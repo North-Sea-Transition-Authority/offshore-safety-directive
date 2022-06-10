@@ -1,0 +1,11 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+
+  - name: build-backend
+    image: eclipse-temurin:17-jdk
+    commands:
+      - chmod +x gradlew
+      - ./gradlew test bootJar
