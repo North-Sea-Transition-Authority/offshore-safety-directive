@@ -21,6 +21,38 @@ steps:
     when:
       status: [ success, failure ]
 
+  - name: publish-docker-develop
+    image: plugins/docker:19.03.8
+    settings:
+      registry: quay.io
+      repo: quay.io/fivium/offshore-safety-directive
+      tags:
+        - develop
+      config:
+        from_secret: docker_config
+    when:
+      branch:
+        - develop
+      status:
+        - success
+
+  - name: publish-docker
+    image: plugins/docker:19.03.8
+    settings:
+      registry: quay.io
+      repo: quay.io/fivium/offshore-safety-directive
+      tags:
+        - ${DRONE_BRANCH/\//-}-${DRONE_BUILD_NUMBER}
+      config:
+        from_secret: docker_config
+    when:
+      branch:
+        - main
+        - hotfix/**
+        - release/**
+      status:
+        - success
+
   - name: slack
     image: plugins/slack
     settings:
@@ -35,3 +67,9 @@ volumes:
   - name: webfiles
     host:
       path: /home/fivium/www/offshore-safety-directive
+
+---
+
+kind: secret
+name: docker_config
+data: eI0qyNsDUizFXZ6PV/b/pKsVm/v27X0bTeEVkvnUKlXBTPll0L3aYawWuqyDzQJmpppt5CJrykjJgmLaDLAhepSxFUBud2kp6c1+S2YbVD3RKl8RCP3NfV3mgAPInewN6ohGRKlEvT/mc2xY559P/XpiEXS9OSwWgz8r9og/ZVpq9eKMv++aRJOoTwEq2tH0dt2pr+e3dN2JJG6iQSJPnhjzade2gbx7WTQa1gAWw/Xmji1fgatP1EzS9cC2Ua68vkV/G9B0pI6BZJHUSXTxhbWZNgeYpQ3rn6zKPuaoIM9vShWea4Ny/9vN5rpRGpN/oW0aduKlWdBoLvO4E2LTqfOaa4pO+OWxE7xD6LURpo+aKQKnxLhiYN+MYE3T1yb3w7j9uaoTPEeIJrRj19A=
