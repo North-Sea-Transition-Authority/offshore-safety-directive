@@ -9,3 +9,19 @@ steps:
     commands:
       - chmod +x gradlew
       - ./gradlew test bootJar
+
+  - name: sync-reports
+    image: alpine:3.16.0
+    commands:
+      - mkdir -p /var/webfiles/${DRONE_BUILD_NUMBER}
+      - cp -r build/reports /var/webfiles/${DRONE_BUILD_NUMBER}
+    volumes:
+      - name: webfiles
+        path: /var/webfiles
+    when:
+      status: [ success, failure ]
+
+volumes:
+  - name: webfiles
+    host:
+      path: /home/fivium/www/offshore-safety-directive
