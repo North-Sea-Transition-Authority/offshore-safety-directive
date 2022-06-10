@@ -21,6 +21,16 @@ steps:
     when:
       status: [ success, failure ]
 
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook: https://hooks.slack.com/services/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
+      channel: offshore-safety-directive-builds
+      template: "*{{build.status}}* <{{build.link}}|Commit {{truncate build.commit 7}} on {{build.branch}} by ${DRONE_COMMIT_AUTHOR_NAME}>\nReports published to: http://drone-assets.fivium.local:9090/offshore-safety-directive/{{build.number}}/"
+    when:
+      status: [ success, failure ]
+
+
 volumes:
   - name: webfiles
     host:
