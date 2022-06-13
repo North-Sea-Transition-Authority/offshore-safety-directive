@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.7.0'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id "org.sonarqube" version "3.3"
 }
 
 group = 'uk.co.nstauthority'
@@ -24,5 +25,23 @@ tasks {
 	}
 	bootJar {
 		archiveFileName.set("${rootProject.name}.jar")
+	}
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "Fivium_${rootProject.name}"
+		property "sonar.organization", "fivium-gh"
+		property "sonar.host.url", "https://sonarcloud.io"
+		if (System.getenv("DRONE_PULL_REQUEST") != null) {
+			property("sonar.pullrequest.key", System.getenv("DRONE_PULL_REQUEST"))
+
+			if (System.getenv("DRONE_SOURCE_BRANCH") != null) {
+				property("sonar.pullrequest.branch", System.getenv("DRONE_SOURCE_BRANCH"))
+			}
+			if (System.getenv("DRONE_TARGET_BRANCH") != null) {
+				property("sonar.pullrequest.base", System.getenv("DRONE_TARGET_BRANCH"))
+			}
+		}
 	}
 }
