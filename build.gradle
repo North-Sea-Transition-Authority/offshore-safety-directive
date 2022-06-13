@@ -18,6 +18,11 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+tasks {
+	test {
+		useJUnitPlatform()
+	}
+	bootJar {
+		archiveFileName.set("${rootProject.name}.jar")
+	}
 }
