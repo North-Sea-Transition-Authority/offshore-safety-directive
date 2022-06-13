@@ -7,7 +7,7 @@ steps:
   - name: build-backend
     image: eclipse-temurin:17-jdk
     environment:
-      SONARCLOUD_TOKEN:
+      SONAR_TOKEN:
         from_secret: sonarcloud_token
     commands:
       - chmod +x gradlew
