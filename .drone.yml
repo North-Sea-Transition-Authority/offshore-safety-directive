@@ -4,6 +4,20 @@ name: default
 
 steps:
 
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: drone-cache
+        path: /cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+        # We can only mount volume caches into the working directory, so all steps which use Gradle must have
+        # the GRADLE_USER_HOME environment variable pointing here.
+        - ./gradle_cache
+        - ./sonar_cache
+
   - name: build-backend
     image: eclipse-temurin:17-jdk
     environment:
@@ -56,30 +70,17 @@ steps:
       status:
         - success
 
-  - name: trivy-build-image
-    image: docker:20.10.9
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
     volumes:
-      - name: docker-sock
-        path: /var/run/
-    commands:
-      - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
-
-  - name: trivy-scan
-    image: aquasec/trivy:0.20.0
-    volumes:
-      - name: docker-sock
-        path: /var/run/
-      - name: drone-trivy-cache
-        path: /root/trivy-cache
-      - name: drone-asset-webfiles
-        path: /var/webfiles
-    commands:
-      # timeout set as initial cache population can seemingly take a while sometimes
-      - trivy --format template --template "@contrib/html.tpl" -o /var/webfiles/${DRONE_BUILD_NUMBER}/trivy-scan.html image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
-      - echo trivy scan reports published at http://drone-assets.fivium.local:9090/offshore-safety-directive/${DRONE_BUILD_NUMBER}/
-    when:
-      status:
-        - success
+      - name: drone-cache
+        path: /cache
+    settings:
+      rebuild: true
+      mount:
+        - ./node_modules
+        - ./gradle_cache
+        - ./sonar_cache
 
   - name: slack
     image: plugins/slack
@@ -89,7 +90,6 @@ steps:
       template: "*{{build.status}}* <{{build.link}}|Commit {{truncate build.commit 7}} on {{build.branch}} by ${DRONE_COMMIT_AUTHOR_NAME}>\nReports published to: http://drone-assets.fivium.local:9090/offshore-safety-directive/{{build.number}}/"
     when:
       status: [ success, failure ]
-
 
 volumes:
   - name: webfiles
