@@ -63,6 +63,8 @@ steps:
         path: /var/run/
     commands:
       - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
+    depends_on:
+      - build-backend
 
   - name: trivy-scan
     image: aquasec/trivy:0.20.0
