@@ -125,7 +125,7 @@ volumes:
     host:
       path: /home/fivium/drone-cache
 
-  - name: drone-sock
+  - name: docker-sock
     host:
       path: /var/run/docker.sock
 
