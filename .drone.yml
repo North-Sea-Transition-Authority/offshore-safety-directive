@@ -96,6 +96,10 @@ volumes:
     host:
       path: /home/fivium/www/offshore-safety-directive
 
+  - name: drone-cache
+    host:
+      path: /home/fivium/drone-cache
+
 ---
 
 kind: secret
