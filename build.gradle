@@ -3,6 +3,8 @@ plugins {
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 	id "org.sonarqube" version "3.3"
+	id 'checkstyle'
+	id 'jacoco'
 }
 
 group = 'uk.co.nstauthority'
@@ -43,5 +45,18 @@ sonarqube {
 				property("sonar.pullrequest.base", System.getenv("DRONE_TARGET_BRANCH"))
 			}
 		}
+	}
+}
+
+checkstyle {
+	config = rootProject.resources.text.fromFile('devtools/checkstyle.xml')
+	toolVersion '9.3'
+	ignoreFailures = false
+	maxWarnings = 0
+}
+
+jacocoTestReport {
+	reports {
+		xml.required = true
 	}
 }

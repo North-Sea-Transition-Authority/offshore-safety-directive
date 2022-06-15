@@ -25,7 +25,7 @@ steps:
         from_secret: sonarcloud_token
     commands:
       - chmod +x gradlew
-      - ./gradlew test bootJar sonarqube
+      - ./gradlew checkstyleMain test bootJar sonarqube
 
   - name: sync-reports
     image: alpine:3.16.0
