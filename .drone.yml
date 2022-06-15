@@ -74,7 +74,7 @@ steps:
     image: docker:20.10.9
     volumes:
       - name: docker-sock
-        path: /var/run/
+        path: /var/run/docker.sock
     commands:
       - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
 
@@ -82,7 +82,7 @@ steps:
     image: aquasec/trivy:0.20.0
     volumes:
       - name: docker-sock
-        path: /var/run/
+        path: /var/run/docker.sock
       - name: drone-trivy-cache
         path: /root/trivy-cache
       - name: drone-asset-webfiles
