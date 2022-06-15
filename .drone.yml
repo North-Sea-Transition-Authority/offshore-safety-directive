@@ -90,7 +90,6 @@ steps:
     commands:
       # timeout set as initial cache population can seemingly take a while sometimes
       - trivy --format template --template "@contrib/html.tpl" -o /var/webfiles/${DRONE_BUILD_NUMBER}/trivy-scan.html image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
-      - echo trivy scan reports published at http://drone-assets.fivium.local:9090/offshore-safety-directive/${DRONE_BUILD_NUMBER}/
     when:
       status:
         - success
