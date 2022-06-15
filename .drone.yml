@@ -85,7 +85,7 @@ steps:
         path: /var/run/docker.sock
       - name: drone-trivy-cache
         path: /root/trivy-cache
-      - name: drone-asset-webfiles
+      - name: webfiles
         path: /var/webfiles
     commands:
       # timeout set as initial cache population can seemingly take a while sometimes
@@ -128,6 +128,10 @@ volumes:
   - name: docker-sock
     host:
       path: /var/run/docker.sock
+
+  - name: drone-trivy-cache
+    host:
+      path: /root/.cache/
 
 ---
 
