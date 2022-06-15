@@ -24,6 +24,7 @@ dependencies {
 tasks {
 	test {
 		useJUnitPlatform()
+		finalizedBy jacocoTestReport
 	}
 	bootJar {
 		archiveFileName.set("${rootProject.name}.jar")
@@ -45,6 +46,7 @@ sonarqube {
 				property("sonar.pullrequest.base", System.getenv("DRONE_TARGET_BRANCH"))
 			}
 		}
+		property 'sonar.coverage.jacoco.xmlReportPaths', "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
 	}
 }
 
