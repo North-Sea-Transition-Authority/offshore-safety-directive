@@ -24,7 +24,10 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 - `npm install`
 - `npx gulp buildAll`
 
-The application will be running on `localhost:8080/osd/<endpoint>` 
+### 3. Run the app
+Create a run configuration for the Spring app and start the application.
+
+The application will be running on `localhost:8080/osd/<endpoint>`
 
 ## Development setup
 
