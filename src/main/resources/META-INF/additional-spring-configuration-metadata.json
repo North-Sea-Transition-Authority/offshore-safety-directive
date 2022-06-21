@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "branding.service.name",
+      "type": "java.lang.String",
+      "description": "Full name of the service."
+    },
+    {
+      "name": "branding.service.mnemonic",
+      "type": "java.lang.String",
+      "description": "Mnemonic of the service."
+    },
+    {
+      "name": "branding.customer.name",
+      "type": "java.lang.String",
+      "description": "Full name of the customer."
+    },
+    {
+      "name": "branding.customer.mnemonic",
+      "type": "java.lang.String",
+      "description": "Mnemonic of the customer."
+    }
+  ]
+}
