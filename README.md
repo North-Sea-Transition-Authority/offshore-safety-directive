@@ -13,18 +13,43 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 ## Pre-requisites
 - Java 17
 - Node LTS + NPM
+- [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
+  (See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
+  for further information about adding your account to the `docker-users` group)
 
-## Backend setup
+## Setup
 
-### 1. Initialise the Fivium Design System
+### 1. Run the backend services
+- Ensure that you have [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
+  installed and running (or an alternative way of running docker).  
+- Run the backing services defined in the `local-dev-compose.yml`. This can be done by clicking the run icon
+  next to `services` when in the file.
+  - If IntelliJ doesn't detect the file as a docker compose file automatically you may need to 
+    [Associate docker-compose as file type](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360009394620-Associate-docker-compose-as-file-type) manually.
+
+### 2. Add the required profile
+
+### Development
+- In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
+
+### Production
+- In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
+- The following environment variables are required when using this profile:
+
+| Environment Variable                   | Description                                                              |
+|----------------------------------------|--------------------------------------------------------------------------|
+| OSD_DATABASE_URL                       | The URL to the database the service connect to                           |
+| OSD_DATABASE_PASSWORD                  | Database schema password for the `osd` user                              |
+
+### 3. Initialise the Fivium Design System
 - `git submodule update --init --recursive`
 - `cd fivium-design-system-core && npm install && npx gulp build && cd ..`
 
-### 2. Build frontend components
+### 4. Build frontend components
 - `npm install`
 - `npx gulp buildAll`
 
-### 3. Run the app
+### 5. Run the app
 Create a run configuration for the Spring app and start the application.
 
 The application will be running on `localhost:8080/osd/<endpoint>`
