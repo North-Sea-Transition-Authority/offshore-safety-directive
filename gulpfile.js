@@ -6,7 +6,7 @@ const autoprefixer = require('autoprefixer');
 const rename = require("gulp-rename");
 
 const sassOptions = {
-  outputStyle: 'expanded',
+  outputStyle: 'compressed',
   includePath: 'src/main/resources/scss'
 };
 
