@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.authenticationTest;
+package uk.co.nstauthority.offshoresafetydirective.authenticationtest;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
