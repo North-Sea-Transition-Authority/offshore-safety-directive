@@ -13,7 +13,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfig
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ControllerAdvice
-class DefaultPageControllerAdvice {
+public class DefaultPageControllerAdvice {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
 

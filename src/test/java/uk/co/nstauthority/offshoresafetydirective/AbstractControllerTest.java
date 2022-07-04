@@ -7,8 +7,10 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandin
 
 @AutoConfigureMockMvc
 @IncludeServiceBrandingConfigurationProperties
+@WithDefaultPageControllerAdvice
 public abstract class AbstractControllerTest {
 
   @Autowired
   protected MockMvc mockMvc;
+
 }

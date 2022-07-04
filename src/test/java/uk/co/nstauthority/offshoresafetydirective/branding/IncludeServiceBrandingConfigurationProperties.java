@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @EnableConfigurationProperties(value = {
     CustomerConfigurationProperties.class,
-    ServiceConfigurationProperties.class
+    ServiceConfigurationProperties.class,
 })
 @Import(ServiceBrandingConfigurationProperties.class)
 @Retention(RetentionPolicy.RUNTIME)
