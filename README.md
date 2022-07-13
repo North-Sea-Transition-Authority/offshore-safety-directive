@@ -40,6 +40,9 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 |----------------------------------------|--------------------------------------------------------------------------|
 | OSD_DATABASE_URL                       | The URL to the database the service connect to                           |
 | OSD_DATABASE_PASSWORD                  | Database schema password for the `osd` user                              |
+| OSD_SAML_ENTITY_ID                     | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox) |
+| OSD_SAML_CERT_LOCATION                 | The location of the crt file from the resources folder                   |
+| OSD_SAML_LOGIN_URL                     | The URL to hit the `login` entry theme of the SAML login module          |
 
 ### 3. Initialise the Fivium Design System
 - `git submodule update --init --recursive`
