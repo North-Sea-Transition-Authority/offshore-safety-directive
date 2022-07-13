@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.authenticationtest;
+package uk.co.nstauthority.offshoresafetydirective.authentication;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,11 +7,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @RequestMapping("/auth")
-public class AuthenticationController {
+public class TestAuthenticationController {
 
   @GetMapping("/secured")
   public ModelAndView renderSecured() {
-    return new ModelAndView("osd/auth/auth");
+    return new ModelAndView();
   }
 
 }
+
