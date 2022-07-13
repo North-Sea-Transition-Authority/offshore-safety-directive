@@ -12,6 +12,7 @@
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
+  breadcrumbsList=""
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -43,6 +44,11 @@
     <#assign backLink=true/>
   </#if>
 
+  <#assign useBreadCrumbs=false>
+  <#if breadcrumbsList?has_content>
+    <#assign useBreadCrumbs=true>
+  </#if>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -63,6 +69,8 @@
     errorItems=errorItems
     backLink=backLink
     backLinkUrl=backLinkUrl
+    breadcrumbs=useBreadCrumbs
+    breadcrumbsList=breadcrumbsList
   >
     <#nested />
   </@fdsDefaultPageTemplate>
