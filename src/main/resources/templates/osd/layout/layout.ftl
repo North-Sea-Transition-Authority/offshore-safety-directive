@@ -52,6 +52,7 @@
     twoThirdsColumn=twoThirdsColumn
     twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
     oneQuarterColumn=oneQuarterColumn
+    topNavigation=true
   >
     <#nested />
   </@fdsDefaultPageTemplate>

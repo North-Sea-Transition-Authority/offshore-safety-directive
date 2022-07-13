@@ -9,6 +9,8 @@ import org.springframework.web.servlet.ModelAndView;
 @RequestMapping("/work-area")
 public class WorkAreaController {
 
+  public static final String WORK_AREA_TITLE = "Work area";
+
   @GetMapping
   public ModelAndView getWorkArea() {
     return new ModelAndView("osd/workarea/workArea");
