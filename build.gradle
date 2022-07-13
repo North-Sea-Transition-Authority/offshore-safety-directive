@@ -16,6 +16,7 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -35,6 +36,7 @@ dependencies {
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
 	testImplementation 'com.h2database:h2:2.1.214'
+	testImplementation 'org.springframework.security:spring-security-test'
 
 }
 

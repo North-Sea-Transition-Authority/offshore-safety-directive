@@ -8,5 +8,6 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public record CustomerConfigurationProperties(
     @NotNull String name,
-    @NotNull String mnemonic
+    @NotNull String mnemonic,
+    @NotNull String guidanceUrl
 ) {}
