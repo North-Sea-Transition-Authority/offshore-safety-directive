@@ -11,7 +11,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -48,8 +47,8 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
 
     assertThat((CustomerConfigurationProperties) modelMap.get("customerBranding")).hasNoNullFieldsOrProperties();
     assertThat((ServiceConfigurationProperties) modelMap.get("serviceBranding")).hasNoNullFieldsOrProperties();
-    assertThat(modelMap.get("serviceHomeUrl")).isEqualTo(
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+    assertThat(modelMap).containsEntry(
+        "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
     );
   }
 

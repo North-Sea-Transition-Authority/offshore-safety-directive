@@ -8,8 +8,10 @@
 <#macro defaultPage
   htmlTitle
   pageHeading=""
+  errorItems=[]
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
+  backLinkUrl=""
 >
   <#local serviceName = serviceBranding.name() />
   <#local customerMnemonic = customerBranding.mnemonic() />
@@ -36,6 +38,11 @@
     <#assign twoThirdsColumn=true/>
   </#if>
 
+  <#assign backLink = false>
+  <#if backLinkUrl?has_content>
+    <#assign backLink=true/>
+  </#if>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -53,6 +60,9 @@
     twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
     oneQuarterColumn=oneQuarterColumn
     topNavigation=true
+    errorItems=errorItems
+    backLink=backLink
+    backLinkUrl=backLinkUrl
   >
     <#nested />
   </@fdsDefaultPageTemplate>
