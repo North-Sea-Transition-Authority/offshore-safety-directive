@@ -50,7 +50,10 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
   public RelyingPartyRegistration getRelyingPartyRegistration() throws CertificateException, IOException {
 
     var certificateStream = new ByteArrayInputStream(samlProperties.getCertificate().getBytes(StandardCharsets.UTF_8));
-    X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(certificateStream);
+
+    X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509")
+        .generateCertificate(certificateStream);
+
     Saml2X509Credential credential = Saml2X509Credential.verification(Objects.requireNonNull(certificate));
 
     return RelyingPartyRegistration
