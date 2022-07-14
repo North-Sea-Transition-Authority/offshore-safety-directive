@@ -16,6 +16,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -34,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
         ApplicantDetailController.class,
     }
 )
+@WithMockUser
 class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   private final NominationDetail nominationDetail = NominationDetailUtil.getNominationDetail();
