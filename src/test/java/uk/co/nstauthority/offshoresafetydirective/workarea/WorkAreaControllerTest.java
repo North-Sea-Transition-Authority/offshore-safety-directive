@@ -8,6 +8,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -17,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationCont
 @ContextConfiguration(
     classes = WorkAreaController.class
 )
+@WithMockUser
 class WorkAreaControllerTest extends AbstractControllerTest {
 
   @Test
