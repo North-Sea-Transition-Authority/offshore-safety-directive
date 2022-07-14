@@ -17,7 +17,7 @@ class SamlProperties {
   private String entityId;
 
   @NotNull
-  private String certificateLocation;
+  private String certificate;
 
   @NotNull
   private String loginUrl;
@@ -38,12 +38,12 @@ class SamlProperties {
     this.entityId = entityId;
   }
 
-  public String getCertificateLocation() {
-    return certificateLocation;
+  public String getCertificate() {
+    return certificate;
   }
 
-  public void setCertificateLocation(String certificateLocation) {
-    this.certificateLocation = certificateLocation;
+  public void setCertificate(String certificate) {
+    this.certificate = certificate;
   }
 
   public String getLoginUrl() {

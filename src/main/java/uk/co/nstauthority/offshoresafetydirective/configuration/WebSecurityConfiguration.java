@@ -1,7 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.configuration;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -9,8 +10,6 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.saml2.core.Saml2X509Credential;
@@ -48,11 +47,12 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
   }
 
   @Bean
-  public RelyingPartyRegistration getRelyingPartyRegistration() throws IOException, CertificateException {
-    Resource resource = new ClassPathResource(samlProperties.getCertificateLocation());
-    InputStream inputStream = resource.getInputStream();
-    X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(inputStream);
+  public RelyingPartyRegistration getRelyingPartyRegistration() throws CertificateException, IOException {
+
+    var certificateStream = new ByteArrayInputStream(samlProperties.getCertificate().getBytes(StandardCharsets.UTF_8));
+    X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(certificateStream);
     Saml2X509Credential credential = Saml2X509Credential.verification(Objects.requireNonNull(certificate));
+
     return RelyingPartyRegistration
         .withRegistrationId(samlProperties.getRegistrationId())
         .assertingPartyDetails(party -> party
