@@ -22,6 +22,9 @@ class SamlProperties {
   @NotNull
   private String loginUrl;
 
+  @NotNull
+  private String consumerServiceLocation;
+
   public String getRegistrationId() {
     return registrationId;
   }
@@ -54,5 +57,12 @@ class SamlProperties {
     this.loginUrl = loginUrl;
   }
 
+  public String getConsumerServiceLocation() {
+    return consumerServiceLocation;
+  }
+
+  public void setConsumerServiceLocation(String consumerServiceLocation) {
+    this.consumerServiceLocation = consumerServiceLocation;
+  }
 }
 

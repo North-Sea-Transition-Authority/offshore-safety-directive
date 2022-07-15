@@ -65,8 +65,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .wantAuthnRequestsSigned(false)
             .verificationX509Credentials(c -> c.add(credential))
         )
+        .assertionConsumerServiceLocation(samlProperties.getConsumerServiceLocation())
         .build();
   }
+
+
 
 }
 
