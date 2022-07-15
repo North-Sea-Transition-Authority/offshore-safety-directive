@@ -8,6 +8,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,6 +23,9 @@ import org.springframework.security.saml2.provider.service.registration.Saml2Mes
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   private final SamlProperties samlProperties;
+
+  @Value("${saml.consumer-service-location}")
+  private String consumerServiceLocation;
 
   @Autowired
   public WebSecurityConfiguration(SamlProperties samlProperties) {
@@ -65,8 +69,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .wantAuthnRequestsSigned(false)
             .verificationX509Credentials(c -> c.add(credential))
         )
+        .assertionConsumerServiceLocation(consumerServiceLocation)
         .build();
   }
+
+
 
 }
 
