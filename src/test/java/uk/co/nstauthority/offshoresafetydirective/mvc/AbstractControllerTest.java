@@ -40,6 +40,5 @@ public abstract class AbstractControllerTest {
       messageSource.setBasename("messages");
       messageSource.setDefaultEncoding("UTF-8");
       return messageSource;
-    }
-  }
+}}
 }

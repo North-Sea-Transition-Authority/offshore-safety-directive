@@ -1,16 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 
 @Service
 class ApplicantDetailService {
@@ -26,26 +20,19 @@ class ApplicantDetailService {
     this.applicantDetailFormValidator = applicantDetailFormValidator;
   }
 
-  ModelAndView getApplicantDetailsModelAndView(ApplicantDetailForm form) {
-    return new ModelAndView("osd/nomination/applicantdetails/applicantDetails")
-        .addObject("form", form)
-        .addObject("portalOrganisationsRestUrl", getPortalOrganisationSearchUrl())
-        .addObject(
-            "actionUrl",
-            ReverseRouter.route(on(ApplicantDetailController.class).saveApplicantDetails(form, null))
-        )
-        .addObject("backLinkUrl", ReverseRouter.route(on(StartNominationController.class).startNomination()));
-  }
-
   @Transactional
-  public ApplicantDetail createApplicantDetail(ApplicantDetailForm form, NominationDetail detail) {
-    var applicantDetail = new ApplicantDetail(
-        detail,
-        form.getPortalOrganisationId(),
-        form.getApplicantReference()
-    );
+  public ApplicantDetail createOrUpdateApplicantDetail(ApplicantDetailForm form, NominationDetail nominationDetail) {
+    ApplicantDetail applicantDetail = applicationDetailRepository.findByNominationDetail(nominationDetail)
+        .map(entity -> updateApplicantDetail(nominationDetail, entity, form))
+        .orElseGet(() -> createApplicantDetail(nominationDetail, form));
     applicationDetailRepository.save(applicantDetail);
     return applicantDetail;
+  }
+
+  ApplicantDetailForm getForm(NominationDetail nominationDetail) {
+    return applicationDetailRepository.findByNominationDetail(nominationDetail)
+        .map(this::applicantDetailEntityToForm)
+        .orElseGet(ApplicantDetailForm::new);
   }
 
   BindingResult validate(ApplicantDetailForm form, BindingResult bindingResult) {
@@ -53,8 +40,27 @@ class ApplicantDetailService {
     return bindingResult;
   }
 
-  private String getPortalOrganisationSearchUrl() {
-    return PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
-        .searchPortalOrganisations(null));
+  private ApplicantDetail createApplicantDetail(NominationDetail nominationDetail, ApplicantDetailForm form) {
+    return new ApplicantDetail(
+        nominationDetail,
+        form.getPortalOrganisationId(),
+        form.getApplicantReference()
+    );
+  }
+
+  private ApplicantDetail updateApplicantDetail(NominationDetail nominationDetail,
+                                                ApplicantDetail applicantDetail,
+                                                ApplicantDetailForm form) {
+    applicantDetail.setNominationDetail(nominationDetail);
+    applicantDetail.setPortalOrganisationId(form.getPortalOrganisationId());
+    applicantDetail.setApplicantReference(form.getApplicantReference());
+    return applicantDetail;
+  }
+
+  private ApplicantDetailForm applicantDetailEntityToForm(ApplicantDetail applicantDetail) {
+    var form = new ApplicantDetailForm();
+    form.setPortalOrganisationId(applicantDetail.getPortalOrganisationId());
+    form.setApplicantReference(applicantDetail.getApplicantReference());
+    return form;
   }
 }

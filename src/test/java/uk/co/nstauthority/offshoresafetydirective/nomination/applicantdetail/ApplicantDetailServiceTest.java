@@ -1,24 +1,20 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantDetailServiceTest {
@@ -38,34 +34,14 @@ class ApplicantDetailServiceTest {
   }
 
   @Test
-  void getApplicantDetailsModelAndView_assertModelProperties() {
-    var form = new ApplicantDetailForm();
-    var expectedPortalOrganisationsRestUrl =
-        PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null));
-    var expectedActionUrl = ReverseRouter.route(on(ApplicantDetailController.class).saveApplicantDetails(
-        form,
-        null
-    ));
-
-    var model = applicantDetailService.getApplicantDetailsModelAndView(form);
-
-    assertThat(model.getModelMap()).containsExactly(
-        entry("form", form),
-        entry("portalOrganisationsRestUrl", expectedPortalOrganisationsRestUrl),
-        entry("actionUrl", expectedActionUrl),
-        entry("backLinkUrl", ReverseRouter.route(on(StartNominationController.class).startNomination()))
-    );
-    assertEquals("osd/nomination/applicantdetails/applicantDetails", model.getViewName());
-  }
-
-  @Test
-  void createApplicantDetail_whenGivenAForm_verifyCreatedEntity() {
+  void createOrUpdateApplicantDetail_whenGivenAForm_verifyCreatedEntity() {
     var form = new ApplicantDetailForm();
     form.setPortalOrganisationId(1);
     form.setApplicantReference("ref#1");
     var applicantDetailArgumentCaptor = ArgumentCaptor.forClass(ApplicantDetail.class);
+    when(applicationDetailRepository.findByNominationDetail(nominationDetail)).thenReturn(Optional.empty());
 
-    applicantDetailService.createApplicantDetail(form, nominationDetail);
+    applicantDetailService.createOrUpdateApplicantDetail(form, nominationDetail);
 
     verify(applicationDetailRepository, times(1)).save(applicantDetailArgumentCaptor.capture());
     var savedApplicantDetail = (ApplicantDetail) applicantDetailArgumentCaptor.getValue();
@@ -91,5 +67,23 @@ class ApplicantDetailServiceTest {
     applicantDetailService.validate(form, bindingResult);
 
     verify(applicantDetailFormValidator, times(1)).validate(form, bindingResult);
+  }
+
+  @Test
+  void getForm_whenPreviousApplicantDetail_thenAssertFormFields() {
+    var applicantDetail = new ApplicantDetail(nominationDetail, 1, "ref #1");
+    when(applicationDetailRepository.findByNominationDetail(nominationDetail)).thenReturn(Optional.of(applicantDetail));
+
+    var form = applicantDetailService.getForm(nominationDetail);
+
+    assertThat(form)
+        .extracting(
+            ApplicantDetailForm::getPortalOrganisationId,
+            ApplicantDetailForm::getApplicantReference
+        )
+        .containsExactly(
+            applicantDetail.getPortalOrganisationId(),
+            applicantDetail.getApplicantReference()
+        );
   }
 }

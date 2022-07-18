@@ -24,6 +24,6 @@ public class StartNominationController {
 
   @PostMapping
   public ModelAndView startNomination() {
-    return ReverseRouter.redirect(on(ApplicantDetailController.class).getApplicantDetails());
+    return ReverseRouter.redirect(on(ApplicantDetailController.class).getNewApplicantDetails());
   }
 }

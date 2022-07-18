@@ -4,6 +4,8 @@
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="portalOrganisationsRestUrl" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="preselectedItems" type="java.util.Map<String, String>" -->
+<#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
 
 <#assign pageTitle = "Applicant details" />
 
@@ -12,13 +14,15 @@
   pageHeading=pageTitle
   errorItems=errorList
   pageSize=PageSize.TWO_THIRDS_COLUMN
-  backLinkUrl=springUrl(backLinkUrl)
+  backLinkUrl=springUrl(backLinkUrl!"")
+  breadcrumbsList=breadcrumbsList
 >
   <@fdsForm.htmlForm
     actionUrl=springUrl(actionUrl)
   >
     <@fdsSearchSelector.searchSelectorRest
       path="form.portalOrganisationId"
+      preselectedItems=preselectedItems
       labelText="What organisation is making this nomination?"
       selectorMinInputLength=3
       restUrl=springUrl(portalOrganisationsRestUrl)

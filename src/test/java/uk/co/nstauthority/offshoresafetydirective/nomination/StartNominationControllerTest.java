@@ -51,6 +51,6 @@ class StartNominationControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicantDetailController.class).getApplicantDetails())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails())));
   }
 }
