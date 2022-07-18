@@ -11,11 +11,13 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.MessageSource;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.WithDefaultPageControllerAdvice;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.TypeMismatchTestForm;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
+@WithDefaultPageControllerAdvice
 class ValidationErrorOrderingServiceTest {
 
   @Autowired
