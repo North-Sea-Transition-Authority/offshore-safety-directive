@@ -4,6 +4,7 @@ import java.time.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 
 @Service
 public class NominationService {
@@ -36,5 +37,12 @@ public class NominationService {
     nominationRepository.save(nomination);
     nominationDetailRepository.save(detail);
     return detail;
+  }
+
+  Nomination getNominationByIdOrError(Integer nominationId) {
+    return nominationRepository.findById(nominationId)
+        .orElseThrow(() -> {
+          throw new OsdEntityNotFoundException(String.format("Cannot find Nomination with ID: %s", nominationId));
+        });
   }
 }

@@ -30,11 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 
 @WebMvcTest
-@ContextConfiguration(
-    classes = {
-        ApplicantDetailController.class,
-    }
-)
+@ContextConfiguration(classes = ApplicantDetailController.class)
 @WithMockUser
 class ApplicantDetailControllerTest extends AbstractControllerTest {
 

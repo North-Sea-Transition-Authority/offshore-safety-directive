@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.portalorganisation.PortalOrganisationRestController;
 
 @Service
 class ApplicantDetailService {
@@ -54,6 +54,7 @@ class ApplicantDetailService {
   }
 
   private String getPortalOrganisationSearchUrl() {
-    return PortalOrganisationRestController.route(on(PortalOrganisationRestController.class).searchPortalOrganisations(null));
+    return PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
+        .searchPortalOrganisations(null));
   }
 }

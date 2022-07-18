@@ -14,11 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.portalorganisation.PortalOrganisationRestController;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantDetailServiceTest {
@@ -41,7 +41,7 @@ class ApplicantDetailServiceTest {
   void getApplicantDetailsModelAndView_assertModelProperties() {
     var form = new ApplicantDetailForm();
     var expectedPortalOrganisationsRestUrl =
-        PortalOrganisationRestController.route(on(PortalOrganisationRestController.class).searchPortalOrganisations(null));
+        PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null));
     var expectedActionUrl = ReverseRouter.route(on(ApplicantDetailController.class).saveApplicantDetails(
         form,
         null

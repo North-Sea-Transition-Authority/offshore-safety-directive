@@ -1,7 +1,8 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.portalorganisation;
+package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,29 +14,24 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
 @RestController
 @RequestMapping("/api/portal-organisations")
-public class PortalOrganisationRestController {
+public class PortalOrganisationUnitRestController {
 
   protected static final String SEARCH_TERM_PARAM_NAME = "term";
 
-  //TODO OSDOP-197 remove this dummy values
-  private final List<RestSearchItem> dummySearchResult = List.of(
-      new RestSearchItem("1", "SHELL U.K LIMITED"),
-      new RestSearchItem("2", "CHEVRON NORTH SEA LIMITED"),
-      new RestSearchItem("3", "BP EXPLORATION OPERATING COMPANY LIMITED"),
-      new RestSearchItem("4", "FAIRFIELD BETULA LIMITED"),
-      new RestSearchItem("5", "TEXACO BRITAIN LIMITED")
-  );
+  private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @Autowired
+  public PortalOrganisationUnitRestController(
+      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+    this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+  }
 
   @GetMapping
   @ResponseBody
   public RestSearchResult searchPortalOrganisations(@RequestParam("term") String searchTerm) {
-    List<RestSearchItem> searchItemsResult = dummySearchResult
+    List<RestSearchItem> searchItemsResult = portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm)
         .stream()
-        .filter(restSearchItem ->
-            restSearchItem.text()
-                .toLowerCase()
-                .contains(StringUtils.defaultIfBlank(searchTerm.toLowerCase(), ""))
-        )
+        .map(view -> new RestSearchItem(view.id(), view.name()))
         .toList();
 
     return new RestSearchResult(searchItemsResult);

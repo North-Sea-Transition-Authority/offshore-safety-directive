@@ -32,7 +32,7 @@ class ApplicantDetailFormValidatorTest {
   }
 
   @Test
-  void supports_whenNotApplicationDetailFormClass_thenTrue() {
+  void supports_whenNotApplicationDetailFormClass_thenFalse() {
     var nonSupportedClass = NonSupportedClass.class;
 
     assertFalse(applicantDetailFormValidator.supports(nonSupportedClass));
