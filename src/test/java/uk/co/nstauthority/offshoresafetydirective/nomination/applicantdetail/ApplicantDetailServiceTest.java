@@ -16,14 +16,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.portalorganisation.PortalOrganisationRestController;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantDetailServiceTest {
 
-  private final NominationDetail nominationDetail = NominationDetailUtil.getNominationDetail();
+  private final NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
 
   private static ApplicationDetailRepository applicationDetailRepository;
   private static ApplicantDetailFormValidator applicantDetailFormValidator;

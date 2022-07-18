@@ -2,10 +2,10 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Instant;
 
-public class NominationDetailUtil {
+public class NominationDetailTestUtil {
 
-  private NominationDetailUtil() {
-    throw new IllegalStateException("NominationDetailUtil is an util class and should not be instantiated");
+  private NominationDetailTestUtil() {
+    throw new IllegalStateException("NominationDetailTestUtil is an util class and should not be instantiated");
   }
 
   public static NominationDetail getNominationDetail() {

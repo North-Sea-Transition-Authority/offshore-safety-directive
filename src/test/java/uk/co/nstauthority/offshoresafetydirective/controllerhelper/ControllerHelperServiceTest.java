@@ -7,17 +7,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
+import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
-@WebMvcTest
-@ContextConfiguration(
-    classes = ControllerHelperService.class
-)
+
+@SpringBootTest
+@AutoConfigureTestDatabase
 class ControllerHelperServiceTest {
+
+  @Autowired
+  private ValidationErrorOrderingService validationErrorOrderingService;
 
   private ControllerHelperService controllerHelperService;
 
@@ -27,7 +31,7 @@ class ControllerHelperServiceTest {
   @BeforeEach
   void setup() {
 
-    controllerHelperService = new ControllerHelperService();
+    controllerHelperService = new ControllerHelperService(validationErrorOrderingService);
 
     failedModelAndView = new ModelAndView()
         .addObject("fail", true);
@@ -46,6 +50,7 @@ class ControllerHelperServiceTest {
     var result = controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
         failedModelAndView,
+        form,
         () -> passedModelAndView
     );
 
@@ -64,6 +69,7 @@ class ControllerHelperServiceTest {
     var result = controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
         failedModelAndView,
+        form,
         () -> passedModelAndView
     );
 

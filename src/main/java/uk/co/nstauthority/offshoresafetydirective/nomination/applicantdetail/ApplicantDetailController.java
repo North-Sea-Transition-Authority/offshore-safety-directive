@@ -45,6 +45,7 @@ public class ApplicantDetailController {
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
         applicantDetailService.getApplicantDetailsModelAndView(form),
+        form,
         () -> {
           var nominationDetail = nominationService.startNomination();
           applicantDetailService.createApplicantDetail(form, nominationDetail);

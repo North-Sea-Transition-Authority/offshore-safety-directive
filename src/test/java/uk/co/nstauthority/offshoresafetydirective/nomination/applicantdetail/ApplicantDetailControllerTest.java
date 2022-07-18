@@ -24,7 +24,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
@@ -38,7 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 @WithMockUser
 class ApplicantDetailControllerTest extends AbstractControllerTest {
 
-  private final NominationDetail nominationDetail = NominationDetailUtil.getNominationDetail();
+  private final NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
 
   @MockBean
   private ApplicantDetailService applicantDetailService;
