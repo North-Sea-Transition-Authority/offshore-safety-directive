@@ -24,7 +24,7 @@
       path="form.portalOrganisationId"
       preselectedItems=preselectedItems
       labelText="What organisation is making this nomination?"
-      selectorMinInputLength=3
+      selectorMinInputLength=2
       restUrl=springUrl(portalOrganisationsRestUrl)
     />
     <@fdsDetails.summaryDetails summaryTitle="The organisation making the nomination is not listed">
