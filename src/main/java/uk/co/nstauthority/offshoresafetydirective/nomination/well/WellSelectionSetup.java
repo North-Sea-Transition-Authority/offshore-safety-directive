@@ -55,8 +55,8 @@ class WellSelectionSetup {
     return selectionType;
   }
 
-  public void setSelectionType(WellSelectionType answer) {
-    this.selectionType = answer;
+  public void setSelectionType(WellSelectionType selectionType) {
+    this.selectionType = selectionType;
   }
 
   @Override

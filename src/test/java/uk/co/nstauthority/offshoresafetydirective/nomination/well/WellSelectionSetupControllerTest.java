@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
 
 @WebMvcTest
 @ContextConfiguration(classes = WellSelectionSetupController.class)
@@ -115,7 +116,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
                 .param("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominatedWellDetailController.class).renderSpecificSetupWells(NOMINATION_ID))));
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_ID));
@@ -160,7 +161,8 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
-    verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_ID));
+    verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(),
+        eq(NOMINATION_ID));
 
     var capturedForm = wellSetupCaptor.getValue();
     assertEquals(WellSelectionType.NO_WELLS.name(), capturedForm.getWellSelectionType());
