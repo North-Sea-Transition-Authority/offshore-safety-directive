@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.web.servlet.MockMvc;
-import uk.co.nstauthority.offshoresafetydirective.WithDefaultPageControllerAdvice;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
@@ -40,5 +39,6 @@ public abstract class AbstractControllerTest {
       messageSource.setBasename("messages");
       messageSource.setDefaultEncoding("UTF-8");
       return messageSource;
-}}
+    }
+  }
 }

@@ -8,5 +8,5 @@ CVE-2019-12400
 CVE-2020-13936
 CVE-2020-13959
 CVE-2020-15522
-#temporarily ignoring vulnerability from eclipse base image
+#temporarily ignoring vulnerability from eclipse base image TODO OSDOP-213
 CVE-2022-30065
