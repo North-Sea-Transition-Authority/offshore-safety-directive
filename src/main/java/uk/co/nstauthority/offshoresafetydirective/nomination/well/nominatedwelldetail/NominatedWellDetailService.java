@@ -7,23 +7,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.Well;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWell;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 
 @Service
 class NominatedWellDetailService {
 
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
   private final NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
-  private final WellService wellService;
+  private final NominatedWellService nominatedWellService;
 
   @Autowired
   NominatedWellDetailService(NominatedWellDetailRepository nominatedWellDetailRepository,
                              NominatedWellDetailFormValidator nominatedWellDetailFormValidator,
-                             WellService wellService) {
+                             NominatedWellService nominatedWellService) {
     this.nominatedWellDetailRepository = nominatedWellDetailRepository;
     this.nominatedWellDetailFormValidator = nominatedWellDetailFormValidator;
-    this.wellService = wellService;
+    this.nominatedWellService = nominatedWellService;
   }
 
   @Transactional
@@ -51,9 +51,9 @@ class NominatedWellDetailService {
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> wellIds = wellService.findAllByNominationDetail(entity.getNominationDetail())
+    List<Integer> wellIds = nominatedWellService.findAllByNominationDetail(entity.getNominationDetail())
         .stream()
-        .map(Well::getWellId)
+        .map(NominatedWell::getWellId)
         .toList();
     form.setWells(wellIds);
     return form;

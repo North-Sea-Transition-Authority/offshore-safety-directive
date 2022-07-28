@@ -6,11 +6,11 @@ import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Repository
-interface WellRepository extends CrudRepository<Well, Integer> {
+interface NominatedWellRepository extends CrudRepository<NominatedWell, Integer> {
 
-  List<Well> findAllByNominationDetail(NominationDetail nominationDetail);
+  List<NominatedWell> findAllByNominationDetail(NominationDetail nominationDetail);
 
-  List<Well> findAllByWellIdIn(List<Integer> wellIds);
+  List<NominatedWell> findAllByWellIdIn(List<Integer> wellIds);
 
   void deleteAllByNominationDetail(NominationDetail nominationDetail);
 }

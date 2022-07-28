@@ -16,8 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedWellDetailServiceTest {
@@ -31,7 +31,7 @@ class NominatedWellDetailServiceTest {
   private NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
 
   @Mock
-  private WellService wellService;
+  private NominatedWellService nominatedWellService;
 
   @InjectMocks
   private NominatedWellDetailService nominatedWellDetailService;
@@ -120,12 +120,12 @@ class NominatedWellDetailServiceTest {
   @Test
   void getForm_whenEntityExist_thenFormMatchesEntityFields() {
     var nominatedWellDetail = NominatedWellDetailTestUtil.getNominatedWellDetail(NOMINATION_DETAIL);
-    var well1 = WellTestUtil.getWell(NOMINATION_DETAIL);
+    var well1 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
     well1.setWellId(1);
-    var well2 = WellTestUtil.getWell(NOMINATION_DETAIL);
+    var well2 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
     well2.setWellId(2);
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
-    when(wellService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(List.of(well1, well2));
+    when(nominatedWellService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(List.of(well1, well2));
 
     var form = nominatedWellDetailService.getForm(NOMINATION_DETAIL);
 

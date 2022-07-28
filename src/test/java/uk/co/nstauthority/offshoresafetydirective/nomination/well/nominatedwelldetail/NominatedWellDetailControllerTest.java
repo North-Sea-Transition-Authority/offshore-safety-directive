@@ -33,8 +33,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellService;
 
 @WebMvcTest
 @ContextConfiguration(classes = NominatedWellDetailController.class)
@@ -52,7 +52,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
   private NominationDetailService nominationDetailService;
 
   @MockBean
-  private WellService wellService;
+  private NominatedWellService nominatedWellService;
 
   @MockBean
   private WellQueryService wellQueryService;
@@ -142,7 +142,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
 
     verify(nominatedWellDetailService, times(1)).createOrUpdateNominatedWellDetail(eq(NOMINATION_DETAIL), any());
-    verify(wellService, times(1)).saveWells(eq(NOMINATION_DETAIL), any());
+    verify(nominatedWellService, times(1)).saveNominatedWells(eq(NOMINATION_DETAIL), any());
   }
 
   @Test
@@ -159,6 +159,6 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     verify(nominatedWellDetailService, never()).createOrUpdateNominatedWellDetail(any(), any());
-    verify(wellService, never()).saveWells(any(), any());
+    verify(nominatedWellService, never()).saveNominatedWells(any(), any());
   }
 }

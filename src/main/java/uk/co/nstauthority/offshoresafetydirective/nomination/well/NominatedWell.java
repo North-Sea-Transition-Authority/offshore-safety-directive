@@ -10,8 +10,8 @@ import javax.persistence.Table;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
-@Table(name = "well")
-public class Well {
+@Table(name = "nominated_wells")
+public class NominatedWell {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +24,10 @@ public class Well {
   private Integer wellId;
 
 
-  protected Well() {
+  protected NominatedWell() {
   }
 
-  Well(NominationDetail nominationDetail, Integer wellId) {
+  NominatedWell(NominationDetail nominationDetail, Integer wellId) {
     this.nominationDetail = nominationDetail;
     this.wellId = wellId;
   }

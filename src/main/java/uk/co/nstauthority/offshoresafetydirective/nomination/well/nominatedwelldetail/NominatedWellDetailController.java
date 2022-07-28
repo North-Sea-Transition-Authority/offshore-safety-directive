@@ -21,8 +21,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestCont
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellService;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
@@ -36,18 +36,19 @@ public class NominatedWellDetailController {
   private final NominationDetailService nominationDetailService;
   private final WellQueryService wellQueryService;
 
-  private final WellService wellService;
+  private final NominatedWellService nominatedWellService;
 
   @Autowired
   public NominatedWellDetailController(ControllerHelperService controllerHelperService,
                                        NominatedWellDetailService nominatedWellDetailService,
                                        NominationDetailService nominationDetailService,
-                                       WellQueryService wellQueryService, WellService wellService) {
+                                       WellQueryService wellQueryService,
+                                       NominatedWellService nominatedWellService) {
     this.controllerHelperService = controllerHelperService;
     this.nominatedWellDetailService = nominatedWellDetailService;
     this.nominationDetailService = nominationDetailService;
     this.wellQueryService = wellQueryService;
-    this.wellService = wellService;
+    this.nominatedWellService = nominatedWellService;
   }
 
   @GetMapping
@@ -70,7 +71,7 @@ public class NominatedWellDetailController {
         () -> {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedWellDetailService.createOrUpdateNominatedWellDetail(nominationDetail, form);
-          wellService.saveWells(nominationDetail, form);
+          nominatedWellService.saveNominatedWells(nominationDetail, form);
           return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
         }
     );

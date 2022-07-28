@@ -20,18 +20,18 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class WellServiceTest {
+class NominatedWellServiceTest {
 
   private final static NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
 
   @Mock
-  private WellRepository wellRepository;
+  private NominatedWellRepository nominatedWellRepository;
 
   @Mock
   private WellQueryService wellQueryService;
 
   @InjectMocks
-  private WellService wellService;
+  private NominatedWellService nominatedWellService;
 
   @Test
   void saveWells_whenFormHasDuplicateWells_verifyNoDuplicateWellsSaved() {
@@ -44,17 +44,17 @@ class WellServiceTest {
 
     when(wellQueryService.getWellsByIdIn(List.of(wellId1, wellId2))).thenReturn(List.of(wellDto1, wellDto2));
 
-    wellService.saveWells(NOMINATION_DETAIL, formWithDuplicateWell);
+    nominatedWellService.saveNominatedWells(NOMINATION_DETAIL, formWithDuplicateWell);
 
-    verify(wellRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
 
     var wellArgumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(wellRepository, times(1)).saveAll(wellArgumentCaptor.capture());
+    verify(nominatedWellRepository, times(1)).saveAll(wellArgumentCaptor.capture());
 
-    var savedWells = (List<Well>) wellArgumentCaptor.getValue();
+    var savedWells = (List<NominatedWell>) wellArgumentCaptor.getValue();
     assertThat(savedWells).extracting(
-        Well::getWellId,
-        Well::getNominationDetail
+        NominatedWell::getWellId,
+        NominatedWell::getNominationDetail
     ).containsExactly(
         tuple(wellDto1.id(), NOMINATION_DETAIL),
         tuple(wellDto2.id(), NOMINATION_DETAIL)
@@ -63,8 +63,8 @@ class WellServiceTest {
 
   @Test
   void findAllByNominationDetail_verifyMethodCall() {
-    wellService.findAllByNominationDetail(NOMINATION_DETAIL);
+    nominatedWellService.findAllByNominationDetail(NOMINATION_DETAIL);
 
-    verify(wellRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
   }
 }
