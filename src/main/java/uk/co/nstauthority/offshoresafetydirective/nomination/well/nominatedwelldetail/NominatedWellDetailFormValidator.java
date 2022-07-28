@@ -15,12 +15,20 @@ class NominatedWellDetailFormValidator implements SmartValidator {
 
   @Override
   public void validate(Object target, Errors errors) {
-    validate(target, errors, null);
+    validate(target, errors, (Object) null);
   }
 
   @Override
   public void validate(Object target, Errors errors, Object... validationHints) {
     var form = (NominatedWellDetailForm) target;
+    if (form.getWells() == null || form.getWells().isEmpty()) {
+      errors.rejectValue(
+          "wellsSelect",
+          "wellsSelect.notEmpty",
+          "You must select at least one well"
+      );
+    }
+
     if (form.getForAllWellPhases() == null) {
       errors.rejectValue(
           "forAllWellPhases",

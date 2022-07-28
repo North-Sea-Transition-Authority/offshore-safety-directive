@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/nominee-details")
@@ -96,7 +97,7 @@ public class NomineeDetailController {
   }
 
   private String getPortalOrganisationSearchUrl() {
-    return PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
+    return RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
         .searchPortalOrganisations(null));
   }
 }

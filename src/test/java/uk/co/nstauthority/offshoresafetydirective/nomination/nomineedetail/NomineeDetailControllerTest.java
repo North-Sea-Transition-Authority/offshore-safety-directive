@@ -30,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @WebMvcTest
 @ContextConfiguration(classes = NomineeDetailController.class)
@@ -86,7 +87,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     var model = modelAndView.getModel();
     var expectedPortalOrganisationsRestUrl =
-        PortalOrganisationUnitRestController.route(
+        RestApiUtil.route(
             on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null));
     var expectedActionUrl =
         ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null));

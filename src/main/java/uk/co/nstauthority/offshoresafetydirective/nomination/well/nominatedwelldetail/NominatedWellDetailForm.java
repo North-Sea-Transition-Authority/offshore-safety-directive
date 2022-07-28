@@ -1,6 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail;
 
-class NominatedWellDetailForm {
+import java.util.List;
+
+public class NominatedWellDetailForm {
+
+  List<Integer> wells;
+
+  String wellsSelect;
 
   private Boolean forAllWellPhases;
 
@@ -9,6 +15,22 @@ class NominatedWellDetailForm {
   private Boolean developmentPhase;
 
   private Boolean decommissioningPhase;
+
+  public List<Integer> getWells() {
+    return wells;
+  }
+
+  public void setWells(List<Integer> wells) {
+    this.wells = wells;
+  }
+
+  public String getWellsSelect() {
+    return wellsSelect;
+  }
+
+  public void setWellsSelect(String wellsSelect) {
+    this.wellsSelect = wellsSelect;
+  }
 
   public Boolean getForAllWellPhases() {
     return forAllWellPhases;

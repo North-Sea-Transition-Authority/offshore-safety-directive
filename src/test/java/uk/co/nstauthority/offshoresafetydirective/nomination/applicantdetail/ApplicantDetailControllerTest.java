@@ -33,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 
 @WebMvcTest
@@ -81,7 +82,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     );
 
     var expectedPortalOrganisationsRestUrl =
-        PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
+        RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchPortalOrganisations(null));
     var expectedActionUrl = ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(null, null));
     var expectedBackLinkUrl = ReverseRouter.route(on(StartNominationController.class).startNomination());
@@ -165,7 +166,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     );
 
     var expectedPortalOrganisationsRestUrl =
-        PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
+        RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchPortalOrganisations(null));
     var expectedActionUrl =
         ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(NOMINATION_ID, null, null));

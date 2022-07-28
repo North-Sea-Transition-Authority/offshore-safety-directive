@@ -3,7 +3,9 @@
 <#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="actionUrl" type="String" -->
-<#-- @ftlvariable name="errorList" type="java.util.List<k.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="alreadyAddedWells" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView>" -->
+<#-- @ftlvariable name="wellsRestUrl" type="String" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -15,6 +17,18 @@
   <@fdsForm.htmlForm
     actionUrl=springUrl(actionUrl)
   >
+    <@fdsAddToList.addToList
+      pathForList="form.wells"
+      pathForSelector="form.wellsSelect"
+      alreadyAdded=alreadyAddedWells
+      title=""
+      itemName="Well"
+      noItemText="No wells added"
+      invalidItemText="This well is invalid"
+      addToListId="well-table"
+      selectorLabelText="Select a well to add to this nomination"
+      restUrl=springUrl(wellsRestUrl)
+    />
     <@fdsRadio.radioGroup
       path="form.forAllWellPhases"
       labelText="Is this nomination for all well phases?"

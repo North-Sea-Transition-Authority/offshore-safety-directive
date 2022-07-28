@@ -55,7 +55,7 @@ public class WellSelectionSetupController {
           wellSelectionSetupService.createOrUpdateWellSelectionSetup(form, nominationId);
           return switch (WellSelectionType.valueOf(form.getWellSelectionType())) {
             case SPECIFIC_WELLS ->
-                ReverseRouter.redirect(on(NominatedWellDetailController.class).renderSpecificSetupWells(nominationId));
+                ReverseRouter.redirect(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId));
             case LICENCE_BLOCK_SUBAREA ->
                 ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList()); //TODO OSDOP-53 update URL
             case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());

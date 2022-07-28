@@ -116,7 +116,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
                 .param("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominatedWellDetailController.class).renderSpecificSetupWells(NOMINATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(NOMINATION_ID))));
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_ID));

@@ -1,30 +1,36 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail;
 
+import java.util.List;
 import javax.transaction.Transactional;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.Well;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellService;
 
 @Service
 class NominatedWellDetailService {
 
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
   private final NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
+  private final WellService wellService;
 
   @Autowired
   NominatedWellDetailService(NominatedWellDetailRepository nominatedWellDetailRepository,
-                             NominatedWellDetailFormValidator nominatedWellDetailFormValidator) {
+                             NominatedWellDetailFormValidator nominatedWellDetailFormValidator,
+                             WellService wellService) {
     this.nominatedWellDetailRepository = nominatedWellDetailRepository;
     this.nominatedWellDetailFormValidator = nominatedWellDetailFormValidator;
+    this.wellService = wellService;
   }
 
   @Transactional
-  public void createOrUpdateSpecificWellsNomination(NominationDetail nominationDetail, NominatedWellDetailForm form) {
+  public void createOrUpdateNominatedWellDetail(NominationDetail nominationDetail, NominatedWellDetailForm form) {
     NominatedWellDetail wellNomination = nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
-        .map(entity -> updateSpecificWellNominationFromForm(nominationDetail, entity, form))
-        .orElseGet(() -> createNewSpecificWellNominationFromForm(nominationDetail, form));
+        .map(entity -> updateNominatedWellDetailFromForm(nominationDetail, entity, form))
+        .orElseGet(() -> createNominatedWellDetailFromForm(nominationDetail, form));
     nominatedWellDetailRepository.save(wellNomination);
   }
 
@@ -35,21 +41,26 @@ class NominatedWellDetailService {
 
   NominatedWellDetailForm getForm(NominationDetail nominationDetail) {
     return nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
-        .map(this::specificWellSetupEntityToForm)
+        .map(this::nominatedWellDetailEntityToForm)
         .orElseGet(NominatedWellDetailForm::new);
   }
 
-  private NominatedWellDetailForm specificWellSetupEntityToForm(NominatedWellDetail entity) {
+  private NominatedWellDetailForm nominatedWellDetailEntityToForm(NominatedWellDetail entity) {
     var form = new NominatedWellDetailForm();
     form.setForAllWellPhases(entity.getForAllWellPhases());
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
+    List<Integer> wellIds = wellService.findAllByNominationDetail(entity.getNominationDetail())
+        .stream()
+        .map(Well::getWellId)
+        .toList();
+    form.setWells(wellIds);
     return form;
   }
 
-  private NominatedWellDetail createNewSpecificWellNominationFromForm(NominationDetail nominationDetail,
-                                                                      NominatedWellDetailForm form) {
+  private NominatedWellDetail createNominatedWellDetailFromForm(NominationDetail nominationDetail,
+                                                                NominatedWellDetailForm form) {
     NominatedWellDetail nominatedWellDetail = new NominatedWellDetail(nominationDetail, form.getForAllWellPhases());
     if (BooleanUtils.isFalse(form.getForAllWellPhases())) {
       nominatedWellDetail
@@ -60,9 +71,9 @@ class NominatedWellDetailService {
     return nominatedWellDetail;
   }
 
-  private NominatedWellDetail updateSpecificWellNominationFromForm(NominationDetail nominationDetail,
-                                                                   NominatedWellDetail nominatedWellDetail,
-                                                                   NominatedWellDetailForm form) {
+  private NominatedWellDetail updateNominatedWellDetailFromForm(NominationDetail nominationDetail,
+                                                                NominatedWellDetail nominatedWellDetail,
+                                                                NominatedWellDetailForm form) {
     nominatedWellDetail.setNominationDetail(nominationDetail);
     nominatedWellDetail.setForAllWellPhases(form.getForAllWellPhases());
     if (BooleanUtils.isTrue(form.getForAllWellPhases())) {

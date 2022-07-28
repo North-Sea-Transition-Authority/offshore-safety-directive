@@ -23,6 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
 @RequestMapping("/nomination")
@@ -128,7 +129,7 @@ public class ApplicantDetailController {
   }
 
   private String getPortalOrganisationSearchUrl() {
-    return PortalOrganisationUnitRestController.route(on(PortalOrganisationUnitRestController.class)
+    return RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
         .searchPortalOrganisations(null));
   }
 

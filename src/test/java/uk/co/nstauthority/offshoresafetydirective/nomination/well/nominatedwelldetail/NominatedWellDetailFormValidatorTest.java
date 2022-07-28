@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class NominatedWellDetailFormValidatorTest {
   }
 
   @Test
-  void supports_whenSpecificWellsSetupForm_thenTrue() {
+  void supports_whenNominatedWellDetailForm_thenTrue() {
     assertTrue(nominatedWellDetailFormValidator.supports(NominatedWellDetailForm.class));
   }
 
@@ -45,8 +46,23 @@ class NominatedWellDetailFormValidatorTest {
   }
 
   @Test
+  void validate_whenNoWellsSelected_thenError() {
+    var form = NominatedWellDetailTestUtil.getValidForm();
+    form.setWells(Collections.emptyList());
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
+    );
+  }
+
+  @Test
   void validate_whenForAllWellPhasesNotSelected_thenError() {
-    var form = new NominatedWellDetailForm();
+    var form = NominatedWellDetailTestUtil.getValidForm();
+    form.setForAllWellPhases(null);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
@@ -59,8 +75,11 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError() {
-    var form = new NominatedWellDetailForm();
+    var form = NominatedWellDetailTestUtil.getValidForm();
     form.setForAllWellPhases(false);
+    form.setExplorationAndAppraisalPhase(null);
+    form.setDevelopmentPhase(null);
+    form.setDecommissioningPhase(null);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
