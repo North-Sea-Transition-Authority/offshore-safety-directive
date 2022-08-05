@@ -18,7 +18,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -31,9 +30,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
 
-@WebMvcTest
 @ContextConfiguration(classes = WellSelectionSetupController.class)
 @WithMockUser
 class WellSelectionSetupControllerTest extends AbstractControllerTest {
@@ -137,7 +136,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
                 .param("wellSelectionType", WellSelectionType.LICENCE_BLOCK_SUBAREA.name())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))));
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_ID));

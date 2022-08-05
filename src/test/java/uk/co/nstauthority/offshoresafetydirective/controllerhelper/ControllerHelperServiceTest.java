@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
@@ -17,7 +16,6 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
 
-@SpringBootTest
 @AutoConfigureTestDatabase
 class ControllerHelperServiceTest extends AbstractControllerTest {
 

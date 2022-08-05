@@ -6,7 +6,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +15,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfiguration
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
-@WebMvcTest
 @ContextConfiguration(classes = {
     DefaultPageControllerAdviceTest.TestController.class,
     DefaultPageControllerAdvice.class

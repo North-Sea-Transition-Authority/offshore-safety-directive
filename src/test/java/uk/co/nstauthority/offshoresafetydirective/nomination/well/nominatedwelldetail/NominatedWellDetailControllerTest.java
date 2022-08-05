@@ -18,7 +18,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +35,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 
-@WebMvcTest
 @ContextConfiguration(classes = NominatedWellDetailController.class)
 @WithMockUser
 class NominatedWellDetailControllerTest extends AbstractControllerTest {

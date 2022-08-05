@@ -16,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnu
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
 
 @Controller
@@ -57,7 +58,7 @@ public class WellSelectionSetupController {
             case SPECIFIC_WELLS ->
                 ReverseRouter.redirect(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId));
             case LICENCE_BLOCK_SUBAREA ->
-                ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList()); //TODO OSDOP-53 update URL
+                ReverseRouter.redirect(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId));
             case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
           };
         }

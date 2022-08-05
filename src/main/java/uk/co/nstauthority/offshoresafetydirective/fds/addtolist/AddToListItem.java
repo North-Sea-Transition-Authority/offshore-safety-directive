@@ -6,5 +6,5 @@ public interface AddToListItem {
 
   String getName();
 
-  Boolean isValid();
+  boolean isValid();
 }

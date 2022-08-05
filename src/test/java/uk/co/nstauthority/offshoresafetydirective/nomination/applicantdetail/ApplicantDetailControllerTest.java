@@ -17,7 +17,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +35,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 
-@WebMvcTest
 @ContextConfiguration(classes = ApplicantDetailController.class)
 @WithMockUser
 class ApplicantDetailControllerTest extends AbstractControllerTest {

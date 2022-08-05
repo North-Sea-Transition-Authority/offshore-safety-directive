@@ -1,8 +1,8 @@
-package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
+package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;
 
-public record WellAddToListView(int id, String name, boolean isValid, String sortKey) implements AddToListItem {
+public record LicenceBlockSubareaAddToListView(int id, String name, boolean isValid, String sortKey) implements AddToListItem {
 
   @Override
   public String getId() {

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
 @AutoConfigureMockMvc
 @IncludeServiceBrandingConfigurationProperties
 @WithDefaultPageControllerAdvice
+@WebMvcTest
 @Import(AbstractControllerTest.TestConfig.class)
 public abstract class AbstractControllerTest {
 

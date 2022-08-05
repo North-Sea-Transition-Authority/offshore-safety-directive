@@ -17,7 +17,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,7 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
-@WebMvcTest
 @ContextConfiguration(classes = NomineeDetailController.class)
 @WithMockUser
 class NomineeDetailControllerTest extends AbstractControllerTest {
