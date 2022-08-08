@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.google.guava:guava:31.0.1-jre'
+	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -27,10 +27,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.security:spring-security-saml2-service-provider'
 	implementation 'org.springframework.session:spring-session-core'
-	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-core:8.5.13'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 
-	runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly 'org.postgresql:postgresql:42.4.1'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
