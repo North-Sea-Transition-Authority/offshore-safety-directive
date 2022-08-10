@@ -1,10 +1,12 @@
 <#include '../../layout/layout.ftl'>
+<#import '../../util/getFirstFormFieldWithError.ftl' as checkBoxValidationUtil>
 
 <#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="portalOrganisationsRestUrl" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<k.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -42,8 +44,11 @@
       hintText="If you are not sure of the planned date, provide an estimated date"
       formId="planned-start-date"
     />
+
+<#--Check which is the first checkbox that is not selected and pass that as the path to the checkBoxGroupComponent to properly bind the error-->
+    <#assign checkboxGroupPath=checkBoxValidationUtil.getFirstFormFieldWithError(["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"])/>
     <@fdsCheckbox.checkboxGroup
-      path="form.operatorHasAuthority"
+      path=checkboxGroupPath
       fieldsetHeadingText="Nominee declarations"
     >
       <@fdsCheckbox.checkboxItem

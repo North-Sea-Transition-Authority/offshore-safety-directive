@@ -76,7 +76,7 @@ class NomineeDetailFormValidatorTest {
   }
 
   @Test
-  void validate_whenSecondDeclarationsNotTicked_tthenAssertCheckBoxGroupError() {
+  void validate_whenSecondDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
     var invalidForm = NomineeDetailTestingUtil.getValidNomineeDetailForm();
     invalidForm.setLicenseeAcknowledgeOperatorRequirements(null);
     invalidForm.setOperatorHasCapacity(null);
@@ -84,7 +84,7 @@ class NomineeDetailFormValidatorTest {
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
     assertThat(extractedErrors).containsExactly(
-        entry("operatorHasAuthority", Set.of("operatorHasAuthority.required"))
+        entry("licenseeAcknowledgeOperatorRequirements", Set.of("licenseeAcknowledgeOperatorRequirements.required"))
     );
   }
 
@@ -96,7 +96,7 @@ class NomineeDetailFormValidatorTest {
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
     assertThat(extractedErrors).containsExactly(
-        entry("operatorHasAuthority", Set.of("operatorHasAuthority.required"))
+        entry("operatorHasCapacity", Set.of("operatorHasCapacity.required"))
     );
   }
 
