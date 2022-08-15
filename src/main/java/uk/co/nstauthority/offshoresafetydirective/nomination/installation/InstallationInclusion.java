@@ -10,8 +10,8 @@ import javax.persistence.Table;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
-@Table(name = "installation_advice")
-public class InstallationAdvice {
+@Table(name = "installation_inclusion")
+public class InstallationInclusion {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ public class InstallationAdvice {
     return nominationDetail;
   }
 
-  public InstallationAdvice setNominationDetail(NominationDetail nominationDetail) {
+  public InstallationInclusion setNominationDetail(NominationDetail nominationDetail) {
     this.nominationDetail = nominationDetail;
     return this;
   }
@@ -40,14 +40,14 @@ public class InstallationAdvice {
     return includeInstallationsInNomination;
   }
 
-  public InstallationAdvice setIncludeInstallationsInNomination(Boolean includeInstallationsInNomination) {
+  public InstallationInclusion setIncludeInstallationsInNomination(Boolean includeInstallationsInNomination) {
     this.includeInstallationsInNomination = includeInstallationsInNomination;
     return this;
   }
 
   @Override
   public String toString() {
-    return "InstallationAdvice{" +
+    return "InstallationInclusion{" +
         "id=" + id +
         ", nominationDetail=" + nominationDetail +
         ", includeInstallationsInNomination=" + includeInstallationsInNomination +

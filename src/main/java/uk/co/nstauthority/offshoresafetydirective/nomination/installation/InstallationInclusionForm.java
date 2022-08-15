@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-class InstallationAdviceForm {
+class InstallationInclusionForm {
 
   private Boolean includeInstallationsInNomination;
 
@@ -8,14 +8,14 @@ class InstallationAdviceForm {
     return includeInstallationsInNomination;
   }
 
-  public InstallationAdviceForm setIncludeInstallationsInNomination(Boolean includeInstallationsInNomination) {
+  public InstallationInclusionForm setIncludeInstallationsInNomination(Boolean includeInstallationsInNomination) {
     this.includeInstallationsInNomination = includeInstallationsInNomination;
     return this;
   }
 
   @Override
   public String toString() {
-    return "InstallationAdviceForm{" +
+    return "InstallationInclusionForm{" +
         "includeInstallationsInNomination=" + includeInstallationsInNomination +
         '}';
   }

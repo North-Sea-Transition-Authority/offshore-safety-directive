@@ -5,16 +5,16 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 
 @Service
-class InstallationAdviceFormValidator implements SmartValidator {
+class InstallationInclusionFormValidator implements SmartValidator {
 
   @Override
   public boolean supports(Class<?> clazz) {
-    return InstallationAdviceForm.class.equals(clazz);
+    return InstallationInclusionForm.class.equals(clazz);
   }
 
   @Override
   public void validate(Object target, Errors errors, Object... validationHints) {
-    var form = (InstallationAdviceForm) target;
+    var form = (InstallationInclusionForm) target;
     if (form.getIncludeInstallationsInNomination() == null) {
       errors.rejectValue(
           "includeInstallationsInNomination",

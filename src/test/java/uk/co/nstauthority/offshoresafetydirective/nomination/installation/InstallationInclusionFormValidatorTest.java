@@ -14,41 +14,41 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
-class InstallationAdviceFormValidatorTest {
+class InstallationInclusionFormValidatorTest {
 
-  private static InstallationAdviceFormValidator installationAdviceFormValidator;
+  private static InstallationInclusionFormValidator installationInclusionFormValidator;
 
   @BeforeAll
   static void setup() {
-    installationAdviceFormValidator = new InstallationAdviceFormValidator();
+    installationInclusionFormValidator = new InstallationInclusionFormValidator();
   }
 
   @Test
   void supports_whenInstallationAdviceForm_thenTrue() {
-    assertTrue(installationAdviceFormValidator.supports(InstallationAdviceForm.class));
+    assertTrue(installationInclusionFormValidator.supports(InstallationInclusionForm.class));
   }
 
   @Test
   void supports_whenNotInstallationAdviceForm_thenFalse() {
-    assertFalse(installationAdviceFormValidator.supports(NonSupportedClass.class));
+    assertFalse(installationInclusionFormValidator.supports(NonSupportedClass.class));
   }
 
   @Test
   void validate_whenValidForm_thenNoErrors() {
-    var validForm = new InstallationAdviceFormTestUtil.InstallationAdviceFormBuilder().build();
+    var validForm = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder().build();
     var bindingResult = new BeanPropertyBindingResult(validForm, "form");
 
-    installationAdviceFormValidator.validate(validForm, bindingResult);
+    installationInclusionFormValidator.validate(validForm, bindingResult);
 
     assertFalse(bindingResult.hasErrors());
   }
 
   @Test
   void validate_whenInvalidForm_thenAssertErrors() {
-    var invalidForm = new InstallationAdviceForm();
+    var invalidForm = new InstallationInclusionForm();
     var bindingResult = new BeanPropertyBindingResult(invalidForm, "form");
 
-    installationAdviceFormValidator.validate(invalidForm, bindingResult);
+    installationInclusionFormValidator.validate(invalidForm, bindingResult);
 
     assertTrue(bindingResult.hasErrors());
 

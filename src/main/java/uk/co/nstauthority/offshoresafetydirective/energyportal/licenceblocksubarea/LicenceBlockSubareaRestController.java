@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
@@ -22,7 +21,6 @@ public class LicenceBlockSubareaRestController {
   }
 
   @GetMapping
-  @ResponseBody
   public RestSearchResult searchWells(@RequestParam("term") String searchTerm) {
     List<RestSearchItem> searchItemsResult = licenceBlockSubareaQueryService.queryLicenceBlockSubareaByName(searchTerm)
         .stream()

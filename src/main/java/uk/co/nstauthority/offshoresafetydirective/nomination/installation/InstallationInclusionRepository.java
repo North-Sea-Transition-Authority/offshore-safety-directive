@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Repository
-interface InstallationAdviceRepository extends CrudRepository<InstallationAdvice, Integer> {
-  Optional<InstallationAdvice> findByNominationDetail(NominationDetail nominationDetail);
+interface InstallationInclusionRepository extends CrudRepository<InstallationInclusion, Integer> {
+  Optional<InstallationInclusion> findByNominationDetail(NominationDetail nominationDetail);
 }
