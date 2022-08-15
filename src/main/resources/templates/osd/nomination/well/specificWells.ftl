@@ -6,6 +6,7 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="alreadyAddedWells" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView>" -->
 <#-- @ftlvariable name="wellsRestUrl" type="String" -->
+<#-- @ftlvariable name="wellPhases" type="java.util.Map<String, String>" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -44,15 +45,15 @@
         >
           <@fdsCheckbox.checkboxItem
             path="form.explorationAndAppraisalPhase"
-            labelText="Exploration & Appraisal"
+            labelText=wellPhases["EXPLORATION_AND_APPRAISAL"]
           />
           <@fdsCheckbox.checkboxItem
             path="form.developmentPhase"
-            labelText="Development"
+            labelText=wellPhases["DEVELOPMENT"]
           />
           <@fdsCheckbox.checkboxItem
             path="form.decommissioningPhase"
-            labelText="Decommissioning"
+            labelText=wellPhases["DECOMMISSIONING"]
           />
         </@fdsCheckbox.checkboxGroup>
       </@fdsRadio.radioNo>

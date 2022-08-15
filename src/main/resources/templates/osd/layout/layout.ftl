@@ -7,8 +7,8 @@
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 
 <#macro defaultPage
-  htmlTitle
-  pageHeading=""
+  pageHeading
+  htmlTitle=pageHeading
   errorItems=[]
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN

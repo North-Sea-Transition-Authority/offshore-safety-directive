@@ -46,16 +46,18 @@ class NominatedWellDetail {
     return nominationDetail;
   }
 
-  void setNominationDetail(NominationDetail nominationDetail) {
+  NominatedWellDetail setNominationDetail(NominationDetail nominationDetail) {
     this.nominationDetail = nominationDetail;
+    return this;
   }
 
   Boolean getForAllWellPhases() {
     return forAllWellPhases;
   }
 
-  void setForAllWellPhases(Boolean forAllWellPhases) {
+  NominatedWellDetail setForAllWellPhases(Boolean forAllWellPhases) {
     this.forAllWellPhases = forAllWellPhases;
+    return this;
   }
 
   Boolean getExplorationAndAppraisalPhase() {

@@ -23,6 +23,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
@@ -31,9 +32,9 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 
 @ContextConfiguration(classes = NominatedWellDetailController.class)
 @WithMockUser
@@ -76,6 +77,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         "actionUrl",
         "wellsRestUrl",
         "alreadyAddedWells",
+        "wellPhases",
         "serviceBranding",
         "customerBranding",
         "serviceHomeUrl",
@@ -93,6 +95,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     assertEquals(expectedBackLinkUrl, model.get("backLinkUrl"));
     assertEquals(NominatedWellDetailController.PAGE_TITLE, model.get("pageTitle"));
     assertEquals(expectedActionUrl, model.get("actionUrl"));
+    assertEquals(DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class), model.get("wellPhases"));
   }
 
   @Test
@@ -111,6 +114,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andReturn()
         .getModelAndView();
 
+    @SuppressWarnings("unchecked")
     var returnedAlreadyAddedWells = (List<WellAddToListView>) modelAndView.getModel().get("alreadyAddedWells");
     assertThat(returnedAlreadyAddedWells)
         .extracting(
@@ -137,7 +141,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))));
 
     verify(nominatedWellDetailService, times(1)).createOrUpdateNominatedWellDetail(eq(NOMINATION_DETAIL), any());
     verify(nominatedWellService, times(1)).saveNominatedWells(eq(NOMINATION_DETAIL), any());

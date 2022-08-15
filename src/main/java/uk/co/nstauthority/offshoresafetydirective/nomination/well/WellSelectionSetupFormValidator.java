@@ -20,7 +20,6 @@ class WellSelectionSetupFormValidator implements SmartValidator {
 
   @Override
   public void validate(Object target, Errors errors, Object... validationHints) {
-    var t = validationHints.length;
     var form = (WellSelectionSetupForm) target;
     if (form.getWellSelectionType() == null
         || !EnumValidationUtil.isValidEnumValue(WellSelectionType.class, form.getWellSelectionType())) {

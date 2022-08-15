@@ -34,15 +34,15 @@ class WellSelectionSetupServiceTest {
   private WellSelectionSetupFormValidator wellSelectionSetupFormValidator;
 
   @InjectMocks
-  private WellSelectionSetupService WellSelectionSetupService;
+  private WellSelectionSetupService wellSelectionSetupService;
 
   @Test
   void createOrUpdateWellSetup_givenAForm_assertEntityFields() {
-    var form = WellSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupTestUtil.getValidForm();
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
     when(wellSelectionSetupRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
-    WellSelectionSetupService.createOrUpdateWellSelectionSetup(form, NOMINATION_ID);
+    wellSelectionSetupService.createOrUpdateWellSelectionSetup(form, NOMINATION_ID);
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetup.class);
     verify(wellSelectionSetupRepository, times(1)).save(wellSetupCaptor.capture());
@@ -60,10 +60,10 @@ class WellSelectionSetupServiceTest {
 
   @Test
   void getForm_whenEntityExists_thenAssertFieldsMatch() {
-    var wellSetup = WellSetupTestUtil.getWellSetup(NOMINATION_DETAIL);
+    var wellSetup = WellSelectionSetupTestUtil.getWellSelectionSetup(NOMINATION_DETAIL);
     when(wellSelectionSetupRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(wellSetup));
 
-    var form = WellSelectionSetupService.getForm(NOMINATION_DETAIL);
+    var form = wellSelectionSetupService.getForm(NOMINATION_DETAIL);
 
     assertThat(form)
         .extracting(WellSelectionSetupForm::getWellSelectionType)
@@ -74,17 +74,17 @@ class WellSelectionSetupServiceTest {
   void getForm_whenNoEntityExist_thenReturnEmptyForm() {
     when(wellSelectionSetupRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
-    var form = WellSelectionSetupService.getForm(NOMINATION_DETAIL);
+    var form = wellSelectionSetupService.getForm(NOMINATION_DETAIL);
 
     assertNull(form.getWellSelectionType());
   }
 
   @Test
   void validate_verifyMethodCall() {
-    var form = WellSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupTestUtil.getValidForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    WellSelectionSetupService.validate(form, bindingResult);
+    wellSelectionSetupService.validate(form, bindingResult);
 
     verify(wellSelectionSetupFormValidator, times(1)).validate(form, bindingResult);
   }

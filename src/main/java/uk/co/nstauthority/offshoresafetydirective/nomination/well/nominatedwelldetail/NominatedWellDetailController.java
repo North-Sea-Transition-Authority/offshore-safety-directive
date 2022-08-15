@@ -15,14 +15,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
@@ -72,7 +73,7 @@ public class NominatedWellDetailController {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedWellDetailService.createOrUpdateNominatedWellDetail(nominationDetail, form);
           nominatedWellService.saveNominatedWells(nominationDetail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
+          return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
         }
     );
   }
@@ -88,7 +89,8 @@ public class NominatedWellDetailController {
             ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null))
         )
         .addObject("wellsRestUrl", getWellsSearchUrl())
-        .addObject("alreadyAddedWells", getWellViews(form));
+        .addObject("alreadyAddedWells", getWellViews(form))
+        .addObject("wellPhases", DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class));
   }
 
   private String getWellsSearchUrl() {

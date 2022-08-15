@@ -38,7 +38,9 @@ class NominatedWellDetailServiceTest {
 
   @Test
   void createOrUpdateNominatedWellDetail_whenForAllPhases_thenSpecificPhasesAreNull() {
-    var specificWellSetup = NominatedWellDetailTestUtil.getNominatedWellDetail(NOMINATION_DETAIL);
+    var specificWellSetup = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder()
+        .withNominationDetail(NOMINATION_DETAIL)
+        .build();
     specificWellSetup.setForAllWellPhases(false);
     specificWellSetup.setExplorationAndAppraisalPhase(true);
     specificWellSetup.setDevelopmentPhase(true);
@@ -119,7 +121,9 @@ class NominatedWellDetailServiceTest {
 
   @Test
   void getForm_whenEntityExist_thenFormMatchesEntityFields() {
-    var nominatedWellDetail = NominatedWellDetailTestUtil.getNominatedWellDetail(NOMINATION_DETAIL);
+    var nominatedWellDetail = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder()
+        .withNominationDetail(NOMINATION_DETAIL)
+        .build();
     var well1 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
     well1.setWellId(1);
     var well2 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);

@@ -2,10 +2,10 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
-public class WellSetupTestUtil {
+public class WellSelectionSetupTestUtil {
 
-  private WellSetupTestUtil() {
-    throw new IllegalStateException("WellSetupTestUtil is an util class and should not be instantiated");
+  private WellSelectionSetupTestUtil() {
+    throw new IllegalStateException("WellSelectionSetupTestUtil is an util class and should not be instantiated");
   }
 
   static WellSelectionSetupForm getValidForm() {
@@ -14,7 +14,7 @@ public class WellSetupTestUtil {
     return form;
   }
 
-  static WellSelectionSetup getWellSetup(NominationDetail nominationDetail) {
+  public static WellSelectionSetup getWellSelectionSetup(NominationDetail nominationDetail) {
     var wellSetup = new WellSelectionSetup(1);
     wellSetup.setNominationDetail(nominationDetail);
     wellSetup.setSelectionType(WellSelectionType.NO_WELLS);

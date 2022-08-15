@@ -35,7 +35,7 @@ class WellSelectionSetupFormValidatorTest {
 
   @Test
   void validate_whenValidForm_assertNoErrors() {
-    var validForm = WellSetupTestUtil.getValidForm();
+    var validForm = WellSelectionSetupTestUtil.getValidForm();
     var bindingResult = new BeanPropertyBindingResult(validForm, "form");
 
     wellSelectionSetupFormValidator.validate(validForm, bindingResult);
