@@ -32,57 +32,49 @@ public class NominationDetail {
   @Enumerated(EnumType.STRING)
   private NominationStatus status;
 
-  public NominationDetail() {
-  }
-
-  public NominationDetail(Nomination nomination,
-                          Instant createdInstant,
-                          Integer version,
-                          NominationStatus status) {
-    this.nomination = nomination;
-    this.createdInstant = createdInstant;
-    this.version = version;
-    this.status = status;
-  }
-
-  public NominationDetail(Integer id) {
-    this.id = id;
-  }
-
   Integer getId() {
     return id;
   }
 
-  Nomination getNomination() {
+  NominationDetail setId(Integer id) {
+    this.id = id;
+    return this;
+  }
+
+  public Nomination getNomination() {
     return nomination;
   }
 
-  void setNomination(Nomination nomination) {
+  NominationDetail setNomination(Nomination nomination) {
     this.nomination = nomination;
+    return this;
   }
 
   Instant getCreatedInstant() {
     return createdInstant;
   }
 
-  void setCreatedInstant(Instant createdInstant) {
+  NominationDetail setCreatedInstant(Instant createdInstant) {
     this.createdInstant = createdInstant;
+    return this;
   }
 
   Integer getVersion() {
     return version;
   }
 
-  void setVersion(Integer version) {
+  NominationDetail setVersion(Integer version) {
     this.version = version;
+    return this;
   }
 
   NominationStatus getStatus() {
     return status;
   }
 
-  void setStatus(NominationStatus status) {
+  NominationDetail setStatus(NominationStatus status) {
     this.status = status;
+    return this;
   }
 
   @Override

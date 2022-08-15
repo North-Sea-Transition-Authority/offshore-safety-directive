@@ -14,6 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
@@ -37,13 +38,13 @@ public class InstallationInclusionController {
   }
 
   @GetMapping
-  public ModelAndView getInstallationInclusion(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getInstallationInclusion(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getModelAndView(nominationId, installationInclusionService.getForm(nominationDetail));
   }
 
   @PostMapping
-  public ModelAndView saveInstallationInclusion(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveInstallationInclusion(@PathVariable("nominationId") NominationId nominationId,
                                                 @ModelAttribute("form") InstallationInclusionForm form,
                                                 BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
@@ -57,17 +58,17 @@ public class InstallationInclusionController {
             return ReverseRouter.redirect(
                 on(NominatedInstallationController.class).getNominatedInstallationDetail(nominationId));
           } else {
-            return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
+            return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
           }
         }
     );
   }
 
-  private ModelAndView getModelAndView(Integer nominationId, InstallationInclusionForm form) {
+  private ModelAndView getModelAndView(NominationId nominationId, InstallationInclusionForm form) {
     return new ModelAndView("osd/nomination/installation/installationInclusion")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_TITLE)
-        .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList()))
+        .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject(
             "actionUrl",
             ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(nominationId, null, null))

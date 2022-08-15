@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
@@ -33,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -41,8 +43,9 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 @WithMockUser
 class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
-  private static final int NOMINATION_ID = 42;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -51,7 +54,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   private NominatedBlockSubareaDetailService nominatedBlockSubareaDetailService;
 
   @MockBean
-  private NominatedBlockSubareaService nominatedBlockSubareaService;
+  NominatedBlockSubareaService nominatedBlockSubareaService;
 
   @MockBean
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -64,10 +67,11 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/well/blockSubarea"))
         .andReturn()
         .getModelAndView();
 
-    assertEquals("osd/nomination/well/blockSubarea", modelAndView.getViewName());
+    assertNotNull(modelAndView);
 
     var model = modelAndView.getModel();
     assertThat(model).containsOnlyKeys(
@@ -115,6 +119,8 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .getModelAndView();
 
     assertNotNull(modelAndView);
+
+    @SuppressWarnings("unchecked")
     var returnedAlreadyAddedSubareas = (List<LicenceBlockSubareaAddToListView>) modelAndView.getModel().get("alreadyAddedSubareas");
     assertThat(returnedAlreadyAddedSubareas)
         .extracting(
@@ -143,7 +149,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
 
     verify(nominatedBlockSubareaDetailService, times(1)).createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
   }

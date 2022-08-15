@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @Service
 class WellSelectionSetupService {
@@ -24,7 +25,7 @@ class WellSelectionSetupService {
   }
 
   @Transactional
-  public void createOrUpdateWellSelectionSetup(WellSelectionSetupForm form, int nominationId) {
+  public void createOrUpdateWellSelectionSetup(WellSelectionSetupForm form, NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     var wellSetup = wellSelectionSetupRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateWellSelectionSetupWithForm(nominationDetail, entity, form))

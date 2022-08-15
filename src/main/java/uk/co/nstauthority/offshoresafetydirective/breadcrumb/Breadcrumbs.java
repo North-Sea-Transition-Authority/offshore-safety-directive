@@ -5,7 +5,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.LinkedHashSet;
 import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 public class Breadcrumbs {
@@ -35,17 +34,22 @@ public class Breadcrumbs {
     }
 
     public BreadcrumbsBuilder addWorkAreaBreadcrumb() {
-      breadcrumbs.add(new BreadcrumbItem("Work area", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())));
-      return this;
-    }
-
-    public BreadcrumbsBuilder addTaskListBreadcrumb() {
-      breadcrumbs.add(new BreadcrumbItem("Task list", ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+      breadcrumbs.add(
+          new BreadcrumbItem(
+              WorkAreaController.WORK_AREA_TITLE,
+              ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+          )
+      );
       return this;
     }
 
     public BreadcrumbsBuilder addBreadcrumb(String prompt, String endpoint) {
       breadcrumbs.add(new BreadcrumbItem(prompt, endpoint));
+      return this;
+    }
+
+    public BreadcrumbsBuilder addBreadcrumb(BreadcrumbItem breadcrumbItem) {
+      breadcrumbs.add(breadcrumbItem);
       return this;
     }
 

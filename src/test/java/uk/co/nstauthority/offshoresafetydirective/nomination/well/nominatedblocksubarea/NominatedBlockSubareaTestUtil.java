@@ -10,7 +10,7 @@ class NominatedBlockSubareaTestUtil {
   }
 
   public static class NominatedBlockSubareaBuilder {
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Integer blockSubareaId = 1;
 
     public NominatedBlockSubareaBuilder withNominationDetail(NominationDetail nominationDetail) {

@@ -27,20 +27,21 @@ public class NominationService {
 
   @Transactional
   public NominationDetail startNomination() {
-    var nomination = new Nomination(clock.instant());
-    var detail = new NominationDetail(
-        nomination,
-        clock.instant(),
-        FIRST_VERSION,
-        NominationStatus.DRAFT
-    );
+    var nomination = new Nomination()
+        .setCreatedInstant(clock.instant());
+
+    var nominationDetail = new NominationDetail()
+        .setNomination(nomination)
+        .setCreatedInstant(clock.instant())
+        .setVersion(FIRST_VERSION)
+        .setStatus(NominationStatus.DRAFT);
+
     nominationRepository.save(nomination);
-    nominationDetailRepository.save(detail);
-    return detail;
+    return nominationDetailRepository.save(nominationDetail);
   }
 
-  Nomination getNominationByIdOrError(Integer nominationId) {
-    return nominationRepository.findById(nominationId)
+  Nomination getNominationByIdOrError(NominationId nominationId) {
+    return nominationRepository.findById(nominationId.id())
         .orElseThrow(() -> {
           throw new OsdEntityNotFoundException(String.format("Cannot find Nomination with ID: %s", nominationId));
         });

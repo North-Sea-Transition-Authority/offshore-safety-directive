@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHel
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
@@ -39,13 +40,13 @@ public class WellSelectionSetupController {
   }
 
   @GetMapping
-  public ModelAndView getWellSetup(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getWellSetup(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getWellSetupModelAndView(wellSelectionSetupService.getForm(nominationDetail), nominationId);
   }
 
   @PostMapping
-  public ModelAndView saveWellSetup(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveWellSetup(@PathVariable("nominationId") NominationId nominationId,
                                     @ModelAttribute("form") WellSelectionSetupForm form,
                                     BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
@@ -56,10 +57,12 @@ public class WellSelectionSetupController {
           wellSelectionSetupService.createOrUpdateWellSelectionSetup(form, nominationId);
           return switch (WellSelectionType.valueOf(form.getWellSelectionType())) {
             case SPECIFIC_WELLS ->
-                ReverseRouter.redirect(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId));
+                ReverseRouter.redirect(on(NominatedWellDetailController.class)
+                    .renderNominatedWellDetail(nominationId));
             case LICENCE_BLOCK_SUBAREA ->
-                ReverseRouter.redirect(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId));
-            case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
+                ReverseRouter.redirect(on(NominatedBlockSubareaController.class)
+                    .getLicenceBlockSubareas(nominationId));
+            case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
           };
         }
     );
@@ -67,8 +70,8 @@ public class WellSelectionSetupController {
 
 
 
-  private ModelAndView getWellSetupModelAndView(WellSelectionSetupForm form, int nominationId) {
-    var backLinkUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList());
+  private ModelAndView getWellSetupModelAndView(WellSelectionSetupForm form, NominationId nominationId) {
+    var backLinkUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId));
     var actionUrl = ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(nominationId, null, null));
     return new ModelAndView("osd/nomination/well/wellSelectionSetup")
         .addObject("form", form)

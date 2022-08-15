@@ -29,29 +29,35 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @ContextConfiguration(classes = NomineeDetailController.class)
 @WithMockUser
 class NomineeDetailControllerTest extends AbstractControllerTest {
 
-  private final Integer nominationId = 1;
-  private final NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+  private final NominationId nominationId = new NominationId(1);
+  private final NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+      .withNominationId(nominationId)
+      .build();
   private final NomineeDetailForm form = new NomineeDetailForm();
 
   @MockBean
   private NominationDetailService nominationDetailService;
 
   @MockBean
-  private NomineeDetailService nomineeDetailService;
+  private NomineeDetailFormService nomineeDetailFormService;
 
   @MockBean
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
+  @MockBean
+  private NomineeDetailPersistenceService nomineeDetailPersistenceService;
+
   @BeforeEach
   void setup() {
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-    when(nomineeDetailService.getForm(nominationDetail)).thenReturn(form);
+    when(nomineeDetailFormService.getForm(nominationDetail)).thenReturn(form);
     when(portalOrganisationUnitQueryService.getOrganisationById(any())).thenReturn(Optional.empty());
   }
 
@@ -63,6 +69,8 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andReturn()
         .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
 
     assertEquals("osd/nomination/nomineeDetails/nomineeDetail", modelAndView.getViewName());
     assertThat(modelAndView.getModel()).containsOnlyKeys(
@@ -98,7 +106,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   @Test
   void saveNomineeDetail_whenValidForm_verifyMethodCalls() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    when(nomineeDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nomineeDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null)))
@@ -106,15 +114,15 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().is3xxRedirection());
 
-    verify(nomineeDetailService, times(1)).validate(any(), any());
+    verify(nomineeDetailFormService, times(1)).validate(any(), any());
     verify(nominationDetailService, times(1)).getLatestNominationDetail(nominationId);
-    verify(nomineeDetailService, times(1)).createOrUpdateNomineeDetail(eq(nominationDetail), any());
+    verify(nomineeDetailPersistenceService, times(1)).createOrUpdateNomineeDetail(eq(nominationDetail), any());
   }
 
   @Test
   void saveNomineeDetail_whenInvalidForm_verifyStatusIsOk() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    when(nomineeDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nomineeDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
     mockMvc.perform(
@@ -123,7 +131,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(nomineeDetailService, times(1)).validate(any(), any());
-    verify(nomineeDetailService, never()).createOrUpdateNomineeDetail(any(), any());
+    verify(nomineeDetailFormService, times(1)).validate(any(), any());
+    verify(nomineeDetailPersistenceService, never()).createOrUpdateNomineeDetail(any(), any());
   }
 }

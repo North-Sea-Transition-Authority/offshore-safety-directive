@@ -12,7 +12,7 @@ class NominatedInstallationDetailTestUtil {
   
   public static class NominatedInstallationDetailBuilder {
 
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
     private Boolean developmentConstructionPhase;

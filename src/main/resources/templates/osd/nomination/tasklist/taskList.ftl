@@ -1,13 +1,14 @@
 <#include '../../layout/layout.ftl'>
 
-<#assign pageTitle = "Nomination" />
+<#-- @ftlvariable name="taskListSections" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView>" -->
+<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
+
+<#assign pageTitle = "${serviceBranding.mnemonic()} operator nomination" />
 
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
   pageSize=PageSize.TWO_THIRDS_COLUMN
 >
-  <p class="govuk-body">
-    This is a task list
-  </p>
+  <@taskList.standardTaskList taskListSections=taskListSections />
 </@defaultPage>

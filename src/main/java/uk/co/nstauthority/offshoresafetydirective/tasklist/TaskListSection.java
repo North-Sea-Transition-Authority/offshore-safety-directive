@@ -35,18 +35,11 @@ public interface TaskListSection<T> {
   int getDisplayOrder();
 
   /**
-   * Used to retrieve a read-only view of the current section and associated items.
-   * The result is to be passed to the frontend.
-   * <p>
-   * Work is required inside this method when implementing a section as it needs to inject all package-specific
-   * extensions of the {@link TaskListItem}.
-   * </p>
-   * <p>
-   * The method should filter by a TaskListItem's {@code TaskListItem::getTaskListSection}
-   * </p>
-   * @param target The object to pass through to each associated project-scoped {@link TaskListItem}.
-   * @return TaskListSectionView related to self.
+   * Determines the warning text to show for the section on the task list.
+   * @return the warning text for the section
    */
-  TaskListSectionView getSectionView(T target);
+  default String getSectionWarningText() {
+    return "";
+  }
 
 }

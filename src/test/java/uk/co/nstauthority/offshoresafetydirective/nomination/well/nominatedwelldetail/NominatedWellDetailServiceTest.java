@@ -22,7 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellT
 @ExtendWith(MockitoExtension.class)
 class NominatedWellDetailServiceTest {
 
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @Mock
   private NominatedWellDetailRepository nominatedWellDetailRepository;

@@ -29,6 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -39,12 +40,14 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 @WithMockUser
 class ApplicantDetailControllerTest extends AbstractControllerTest {
 
-  private final int NOMINATION_ID = 1;
+  private final NominationId nominationId = new NominationId(10);
 
-  private final NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+  private final NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+      .withNominationId(nominationId)
+      .build();
 
   @MockBean
-  private ApplicantDetailService applicantDetailService;
+  private ApplicantDetailFormService applicantDetailFormService;
 
   @MockBean
   private NominationService nominationService;
@@ -53,7 +56,10 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   private NominationDetailService nominationDetailService;
 
   @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+  PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @MockBean
+  private ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
   @Test
   void getNewApplicantDetails_assertModelProperties() throws Exception {
@@ -63,6 +69,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andReturn()
         .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
 
     assertThat(modelAndView.getModel()).containsOnlyKeys(
         "form",
@@ -102,19 +110,19 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(applicantDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationService.startNomination()).thenReturn(nominationDetail);
-    when(applicantDetailService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
+    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))));
 
     verify(nominationService, times(1)).startNomination();
-    verify(applicantDetailService, times(1)).createOrUpdateApplicantDetail(any(), eq(nominationDetail));
+    verify(applicantDetailPersistenceService, times(1)).createOrUpdateApplicantDetail(any(), eq(nominationDetail));
   }
 
   @Test
@@ -123,7 +131,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
-    when(applicantDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))
@@ -132,19 +140,23 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     verify(nominationService, never()).startNomination();
-    verify(applicantDetailService, never()).createOrUpdateApplicantDetail(any(), any());
+    verify(applicantDetailPersistenceService, never()).createOrUpdateApplicantDetail(any(), any());
   }
 
   @Test
   void getUpdateApplicantDetails_assertModelProperties() throws Exception {
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-    when(applicantDetailService.getForm(nominationDetail)).thenReturn(ApplicantDetailTestUtil.getValidApplicantDetailForm());
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(ApplicantDetailTestUtil.getValidApplicantDetailForm());
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(NOMINATION_ID)))
+            get(ReverseRouter.route(
+                on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId)
+            ))
         )
         .andExpect(status().isOk())
         .andReturn()
         .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
 
     assertThat(modelAndView.getModel()).containsOnlyKeys(
         "form",
@@ -167,7 +179,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchPortalOrganisations(null));
     var expectedActionUrl =
-        ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(NOMINATION_ID, null, null));
+        ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null));
 
     assertThat(modelAndView.getModel()).containsAllEntriesOf(Map.of(
         "portalOrganisationsRestUrl", expectedPortalOrganisationsRestUrl,
@@ -185,18 +197,20 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(applicantDetailService.validate(any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-    when(applicantDetailService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(NOMINATION_ID, form, null)))
+            post(ReverseRouter.route(
+                on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null)
+            ))
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))));
 
-    verify(applicantDetailService, times(1)).createOrUpdateApplicantDetail(any(), eq(nominationDetail));
+    verify(applicantDetailPersistenceService, times(1)).createOrUpdateApplicantDetail(any(), eq(nominationDetail));
     verify(nominationService, never()).startNomination();
   }
 
@@ -206,15 +220,17 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
-    when(applicantDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(NOMINATION_ID, form, null)))
+            post(ReverseRouter.route(
+                on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null)
+            ))
                 .with(csrf())
         )
         .andExpect(status().isOk());
 
     verify(nominationService, never()).startNomination();
-    verify(applicantDetailService, never()).createOrUpdateApplicantDetail(any(), any());
+    verify(applicantDetailPersistenceService, never()).createOrUpdateApplicantDetail(any(), any());
   }
 }

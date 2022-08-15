@@ -15,11 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
@@ -31,45 +33,49 @@ public class NomineeDetailController {
 
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
-  private final NomineeDetailService nomineeDetailService;
+  private final NomineeDetailFormService nomineeDetailFormService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
 
   @Autowired
   public NomineeDetailController(
       ControllerHelperService controllerHelperService,
       NominationDetailService nominationDetailService,
-      NomineeDetailService nomineeDetailService,
-      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+      NomineeDetailFormService nomineeDetailFormService,
+      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+      NomineeDetailPersistenceService nomineeDetailPersistenceService) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
-    this.nomineeDetailService = nomineeDetailService;
+    this.nomineeDetailFormService = nomineeDetailFormService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+    this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
   }
 
   @GetMapping
-  public ModelAndView getNomineeDetail(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getNomineeDetail(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nomineeDetailService.getForm(detail), nominationId);
+    return getModelAndView(nomineeDetailFormService.getForm(detail), nominationId);
   }
 
   @PostMapping
-  public ModelAndView saveNomineeDetail(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveNomineeDetail(@PathVariable("nominationId") NominationId nominationId,
                                         @ModelAttribute("form") NomineeDetailForm form,
                                         BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
-        nomineeDetailService.validate(form, bindingResult),
+        nomineeDetailFormService.validate(form, bindingResult),
         getModelAndView(form, nominationId),
         form,
         () -> {
           var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nomineeDetailService.createOrUpdateNomineeDetail(detail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
+          nomineeDetailPersistenceService.createOrUpdateNomineeDetail(detail, form);
+          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
         }
     );
   }
 
   private ModelAndView getModelAndView(NomineeDetailForm form,
-                                       Integer nominationId) {
+                                       NominationId nominationId) {
     var modelAndView = new ModelAndView("osd/nomination/nomineeDetails/nomineeDetail")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_NAME)
@@ -81,7 +87,7 @@ public class NomineeDetailController {
         );
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_NAME)
         .addWorkAreaBreadcrumb()
-        .addTaskListBreadcrumb()
+        .addBreadcrumb(NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId))
         .build();
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
     return modelAndView;

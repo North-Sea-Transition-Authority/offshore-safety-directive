@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -48,13 +49,13 @@ public class NominatedInstallationController {
   }
 
   @GetMapping
-  public ModelAndView getNominatedInstallationDetail(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getNominatedInstallationDetail(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getModelAndView(nominationId, nominatedInstallationDetailService.getForm(nominationDetail));
   }
 
   @PostMapping
-  public ModelAndView saveNominatedInstallationDetail(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveNominatedInstallationDetail(@PathVariable("nominationId") NominationId nominationId,
                                                       @ModelAttribute("form") NominatedInstallationDetailForm form,
                                                       BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
@@ -69,7 +70,7 @@ public class NominatedInstallationController {
     );
   }
 
-  private ModelAndView getModelAndView(int nominationId, NominatedInstallationDetailForm form) {
+  private ModelAndView getModelAndView(NominationId nominationId, NominatedInstallationDetailForm form) {
     return new ModelAndView("osd/nomination/installation/installationDetail")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_TITLE)

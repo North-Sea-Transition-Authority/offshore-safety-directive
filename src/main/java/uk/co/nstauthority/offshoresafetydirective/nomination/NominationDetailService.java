@@ -18,7 +18,7 @@ public class NominationDetailService {
     this.nominationDetailRepository = nominationDetailRepository;
   }
 
-  public NominationDetail getLatestNominationDetail(Integer nominationId) {
+  public NominationDetail getLatestNominationDetail(NominationId nominationId) {
     var nomination = nominationService.getNominationByIdOrError(nominationId);
     return nominationDetailRepository.findFirstByNominationOrderByVersionDesc(nomination)
         .orElseThrow(() -> {

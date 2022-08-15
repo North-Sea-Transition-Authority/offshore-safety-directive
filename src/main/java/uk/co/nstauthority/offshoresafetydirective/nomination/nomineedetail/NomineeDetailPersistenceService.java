@@ -1,44 +1,34 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class NomineeDetailService {
+class NomineeDetailPersistenceService {
 
   private final NomineeDetailRepository nomineeDetailRepository;
-  private final NomineeDetailFormValidator nomineeDetailFormValidator;
 
   @Autowired
-  NomineeDetailService(
-      NomineeDetailRepository nomineeDetailRepository,
-      NomineeDetailFormValidator nomineeDetailFormValidator) {
+  NomineeDetailPersistenceService(NomineeDetailRepository nomineeDetailRepository) {
     this.nomineeDetailRepository = nomineeDetailRepository;
-    this.nomineeDetailFormValidator = nomineeDetailFormValidator;
+  }
+
+  Optional<NomineeDetail> getNomineeDetail(NominationDetail nominationDetail) {
+    return nomineeDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   @Transactional
-  public void createOrUpdateNomineeDetail(NominationDetail detail, NomineeDetailForm form) {
-    var nomineeDetailOptional = nomineeDetailRepository.findByNominationDetail(detail);
+  public void createOrUpdateNomineeDetail(NominationDetail nominationDetail, NomineeDetailForm form) {
+    var nomineeDetailOptional = nomineeDetailRepository.findByNominationDetail(nominationDetail);
     NomineeDetail nomineeDetail;
-    nomineeDetail = nomineeDetailOptional.map(value -> updateNomineeDetailEntityFromForm(detail, value, form))
-        .orElseGet(() -> newNomineeDetailEntityFromForm(detail, form));
+    nomineeDetail = nomineeDetailOptional
+        .map(value -> updateNomineeDetailEntityFromForm(nominationDetail, value, form))
+        .orElseGet(() -> newNomineeDetailEntityFromForm(nominationDetail, form));
     nomineeDetailRepository.save(nomineeDetail);
-  }
-
-  NomineeDetailForm getForm(NominationDetail detail) {
-    return nomineeDetailRepository.findByNominationDetail(detail)
-        .map(this::nomineeDetailEntityToForm)
-        .orElseGet(NomineeDetailForm::new);
-  }
-
-  BindingResult validate(NomineeDetailForm form, BindingResult bindingResult) {
-    nomineeDetailFormValidator.validate(form, bindingResult);
-    return bindingResult;
   }
 
   private NomineeDetail newNomineeDetailEntityFromForm(NominationDetail detail, NomineeDetailForm form) {
@@ -64,19 +54,6 @@ class NomineeDetailService {
     nomineeDetail.setOperatorHasCapacity(form.getOperatorHasCapacity());
     nomineeDetail.setLicenseeAcknowledgeOperatorRequirements(form.getLicenseeAcknowledgeOperatorRequirements());
     return nomineeDetail;
-  }
-
-  private NomineeDetailForm nomineeDetailEntityToForm(NomineeDetail entity) {
-    var form = new NomineeDetailForm();
-    form.setNominatedOrganisationId(entity.getNominatedOrganisationId());
-    form.setReasonForNomination(entity.getReasonForNomination());
-    form.setPlannedStartDay(String.valueOf(entity.getPlannedStartDate().getDayOfMonth()));
-    form.setPlannedStartMonth(String.valueOf(entity.getPlannedStartDate().getMonthValue()));
-    form.setPlannedStartYear(String.valueOf(entity.getPlannedStartDate().getYear()));
-    form.setOperatorHasAuthority(entity.getOperatorHasAuthority());
-    form.setOperatorHasCapacity(entity.getOperatorHasCapacity());
-    form.setLicenseeAcknowledgeOperatorRequirements(entity.getLicenseeAcknowledgeOperatorRequirements());
-    return form;
   }
 
   private LocalDate createProposedStartDate(NomineeDetailForm form) {

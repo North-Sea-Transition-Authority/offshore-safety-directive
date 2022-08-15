@@ -11,7 +11,7 @@ public class NominatedInstallationTestUtil {
   }
 
   public static class NominatedInstallationBuilder {
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Integer installationId = 1;
 
     public NominatedInstallationBuilder withNominationDetail(NominationDetail nominationDetail) {

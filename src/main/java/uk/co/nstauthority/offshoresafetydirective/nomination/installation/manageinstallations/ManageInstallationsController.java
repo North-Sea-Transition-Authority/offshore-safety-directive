@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationController;
@@ -35,11 +37,11 @@ public class ManageInstallationsController {
   }
 
   @GetMapping
-  public ModelAndView getManageInstallations(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getManageInstallations(@PathVariable("nominationId") NominationId nominationId) {
     return getModelAndView(nominationId);
   }
 
-  private ModelAndView getModelAndView(int nominationId) {
+  private ModelAndView getModelAndView(NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     var modelAndView = new ModelAndView("osd/nomination/installation/manageInstallations")
         .addObject("pageTitle", PAGE_TITLE)
@@ -62,12 +64,13 @@ public class ManageInstallationsController {
         )
         .addObject(
             "saveAndContinueUrl",
-            ReverseRouter.route(on(NominationTaskListController.class).getTaskList())
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))
         );
     var breadcrumb = new Breadcrumbs.BreadcrumbsBuilder(PAGE_TITLE)
         .addWorkAreaBreadcrumb()
-        .addTaskListBreadcrumb()
+        .addBreadcrumb(NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId))
         .build();
+
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumb);
     return modelAndView;
   }

@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQuerySer
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
@@ -53,7 +54,7 @@ public class NominatedWellDetailController {
   }
 
   @GetMapping
-  public ModelAndView renderNominatedWellDetail(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView renderNominatedWellDetail(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getNominatedWellDetailModelAndView(
         nominatedWellDetailService.getForm(nominationDetail),
@@ -62,7 +63,7 @@ public class NominatedWellDetailController {
   }
 
   @PostMapping
-  public ModelAndView saveNominatedWellDetail(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveNominatedWellDetail(@PathVariable("nominationId") NominationId nominationId,
                                               @ModelAttribute("form") NominatedWellDetailForm form,
                                               BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
@@ -79,7 +80,7 @@ public class NominatedWellDetailController {
   }
 
   private ModelAndView getNominatedWellDetailModelAndView(NominatedWellDetailForm form,
-                                                          int nominationId) {
+                                                          NominationId nominationId) {
     return new ModelAndView("osd/nomination/well/specificWells")
         .addObject("form", form)
         .addObject("backLinkUrl", ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(nominationId)))

@@ -16,7 +16,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 @ExtendWith(MockitoExtension.class)
 class InstallationInclusionViewServiceTest {
 
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @Mock
   private InstallationInclusionRepository installationInclusionRepository;

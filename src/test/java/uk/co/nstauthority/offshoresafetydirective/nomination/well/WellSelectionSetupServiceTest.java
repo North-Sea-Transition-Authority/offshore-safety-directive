@@ -17,12 +17,15 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @ExtendWith(MockitoExtension.class)
 class WellSelectionSetupServiceTest {
 
-  private static final int NOMINATION_ID = 1;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .withNominationId(NOMINATION_ID)
+      .build();
 
   @Mock
   private WellSelectionSetupRepository wellSelectionSetupRepository;

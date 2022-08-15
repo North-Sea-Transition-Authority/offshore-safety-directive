@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
@@ -36,8 +37,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 @WithMockUser
 class InstallationInclusionControllerTest extends AbstractControllerTest {
 
-  private static final int NOMINATION_ID = 42;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @MockBean
   private InstallationInclusionService installationInclusionService;
@@ -76,7 +78,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         "org.springframework.validation.BindingResult.form"
     );
 
-    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList());
+    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
     var expectedActionUrl =
         ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null));
     assertEquals(InstallationInclusionForm.class, model.get("form").getClass());
@@ -119,7 +121,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
                 .param("includeInstallationsInNomination", "false")
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
 
     verify(installationInclusionService, times(1)).createOrUpdateInstallationInclusion(eq(NOMINATION_DETAIL), any());
   }

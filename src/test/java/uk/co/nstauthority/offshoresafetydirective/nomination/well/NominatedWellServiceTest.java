@@ -22,7 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelld
 @ExtendWith(MockitoExtension.class)
 class NominatedWellServiceTest {
 
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @Mock
   private NominatedWellRepository nominatedWellRepository;
@@ -48,10 +49,12 @@ class NominatedWellServiceTest {
 
     verify(nominatedWellRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
 
-    var wellArgumentCaptor = ArgumentCaptor.forClass(List.class);
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<NominatedWell>> wellArgumentCaptor = ArgumentCaptor.forClass(List.class);
     verify(nominatedWellRepository, times(1)).saveAll(wellArgumentCaptor.capture());
 
     var savedWells = (List<NominatedWell>) wellArgumentCaptor.getValue();
+
     assertThat(savedWells).extracting(
         NominatedWell::getWellId,
         NominatedWell::getNominationDetail

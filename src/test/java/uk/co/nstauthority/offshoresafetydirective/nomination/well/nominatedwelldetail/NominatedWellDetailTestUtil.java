@@ -25,7 +25,7 @@ public class NominatedWellDetailTestUtil {
   }
 
   public static class NominatedWellDetailBuilder {
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllWellPhases = true;
     private Boolean explorationAndAppraisalPhase;
     private Boolean developmentPhase;

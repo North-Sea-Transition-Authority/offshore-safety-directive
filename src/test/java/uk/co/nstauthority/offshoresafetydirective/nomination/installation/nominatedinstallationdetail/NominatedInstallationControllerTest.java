@@ -34,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -43,8 +44,9 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 @WithMockUser
 class NominatedInstallationControllerTest extends AbstractControllerTest {
 
-  private static final Integer NOMINATION_ID = 1;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationDetail NOMINATION_DETAIL =  new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @MockBean
   private NominatedInstallationDetailService nominatedInstallationDetailService;
@@ -67,14 +69,17 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
         .thenReturn(List.of(installationDto2, installationDto1));
 
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"))
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
 
     assertThat(model).containsOnlyKeys(
         "form",

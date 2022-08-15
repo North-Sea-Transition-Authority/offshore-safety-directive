@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -50,13 +51,13 @@ public class NominatedBlockSubareaController {
   }
 
   @GetMapping
-  public ModelAndView getLicenceBlockSubareas(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getModelAndView(nominationId, nominatedBlockSubareaDetailService.getForm(nominationDetail));
   }
 
   @PostMapping
-  public ModelAndView saveLicenceBlockSubareas(@PathVariable("nominationId") Integer nominationId,
+  public ModelAndView saveLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") NominatedBlockSubareaForm form,
                                                BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
@@ -67,12 +68,12 @@ public class NominatedBlockSubareaController {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedBlockSubareaDetailService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
           nominatedBlockSubareaService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList());
+          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
         }
     );
   }
 
-  private ModelAndView getModelAndView(int nominationId, NominatedBlockSubareaForm form) {
+  private ModelAndView getModelAndView(NominationId nominationId, NominatedBlockSubareaForm form) {
     return new ModelAndView("osd/nomination/well/blockSubarea")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_TITLE)

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation.manag
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -29,11 +31,12 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @WithMockUser
 class ManageInstallationsControllerTest extends AbstractControllerTest {
 
-  private static final int NOMINATION_ID = 42;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @MockBean
-  private ManageInstallationService manageInstallationService;
+  ManageInstallationService manageInstallationService;
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -41,14 +44,17 @@ class ManageInstallationsControllerTest extends AbstractControllerTest {
   @Test
   void getManageInstallations_assertModelAndViewProperties() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageInstallationsController.class).getManageInstallations(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/manageInstallations"))
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertNotNull(modelAndView);
+
+    var model = modelAndView.getModel();
 
     assertThat(model).containsOnlyKeys(
         "pageTitle",
@@ -75,10 +81,10 @@ class ManageInstallationsControllerTest extends AbstractControllerTest {
     var expectedNominatedInstallationDetailChangeUrl =
         ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID));
     var expectedSaveAndContinueUrl =
-        ReverseRouter.route(on(NominationTaskListController.class).getTaskList());
+        ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
     var expectedBreadcrumbs = Map.of(
-        ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "Work area",
-        ReverseRouter.route(on(NominationTaskListController.class).getTaskList()), "Task list"
+        ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), WorkAreaController.WORK_AREA_TITLE,
+        ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)), NominationTaskListController.PAGE_NAME
     );
     assertEquals(expectedInstallationInclusionChangeUrl, model.get("installationInclusionChangeUrl"));
     assertEquals(expectedNominatedInstallationDetailChangeUrl, model.get("nominatedInstallationDetailChangeUrl"));

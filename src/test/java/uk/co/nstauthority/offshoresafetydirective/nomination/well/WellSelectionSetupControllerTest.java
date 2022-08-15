@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -29,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
@@ -43,8 +43,10 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationDetailService nominationDetailService;
 
-  private static final int NOMINATION_ID = 42;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .withNominationId(NOMINATION_ID)
+      .build();
 
   @Test
   void getWellSetup_assertModelAndView() throws Exception {
@@ -57,6 +59,8 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andReturn()
         .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
 
     assertEquals("osd/nomination/well/wellSelectionSetup", modelAndView.getViewName());
 
@@ -77,7 +81,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
         "org.springframework.validation.BindingResult.form"
     );
 
-    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList());
+    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
     var expectedActionUrl = ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null));
     var expectedWellSetupAnswers = DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class);
     assertEquals(WellSelectionSetupForm.class, model.get("form").getClass());
@@ -100,7 +104,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(WellSelectionSetupService, never()).createOrUpdateWellSelectionSetup(any(), anyInt());
+    verify(WellSelectionSetupService, never()).createOrUpdateWellSelectionSetup(any(), any(NominationId.class));
   }
 
   @Test
@@ -157,7 +161,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
                 .param("wellSelectionType", WellSelectionType.NO_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(WellSelectionSetupService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(),

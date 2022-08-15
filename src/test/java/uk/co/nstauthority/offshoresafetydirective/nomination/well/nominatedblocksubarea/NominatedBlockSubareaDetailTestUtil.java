@@ -10,7 +10,7 @@ class NominatedBlockSubareaDetailTestUtil {
   }
 
   public static class NominatedBlockSubareaDetailBuilder {
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean validForFutureWellsInSubarea = true;
     private Boolean explorationAndAppraisalPhase = true;
     private Boolean developmentPhase = true;

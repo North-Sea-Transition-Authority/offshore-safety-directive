@@ -10,7 +10,7 @@ public class InstallationInclusionTestUtil {
   }
 
   static class InstallationInclusionBuilder {
-    private NominationDetail nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean includeInstallationsInNomination = true;
 
     InstallationInclusionBuilder withNominationDetail(NominationDetail nominationDetail) {

@@ -10,7 +10,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "nominations")
-class Nomination {
+public class Nomination {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,23 +19,22 @@ class Nomination {
   @Column(name = "created_datetime")
   private Instant createdInstant;
 
-  protected Nomination() {
-  }
-
-  Nomination(Instant createdInstant) {
-    this.createdInstant = createdInstant;
-  }
-
-  Integer getId() {
+  public Integer getId() {
     return id;
+  }
+
+  Nomination setId(Integer id) {
+    this.id = id;
+    return this;
   }
 
   Instant getCreatedInstant() {
     return createdInstant;
   }
 
-  void setCreatedInstant(Instant createdInstant) {
+  Nomination setCreatedInstant(Instant createdInstant) {
     this.createdInstant = createdInstant;
+    return this;
   }
 
   @Override

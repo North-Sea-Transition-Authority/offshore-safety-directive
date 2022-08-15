@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
@@ -36,12 +38,12 @@ public class ManageWellsController {
   }
 
   @GetMapping
-  public ModelAndView getWellManagementPage(@PathVariable("nominationId") Integer nominationId) {
+  public ModelAndView getWellManagementPage(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getWellManagementModelAndView(nominationId, nominationDetail);
   }
 
-  private ModelAndView getWellManagementModelAndView(int nominationId, NominationDetail nominationDetail) {
+  private ModelAndView getWellManagementModelAndView(NominationId nominationId, NominationDetail nominationDetail) {
     var modelAndView = new ModelAndView("osd/nomination/well/managewells/wellManagement")
         .addObject("pageTitle", PAGE_TITLE)
         .addObject(
@@ -63,12 +65,13 @@ public class ManageWellsController {
         )
         .addObject(
             "saveAndContinueUrl",
-            ReverseRouter.route(on(NominationTaskListController.class).getTaskList())
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))
         );
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_TITLE)
         .addWorkAreaBreadcrumb()
-        .addTaskListBreadcrumb()
+        .addBreadcrumb(NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId))
         .build();
+
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
     return modelAndView;
   }

@@ -1,23 +1,23 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class ApplicantDetailService {
+class ApplicantDetailPersistenceService {
 
   private final ApplicationDetailRepository applicationDetailRepository;
-  private final ApplicantDetailFormValidator applicantDetailFormValidator;
 
   @Autowired
-  ApplicantDetailService(
-      ApplicationDetailRepository applicationDetailRepository,
-      ApplicantDetailFormValidator applicantDetailFormValidator) {
+  ApplicantDetailPersistenceService(ApplicationDetailRepository applicationDetailRepository) {
     this.applicationDetailRepository = applicationDetailRepository;
-    this.applicantDetailFormValidator = applicantDetailFormValidator;
+  }
+
+  Optional<ApplicantDetail> getApplicantDetail(NominationDetail nominationDetail) {
+    return applicationDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   @Transactional
@@ -27,17 +27,6 @@ class ApplicantDetailService {
         .orElseGet(() -> createApplicantDetail(nominationDetail, form));
     applicationDetailRepository.save(applicantDetail);
     return applicantDetail;
-  }
-
-  ApplicantDetailForm getForm(NominationDetail nominationDetail) {
-    return applicationDetailRepository.findByNominationDetail(nominationDetail)
-        .map(this::applicantDetailEntityToForm)
-        .orElseGet(ApplicantDetailForm::new);
-  }
-
-  BindingResult validate(ApplicantDetailForm form, BindingResult bindingResult) {
-    applicantDetailFormValidator.validate(form, bindingResult);
-    return bindingResult;
   }
 
   private ApplicantDetail createApplicantDetail(NominationDetail nominationDetail, ApplicantDetailForm form) {
@@ -55,12 +44,5 @@ class ApplicantDetailService {
     applicantDetail.setPortalOrganisationId(form.getPortalOrganisationId());
     applicantDetail.setApplicantReference(form.getApplicantReference());
     return applicantDetail;
-  }
-
-  private ApplicantDetailForm applicantDetailEntityToForm(ApplicantDetail applicantDetail) {
-    var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(applicantDetail.getPortalOrganisationId());
-    form.setApplicantReference(applicantDetail.getApplicantReference());
-    return form;
   }
 }

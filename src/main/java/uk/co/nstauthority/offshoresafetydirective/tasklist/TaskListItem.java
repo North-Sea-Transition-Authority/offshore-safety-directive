@@ -24,14 +24,14 @@ public interface TaskListItem<T> {
    *
    * @return The name displayed in the task list.
    */
-  String getName();
+  String getItemDisplayText();
 
   /**
    * The GET mapping to be redirected to on click.
-   *
+   * @param target An object used to determine the action url
    * @return The URL associated with the entry.
    */
-  String getActionUrl();
+  String getActionUrl(T target);
 
   /**
    * The order the item appears in the list.
@@ -62,12 +62,12 @@ public interface TaskListItem<T> {
   }
 
   /**
-   * Determines if a label should be shown on the right of the entry in the task list.
+   * Determines if any labels should be shown on the right of the entry in the task list.
    *
    * @param target The object to determine label visibility.
    * @return True if a label should be shown. False if no label is associated.
    */
-  default boolean showLabel(T target) {
+  default boolean showTaskListLabels(T target) {
     return true;
   }
 
@@ -77,5 +77,25 @@ public interface TaskListItem<T> {
    * @return Class of the section related to the item.
    */
   Class<? extends TaskListSection<T>> getTaskListSection();
+
+  /**
+   * Determines if the not completed task list label should be shown if the item is not
+   * valid.
+   * @param target The object to determine showing the not completed label
+   * @return true to show the not completed label, false to not show it.
+   */
+  default boolean showNotCompletedLabels(T target) {
+    return true;
+  }
+
+  /**
+   * Create a custom task list label for a given task list item. A custom task list
+   * label is defined as anything not controlled by Fivium Design System.
+   * @param target The object to use to construct a task list custom label
+   * @return The custom task list label to show
+   */
+  default TaskListLabel getCustomTaskListLabel(T target) {
+    return null;
+  }
 
 }

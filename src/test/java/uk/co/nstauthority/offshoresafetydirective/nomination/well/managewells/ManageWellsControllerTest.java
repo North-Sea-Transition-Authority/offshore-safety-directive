@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewTestUtil;
@@ -32,8 +34,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelld
 @WithMockUser
 class ManageWellsControllerTest extends AbstractControllerTest {
 
-  private static final int NOMINATION_ID = 1;
-  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.getNominationDetail();
+  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -51,14 +54,17 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedWellDetailView));
 
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/managewells/wellManagement"))
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertNotNull(modelAndView);
+
+    var model = modelAndView.getModel();
 
     assertThat(model).containsOnlyKeys(
         "pageTitle",
@@ -84,7 +90,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID));
     var expectedNominatedWellDetailViewChangeUrl =
         ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(NOMINATION_ID));
-    var expectedSaveAndContinueUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList());
+    var expectedSaveAndContinueUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
     assertEquals(ManageWellsController.PAGE_TITLE, model.get("pageTitle"));
     assertEquals(expectedWellSelectionSetupChangeUrl, model.get("wellSelectionSetupChangeUrl"));
     assertEquals(expectedNominatedWellDetailViewChangeUrl, model.get("nominatedWellDetailViewChangeUrl"));
@@ -101,13 +107,16 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedWellDetailView));
 
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertNotNull(modelAndView);
+
+    var model = modelAndView.getModel();
 
     assertEquals(wellSelectionView, model.get("wellSelectionSetupView"));
     assertEquals(nominatedWellDetailView, model.get("nominatedWellDetailView"));
@@ -121,13 +130,16 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL))
         .thenReturn(Optional.empty());
 
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
         )
         .andExpect(status().isOk())
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertNotNull(modelAndView);
+
+    var model = modelAndView.getModel();
 
     assertThat(model.get("wellSelectionSetupView")).hasAllNullFieldsOrProperties();
     assertThat((NominatedWellDetailView) model.get("nominatedWellDetailView"))

@@ -28,8 +28,12 @@ class NominationDetailServiceTest {
 
   @Test
   void getLatestNominationDetail_whenExists_thenReturnEntity() {
-    var nominationId = 42;
-    var nominationDetail = NominationDetailTestUtil.getNominationDetail();
+    var nominationId = new NominationId(42);
+
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(nominationId)
+        .build();
+
     when(nominationService.getNominationByIdOrError(nominationId)).thenReturn(nomination);
     when(nominationDetailRepository.findFirstByNominationOrderByVersionDesc(nomination))
         .thenReturn(Optional.of(nominationDetail));
@@ -39,7 +43,7 @@ class NominationDetailServiceTest {
 
   @Test
   void getLatestNominationDetail_whenDoesNotExist_thenThrowError() {
-    var nominationId = 42;
+    var nominationId = new NominationId(42);
     when(nominationService.getNominationByIdOrError(nominationId)).thenReturn(nomination);
     when(nominationDetailRepository.findFirstByNominationOrderByVersionDesc(nomination)).thenReturn(Optional.empty());
 
