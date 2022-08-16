@@ -77,7 +77,7 @@ class InstallationInclusionServiceTest {
 
     assertThat(form)
         .extracting(InstallationInclusionForm::getIncludeInstallationsInNomination)
-        .isEqualTo(null);
+        .isNull();
   }
 
   @Test
