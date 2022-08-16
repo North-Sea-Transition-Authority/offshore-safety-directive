@@ -38,12 +38,9 @@ steps:
 
   - name: build-backend
     image: eclipse-temurin:17-jdk
-    environment:
-      SONAR_TOKEN:
-        from_secret: sonarcloud_token
     commands:
       - chmod +x gradlew
-      - ./gradlew checkstyleMain test bootJar sonarqube
+      - ./gradlew checkstyleMain test bootJar
 
   - name: sync-reports
     image: alpine:3.16.0
@@ -55,6 +52,24 @@ steps:
         path: /var/webfiles
     when:
       status: [ success, failure ]
+
+  - name: code-analysis
+    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java17:latest
+    environment:
+      SONARCLOUD_TOKEN:
+        from_secret: sonarcloud_token
+      GRADLE_USER_HOME: /drone/src/gradle_cache
+      # This SONAR_USER_HOME is the cache path - not the actual user home
+      SONAR_USER_HOME: /drone/src/sonar_cache
+    commands:
+      - chmod +x gradlew
+      - ./gradlew sonarqube -info
+    when:
+      # The Pull Request Pipeline will run the Code Analysis on all other branches (once a PR is open)
+      branch:
+        - develop
+        - main
+        - drone/*
 
   - name: publish-docker-develop
     image: plugins/docker:19.03.8
@@ -169,6 +184,101 @@ volumes:
   - name: drone-trivy-cache
     host:
       path: /root/.cache/
+
+---
+
+kind: pipeline
+type: docker
+name: github-pr
+
+clone:
+  disable: true
+
+steps:
+
+  - name: clone
+    image: alpine/git:v2.26.2
+    commands:
+      # Manually cloning as there seems to be a bug with DRONE_BRANCH on Pull Request Events
+      # DRONE_BRANCH is set to the target branch, rather than the current branch
+      # This means that Sonarcloud doesn't think anything has changed
+      - git clone https://github.com/Fivium/offshore-safety-directive.git .
+      - git checkout $DRONE_SOURCE_BRANCH
+
+  - name: restore-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: drone-cache
+        path: /cache
+    settings:
+      restore: true
+      mount:
+        - ./node_modules
+        # We can only mount volume caches into the working directory, so all steps which use Gradle must have
+        # the GRADLE_USER_HOME environment variable pointing here.
+        - ./gradle_cache
+        - ./sonar_cache
+
+  - name: fetch-fds-submodule
+    image: alpine/git:v2.26.2
+    commands:
+      - echo "$${BITBUCKET_SSH_KEY}" > bitbucket_ssh_key
+      - chmod 600 bitbucket_ssh_key
+      - export GIT_SSH_COMMAND="ssh -i bitbucket_ssh_key -F /dev/null  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+      - git submodule update --init --recursive
+    environment:
+      BITBUCKET_SSH_KEY:
+        from_secret: bitbucket_ssh_key
+
+  - name: build-frontend
+    image: node:10
+    commands:
+      - cd fivium-design-system-core && npm install && npx gulp build && cd ..
+      - npm install
+      - npx gulp buildAll
+
+  # This is in the PR pipeline so the code-analysis below can access the test data (to see coverage)
+  - name: backend-tests
+    image: eclipse-temurin:17-jdk
+    environment:
+      GRADLE_USER_HOME: /drone/src/gradle_cache
+    commands:
+      - chmod +x gradlew
+      - ./gradlew test
+
+  # This is in the PR pipeline as only PR events get the necessary information for proper github integration
+  - name: code-analysis
+    image: repo1.dev.fivium.local:5000/sonarcloud-scan-java17:latest
+    environment:
+      SONARCLOUD_TOKEN:
+        from_secret: sonarcloud_token
+      GRADLE_USER_HOME: /drone/src/gradle_cache
+      # This SONAR_USER_HOME is the cache path - not the actual user home
+      SONAR_USER_HOME: /drone/src/sonar_cache
+    commands:
+      - chmod +x gradlew
+      - ./gradlew sonarqube -info
+
+  - name: rebuild-cache
+    image: drillster/drone-volume-cache
+    volumes:
+      - name: drone-cache
+        path: /cache
+    settings:
+      rebuild: true
+      mount:
+        - ./node_modules
+        - ./gradle_cache
+        - ./sonar_cache
+
+trigger:
+  event:
+    - pull_request
+
+volumes:
+  - name: drone-cache
+    host:
+      path: /home/fivium/drone-cache
 
 ---
 
