@@ -14,13 +14,10 @@ errorItems=errorList
 pageSize=PageSize.TWO_THIRDS_COLUMN
 backLinkUrl=springUrl(backLinkUrl)
 >
-  <div class="govuk-heading-l">
-    Licence block areas
-  </div>
-  <@fdsInsetText.insetText>
-    This will apply the nominated operator to all wells that exist within the licence block subarea at the time of
-    submission. You will be able to review this list and exclude wells from the nomination if required.
-  </@fdsInsetText.insetText>
+  <p class="govuk-body">
+    This will apply the nominated operator to all wells that at the time of submission exist within the licence block
+    subareas listed below. You will be able to review this list and exclude wells from the nomination if required.
+  </p>
   <@fdsForm.htmlForm
     actionUrl=springUrl(actionUrl)
   >
