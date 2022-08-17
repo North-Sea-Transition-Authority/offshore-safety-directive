@@ -33,7 +33,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 
@@ -52,9 +51,6 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationDetailService nominationDetailService;
-
-  @MockBean
-  private NominatedWellService nominatedWellService;
 
   @MockBean
   private WellQueryService wellQueryService;
@@ -152,7 +148,6 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(nominationId))));
 
     verify(nominatedWellDetailService, times(1)).createOrUpdateNominatedWellDetail(eq(nominationDetail), any());
-    verify(nominatedWellService, times(1)).saveNominatedWells(eq(nominationDetail), any());
   }
 
   @Test
@@ -169,6 +164,5 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     verify(nominatedWellDetailService, never()).createOrUpdateNominatedWellDetail(any(), any());
-    verify(nominatedWellService, never()).saveNominatedWells(any(), any());
   }
 }

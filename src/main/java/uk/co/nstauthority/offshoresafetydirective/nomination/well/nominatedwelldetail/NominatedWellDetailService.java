@@ -31,6 +31,7 @@ class NominatedWellDetailService {
     NominatedWellDetail wellNomination = nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateNominatedWellDetailFromForm(nominationDetail, entity, form))
         .orElseGet(() -> createNominatedWellDetailFromForm(nominationDetail, form));
+    nominatedWellService.saveNominatedWells(nominationDetail, form);
     nominatedWellDetailRepository.save(wellNomination);
   }
 

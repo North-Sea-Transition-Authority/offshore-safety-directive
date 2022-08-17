@@ -75,6 +75,7 @@ class NominatedWellDetailServiceTest {
             null,
             null
         );
+    verify(nominatedWellService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
   }
 
   @Test
@@ -108,6 +109,7 @@ class NominatedWellDetailServiceTest {
             form.getDevelopmentPhase(),
             form.getDecommissioningPhase()
         );
+    verify(nominatedWellService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
   }
 
   @Test
