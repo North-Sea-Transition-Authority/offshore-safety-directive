@@ -25,22 +25,25 @@ public class InstallationInclusionController {
   static final String PAGE_TITLE = "Installation nominations";
 
   private final ControllerHelperService controllerHelperService;
-  private final InstallationInclusionService installationInclusionService;
+  private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private final InstallationInclusionFormService installationInclusionFormService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
   public InstallationInclusionController(ControllerHelperService controllerHelperService,
-                                         InstallationInclusionService installationInclusionService,
+                                         InstallationInclusionPersistenceService installationInclusionPersistenceService,
+                                         InstallationInclusionFormService installationInclusionFormService,
                                          NominationDetailService nominationDetailService) {
     this.controllerHelperService = controllerHelperService;
-    this.installationInclusionService = installationInclusionService;
+    this.installationInclusionPersistenceService = installationInclusionPersistenceService;
+    this.installationInclusionFormService = installationInclusionFormService;
     this.nominationDetailService = nominationDetailService;
   }
 
   @GetMapping
   public ModelAndView getInstallationInclusion(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nominationId, installationInclusionService.getForm(nominationDetail));
+    return getModelAndView(nominationId, installationInclusionFormService.getForm(nominationDetail));
   }
 
   @PostMapping
@@ -48,12 +51,12 @@ public class InstallationInclusionController {
                                                 @ModelAttribute("form") InstallationInclusionForm form,
                                                 BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
-        installationInclusionService.validate(form, bindingResult),
+        installationInclusionFormService.validate(form, bindingResult),
         getModelAndView(nominationId, form),
         form,
         () -> {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          installationInclusionService.createOrUpdateInstallationInclusion(nominationDetail, form);
+          installationInclusionPersistenceService.createOrUpdateInstallationInclusion(nominationDetail, form);
           if (form.getIncludeInstallationsInNomination()) {
             return ReverseRouter.redirect(
                 on(NominatedInstallationController.class).getNominatedInstallationDetail(nominationId));

@@ -1,22 +1,19 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class InstallationInclusionService {
+class InstallationInclusionPersistenceService {
 
   private final InstallationInclusionRepository installationInclusionRepository;
-  private final InstallationInclusionFormValidator installationInclusionFormValidator;
 
   @Autowired
-  InstallationInclusionService(InstallationInclusionRepository installationInclusionRepository,
-                               InstallationInclusionFormValidator installationInclusionFormValidator) {
+  InstallationInclusionPersistenceService(InstallationInclusionRepository installationInclusionRepository) {
     this.installationInclusionRepository = installationInclusionRepository;
-    this.installationInclusionFormValidator = installationInclusionFormValidator;
   }
 
   @Transactional
@@ -27,15 +24,8 @@ class InstallationInclusionService {
     installationInclusionRepository.save(installationAdvice);
   }
 
-  InstallationInclusionForm getForm(NominationDetail nominationDetail) {
-    return installationInclusionRepository.findByNominationDetail(nominationDetail)
-        .map(this::installationInclusionFormFromEntity)
-        .orElse(new InstallationInclusionForm());
-  }
-
-  BindingResult validate(InstallationInclusionForm form, BindingResult bindingResult) {
-    installationInclusionFormValidator.validate(form, bindingResult);
-    return bindingResult;
+  Optional<InstallationInclusion> findByNominationDetail(NominationDetail nominationDetail) {
+    return installationInclusionRepository.findByNominationDetail(nominationDetail);
   }
 
   private InstallationInclusion newInstallationInclusionEntityFromForm(NominationDetail nominationDetail,
@@ -48,10 +38,5 @@ class InstallationInclusionService {
                                                                           InstallationInclusionForm form) {
     return installationInclusion.setNominationDetail(nominationDetail)
         .setIncludeInstallationsInNomination(form.getIncludeInstallationsInNomination());
-  }
-
-  private InstallationInclusionForm installationInclusionFormFromEntity(InstallationInclusion installationInclusion) {
-    return new InstallationInclusionForm()
-        .setIncludeInstallationsInNomination(installationInclusion.getIncludeInstallationsInNomination());
   }
 }

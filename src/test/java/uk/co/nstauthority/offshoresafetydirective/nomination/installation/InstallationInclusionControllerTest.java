@@ -42,7 +42,10 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private InstallationInclusionService installationInclusionService;
+  private InstallationInclusionPersistenceService installationInclusionPersistenceService;
+
+  @MockBean
+  private InstallationInclusionFormService installationInclusionFormService;
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -50,7 +53,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
   @Test
   void getInstallationAdvice_assertModelAndViewProperties() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionService.getForm(NOMINATION_DETAIL)).thenReturn(new InstallationInclusionForm());
+    when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(new InstallationInclusionForm());
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID)))
@@ -93,7 +96,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
@@ -104,7 +107,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(
             on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID))));
 
-    verify(installationInclusionService, times(1)).createOrUpdateInstallationInclusion(eq(NOMINATION_DETAIL), any());
+    verify(installationInclusionPersistenceService, times(1)).createOrUpdateInstallationInclusion(eq(NOMINATION_DETAIL), any());
   }
 
   @Test
@@ -113,7 +116,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
@@ -123,7 +126,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
 
-    verify(installationInclusionService, times(1)).createOrUpdateInstallationInclusion(eq(NOMINATION_DETAIL), any());
+    verify(installationInclusionPersistenceService, times(1)).createOrUpdateInstallationInclusion(eq(NOMINATION_DETAIL), any());
   }
 
   @Test
@@ -132,7 +135,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default msg"));
 
-    when(installationInclusionService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
@@ -140,6 +143,6 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(installationInclusionService, never()).createOrUpdateInstallationInclusion(any(), any());
+    verify(installationInclusionPersistenceService, never()).createOrUpdateInstallationInclusion(any(), any());
   }
 }

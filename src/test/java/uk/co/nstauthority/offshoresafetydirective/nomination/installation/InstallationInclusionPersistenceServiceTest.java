@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,12 +13,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class InstallationInclusionServiceTest {
+class InstallationInclusionPersistenceServiceTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
@@ -25,11 +25,8 @@ class InstallationInclusionServiceTest {
   @Mock
   private InstallationInclusionRepository installationInclusionRepository;
 
-  @Mock
-  private InstallationInclusionFormValidator installationInclusionFormValidator;
-
   @InjectMocks
-  private InstallationInclusionService installationInclusionService;
+  private InstallationInclusionPersistenceService installationInclusionPersistenceService;
 
   @Test
   void createOrUpdateInstallationInclusion_givenAForm_assertEntityFields() {
@@ -37,7 +34,7 @@ class InstallationInclusionServiceTest {
 
     when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
-    installationInclusionService.createOrUpdateInstallationInclusion(NOMINATION_DETAIL, form);
+    installationInclusionPersistenceService.createOrUpdateInstallationInclusion(NOMINATION_DETAIL, form);
 
     var installationInclusionCaptor = ArgumentCaptor.forClass(InstallationInclusion.class);
     verify(installationInclusionRepository, times(1)).save(installationInclusionCaptor.capture());
@@ -55,38 +52,22 @@ class InstallationInclusionServiceTest {
   }
 
   @Test
-  void getForm_whenEntityExist_assertFormFieldsMatchEntity() {
-    var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder()
-        .withNominationDetail(NOMINATION_DETAIL)
-        .build();
+  void findByNominationDetail_whenExist_returnOptional() {
+    var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder().build();
     when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(installationInclusion));
 
-    var form = installationInclusionService.getForm(NOMINATION_DETAIL);
-
-    assertThat(form)
-        .extracting(InstallationInclusionForm::getIncludeInstallationsInNomination)
-        .isEqualTo(installationInclusion.getIncludeInstallationsInNomination());
+    assertEquals(
+        Optional.of(installationInclusion),
+        installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL)
+    );
   }
 
   @Test
-  void getForm_whenNoEntityExist_assertFormIsEmpty() {
-    when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
+  void findByNominationDetail_whenDoesNotExist_returnEmptyOptional() {
+    when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
 
-    var form = installationInclusionService.getForm(NOMINATION_DETAIL);
-
-    assertThat(form)
-        .extracting(InstallationInclusionForm::getIncludeInstallationsInNomination)
-        .isNull();
-  }
-
-  @Test
-  void validate_verifyMethodCall() {
-    var form = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder().build();
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
-
-    installationInclusionService.validate(form, bindingResult);
-
-    verify(installationInclusionFormValidator, times(1)).validate(form, bindingResult);
+    assertThat(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).isEmpty();
   }
 }

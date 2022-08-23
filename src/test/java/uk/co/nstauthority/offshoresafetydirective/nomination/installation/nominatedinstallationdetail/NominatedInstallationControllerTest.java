@@ -49,7 +49,10 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private NominatedInstallationDetailService nominatedInstallationDetailService;
+  private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
+
+  @MockBean
+  private NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -65,7 +68,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .withInstallations(List.of(installationDto1.id(), installationDto2.id()))
         .build();
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedInstallationDetailService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+    when(nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
     when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
         .thenReturn(List.of(installationDto2, installationDto1));
 
@@ -124,7 +127,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var form = new NominatedInstallationDetailForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(nominatedInstallationDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedInstallationDetailServiceFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
@@ -136,7 +139,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageInstallationsController.class)
             .getManageInstallations(NOMINATION_ID))));
 
-    verify(nominatedInstallationDetailService, times(1))
+    verify(nominatedInstallationDetailPersistenceService, times(1))
         .createOrUpdateNominatedInstallationDetail(eq(NOMINATION_DETAIL), any(NominatedInstallationDetailForm.class));
   }
 
@@ -146,7 +149,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
-    when(nominatedInstallationDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedInstallationDetailServiceFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(
@@ -156,6 +159,6 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"));
 
-    verify(nominatedInstallationDetailService, never()).createOrUpdateNominatedInstallationDetail(any(), any());
+    verify(nominatedInstallationDetailPersistenceService, never()).createOrUpdateNominatedInstallationDetail(any(), any());
   }
 }
