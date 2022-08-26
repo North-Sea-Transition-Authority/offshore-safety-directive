@@ -33,26 +33,29 @@ public class NominatedWellDetailController {
   static final String PAGE_TITLE = "Specific well nominations";
 
   private final ControllerHelperService controllerHelperService;
-  private final NominatedWellDetailService nominatedWellDetailService;
+  private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final WellQueryService wellQueryService;
+  private final NominatedWellDetailFormService nominatedWellDetailFormService;
 
   @Autowired
   public NominatedWellDetailController(ControllerHelperService controllerHelperService,
-                                       NominatedWellDetailService nominatedWellDetailService,
+                                       NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
                                        NominationDetailService nominationDetailService,
-                                       WellQueryService wellQueryService) {
+                                       WellQueryService wellQueryService,
+                                       NominatedWellDetailFormService nominatedWellDetailFormService) {
     this.controllerHelperService = controllerHelperService;
-    this.nominatedWellDetailService = nominatedWellDetailService;
+    this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.wellQueryService = wellQueryService;
+    this.nominatedWellDetailFormService = nominatedWellDetailFormService;
   }
 
   @GetMapping
   public ModelAndView renderNominatedWellDetail(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getNominatedWellDetailModelAndView(
-        nominatedWellDetailService.getForm(nominationDetail),
+        nominatedWellDetailFormService.getForm(nominationDetail),
         nominationId
     );
   }
@@ -62,12 +65,12 @@ public class NominatedWellDetailController {
                                               @ModelAttribute("form") NominatedWellDetailForm form,
                                               BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
-        nominatedWellDetailService.validate(form, bindingResult),
+        nominatedWellDetailFormService.validate(form, bindingResult),
         getNominatedWellDetailModelAndView(form, nominationId),
         form,
         () -> {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nominatedWellDetailService.createOrUpdateNominatedWellDetail(nominationDetail, form);
+          nominatedWellDetailPersistenceService.createOrUpdateNominatedWellDetail(nominationDetail, form);
           return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
         }
     );

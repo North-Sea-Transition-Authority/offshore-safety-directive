@@ -51,7 +51,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   private NominationDetailService nominationDetailService;
 
   @MockBean
-  private NominatedBlockSubareaDetailService nominatedBlockSubareaDetailService;
+  private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
   @MockBean
   NominatedBlockSubareaService nominatedBlockSubareaService;
@@ -59,10 +59,13 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   @MockBean
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
+  @MockBean
+  private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
+
   @Test
   void getLicenceBlockSubareas_assertModelAndViewProperties() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedBlockSubareaDetailService.getForm(NOMINATION_DETAIL)).thenReturn(new NominatedBlockSubareaForm());
+    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(new NominatedBlockSubareaForm());
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
         )
@@ -108,7 +111,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     var licenceBlockSubareaDto2 = new LicenceBlockSubareaDto(2, "blockSubarea2", "2");
     var licenceBlockSubareaDto3 = new LicenceBlockSubareaDto(3, "blockSubarea3", "3");
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedBlockSubareaDetailService.getForm(NOMINATION_DETAIL)).thenReturn(formWithSubareas);
+    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(formWithSubareas);
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(formWithSubareas.getSubareas()))
         .thenReturn(List.of(licenceBlockSubareaDto2, licenceBlockSubareaDto3, licenceBlockSubareaDto1));
     var modelAndView = mockMvc.perform(
@@ -139,7 +142,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   void saveLicenceBlockSubareas_whenNoErrors_thenVerifyServiceCall() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(new NominatedBlockSubareaForm(), "form");
 
-    when(nominatedBlockSubareaDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
@@ -151,7 +154,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
 
-    verify(nominatedBlockSubareaDetailService, times(1)).createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
+    verify(nominatedBlockSubareaDetailPersistenceService, times(1)).createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
   }
 
   @Test
@@ -159,7 +162,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(new NominatedBlockSubareaForm(), "form");
     bindingResult.addError(new FieldError("error", "error field", "error message"));
 
-    when(nominatedBlockSubareaDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
@@ -171,6 +174,6 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(nominatedBlockSubareaDetailService, never()).createOrUpdateNominatedBlockSubareaDetail(any(), any());
+    verify(nominatedBlockSubareaDetailPersistenceService, never()).createOrUpdateNominatedBlockSubareaDetail(any(), any());
   }
 }

@@ -47,7 +47,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private NominatedWellDetailService nominatedWellDetailService;
+  private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -55,10 +55,13 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
   @MockBean
   private WellQueryService wellQueryService;
 
+  @MockBean
+  private NominatedWellDetailFormService nominatedWellDetailFormService;
+
   @Test
   void renderNominatedWellDetail_assertModelProperties() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-    when(nominatedWellDetailService.getForm(nominationDetail)).thenReturn(new NominatedWellDetailForm());
+    when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(new NominatedWellDetailForm());
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
         )
@@ -106,7 +109,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     var wellDto2 = new WellDto(2, "wellDto2", "2");
     var wellDto3 = new WellDto(3, "wellDto3", "3");
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-    when(nominatedWellDetailService.getForm(nominationDetail)).thenReturn(formWithWells);
+    when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(formWithWells);
     when(wellQueryService.getWellsByIdIn(formWithWells.getWells())).thenReturn(List.of(wellDto2, wellDto3, wellDto1));
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
@@ -137,7 +140,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
   void saveNominatedWellDetail_whenNoValidationErrors_verifyMethodCall() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(new NominatedWellDetailForm(), "form");
 
-    when(nominatedWellDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedWellDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
     mockMvc.perform(
@@ -147,7 +150,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(nominationId))));
 
-    verify(nominatedWellDetailService, times(1)).createOrUpdateNominatedWellDetail(eq(nominationDetail), any());
+    verify(nominatedWellDetailPersistenceService, times(1)).createOrUpdateNominatedWellDetail(eq(nominationDetail), any());
   }
 
   @Test
@@ -155,7 +158,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(new NominatedWellDetailForm(), "form");
     bindingResult.addError(new FieldError("error", "error field", "error message"));
 
-    when(nominatedWellDetailService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedWellDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
@@ -163,6 +166,6 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(nominatedWellDetailService, never()).createOrUpdateNominatedWellDetail(any(), any());
+    verify(nominatedWellDetailPersistenceService, never()).createOrUpdateNominatedWellDetail(any(), any());
   }
 }

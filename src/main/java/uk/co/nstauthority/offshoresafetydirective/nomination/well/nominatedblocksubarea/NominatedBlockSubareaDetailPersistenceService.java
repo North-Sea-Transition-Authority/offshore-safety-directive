@@ -1,27 +1,20 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea;
 
-import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class NominatedBlockSubareaDetailService {
+class NominatedBlockSubareaDetailPersistenceService {
 
   private final NominatedBlockSubareaDetailRepository nominatedBlockSubareaDetailRepository;
-  private final NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator;
-  private final NominatedBlockSubareaService nominatedBlockSubareaService;
 
   @Autowired
-  NominatedBlockSubareaDetailService(NominatedBlockSubareaDetailRepository nominatedBlockSubareaDetailRepository,
-                                     NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator,
-                                     NominatedBlockSubareaService nominatedBlockSubareaService) {
+  NominatedBlockSubareaDetailPersistenceService(NominatedBlockSubareaDetailRepository nominatedBlockSubareaDetailRepository) {
     this.nominatedBlockSubareaDetailRepository = nominatedBlockSubareaDetailRepository;
-    this.nominatedBlockSubareaFormValidator = nominatedBlockSubareaFormValidator;
-    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
   }
 
   @Transactional
@@ -33,30 +26,8 @@ class NominatedBlockSubareaDetailService {
     nominatedBlockSubareaDetailRepository.save(blockSubareaDetail);
   }
 
-  BindingResult validate(NominatedBlockSubareaForm form, BindingResult bindingResult) {
-    nominatedBlockSubareaFormValidator.validate(form, bindingResult);
-    return bindingResult;
-  }
-
-  NominatedBlockSubareaForm getForm(NominationDetail nominationDetail) {
-    return nominatedBlockSubareaDetailRepository.findByNominationDetail(nominationDetail)
-        .map(this::nominatedSubareaDetailToForm)
-        .orElseGet(NominatedBlockSubareaForm::new);
-  }
-
-  private NominatedBlockSubareaForm nominatedSubareaDetailToForm(NominatedBlockSubareaDetail entity) {
-    var form = new NominatedBlockSubareaForm();
-    form.setValidForFutureWellsInSubarea(entity.getValidForFutureWellsInSubarea());
-    form.setForAllWellPhases(entity.getForAllWellPhases());
-    form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
-    form.setDevelopmentPhase(entity.getDevelopmentPhase());
-    form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> blockSubareaIds = nominatedBlockSubareaService.findAllByNominationDetail(entity.getNominationDetail())
-        .stream()
-        .map(NominatedBlockSubarea::getBlockSubareaId)
-        .toList();
-    form.setSubareas(blockSubareaIds);
-    return form;
+  Optional<NominatedBlockSubareaDetail> findByNominationDetail(NominationDetail nominationDetail) {
+    return nominatedBlockSubareaDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   private NominatedBlockSubareaDetail updateNominatedBlockSubareaDetailFromForm(NominationDetail nominationDetail,

@@ -33,19 +33,22 @@ public class NominatedBlockSubareaController {
 
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
-  private final NominatedBlockSubareaDetailService nominatedBlockSubareaDetailService;
+  private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
+  private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
   private final NominatedBlockSubareaService nominatedBlockSubareaService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   public NominatedBlockSubareaController(ControllerHelperService controllerHelperService,
                                          NominationDetailService nominationDetailService,
-                                         NominatedBlockSubareaDetailService nominatedBlockSubareaDetailService,
+                                         NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService,
+                                         NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                                          NominatedBlockSubareaService nominatedBlockSubareaService,
                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
-    this.nominatedBlockSubareaDetailService = nominatedBlockSubareaDetailService;
+    this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
+    this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedBlockSubareaService = nominatedBlockSubareaService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
@@ -53,7 +56,7 @@ public class NominatedBlockSubareaController {
   @GetMapping
   public ModelAndView getLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nominationId, nominatedBlockSubareaDetailService.getForm(nominationDetail));
+    return getModelAndView(nominationId, nominatedBlockSubareaFormService.getForm(nominationDetail));
   }
 
   @PostMapping
@@ -61,12 +64,12 @@ public class NominatedBlockSubareaController {
                                                @ModelAttribute("form") NominatedBlockSubareaForm form,
                                                BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
-        nominatedBlockSubareaDetailService.validate(form, bindingResult),
+        nominatedBlockSubareaFormService.validate(form, bindingResult),
         getModelAndView(nominationId, form),
         form,
         () -> {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nominatedBlockSubareaDetailService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
+          nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
           nominatedBlockSubareaService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
           return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
         }

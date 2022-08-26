@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedbloc
 
 import java.util.List;
 
-class NominatedBlockSubareaFormTestUtil {
+public class NominatedBlockSubareaFormTestUtil {
 
   private NominatedBlockSubareaFormTestUtil() {
     throw new IllegalStateException("NominatedBlockSubareaFormTestUtil is a test util and should not be instantiated");

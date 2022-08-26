@@ -1,28 +1,23 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail;
 
-import java.util.List;
+import java.util.Optional;
 import javax.transaction.Transactional;
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWell;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellService;
 
 @Service
-class NominatedWellDetailService {
+class NominatedWellDetailPersistenceService {
 
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
-  private final NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
   private final NominatedWellService nominatedWellService;
 
   @Autowired
-  NominatedWellDetailService(NominatedWellDetailRepository nominatedWellDetailRepository,
-                             NominatedWellDetailFormValidator nominatedWellDetailFormValidator,
-                             NominatedWellService nominatedWellService) {
+  NominatedWellDetailPersistenceService(NominatedWellDetailRepository nominatedWellDetailRepository,
+                                        NominatedWellService nominatedWellService) {
     this.nominatedWellDetailRepository = nominatedWellDetailRepository;
-    this.nominatedWellDetailFormValidator = nominatedWellDetailFormValidator;
     this.nominatedWellService = nominatedWellService;
   }
 
@@ -35,29 +30,8 @@ class NominatedWellDetailService {
     nominatedWellDetailRepository.save(wellNomination);
   }
 
-  BindingResult validate(NominatedWellDetailForm form, BindingResult bindingResult) {
-    nominatedWellDetailFormValidator.validate(form, bindingResult);
-    return bindingResult;
-  }
-
-  NominatedWellDetailForm getForm(NominationDetail nominationDetail) {
-    return nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
-        .map(this::nominatedWellDetailEntityToForm)
-        .orElseGet(NominatedWellDetailForm::new);
-  }
-
-  private NominatedWellDetailForm nominatedWellDetailEntityToForm(NominatedWellDetail entity) {
-    var form = new NominatedWellDetailForm();
-    form.setForAllWellPhases(entity.getForAllWellPhases());
-    form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
-    form.setDevelopmentPhase(entity.getDevelopmentPhase());
-    form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> wellIds = nominatedWellService.findAllByNominationDetail(entity.getNominationDetail())
-        .stream()
-        .map(NominatedWell::getWellId)
-        .toList();
-    form.setWells(wellIds);
-    return form;
+  Optional<NominatedWellDetail> findByNominationDetail(NominationDetail nominationDetail) {
+    return nominatedWellDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   private NominatedWellDetail createNominatedWellDetailFromForm(NominationDetail nominationDetail,

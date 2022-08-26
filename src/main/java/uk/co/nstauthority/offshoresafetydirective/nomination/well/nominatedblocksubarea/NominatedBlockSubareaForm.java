@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedbloc
 
 import java.util.List;
 
-class NominatedBlockSubareaForm {
+public class NominatedBlockSubareaForm {
 
   private List<Integer> subareas;
 
