@@ -72,6 +72,8 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         "nominatedWellDetailView",
         "wellSelectionSetupChangeUrl",
         "nominatedWellDetailViewChangeUrl",
+        "nominatedBlockSubareaDetailView",
+        "nominatedBlockSubareaDetailViewChangeUrl",
         "saveAndContinueUrl",
         "serviceBranding",
         "customerBranding",
@@ -83,7 +85,8 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         "org.springframework.validation.BindingResult.serviceBranding",
         "org.springframework.validation.BindingResult.customerBranding",
         "org.springframework.validation.BindingResult.wellSelectionSetupView",
-        "org.springframework.validation.BindingResult.nominatedWellDetailView"
+        "org.springframework.validation.BindingResult.nominatedWellDetailView",
+        "org.springframework.validation.BindingResult.nominatedBlockSubareaDetailView"
     );
 
     var expectedWellSelectionSetupChangeUrl =

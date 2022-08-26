@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailViewService;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +25,9 @@ class ManageWellsServiceTest {
 
   @Mock
   private NominatedWellDetailViewService nominatedWellDetailViewService;
+
+  @Mock
+  private NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
 
   @InjectMocks
   private ManageWellsService manageWellsService;
@@ -40,5 +44,12 @@ class ManageWellsServiceTest {
     manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL);
 
     verify(nominatedWellDetailViewService, times(1)).getNominatedWellDetailView(NOMINATION_DETAIL);
+  }
+
+  @Test
+  void getNominatedBlockSubareaDetailView_verifyMethodCall() {
+    manageWellsService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+
+    verify(nominatedBlockSubareaDetailViewService, times(1)).getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
   }
 }

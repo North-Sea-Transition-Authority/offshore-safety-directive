@@ -21,8 +21,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
@@ -71,7 +71,7 @@ public class NominatedBlockSubareaController {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
           nominatedBlockSubareaService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+          return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
         }
     );
   }

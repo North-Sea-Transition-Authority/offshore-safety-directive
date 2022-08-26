@@ -35,8 +35,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @ContextConfiguration(classes = NominatedBlockSubareaController.class)
@@ -152,9 +152,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))));
 
-    verify(nominatedBlockSubareaDetailPersistenceService, times(1)).createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
+    verify(nominatedBlockSubareaDetailPersistenceService, times(1))
+        .createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
   }
 
   @Test

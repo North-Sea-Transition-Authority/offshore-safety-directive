@@ -18,6 +18,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailView;
 
@@ -66,6 +68,15 @@ public class ManageWellsController {
         .addObject(
             "saveAndContinueUrl",
             ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))
+        )
+        .addObject(
+            "nominatedBlockSubareaDetailView",
+            manageWellsService.getNominatedBlockSubareaDetailView(nominationDetail)
+                .orElse(new NominatedBlockSubareaDetailView())
+        )
+        .addObject(
+            "nominatedBlockSubareaDetailViewChangeUrl",
+            ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId))
         );
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_TITLE)
         .addWorkAreaBreadcrumb()

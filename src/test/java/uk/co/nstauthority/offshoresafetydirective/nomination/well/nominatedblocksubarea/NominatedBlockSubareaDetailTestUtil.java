@@ -12,6 +12,7 @@ class NominatedBlockSubareaDetailTestUtil {
   public static class NominatedBlockSubareaDetailBuilder {
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean validForFutureWellsInSubarea = true;
+    private Boolean forAllWellPhases = false;
     private Boolean explorationAndAppraisalPhase = true;
     private Boolean developmentPhase = true;
     private Boolean decommissioningPhase = true;
@@ -23,6 +24,11 @@ class NominatedBlockSubareaDetailTestUtil {
 
     public NominatedBlockSubareaDetailBuilder withValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
       this.validForFutureWellsInSubarea = validForFutureWellsInSubarea;
+      return this;
+    }
+
+    public NominatedBlockSubareaDetailBuilder withForAllWellPhases(Boolean forAllWellPhases) {
+      this.forAllWellPhases = forAllWellPhases;
       return this;
     }
 
@@ -45,6 +51,7 @@ class NominatedBlockSubareaDetailTestUtil {
       return new NominatedBlockSubareaDetail()
           .setNominationDetail(nominationDetail)
           .setValidForFutureWellsInSubarea(validForFutureWellsInSubarea)
+          .setForAllWellPhases(forAllWellPhases)
           .setExplorationAndAppraisalPhase(explorationAndAppraisalPhase)
           .setDevelopmentPhase(developmentPhase)
           .setDecommissioningPhase(decommissioningPhase);

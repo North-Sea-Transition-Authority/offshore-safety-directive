@@ -6,19 +6,24 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailViewService;
 
 @Service
 class ManageWellsService {
   private final NominatedWellDetailViewService nominatedWellDetailViewService;
+  private final NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
 
   private final WellSelectionSetupViewService wellSelectionSetupViewService;
 
   @Autowired
   ManageWellsService(NominatedWellDetailViewService nominatedWellDetailViewService,
+                     NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService,
                      WellSelectionSetupViewService wellSelectionSetupViewService) {
     this.nominatedWellDetailViewService = nominatedWellDetailViewService;
+    this.nominatedBlockSubareaDetailViewService = nominatedBlockSubareaDetailViewService;
     this.wellSelectionSetupViewService = wellSelectionSetupViewService;
   }
 
@@ -28,5 +33,9 @@ class ManageWellsService {
 
   Optional<NominatedWellDetailView> getNominatedWellDetailView(NominationDetail nominationDetail) {
     return nominatedWellDetailViewService.getNominatedWellDetailView(nominationDetail);
+  }
+
+  Optional<NominatedBlockSubareaDetailView> getNominatedBlockSubareaDetailView(NominationDetail nominationDetail) {
+    return nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail);
   }
 }
