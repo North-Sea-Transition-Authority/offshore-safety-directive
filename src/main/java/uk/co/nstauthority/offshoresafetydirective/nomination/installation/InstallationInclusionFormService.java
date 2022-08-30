@@ -1,33 +1,28 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class InstallationInclusionFormService {
-
-  private final InstallationInclusionFormValidator installationInclusionFormValidator;
+public class InstallationInclusionFormService {
 
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
 
   @Autowired
-  InstallationInclusionFormService(InstallationInclusionFormValidator installationInclusionFormValidator,
-                                          InstallationInclusionPersistenceService installationInclusionPersistenceService) {
-    this.installationInclusionFormValidator = installationInclusionFormValidator;
+  InstallationInclusionFormService(InstallationInclusionPersistenceService installationInclusionPersistenceService) {
     this.installationInclusionPersistenceService = installationInclusionPersistenceService;
+  }
+
+  public boolean isNotRelatedToInstallationOperatorship(NominationDetail nominationDetail) {
+    return BooleanUtils.isFalse(getForm(nominationDetail).getIncludeInstallationsInNomination());
   }
 
   InstallationInclusionForm getForm(NominationDetail nominationDetail) {
     return installationInclusionPersistenceService.findByNominationDetail(nominationDetail)
         .map(this::installationInclusionFormFromEntity)
         .orElse(new InstallationInclusionForm());
-  }
-
-  BindingResult validate(InstallationInclusionForm form, BindingResult bindingResult) {
-    installationInclusionFormValidator.validate(form, bindingResult);
-    return bindingResult;
   }
 
   private InstallationInclusionForm installationInclusionFormFromEntity(InstallationInclusion installationInclusion) {

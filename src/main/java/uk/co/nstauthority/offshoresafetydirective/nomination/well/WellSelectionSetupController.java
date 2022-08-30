@@ -26,35 +26,42 @@ public class WellSelectionSetupController {
 
   public static final String PAGE_NAME = "Well nominations";
 
-  private final WellSelectionSetupService wellSelectionSetupService;
+  private final WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final ControllerHelperService controllerHelperService;
+  private final WellSelectionSetupFormService wellSelectionSetupFormService;
+  private final WellSelectionSetupValidationService wellSelectionSetupValidationService;
 
   @Autowired
-  public WellSelectionSetupController(WellSelectionSetupService wellSelectionSetupService,
+  public WellSelectionSetupController(WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService,
                                       NominationDetailService nominationDetailService,
-                                      ControllerHelperService controllerHelperService) {
-    this.wellSelectionSetupService = wellSelectionSetupService;
+                                      ControllerHelperService controllerHelperService,
+                                      WellSelectionSetupFormService wellSelectionSetupFormService,
+                                      WellSelectionSetupValidationService wellSelectionSetupValidationService) {
+    this.wellSelectionSetupPersistenceService = wellSelectionSetupPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.controllerHelperService = controllerHelperService;
+    this.wellSelectionSetupFormService = wellSelectionSetupFormService;
+    this.wellSelectionSetupValidationService = wellSelectionSetupValidationService;
   }
 
   @GetMapping
   public ModelAndView getWellSetup(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getWellSetupModelAndView(wellSelectionSetupService.getForm(nominationDetail), nominationId);
+    return getWellSetupModelAndView(wellSelectionSetupFormService.getForm(nominationDetail), nominationId);
   }
 
   @PostMapping
   public ModelAndView saveWellSetup(@PathVariable("nominationId") NominationId nominationId,
                                     @ModelAttribute("form") WellSelectionSetupForm form,
                                     BindingResult bindingResult) {
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return controllerHelperService.checkErrorsAndRedirect(
-        wellSelectionSetupService.validate(form, bindingResult),
+        wellSelectionSetupValidationService.validate(form, bindingResult, nominationDetail),
         getWellSetupModelAndView(form, nominationId),
         form,
         () -> {
-          wellSelectionSetupService.createOrUpdateWellSelectionSetup(form, nominationId);
+          wellSelectionSetupPersistenceService.createOrUpdateWellSelectionSetup(form, nominationDetail);
           return switch (WellSelectionType.valueOf(form.getWellSelectionType())) {
             case SPECIFIC_WELLS ->
                 ReverseRouter.redirect(on(NominatedWellDetailController.class)

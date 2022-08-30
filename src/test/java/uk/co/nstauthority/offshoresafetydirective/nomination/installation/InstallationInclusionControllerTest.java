@@ -50,6 +50,9 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationDetailService nominationDetailService;
 
+  @MockBean
+  private InstallationInclusionValidationService installationInclusionValidationService;
+
   @Test
   void getInstallationAdvice_assertModelAndViewProperties() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
@@ -96,10 +99,11 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
+            post(ReverseRouter.route(on(InstallationInclusionController.class)
+                  .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
                 .param("includeInstallationsInNomination", "true")
         )
@@ -116,10 +120,11 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
+            post(ReverseRouter.route(on(InstallationInclusionController.class)
+                  .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
                 .param("includeInstallationsInNomination", "false")
         )
@@ -135,10 +140,11 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default msg"));
 
-    when(installationInclusionFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(installationInclusionValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null)))
+            post(ReverseRouter.route(on(InstallationInclusionController.class)
+                  .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
         )
         .andExpect(status().isOk());

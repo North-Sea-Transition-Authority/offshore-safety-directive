@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.io.Serializable;
 import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,8 +11,9 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "nominations")
-public class Nomination {
+public class Nomination implements Serializable {
 
+  private static final long serialVersionUID = -1465606964869645933L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;

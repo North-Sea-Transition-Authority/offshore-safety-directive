@@ -36,7 +36,7 @@ public class NominatedInstallationController {
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final InstallationQueryService installationQueryService;
-  private final NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
+  private final NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
 
   @Autowired
   public NominatedInstallationController(ControllerHelperService controllerHelperService,
@@ -44,19 +44,19 @@ public class NominatedInstallationController {
                                              nominatedInstallationDetailPersistenceService,
                                          NominationDetailService nominationDetailService,
                                          InstallationQueryService installationQueryService,
-                                         NominatedInstallationDetailServiceFormService
-                                               nominatedInstallationDetailServiceFormService) {
+                                         NominatedInstallationDetailFormService
+                                             nominatedInstallationDetailFormService) {
     this.controllerHelperService = controllerHelperService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.installationQueryService = installationQueryService;
-    this.nominatedInstallationDetailServiceFormService = nominatedInstallationDetailServiceFormService;
+    this.nominatedInstallationDetailFormService = nominatedInstallationDetailFormService;
   }
 
   @GetMapping
   public ModelAndView getNominatedInstallationDetail(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nominationId, nominatedInstallationDetailServiceFormService.getForm(nominationDetail));
+    return getModelAndView(nominationId, nominatedInstallationDetailFormService.getForm(nominationDetail));
   }
 
   @PostMapping
@@ -64,7 +64,7 @@ public class NominatedInstallationController {
                                                       @ModelAttribute("form") NominatedInstallationDetailForm form,
                                                       BindingResult bindingResult) {
     return controllerHelperService.checkErrorsAndRedirect(
-        nominatedInstallationDetailServiceFormService.validate(form, bindingResult),
+        nominatedInstallationDetailFormService.validate(form, bindingResult),
         getModelAndView(nominationId, form),
         form,
         () -> {

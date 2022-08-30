@@ -15,8 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailServiceFormService;
 
 @ExtendWith(MockitoExtension.class)
 class InstallationSubmissionServiceTest {
@@ -27,7 +27,10 @@ class InstallationSubmissionServiceTest {
   private InstallationInclusionFormService installationInclusionFormService;
 
   @Mock
-  private NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
+  private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
+
+  @Mock
+  private InstallationInclusionValidationService installationInclusionValidationService;
 
   @InjectMocks
   private InstallationSubmissionService installationSubmissionService;
@@ -44,7 +47,7 @@ class InstallationSubmissionServiceTest {
       BindingResult bindingResult = invocation.getArgument(1);
       bindingResult.rejectValue("includeInstallationsInNomination", "includeInstallationsInNomination.required", "test message");
       return bindingResult;
-    }).when(installationInclusionFormService).validate(eq(installationInclusionForm), any());
+    }).when(installationInclusionValidationService).validate(eq(installationInclusionForm), any(), any());
 
     assertFalse(installationSubmissionService.isSectionSubmittable(NOMINATION_DETAIL));
   }
@@ -58,7 +61,7 @@ class InstallationSubmissionServiceTest {
     when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);
 
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
-        .when(installationInclusionFormService).validate(eq(installationInclusionForm), any());
+        .when(installationInclusionValidationService).validate(eq(installationInclusionForm), any(), any());
 
     assertTrue(installationSubmissionService.isSectionSubmittable(NOMINATION_DETAIL));
   }
@@ -72,12 +75,12 @@ class InstallationSubmissionServiceTest {
         .build();
 
     when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);
-    when(nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedInstallationDetailForm);
+    when(nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedInstallationDetailForm);
 
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
-        .when(installationInclusionFormService).validate(eq(installationInclusionForm), any());
+        .when(installationInclusionValidationService).validate(eq(installationInclusionForm), any(), any());
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
-        .when(nominatedInstallationDetailServiceFormService).validate(eq(nominatedInstallationDetailForm), any());
+        .when(nominatedInstallationDetailFormService).validate(eq(nominatedInstallationDetailForm), any());
 
     assertTrue(installationSubmissionService.isSectionSubmittable(NOMINATION_DETAIL));
   }
@@ -91,15 +94,15 @@ class InstallationSubmissionServiceTest {
         .build();
 
     when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);
-    when(nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedInstallationDetailForm);
+    when(nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedInstallationDetailForm);
 
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
-        .when(installationInclusionFormService).validate(eq(installationInclusionForm), any());
+        .when(installationInclusionValidationService).validate(eq(installationInclusionForm), any(), any());
     doAnswer(invocation -> {
       BindingResult bindingResult = invocation.getArgument(1);
       bindingResult.rejectValue("forAllInstallationPhases", "forAllInstallationPhases.required", "test message");
       return bindingResult;
-    }).when(nominatedInstallationDetailServiceFormService).validate(eq(nominatedInstallationDetailForm), any());
+    }).when(nominatedInstallationDetailFormService).validate(eq(nominatedInstallationDetailForm), any());
 
     assertFalse(installationSubmissionService.isSectionSubmittable(NOMINATION_DETAIL));
   }

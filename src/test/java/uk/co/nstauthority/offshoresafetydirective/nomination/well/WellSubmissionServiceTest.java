@@ -27,7 +27,7 @@ class WellSubmissionServiceTest {
       .build();
 
   @Mock
-  private WellSelectionSetupService wellSelectionSetupService;
+  private WellSelectionSetupFormService wellSelectionSetupFormService;
 
   @Mock
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
@@ -42,7 +42,7 @@ class WellSubmissionServiceTest {
   void isSectionSubmittable_whenNotAnsweredSelectionSetup_thenFalse() {
     var emptyWellSelectionSetupForm = new WellSelectionSetupForm();
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
 
     assertFalse(
         wellSubmissionService.isSectionSubmittable(NOMINATION_DETAIL)
@@ -54,7 +54,7 @@ class WellSubmissionServiceTest {
     var emptyWellSelectionSetupForm = new WellSelectionSetupForm();
     emptyWellSelectionSetupForm.setWellSelectionType(WellSelectionType.NO_WELLS.name());
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
 
     assertTrue(
         wellSubmissionService.isSectionSubmittable(NOMINATION_DETAIL)
@@ -67,7 +67,7 @@ class WellSubmissionServiceTest {
     wellSelectionSetupForm.setWellSelectionType(WellSelectionType.SPECIFIC_WELLS.name());
     var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
         .when(nominatedWellDetailFormService).validate(eq(nominatedWellDetailForm), any());
@@ -83,7 +83,7 @@ class WellSubmissionServiceTest {
     wellSelectionSetupForm.setWellSelectionType(WellSelectionType.SPECIFIC_WELLS.name());
     var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);
     doAnswer(invocation -> {
       BindingResult bindingResult = invocation.getArgument(1);
@@ -102,7 +102,7 @@ class WellSubmissionServiceTest {
     wellSelectionSetupForm.setWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA.name());
     var nominatedBlockSubareaForm = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder().build();
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedBlockSubareaForm);
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
         .when(nominatedBlockSubareaFormService).validate(eq(nominatedBlockSubareaForm), any());
@@ -118,7 +118,7 @@ class WellSubmissionServiceTest {
     wellSelectionSetupForm.setWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA.name());
     var nominatedBlockSubareaForm = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder().build();
 
-    when(wellSelectionSetupService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedBlockSubareaForm);
     doAnswer(invocation -> {
       BindingResult bindingResult = invocation.getArgument(1);

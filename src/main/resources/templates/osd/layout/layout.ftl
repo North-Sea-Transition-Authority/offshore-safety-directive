@@ -1,4 +1,5 @@
 <#include '../../fds/layout.ftl'>
+<#include '../../fds/objects/layouts/leftSubNavLayout.ftl'>
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/mailTo.ftl' as mailTo>
 <#import '../macros/taskList.ftl' as taskList>
@@ -6,6 +7,10 @@
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
+
+<#assign serviceName = serviceBranding.name() />
+<#assign customerMnemonic = customerBranding.mnemonic() />
+<#assign serviceHomeUrl = springUrl(serviceHomeUrl) />
 
 <#macro defaultPage
   pageHeading
@@ -16,9 +21,6 @@
   backLinkUrl=""
   breadcrumbsList={}
 >
-  <#local serviceName = serviceBranding.name() />
-  <#local customerMnemonic = customerBranding.mnemonic() />
-  <#local serviceHomeUrl = springUrl(serviceHomeUrl) />
 
   <#assign fullWidthColumn=false />
   <#assign oneHalfColumn=false />
@@ -73,7 +75,27 @@
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsList
+    singleErrorMessage=singleErrorMessage
   >
     <#nested />
   </@fdsDefaultPageTemplate>
+</#macro>
+
+<#macro defaultPageWithSubNavigation
+  pageHeading
+  htmlTitle=pageHeading
+  phaseBanner=true
+>
+    <@fdsLeftSubNavPageTemplate
+      htmlTitle=htmlTitle
+      htmlAppTitle=pageHeading
+      phaseBanner=phaseBanner
+      homePageUrl=serviceHomeUrl
+      serviceUrl=serviceHomeUrl
+      topNavigation=true
+      logoProductText=customerMnemonic
+      phaseBannerContent=""
+    >
+      <#nested />
+    </@fdsLeftSubNavPageTemplate>
 </#macro>

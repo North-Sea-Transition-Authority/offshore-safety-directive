@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.io.Serializable;
 import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,7 +15,9 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "nomination_details")
-public class NominationDetail {
+public class NominationDetail implements Serializable {
+
+  private static final long serialVersionUID = 6126656191548621905L;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +34,9 @@ public class NominationDetail {
 
   @Enumerated(EnumType.STRING)
   private NominationStatus status;
+
+  @Column(name = "submitted_datetime")
+  private Instant submittedInstant;
 
   Integer getId() {
     return id;
@@ -77,6 +83,14 @@ public class NominationDetail {
     return this;
   }
 
+  public Instant getSubmittedInstant() {
+    return submittedInstant;
+  }
+
+  public void setSubmittedInstant(Instant submittedInstant) {
+    this.submittedInstant = submittedInstant;
+  }
+
   @Override
   public String toString() {
     return "NominationDetail{" +
@@ -85,6 +99,7 @@ public class NominationDetail {
         ", createdInstant=" + createdInstant +
         ", version=" + version +
         ", status=" + status +
+        ", submittedInstant=" + submittedInstant +
         '}';
   }
 }

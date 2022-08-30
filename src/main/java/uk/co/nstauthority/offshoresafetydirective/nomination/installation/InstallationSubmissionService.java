@@ -5,36 +5,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailServiceFormService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSectionSubmissionService;
 
 @Service
 class InstallationSubmissionService implements NominationSectionSubmissionService {
 
   private final InstallationInclusionFormService installationInclusionFormService;
-  private final NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
+  private final NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
+  private final InstallationInclusionValidationService installationInclusionValidationService;
 
   @Autowired
   InstallationSubmissionService(InstallationInclusionFormService installationInclusionFormService,
-                                NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService) {
+                                NominatedInstallationDetailFormService nominatedInstallationDetailFormService,
+                                InstallationInclusionValidationService installationInclusionValidationService) {
     this.installationInclusionFormService = installationInclusionFormService;
-    this.nominatedInstallationDetailServiceFormService = nominatedInstallationDetailServiceFormService;
+    this.nominatedInstallationDetailFormService = nominatedInstallationDetailFormService;
+    this.installationInclusionValidationService = installationInclusionValidationService;
   }
 
   @Override
   public boolean isSectionSubmittable(NominationDetail nominationDetail) {
     var installationInclusionForm = installationInclusionFormService.getForm(nominationDetail);
     var installationInclusionFormBindingResult = new BeanPropertyBindingResult(installationInclusionForm, "form");
-    installationInclusionFormService.validate(installationInclusionForm, installationInclusionFormBindingResult);
+    installationInclusionValidationService.validate(
+        installationInclusionForm,
+        installationInclusionFormBindingResult,
+        nominationDetail
+    );
     if (installationInclusionFormBindingResult.hasErrors()) {
       return false;
     } else if (BooleanUtils.isFalse(installationInclusionForm.getIncludeInstallationsInNomination())) {
       return true;
     }
 
-    var nominatedInstallationDetailForm = nominatedInstallationDetailServiceFormService.getForm(nominationDetail);
+    var nominatedInstallationDetailForm = nominatedInstallationDetailFormService.getForm(nominationDetail);
     var nominatedInstallationDetailFormBindingResult = new BeanPropertyBindingResult(nominatedInstallationDetailForm, "form");
-    nominatedInstallationDetailServiceFormService.validate(
+    nominatedInstallationDetailFormService.validate(
         nominatedInstallationDetailForm,
         nominatedInstallationDetailFormBindingResult
     );

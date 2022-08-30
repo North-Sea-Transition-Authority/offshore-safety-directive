@@ -1,0 +1,93 @@
+package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+
+@WebMvcTest
+@ContextConfiguration(classes = NominationSubmissionController.class)
+@WithMockUser
+class NominationSubmissionControllerTest extends AbstractControllerTest {
+
+  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
+
+  @MockBean
+  private NominationSubmissionService nominationSubmissionService;
+
+  @MockBean
+  private NominationDetailService nominationDetailService;
+
+  @Test
+  void getSubmissionPage_assertModelProperties() throws Exception {
+    var isSubmittable = false;
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+    when(nominationSubmissionService.canSubmitNomination(NOMINATION_DETAIL)).thenReturn(isSubmittable);
+
+    var model = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andReturn()
+        .getModelAndView()
+        .getModel();
+
+    assertThat(model).containsOnlyKeys(
+        "backLinkUrl",
+        "actionUrl",
+        "isSubmittable",
+        "serviceBranding",
+        "customerBranding",
+        "serviceHomeUrl",
+        "navigationItems",
+        "currentEndPoint",
+        "org.springframework.validation.BindingResult.serviceBranding",
+        "org.springframework.validation.BindingResult.customerBranding"
+    );
+
+    var expectedBackLink = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
+    var expectedActionUrl = ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID));
+    assertEquals(expectedBackLink, model.get("backLinkUrl"));
+    assertEquals(expectedActionUrl, model.get("actionUrl"));
+    assertEquals(isSubmittable, model.get("isSubmittable"));
+  }
+
+  @Test
+  void submitNomination_verifyMethodCallAndRedirection() throws Exception {
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)
+            .getSubmissionConfirmationPage(NOMINATION_ID))));
+
+    verify(nominationSubmissionService, times(1)).submitNomination(NOMINATION_DETAIL);
+  }
+}

@@ -1,8 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -57,12 +56,34 @@ class InstallationInclusionFormServiceTest {
   }
 
   @Test
-  void validate_verifyMethodCall() {
-    var form = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder().build();
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
+  void isNotRelatedToInstallationOperatorship_whenFormNotYetAnswered_thenFalse() {
+    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
 
-    installationInclusionFormService.validate(form, bindingResult);
+    assertFalse(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));
+  }
 
-    verify(installationInclusionFormValidator, times(1)).validate(form, bindingResult);
+  @Test
+  void isNotRelatedToInstallationOperatorship_whenNotIncludingInstallation_thenTrue() {
+    var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder()
+        .includeInstallationsInNomination(false)
+        .build();
+
+    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(installationInclusion));
+
+    assertTrue(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));
+  }
+
+  @Test
+  void isNotRelatedToInstallationOperatorship_whenIncludingInstallation_thenFalse() {
+    var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder()
+        .includeInstallationsInNomination(true)
+        .build();
+
+    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(installationInclusion));
+
+    assertFalse(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));
   }
 }

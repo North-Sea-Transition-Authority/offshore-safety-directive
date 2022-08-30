@@ -12,22 +12,22 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelld
 @Service
 class WellSubmissionService implements NominationSectionSubmissionService {
 
-  private final WellSelectionSetupService wellSelectionSetupService;
+  private final WellSelectionSetupFormService wellSelectionSetupFormService;
   private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
   private final NominatedWellDetailFormService nominatedWellDetailFormService;
 
   @Autowired
-  WellSubmissionService(WellSelectionSetupService wellSelectionSetupService,
+  WellSubmissionService(WellSelectionSetupFormService wellSelectionSetupFormService,
                         NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                         NominatedWellDetailFormService nominatedWellDetailFormService) {
-    this.wellSelectionSetupService = wellSelectionSetupService;
+    this.wellSelectionSetupFormService = wellSelectionSetupFormService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
   }
 
   @Override
   public boolean isSectionSubmittable(NominationDetail nominationDetail) {
-    var wellSelectionForm = wellSelectionSetupService.getForm(nominationDetail);
+    var wellSelectionForm = wellSelectionSetupFormService.getForm(nominationDetail);
     if (StringUtils.isNotBlank(wellSelectionForm.getWellSelectionType())) {
       return switch (WellSelectionType.valueOf(wellSelectionForm.getWellSelectionType())) {
         case NO_WELLS -> true;

@@ -9,14 +9,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Nomina
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationService;
 
 @Service
-public class NominatedInstallationDetailServiceFormService {
+public class NominatedInstallationDetailFormService {
 
   private final NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
   private final NominatedInstallationService nominatedInstallationService;
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
 
   @Autowired
-  public NominatedInstallationDetailServiceFormService(
+  public NominatedInstallationDetailFormService(
       NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator,
       NominatedInstallationService nominatedInstallationService,
       NominatedInstallationDetailRepository nominatedInstallationDetailRepository) {

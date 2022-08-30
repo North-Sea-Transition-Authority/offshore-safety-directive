@@ -3,25 +3,35 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype.NominationTypeValidator;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class WellSelectionSetupFormValidatorTest {
 
-  private static WellSelectionSetupFormValidator wellSelectionSetupFormValidator;
+  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+      .build();
 
-  @BeforeAll
-  static void setup() {
-    wellSelectionSetupFormValidator = new WellSelectionSetupFormValidator();
-  }
+  private static final WellSelectionSetupFormValidatorHint HINT =
+      new WellSelectionSetupFormValidatorHint(NOMINATION_DETAIL);
+
+  @Mock
+  private NominationTypeValidator nominationTypeValidator;
+
+  @InjectMocks
+  private WellSelectionSetupFormValidator wellSelectionSetupFormValidator;
 
   @Test
   void supports_whenWellSetupForm_thenTrue() {
@@ -38,7 +48,7 @@ class WellSelectionSetupFormValidatorTest {
     var validForm = WellSelectionSetupTestUtil.getValidForm();
     var bindingResult = new BeanPropertyBindingResult(validForm, "form");
 
-    wellSelectionSetupFormValidator.validate(validForm, bindingResult);
+    wellSelectionSetupFormValidator.validate(validForm, bindingResult, HINT);
 
     assertFalse(bindingResult.hasErrors());
   }
@@ -48,7 +58,7 @@ class WellSelectionSetupFormValidatorTest {
     var invalidForm = new WellSelectionSetupForm();
     var bindingResult = new BeanPropertyBindingResult(invalidForm, "form");
 
-    wellSelectionSetupFormValidator.validate(invalidForm, bindingResult);
+    wellSelectionSetupFormValidator.validate(invalidForm, bindingResult, HINT);
 
     assertTrue(bindingResult.hasErrors());
 
@@ -64,7 +74,7 @@ class WellSelectionSetupFormValidatorTest {
     invalidForm.setWellSelectionType("Invalid well selection type");
     var bindingResult = new BeanPropertyBindingResult(invalidForm, "form");
 
-    wellSelectionSetupFormValidator.validate(invalidForm, bindingResult);
+    wellSelectionSetupFormValidator.validate(invalidForm, bindingResult, HINT);
 
     assertTrue(bindingResult.hasErrors());
 
@@ -72,6 +82,14 @@ class WellSelectionSetupFormValidatorTest {
     assertThat(extractedErrors).containsExactly(
         entry("wellSelectionType", Set.of("wellSelectionType.required"))
     );
+  }
+
+  @Test
+  void validate_whenNoHintProvided_expectException() {
+    var form = new WellSelectionSetupForm();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    assertThrows(IllegalStateException.class, () -> wellSelectionSetupFormValidator.validate(form, bindingResult));
   }
 
   private static class NonSupportedClass {

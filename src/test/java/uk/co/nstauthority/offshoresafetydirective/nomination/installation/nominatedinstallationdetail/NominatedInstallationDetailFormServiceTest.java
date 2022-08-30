@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Nomina
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class NominatedInstallationDetailServiceFormServiceTest {
+class NominatedInstallationDetailFormServiceTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
@@ -34,7 +34,7 @@ class NominatedInstallationDetailServiceFormServiceTest {
   private NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
 
   @InjectMocks
-  private NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
+  private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
 
   @Test
   void getForm_whenEntityExist_thenFormMatchesEntity() {
@@ -60,7 +60,7 @@ class NominatedInstallationDetailServiceFormServiceTest {
     when(nominatedInstallationService.findAllByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedInstallation1, nominatedInstallation2));
 
-    var form = nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL);
+    var form = nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL);
 
     assertThat(form)
         .extracting(
@@ -89,7 +89,7 @@ class NominatedInstallationDetailServiceFormServiceTest {
   void getForm_whenNoEntityExist_thenFormEmpty() {
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
-    var form = nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL);
+    var form = nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL);
 
     assertThat(form).hasAllNullFieldsOrProperties();
   }
@@ -99,7 +99,7 @@ class NominatedInstallationDetailServiceFormServiceTest {
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    nominatedInstallationDetailServiceFormService.validate(form, bindingResult);
+    nominatedInstallationDetailFormService.validate(form, bindingResult);
 
     verify(nominatedInstallationDetailFormValidator, times(1)).validate(form, bindingResult);
   }

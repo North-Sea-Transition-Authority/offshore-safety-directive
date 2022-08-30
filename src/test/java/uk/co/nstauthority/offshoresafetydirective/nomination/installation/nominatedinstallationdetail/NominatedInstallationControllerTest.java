@@ -52,7 +52,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
 
   @MockBean
-  private NominatedInstallationDetailServiceFormService nominatedInstallationDetailServiceFormService;
+  private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -68,7 +68,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .withInstallations(List.of(installationDto1.id(), installationDto2.id()))
         .build();
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedInstallationDetailServiceFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+    when(nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
     when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
         .thenReturn(List.of(installationDto2, installationDto1));
 
@@ -127,7 +127,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var form = new NominatedInstallationDetailForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(nominatedInstallationDetailServiceFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
@@ -149,7 +149,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
-    when(nominatedInstallationDetailServiceFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
             post(ReverseRouter.route(

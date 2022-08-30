@@ -27,16 +27,19 @@ public class InstallationInclusionController {
   private final ControllerHelperService controllerHelperService;
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
   private final InstallationInclusionFormService installationInclusionFormService;
+  private final InstallationInclusionValidationService installationInclusionValidationService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
   public InstallationInclusionController(ControllerHelperService controllerHelperService,
                                          InstallationInclusionPersistenceService installationInclusionPersistenceService,
                                          InstallationInclusionFormService installationInclusionFormService,
+                                         InstallationInclusionValidationService installationInclusionValidationService,
                                          NominationDetailService nominationDetailService) {
     this.controllerHelperService = controllerHelperService;
     this.installationInclusionPersistenceService = installationInclusionPersistenceService;
     this.installationInclusionFormService = installationInclusionFormService;
+    this.installationInclusionValidationService = installationInclusionValidationService;
     this.nominationDetailService = nominationDetailService;
   }
 
@@ -50,12 +53,12 @@ public class InstallationInclusionController {
   public ModelAndView saveInstallationInclusion(@PathVariable("nominationId") NominationId nominationId,
                                                 @ModelAttribute("form") InstallationInclusionForm form,
                                                 BindingResult bindingResult) {
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     return controllerHelperService.checkErrorsAndRedirect(
-        installationInclusionFormService.validate(form, bindingResult),
+        installationInclusionValidationService.validate(form, bindingResult, nominationDetail),
         getModelAndView(nominationId, form),
         form,
         () -> {
-          var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           installationInclusionPersistenceService.createOrUpdateInstallationInclusion(nominationDetail, form);
           if (form.getIncludeInstallationsInNomination()) {
             return ReverseRouter.redirect(
