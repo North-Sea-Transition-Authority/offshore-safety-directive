@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -22,7 +22,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 

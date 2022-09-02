@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -15,8 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailFormServiceTest {
@@ -28,7 +26,7 @@ class NominatedInstallationDetailFormServiceTest {
   private NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
 
   @Mock
-  private NominatedInstallationService nominatedInstallationService;
+  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @Mock
   private NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
@@ -57,7 +55,7 @@ class NominatedInstallationDetailFormServiceTest {
 
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedInstallationDetail));
-    when(nominatedInstallationService.findAllByNominationDetail(NOMINATION_DETAIL))
+    when(nominatedInstallationPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedInstallation1, nominatedInstallation2));
 
     var form = nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL);

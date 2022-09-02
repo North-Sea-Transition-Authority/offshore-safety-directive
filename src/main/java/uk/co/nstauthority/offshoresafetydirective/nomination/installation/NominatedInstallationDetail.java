@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

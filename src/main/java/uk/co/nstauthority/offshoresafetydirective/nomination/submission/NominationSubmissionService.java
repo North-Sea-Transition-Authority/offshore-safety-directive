@@ -27,6 +27,13 @@ class NominationSubmissionService {
   }
 
   void submitNomination(NominationDetail nominationDetail) {
+    onSubmission(nominationDetail);
     nominationDetailService.submitNomination(nominationDetail);
+  }
+
+  private void onSubmission(NominationDetail nominationDetail) {
+    nominationSectionSubmissionServices.forEach(
+        nominationSectionSubmissionService -> nominationSectionSubmissionService.onSubmission(nominationDetail)
+    );
   }
 }

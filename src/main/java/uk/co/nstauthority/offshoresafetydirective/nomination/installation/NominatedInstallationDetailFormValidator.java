@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import org.apache.commons.lang.BooleanUtils;
 import org.springframework.stereotype.Service;

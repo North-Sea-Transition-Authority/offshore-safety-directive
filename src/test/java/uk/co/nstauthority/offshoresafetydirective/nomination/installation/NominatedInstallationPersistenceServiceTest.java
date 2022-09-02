@@ -17,10 +17,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class NominatedInstallationServiceTest {
+class NominatedInstallationPersistenceServiceTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
@@ -32,7 +31,7 @@ class NominatedInstallationServiceTest {
   private InstallationQueryService installationQueryService;
 
   @InjectMocks
-  private NominatedInstallationService nominatedInstallationService;
+  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @Test
   void saveNominatedInstallations_whenFormHasDuplicateWells_verifyNoDuplicateWellsSaved() {
@@ -46,7 +45,7 @@ class NominatedInstallationServiceTest {
 
     when(installationQueryService.getInstallationsByIdIn(List.of(installationId1, installationId2))).thenReturn(List.of(installationDto1, installationDto2));
 
-    nominatedInstallationService.saveNominatedInstallations(NOMINATION_DETAIL, formWithDuplicateInstallation);
+    nominatedInstallationPersistenceService.saveNominatedInstallations(NOMINATION_DETAIL, formWithDuplicateInstallation);
 
     verify(nominatedInstallationRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
 
@@ -66,8 +65,15 @@ class NominatedInstallationServiceTest {
 
   @Test
   void findAllByNominationDetail_verifyMethodCall() {
-    nominatedInstallationService.findAllByNominationDetail(NOMINATION_DETAIL);
+    nominatedInstallationPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL);
 
     verify(nominatedInstallationRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
+  }
+
+  @Test
+  void deleteByNominationDetail_verifyRepoCall() {
+    nominatedInstallationPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
+
+    verify(nominatedInstallationRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
   }
 }

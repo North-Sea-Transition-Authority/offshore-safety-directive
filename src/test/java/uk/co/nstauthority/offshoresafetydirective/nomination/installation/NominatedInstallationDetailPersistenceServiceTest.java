@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationService;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailPersistenceServiceTest {
@@ -24,7 +23,7 @@ class NominatedInstallationDetailPersistenceServiceTest {
   private NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
 
   @Mock
-  private NominatedInstallationService nominatedInstallationService;
+  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @InjectMocks
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
@@ -44,7 +43,7 @@ class NominatedInstallationDetailPersistenceServiceTest {
     nominatedInstallationDetailPersistenceService.createOrUpdateNominatedInstallationDetail(NOMINATION_DETAIL, form);
 
     var nominatedInstallationsDetailCaptor = ArgumentCaptor.forClass(NominatedInstallationDetail.class);
-    verify(nominatedInstallationService, times(1)).saveNominatedInstallations(NOMINATION_DETAIL, form);
+    verify(nominatedInstallationPersistenceService, times(1)).saveNominatedInstallations(NOMINATION_DETAIL, form);
     verify(nominatedInstallationDetailRepository, times(1)).save(nominatedInstallationsDetailCaptor.capture());
 
     var savedEntity = nominatedInstallationsDetailCaptor.getValue();
@@ -86,7 +85,7 @@ class NominatedInstallationDetailPersistenceServiceTest {
     nominatedInstallationDetailPersistenceService.createOrUpdateNominatedInstallationDetail(NOMINATION_DETAIL, form);
 
     var nominatedInstallationsDetailCaptor = ArgumentCaptor.forClass(NominatedInstallationDetail.class);
-    verify(nominatedInstallationService, times(1)).saveNominatedInstallations(NOMINATION_DETAIL, form);
+    verify(nominatedInstallationPersistenceService, times(1)).saveNominatedInstallations(NOMINATION_DETAIL, form);
     verify(nominatedInstallationDetailRepository, times(1)).save(nominatedInstallationsDetailCaptor.capture());
 
     var savedEntity = nominatedInstallationsDetailCaptor.getValue();
@@ -111,5 +110,12 @@ class NominatedInstallationDetailPersistenceServiceTest {
             form.getDevelopmentProductionPhase(),
             form.getDecommissioningPhase()
         );
+  }
+
+  @Test
+  void deleteByNominationDetail_verifyRepoCall() {
+    nominatedInstallationDetailPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
+
+    verify(nominatedInstallationDetailRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
   }
 }

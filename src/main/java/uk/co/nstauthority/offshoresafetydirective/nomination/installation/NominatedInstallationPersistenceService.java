@@ -6,17 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailForm;
 
 @Service
-public class NominatedInstallationService {
+class NominatedInstallationPersistenceService {
 
   private final NominatedInstallationRepository nominatedInstallationRepository;
   private final InstallationQueryService installationQueryService;
 
   @Autowired
-  NominatedInstallationService(NominatedInstallationRepository nominatedInstallationRepository,
-                               InstallationQueryService installationQueryService) {
+  NominatedInstallationPersistenceService(NominatedInstallationRepository nominatedInstallationRepository,
+                                          InstallationQueryService installationQueryService) {
     this.nominatedInstallationRepository = nominatedInstallationRepository;
     this.installationQueryService = installationQueryService;
   }
@@ -38,7 +37,12 @@ public class NominatedInstallationService {
     nominatedInstallationRepository.saveAll(nominatedInstallations);
   }
 
-  public List<NominatedInstallation> findAllByNominationDetail(NominationDetail nominationDetail) {
+  @Transactional
+  public void deleteByNominationDetail(NominationDetail nominationDetail) {
+    nominatedInstallationRepository.deleteAllByNominationDetail(nominationDetail);
+  }
+
+  List<NominatedInstallation> findAllByNominationDetail(NominationDetail nominationDetail) {
     return nominatedInstallationRepository.findAllByNominationDetail(nominationDetail);
   }
 }

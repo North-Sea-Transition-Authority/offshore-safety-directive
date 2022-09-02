@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -15,8 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailFormTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class InstallationSubmissionServiceTest {
@@ -31,6 +32,12 @@ class InstallationSubmissionServiceTest {
 
   @Mock
   private InstallationInclusionValidationService installationInclusionValidationService;
+
+  @Mock
+  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+
+  @Mock
+  private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
 
   @InjectMocks
   private InstallationSubmissionService installationSubmissionService;
@@ -105,5 +112,33 @@ class InstallationSubmissionServiceTest {
     }).when(nominatedInstallationDetailFormService).validate(eq(nominatedInstallationDetailForm), any());
 
     assertFalse(installationSubmissionService.isSectionSubmittable(NOMINATION_DETAIL));
+  }
+
+  @Test
+  void onSubmission_whenIncludeInstallations_thenDontCleanDB() {
+    var installationInclusionForm = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder()
+        .includeInstallationsInNomination(true)
+        .build();
+
+    when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);
+
+    installationSubmissionService.onSubmission(NOMINATION_DETAIL);
+
+    verify(nominatedInstallationPersistenceService, never()).deleteByNominationDetail(any());
+    verify(nominatedInstallationDetailPersistenceService, never()).deleteByNominationDetail(any());
+  }
+
+  @Test
+  void onSubmission_whenNotIncludeInstallations_thenCleanDB() {
+    var installationInclusionForm = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder()
+        .includeInstallationsInNomination(false)
+        .build();
+
+    when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);
+
+    installationSubmissionService.onSubmission(NOMINATION_DETAIL);
+
+    verify(nominatedInstallationPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedInstallationDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
   }
 }
