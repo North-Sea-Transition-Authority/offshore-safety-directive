@@ -57,7 +57,7 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 ### 5. Run the app
 Create a run configuration for the Spring app and start the application.
 
-The application will be running on `localhost:8080/osd/<endpoint>`
+The application will be running on `localhost:8080/wios/<endpoint>`
 
 ## Development setup
 

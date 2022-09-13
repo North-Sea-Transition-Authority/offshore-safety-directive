@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailViewService;
 
 @ExtendWith(MockitoExtension.class)
 class ManageInstallationServiceTest {

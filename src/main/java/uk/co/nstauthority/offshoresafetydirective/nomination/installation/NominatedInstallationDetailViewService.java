@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,33 +7,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallation;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationService;
 
 @Service
 public class NominatedInstallationDetailViewService {
 
   private final InstallationQueryService installationQueryService;
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
-  private final NominatedInstallationService nominatedInstallationService;
+  private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @Autowired
   public NominatedInstallationDetailViewService(InstallationQueryService installationQueryService,
                                                 NominatedInstallationDetailRepository nominatedInstallationDetailRepository,
-                                                NominatedInstallationService nominatedInstallationService) {
+                                                NominatedInstallationPersistenceService nominatedInstallationPersistenceService) {
     this.installationQueryService = installationQueryService;
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
-    this.nominatedInstallationService = nominatedInstallationService;
+    this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
   }
 
   public Optional<NominatedInstallationDetailView> getNominatedInstallationDetailView(NominationDetail nominationDetail) {
     return nominatedInstallationDetailRepository.findByNominationDetail(nominationDetail)
         .map(nominatedInstallationDetail -> {
-          List<Integer> nominatedInstallationIds = nominatedInstallationService.findAllByNominationDetail(nominationDetail)
-              .stream()
-              .map(NominatedInstallation::getInstallationId)
-              .toList();
+          List<Integer> nominatedInstallationIds =
+              nominatedInstallationPersistenceService.findAllByNominationDetail(nominationDetail)
+                  .stream()
+                  .map(NominatedInstallation::getInstallationId)
+                  .toList();
+
           var installationDtos = installationQueryService.getInstallationsByIdIn(nominatedInstallationIds);
+
           return new NominatedInstallationDetailView(
               installationDtos,
               nominatedInstallationDetail.getForAllInstallationPhases(),

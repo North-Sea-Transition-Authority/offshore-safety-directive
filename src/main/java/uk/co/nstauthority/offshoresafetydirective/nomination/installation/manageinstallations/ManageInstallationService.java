@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail.NominatedInstallationDetailViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailViewService;
 
 @Service
 class ManageInstallationService {

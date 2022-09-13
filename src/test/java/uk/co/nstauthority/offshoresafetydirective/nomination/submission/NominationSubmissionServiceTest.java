@@ -71,5 +71,7 @@ class NominationSubmissionServiceTest {
     nominationSubmissionService.submitNomination(NOMINATION_DETAIL);
 
     verify(nominationDetailService, times(1)).submitNomination(NOMINATION_DETAIL);
+    verify(firstNominationSectionSubmissionService, times(1)).onSubmission(NOMINATION_DETAIL);
+    verify(secondNominationSectionSubmissionService, times(1)).onSubmission(NOMINATION_DETAIL);
   }
 }

@@ -1,23 +1,22 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation.nominatedinstallationdetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationService;
 
 @Service
 class NominatedInstallationDetailPersistenceService {
 
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
-  private final NominatedInstallationService nominatedInstallationService;
+  private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @Autowired
   NominatedInstallationDetailPersistenceService(NominatedInstallationDetailRepository nominatedInstallationDetailRepository,
-                                                NominatedInstallationService nominatedInstallationService) {
+                                                NominatedInstallationPersistenceService nominatedInstallationPersistenceService) {
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
-    this.nominatedInstallationService = nominatedInstallationService;
+    this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
   }
 
   @Transactional
@@ -26,8 +25,13 @@ class NominatedInstallationDetailPersistenceService {
     var nominatedInstallationDetail = nominatedInstallationDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateInstallationAdviceDetailWithForm(nominationDetail, entity, form))
         .orElse(newNominatedInstallationDetailFromForm(nominationDetail, form));
-    nominatedInstallationService.saveNominatedInstallations(nominationDetail, form);
+    nominatedInstallationPersistenceService.saveNominatedInstallations(nominationDetail, form);
     nominatedInstallationDetailRepository.save(nominatedInstallationDetail);
+  }
+
+  @Transactional
+  public void deleteByNominationDetail(NominationDetail nominationDetail) {
+    nominatedInstallationDetailRepository.deleteAllByNominationDetail(nominationDetail);
   }
 
   private NominatedInstallationDetail updateInstallationAdviceDetailWithForm(NominationDetail nominationDetail,
