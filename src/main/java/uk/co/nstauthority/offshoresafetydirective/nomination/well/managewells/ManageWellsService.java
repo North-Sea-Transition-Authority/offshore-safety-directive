@@ -4,12 +4,12 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailViewService;
 
 @Service
 class ManageWellsService {

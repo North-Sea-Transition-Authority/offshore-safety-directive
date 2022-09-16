@@ -1,6 +1,6 @@
 <#include '../../../layout/layout.ftl'>
 
-<#-- @ftlvariable name="nominatedBlockSubareaDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailView" -->
+<#-- @ftlvariable name="nominatedBlockSubareaDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView" -->
 
 <#macro licenceBlockSubareaSummary nominatedBlockSubareaDetailView changeUrl="">
   <@fdsSummaryList.summaryListWrapper

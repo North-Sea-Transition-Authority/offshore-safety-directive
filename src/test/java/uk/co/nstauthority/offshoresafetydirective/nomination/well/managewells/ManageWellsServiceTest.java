@@ -10,9 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedblocksubarea.NominatedBlockSubareaDetailViewService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailViewService;
 
 @ExtendWith(MockitoExtension.class)
 class ManageWellsServiceTest {

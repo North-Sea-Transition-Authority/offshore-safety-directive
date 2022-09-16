@@ -8,7 +8,9 @@ CVE-2019-12400
 CVE-2020-13936
 CVE-2020-13959
 CVE-2020-15522
-#temporarily ignoring vulnerability see TODO OSDOP-213
+# Temporarily ignoring vulnerability see TODO OSDOP-213
 CVE-2022-30065
 CVE-2022-25857
+# These should be resolved in spring 2.7.4
 CVE-2022-38752
+CVE-2022-38749

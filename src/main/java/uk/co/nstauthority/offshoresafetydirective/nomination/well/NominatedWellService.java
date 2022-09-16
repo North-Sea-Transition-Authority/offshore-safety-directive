@@ -6,10 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailForm;
 
 @Service
-public class NominatedWellService {
+class NominatedWellService {
 
   private final NominatedWellRepository nominatedWellRepository;
   private final WellQueryService wellQueryService;
@@ -33,7 +32,7 @@ public class NominatedWellService {
     nominatedWellRepository.saveAll(nominatedWells);
   }
 
-  public List<NominatedWell> findAllByNominationDetail(NominationDetail nominationDetail) {
+  List<NominatedWell> findAllByNominationDetail(NominationDetail nominationDetail) {
     return nominatedWellRepository.findAllByNominationDetail(nominationDetail);
   }
 }

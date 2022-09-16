@@ -1,6 +1,6 @@
 <#include '../../../layout/layout.ftl'>
 
-<#-- @ftlvariable name="nominatedWellDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.nominatedwelldetail.NominatedWellDetailView" -->
+<#-- @ftlvariable name="nominatedWellDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView" -->
 
 <#macro nominatedWellDetailSummary nominatedWellDetailView changeUrl="">
   <@fdsSummaryList.summaryListWrapper
