@@ -10,12 +10,10 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype.NominationTypeValidator;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,9 +24,6 @@ class WellSelectionSetupFormValidatorTest {
 
   private static final WellSelectionSetupFormValidatorHint HINT =
       new WellSelectionSetupFormValidatorHint(NOMINATION_DETAIL);
-
-  @Mock
-  private NominationTypeValidator nominationTypeValidator;
 
   @InjectMocks
   private WellSelectionSetupFormValidator wellSelectionSetupFormValidator;
@@ -45,7 +40,7 @@ class WellSelectionSetupFormValidatorTest {
 
   @Test
   void validate_whenValidForm_assertNoErrors() {
-    var validForm = WellSelectionSetupTestUtil.getValidForm();
+    var validForm = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(validForm, "form");
 
     wellSelectionSetupFormValidator.validate(validForm, bindingResult, HINT);

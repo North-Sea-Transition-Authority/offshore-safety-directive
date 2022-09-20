@@ -97,7 +97,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @Test
   void saveWellSetup_whenErrors_thenExpectStatusOk() throws Exception {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default msg"));
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
@@ -113,7 +113,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @Test
   void saveWellSetup_whenAnsweredSpecificWells_thenExpectRedirection() throws Exception {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
@@ -138,7 +138,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @Test
   void saveWellSetup_whenAndAnsweredLicenceBlockSubarea_thenExpectRedirection() throws Exception {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
@@ -163,7 +163,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @Test
   void saveWellSetup_whenAndAnsweredNo_thenExpectRedirection() throws Exception {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);

@@ -21,9 +21,6 @@ class WellSelectionSetupFormServiceTest {
       .build();
 
   @Mock
-  private WellSelectionSetupFormValidator wellSelectionSetupFormValidator;
-
-  @Mock
   private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
 
   @InjectMocks
@@ -31,7 +28,8 @@ class WellSelectionSetupFormServiceTest {
 
   @Test
   void getForm_whenEntityExists_thenAssertFieldsMatch() {
-    var wellSetup = WellSelectionSetupTestUtil.getWellSelectionSetup(NOMINATION_DETAIL);
+    var wellSetup = WellSelectionSetupTestUtil.builder().build();
+
     when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(wellSetup));
 
     var form = wellSelectionSetupFormService.getForm(NOMINATION_DETAIL);
@@ -60,8 +58,9 @@ class WellSelectionSetupFormServiceTest {
 
   @Test
   void isNotRelatedToWellOperatorship_whenNotIncludingWells_thenTrue() {
-    var wellSelectionSetup = WellSelectionSetupTestUtil.getWellSelectionSetup(NOMINATION_DETAIL);
-    wellSelectionSetup.setSelectionType(WellSelectionType.NO_WELLS);
+    var wellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.NO_WELLS)
+        .build();
 
     when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(wellSelectionSetup));
@@ -71,8 +70,9 @@ class WellSelectionSetupFormServiceTest {
 
   @Test
   void isNotRelatedToWellOperatorship_whenIncludingWells_thenFalse() {
-    var wellSelectionSetup = WellSelectionSetupTestUtil.getWellSelectionSetup(NOMINATION_DETAIL);
-    wellSelectionSetup.setSelectionType(WellSelectionType.SPECIFIC_WELLS);
+    var wellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
+        .build();
 
     when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(wellSelectionSetup));

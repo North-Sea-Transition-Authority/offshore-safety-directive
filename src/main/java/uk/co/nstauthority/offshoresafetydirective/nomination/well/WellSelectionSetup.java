@@ -35,12 +35,12 @@ class WellSelectionSetup {
     this.selectionType = selectionType;
   }
 
-  WellSelectionSetup(int id) {
-    this.id = id;
-  }
-
   public Integer getId() {
     return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
   }
 
   public NominationDetail getNominationDetail() {

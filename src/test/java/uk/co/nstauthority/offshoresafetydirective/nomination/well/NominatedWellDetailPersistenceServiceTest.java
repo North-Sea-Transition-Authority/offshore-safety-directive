@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -112,7 +111,7 @@ class NominatedWellDetailPersistenceServiceTest {
 
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
 
-    assertEquals(nominatedWellDetail, nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL).get());
+    assertThat(nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).contains(nominatedWellDetail);
   }
 
   @Test
@@ -120,5 +119,11 @@ class NominatedWellDetailPersistenceServiceTest {
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
     assertThat(nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).isEmpty();
+  }
+
+  @Test
+  void deleteByNominationDetail_verifyRepositoryInteraction() {
+    nominatedWellDetailPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellDetailRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
   }
 }

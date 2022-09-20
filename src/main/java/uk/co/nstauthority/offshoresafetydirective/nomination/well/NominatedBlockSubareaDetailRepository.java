@@ -9,4 +9,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 interface NominatedBlockSubareaDetailRepository extends CrudRepository<NominatedBlockSubareaDetail, Integer> {
 
   Optional<NominatedBlockSubareaDetail> findByNominationDetail(NominationDetail nominationDetail);
+
+  void deleteAllByNominationDetail(NominationDetail nominationDetail);
 }

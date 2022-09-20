@@ -32,7 +32,7 @@ class WellSelectionSetupPersistenceServiceTest {
 
   @Test
   void createOrUpdateWellSetup_givenAForm_assertEntityFields() {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     when(wellSelectionSetupRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
     wellSelectionSetupPersistenceService.createOrUpdateWellSelectionSetup(form, NOMINATION_DETAIL);

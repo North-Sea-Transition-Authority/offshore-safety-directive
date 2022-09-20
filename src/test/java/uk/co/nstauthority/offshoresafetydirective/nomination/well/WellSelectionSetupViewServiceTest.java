@@ -28,7 +28,7 @@ class WellSelectionSetupViewServiceTest {
 
   @Test
   void getWellSelectionSetupView_whenEntityExist_thenAssertViewFields() {
-    var wellSelectionSetup = WellSelectionSetupTestUtil.getWellSelectionSetup(NOMINATION_DETAIL);
+    var wellSelectionSetup = WellSelectionSetupTestUtil.builder().build();
     when(wellSelectionSetupRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(wellSelectionSetup));
 
     var wellSelectionSetupView = getWellSelectionSetupView.getWellSelectionSetupView(NOMINATION_DETAIL);

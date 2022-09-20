@@ -26,7 +26,7 @@ class WellSelectionSetupValidationServiceTest {
 
   @Test
   void validate_verifyMethodCall() {
-    var form = WellSelectionSetupTestUtil.getValidForm();
+    var form = WellSelectionSetupFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     wellSelectionSetupValidationService.validate(form, bindingResult, NOMINATION_DETAIL);

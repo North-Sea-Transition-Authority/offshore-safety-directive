@@ -26,6 +26,11 @@ class NominatedBlockSubareaDetailPersistenceService {
     nominatedBlockSubareaDetailRepository.save(blockSubareaDetail);
   }
 
+  @Transactional
+  public void deleteByNominationDetail(NominationDetail nominationDetail) {
+    nominatedBlockSubareaDetailRepository.deleteAllByNominationDetail(nominationDetail);
+  }
+
   Optional<NominatedBlockSubareaDetail> findByNominationDetail(NominationDetail nominationDetail) {
     return nominatedBlockSubareaDetailRepository.findByNominationDetail(nominationDetail);
   }

@@ -5,8 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +26,7 @@ class WellSubmissionServiceTest {
       .build();
 
   @Mock
-  private WellSelectionSetupFormService wellSelectionSetupFormService;
+  private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
 
   @Mock
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
@@ -31,14 +34,19 @@ class WellSubmissionServiceTest {
   @Mock
   private NominatedWellDetailFormService nominatedWellDetailFormService;
 
+  @Mock
+  private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
+
+  @Mock
+  private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
+
   @InjectMocks
   private WellSubmissionService wellSubmissionService;
 
   @Test
   void isSectionSubmittable_whenNotAnsweredSelectionSetup_thenFalse() {
-    var emptyWellSelectionSetupForm = new WellSelectionSetupForm();
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
 
     assertFalse(
         wellSubmissionService.isSectionSubmittable(NOMINATION_DETAIL)
@@ -47,10 +55,12 @@ class WellSubmissionServiceTest {
 
   @Test
   void isSectionSubmittable_whenNotIncludingWellsInNomination_thenTrue() {
-    var emptyWellSelectionSetupForm = new WellSelectionSetupForm();
-    emptyWellSelectionSetupForm.setWellSelectionType(WellSelectionType.NO_WELLS.name());
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(emptyWellSelectionSetupForm);
+    var noWellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.NO_WELLS)
+        .build();
+
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(noWellSelectionSetup));
 
     assertTrue(
         wellSubmissionService.isSectionSubmittable(NOMINATION_DETAIL)
@@ -59,11 +69,14 @@ class WellSubmissionServiceTest {
 
   @Test
   void isSectionSubmittable_whenIncludingWellsInNominationAndSpecificWellsJourneyComplete_thenTrue() {
-    var wellSelectionSetupForm = new WellSelectionSetupForm();
-    wellSelectionSetupForm.setWellSelectionType(WellSelectionType.SPECIFIC_WELLS.name());
+
+    var specificWellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
+        .build();
+
     var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(specificWellSelectionSetup));
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
         .when(nominatedWellDetailFormService).validate(eq(nominatedWellDetailForm), any());
@@ -75,11 +88,14 @@ class WellSubmissionServiceTest {
 
   @Test
   void isSectionSubmittable_whenIncludingWellsInNominationAndSpecificWellsJourneyIncomplete_thenFalse() {
-    var wellSelectionSetupForm = new WellSelectionSetupForm();
-    wellSelectionSetupForm.setWellSelectionType(WellSelectionType.SPECIFIC_WELLS.name());
+
+    var specificWellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
+        .build();
+
     var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(specificWellSelectionSetup));
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);
     doAnswer(invocation -> {
       BindingResult bindingResult = invocation.getArgument(1);
@@ -94,11 +110,14 @@ class WellSubmissionServiceTest {
 
   @Test
   void isSectionSubmittable_whenIncludingBlockSubareasInNominationAndLicenceBlockSubareasJourneyComplete_thenTrue() {
-    var wellSelectionSetupForm = new WellSelectionSetupForm();
-    wellSelectionSetupForm.setWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA.name());
+
+    var subareaWellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA)
+        .build();
+
     var nominatedBlockSubareaForm = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder().build();
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(subareaWellSelectionSetup));
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedBlockSubareaForm);
     doAnswer(invocation -> invocation.<BindingResult>getArgument(1))
         .when(nominatedBlockSubareaFormService).validate(eq(nominatedBlockSubareaForm), any());
@@ -110,11 +129,14 @@ class WellSubmissionServiceTest {
 
   @Test
   void isSectionSubmittable_whenIncludingBlockSubareasInNominationAndLicenceBlockSubareasJourneyIncomplete_thenFalse() {
-    var wellSelectionSetupForm = new WellSelectionSetupForm();
-    wellSelectionSetupForm.setWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA.name());
+
+    var subareaWellSelectionSetup = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA)
+        .build();
+
     var nominatedBlockSubareaForm = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder().build();
 
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(wellSelectionSetupForm);
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(subareaWellSelectionSetup));
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedBlockSubareaForm);
     doAnswer(invocation -> {
       BindingResult bindingResult = invocation.getArgument(1);
@@ -125,5 +147,51 @@ class WellSubmissionServiceTest {
     assertFalse(
         wellSubmissionService.isSectionSubmittable(NOMINATION_DETAIL)
     );
+  }
+
+  @Test
+  void onSubmission_whenNoWellsRelevantToNomination_thenSpecificAndSubareaWellsCleanedUp() {
+
+    var noWellSelection = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.NO_WELLS)
+        .build();
+
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(noWellSelection));
+
+    wellSubmissionService.onSubmission(NOMINATION_DETAIL);
+
+    verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+
+  }
+
+  @Test
+  void onSubmission_whenSpecificWellsRelevantToNomination_thenSubareaWellsCleanedUp() {
+
+    var specificWellSelection = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
+        .build();
+
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(specificWellSelection));
+
+    wellSubmissionService.onSubmission(NOMINATION_DETAIL);
+
+    verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+
+  }
+
+  @Test
+  void onSubmission_whenSubareaWellsRelevantToNomination_thenSpecificWellsCleanedUp() {
+
+    var subareaWellSelection = WellSelectionSetupTestUtil.builder()
+        .withWellSelectionType(WellSelectionType.LICENCE_BLOCK_SUBAREA)
+        .build();
+
+    when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(subareaWellSelection));
+
+    wellSubmissionService.onSubmission(NOMINATION_DETAIL);
+
+    verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+
   }
 }
