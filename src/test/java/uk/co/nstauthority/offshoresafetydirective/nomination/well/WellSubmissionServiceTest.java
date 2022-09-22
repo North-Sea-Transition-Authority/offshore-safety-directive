@@ -40,6 +40,12 @@ class WellSubmissionServiceTest {
   @Mock
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
+  @Mock
+  private NominatedWellService nominatedWellService;
+
+  @Mock
+  private NominatedBlockSubareaService nominatedBlockSubareaService;
+
   @InjectMocks
   private WellSubmissionService wellSubmissionService;
 
@@ -161,7 +167,9 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
     verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedBlockSubareaService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 
@@ -177,6 +185,7 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedBlockSubareaService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 
@@ -192,6 +201,7 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 }

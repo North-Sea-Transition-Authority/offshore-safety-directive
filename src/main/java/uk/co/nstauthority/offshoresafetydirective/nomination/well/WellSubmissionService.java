@@ -15,19 +15,27 @@ class WellSubmissionService implements NominationSectionSubmissionService {
 
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
+  private final NominatedWellService nominatedWellService;
+
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
+
+  private final NominatedBlockSubareaService nominatedBlockSubareaService;
 
   @Autowired
   WellSubmissionService(WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService,
                         NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                         NominatedWellDetailFormService nominatedWellDetailFormService,
                         NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
-                        NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService) {
+                        NominatedWellService nominatedWellService,
+                        NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService,
+                        NominatedBlockSubareaService nominatedBlockSubareaService) {
     this.wellSelectionSetupPersistenceService = wellSelectionSetupPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
+    this.nominatedWellService = nominatedWellService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaDetailPersistenceService;
+    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
   }
 
   @Override
@@ -46,11 +54,11 @@ class WellSubmissionService implements NominationSectionSubmissionService {
     wellSelectionSetupPersistenceService.findByNominationDetail(nominationDetail).ifPresent(wellSelectionSetup -> {
       switch (wellSelectionSetup.getSelectionType()) {
         case NO_WELLS -> {
-          nominatedWellDetailPersistenceService.deleteByNominationDetail(nominationDetail);
-          nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(nominationDetail);
+          cleanUpSpecificWellData(nominationDetail);
+          cleanUpLicenceBlockSubareaData(nominationDetail);
         }
-        case SPECIFIC_WELLS -> nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(nominationDetail);
-        case LICENCE_BLOCK_SUBAREA -> nominatedWellDetailPersistenceService.deleteByNominationDetail(nominationDetail);
+        case SPECIFIC_WELLS -> cleanUpLicenceBlockSubareaData(nominationDetail);
+        case LICENCE_BLOCK_SUBAREA -> cleanUpSpecificWellData(nominationDetail);
         default -> throw new IllegalArgumentException(
             "An unknown WellSelectionType was provided: %s".formatted(wellSelectionSetup.getSelectionType())
         );
@@ -70,5 +78,15 @@ class WellSubmissionService implements NominationSectionSubmissionService {
     var bindingResult = new BeanPropertyBindingResult(licenceBlockSubareaForm, "form");
     nominatedBlockSubareaFormService.validate(licenceBlockSubareaForm, bindingResult);
     return !bindingResult.hasErrors();
+  }
+
+  private void cleanUpSpecificWellData(NominationDetail nominationDetail) {
+    nominatedWellDetailPersistenceService.deleteByNominationDetail(nominationDetail);
+    nominatedWellService.deleteByNominationDetail(nominationDetail);
+  }
+
+  private void cleanUpLicenceBlockSubareaData(NominationDetail nominationDetail) {
+    nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(nominationDetail);
+    nominatedBlockSubareaService.deleteByNominationDetail(nominationDetail);
   }
 }

@@ -34,11 +34,16 @@ class NominatedBlockSubareaService {
             .setBlockSubareaId(blockSubareaDto.id())
         )
         .toList();
-    nominatedBlockSubareaRepository.deleteAllByNominationDetail(nominationDetail);
+    deleteByNominationDetail(nominationDetail);
     nominatedBlockSubareaRepository.saveAll(nominatedBlockSubareas);
   }
 
-  public List<NominatedBlockSubarea> findAllByNominationDetail(NominationDetail nominationDetail) {
+  List<NominatedBlockSubarea> findAllByNominationDetail(NominationDetail nominationDetail) {
     return nominatedBlockSubareaRepository.findAllByNominationDetail(nominationDetail);
+  }
+
+  @Transactional
+  public void deleteByNominationDetail(NominationDetail nominationDetail) {
+    nominatedBlockSubareaRepository.deleteAllByNominationDetail(nominationDetail);
   }
 }

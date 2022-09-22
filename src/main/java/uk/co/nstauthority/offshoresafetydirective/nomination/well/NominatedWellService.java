@@ -28,11 +28,16 @@ class NominatedWellService {
         .stream()
         .map(wellDto -> new NominatedWell(nominationDetail, wellDto.id()))
         .toList();
-    nominatedWellRepository.deleteAllByNominationDetail(nominationDetail);
+    deleteByNominationDetail(nominationDetail);
     nominatedWellRepository.saveAll(nominatedWells);
   }
 
   List<NominatedWell> findAllByNominationDetail(NominationDetail nominationDetail) {
     return nominatedWellRepository.findAllByNominationDetail(nominationDetail);
+  }
+
+  @Transactional
+  public void deleteByNominationDetail(NominationDetail nominationDetail) {
+    nominatedWellRepository.deleteAllByNominationDetail(nominationDetail);
   }
 }
