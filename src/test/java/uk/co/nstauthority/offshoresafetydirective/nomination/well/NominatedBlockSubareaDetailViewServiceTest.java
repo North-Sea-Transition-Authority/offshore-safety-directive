@@ -26,7 +26,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
   @Mock
-  private NominatedBlockSubareaService nominatedBlockSubareaService;
+  private NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @Mock
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -51,7 +51,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
 
     when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedBlockSubareaDetail));
-    when(nominatedBlockSubareaService.findAllByNominationDetail(NOMINATION_DETAIL))
+    when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedBlockSubarea1, nominatedBlockSubarea2));
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(List.of(
         nominatedBlockSubarea1.getBlockSubareaId(),

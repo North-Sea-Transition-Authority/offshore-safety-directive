@@ -27,7 +27,7 @@ class NominatedBlockSubareaFormServiceTest {
   private NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator;
 
   @Mock
-  private NominatedBlockSubareaService nominatedBlockSubareaService;
+  private NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @Mock
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
@@ -61,7 +61,7 @@ class NominatedBlockSubareaFormServiceTest {
 
     when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedBlockSubareaDetail));
-    when(nominatedBlockSubareaService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(
+    when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(
         List.of(subarea1, subarea2));
 
     var form = nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL);

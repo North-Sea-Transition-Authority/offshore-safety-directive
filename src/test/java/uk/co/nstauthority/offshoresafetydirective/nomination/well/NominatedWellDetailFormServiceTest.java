@@ -29,7 +29,7 @@ class NominatedWellDetailFormServiceTest {
   private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
   @Mock
-  private NominatedWellService nominatedWellService;
+  private NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @InjectMocks
   private NominatedWellDetailFormService nominatedWellDetailFormService;
@@ -54,7 +54,7 @@ class NominatedWellDetailFormServiceTest {
     var well2 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
     well2.setWellId(2);
     when(nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
-    when(nominatedWellService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(List.of(well1, well2));
+    when(nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(List.of(well1, well2));
 
     var form = nominatedWellDetailFormService.getForm(NOMINATION_DETAIL);
 

@@ -10,15 +10,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedBlockSubareaFormService {
 
   private final NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator;
-  private final NominatedBlockSubareaService nominatedBlockSubareaService;
+  private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
   @Autowired
   NominatedBlockSubareaFormService(NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator,
-                                          NominatedBlockSubareaService nominatedBlockSubareaService,
+                                          NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
                                           NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService) {
     this.nominatedBlockSubareaFormValidator = nominatedBlockSubareaFormValidator;
-    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
+    this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
   }
 
@@ -40,7 +40,8 @@ class NominatedBlockSubareaFormService {
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> blockSubareaIds = nominatedBlockSubareaService.findAllByNominationDetail(entity.getNominationDetail())
+    List<Integer> blockSubareaIds = nominatedBlockSubareaPersistenceService
+        .findAllByNominationDetail(entity.getNominationDetail())
         .stream()
         .map(NominatedBlockSubarea::getBlockSubareaId)
         .toList();

@@ -41,10 +41,10 @@ class WellSubmissionServiceTest {
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
   @Mock
-  private NominatedWellService nominatedWellService;
+  private NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @Mock
-  private NominatedBlockSubareaService nominatedBlockSubareaService;
+  private NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @InjectMocks
   private WellSubmissionService wellSubmissionService;
@@ -167,9 +167,9 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
-    verify(nominatedWellService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
     verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
-    verify(nominatedBlockSubareaService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedBlockSubareaPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 
@@ -185,7 +185,7 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedBlockSubareaDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
-    verify(nominatedBlockSubareaService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedBlockSubareaPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 
@@ -201,7 +201,7 @@ class WellSubmissionServiceTest {
     wellSubmissionService.onSubmission(NOMINATION_DETAIL);
 
     verify(nominatedWellDetailPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
-    verify(nominatedWellService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
+    verify(nominatedWellPersistenceService, times(1)).deleteByNominationDetail(NOMINATION_DETAIL);
 
   }
 }

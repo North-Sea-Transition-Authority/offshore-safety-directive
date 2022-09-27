@@ -34,7 +34,7 @@ public class NominatedBlockSubareaController {
   private final NominationDetailService nominationDetailService;
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
   private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
-  private final NominatedBlockSubareaService nominatedBlockSubareaService;
+  private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
@@ -42,13 +42,13 @@ public class NominatedBlockSubareaController {
                                          NominationDetailService nominationDetailService,
                                          NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService,
                                          NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
-                                         NominatedBlockSubareaService nominatedBlockSubareaService,
+                                         NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
-    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
+    this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
@@ -69,7 +69,7 @@ public class NominatedBlockSubareaController {
         () -> {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
-          nominatedBlockSubareaService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
+          nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
           return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
         }
     );

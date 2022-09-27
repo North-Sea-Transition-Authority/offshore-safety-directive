@@ -8,14 +8,14 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class NominatedBlockSubareaService {
+class NominatedBlockSubareaPersistenceService {
 
   private final NominatedBlockSubareaRepository nominatedBlockSubareaRepository;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
-  NominatedBlockSubareaService(NominatedBlockSubareaRepository nominatedBlockSubareaRepository,
-                                      LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+  NominatedBlockSubareaPersistenceService(NominatedBlockSubareaRepository nominatedBlockSubareaRepository,
+                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.nominatedBlockSubareaRepository = nominatedBlockSubareaRepository;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }

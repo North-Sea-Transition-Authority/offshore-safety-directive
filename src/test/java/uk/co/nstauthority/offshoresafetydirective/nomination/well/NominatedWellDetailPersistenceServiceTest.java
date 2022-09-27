@@ -25,7 +25,7 @@ class NominatedWellDetailPersistenceServiceTest {
   private NominatedWellDetailRepository nominatedWellDetailRepository;
 
   @Mock
-  private NominatedWellService nominatedWellService;
+  private NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @InjectMocks
   private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
@@ -68,7 +68,7 @@ class NominatedWellDetailPersistenceServiceTest {
             null,
             null
         );
-    verify(nominatedWellService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
+    verify(nominatedWellPersistenceService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
   }
 
   @Test
@@ -102,7 +102,7 @@ class NominatedWellDetailPersistenceServiceTest {
             form.getDevelopmentPhase(),
             form.getDecommissioningPhase()
         );
-    verify(nominatedWellService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
+    verify(nominatedWellPersistenceService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
   }
 
   @Test

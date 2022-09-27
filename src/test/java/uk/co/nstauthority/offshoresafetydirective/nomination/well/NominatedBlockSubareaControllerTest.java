@@ -53,7 +53,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
   @MockBean
-  NominatedBlockSubareaService nominatedBlockSubareaService;
+  NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @MockBean
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;

@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class NominatedWellServiceTest {
+class NominatedWellPersistenceServiceTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
@@ -31,7 +31,7 @@ class NominatedWellServiceTest {
   private WellQueryService wellQueryService;
 
   @InjectMocks
-  private NominatedWellService nominatedWellService;
+  private NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @Test
   void saveWells_whenFormHasDuplicateWells_verifyNoDuplicateWellsSaved() {
@@ -44,7 +44,7 @@ class NominatedWellServiceTest {
 
     when(wellQueryService.getWellsByIdIn(List.of(wellId1, wellId2))).thenReturn(List.of(wellDto1, wellDto2));
 
-    nominatedWellService.saveNominatedWells(NOMINATION_DETAIL, formWithDuplicateWell);
+    nominatedWellPersistenceService.saveNominatedWells(NOMINATION_DETAIL, formWithDuplicateWell);
 
     verify(nominatedWellRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
 
@@ -65,7 +65,7 @@ class NominatedWellServiceTest {
 
   @Test
   void findAllByNominationDetail_verifyMethodCall() {
-    nominatedWellService.findAllByNominationDetail(NOMINATION_DETAIL);
+    nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL);
 
     verify(nominatedWellRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
   }

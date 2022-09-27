@@ -11,23 +11,23 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 public class NominatedBlockSubareaDetailViewService {
 
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
-  private final NominatedBlockSubareaService nominatedBlockSubareaService;
+  private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   public NominatedBlockSubareaDetailViewService(
       NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService,
-      NominatedBlockSubareaService nominatedBlockSubareaService,
+      NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService,
       LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaDetailPersistenceService;
-    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
+    this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaPersistenceService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   public Optional<NominatedBlockSubareaDetailView> getNominatedBlockSubareaDetailView(NominationDetail nominationDetail) {
     return nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(nominationDetail)
         .map(entity -> {
-          var licenceBlockSubareaIds = nominatedBlockSubareaService.findAllByNominationDetail(nominationDetail)
+          var licenceBlockSubareaIds = nominatedBlockSubareaPersistenceService.findAllByNominationDetail(nominationDetail)
               .stream()
               .map(NominatedBlockSubarea::getBlockSubareaId)
               .toList();

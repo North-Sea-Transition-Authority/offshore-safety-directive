@@ -11,13 +11,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedWellDetailPersistenceService {
 
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
-  private final NominatedWellService nominatedWellService;
+  private final NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @Autowired
   NominatedWellDetailPersistenceService(NominatedWellDetailRepository nominatedWellDetailRepository,
-                                        NominatedWellService nominatedWellService) {
+                                        NominatedWellPersistenceService nominatedWellPersistenceService) {
     this.nominatedWellDetailRepository = nominatedWellDetailRepository;
-    this.nominatedWellService = nominatedWellService;
+    this.nominatedWellPersistenceService = nominatedWellPersistenceService;
   }
 
   @Transactional
@@ -25,7 +25,7 @@ class NominatedWellDetailPersistenceService {
     NominatedWellDetail wellNomination = nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateNominatedWellDetailFromForm(nominationDetail, entity, form))
         .orElseGet(() -> createNominatedWellDetailFromForm(nominationDetail, form));
-    nominatedWellService.saveNominatedWells(nominationDetail, form);
+    nominatedWellPersistenceService.saveNominatedWells(nominationDetail, form);
     nominatedWellDetailRepository.save(wellNomination);
   }
 

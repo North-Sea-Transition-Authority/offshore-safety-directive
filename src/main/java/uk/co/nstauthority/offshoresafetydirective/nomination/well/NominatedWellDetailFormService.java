@@ -11,15 +11,15 @@ class NominatedWellDetailFormService {
 
   private final NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
-  private final NominatedWellService nominatedWellService;
+  private final NominatedWellPersistenceService nominatedWellPersistenceService;
 
   @Autowired
   NominatedWellDetailFormService(NominatedWellDetailFormValidator nominatedWellDetailFormValidator,
                                         NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
-                                        NominatedWellService nominatedWellService) {
+                                        NominatedWellPersistenceService nominatedWellPersistenceService) {
     this.nominatedWellDetailFormValidator = nominatedWellDetailFormValidator;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
-    this.nominatedWellService = nominatedWellService;
+    this.nominatedWellPersistenceService = nominatedWellPersistenceService;
   }
 
   NominatedWellDetailForm getForm(NominationDetail nominationDetail) {
@@ -39,7 +39,7 @@ class NominatedWellDetailFormService {
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> wellIds = nominatedWellService.findAllByNominationDetail(entity.getNominationDetail())
+    List<Integer> wellIds = nominatedWellPersistenceService.findAllByNominationDetail(entity.getNominationDetail())
         .stream()
         .map(NominatedWell::getWellId)
         .toList();

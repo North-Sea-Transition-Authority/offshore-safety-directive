@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class NominatedBlockSubareaServiceTest {
+class NominatedBlockSubareaPersistenceServiceTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
@@ -31,7 +31,7 @@ class NominatedBlockSubareaServiceTest {
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @InjectMocks
-  private NominatedBlockSubareaService nominatedBlockSubareaService;
+  private NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @Test
   void saveNominatedLicenceBlockSubareas_whenFormHasDuplicateSubareas_verifyNoDuplicateSubareasSaved() {
@@ -46,7 +46,7 @@ class NominatedBlockSubareaServiceTest {
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(List.of(subareaId1, subareaId2)))
         .thenReturn(List.of(blockSubareaDto1, blockSubareaDto2));
 
-    nominatedBlockSubareaService.saveNominatedLicenceBlockSubareas(NOMINATION_DETAIL, formWithDuplicateSubarea);
+    nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(NOMINATION_DETAIL, formWithDuplicateSubarea);
 
     verify(nominatedBlockSubareaRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
 
@@ -66,7 +66,7 @@ class NominatedBlockSubareaServiceTest {
 
   @Test
   void findAllByNominationDetail_verifyMethodCall() {
-    nominatedBlockSubareaService.findAllByNominationDetail(NOMINATION_DETAIL);
+    nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL);
 
     verify(nominatedBlockSubareaRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
   }

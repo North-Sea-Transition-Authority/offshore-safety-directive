@@ -8,13 +8,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQuerySer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class NominatedWellService {
+class NominatedWellPersistenceService {
 
   private final NominatedWellRepository nominatedWellRepository;
   private final WellQueryService wellQueryService;
 
   @Autowired
-  NominatedWellService(NominatedWellRepository nominatedWellRepository, WellQueryService wellQueryService) {
+  NominatedWellPersistenceService(NominatedWellRepository nominatedWellRepository, WellQueryService wellQueryService) {
     this.nominatedWellRepository = nominatedWellRepository;
     this.wellQueryService = wellQueryService;
   }

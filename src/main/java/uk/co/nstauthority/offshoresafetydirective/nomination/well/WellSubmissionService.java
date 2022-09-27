@@ -15,27 +15,27 @@ class WellSubmissionService implements NominationSectionSubmissionService {
 
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
-  private final NominatedWellService nominatedWellService;
+  private final NominatedWellPersistenceService nominatedWellPersistenceService;
 
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
-  private final NominatedBlockSubareaService nominatedBlockSubareaService;
+  private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
   @Autowired
   WellSubmissionService(WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService,
                         NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                         NominatedWellDetailFormService nominatedWellDetailFormService,
                         NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
-                        NominatedWellService nominatedWellService,
+                        NominatedWellPersistenceService nominatedWellPersistenceService,
                         NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService,
-                        NominatedBlockSubareaService nominatedBlockSubareaService) {
+                        NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService) {
     this.wellSelectionSetupPersistenceService = wellSelectionSetupPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
-    this.nominatedWellService = nominatedWellService;
+    this.nominatedWellPersistenceService = nominatedWellPersistenceService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaDetailPersistenceService;
-    this.nominatedBlockSubareaService = nominatedBlockSubareaService;
+    this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaPersistenceService;
   }
 
   @Override
@@ -82,11 +82,11 @@ class WellSubmissionService implements NominationSectionSubmissionService {
 
   private void cleanUpSpecificWellData(NominationDetail nominationDetail) {
     nominatedWellDetailPersistenceService.deleteByNominationDetail(nominationDetail);
-    nominatedWellService.deleteByNominationDetail(nominationDetail);
+    nominatedWellPersistenceService.deleteByNominationDetail(nominationDetail);
   }
 
   private void cleanUpLicenceBlockSubareaData(NominationDetail nominationDetail) {
     nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(nominationDetail);
-    nominatedBlockSubareaService.deleteByNominationDetail(nominationDetail);
+    nominatedBlockSubareaPersistenceService.deleteByNominationDetail(nominationDetail);
   }
 }
