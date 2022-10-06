@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;

@@ -13,9 +13,19 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+	maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" } // Required for opensaml deps
 }
 
 dependencies {
+
+	// OpenSAML 4.1+ is required for most SAML functionality
+	// See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
+	constraints {
+		implementation "org.opensaml:opensaml-core:4.2.0"
+		implementation "org.opensaml:opensaml-saml-api:4.2.0"
+		implementation "org.opensaml:opensaml-saml-impl:4.2.0"
+	}
+
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'

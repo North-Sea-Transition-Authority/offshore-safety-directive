@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 @Configuration
 @ConfigurationProperties(prefix = "saml")
 @Validated
-class SamlProperties {
+public class SamlProperties {
 
   @NotNull
   private String registrationId;

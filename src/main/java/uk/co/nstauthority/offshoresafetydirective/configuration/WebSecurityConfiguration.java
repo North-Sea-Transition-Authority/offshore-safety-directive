@@ -10,26 +10,38 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.saml2.core.Saml2X509Credential;
+import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 
 @Configuration
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
   private final SamlProperties samlProperties;
+  private final SamlResponseParser samlResponseParser;
 
   @Autowired
-  public WebSecurityConfiguration(SamlProperties samlProperties) {
+  public WebSecurityConfiguration(SamlProperties samlProperties,
+                                  SamlResponseParser samlResponseParser) {
     this.samlProperties = samlProperties;
+    this.samlResponseParser = samlResponseParser;
   }
+
+
 
   @Override
   protected void configure(HttpSecurity http) throws Exception {
+
+    var authenticationProvider = new OpenSaml4AuthenticationProvider();
+    authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
+
     http
         .authorizeHttpRequests()
         .mvcMatchers("/assets/**")
@@ -37,7 +49,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         .anyRequest()
           .authenticated()
         .and()
-        .saml2Login();
+        .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)));
   }
 
   @Bean
