@@ -12,12 +12,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -28,12 +30,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 @WebMvcTest
 @ContextConfiguration(classes = NominationSubmissionController.class)
-@WithMockUser
 class NominationSubmissionControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   private NominationSubmissionService nominationSubmissionService;
@@ -47,14 +50,18 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
     when(nominationSubmissionService.canSubmitNomination(NOMINATION_DETAIL)).thenReturn(isSubmittable);
 
-    var model = mockMvc.perform(
+    var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
         .andReturn()
-        .getModelAndView()
-        .getModel();
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    var model = modelAndView.getModel();
 
     assertThat(model).containsOnlyKeys(
         "backLinkUrl",
@@ -83,6 +90,7 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)

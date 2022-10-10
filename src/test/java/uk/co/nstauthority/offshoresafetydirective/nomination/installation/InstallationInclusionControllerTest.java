@@ -15,14 +15,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -33,12 +35,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 @WebMvcTest
 @ContextConfiguration(classes = InstallationInclusionController.class)
-@WithMockUser
 class InstallationInclusionControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   private InstallationInclusionPersistenceService installationInclusionPersistenceService;
@@ -59,6 +62,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -104,6 +108,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
             post(ReverseRouter.route(on(InstallationInclusionController.class)
                   .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
                 .param("includeInstallationsInNomination", "true")
         )
         .andExpect(status().is3xxRedirection())
@@ -125,6 +130,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
             post(ReverseRouter.route(on(InstallationInclusionController.class)
                   .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
                 .param("includeInstallationsInNomination", "false")
         )
         .andExpect(status().is3xxRedirection())
@@ -145,6 +151,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
             post(ReverseRouter.route(on(InstallationInclusionController.class)
                   .saveInstallationInclusion(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk());
 

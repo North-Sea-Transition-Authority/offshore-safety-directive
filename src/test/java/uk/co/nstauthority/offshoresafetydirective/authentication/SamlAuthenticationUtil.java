@@ -14,70 +14,45 @@ public class SamlAuthenticationUtil {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  public static ContextBuilder ContextBuilder() {
-    return new ContextBuilder();
+  public static Builder Builder() {
+    return new Builder();
   }
 
-  public static class ContextBuilder {
+  public static class Builder {
 
-    private ContextBuilder() {
+    private Builder() {
     }
 
-    private Long wuaId = 1L;
-    private Long personId = 2L;
-    private String forename = "Forename";
-    private String surname = "Surname";
-    private String emailAddress = "test.user@test.com";
-    private Collection<GrantedAuthority> grantedAuthorities = new HashSet<>();
+    private ServiceUserDetail serviceUserDetail = ServiceUserDetailTestUtil.Builder().build();
+    private final Collection<GrantedAuthority> grantedAuthorities = new HashSet<>();
 
-    public ServiceUserDetail buildAndApply() {
-      var samlUser = new ServiceUserDetail(wuaId, personId, forename, surname, emailAddress);
-
-      var authentication = new ServiceSaml2Authentication(samlUser, grantedAuthorities);
+    public void setSecurityContext() {
+      var authentication = build();
       SecurityContextHolder.setContext(new SecurityContextImpl(authentication));
-
-      return samlUser;
     }
 
-    public ContextBuilder withWuaId(Long wuaId) {
-      this.wuaId = wuaId;
-      return this;
+    public ServiceSaml2Authentication build() {
+      return new ServiceSaml2Authentication(serviceUserDetail, grantedAuthorities);
     }
 
-    public ContextBuilder withPersonId(Long personId) {
-      this.personId = personId;
-      return this;
-    }
-
-    public ContextBuilder withForename(String forename) {
-      this.forename = forename;
-      return this;
-    }
-
-    public ContextBuilder withSurname(String surname) {
-      this.surname = surname;
-      return this;
-    }
-
-    public ContextBuilder withtEmailAddress(String emailAddress) {
-      this.emailAddress = emailAddress;
-      return this;
-    }
-
-    public ContextBuilder withGrantedAuthorities(Collection<GrantedAuthority> grantedAuthorities) {
+    public Builder withGrantedAuthorities(Collection<GrantedAuthority> grantedAuthorities) {
       this.grantedAuthorities.addAll(grantedAuthorities);
       return this;
     }
 
-    public ContextBuilder withGrantedAuthority(GrantedAuthority grantedAuthority) {
+    public Builder withGrantedAuthority(GrantedAuthority grantedAuthority) {
       this.grantedAuthorities.add(grantedAuthority);
       return this;
     }
 
-    public ContextBuilder withGrantedAuthority(String grantedAuthority) {
+    public Builder withGrantedAuthority(String grantedAuthority) {
       this.grantedAuthorities.add(new SimpleGrantedAuthority(grantedAuthority));
       return this;
     }
-  }
 
+    public Builder withUser(ServiceUserDetail serviceUserDetail) {
+      this.serviceUserDetail = serviceUserDetail;
+      return this;
+    }
+  }
 }

@@ -20,9 +20,14 @@ class UserDetailServiceTest {
 
   @Test
   void getUserDetail_whenUserInContext_thenExpectedUserReturned() {
-    var user = SamlAuthenticationUtil.ContextBuilder()
+
+    var user = ServiceUserDetailTestUtil.Builder()
         .withWuaId(100L)
-        .buildAndApply();
+        .build();
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(user)
+        .setSecurityContext();
 
     assertThat(userDetailService.getUserDetail())
         .extracting(ServiceUserDetail::wuaId)

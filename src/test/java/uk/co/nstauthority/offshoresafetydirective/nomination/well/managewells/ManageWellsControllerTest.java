@@ -8,14 +8,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -31,12 +33,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionS
 
 @WebMvcTest
 @ContextConfiguration(classes = ManageWellsController.class)
-@WithMockUser
 class ManageWellsControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(1);
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -56,6 +59,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/managewells/wellManagement"))
@@ -112,6 +116,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -135,6 +140,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()

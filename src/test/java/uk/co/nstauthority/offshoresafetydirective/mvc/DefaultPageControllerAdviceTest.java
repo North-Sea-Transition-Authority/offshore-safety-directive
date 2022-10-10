@@ -3,14 +3,15 @@ package uk.co.nstauthority.offshoresafetydirective.mvc;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -19,7 +20,6 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
     DefaultPageControllerAdviceTest.TestController.class,
     DefaultPageControllerAdvice.class
 })
-@WithMockUser
 class DefaultPageControllerAdviceTest extends AbstractControllerTest {
 
   @Test
@@ -27,6 +27,7 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(TestController.class).testEndpoint()))
+            .with(user(ServiceUserDetailTestUtil.Builder().build()))
     )
         .andReturn()
         .getModelAndView();

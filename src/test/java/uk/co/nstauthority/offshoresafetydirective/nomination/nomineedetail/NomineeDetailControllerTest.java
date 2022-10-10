@@ -13,15 +13,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -33,8 +35,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @ContextConfiguration(classes = NomineeDetailController.class)
-@WithMockUser
 class NomineeDetailControllerTest extends AbstractControllerTest {
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   private final NominationId nominationId = new NominationId(1);
   private final NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
@@ -65,6 +68,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   void getNomineeDetail_assertModelProperties() throws Exception {
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(nominationId)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -111,6 +115,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().is3xxRedirection());
 
@@ -128,6 +133,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk());
 

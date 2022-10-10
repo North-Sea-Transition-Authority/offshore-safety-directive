@@ -17,14 +17,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -39,12 +41,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.Ma
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @ContextConfiguration(classes = NominatedBlockSubareaController.class)
-@WithMockUser
 class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   private NominationDetailService nominationDetailService;
@@ -67,6 +70,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(new NominatedBlockSubareaForm());
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/blockSubarea"))
@@ -113,8 +117,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(formWithSubareas);
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(formWithSubareas.getSubareas()))
         .thenReturn(List.of(licenceBlockSubareaDto2, licenceBlockSubareaDto3, licenceBlockSubareaDto1));
+
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -148,7 +154,8 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             post(
                 ReverseRouter.route(
                     on(NominatedBlockSubareaController.class).saveLicenceBlockSubareas(NOMINATION_ID, null, null)))
-            .with(csrf())
+                .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))));
@@ -171,6 +178,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
                     .saveLicenceBlockSubareas(NOMINATION_ID, null, null))
             )
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk());
 

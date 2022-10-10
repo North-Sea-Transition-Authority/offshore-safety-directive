@@ -15,14 +15,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
@@ -36,8 +38,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 
 @ContextConfiguration(classes = NominatedWellDetailController.class)
-@WithMockUser
 class NominatedWellDetailControllerTest extends AbstractControllerTest {
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   private final NominationId nominationId = new NominationId(1);
 
@@ -63,6 +66,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(new NominatedWellDetailForm());
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -112,6 +116,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     when(wellQueryService.getWellsByIdIn(formWithWells.getWells())).thenReturn(List.of(wellDto2, wellDto3, wellDto1));
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
@@ -145,6 +150,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(nominationId))));
@@ -162,6 +168,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk());
 

@@ -4,6 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +31,14 @@ class TestAuthenticationControllerTest extends AbstractControllerTest {
   @Test
   void whenUser_thenVerifyAuthorised() throws Exception {
 
-    var expectedUser = SamlAuthenticationUtil.ContextBuilder()
+    var expectedUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(100L)
-        .buildAndApply();
+        .build();
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(TestAuthenticationController.class).requiresUserEndpoint())))
+            get(ReverseRouter.route(on(TestAuthenticationController.class).requiresUserEndpoint()))
+                .with(user(expectedUser))
+        )
         .andExpect(status().isOk())
         .andReturn()
         .getModelAndView();

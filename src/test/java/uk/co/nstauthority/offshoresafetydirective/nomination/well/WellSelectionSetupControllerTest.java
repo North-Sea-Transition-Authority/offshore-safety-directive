@@ -14,14 +14,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -32,13 +34,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
 @ContextConfiguration(classes = WellSelectionSetupController.class)
-@WithMockUser
 class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .withNominationId(NOMINATION_ID)
       .build();
+
+  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
@@ -59,6 +62,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID)))
+            .with(user(NOMINATION_EDITOR_USER))
     )
         .andExpect(status().isOk())
         .andReturn()
@@ -105,6 +109,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk());
 
@@ -122,6 +127,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
                 .param("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
@@ -147,6 +153,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
                 .param("wellSelectionType", WellSelectionType.LICENCE_BLOCK_SUBAREA.name())
         )
         .andExpect(status().is3xxRedirection())
@@ -172,6 +179,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
+                .with(user(NOMINATION_EDITOR_USER))
                 .param("wellSelectionType", WellSelectionType.NO_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())

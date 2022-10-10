@@ -9,14 +9,16 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -31,8 +33,9 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @WebMvcTest
 @ContextConfiguration(classes = NominationTaskListController.class)
-@WithMockUser
 class NominationTaskListControllerTest extends AbstractControllerTest {
+
+  private static final ServiceUserDetail TASK_LIST_USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
   NominationDetailService nominationDetailService;
@@ -83,6 +86,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
+            .with(user(TASK_LIST_USER))
     )
         .andExpect(status().isOk())
         .andReturn()
