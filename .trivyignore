@@ -1,19 +1,22 @@
-# Introduced in OSDOP-201 due to SAML related dependencies
-CVE-2018-10237
-CVE-2020-8908
+# Transient vulnerability from spring-security-saml2-service-providerCVE-2018-10237
 CVE-2015-7501
 CVE-2015-6420
 CVE-2021-40690
 CVE-2019-12400
 CVE-2020-13936
-CVE-2020-13959
 CVE-2020-15522
-# Temporarily ignoring vulnerability see TODO OSDOP-213
-CVE-2022-30065
+
+# Transient vulnerability from spring-boot-starter-actuator
 CVE-2022-25857
 CVE-2022-38752
 CVE-2022-38749
 CVE-2022-38750
 CVE-2022-38751
+
+# Transient vulnerability from spring-boot-starter-web
 CVE-2022-42003
 CVE-2022-42004
+
+# Transient vulnerability from energyportalapi:client
+CVE-2022-3171
+CVE-2022-37734

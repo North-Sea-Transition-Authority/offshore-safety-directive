@@ -29,6 +29,16 @@
       "name": "schema.password",
       "type": "java.lang.String",
       "description": "The password for the database schema the service will connect to."
+    },
+    {
+      "name": "energy-portal.api.url",
+      "type": "java.lang.String",
+      "description": "The URL to the Energy Portal API (ending in `/graphql`)."
+    },
+    {
+      "name": "energy-portal.api.token",
+      "type": "java.lang.String",
+      "description": "The pre-shared key to authenticate with the Energy Portal API."
     }
   ]
 }

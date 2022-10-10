@@ -43,8 +43,10 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 | OSD_SAML_ENTITY_ID             | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                           |
 | OSD_SAML_CERTIFICATE           | The x509 certificate string                                                                        |
 | OSD_SAML_LOGIN_URL             | The URL to hit the `login` entry theme of the SAML login module                                    |
-| OSD_SAML_BASE_URL              | The url prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local) |
+| OSD_SAML_BASE_URL              | The URL prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local) |
 | OSD_ENABLE_FLYWAY_OUT_OF_ORDER | Set to `true` to allow flyway to run out of order, defaults to `false`                             | 
+| OSD_ENERGY_PORTAL_API_URL      | The URL to the Energy Portal API (ending in `/graphql`)                                            |
+| OSD_ENERGY_PORTAL_API_TOKEN    | The pre-shared key to authenticate with the Energy Portal API                                      |
 
 ### 3. Initialise the Fivium Design System
 - `git submodule update --init --recursive`

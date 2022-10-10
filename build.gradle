@@ -13,7 +13,18 @@ sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
-	maven { url "https://build.shibboleth.net/nexus/content/repositories/releases/" } // Required for opensaml deps
+	maven {
+		// Required for opensaml deps
+		url "https://build.shibboleth.net/nexus/content/repositories/releases/"
+	}
+	maven {
+		url "http://nexus.fivium.local:8081/repository/maven-releases/"
+		allowInsecureProtocol = true
+	}
+	maven {
+		url "http://nexus.fivium.local:8081/repository/maven-snapshots/"
+		allowInsecureProtocol = true
+	}
 }
 
 dependencies {
@@ -39,6 +50,7 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 	implementation 'org.flywaydb:flyway-core:8.5.13'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
+	implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql:42.4.1'
 
