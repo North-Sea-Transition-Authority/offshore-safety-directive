@@ -1,8 +1,8 @@
 <#include '../layout/layout.ftl'/>
 
-<#macro mailToLink linkText mailToEmailAddress linkClass="govuk-link" linkScreenReaderText="">
+<#macro mailToLink mailToEmailAddress linkText="" linkClass="govuk-link" linkScreenReaderText="">
   <@fdsAction.link
-    linkText=linkText linkUrl="mailto:${mailToEmailAddress}"
+    linkText=linkText?has_content?then(linkText, mailToEmailAddress) linkUrl="mailto:${mailToEmailAddress}"
     linkClass=linkClass
     linkScreenReaderText=linkScreenReaderText
   />

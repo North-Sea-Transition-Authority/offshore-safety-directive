@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
@@ -22,15 +24,21 @@ class TopNavigationServiceTest {
   void getTopNavigationItems_verifyAllTopNavigationItems() {
     var topNavigationItems = topNavigationService.getTopNavigationItems();
 
-    assertThat(topNavigationItems).hasSize(1);
-    assertThat(topNavigationItems.get(0))
+    assertThat(topNavigationItems)
         .extracting(
             TopNavigationItem::getDisplayName,
             TopNavigationItem::getUrl
         )
         .containsExactly(
-            WorkAreaController.WORK_AREA_TITLE,
-            StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "/")
+            Tuple.tuple(
+                WorkAreaController.WORK_AREA_TITLE,
+                StringUtils.stripEnd(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), "/")
+            ),
+            Tuple.tuple(
+                TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
+                StringUtils.stripEnd(
+                    ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList()), "/")
+            )
         );
   }
 }
