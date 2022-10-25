@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
-public record TeamMemberView(int wuaId, String title, String firstName, String middleInitials,
+public record TeamMemberView(WebUserAccountId webUserAccountId, String title, String firstName, String middleInitials,
                              String lastName, String contactEmail, String contactNumber,
                              Set<TeamRole> teamRoles) {
 

@@ -9,7 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberViewService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 
 @Controller
 @RequestMapping("/permission-management/regulator")
@@ -45,7 +45,7 @@ public class RegulatorTeamManagementController {
         .addObject("pageTitle", "Manage %s".formatted(customerConfigurationProperties.mnemonic()))
         .addObject("teamName", customerConfigurationProperties.mnemonic())
         .addObject("teamRoles", RegulatorTeamRole.values())
-        .addObject("teamMembers", teamMemberViewService.getUserViewsForTeam(team));
+        .addObject("teamMembers", teamMemberViewService.getTeamMemberViewsForTeam(team));
   }
 
 }

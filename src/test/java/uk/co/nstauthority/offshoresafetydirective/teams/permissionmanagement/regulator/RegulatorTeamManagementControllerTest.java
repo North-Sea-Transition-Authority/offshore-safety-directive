@@ -25,10 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberViewService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 
 @ContextConfiguration(classes = {RegulatorTeamManagementController.class})
 class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
@@ -63,8 +60,10 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     team.setTeamType(TeamType.REGULATOR);
     when(regulatorTeamService.getRegulatorTeamForUser(serviceUserDetail)).thenReturn(Optional.of(team));
 
-    var teamMemberView = TeamMemberViewUtil.getTeamMemberView(Set.of(RegulatorTeamRole.ACCESS_MANAGER));
-    when(teamMemberViewService.getUserViewsForTeam(team)).thenReturn(List.of(teamMemberView));
+    var teamMemberView = TeamMemberViewUtil.builder()
+        .withRoles(Set.of(RegulatorTeamRole.ACCESS_MANAGER))
+        .build();
+    when(teamMemberViewService.getTeamMemberViewsForTeam(team)).thenReturn(List.of(teamMemberView));
 
 
     var result = mockMvc.perform(
