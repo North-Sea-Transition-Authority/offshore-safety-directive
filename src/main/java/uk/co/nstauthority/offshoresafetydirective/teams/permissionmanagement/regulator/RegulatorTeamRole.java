@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -9,15 +10,39 @@ public enum RegulatorTeamRole implements TeamRole {
 
   ACCESS_MANAGER(
       "Access manager",
-      "Manage regulator access to the team",
+      "Can add, remove and update members of this team",
       10,
       EnumSet.of(RolePermission.GRANT_ROLES)
   ),
   ORGANISATION_ACCESS_MANAGER(
       "Organisation access manager",
-      "Manage organisation access to the service",
+      "Can manage organisation access to this service",
       20,
       EnumSet.of(RolePermission.MANAGE_ORGANISATIONS)
+  ),
+  MANAGE_NOMINATION(
+      "Managed nominations",
+      "Can create and process phase one nomination applications",
+      30,
+      Set.of()
+  ),
+  VIEW_NOMINATION(
+      "View nominations",
+      "Can view nominations",
+      40,
+      Set.of()
+  ),
+  MANAGE_ASSET_OPERATORS(
+      "Manage well and installation operators",
+      "Can carry out updates to the system of record including data checks and terminations",
+      50,
+      Set.of()
+  ),
+  VIEW_ASSET_OPERATORS(
+      "View well and installation operators",
+      "Can view system of record data",
+      60,
+      Set.of()
   );
 
   private final String displayText;
@@ -52,4 +77,14 @@ public enum RegulatorTeamRole implements TeamRole {
   public Set<RolePermission> getRolePermissions() {
     return rolePermissions;
   }
+
+  static Optional<RegulatorTeamRole> getRoleFromString(String role) {
+    try {
+      return Optional.of(RegulatorTeamRole.valueOf(role.toUpperCase()));
+    } catch (IllegalArgumentException exception) {
+      return Optional.empty();
+    }
+  }
+
+
 }

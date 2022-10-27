@@ -2,43 +2,42 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import java.util.HashSet;
 import java.util.Set;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
-public class TeamMemberViewUtil {
+public class TeamMemberViewTestUtil {
 
-  private TeamMemberViewUtil() {
+  private TeamMemberViewTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  public static Builder builder() {
+  public static Builder Builder() {
     return new Builder();
   }
 
   public static class Builder {
 
-    private WebUserAccountId webUserAccountId;
+    private WebUserAccountId wuaId;
     private String title;
     private String firstName;
-    private String middleInitials;
     private String lastName;
     private String contactEmail;
     private String contactNumber;
-    private final Set<TeamRole> roles;
+    private Set<TeamRole> roles;
 
     public Builder() {
-      webUserAccountId = new WebUserAccountId(1L);
+      wuaId = new WebUserAccountId(1L);
       title = "Mr";
       firstName = "Forename";
-      middleInitials = "M.I.";
       lastName = "Surname";
       contactEmail = "f.s@test.com";
       contactNumber = "+440000000000";
       roles = new HashSet<>();
     }
 
-    public Builder withWuaId(WebUserAccountId webUserAccountId) {
-      this.webUserAccountId = webUserAccountId;
+    public Builder withWuaId(WebUserAccountId wuaId) {
+      this.wuaId = wuaId;
       return this;
     }
 
@@ -49,11 +48,6 @@ public class TeamMemberViewUtil {
 
     public Builder withFirstName(String firstName) {
       this.firstName = firstName;
-      return this;
-    }
-
-    public Builder withMiddleInitials(String middleInitials) {
-      this.middleInitials = middleInitials;
       return this;
     }
 
@@ -73,7 +67,7 @@ public class TeamMemberViewUtil {
     }
 
     public Builder withRoles(Set<TeamRole> roles) {
-      this.roles.addAll(roles);
+      this.roles = roles;
       return this;
     }
 
@@ -83,7 +77,7 @@ public class TeamMemberViewUtil {
     }
 
     public TeamMemberView build() {
-      return new TeamMemberView(webUserAccountId, title, firstName, middleInitials, lastName, contactEmail, contactNumber, roles);
+      return new TeamMemberView(wuaId, title, firstName, lastName, contactEmail, contactNumber, roles);
     }
   }
 

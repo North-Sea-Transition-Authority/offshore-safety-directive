@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,26 +26,27 @@ class TeamServiceTest {
   private TeamService teamService;
 
   @Test
-  void getTeamByUuid_withValue() {
-    var uuid = UUID.randomUUID();
-    var team = new Team();
+  void getTeam_whenMatch_thenReturnTeam() {
 
-    when(teamRepository.findByUuid(uuid)).thenReturn(Optional.of(team));
-    var result = teamService.getTeamByUuid(TeamId.valueOf(uuid));
+    var team = TeamTestUtil.Builder().build();
+
+    when(teamRepository.findByUuidAndTeamType(team.getUuid(), team.getTeamType())).thenReturn(Optional.of(team));
+    var result = teamService.getTeam(TeamId.valueOf(team.getUuid()), team.getTeamType());
 
     assertThat(result).contains(team);
-    verify(teamRepository).findByUuid(uuid);
+    verify(teamRepository).findByUuidAndTeamType(team.getUuid(), team.getTeamType());
   }
 
   @Test
-  void getTeamByUuid_withoutValue() {
-    var uuid = UUID.randomUUID();
+  void getTeam_whenNoMatch_thenEmptyOptionalReturned() {
 
-    when(teamRepository.findByUuid(uuid)).thenReturn(Optional.empty());
-    var result = teamService.getTeamByUuid(TeamId.valueOf(uuid));
+    var team = TeamTestUtil.Builder().build();
+
+    when(teamRepository.findByUuidAndTeamType(team.getUuid(), team.getTeamType())).thenReturn(Optional.empty());
+    var result = teamService.getTeam(TeamId.valueOf(team.getUuid()), team.getTeamType());
 
     assertThat(result).isEmpty();
-    verify(teamRepository).findByUuid(uuid);
+    verify(teamRepository).findByUuidAndTeamType(team.getUuid(), team.getTeamType());
   }
 
   @ParameterizedTest

@@ -16,8 +16,8 @@ public class TeamService {
     this.teamRepository = teamRepository;
   }
 
-  public Optional<Team> getTeamByUuid(TeamId teamId) {
-    return teamRepository.findByUuid(teamId.uuid());
+  public Optional<Team> getTeam(TeamId teamId, TeamType teamType) {
+    return teamRepository.findByUuidAndTeamType(teamId.uuid(), teamType);
   }
 
   public List<Team> getTeamsOfTypeThatUserBelongsTo(ServiceUserDetail user, TeamType teamType) {

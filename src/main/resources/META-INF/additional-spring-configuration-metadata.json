@@ -39,6 +39,11 @@
       "name": "energy-portal.api.token",
       "type": "java.lang.String",
       "description": "The pre-shared key to authenticate with the Energy Portal API."
+    },
+    {
+      "name": "energy-portal.registration-url",
+      "type": "java.lang.String",
+      "description": "The user registration url of the Energy Portal."
     }
   ]
 }

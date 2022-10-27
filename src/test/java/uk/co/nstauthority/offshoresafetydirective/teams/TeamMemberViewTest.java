@@ -7,19 +7,26 @@ import org.junit.jupiter.api.Test;
 class TeamMemberViewTest {
 
   @Test
-  void getDisplayName() {
-    var teamMemberView = TeamMemberViewUtil.builder().build();
+  void getDisplayName_whenTitle_thenTitleIncludedInDisplayName() {
+
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTitle("Mr")
+        .withFirstName("Forename")
+        .withLastName("Surname")
+        .build();
+
     assertThat(teamMemberView.getDisplayName()).isEqualTo("Mr Forename Surname");
   }
 
   @Test
-  void getDisplayName_whenTitleIsNull_thenExcludeFromDisplayName() {
-    var teamMemberView = TeamMemberViewUtil.builder().build();
+  void getDisplayName_whenNoTitle_thenTitleIncludedInDisplayName() {
 
-    var teamMemberViewWithoutTitle = new TeamMemberView(teamMemberView.webUserAccountId(), null, teamMemberView.firstName(),
-        teamMemberView.middleInitials(), teamMemberView.lastName(), teamMemberView.contactEmail(),
-        teamMemberView.contactNumber(), teamMemberView.teamRoles());
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTitle(null)
+        .withFirstName("Forename")
+        .withLastName("Surname")
+        .build();
 
-    assertThat(teamMemberViewWithoutTitle.getDisplayName()).isEqualTo("Forename Surname");
+    assertThat(teamMemberView.getDisplayName()).isEqualTo("Forename Surname");
   }
 }

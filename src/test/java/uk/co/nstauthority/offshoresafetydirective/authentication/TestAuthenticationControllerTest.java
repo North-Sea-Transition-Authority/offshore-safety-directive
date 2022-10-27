@@ -1,11 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.authentication;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -20,6 +22,12 @@ class TestAuthenticationControllerTest extends AbstractControllerTest {
 
   @Autowired
   UserDetailService userDetailService;
+
+  // needs to be BeforeEach as otherwise MockBean in AbstractControllerTest is not initialised yet
+  @BeforeEach
+  void setUp() {
+    doCallRealMethod().when(userDetailService).getUserDetail();
+  }
 
   @Test
   void whenNoUser_thenVerifyAuthenticationRequired() throws Exception {

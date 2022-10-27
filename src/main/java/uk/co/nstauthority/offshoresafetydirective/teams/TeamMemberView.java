@@ -4,9 +4,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
-public record TeamMemberView(WebUserAccountId webUserAccountId, String title, String firstName, String middleInitials,
+public record TeamMemberView(WebUserAccountId wuaId, String title, String firstName,
                              String lastName, String contactEmail, String contactNumber,
                              Set<TeamRole> teamRoles) {
 

@@ -37,7 +37,7 @@ class TopNavigationServiceTest {
             Tuple.tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
                 StringUtils.stripEnd(
-                    ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList()), "/")
+                    ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect()), "/")
             )
         );
   }

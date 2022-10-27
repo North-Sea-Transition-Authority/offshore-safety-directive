@@ -4,9 +4,9 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<java.lang.String, java.lang.String>" -->
-<#include '../layout/layout.ftl'>
-<#import '_teamMembers.ftl' as teamMembersMacro>
-<#import '_roleDescriptions.ftl' as roleDescriptions>
+<#include '../../layout/layout.ftl'>
+<#import '../_teamMembers.ftl' as teamMembersMacro>
+<#import '../_roleDescriptions.ftl' as roleDescriptions>
 
 <#assign pageTitle=teamName/>
 
@@ -19,8 +19,17 @@
 
   <@roleDescriptions.roleDescriptions roles=teamRoles/>
 
+  <#if addTeamMemberUrl?has_content>
+    <@fdsAction.link
+      linkText="Add user"
+      linkUrl=springUrl(addTeamMemberUrl)
+      linkClass="govuk-button govuk-button--secondary"
+      role=true
+    />
+  </#if>
+
   <#if teamMembers?has_content>
-      <@teamMembersMacro.teamMembers name=teamName members=teamMembers/>
+    <@teamMembersMacro.teamMembers name=teamName members=teamMembers/>
   <#else>
     <@fdsInsetText.insetText>
       ${teamName} has no members.

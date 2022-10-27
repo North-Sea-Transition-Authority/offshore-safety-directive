@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
@@ -9,13 +10,27 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
 
 @Configuration
 class WebMvcConfiguration implements WebMvcConfigurer {
 
+  private static final String ASSETS_PATH = "/assets/**";
+
+  private final PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor;
+  private final RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor;
+
+  @Autowired
+  WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
+                      RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor) {
+    this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
+    this.regulatorPermissionManagementHandlerInterceptor = regulatorPermissionManagementHandlerInterceptor;
+  }
+
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/assets/**")
+    registry.addResourceHandler(ASSETS_PATH)
         .addResourceLocations("classpath:/public/assets/")
         .setCacheControl(CacheControl.maxAge(365, TimeUnit.DAYS))
         .resourceChain(false)
@@ -25,7 +40,11 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(new ResponseBufferSizeHandlerInterceptor())
-        .excludePathPatterns("/assets/**");
+        .excludePathPatterns(ASSETS_PATH);
+    registry.addInterceptor(permissionManagementHandlerInterceptor)
+        .addPathPatterns("/permission-management/**");
+    registry.addInterceptor(regulatorPermissionManagementHandlerInterceptor)
+        .addPathPatterns("/permission-management/regulator/**");
   }
 
   @Bean

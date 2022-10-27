@@ -24,7 +24,7 @@ public class TopNavigationService {
 
     navigationItems.add(
         new TopNavigationItem(TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList()))
+            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect()))
     );
 
     return navigationItems;

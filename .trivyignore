@@ -1,10 +1,16 @@
-# Transient vulnerability from spring-security-saml2-service-providerCVE-2018-10237
+# Transient vulnerability from spring-security-saml2-service-provider
 CVE-2015-7501
 CVE-2015-6420
 CVE-2021-40690
 CVE-2019-12400
 CVE-2020-13936
 CVE-2020-15522
+CVE-2022-40152
+CVE-2022-40153
+CVE-2022-40154
+CVE-2022-40155
+CVE-2022-40156
+CVE-2022-40151
 
 # Transient vulnerability from spring-boot-starter-actuator
 CVE-2022-25857

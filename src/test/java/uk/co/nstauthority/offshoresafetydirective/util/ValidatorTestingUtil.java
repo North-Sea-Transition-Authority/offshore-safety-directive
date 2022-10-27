@@ -29,4 +29,15 @@ public class ValidatorTestingUtil {
         ));
 
   }
+
+  public static Map<String, Set<String>> extractErrorMessages(BindingResult bindingResult) {
+
+    return bindingResult.getFieldErrors().stream()
+        .collect(Collectors.groupingBy(
+            FieldError::getField,
+            LinkedHashMap::new,
+            Collectors.mapping(FieldError::getDefaultMessage, Collectors.toSet())
+        ));
+
+  }
 }

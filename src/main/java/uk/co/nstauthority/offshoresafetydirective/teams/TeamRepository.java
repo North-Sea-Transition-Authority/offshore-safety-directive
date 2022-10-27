@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 interface TeamRepository extends CrudRepository<Team, Integer> {
 
-  Optional<Team> findByUuid(UUID uuid);
+  Optional<Team> findByUuidAndTeamType(UUID uuid, TeamType teamType);
 
   @Query(
       """
