@@ -24,6 +24,11 @@ public class AddTeamMemberValidator implements SmartValidator {
   static final String TOO_MANY_RESULTS_FOUND_ERROR_MESSAGE =
       "More than one Energy Portal user exists with this email address. Enter the username of the user instead.";
 
+  static final String SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE = "%s.sharedAccountProhibited"
+      .formatted(USERNAME_FORM_FIELD_NAME);
+
+  static final String SHARED_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE = "You cannot add shared accounts to this service";
+
   private final EnergyPortalUserService energyPortalUserService;
 
   @Autowired
@@ -63,6 +68,12 @@ public class AddTeamMemberValidator implements SmartValidator {
             USERNAME_FORM_FIELD_NAME,
             TOO_MANY_RESULTS_FOUND_ERROR_CODE,
             TOO_MANY_RESULTS_FOUND_ERROR_MESSAGE
+        );
+      } else if (resultingUsers.get(0).isSharedAccount()) {
+        errors.rejectValue(
+            USERNAME_FORM_FIELD_NAME,
+            SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE,
+            SHARED_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE
         );
       }
     }

@@ -20,6 +20,9 @@ public class EnergyPortalUserDtoTestUtil {
     private String surname = "surname";
     private String primaryEmailAddress = "email address";
     private String telephoneNumber = "telephone number";
+    private boolean isSharedAccount = false;
+    private boolean canLogin = true;
+
     private Builder() {}
 
     public Builder withWebUserAccountId(int webUserAccountId) {
@@ -52,6 +55,16 @@ public class EnergyPortalUserDtoTestUtil {
       return this;
     }
 
+    public Builder hasSharedAccount(boolean isSharedAccount) {
+      this.isSharedAccount = isSharedAccount;
+      return this;
+    }
+
+    public Builder canLogin(boolean canLogin) {
+      this.canLogin = canLogin;
+      return this;
+    }
+
     public EnergyPortalUserDto build() {
       return new EnergyPortalUserDto(
           webUserAccountId,
@@ -59,7 +72,9 @@ public class EnergyPortalUserDtoTestUtil {
           forename,
           surname,
           primaryEmailAddress,
-          telephoneNumber
+          telephoneNumber,
+          isSharedAccount,
+          canLogin
       );
     }
 

@@ -20,7 +20,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
@@ -29,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -426,6 +431,35 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
         .andExpect(status().isNotFound());
   }
 
+  @ParameterizedTest
+  @MethodSource("getEnergyPortalUserThatShouldResultInBadRequest")
+  void renderAddTeamMemberRoles_whenEnergyPortalUserNotValid_thenBadRequest(EnergyPortalUserDto energyPortalUser) throws Exception {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(user);
+
+    var team = TeamTestUtil.Builder()
+        .build();
+
+    var teamId = new TeamId(team.getUuid());
+
+    var webUserAccountIdToAdd = new WebUserAccountId(123);
+
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
+        .thenReturn(true);
+
+    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+        .thenReturn(Optional.of(energyPortalUser));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(RegulatorAddMemberController.class)
+                .renderAddTeamMemberRoles(teamId, webUserAccountIdToAdd)))
+                .with(user(user)))
+        .andExpect(status().isBadRequest());
+  }
+
   @Test
   void renderAddTeamMemberRoles_assertModelProperties() throws Exception {
 
@@ -583,6 +617,37 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
         .andExpect(status().isNotFound());
   }
 
+  @ParameterizedTest
+  @MethodSource("getEnergyPortalUserThatShouldResultInBadRequest")
+  void saveAddTeamMemberRoles_whenEnergyPortalUserNotValid_thenBadRequest(EnergyPortalUserDto energyPortalUser) throws Exception {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(user);
+
+    var team = TeamTestUtil.Builder()
+        .build();
+
+    var teamId = new TeamId(team.getUuid());
+
+    var webUserAccountIdToAdd = new WebUserAccountId(123);
+
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
+        .thenReturn(true);
+
+    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+        .thenReturn(Optional.of(energyPortalUser));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(RegulatorAddMemberController.class)
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .with(user(user))
+                .with(csrf())
+        )
+        .andExpect(status().isBadRequest());
+  }
+
   @Test
   void saveAddTeamMemberRoles_whenInvalidTeamMemberRolesForm_thenStayOnFormPage() throws Exception {
 
@@ -657,6 +722,22 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
             (x, y) -> x,
             LinkedHashMap::new)
         );
+  }
+
+  private static Stream<Arguments> getEnergyPortalUserThatShouldResultInBadRequest() {
+
+    var noLoginEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
+        .canLogin(false)
+        .build();
+
+    var sharedAccountEnergyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
+        .hasSharedAccount(true)
+        .build();
+
+    return Stream.of(
+        Arguments.of(noLoginEnergyPortalUser),
+        Arguments.of(sharedAccountEnergyPortalUser)
+    );
   }
 
 }

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -58,10 +59,12 @@ class EnergyPortalUserServiceTest {
   }
 
   @Test
-  void findUserByUsername_whenResults_thenPopulatedListCorrectlyMapped() {
+  void findUserByUsername_whenUserFoundAndCanLogIn_thenPopulatedListCorrectlyMapped() {
 
     var username = "username";
-    var expectedUser = EpaUserTestUtil.Builder().build();
+    var expectedUser = EpaUserTestUtil.Builder()
+        .canLogin(true)
+        .build();
 
     var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
 
@@ -72,41 +75,44 @@ class EnergyPortalUserServiceTest {
         anyString()
     )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.findUserByUsername(username)).containsExactly(
-        new EnergyPortalUserDto(
-            expectedUser.getWebUserAccountId(),
-            expectedUser.getTitle(),
-            expectedUser.getForename(),
-            expectedUser.getSurname(),
-            expectedUser.getPrimaryEmailAddress(),
-            expectedUser.getTelephoneNumber()
+    assertThat(energyPortalUserService.findUserByUsername(username))
+        .extracting(
+            EnergyPortalUserDto::webUserAccountId,
+            EnergyPortalUserDto::title,
+            EnergyPortalUserDto::forename,
+            EnergyPortalUserDto::surname,
+            EnergyPortalUserDto::emailAddress,
+            EnergyPortalUserDto::telephoneNumber,
+            EnergyPortalUserDto::isSharedAccount,
+            EnergyPortalUserDto::canLogin
         )
-    );
+        .containsExactly(
+            tuple(
+                expectedUser.getWebUserAccountId(),
+                expectedUser.getTitle(),
+                expectedUser.getForename(),
+                expectedUser.getSurname(),
+                expectedUser.getPrimaryEmailAddress(),
+                expectedUser.getTelephoneNumber(),
+                expectedUser.getIsAccountShared(),
+                expectedUser.getCanLogin()
+            )
+        );
   }
 
   @Test
-  void findUserByUsername_whenUserDontMatchFilter_thenOnlyCanLoginTrueAndSharedAccountFalseReturned() {
+  void findUserByUsername_whenUsersFound_thenOnlyThoseWithCanLoginTrueReturned() {
 
     var username = "username";
 
-    var userCanLoginAndSharedFalse = EpaUserTestUtil.Builder()
+    var canLoginUser = EpaUserTestUtil.Builder()
         .canLogin(true)
-        .isSharedAccount(false)
+        .withWebUserAccountId(100)
         .build();
 
-    var userNotLoginAndSharedFalse = EpaUserTestUtil.Builder()
+    var notLoginUser = EpaUserTestUtil.Builder()
         .canLogin(false)
-        .isSharedAccount(false)
-        .build();
-
-    var userHasSharedAccountAndCanLogin = EpaUserTestUtil.Builder()
-        .isSharedAccount(true)
-        .canLogin(true)
-        .build();
-
-    var userHasSharedAccountAndNoLogin = EpaUserTestUtil.Builder()
-        .canLogin(false)
-        .isSharedAccount(true)
+        .withWebUserAccountId(200)
         .build();
 
     var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
@@ -117,22 +123,13 @@ class EnergyPortalUserServiceTest {
         anyString(),
         anyString()
     )).thenReturn(List.of(
-        userCanLoginAndSharedFalse,
-        userNotLoginAndSharedFalse,
-        userHasSharedAccountAndCanLogin,
-        userHasSharedAccountAndNoLogin
+        canLoginUser,
+        notLoginUser
     ));
 
-    assertThat(energyPortalUserService.findUserByUsername(username)).containsExactly(
-        new EnergyPortalUserDto(
-            userCanLoginAndSharedFalse.getWebUserAccountId(),
-            userCanLoginAndSharedFalse.getTitle(),
-            userCanLoginAndSharedFalse.getForename(),
-            userCanLoginAndSharedFalse.getSurname(),
-            userCanLoginAndSharedFalse.getPrimaryEmailAddress(),
-            userCanLoginAndSharedFalse.getTelephoneNumber()
-        )
-    );
+    assertThat(energyPortalUserService.findUserByUsername(username))
+        .extracting(EnergyPortalUserDto::webUserAccountId)
+        .containsExactly(canLoginUser.getWebUserAccountId());
   }
 
   @Test
@@ -167,16 +164,29 @@ class EnergyPortalUserServiceTest {
           anyString()
       )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.findByWuaIds(List.of(webUserAccountId))).containsExactly(
-        new EnergyPortalUserDto(
-            expectedUser.getWebUserAccountId(),
-            expectedUser.getTitle(),
-            expectedUser.getForename(),
-            expectedUser.getSurname(),
-            expectedUser.getPrimaryEmailAddress(),
-            expectedUser.getTelephoneNumber()
+    assertThat(energyPortalUserService.findByWuaIds(List.of(webUserAccountId)))
+        .extracting(
+            EnergyPortalUserDto::webUserAccountId,
+            EnergyPortalUserDto::title,
+            EnergyPortalUserDto::forename,
+            EnergyPortalUserDto::surname,
+            EnergyPortalUserDto::emailAddress,
+            EnergyPortalUserDto::telephoneNumber,
+            EnergyPortalUserDto::isSharedAccount,
+            EnergyPortalUserDto::canLogin
         )
-    );
+        .containsExactly(
+            tuple(
+                expectedUser.getWebUserAccountId(),
+                expectedUser.getTitle(),
+                expectedUser.getForename(),
+                expectedUser.getSurname(),
+                expectedUser.getPrimaryEmailAddress(),
+                expectedUser.getTelephoneNumber(),
+                expectedUser.getIsAccountShared(),
+                expectedUser.getCanLogin()
+            )
+        );
   }
 
   @Test
@@ -194,16 +204,30 @@ class EnergyPortalUserServiceTest {
         anyString()
     )).thenReturn(Optional.of(expectedUser));
 
-    assertThat(energyPortalUserService.findByWuaId(webUserAccountId)).contains(
-        new EnergyPortalUserDto(
+    var resultingUser = energyPortalUserService.findByWuaId(webUserAccountId);
+
+    assertThat(resultingUser).isPresent();
+    assertThat(resultingUser.get())
+        .extracting(
+            EnergyPortalUserDto::webUserAccountId,
+            EnergyPortalUserDto::title,
+            EnergyPortalUserDto::forename,
+            EnergyPortalUserDto::surname,
+            EnergyPortalUserDto::emailAddress,
+            EnergyPortalUserDto::telephoneNumber,
+            EnergyPortalUserDto::isSharedAccount,
+            EnergyPortalUserDto::canLogin
+        )
+        .containsExactly(
             expectedUser.getWebUserAccountId(),
             expectedUser.getTitle(),
             expectedUser.getForename(),
             expectedUser.getSurname(),
             expectedUser.getPrimaryEmailAddress(),
-            expectedUser.getTelephoneNumber()
-        )
-    );
+            expectedUser.getTelephoneNumber(),
+            expectedUser.getIsAccountShared(),
+            expectedUser.getCanLogin()
+        );
   }
 
   @Test

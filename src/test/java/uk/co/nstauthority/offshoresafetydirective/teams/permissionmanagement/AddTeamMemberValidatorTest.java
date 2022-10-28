@@ -142,6 +142,61 @@ class AddTeamMemberValidatorTest {
     assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
   }
 
+
+  @Test
+  void validate_whenUsernameMatchesOneUserWithSharedAccount_thenError() {
+
+    var usernameToTest = "username";
+    var form = constructAddTeamMemberForm(usernameToTest);
+
+    var energyPortalUserWithSharedAccount = EnergyPortalUserDtoTestUtil.Builder()
+        .hasSharedAccount(true)
+        .build();
+
+    when(energyPortalUserService.findUserByUsername(usernameToTest))
+        .thenReturn(List.of(energyPortalUserWithSharedAccount));
+
+    var bindingResult = validateAddTeamMemberForm(form);
+
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(
+            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+            Set.of(AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE)
+        )
+    );
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(
+            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+            Set.of(AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE)
+        )
+    );
+
+  }
+
+  @Test
+  void validate_whenUsernameMatchesOneUserWithNoSharedAccount_thenNoError() {
+
+    var usernameToTest = "username";
+    var form = constructAddTeamMemberForm(usernameToTest);
+
+    var energyPortalUserWithoutSharedAccount = EnergyPortalUserDtoTestUtil.Builder()
+        .hasSharedAccount(false)
+        .build();
+
+    when(energyPortalUserService.findUserByUsername(usernameToTest))
+        .thenReturn(List.of(energyPortalUserWithoutSharedAccount));
+
+    var bindingResult = validateAddTeamMemberForm(form);
+
+    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
+    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+  }
+
   private AddTeamMemberForm constructAddTeamMemberForm(String username) {
     var form = new AddTeamMemberForm();
     form.setUsername(username);

@@ -6,7 +6,9 @@ public record EnergyPortalUserDto(
     String forename,
     String surname,
     String emailAddress,
-    String telephoneNumber
+    String telephoneNumber,
+    boolean isSharedAccount,
+    boolean canLogin
 ) {
 
   public String displayName() {

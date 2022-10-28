@@ -30,7 +30,9 @@ public class EnergyPortalUserService {
       .forename()
       .surname()
       .primaryEmailAddress()
-      .telephoneNumber();
+      .telephoneNumber()
+      .canLogin()
+      .isAccountShared();
 
   private final UserApi userApi;
 
@@ -51,7 +53,7 @@ public class EnergyPortalUserService {
             logCorrelationId.id()
         )
         .stream()
-        .filter(user -> user.getCanLogin() && !user.getIsAccountShared())
+        .filter(User::getCanLogin)
         .map(this::convertToEnergyPortalUser)
         .toList()
     ));
@@ -97,7 +99,9 @@ public class EnergyPortalUserService {
         user.getForename(),
         user.getSurname(),
         user.getPrimaryEmailAddress(),
-        user.getTelephoneNumber()
+        user.getTelephoneNumber(),
+        user.getIsAccountShared(),
+        user.getCanLogin()
     );
   }
 }

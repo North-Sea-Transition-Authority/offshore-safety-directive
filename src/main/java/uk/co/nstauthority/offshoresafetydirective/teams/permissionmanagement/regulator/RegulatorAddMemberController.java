@@ -171,10 +171,31 @@ class RegulatorAddMemberController extends AbstractRegulatorPermissionManagement
   }
 
   private EnergyPortalUserDto getEnergyPortalUser(WebUserAccountId webUserAccountId) {
-    return energyPortalUserService.findByWuaId(webUserAccountId)
+    var energyPortalUser = energyPortalUserService.findByWuaId(webUserAccountId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "No Energy Portal user with WUA_ID %s could be found".formatted(webUserAccountId)
         ));
+
+    if (energyPortalUser.isSharedAccount()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Energy Portal user with WUA_ID %s is a shared account and is not allowed to be added to this service"
+              .formatted(webUserAccountId)
+      );
+    }
+
+    if (!energyPortalUser.canLogin()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          """
+              Energy Portal user with WUA_ID %s does not have login access to the Energy Portal and is
+              not allowed to be added to this service
+          """
+              .formatted(webUserAccountId)
+      );
+    }
+
+    return energyPortalUser;
   }
 }
