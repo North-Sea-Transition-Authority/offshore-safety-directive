@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.configuration;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -12,17 +11,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
 import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
+import org.springframework.security.web.SecurityFilterChain;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 
 @Configuration
-public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfiguration {
+
+  static final String IDP_ACCESS_GRANTED_AUTHORITY_NAME = "WIOS_ACCESS_PRIVILEGE";
 
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
@@ -34,22 +35,24 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     this.samlResponseParser = samlResponseParser;
   }
 
-
-
-  @Override
-  protected void configure(HttpSecurity http) throws Exception {
+  @Bean
+  protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
     var authenticationProvider = new OpenSaml4AuthenticationProvider();
     authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
 
-    http
+    httpSecurity
         .authorizeHttpRequests()
+        .mvcMatchers("/*")
+          .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
         .mvcMatchers("/assets/**")
           .permitAll()
         .anyRequest()
           .authenticated()
         .and()
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)));
+
+    return httpSecurity.build();
   }
 
   @Bean
@@ -59,7 +62,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
   }
 
   @Bean
-  public RelyingPartyRegistration getRelyingPartyRegistration() throws CertificateException, IOException {
+  public RelyingPartyRegistration getRelyingPartyRegistration() throws CertificateException {
 
     var certificateStream = new ByteArrayInputStream(samlProperties.getCertificate().getBytes(StandardCharsets.UTF_8));
 

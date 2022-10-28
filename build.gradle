@@ -37,8 +37,6 @@ dependencies {
 		implementation "org.opensaml:opensaml-saml-impl:4.2.0"
 	}
 
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -48,17 +46,21 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.security:spring-security-saml2-service-provider'
 	implementation 'org.springframework.session:spring-session-core'
+
+	implementation 'com.google.guava:guava:31.1-jre'
+	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.flywaydb:flyway-core:8.5.13'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
+
 	implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
+	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql:42.4.1'
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
 	testImplementation 'com.h2database:h2:2.1.214'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
 }

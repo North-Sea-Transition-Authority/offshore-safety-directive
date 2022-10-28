@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
@@ -14,6 +15,8 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
@@ -27,6 +30,9 @@ class TeamMemberRoleServiceTest {
   @Mock
   private AddedToTeamEventPublisher addedToTeamEventPublisher;
 
+  @Mock
+  private UserDetailService userDetailService;
+
   @InjectMocks
   private TeamMemberRoleService teamMemberRoleService;
 
@@ -39,6 +45,9 @@ class TeamMemberRoleServiceTest {
     var team = TeamTestUtil.Builder().build();
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
     var role = "ROLE_NAME";
+    var instigatingUser = ServiceUserDetailTestUtil.Builder().build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role));
 
@@ -51,7 +60,8 @@ class TeamMemberRoleServiceTest {
     verify(addedToTeamEventPublisher, times(1)).publish(
         new TeamId(team.getUuid()),
         new WebUserAccountId(userToAdd.webUserAccountId()),
-        Set.of(role)
+        Set.of(role),
+        instigatingUser
     );
   }
 
@@ -65,6 +75,10 @@ class TeamMemberRoleServiceTest {
     var secondRole = "SECOND_ROLE_NAME";
 
     var rolesToGrant = Set.of(firstRole, secondRole);
+
+    var instigatingUser = ServiceUserDetailTestUtil.Builder().build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, rolesToGrant);
 
@@ -80,7 +94,8 @@ class TeamMemberRoleServiceTest {
     verify(addedToTeamEventPublisher, times(1)).publish(
         new TeamId(team.getUuid()),
         new WebUserAccountId(userToAdd.webUserAccountId()),
-        rolesToGrant
+        rolesToGrant,
+        instigatingUser
     );
   }
 

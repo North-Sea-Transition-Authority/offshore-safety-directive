@@ -4,6 +4,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 
@@ -17,9 +18,18 @@ public class AddedToTeamEventPublisher {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  public void publish(TeamId teamAddedTo, WebUserAccountId webUserAccountIdOfAddedUser, Set<String> rolesGranted) {
+  public void publish(TeamId teamAddedTo,
+                      WebUserAccountId addedUserWebUserAccountId,
+                      Set<String> rolesGranted,
+                      ServiceUserDetail instigatingUser) {
     applicationEventPublisher.publishEvent(
-        new AddedToTeamEvent(this, teamAddedTo, webUserAccountIdOfAddedUser, rolesGranted)
+        new AddedToTeamEvent(
+            this,
+            teamAddedTo,
+            addedUserWebUserAccountId,
+            new WebUserAccountId(instigatingUser.wuaId()),
+            rolesGranted
+        )
     );
   }
 }

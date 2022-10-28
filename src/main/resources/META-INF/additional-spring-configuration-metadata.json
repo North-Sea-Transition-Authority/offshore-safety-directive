@@ -44,6 +44,16 @@
       "name": "energy-portal.registration-url",
       "type": "java.lang.String",
       "description": "The user registration url of the Energy Portal."
+    },
+    {
+      "name": "energy-portal.access-api.base-url",
+      "type": "java.lang.String",
+      "description": "The Energy Portal team access API base url. (ending in the fox 5 context for the environment)."
+    },
+    {
+      "name": "energy-portal.access-api.token",
+      "type": "java.lang.String",
+      "description": "The Energy Portal team access API token."
     }
   ]
 }

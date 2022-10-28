@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 
@@ -29,19 +30,21 @@ class AddedToTeamEventPublisherTest {
   void publish_verifyEventPublished() {
 
     var teamId = new TeamId(UUID.randomUUID());
-    var webUserAccountId = new WebUserAccountId(123);
+    var addedWebUserAccountId = new WebUserAccountId(123);
     var rolesGranted = Set.of("ROLE_1", "ROLE_2");
+    var instigatingUser = ServiceUserDetailTestUtil.Builder().build();
 
     var addedToTeamEventCaptor = ArgumentCaptor.forClass(AddedToTeamEvent.class);
 
-    addedToTeamEventPublisher.publish(teamId, webUserAccountId, rolesGranted);
+    addedToTeamEventPublisher.publish(teamId, addedWebUserAccountId, rolesGranted, instigatingUser);
 
     verify(applicationEventPublisher, times(1)).publishEvent(addedToTeamEventCaptor.capture());
 
     var addToTeamEvent = addedToTeamEventCaptor.getValue();
     assertThat(addToTeamEvent.getTeamAddedTo()).isEqualTo(teamId);
-    assertThat(addToTeamEvent.getWebUserAccountIdOfAddedUser()).isEqualTo(webUserAccountId);
+    assertThat(addToTeamEvent.getAddedUserWebUserAccountId()).isEqualTo(addedWebUserAccountId);
     assertThat(addToTeamEvent.getRolesGranted()).isEqualTo(rolesGranted);
+    assertThat(addToTeamEvent.getInstigatingUserWebUserAccountId().id()).isEqualTo(instigatingUser.wuaId());
   }
 
 }

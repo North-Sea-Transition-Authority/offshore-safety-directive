@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
@@ -16,11 +17,15 @@ public class TeamMemberRoleService {
 
   private final AddedToTeamEventPublisher addedToTeamEventPublisher;
 
+  private final UserDetailService userDetailService;
+
   @Autowired
   public TeamMemberRoleService(TeamMemberRoleRepository teamMemberRoleRepository,
-                               AddedToTeamEventPublisher addedToTeamEventPublisher) {
+                               AddedToTeamEventPublisher addedToTeamEventPublisher,
+                               UserDetailService userDetailService) {
     this.teamMemberRoleRepository = teamMemberRoleRepository;
     this.addedToTeamEventPublisher = addedToTeamEventPublisher;
+    this.userDetailService = userDetailService;
   }
 
   @Transactional
@@ -41,7 +46,8 @@ public class TeamMemberRoleService {
     addedToTeamEventPublisher.publish(
         new TeamId(team.getUuid()),
         new WebUserAccountId(userToAdd.webUserAccountId()),
-        roles
+        roles,
+        userDetailService.getUserDetail()
     );
   }
 }
