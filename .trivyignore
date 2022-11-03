@@ -26,3 +26,6 @@ CVE-2022-42004
 # Transient vulnerability from energyportalapi:client
 CVE-2022-3171
 CVE-2022-37734
+
+# Transient vulnerability from org.springframework.security:spring-security-core
+CVE-2022-31692
