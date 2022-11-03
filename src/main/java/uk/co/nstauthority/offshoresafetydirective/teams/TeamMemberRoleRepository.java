@@ -14,4 +14,7 @@ interface TeamMemberRoleRepository extends CrudRepository<TeamMemberRole, UUID> 
   boolean existsByWuaIdAndTeam_Uuid(long wuaId, UUID teamId);
 
   boolean existsByWuaIdAndTeam_UuidAndRoleIn(long wuaId, UUID teamId, Set<String> roles);
+
+  List<TeamMemberRole> findAllByTeamAndWuaId(Team team, Long wuaId);
+
 }

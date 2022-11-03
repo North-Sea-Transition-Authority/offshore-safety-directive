@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
 public record EnergyPortalUserDto(
-    int webUserAccountId,
+    long webUserAccountId,
     String title,
     String forename,
     String surname,

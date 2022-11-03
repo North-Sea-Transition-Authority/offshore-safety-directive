@@ -171,4 +171,5 @@ class TeamRepositoryTest {
     // THEN only one team is returned regardless how many roles exist
     assertThat(result).containsExactly(team);
   }
+
 }

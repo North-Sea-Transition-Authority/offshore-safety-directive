@@ -4,6 +4,8 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<java.lang.String, java.lang.String>" -->
+<#-- @ftlvariable name="canRemoveUsers" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="addTeamMemberUrl" type="java.lang.String" -->
 <#include '../../layout/layout.ftl'>
 <#import '../_teamMembers.ftl' as teamMembersMacro>
 <#import '../_roleDescriptions.ftl' as roleDescriptions>
@@ -29,7 +31,7 @@
   </#if>
 
   <#if teamMembers?has_content>
-    <@teamMembersMacro.teamMembers name=teamName members=teamMembers/>
+      <@teamMembersMacro.teamMembers name=teamName members=teamMembers canRemoveUsers=canRemoveUsers!false/>
   <#else>
     <@fdsInsetText.insetText>
       ${teamName} has no members.

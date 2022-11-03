@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -28,7 +29,7 @@ class TeamMemberServiceTest {
   private TeamMemberService teamMemberService;
 
   @Test
-  void getTeamMembers() {
+  void getAllTeamMembers_whenMembers_thenNotEmpty() {
     var team = new Team();
     team.setTeamType(TeamType.REGULATOR);
 
@@ -47,7 +48,9 @@ class TeamMemberServiceTest {
 
     var result = teamMemberService.getTeamMembers(team);
 
-    var expectedTeamMember = new TeamMember(new WebUserAccountId(1L), Set.of(RegulatorTeamRole.ACCESS_MANAGER,
+    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+
+    var expectedTeamMember = new TeamMember(new WebUserAccountId(1L), teamView, Set.of(RegulatorTeamRole.ACCESS_MANAGER,
         RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
 
     assertThat(result).containsExactly(expectedTeamMember);
@@ -94,6 +97,8 @@ class TeamMemberServiceTest {
     when(teamMemberRoleRepository.existsByWuaIdAndTeam_UuidAndRoleIn(user.wuaId(), teamId.uuid(), roles))
         .thenReturn(false);
 
+    var result = teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles);
+
     assertFalse(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles));
   }
 
@@ -106,6 +111,8 @@ class TeamMemberServiceTest {
 
     var firstRole = RegulatorTeamRole.ACCESS_MANAGER;
     var secondRole = RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER;
+
+    team.setTeamType(TeamType.REGULATOR);
 
     var roleBuilder = TeamMemberRoleTestUtil.Builder()
         .withTeam(team)
@@ -135,5 +142,17 @@ class TeamMemberServiceTest {
                 Set.of(secondRole, firstRole)
             )
         );
+  }
+
+  @Test
+  void getAllTeamMembers_whenNoMembers_thenEmpty() {
+    var team = new Team();
+
+    when(teamMemberRoleRepository.findAllByTeam(team)).thenReturn(List.of());
+
+    var result = teamMemberService.getTeamMembers(team);
+
+    assertThat(result).isEmpty();
+    verify(teamMemberRoleRepository).findAllByTeam(team);
   }
 }

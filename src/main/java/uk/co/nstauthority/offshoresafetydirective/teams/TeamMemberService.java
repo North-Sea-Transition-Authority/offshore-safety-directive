@@ -3,10 +3,12 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -32,11 +34,25 @@ public class TeamMemberService {
     // Convert to a list of TeamMember objects.
     return wuaIdToRolesMap.entrySet()
         .stream()
-        .map(entry -> new TeamMember(
-            entry.getKey(),
-            mapMemberRolesToTeamRoles(entry.getValue(), team)
-        ))
+        .map(entry -> new TeamMember(entry.getKey(), createTeamView(team),
+            mapMemberRolesToTeamRoles(entry.getValue(), team)))
         .toList();
+  }
+
+  public Optional<TeamMember> getTeamMember(Team team, WebUserAccountId wuaId) {
+    // Group all roles to the appropriate wuaId
+    var teamMemberRoles = teamMemberRoleRepository.findAllByTeamAndWuaId(team, wuaId.id());
+
+    if (teamMemberRoles.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var teamMember = new TeamMember(wuaId, createTeamView(team), mapMemberRolesToTeamRoles(teamMemberRoles, team));
+    return Optional.of(teamMember);
+  }
+
+  private TeamView createTeamView(Team team) {
+    return new TeamView(new TeamId(team.getUuid()), team.getTeamType());
   }
 
   public boolean isMemberOfTeam(TeamId teamId, ServiceUserDetail user) {
@@ -54,4 +70,11 @@ public class TeamMemberService {
         })
         .collect(Collectors.toSet());
   }
+
+  @Transactional
+  public void removeMemberFromTeam(Team team, TeamMember teamMember) {
+    var teamMemberRoles = teamMemberRoleRepository.findAllByTeamAndWuaId(team, teamMember.wuaId().id());
+    teamMemberRoleRepository.deleteAll(teamMemberRoles);
+  }
+
 }

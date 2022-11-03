@@ -24,4 +24,10 @@ public class TeamService {
     return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
   }
 
+  public Optional<Team> getRegulatorTeamForUser(ServiceUserDetail user) {
+    return teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), TeamType.REGULATOR)
+        .stream()
+        .findFirst();
+  }
+
 }

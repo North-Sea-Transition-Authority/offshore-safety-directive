@@ -14,7 +14,7 @@ public class EnergyPortalUserDtoTestUtil {
 
   public static class Builder {
 
-    private int webUserAccountId = 1;
+    private long webUserAccountId = 1;
     private String title = "title";
     private String forename = "forename";
     private String surname = "surname";
@@ -25,7 +25,7 @@ public class EnergyPortalUserDtoTestUtil {
 
     private Builder() {}
 
-    public Builder withWebUserAccountId(int webUserAccountId) {
+    public Builder withWebUserAccountId(long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
       return this;
     }

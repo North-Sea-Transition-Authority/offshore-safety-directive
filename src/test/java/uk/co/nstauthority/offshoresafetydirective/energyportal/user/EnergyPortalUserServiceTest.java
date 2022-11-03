@@ -88,7 +88,7 @@ class EnergyPortalUserServiceTest {
         )
         .containsExactly(
             tuple(
-                expectedUser.getWebUserAccountId(),
+                Long.valueOf(expectedUser.getWebUserAccountId()),
                 expectedUser.getTitle(),
                 expectedUser.getForename(),
                 expectedUser.getSurname(),
@@ -129,7 +129,7 @@ class EnergyPortalUserServiceTest {
 
     assertThat(energyPortalUserService.findUserByUsername(username))
         .extracting(EnergyPortalUserDto::webUserAccountId)
-        .containsExactly(canLoginUser.getWebUserAccountId());
+        .containsExactly(Long.valueOf(canLoginUser.getWebUserAccountId()));
   }
 
   @Test
@@ -177,7 +177,7 @@ class EnergyPortalUserServiceTest {
         )
         .containsExactly(
             tuple(
-                expectedUser.getWebUserAccountId(),
+                Long.valueOf(expectedUser.getWebUserAccountId()),
                 expectedUser.getTitle(),
                 expectedUser.getForename(),
                 expectedUser.getSurname(),
@@ -219,7 +219,7 @@ class EnergyPortalUserServiceTest {
             EnergyPortalUserDto::canLogin
         )
         .containsExactly(
-            expectedUser.getWebUserAccountId(),
+            Long.valueOf(expectedUser.getWebUserAccountId()),
             expectedUser.getTitle(),
             expectedUser.getForename(),
             expectedUser.getSurname(),

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.re
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.IsMemberOfTeam;
 
@@ -25,17 +27,20 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
   private final RegulatorTeamService regulatorTeamService;
   private final UserDetailService userDetailService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
+  private final TeamMemberService teamMemberService;
 
   @Autowired
   RegulatorTeamManagementController(TeamMemberViewService teamMemberViewService,
                                     RegulatorTeamService regulatorTeamService,
                                     UserDetailService userDetailService,
-                                    CustomerConfigurationProperties customerConfigurationProperties) {
+                                    CustomerConfigurationProperties customerConfigurationProperties,
+                                    TeamMemberService teamMemberService) {
     super(regulatorTeamService);
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamService = regulatorTeamService;
     this.userDetailService = userDetailService;
     this.customerConfigurationProperties = customerConfigurationProperties;
+    this.teamMemberService = teamMemberService;
   }
 
   @GetMapping
@@ -57,6 +62,8 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
 
     var team = getRegulatorTeam(teamId);
 
+    var user = userDetailService.getUserDetail();
+
     var modelAndView = new ModelAndView("osd/permissionmanagement/regulator/regulatorTeamMembers")
         .addObject("pageTitle", "Manage %s".formatted(customerConfigurationProperties.mnemonic()))
         .addObject("teamName", customerConfigurationProperties.mnemonic())
@@ -68,6 +75,8 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
           "addTeamMemberUrl",
           ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
       );
+      modelAndView.addObject("canRemoveUsers", teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user,
+          Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())));
     }
 
     return modelAndView;

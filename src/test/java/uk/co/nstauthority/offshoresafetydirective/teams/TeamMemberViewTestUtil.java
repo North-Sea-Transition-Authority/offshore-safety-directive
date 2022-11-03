@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -18,26 +19,31 @@ public class TeamMemberViewTestUtil {
 
   public static class Builder {
 
-    private WebUserAccountId wuaId;
-    private String title;
-    private String firstName;
-    private String lastName;
-    private String contactEmail;
-    private String contactNumber;
-    private Set<TeamRole> roles;
+    private WebUserAccountId wuaId = new WebUserAccountId(1L);
+    private TeamId teamId = new TeamId(UUID.randomUUID());
+    private TeamType teamType = TeamType.REGULATOR;
+    private String title = "Mr";
+    private String firstName = "Forename";
+    private String lastName = "Surname";
+    private String contactEmail = "f.s@test.com";
+    private String contactNumber = "+440000000000";
+    private Set<TeamRole> roles = new HashSet<>();
 
     public Builder() {
-      wuaId = new WebUserAccountId(1L);
-      title = "Mr";
-      firstName = "Forename";
-      lastName = "Surname";
-      contactEmail = "f.s@test.com";
-      contactNumber = "+440000000000";
-      roles = new HashSet<>();
     }
 
-    public Builder withWuaId(WebUserAccountId wuaId) {
+    public Builder withWebUserAccountId(WebUserAccountId wuaId) {
       this.wuaId = wuaId;
+      return this;
+    }
+
+    public Builder withTeamId(TeamId teamId) {
+      this.teamId = teamId;
+      return this;
+    }
+
+    public Builder withTeamType(TeamType teamType) {
+      this.teamType = teamType;
       return this;
     }
 
@@ -77,7 +83,8 @@ public class TeamMemberViewTestUtil {
     }
 
     public TeamMemberView build() {
-      return new TeamMemberView(wuaId, title, firstName, lastName, contactEmail, contactNumber, roles);
+      return new TeamMemberView(wuaId, new TeamView(teamId, teamType), title, firstName, lastName, contactEmail,
+          contactNumber, roles);
     }
   }
 

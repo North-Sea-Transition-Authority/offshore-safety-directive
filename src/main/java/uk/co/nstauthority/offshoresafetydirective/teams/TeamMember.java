@@ -4,5 +4,5 @@ import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
-record TeamMember(WebUserAccountId wuaId, Set<TeamRole> roles) {
+public record TeamMember(WebUserAccountId wuaId, TeamView teamView, Set<TeamRole> roles) {
 }

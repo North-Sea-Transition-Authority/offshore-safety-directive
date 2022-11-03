@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 public class TeamMemberViewService {
 
   private final TeamMemberService teamMemberService;
-
   private final EnergyPortalUserService energyPortalUserService;
 
   @Autowired
@@ -30,6 +30,12 @@ public class TeamMemberViewService {
   public List<TeamMemberView> getTeamMemberViewsForTeam(Team team) {
     var members = teamMemberService.getTeamMembers(team);
     return createUserViewsFromTeamMembers(members);
+  }
+
+  public Optional<TeamMemberView> getTeamMemberView(TeamMember teamMember) {
+    return createUserViewsFromTeamMembers(List.of(teamMember))
+        .stream()
+        .findFirst();
   }
 
   private List<TeamMemberView> createUserViewsFromTeamMembers(Collection<TeamMember> teamMembers) {
@@ -69,6 +75,7 @@ public class TeamMemberViewService {
 
       return new TeamMemberView(
           teamMember.wuaId(),
+          teamMember.teamView(),
           energyPortalUser.title(),
           energyPortalUser.forename(),
           energyPortalUser.surname(),

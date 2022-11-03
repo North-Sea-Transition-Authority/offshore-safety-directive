@@ -10,6 +10,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,9 +210,8 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
 
     var teamMemberView = TeamMemberViewTestUtil.Builder()
-        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withRoles(Set.of(RegulatorTeamRole.ACCESS_MANAGER))
         .build();
-
     when(teamMemberViewService.getTeamMemberViewsForTeam(team)).thenReturn(List.of(teamMemberView));
 
     var resultModelAndView = mockMvc.perform(
