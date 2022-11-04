@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -85,5 +86,51 @@ class TeamMemberViewServiceTest {
         )
     );
 
+  }
+
+  @Test
+  void getUserViewForTeamMember() {
+    var team = new Team(UUID.randomUUID());
+    var wuaId = 100L;
+
+    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+
+    var teamMember = new TeamMember(new WebUserAccountId(wuaId), teamView,
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
+
+    var portalUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(wuaId)
+        .withTitle("Dr")
+        .withForename("John")
+        .withSurname("Smith")
+        .withEmailAddress("john.smith@test.org")
+        .withPhoneNumber("telephone")
+        .build();
+
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId))))
+        .thenReturn(List.of(portalUser));
+
+    var result = teamMemberViewService.getTeamMemberView(teamMember);
+
+    assertTrue(result.isPresent());
+    assertThat(result.get()).extracting(
+        TeamMemberView::wuaId,
+        TeamMemberView::teamView,
+        TeamMemberView::title,
+        TeamMemberView::firstName,
+        TeamMemberView::lastName,
+        TeamMemberView::contactEmail,
+        TeamMemberView::contactNumber,
+        TeamMemberView::teamRoles
+    ).containsExactly(
+        new WebUserAccountId(wuaId),
+        teamView,
+        "Dr",
+        "John",
+        "Smith",
+        "john.smith@test.org",
+        "telephone",
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER)
+    );
   }
 }

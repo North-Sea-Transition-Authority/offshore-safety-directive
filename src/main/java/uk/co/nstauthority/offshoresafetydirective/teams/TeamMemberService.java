@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -69,12 +68,6 @@ public class TeamMemberService {
           case REGULATOR -> RegulatorTeamRole.valueOf(teamMemberRole.getRole());
         })
         .collect(Collectors.toSet());
-  }
-
-  @Transactional
-  public void removeMemberFromTeam(Team team, TeamMember teamMember) {
-    var teamMemberRoles = teamMemberRoleRepository.findAllByTeamAndWuaId(team, teamMember.wuaId().id());
-    teamMemberRoleRepository.deleteAll(teamMemberRoles);
   }
 
 }

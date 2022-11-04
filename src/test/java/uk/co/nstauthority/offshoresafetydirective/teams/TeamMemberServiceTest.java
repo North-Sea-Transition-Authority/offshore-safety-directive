@@ -25,6 +25,9 @@ class TeamMemberServiceTest {
   @Mock
   private TeamMemberRoleRepository teamMemberRoleRepository;
 
+  @Mock
+  private TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
+
   @InjectMocks
   private TeamMemberService teamMemberService;
 
@@ -54,6 +57,18 @@ class TeamMemberServiceTest {
         RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
 
     assertThat(result).containsExactly(expectedTeamMember);
+  }
+
+  @Test
+  void getAllTeamMembers_whenNoMembers_thenEmpty() {
+    var team = new Team();
+
+    when(teamMemberRoleRepository.findAllByTeam(team)).thenReturn(List.of());
+
+    var result = teamMemberService.getTeamMembers(team);
+
+    assertThat(result).isEmpty();
+    verify(teamMemberRoleRepository).findAllByTeam(team);
   }
 
   @Test
@@ -145,14 +160,49 @@ class TeamMemberServiceTest {
   }
 
   @Test
-  void getAllTeamMembers_whenNoMembers_thenEmpty() {
-    var team = new Team();
+  void getTeamMember_whenMemberIsInTeam_thenGetTeamMember() {
+    var team = new Team(UUID.randomUUID());
+    team.setTeamType(TeamType.REGULATOR);
 
-    when(teamMemberRoleRepository.findAllByTeam(team)).thenReturn(List.of());
+    var wuaId = new WebUserAccountId(123);
+    var role = TeamMemberRoleTestUtil.Builder()
+        .withRole(RegulatorTeamRole.VIEW_NOMINATION.name())
+        .withWebUserAccountId(wuaId.id())
+        .build();
 
-    var result = teamMemberService.getTeamMembers(team);
+    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
 
-    assertThat(result).isEmpty();
-    verify(teamMemberRoleRepository).findAllByTeam(team);
+    when(teamMemberRoleRepository.findAllByTeamAndWuaId(team, wuaId.id()))
+        .thenReturn(List.of(role));
+
+    var result = teamMemberService.getTeamMember(team, wuaId);
+
+    assertTrue(result.isPresent());
+    assertThat(result.get()).extracting(
+        TeamMember::teamView,
+        TeamMember::wuaId
+    ).containsExactly(
+        teamView,
+        wuaId
+    );
+
+    assertThat(result.get().roles()).containsExactly(
+        RegulatorTeamRole.VIEW_NOMINATION
+    );
   }
+
+  @Test
+  void getTeamMember_whenMemberIsNotInTeam_thenEmpty() {
+    var team = new Team(UUID.randomUUID());
+    team.setTeamType(TeamType.REGULATOR);
+
+    var wuaId = new WebUserAccountId(123);
+
+    when(teamMemberRoleRepository.findAllByTeamAndWuaId(team, wuaId.id())).thenReturn(List.of());
+
+    var result = teamMemberService.getTeamMember(team, wuaId);
+
+    assertTrue(result.isEmpty());
+  }
+
 }

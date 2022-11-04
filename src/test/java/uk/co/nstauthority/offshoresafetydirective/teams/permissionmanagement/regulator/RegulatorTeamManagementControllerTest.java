@@ -24,7 +24,6 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -214,6 +213,10 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
         .build();
     when(teamMemberViewService.getTeamMemberViewsForTeam(team)).thenReturn(List.of(teamMemberView));
 
+    var canRemoveUsers = true;
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
+        .thenReturn(canRemoveUsers);
+
     var resultModelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
                 .with(user(user)))
@@ -226,12 +229,13 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     var model = resultModelAndView.getModel();
     var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
 
-    assertThat(model).extractingByKeys("pageTitle", "teamName", "teamRoles", "addTeamMemberUrl")
+    assertThat(model).extractingByKeys("pageTitle", "teamName", "teamRoles", "addTeamMemberUrl", "canRemoveUsers")
         .containsExactly(
             "Manage %s".formatted(mnemonic),
             mnemonic,
             RegulatorTeamRole.values(),
-            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
+            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)),
+            canRemoveUsers
         );
 
     @SuppressWarnings("unchecked")
