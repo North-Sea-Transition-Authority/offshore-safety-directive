@@ -11,8 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
@@ -26,17 +30,20 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
   private final TeamMemberService teamMemberService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
   private final TeamMemberViewService teamMemberViewService;
+  private final RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService;
 
   @Autowired
   public RegulatorRemoveMemberController(
       RegulatorTeamService regulatorTeamService,
       TeamMemberService teamMemberService,
       CustomerConfigurationProperties customerConfigurationProperties,
-      TeamMemberViewService teamMemberViewService) {
+      TeamMemberViewService teamMemberViewService,
+      RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService) {
     super(regulatorTeamService);
     this.teamMemberService = teamMemberService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.teamMemberViewService = teamMemberViewService;
+    this.regulatorTeamMemberRemovalService = regulatorTeamMemberRemovalService;
   }
 
   @GetMapping("/{wuaId}")
@@ -57,16 +64,25 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
+    var teamName = customerConfigurationProperties.mnemonic();
+    var canRemoveTeamMember = regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember);
+
     return new ModelAndView("osd/permissionmanagement/regulator/regulatorRemoveTeamMember")
-        .addObject("teamName", customerConfigurationProperties.mnemonic())
+        .addObject("pageTitle",
+            regulatorTeamMemberRemovalService.getRemoveScreenPageTitle(teamName, userView, canRemoveTeamMember))
+        .addObject("teamName", teamName)
         .addObject("teamMember", userView)
         .addObject("backLinkUrl", ReverseRouter.route(on(RegulatorTeamManagementController.class)
-            .renderMemberList(teamId)));
+            .renderMemberList(teamId)))
+        .addObject("removeUrl", ReverseRouter.route(on(RegulatorRemoveMemberController.class)
+            .removeMember(teamId, wuaId, null)))
+        .addObject("canRemoveTeamMember", regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember));
   }
 
   @PostMapping("/{wuaId}")
   public ModelAndView removeMember(@PathVariable("teamId") TeamId teamId,
-                                   @PathVariable("wuaId") WebUserAccountId wuaId) {
+                                   @PathVariable("wuaId") WebUserAccountId wuaId,
+                                   RedirectAttributes redirectAttributes) {
 
     var team = getRegulatorTeam(teamId);
 
@@ -74,7 +90,24 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No user [%s] in team [%s]".formatted(wuaId, teamId)));
 
-    teamMemberService.removeMemberFromTeam(team, teamMember);
+    if (regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember)) {
+      regulatorTeamMemberRemovalService.removeTeamMember(team, teamMember);
+    } else {
+      return renderRemoveMember(teamId, wuaId)
+          .addObject("singleErrorMessage", RegulatorTeamMemberRemovalService.LAST_ACCESS_MANAGER_ERROR_MESSAGE);
+    }
+
+    var userView = teamMemberViewService.getTeamMemberView(teamMember)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+            "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
+
+    var banner = NotificationBanner.builder()
+        .withTitle("Removed member from team")
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withContent("%s has been removed from the team".formatted(userView.getDisplayName()))
+        .build();
+
+    NotificationBannerUtil.applyNotificationBanner(redirectAttributes, banner);
 
     return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
 

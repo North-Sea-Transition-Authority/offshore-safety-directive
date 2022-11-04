@@ -20,6 +20,7 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
   breadcrumbsList={}
+  singleErrorMessage=""
 >
 
   <#assign fullWidthColumn=false />
@@ -53,6 +54,31 @@
     <#assign backLink=true/>
   </#if>
 
+  <#assign notificationBannerContent>
+    <#if flash?has_content>
+
+        <#local bannerContent>
+            <#if flash.heading?has_content>
+              <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+            <#else>
+                <p class="govuk-body">
+                  ${flash.content}
+                </p>
+            </#if>
+        </#local>
+
+        <#if flash.type.name() == "INFO">
+          <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
+              ${bannerContent}
+          </@fdsNotificationBanner.notificationBannerInfo>
+        <#elseif flash.type.name() == "SUCCESS">
+          <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
+              ${bannerContent}
+          </@fdsNotificationBanner.notificationBannerSuccess>
+        </#if>
+    </#if>
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     serviceName=serviceName
@@ -75,6 +101,8 @@
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsList
+    singleErrorMessage=singleErrorMessage
+    notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
   >
     <#nested />
