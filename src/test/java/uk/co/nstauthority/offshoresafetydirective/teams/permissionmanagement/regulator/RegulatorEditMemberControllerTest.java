@@ -47,10 +47,10 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   private TeamMemberViewService teamMemberViewService;
 
   @MockBean
-  private RegulatorTeamMemberEditService regulatorTeamMemberEditService;
+  RegulatorTeamMemberEditService regulatorTeamMemberEditService;
 
   @MockBean
-  private RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator;
+  RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator;
 
   private Team regulatorTeam;
   private TeamView teamView;
@@ -81,7 +81,6 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   @Test
   void renderEditMember_whenNotAccessManager_thenForbidden() throws Exception {
-    when(userDetailService.getUserDetail()).thenReturn(nonAccessManager);
 
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), nonAccessManager,
         Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()))
@@ -127,7 +126,6 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   }
 
   private MvcResult makeValidRenderEditMemberRequest(Set<TeamRole> teamMemberRoles) throws Exception {
-    when(userDetailService.getUserDetail()).thenReturn(accessManager);
 
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
         Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()))
