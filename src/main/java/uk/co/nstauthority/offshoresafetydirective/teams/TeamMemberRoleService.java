@@ -30,18 +30,7 @@ public class TeamMemberRoleService {
 
   @Transactional
   public void addUserTeamRoles(Team team, EnergyPortalUserDto userToAdd, Set<String> roles) {
-
-    var teamMemberRoles = new ArrayList<TeamMemberRole>();
-
-    roles.forEach(role -> {
-      var teamMemberRole = new TeamMemberRole();
-      teamMemberRole.setTeam(team);
-      teamMemberRole.setWuaId((long) userToAdd.webUserAccountId());
-      teamMemberRole.setRole(role);
-      teamMemberRoles.add(teamMemberRole);
-    });
-
-    teamMemberRoleRepository.saveAll(teamMemberRoles);
+    updateUserTeamRoles(team, new WebUserAccountId(userToAdd.webUserAccountId()), roles);
 
     addedToTeamEventPublisher.publish(
         new TeamId(team.getUuid()),
@@ -50,4 +39,24 @@ public class TeamMemberRoleService {
         userDetailService.getUserDetail()
     );
   }
+
+  @Transactional
+  public void updateUserTeamRoles(Team team, WebUserAccountId wuaId, Set<String> roles) {
+    // Clear user's existing roles
+    teamMemberRoleRepository.deleteAllByTeamAndWuaId(team, wuaId.id());
+
+    var teamMemberRoles = new ArrayList<TeamMemberRole>();
+
+    // Create new roles based on role selection
+    roles.forEach(role -> {
+      var teamMemberRole = new TeamMemberRole();
+      teamMemberRole.setTeam(team);
+      teamMemberRole.setWuaId(wuaId.id());
+      teamMemberRole.setRole(role);
+      teamMemberRoles.add(teamMemberRole);
+    });
+
+    teamMemberRoleRepository.saveAll(teamMemberRoles);
+  }
+
 }

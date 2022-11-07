@@ -5,6 +5,7 @@
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<java.lang.String, java.lang.String>" -->
 <#-- @ftlvariable name="canRemoveUsers" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="canEditUsers" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="addTeamMemberUrl" type="java.lang.String" -->
 <#include '../../layout/layout.ftl'>
 <#import '../_teamMembers.ftl' as teamMembersMacro>
@@ -31,7 +32,7 @@
   </#if>
 
   <#if teamMembers?has_content>
-      <@teamMembersMacro.teamMembers name=teamName members=teamMembers canRemoveUsers=canRemoveUsers!false/>
+      <@teamMembersMacro.teamMembers name=teamName members=teamMembers canRemoveUsers=canRemoveUsers!false canEditUsers=canEditUsers!false/>
   <#else>
     <@fdsInsetText.insetText>
       ${teamName} has no members.

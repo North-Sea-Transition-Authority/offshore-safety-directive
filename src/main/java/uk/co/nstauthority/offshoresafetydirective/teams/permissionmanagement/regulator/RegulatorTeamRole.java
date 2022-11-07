@@ -45,22 +45,22 @@ public enum RegulatorTeamRole implements TeamRole {
       Set.of()
   );
 
-  private final String displayText;
+  private final String screenDisplayText;
   private final String description;
   private final Integer displayOrder;
   private final Set<RolePermission> rolePermissions;
 
-  RegulatorTeamRole(String displayText, String description, Integer displayOrder,
+  RegulatorTeamRole(String screenDisplayText, String description, Integer displayOrder,
                     Set<RolePermission> rolePermissions) {
-    this.displayText = displayText;
+    this.screenDisplayText = screenDisplayText;
     this.description = description;
     this.displayOrder = displayOrder;
     this.rolePermissions = rolePermissions;
   }
 
   @Override
-  public String getDisplayText() {
-    return displayText;
+  public String getScreenDisplayText() {
+    return screenDisplayText;
   }
 
   @Override
@@ -69,7 +69,7 @@ public enum RegulatorTeamRole implements TeamRole {
   }
 
   @Override
-  public Integer getDisplayOrder() {
+  public int getDisplayOrder() {
     return displayOrder;
   }
 

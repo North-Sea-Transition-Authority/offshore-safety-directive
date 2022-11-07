@@ -5,6 +5,10 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 
 public class TeamTestUtil {
 
+  public static TeamView createTeamView(Team team) {
+    return new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+  }
+
   private TeamTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }

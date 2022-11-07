@@ -2,15 +2,15 @@ package uk.co.nstauthority.offshoresafetydirective.displayableutil;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
+import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 
 public class DisplayableEnumOptionUtil {
 
   private DisplayableEnumOptionUtil() {
-    throw new IllegalStateException("DisplayableEnumOptionUtil is a util class and should not be instantiated");
+    throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
   public static Map<String, String> getDisplayableOptions(
@@ -18,11 +18,20 @@ public class DisplayableEnumOptionUtil {
   ) {
     return Arrays.stream((DisplayableEnumOption[]) displayableOptionEnum.getEnumConstants())
         .sorted(Comparator.comparingInt(DisplayableEnumOption::getDisplayOrder))
-        .collect(Collectors.toMap(
+        .collect(StreamUtil.toLinkedHashMap(
             DisplayableEnumOption::getFormValue,
-            DisplayableEnumOption::getScreenDisplayText,
-            (x, y) -> y,
-            LinkedHashMap::new
+            DisplayableEnumOption::getScreenDisplayText)
+        );
+  }
+
+  public static Map<String, String> getDisplayableOptionsWithDescription(
+      Class<? extends DisplayableEnumWithDescription> displayableOptionEnum
+  ) {
+    return Arrays.stream((DisplayableEnumWithDescription[]) displayableOptionEnum.getEnumConstants())
+        .sorted(Comparator.comparingInt(DisplayableEnumOption::getDisplayOrder))
+        .collect(StreamUtil.toLinkedHashMap(
+            DisplayableEnum::getFormValue,
+            opt -> "%s (%s)".formatted(opt.getDescription(), opt.getScreenDisplayText())
         ));
   }
 }

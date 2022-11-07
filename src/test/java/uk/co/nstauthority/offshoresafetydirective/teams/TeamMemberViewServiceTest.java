@@ -222,7 +222,7 @@ class TeamMemberViewServiceTest {
     }
 
     @Override
-    public String getDisplayText() {
+    public String getScreenDisplayText() {
       return "";
     }
 
@@ -232,7 +232,7 @@ class TeamMemberViewServiceTest {
     }
 
     @Override
-    public Integer getDisplayOrder() {
+    public int getDisplayOrder() {
       return displayOrder;
     }
 

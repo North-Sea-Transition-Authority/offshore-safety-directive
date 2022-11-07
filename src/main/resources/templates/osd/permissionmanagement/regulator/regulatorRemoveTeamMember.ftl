@@ -7,6 +7,7 @@
 <#-- @ftlvariable name="teamMember" type="uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView" -->
 <#-- @ftlvariable name="removeUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="canRemoveTeamMember" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="singleErrorMessage" type="java.lang.String" -->
 
 <@defaultPage
     htmlTitle=htmlTitle
@@ -39,7 +40,7 @@
         <@fdsSummaryList.summaryListRowNoAction keyText="Roles">
           <ul class="govuk-list govuk-!-margin-bottom-0">
               <#list teamMember.teamRoles() as role>
-                <li>${role.displayText}</li>
+                <li>${role.screenDisplayText}</li>
               </#list>
           </ul>
         </@fdsSummaryList.summaryListRowNoAction>

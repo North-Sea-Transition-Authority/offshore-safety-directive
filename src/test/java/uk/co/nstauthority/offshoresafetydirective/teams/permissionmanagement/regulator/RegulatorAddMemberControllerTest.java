@@ -13,13 +13,11 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,6 +36,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortal
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -680,12 +679,10 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   private Map<String, String> getDisplayableRegulatorRoles() {
     return Arrays.stream(RegulatorTeamRole.values())
         .sorted(Comparator.comparing(RegulatorTeamRole::getDisplayOrder))
-        .collect(Collectors.toMap(
+        .collect(StreamUtil.toLinkedHashMap(
             RegulatorTeamRole::name,
-            role -> "%s (%s)".formatted(role.getDescription(), role.getDisplayText()),
-            (x, y) -> x,
-            LinkedHashMap::new)
-        );
+            role -> "%s (%s)".formatted(role.getDescription(), role.getScreenDisplayText())
+        ));
   }
 
   private static Stream<Arguments> getEnergyPortalUserThatShouldResultInBadRequest() {

@@ -7,7 +7,7 @@
     <@fdsDetails.summaryDetails summaryTitle="What does each role allow a user to do?">
         <@fdsSummaryList.summaryList>
             <#list roles as role>
-                <@fdsSummaryList.summaryListRowNoAction keyText=role.displayText>
+                <@fdsSummaryList.summaryListRowNoAction keyText=role.screenDisplayText>
                     ${role.description}
                 </@fdsSummaryList.summaryListRowNoAction>
             </#list>

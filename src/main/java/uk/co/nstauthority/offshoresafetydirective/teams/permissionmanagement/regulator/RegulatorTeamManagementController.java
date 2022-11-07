@@ -71,12 +71,13 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
         .addObject("teamMembers", teamMemberViewService.getTeamMemberViewsForTeam(team));
 
     if (regulatorTeamService.isAccessManager(teamId, userDetailService.getUserDetail())) {
-      modelAndView.addObject(
-          "addTeamMemberUrl",
-          ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
-      );
-      modelAndView.addObject("canRemoveUsers", teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user,
-          Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())));
+      modelAndView
+          .addObject("addTeamMemberUrl",
+              ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
+          .addObject("canRemoveUsers", teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user,
+              Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
+          .addObject("canEditUsers", teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user,
+              Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())));
     }
 
     return modelAndView;

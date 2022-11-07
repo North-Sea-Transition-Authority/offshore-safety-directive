@@ -1,9 +1,9 @@
 <#import '../macros/mailTo.ftl' as mailTo>
 <#include '../../fds/objects/layouts/generic.ftl'>
 
-<#macro teamMembers name members canRemoveUsers=false>
+<#macro teamMembers name members canRemoveUsers=false canEditUsers=false>
 
-    <#assign showActionColumn = canRemoveUsers/>
+    <#assign showActionColumn = canRemoveUsers || canEditUsers/>
 
   <table class="govuk-table">
     <caption class="govuk-table__caption govuk-table__caption--m govuk-visually-hidden">Members of ${name}</caption>
@@ -36,15 +36,18 @@
         <td class="govuk-table__cell">
           <ul class="govuk-list govuk-!-margin-bottom-0">
               <#list member.teamRoles() as role>
-                <li>${role.displayText}</li>
+                <li>${role.screenDisplayText}</li>
               </#list>
           </ul>
         </td>
           <#if showActionColumn>
             <td class="govuk-table__cell">
-                <#if canRemoveUsers>
-                  <ul class="govuk-list govuk-!-margin-bottom-0"><@fdsAction.link linkText="Remove" linkUrl=springUrl(member.removeUrl()) linkScreenReaderText=member.getDisplayName() /></ul>
-                </#if>
+              <#if canEditUsers>
+                <ul class="govuk-list govuk-!-margin-bottom-0"><@fdsAction.link linkText="Edit" linkUrl=springUrl(member.editUrl()) linkScreenReaderText=member.getDisplayName() /></ul>
+              </#if>
+              <#if canRemoveUsers>
+                <ul class="govuk-list govuk-!-margin-bottom-0"><@fdsAction.link linkText="Remove" linkUrl=springUrl(member.removeUrl()) linkScreenReaderText=member.getDisplayName() /></ul>
+              </#if>
             </td>
           </#if>
       </tr>

@@ -2,10 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.re
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -152,21 +149,10 @@ class RegulatorAddMemberController extends AbstractRegulatorPermissionManagement
     return new ModelAndView("osd/permissionmanagement/regulator/regulatorAddTeamMemberRoles")
         .addObject("pageTitle", "What actions does %s perform?".formatted(energyPortalUser.displayName()))
         .addObject("form", form)
-        .addObject("roles", getDisplayableRegulatorRoles())
+        .addObject("roles", DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(RegulatorTeamRole.class))
         .addObject(
             "backLinkUrl",
             ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
-        );
-  }
-
-  private Map<String, String> getDisplayableRegulatorRoles() {
-    return Arrays.stream(RegulatorTeamRole.values())
-        .sorted(Comparator.comparing(RegulatorTeamRole::getDisplayOrder))
-        .collect(Collectors.toMap(
-            RegulatorTeamRole::name,
-            role -> "%s (%s)".formatted(role.getDescription(), role.getDisplayText()),
-            (x, y) -> x,
-            LinkedHashMap::new)
         );
   }
 
@@ -189,9 +175,9 @@ class RegulatorAddMemberController extends AbstractRegulatorPermissionManagement
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           """
-              Energy Portal user with WUA_ID %s does not have login access to the Energy Portal and is
-              not allowed to be added to this service
-          """
+                  Energy Portal user with WUA_ID %s does not have login access to the Energy Portal and is
+                  not allowed to be added to this service
+              """
               .formatted(webUserAccountId)
       );
     }
