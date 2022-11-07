@@ -1,10 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -69,7 +69,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMember_whenNotAccessManager_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -90,7 +89,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMember_whenAccessManager_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -113,7 +111,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMember_whenNoTeamFound_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var teamId = new TeamId(UUID.randomUUID());
 
@@ -132,7 +129,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMember_whenTeamIdIsNotRegulatorTeam_then404() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -154,7 +150,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMember_assertModelProperties() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -167,39 +162,30 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
 
-    var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
-                .with(user(user)))
-        .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
     var customerMnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
     var registrationUrl = applicationContext.getBean(EnergyPortalConfiguration.class).registrationUrl();
 
-    assertThat(modelAndView.getModel())
-        .extractingByKeys(
-            "htmlTitle",
+    mockMvc.perform(
+            get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
+                .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMember"))
+        .andExpect(model().attribute("htmlTitle", "Add user to %s".formatted(customerMnemonic)))
+        .andExpect(model().attribute(
             "backLinkUrl",
-            "registrationUrl",
-            "submitUrl"
-        )
-        .containsExactly(
-            "Add user to %s".formatted(customerMnemonic),
-            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)),
-            registrationUrl,
-            ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .addMemberToTeamSubmission(teamId, null, null))
-        );
+            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId))
+        ))
+        .andExpect(model().attribute("registrationUrl", registrationUrl))
+        .andExpect(model().attribute(
+            "submitUrl",
+            ReverseRouter.route(on(RegulatorAddMemberController.class).addMemberToTeamSubmission(teamId, null, null))
+        ));
   }
 
   @Test
   void addMemberToTeamSubmission_whenTeamIdNotRegulatorType_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -223,7 +209,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void addMemberToTeamSubmission_whenNotAccessManager_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -245,7 +230,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void addMemberToTeamSubmission_whenAccessManager_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -270,7 +254,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void addMemberToTeamSubmission_whenInvalidForm_thenUserStaysOnFormPage() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -297,7 +280,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void addMemberToTeamSubmission_whenValidForm_thenUserTakenToRolesSelection() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -331,7 +313,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_whenAccessManager_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -359,7 +340,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_whenNotAccessManager_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -382,7 +362,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_whenNotRegulatorTeam_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -407,7 +386,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_whenNoEnergyPortalUser_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -436,7 +414,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_whenEnergyPortalUserNotValid_thenBadRequest(EnergyPortalUserDto energyPortalUser) throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -464,7 +441,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void renderAddTeamMemberRoles_assertModelProperties() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -483,34 +459,28 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(energyPortalUserToAdd));
 
-    var modelAndView = mockMvc.perform(
+    mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorAddMemberController.class)
                 .renderAddTeamMemberRoles(teamId, webUserAccountIdToAdd)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-    assertThat(modelAndView.getModel()).isNotNull();
-    assertThat(modelAndView.getModel())
-        .extractingByKeys(
+        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMemberRoles"))
+        .andExpect(model().attribute(
             "pageTitle",
-            "roles",
-            "backLinkUrl"
-        )
-        .containsExactly(
-            "What actions does %s perform?".formatted(energyPortalUserToAdd.displayName()),
-            getDisplayableRegulatorRoles(),
+            "What actions does %s perform?".formatted(energyPortalUserToAdd.displayName())
+        ))
+        .andExpect(model().attribute(
+            "backLinkUrl",
             ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
-        );
+        ))
+        .andExpect(model().attributeExists("form"))
+        .andExpect(model().attribute("roles", getDisplayableRegulatorRoles()));
   }
 
   @Test
   void saveAddTeamMemberRoles_whenNotAccessManager_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -535,7 +505,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenAccessManager_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -565,7 +534,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenNotRegulatorTeam_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -591,7 +559,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenEnergyPortalUserNotFound_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -622,7 +589,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenEnergyPortalUserNotValid_thenBadRequest(EnergyPortalUserDto energyPortalUser) throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -652,7 +618,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenInvalidTeamMemberRolesForm_thenStayOnFormPage() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -684,7 +649,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenValidTeamMemberRolesForm_thenRedirectionToMembersPage() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .build();

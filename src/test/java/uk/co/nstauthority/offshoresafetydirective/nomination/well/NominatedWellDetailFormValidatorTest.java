@@ -36,7 +36,7 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenValidForm_thenNoErrors() {
-    var form = NominatedWellDetailTestUtil.getValidForm();
+    var form = NominatedWellFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
@@ -47,7 +47,7 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenNoWellsSelected_thenError() {
-    var form = NominatedWellDetailTestUtil.getValidForm();
+    var form = NominatedWellFormTestUtil.builder().build();
     form.setWells(Collections.emptyList());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -61,8 +61,10 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenForAllWellPhasesNotSelected_thenError() {
-    var form = NominatedWellDetailTestUtil.getValidForm();
-    form.setForAllWellPhases(null);
+    var form = NominatedWellFormTestUtil.builder()
+        .isForAllWellPhases(null)
+        .build();
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
@@ -75,11 +77,13 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError() {
-    var form = NominatedWellDetailTestUtil.getValidForm();
-    form.setForAllWellPhases(false);
-    form.setExplorationAndAppraisalPhase(null);
-    form.setDevelopmentPhase(null);
-    form.setDecommissioningPhase(null);
+    var form = NominatedWellFormTestUtil.builder()
+        .isForAllWellPhases(false)
+        .isExplorationAndAppraisalPhase(null)
+        .isDevelopmentPhase(null)
+        .isDecommissioningPhase(null)
+        .build();
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);

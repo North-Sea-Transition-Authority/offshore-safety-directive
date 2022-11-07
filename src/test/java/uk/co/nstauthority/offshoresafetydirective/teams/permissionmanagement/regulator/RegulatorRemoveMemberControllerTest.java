@@ -65,8 +65,6 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
     authenticatedUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(wuaId.id())
         .build();
-
-    when(userDetailService.getUserDetail()).thenCallRealMethod();
   }
 
   @Test

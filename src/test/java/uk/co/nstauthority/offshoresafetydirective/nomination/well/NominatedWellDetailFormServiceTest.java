@@ -36,7 +36,7 @@ class NominatedWellDetailFormServiceTest {
 
   @Test
   void validate_verifyMethodCall() {
-    var form = NominatedWellDetailTestUtil.getValidForm();
+    var form = NominatedWellFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormService.validate(form, bindingResult);
@@ -46,7 +46,7 @@ class NominatedWellDetailFormServiceTest {
 
   @Test
   void getForm_whenEntityExist_thenFormMatchesEntityFields() {
-    var nominatedWellDetail = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder()
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
         .build();
     var well1 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);

@@ -3,14 +3,17 @@
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/mailTo.ftl' as mailTo>
 <#import '../macros/taskList.ftl' as taskList>
+<#import '_header.ftl' as pageHeader>
 
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
+<#-- @ftlvariable name="singleErrorMessage" type="String" -->
+<#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 
-<#assign serviceName = serviceBranding.name() />
-<#assign customerMnemonic = customerBranding.mnemonic() />
-<#assign serviceHomeUrl = springUrl(serviceHomeUrl) />
+<#assign SERVICE_NAME = serviceBranding.name() />
+<#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
+<#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 
 <#macro defaultPage
   pageHeading
@@ -79,16 +82,15 @@
     </#if>
   </#assign>
 
+  <#assign serviceHeader>
+    <@_serviceHeader/>
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
-    serviceName=serviceName
-    htmlAppTitle=serviceName
+    htmlAppTitle=SERVICE_NAME
     pageHeading=pageHeading
-    headerLogo="GOV_CREST"
-    logoProductText=customerMnemonic
     phaseBanner=phaseBanner
-    serviceUrl=serviceHomeUrl
-    homePageUrl=serviceHomeUrl
     fullWidthColumn=fullWidthColumn
     oneHalfColumn=oneHalfColumn
     oneThirdColumn=oneThirdColumn
@@ -104,6 +106,7 @@
     singleErrorMessage=singleErrorMessage
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
+    headerContent=serviceHeader
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -114,16 +117,28 @@
   htmlTitle=pageHeading
   phaseBanner=true
 >
-    <@fdsLeftSubNavPageTemplate
-      htmlTitle=htmlTitle
-      htmlAppTitle=pageHeading
-      phaseBanner=phaseBanner
-      homePageUrl=serviceHomeUrl
-      serviceUrl=serviceHomeUrl
-      topNavigation=true
-      logoProductText=customerMnemonic
-      phaseBannerContent=""
-    >
-      <#nested />
-    </@fdsLeftSubNavPageTemplate>
+  <#assign serviceHeader>
+    <@_serviceHeader/>
+  </#assign>
+
+  <@fdsLeftSubNavPageTemplate
+    htmlTitle=htmlTitle
+    htmlAppTitle=pageHeading
+    phaseBanner=phaseBanner
+    topNavigation=true
+    logoProductText=CUSTOMER_MNEMONIC
+    headerContent=serviceHeader
+  >
+    <#nested />
+  </@fdsLeftSubNavPageTemplate>
+</#macro>
+
+<#macro _serviceHeader>
+  <@pageHeader.header
+    serviceName=SERVICE_NAME
+    customerMnemonic=CUSTOMER_MNEMONIC
+    serviceHomeUrl=SERVICE_HOME_URL
+    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
+    signOutUrl=springUrl("/logout")
+  />
 </#macro>

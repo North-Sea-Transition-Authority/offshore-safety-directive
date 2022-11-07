@@ -80,7 +80,7 @@ class WellSubmissionServiceTest {
         .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
         .build();
 
-    var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
+    var nominatedWellDetailForm = NominatedWellFormTestUtil.builder().build();
 
     when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(specificWellSelectionSetup));
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);
@@ -99,7 +99,7 @@ class WellSubmissionServiceTest {
         .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
         .build();
 
-    var nominatedWellDetailForm = NominatedWellDetailTestUtil.getValidForm();
+    var nominatedWellDetailForm = NominatedWellFormTestUtil.builder().build();
 
     when(wellSelectionSetupPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(specificWellSelectionSetup));
     when(nominatedWellDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(nominatedWellDetailForm);

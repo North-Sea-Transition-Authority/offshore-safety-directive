@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -13,12 +12,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -66,63 +67,58 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
   @Test
   void getLicenceBlockSubareas_assertModelAndViewProperties() throws Exception {
+
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(new NominatedBlockSubareaForm());
-    var modelAndView = mockMvc.perform(
+
+    var form = new NominatedBlockSubareaForm();
+
+    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+
+    mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
                 .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/blockSubarea"))
-        .andReturn()
-        .getModelAndView();
-
-    assertNotNull(modelAndView);
-
-    var model = modelAndView.getModel();
-    assertThat(model).containsOnlyKeys(
-        "form",
-        "pageTitle",
-        "backLinkUrl",
-        "actionUrl",
-        "alreadyAddedSubareas",
-        "blockSubareaRestUrl",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "navigationItems",
-        "currentEndPoint",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form"
-    );
-
-    var expectedBackLinkUrl = ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID));
-    var expectedActionUrl = ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID));
-    var expectedBlockSubareaRestUrl = RestApiUtil.route(on(LicenceBlockSubareaRestController.class).searchWells(null));
-    assertEquals(NominatedBlockSubareaForm.class, model.get("form").getClass());
-    assertEquals(expectedBackLinkUrl, model.get("backLinkUrl"));
-    assertEquals(NominatedBlockSubareaController.PAGE_TITLE, model.get("pageTitle"));
-    assertEquals(expectedActionUrl, model.get("actionUrl"));
-    assertEquals(expectedBlockSubareaRestUrl, model.get("blockSubareaRestUrl"));
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attribute("pageTitle", NominatedBlockSubareaController.PAGE_TITLE))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))
+        ))
+        .andExpect(model().attribute("alreadyAddedSubareas", Collections.emptyList()))
+        .andExpect(model().attribute(
+            "blockSubareaRestUrl",
+            RestApiUtil.route(on(LicenceBlockSubareaRestController.class).searchWells(null))
+        ));
   }
 
   @Test
   void getLicenceBlockSubareas_whenSavedBlockSubareas_assertSubareasAreSorted() throws Exception {
-    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder().build();
-    var licenceBlockSubareaDto1 = new LicenceBlockSubareaDto(1, "blockSubarea1", "1");
-    var licenceBlockSubareaDto2 = new LicenceBlockSubareaDto(2, "blockSubarea2", "2");
-    var licenceBlockSubareaDto3 = new LicenceBlockSubareaDto(3, "blockSubarea3", "3");
+
+    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .build();
+
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
     when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(formWithSubareas);
+
+    var firstBlockSubareaBySortKey = new LicenceBlockSubareaDto(1, "blockSubarea1", "1");
+    var secondBlockSubareaBySortKey = new LicenceBlockSubareaDto(2, "blockSubarea2", "2");
+    var thirdBlockSubareaBySortKey = new LicenceBlockSubareaDto(3, "blockSubarea3", "3");
+
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(formWithSubareas.getSubareas()))
-        .thenReturn(List.of(licenceBlockSubareaDto2, licenceBlockSubareaDto3, licenceBlockSubareaDto1));
+        .thenReturn(List.of(secondBlockSubareaBySortKey, thirdBlockSubareaBySortKey, firstBlockSubareaBySortKey));
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
                 .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
+        .andExpect(model().attributeExists("alreadyAddedSubareas"))
         .andReturn()
         .getModelAndView();
 
@@ -130,16 +126,25 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
     @SuppressWarnings("unchecked")
     var returnedAlreadyAddedSubareas = (List<LicenceBlockSubareaAddToListView>) modelAndView.getModel().get("alreadyAddedSubareas");
+
     assertThat(returnedAlreadyAddedSubareas)
         .extracting(
             LicenceBlockSubareaAddToListView::getId,
-            LicenceBlockSubareaAddToListView::getName,
             LicenceBlockSubareaAddToListView::getSortKey
         )
         .containsExactly(
-            tuple(String.valueOf(licenceBlockSubareaDto1.id()), licenceBlockSubareaDto1.name(), licenceBlockSubareaDto1.sortKey()),
-            tuple(String.valueOf(licenceBlockSubareaDto2.id()), licenceBlockSubareaDto2.name(), licenceBlockSubareaDto2.sortKey()),
-            tuple(String.valueOf(licenceBlockSubareaDto3.id()), licenceBlockSubareaDto3.name(), licenceBlockSubareaDto3.sortKey())
+            tuple(
+                String.valueOf(firstBlockSubareaBySortKey.id()),
+                firstBlockSubareaBySortKey.sortKey()
+            ),
+            tuple(
+                String.valueOf(secondBlockSubareaBySortKey.id()),
+                secondBlockSubareaBySortKey.sortKey()
+            ),
+            tuple(
+                String.valueOf(thirdBlockSubareaBySortKey.id()),
+                thirdBlockSubareaBySortKey.sortKey()
+            )
         );
   }
 

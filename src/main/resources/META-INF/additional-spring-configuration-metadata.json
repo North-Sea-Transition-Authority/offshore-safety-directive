@@ -54,6 +54,11 @@
       "name": "energy-portal.access-api.token",
       "type": "java.lang.String",
       "description": "The Energy Portal team access API token."
+    },
+    {
+      "name": "energy.portal.logout-url",
+      "type": "java.lang.String",
+      "description": "The logout URL for the Energy Portal."
     }
   ]
 }

@@ -19,6 +19,7 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.web.SecurityFilterChain;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 
 @Configuration
 public class WebSecurityConfiguration {
@@ -27,12 +28,16 @@ public class WebSecurityConfiguration {
 
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
+  private final ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
+
 
   @Autowired
   public WebSecurityConfiguration(SamlProperties samlProperties,
-                                  SamlResponseParser samlResponseParser) {
+                                  SamlResponseParser samlResponseParser,
+                                  ServiceLogoutSuccessHandler serviceLogoutSuccessHandler) {
     this.samlProperties = samlProperties;
     this.samlResponseParser = samlResponseParser;
+    this.serviceLogoutSuccessHandler = serviceLogoutSuccessHandler;
   }
 
   @Bean
@@ -50,7 +55,9 @@ public class WebSecurityConfiguration {
         .anyRequest()
           .authenticated()
         .and()
-        .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)));
+        .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
+        .logout()
+          .logoutSuccessHandler(serviceLogoutSuccessHandler);
 
     return httpSecurity.build();
   }
@@ -83,8 +90,5 @@ public class WebSecurityConfiguration {
         .assertionConsumerServiceLocation(samlProperties.getConsumerServiceLocation())
         .build();
   }
-
-
-
 }
 

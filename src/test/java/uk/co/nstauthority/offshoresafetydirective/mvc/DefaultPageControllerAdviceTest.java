@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
@@ -25,9 +26,11 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
   @Test
   void addDefaultModelAttributes_verifyDefaultAttributes() throws Exception {
 
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(TestController.class).testEndpoint()))
-            .with(user(ServiceUserDetailTestUtil.Builder().build()))
+            .with(user(loggedInUser))
     )
         .andReturn()
         .getModelAndView();
@@ -43,13 +46,16 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
         "org.springframework.validation.BindingResult.serviceBranding",
         "serviceHomeUrl",
         "navigationItems",
-        "currentEndPoint"
+        "currentEndPoint",
+        "loggedInUser",
+        "org.springframework.validation.BindingResult.loggedInUser"
     );
 
     assertThat((CustomerConfigurationProperties) modelMap.get("customerBranding")).hasNoNullFieldsOrProperties();
     assertThat((ServiceConfigurationProperties) modelMap.get("serviceBranding")).hasNoNullFieldsOrProperties();
-    assertThat(modelMap).containsEntry(
-        "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+    assertThat(modelMap).contains(
+        entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+        entry("loggedInUser", loggedInUser)
     );
   }
 

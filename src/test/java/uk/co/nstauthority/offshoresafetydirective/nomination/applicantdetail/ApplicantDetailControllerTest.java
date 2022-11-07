@@ -1,7 +1,4 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -11,8 +8,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
@@ -36,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 
 @ContextConfiguration(classes = ApplicantDetailController.class)
@@ -66,44 +66,25 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void getNewApplicantDetails_assertModelProperties() throws Exception {
-    var modelAndView = mockMvc.perform(
+
+    mockMvc.perform(
         get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
             .with(user(NOMINATION_EDITOR_USER))
     )
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    assertThat(modelAndView.getModel()).containsOnlyKeys(
-        "form",
-        "portalOrganisationsRestUrl",
-        "actionUrl",
-        "backLinkUrl",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form",
-        "navigationItems",
-        "currentEndPoint"
-    );
-
-    var expectedPortalOrganisationsRestUrl =
-        RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-            .searchPortalOrganisations(null));
-    var expectedActionUrl = ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(null, null));
-    var expectedBackLinkUrl = ReverseRouter.route(on(StartNominationController.class).startNomination());
-
-    assertThat(modelAndView.getModel()).containsAllEntriesOf(Map.of(
-        "portalOrganisationsRestUrl", expectedPortalOrganisationsRestUrl,
-        "actionUrl", expectedActionUrl,
-        "backLinkUrl", expectedBackLinkUrl
-    ));
-
-    assertEquals("osd/nomination/applicantdetails/applicantDetails", modelAndView.getViewName());
+        .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
+        .andExpect(model().attribute(
+            "portalOrganisationsRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(null, null))
+        ))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(StartNominationController.class).startNomination())
+        ));
   }
 
   @Test
@@ -151,49 +132,37 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void getUpdateApplicantDetails_assertModelProperties() throws Exception {
+
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
     when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(ApplicantDetailTestUtil.getValidApplicantDetailForm());
-    var modelAndView = mockMvc.perform(
+
+    mockMvc.perform(
             get(ReverseRouter.route(
                 on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId)
             ))
                 .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    assertThat(modelAndView.getModel()).containsOnlyKeys(
-        "form",
-        "preselectedItems",
-        "portalOrganisationsRestUrl",
-        "actionUrl",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "breadcrumbsList",
-        "currentPage",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form",
-        "navigationItems",
-        "currentEndPoint"
-    );
-
-    var expectedPortalOrganisationsRestUrl =
-        RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-            .searchPortalOrganisations(null));
-    var expectedActionUrl =
-        ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null));
-
-    assertThat(modelAndView.getModel()).containsAllEntriesOf(Map.of(
-        "portalOrganisationsRestUrl", expectedPortalOrganisationsRestUrl,
-        "actionUrl", expectedActionUrl
-    ));
-
-    assertEquals("osd/nomination/applicantdetails/applicantDetails", modelAndView.getViewName());
+        .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
+        .andExpect(model().attribute(
+            "portalOrganisationsRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null))
+        ))
+        .andExpect(model().attribute("preselectedItems", Map.of()))
+        .andExpect(model().attribute(
+            "breadcrumbsList",
+            Map.of(
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
+                WorkAreaController.WORK_AREA_TITLE,
+                ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)),
+                NominationTaskListController.PAGE_NAME
+            )
+        ))
+        .andExpect(model().attribute("currentPage", ApplicantDetailController.PAGE_NAME));
   }
 
   @Test

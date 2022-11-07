@@ -10,6 +10,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -19,12 +20,15 @@ public class DefaultPageControllerAdvice {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
   private final TopNavigationService topNavigationService;
+  private final UserDetailService userDetailService;
 
   @Autowired
   DefaultPageControllerAdvice(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
-                              TopNavigationService topNavigationService) {
+                              TopNavigationService topNavigationService,
+                              UserDetailService userDetailService) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
     this.topNavigationService = topNavigationService;
+    this.userDetailService = userDetailService;
   }
 
   @ModelAttribute
@@ -32,6 +36,7 @@ public class DefaultPageControllerAdvice {
     addBrandingAttributes(model);
     addCommonUrls(model);
     addTopNavigationItems(model, request);
+    addUser(model);
   }
 
   @InitBinder
@@ -58,5 +63,9 @@ public class DefaultPageControllerAdvice {
 
   private void addCommonUrls(Model model) {
     model.addAttribute("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+  }
+
+  private void addUser(Model model) {
+    model.addAttribute("loggedInUser", userDetailService.getUserDetail());
   }
 }

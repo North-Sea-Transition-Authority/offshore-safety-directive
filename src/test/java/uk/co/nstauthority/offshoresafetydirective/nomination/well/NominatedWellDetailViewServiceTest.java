@@ -37,7 +37,7 @@ class NominatedWellDetailViewServiceTest {
 
   @Test
   void getNominatedWellDetailView_whenEntityExist_assertFields() {
-    var nominatedWellDetail = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder()
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
         .withForAllWellPhases(false)
         .withExplorationAndAppraisalPhase(true)

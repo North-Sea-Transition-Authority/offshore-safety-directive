@@ -1,5 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
+import static org.mockito.Mockito.doCallRealMethod;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -42,6 +45,11 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected UserDetailService userDetailService;
+
+  @BeforeEach
+  void setupAbstractControllerTest() {
+    doCallRealMethod().when(userDetailService).getUserDetail();
+  }
 
   @TestConfiguration
   public static class TestConfig {

@@ -39,8 +39,12 @@ class NominatedWellPersistenceServiceTest {
     var wellId2 = 2;
     var wellDto1 = new WellDto(wellId1, "well1", "1");
     var wellDto2 = new WellDto(wellId2, "well2", "2");
-    var formWithDuplicateWell = NominatedWellDetailTestUtil.getValidForm();
-    formWithDuplicateWell.setWells(List.of(wellId1, wellId2, wellId2));
+
+    var formWithDuplicateWell = NominatedWellFormTestUtil.builder()
+        .withWell(wellId1)
+        .withWell(wellId2)
+        .withWell(wellId2)
+        .build();
 
     when(wellQueryService.getWellsByIdIn(List.of(wellId1, wellId2))).thenReturn(List.of(wellDto1, wellDto2));
 

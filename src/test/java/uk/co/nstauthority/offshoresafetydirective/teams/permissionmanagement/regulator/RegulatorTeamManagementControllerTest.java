@@ -1,10 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
@@ -22,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfiguration
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
@@ -51,7 +51,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberListRedirect_whenNoAccessToRegulatorTeam_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     when(regulatorTeamService.getRegulatorTeamForUser(user)).thenReturn(Optional.empty());
 
@@ -65,7 +64,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberListRedirect_whenAccessToRegulatorTeam_thenRedirectionToTeamIdEndpoint() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withId(UUID.randomUUID())
@@ -94,7 +92,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberList_whenNotMemberOfTeam_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var teamId = new TeamId(UUID.randomUUID());
 
@@ -110,7 +107,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberList_whenMemberOfTeam_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -131,7 +127,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberList_whenNoTeamFound_thenNotFound() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var teamId = new TeamId(UUID.randomUUID());
 
@@ -148,7 +143,6 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   void renderMemberList_whenNotAccessManager_assertModelProperties() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -165,37 +159,23 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
 
     when(teamMemberViewService.getTeamMemberViewsForTeam(team)).thenReturn(List.of(teamMemberView));
 
-    var resultModelAndView = mockMvc.perform(
+    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
+
+    mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(resultModelAndView).isNotNull();
-
-    var model = resultModelAndView.getModel();
-    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
-
-    assertThat(model).extractingByKeys("pageTitle", "teamName", "teamRoles")
-        .containsExactly(
-            "Manage %s".formatted(mnemonic),
-            mnemonic,
-            RegulatorTeamRole.values()
-        );
-
-    @SuppressWarnings("unchecked")
-    var teamMembers = (List<TeamMemberView>) model.get("teamMembers");
-    assertThat(teamMembers).containsExactly(teamMemberView);
-
-    assertThat(model).doesNotContainKey("addTeamMemberUrl");
+        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorTeamMembers"))
+        .andExpect(model().attribute("pageTitle", "Manage %s".formatted(mnemonic)))
+        .andExpect(model().attribute("teamName", mnemonic))
+        .andExpect(model().attribute("teamRoles", RegulatorTeamRole.values()))
+        .andExpect(model().attributeDoesNotExist("addTeamMemberUrl"));
   }
 
   @Test
   void renderMemberList_whenAccessManager_assertModelProperties() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
-    when(userDetailService.getUserDetail()).thenReturn(user);
 
     var team = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -217,29 +197,21 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
         .thenReturn(canRemoveUsers);
 
-    var resultModelAndView = mockMvc.perform(
+    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
+
+    mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(resultModelAndView).isNotNull();
-
-    var model = resultModelAndView.getModel();
-    var mnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
-
-    assertThat(model).extractingByKeys("pageTitle", "teamName", "teamRoles", "addTeamMemberUrl", "canRemoveUsers")
-        .containsExactly(
-            "Manage %s".formatted(mnemonic),
-            mnemonic,
-            RegulatorTeamRole.values(),
-            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)),
-            canRemoveUsers
-        );
-
-    @SuppressWarnings("unchecked")
-    var teamMembers = (List<TeamMemberView>) model.get("teamMembers");
-    assertThat(teamMembers).containsExactly(teamMemberView);
+        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorTeamMembers"))
+        .andExpect(model().attribute("pageTitle", "Manage %s".formatted(mnemonic)))
+        .andExpect(model().attribute("teamName", mnemonic))
+        .andExpect(model().attribute("teamRoles", RegulatorTeamRole.values()))
+        .andExpect(model().attribute(
+            "addTeamMemberUrl",
+            ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId))
+        ))
+        .andExpect(model().attribute("canRemoveUsers", canRemoveUsers))
+        .andExpect(model().attribute("teamMembers", List.of(teamMemberView)));
   }
 }

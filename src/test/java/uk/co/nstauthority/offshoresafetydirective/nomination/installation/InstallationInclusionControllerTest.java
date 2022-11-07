@@ -1,8 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -12,13 +9,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -33,7 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
-@WebMvcTest
 @ContextConfiguration(classes = InstallationInclusionController.class)
 class InstallationInclusionControllerTest extends AbstractControllerTest {
 
@@ -57,43 +54,28 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
 
   @Test
   void getInstallationAdvice_assertModelAndViewProperties() throws Exception {
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(new InstallationInclusionForm());
 
-    var modelAndView = mockMvc.perform(
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+
+    var form = new InstallationInclusionForm();
+    when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+
+    mockMvc.perform(
             get(ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID)))
                 .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertNotNull(modelAndView);
-    assertEquals("osd/nomination/installation/installationInclusion", modelAndView.getViewName());
-
-    var model = modelAndView.getModel();
-    assertThat(model).containsOnlyKeys(
-        "form",
-        "pageTitle",
-        "backLinkUrl",
-        "actionUrl",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "navigationItems",
-        "currentEndPoint",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form"
-    );
-
-    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
-    var expectedActionUrl =
-        ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null));
-    assertEquals(InstallationInclusionForm.class, model.get("form").getClass());
-    assertEquals(expectedBackUrl,  model.get("backLinkUrl"));
-    assertEquals(expectedActionUrl,  model.get("actionUrl"));
-    assertEquals(InstallationInclusionController.PAGE_TITLE,  model.get("pageTitle"));
+        .andExpect(view().name("osd/nomination/installation/installationInclusion"))
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attribute("pageTitle", InstallationInclusionController.PAGE_TITLE))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(InstallationInclusionController.class).saveInstallationInclusion(NOMINATION_ID, null, null))
+        ));
   }
 
   @Test

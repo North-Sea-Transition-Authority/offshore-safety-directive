@@ -63,7 +63,6 @@ class RegulatorPermissionManagementHandlerInterceptorTest extends AbstractContro
     var teamId = new TeamId(UUID.randomUUID());
 
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, USER, Set.of(EXAMPLE_ROLE.name()))).thenReturn(true);
-    when(userDetailService.getUserDetail()).thenReturn(USER);
 
     mockMvc.perform(get("%s/%s".formatted(url, teamId.toString()))
             .with(user(USER)))
@@ -81,7 +80,6 @@ class RegulatorPermissionManagementHandlerInterceptorTest extends AbstractContro
 
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, USER, Set.of(EXAMPLE_ROLE.name())))
         .thenReturn(false);
-    when(userDetailService.getUserDetail()).thenReturn(USER);
 
     mockMvc.perform(get("%s/%s".formatted(url, teamId.toString()))
             .with(user(USER)))

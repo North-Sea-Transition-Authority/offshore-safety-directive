@@ -14,4 +14,8 @@ public record ServiceUserDetail(Long wuaId,
   public String getName() {
     return wuaId.toString();
   }
+
+  public String displayName() {
+    return "%s %s".formatted(forename, surname);
+  }
 }

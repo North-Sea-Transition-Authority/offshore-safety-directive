@@ -45,7 +45,6 @@ class PermissionManagementHandlerInterceptorTest extends AbstractControllerTest 
     var teamId = new TeamId(UUID.randomUUID());
 
     when(teamMemberService.isMemberOfTeam(teamId, USER)).thenReturn(true);
-    when(userDetailService.getUserDetail()).thenReturn(USER);
 
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class).isMemberOfTeamAnnotationWithTeamIdInPath(teamId)))
             .with(user(USER)))
@@ -58,7 +57,6 @@ class PermissionManagementHandlerInterceptorTest extends AbstractControllerTest 
     var teamId = new TeamId(UUID.randomUUID());
 
     when(teamMemberService.isMemberOfTeam(teamId, USER)).thenReturn(false);
-    when(userDetailService.getUserDetail()).thenReturn(USER);
 
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class).isMemberOfTeamAnnotationWithTeamIdInPath(teamId)))
             .with(user(USER)))

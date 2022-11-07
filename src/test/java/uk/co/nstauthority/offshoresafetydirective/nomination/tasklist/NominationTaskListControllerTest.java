@@ -1,20 +1,20 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -31,7 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
-@WebMvcTest
 @ContextConfiguration(classes = NominationTaskListController.class)
 class NominationTaskListControllerTest extends AbstractControllerTest {
 
@@ -60,64 +59,37 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     var sectionDisplayOrder = 10;
     var sectionWarningText = "section warning text";
 
-    when(nominationTaskListSection.getSectionName()).thenReturn(sectionName);
-    when(nominationTaskListSection.getDisplayOrder()).thenReturn(sectionDisplayOrder);
-    when(nominationTaskListSection.getSectionWarningText()).thenReturn(sectionWarningText);
+    setupMockTaskListSection(sectionName, sectionDisplayOrder, sectionWarningText);
 
     var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
 
-    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(10, "display name", "/action-url")
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
         .withTaskListLabels(true)
         .withNotCompletedLabel(false)
         .withItemValid(true)
         .withCustomTaskListLabel(new TaskListLabel("label text", TaskListLabelType.GREY))
         .build();
 
-    doReturn(nominationTaskListSection.getClass()).when(nominationTaskListItem).getTaskListSection();
-    when(nominationTaskListItem.isVisible(nominationTaskListItemType)).thenReturn(true);
-
-    when(nominationTaskListItem.getDisplayOrder()).thenReturn(expectedTaskListItemView.getDisplayOrder());
-    when(nominationTaskListItem.getActionUrl(nominationTaskListItemType)).thenReturn(expectedTaskListItemView.getActionUrl());
-    when(nominationTaskListItem.getItemDisplayText()).thenReturn(expectedTaskListItemView.getDisplayName());
-    when(nominationTaskListItem.showTaskListLabels(nominationTaskListItemType)).thenReturn(expectedTaskListItemView.showTaskListLabels());
-    when(nominationTaskListItem.showNotCompletedLabels(nominationTaskListItemType)).thenReturn(expectedTaskListItemView.showNotCompletedLabel());
-    when(nominationTaskListItem.isValid(nominationTaskListItemType)).thenReturn(expectedTaskListItemView.isItemValid());
-    when(nominationTaskListItem.getCustomTaskListLabel(nominationTaskListItemType)).thenReturn(expectedTaskListItemView.getCustomTaskListLabel());
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
             .with(user(TASK_LIST_USER))
     )
         .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/tasklist/taskList"))
+        .andExpect(model().attribute(
+            "breadcrumbsList",
+            Map.of(
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), WorkAreaController.WORK_AREA_TITLE
+            )
+        ))
+        .andExpect(model().attribute("currentPage", NominationTaskListController.PAGE_NAME))
+        .andExpect(model().attributeExists("taskListSections"))
         .andReturn()
         .getModelAndView();
 
-    assertThat(modelAndView).isNotNull();
-
-    assertEquals(modelAndView.getViewName(), "osd/nomination/tasklist/taskList");
-
-    assertThat(modelAndView.getModel()).containsOnlyKeys(
-        "taskListSections",
-        "breadcrumbsList",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "currentPage",
-        "navigationItems",
-        "currentEndPoint"
-    );
-
-    @SuppressWarnings("unchecked")
-    var breadcrumbs = (Map<String, String>) modelAndView.getModel().get("breadcrumbsList");
-
-    assertThat(breadcrumbs)
-        .containsExactly(
-            entry(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), WorkAreaController.WORK_AREA_TITLE)
-        );
-
-    assertEquals(modelAndView.getModel().get("currentPage"), NominationTaskListController.PAGE_NAME);
+    assertNotNull(modelAndView);
 
     @SuppressWarnings("unchecked")
     var taskListSectionViews = (List<TaskListSectionView>) modelAndView.getModel().get("taskListSections");
@@ -157,6 +129,41 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
                 expectedTaskListItemView.getCustomTaskListLabel()
             )
         );
+  }
+
+  private void setupMockTaskListItem(TaskListItemView taskListItemViewToReturn,
+                                     NominationTaskListItemType nominationTaskListItemType) {
+
+    doReturn(nominationTaskListSection.getClass()).when(nominationTaskListItem).getTaskListSection();
+
+    when(nominationTaskListItem.isVisible(nominationTaskListItemType)).thenReturn(true);
+
+    when(nominationTaskListItem.getDisplayOrder())
+        .thenReturn(taskListItemViewToReturn.getDisplayOrder());
+
+    when(nominationTaskListItem.getActionUrl(nominationTaskListItemType))
+        .thenReturn(taskListItemViewToReturn.getActionUrl());
+
+    when(nominationTaskListItem.getItemDisplayText())
+        .thenReturn(taskListItemViewToReturn.getDisplayName());
+
+    when(nominationTaskListItem.showTaskListLabels(nominationTaskListItemType))
+        .thenReturn(taskListItemViewToReturn.showTaskListLabels());
+
+    when(nominationTaskListItem.showNotCompletedLabels(nominationTaskListItemType))
+        .thenReturn(taskListItemViewToReturn.showNotCompletedLabel());
+
+    when(nominationTaskListItem.isValid(nominationTaskListItemType))
+        .thenReturn(taskListItemViewToReturn.isItemValid());
+
+    when(nominationTaskListItem.getCustomTaskListLabel(nominationTaskListItemType))
+        .thenReturn(taskListItemViewToReturn.getCustomTaskListLabel());
+  }
+
+  private void setupMockTaskListSection(String sectionName, int sectionDisplayOrder, String sectionWarningText) {
+    when(nominationTaskListSection.getSectionName()).thenReturn(sectionName);
+    when(nominationTaskListSection.getDisplayOrder()).thenReturn(sectionDisplayOrder);
+    when(nominationTaskListSection.getSectionWarningText()).thenReturn(sectionWarningText);
   }
 
 }

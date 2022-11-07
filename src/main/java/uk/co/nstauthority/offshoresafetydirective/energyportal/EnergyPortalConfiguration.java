@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "energy-portal")
 @Validated
 public record EnergyPortalConfiguration(
-    @NotNull String registrationUrl
+    @NotNull String registrationUrl,
+    @NotNull String logoutUrl
 ) {
 }

@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -11,6 +9,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -64,65 +63,51 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   @Test
   void getNominatedInstallationDetail_assertModelProperties() throws Exception {
+
     var installationDto1 = new InstallationDto(1, "installation1");
     var installationDto2 = new InstallationDto(2, "installation2");
+
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withInstallations(List.of(installationDto1.id(), installationDto2.id()))
         .build();
+
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
     when(nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
     when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
         .thenReturn(List.of(installationDto2, installationDto1));
 
-    var modelAndView = mockMvc.perform(
+    mockMvc.perform(
             get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
                 .with(user(NOMINATION_EDITOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"))
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    var model = modelAndView.getModel();
-
-    assertThat(model).containsOnlyKeys(
-        "form",
-        "pageTitle",
-        "backLinkUrl",
-        "actionUrl",
-        "installationPhases",
-        "alreadyAddedInstallations",
-        "installationsRestUrl",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "navigationItems",
-        "currentEndPoint",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form"
-    );
-    var expectedBackLinkUrl =  ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID));
-    var expectedActionUrl =
-        ReverseRouter.route(on(NominatedInstallationController.class).saveNominatedInstallationDetail(NOMINATION_ID, null, null));
-    var expectedInstallationsRestUrl =  RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null));
-    var expectedInstallationView1 = new InstallationAddToListView(installationDto1.id(), installationDto1.name(), true);
-    var expectedInstallationView2 = new InstallationAddToListView(installationDto2.id(), installationDto2.name(), true);
-    assertEquals(NominatedInstallationDetailForm.class, model.get("form").getClass());
-    assertEquals(NominatedInstallationController.PAGE_TITLE, model.get("pageTitle"));
-    assertEquals(expectedBackLinkUrl, model.get("backLinkUrl"));
-    assertEquals(expectedActionUrl, model.get("actionUrl"));
-    assertEquals(DisplayableEnumOptionUtil.getDisplayableOptions(InstallationPhase.class), model.get("installationPhases"));
-    assertEquals(expectedInstallationsRestUrl, model.get("installationsRestUrl"));
-
-    @SuppressWarnings("unchecked")
-    var expectedInstallationsViews = (List<InstallationAddToListView>) model.get("alreadyAddedInstallations");
-    assertThat(expectedInstallationsViews).containsExactly(
-        expectedInstallationView1,
-        expectedInstallationView2
-    );
+        .andExpect(model().attribute("pageTitle", NominatedInstallationController.PAGE_TITLE))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(NominatedInstallationController.class)
+                .saveNominatedInstallationDetail(NOMINATION_ID, null, null))
+        ))
+        .andExpect(model().attribute(
+            "installationPhases",
+            DisplayableEnumOptionUtil.getDisplayableOptions(InstallationPhase.class)
+        ))
+        .andExpect(model().attribute(
+            "alreadyAddedInstallations",
+            List.of(
+                new InstallationAddToListView(installationDto1.id(), installationDto1.name(), true),
+                new InstallationAddToListView(installationDto2.id(), installationDto2.name(), true)
+            )
+        ))
+        .andExpect(model().attribute(
+            "installationsRestUrl",
+            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+        ))
+        .andExpect(model().attribute("form", form));
   }
 
   @Test

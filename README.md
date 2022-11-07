@@ -50,6 +50,8 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 | OSD_ENERGY_PORTAL_TEAM_ACCESS_API_BASE_URL | The Energy Portal team access API base url. (ending in the fox 5 context for the environment)      |
 | OSD_ENERGY_PORTAL_TEAM_ACCESS_API_TOKEN    | The Energy Portal team access API token                                                            |
 | OSD_ENERGY_PORTAL_REGISTRATION_URL         | The Energy Portal registration url for the environment                                             |
+| OSD_ENERGY_PORTAL_LOGOUT_URL               | The URL to the log out entry theme of the Energy Portal                                            | 
+
 
 
 

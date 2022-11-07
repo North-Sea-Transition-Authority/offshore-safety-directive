@@ -32,7 +32,7 @@ class NominatedWellDetailPersistenceServiceTest {
 
   @Test
   void createOrUpdateNominatedWellDetail_whenForAllPhases_thenSpecificPhasesAreNull() {
-    var specificWellSetup = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder()
+    var specificWellSetup = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
         .build();
     specificWellSetup.setForAllWellPhases(false);
@@ -107,7 +107,7 @@ class NominatedWellDetailPersistenceServiceTest {
 
   @Test
   void findByNominationDetail_whenEntityExists_assertEntity() {
-    var nominatedWellDetail = new NominatedWellDetailTestUtil.NominatedWellDetailBuilder().build();
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder().build();
 
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
 

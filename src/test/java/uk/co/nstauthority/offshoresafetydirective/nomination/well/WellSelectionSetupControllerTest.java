@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -11,8 +10,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
@@ -58,45 +59,27 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
   @Test
   void getWellSetup_assertModelAndView() throws Exception {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(new WellSelectionSetupForm());
 
-    var modelAndView = mockMvc.perform(
+    var form = new WellSelectionSetupForm();
+    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+
+    mockMvc.perform(
         get(ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID)))
             .with(user(NOMINATION_EDITOR_USER))
     )
         .andExpect(status().isOk())
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    assertEquals("osd/nomination/well/wellSelectionSetup", modelAndView.getViewName());
-
-    var model = modelAndView.getModel();
-    assertThat(model).containsOnlyKeys(
-        "form",
-        "backLinkUrl",
-        "actionUrl",
-        "pageTitle",
-        "wellSelectionTypes",
-        "serviceBranding",
-        "customerBranding",
-        "serviceHomeUrl",
-        "navigationItems",
-        "currentEndPoint",
-        "org.springframework.validation.BindingResult.serviceBranding",
-        "org.springframework.validation.BindingResult.customerBranding",
-        "org.springframework.validation.BindingResult.form"
-    );
-
-    var expectedBackUrl = ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID));
-    var expectedActionUrl = ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null));
-    var expectedWellSetupAnswers = DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class);
-    assertEquals(WellSelectionSetupForm.class, model.get("form").getClass());
-    assertEquals(expectedBackUrl,  model.get("backLinkUrl"));
-    assertEquals(expectedActionUrl,  model.get("actionUrl"));
-    assertEquals(WellSelectionSetupController.PAGE_NAME,  model.get("pageTitle"));
-    assertEquals(expectedWellSetupAnswers,  model.get("wellSelectionTypes"));
+        .andExpect(view().name("osd/nomination/well/wellSelectionSetup"))
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))
+        ))
+        .andExpect(model().attribute(
+            "actionUrl",
+            ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null))
+        ))
+        .andExpect(model().attribute("wellSelectionTypes", DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class)))
+        .andExpect(model().attribute("pageTitle", WellSelectionSetupController.PAGE_NAME));
   }
 
   @Test
