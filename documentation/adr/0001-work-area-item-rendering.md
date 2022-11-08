@@ -1,7 +1,7 @@
 # OSDOP-83: Rendering work area items
 
-* Status: DRAFT
-* Approved by:
+* Status: APPROVED
+* Approved by: Cade Ayres, Chris Tasker, James Barnett
 
 ## Context and problem statement
 
