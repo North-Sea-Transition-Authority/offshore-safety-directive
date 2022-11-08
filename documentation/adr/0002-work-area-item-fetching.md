@@ -1,7 +1,7 @@
 # OSDOP-83: Fetching work area items
 
-* Status: DRAFT
-* Approved by:
+* Status: APPROVED
+* Approved by: Cade Ayres, James Barnett, Chris Tasker
 
 ## Context and problem statement
 
