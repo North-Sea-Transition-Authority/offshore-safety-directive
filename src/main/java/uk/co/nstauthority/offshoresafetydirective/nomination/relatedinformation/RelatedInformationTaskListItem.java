@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
+package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -11,25 +11,26 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSection;
 
 @Component
-class NomineeDetailTaskListItem implements NominationTaskListItem {
+class RelatedInformationTaskListItem implements NominationTaskListItem {
 
-  static final int ITEM_DISPLAY_ORDER = 10;
+  static final int ITEM_DISPLAY_ORDER = 20;
 
-  private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
+  private final RelatedInformationSubmissionService relatedInformationFormService;
 
   @Autowired
-  NomineeDetailTaskListItem(NomineeDetailSubmissionService nomineeDetailSubmissionService) {
-    this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
+  RelatedInformationTaskListItem(
+      RelatedInformationSubmissionService relatedInformationFormService) {
+    this.relatedInformationFormService = relatedInformationFormService;
   }
 
   @Override
   public String getItemDisplayText() {
-    return NomineeDetailController.PAGE_NAME;
+    return RelatedInformationController.PAGE_NAME;
   }
 
   @Override
   public String getActionUrl(NominationTaskListItemType target) {
-    return ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(target.nominationId()));
+    return ReverseRouter.route(on(RelatedInformationController.class).renderRelatedInformation(target.nominationId()));
   }
 
   @Override
@@ -38,12 +39,17 @@ class NomineeDetailTaskListItem implements NominationTaskListItem {
   }
 
   @Override
-  public boolean isValid(NominationTaskListItemType target) {
-    return nomineeDetailSubmissionService.isSectionSubmittable(target.nominationDetail());
+  public boolean isVisible(NominationTaskListItemType target) {
+    return NominationTaskListItem.super.isVisible(target);
   }
 
   @Override
   public Class<? extends TaskListSection<NominationTaskListItemType>> getTaskListSection() {
     return NominationDetailsTaskListSection.class;
+  }
+
+  @Override
+  public boolean isValid(NominationTaskListItemType target) {
+    return relatedInformationFormService.isSectionSubmittable(target.nominationDetail());
   }
 }

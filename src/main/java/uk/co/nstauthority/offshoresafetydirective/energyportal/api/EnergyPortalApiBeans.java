@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.api;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import uk.co.fivium.energyportalapi.client.EnergyPortal;
+import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 
 @Configuration
@@ -19,5 +20,10 @@ class EnergyPortalApiBeans {
   @Bean
   UserApi userApi(EnergyPortal energyPortal) {
     return new UserApi(energyPortal);
+  }
+
+  @Bean
+  FieldApi fieldApi(EnergyPortal energyPortal) {
+    return new FieldApi(energyPortal);
   }
 }

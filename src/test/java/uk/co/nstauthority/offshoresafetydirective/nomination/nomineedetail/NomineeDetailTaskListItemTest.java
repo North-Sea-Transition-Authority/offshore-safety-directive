@@ -15,7 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListItemType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NomineeTaskListSection;
+import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationDetailsTaskListSection;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailTaskListItemTest {
@@ -61,7 +61,7 @@ class NomineeDetailTaskListItemTest {
   void getTaskListSection() {
     assertEquals(
         nomineeDetailTaskListItem.getTaskListSection(),
-        NomineeTaskListSection.class
+        NominationDetailsTaskListSection.class
     );
   }
 

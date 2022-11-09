@@ -3,9 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 import org.springframework.stereotype.Component;
 
 @Component
-public class NomineeTaskListSection implements NominationTaskListSection {
+public class NominationDetailsTaskListSection implements NominationTaskListSection {
 
-  static final String SECTION_NAME = "Nominee";
+  static final String SECTION_NAME = "Nomination details";
 
   static final int SECTION_DISPLAY_ORDER = 20;
 
