@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -34,6 +35,23 @@ class RelatedInformationFormService {
 
     form.setRelatedToAnyFields(relatedInformation.getRelatedToFields());
     form.setFields(fields);
+
+    form.setRelatedToAnyLicenceApplications(relatedInformation.getRelatedToLicenceApplications());
+
+    if (BooleanUtils.isTrue(relatedInformation.getRelatedToLicenceApplications())) {
+      form.setRelatedLicenceApplications(relatedInformation.getRelatedLicenceApplications());
+    } else {
+      form.setRelatedLicenceApplications(null);
+    }
+
+    form.setRelatedToAnyWellApplications(relatedInformation.getRelatedToWellApplications());
+
+    if (BooleanUtils.isTrue(relatedInformation.getRelatedToWellApplications())) {
+      form.setRelatedWellApplications(relatedInformation.getRelatedWellApplications());
+    } else {
+      form.setRelatedWellApplications(null);
+    }
+
     return form;
   }
 }

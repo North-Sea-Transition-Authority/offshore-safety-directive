@@ -5,17 +5,53 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
+import org.springframework.validation.ValidationUtils;
 
 @Service
 class RelatedInformationValidator implements SmartValidator {
 
+  static final String REQUIRED_FIELD_CODE = "required";
+
   static final String RELATED_TO_ANY_FIELDS_FIELD_NAME = "relatedToAnyFields";
-  static final String RELATED_TO_ANY_FIELDS_REQUIRED_CODE = "%s.required".formatted(RELATED_TO_ANY_FIELDS_FIELD_NAME);
+  static final String RELATED_TO_ANY_FIELDS_REQUIRED_CODE
+      = "%s.%s".formatted(RELATED_TO_ANY_FIELDS_FIELD_NAME, REQUIRED_FIELD_CODE);
   static final String RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE = "Select yes if your nomination is related to any fields";
 
   static final String FIELDS_FIELD_NAME = "fieldSelector";
-  static final String FIELDS_REQUIRED_CODE = "%s.required".formatted(FIELDS_FIELD_NAME);
+  static final String FIELDS_REQUIRED_CODE = "%s.%s".formatted(FIELDS_FIELD_NAME, REQUIRED_FIELD_CODE);
   static final String FIELDS_REQUIRED_MESSAGE = "You must add at least one field";
+
+  static final String RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME = "relatedToAnyLicenceApplications";
+
+  static final String RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE
+      = "%s.%s".formatted(RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME, REQUIRED_FIELD_CODE);
+
+  static final String RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE =
+      "Select yes if any PEARS applications relate to this nomination";
+
+  static final String RELATED_LICENCE_APPLICATIONS_FIELD_NAME = "relatedLicenceApplications";
+
+  static final String RELATED_LICENCE_APPLICATIONS_REQUIRED_CODE
+      = "%s.required".formatted(RELATED_LICENCE_APPLICATIONS_FIELD_NAME);
+
+  static final String RELATED_LICENCE_APPLICATIONS_REQUIRED_MESSAGE =
+      "Enter the PEARS application references that relate to this nomination";
+
+  static final String RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME = "relatedToAnyWellApplications";
+
+  static final String RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE
+      = "%s.%s".formatted(RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME, REQUIRED_FIELD_CODE);
+
+  static final String RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE =
+      "Select yes if any WONS applications relate to this nomination";
+
+  static final String RELATED_WELL_APPLICATIONS_FIELD_NAME = "relatedWellApplications";
+
+  static final String RELATED_WELL_APPLICATIONS_REQUIRED_CODE
+      = "%s.%s".formatted(RELATED_WELL_APPLICATIONS_FIELD_NAME, REQUIRED_FIELD_CODE);
+
+  static final String RELATED_WELL_APPLICATIONS_REQUIRED_MESSAGE =
+      "Enter the WONS application references that relate to this nomination";
 
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
@@ -25,10 +61,27 @@ class RelatedInformationValidator implements SmartValidator {
   @Override
   public void validate(@NotNull Object target, @NotNull Errors errors, @NotNull Object... validationHints) {
     var form = (RelatedInformationForm) target;
+
+    validateRelatedFields(form, errors);
+    validateRelatedLicenceApplications(form, errors);
+    validateRelatedWellApplications(form, errors);
+  }
+
+  @Override
+  public void validate(@NotNull Object target, @NotNull Errors errors) {
+    validate(target, errors, new Object[0]);
+  }
+
+  private void validateRelatedFields(RelatedInformationForm form, Errors errors) {
+
     if (form.getRelatedToAnyFields() == null) {
-      errors.rejectValue(RELATED_TO_ANY_FIELDS_FIELD_NAME, RELATED_TO_ANY_FIELDS_REQUIRED_CODE,
-          RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE);
+      errors.rejectValue(
+          RELATED_TO_ANY_FIELDS_FIELD_NAME,
+          RELATED_TO_ANY_FIELDS_REQUIRED_CODE,
+          RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE
+      );
     }
+
     if (BooleanUtils.isTrue(form.getRelatedToAnyFields())) {
       if (form.getFields().isEmpty()) {
         errors.rejectValue(FIELDS_FIELD_NAME, FIELDS_REQUIRED_CODE, FIELDS_REQUIRED_MESSAGE);
@@ -36,8 +89,43 @@ class RelatedInformationValidator implements SmartValidator {
     }
   }
 
-  @Override
-  public void validate(@NotNull Object target, @NotNull Errors errors) {
-    validate(target, errors, new Object[0]);
+  private void validateRelatedLicenceApplications(RelatedInformationForm form, Errors errors) {
+
+    if (form.getRelatedToAnyLicenceApplications() == null) {
+      errors.rejectValue(
+          RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
+          RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE,
+          RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
+      );
+    }
+
+    if (BooleanUtils.isTrue(form.getRelatedToAnyLicenceApplications())) {
+      ValidationUtils.rejectIfEmptyOrWhitespace(
+          errors,
+          RELATED_LICENCE_APPLICATIONS_FIELD_NAME,
+          RELATED_LICENCE_APPLICATIONS_REQUIRED_CODE,
+          RELATED_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
+      );
+    }
+  }
+
+  private void validateRelatedWellApplications(RelatedInformationForm form, Errors errors) {
+
+    if (form.getRelatedToAnyWellApplications() == null) {
+      errors.rejectValue(
+          RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
+          RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE,
+          RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE
+      );
+    }
+
+    if (BooleanUtils.isTrue(form.getRelatedToAnyWellApplications())) {
+      ValidationUtils.rejectIfEmptyOrWhitespace(
+          errors,
+          RELATED_WELL_APPLICATIONS_FIELD_NAME,
+          RELATED_WELL_APPLICATIONS_REQUIRED_CODE,
+          RELATED_WELL_APPLICATIONS_REQUIRED_MESSAGE
+      );
+    }
   }
 }

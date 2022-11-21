@@ -26,14 +26,28 @@ class RelatedInformationPersistenceService {
   }
 
   @Transactional
-  public RelatedInformation createOrUpdateRelatedInformation(NominationDetail nominationDetail,
-                                        RelatedInformationForm relatedInformationForm) {
+  public void createOrUpdateRelatedInformation(NominationDetail nominationDetail,
+                                               RelatedInformationForm relatedInformationForm) {
 
     var relatedInformation = getRelatedInformation(nominationDetail)
         .orElseGet(RelatedInformation::new);
 
     relatedInformation.setNominationDetail(nominationDetail);
     relatedInformation.setRelatedToFields(relatedInformationForm.getRelatedToAnyFields());
+    relatedInformation.setRelatedToLicenceApplications(relatedInformationForm.getRelatedToAnyLicenceApplications());
+    relatedInformation.setRelatedToWellApplications(relatedInformationForm.getRelatedToAnyWellApplications());
+
+    if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyLicenceApplications())) {
+      relatedInformation.setRelatedLicenceApplications(relatedInformationForm.getRelatedLicenceApplications());
+    } else {
+      relatedInformation.setRelatedLicenceApplications(null);
+    }
+
+    if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyWellApplications())) {
+      relatedInformation.setRelatedWellApplications(relatedInformationForm.getRelatedWellApplications());
+    } else {
+      relatedInformation.setRelatedLicenceApplications(null);
+    }
 
     relatedInformationRepository.save(relatedInformation);
 
@@ -43,8 +57,6 @@ class RelatedInformationPersistenceService {
     } else if (BooleanUtils.isFalse(relatedInformationForm.getRelatedToAnyFields())) {
       relatedInformationFieldPersistenceService.removeExistingLinkedFields(relatedInformation);
     }
-
-    return relatedInformation;
   }
 
 }

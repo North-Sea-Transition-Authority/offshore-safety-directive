@@ -1,12 +1,14 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,46 +28,146 @@ class RelatedInformationPersistenceServiceTest {
 
   @Test
   void createOrUpdateRelatedInformation_whenFieldsSelected_thenFieldsAdded() {
-    var form = new RelatedInformationForm();
-    form.setRelatedToAnyFields(true);
-    form.setFields(List.of(1));
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToAnyFields(true)
+        .withField(100)
+        .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
-    var relatedInformation = relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail,
-        form);
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
-    verify(relatedInformationRepository).save(relatedInformation);
-    verify(relatedInformationFieldPersistenceService).updateLinkedFields(relatedInformation, List.of(1));
-    verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(relatedInformation);
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+
+    verify(relatedInformationRepository).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+
+    verify(relatedInformationFieldPersistenceService).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
   @Test
   void createOrUpdateRelatedInformation_whenNotRelatedToFields_thenFieldsRemoved() {
-    var form = new RelatedInformationForm();
-    form.setRelatedToAnyFields(false);
-    form.setFields(List.of(1));
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToAnyFields(false)
+        .withField(100)
+        .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
-    var relatedInformation = relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail,
-        form);
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
-    verify(relatedInformationRepository).save(relatedInformation);
-    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(relatedInformation, List.of(1));
-    verify(relatedInformationFieldPersistenceService).removeExistingLinkedFields(relatedInformation);
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+
+    verify(relatedInformationRepository).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+
+    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
   @Test
   void createOrUpdateRelatedInformation_whenFieldsPopulated_andNotRelatedToAnyFields_thenNothingChanged() {
-    var form = new RelatedInformationForm();
-    form.setRelatedToAnyFields(null);
-    form.setFields(List.of(1));
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToAnyFields(null)
+        .withField(100)
+        .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
-    var relatedInformation = relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail,
-        form);
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
-    verify(relatedInformationRepository).save(relatedInformation);
-    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(relatedInformation, List.of(1));
-    verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(relatedInformation);
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+
+    verify(relatedInformationRepository).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+
+    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(persistedRelatedInformation);
+  }
+
+  @Test
+  void createOrUpdateRelatedInformation_whenLicenceApplicationsRelevant_thenApplicationReferencesSaved() {
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToLicenceApplications(true)
+        .withRelatedLicenceApplications("related licence applications")
+        .build();
+
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
+
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+    verify(relatedInformationRepository, times(1)).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+    assertThat(persistedRelatedInformation.getRelatedToLicenceApplications()).isTrue();
+    assertThat(persistedRelatedInformation.getRelatedLicenceApplications())
+        .isEqualTo("related licence applications");
+  }
+
+  @Test
+  void createOrUpdateRelatedInformation_whenNoLicenceApplicationsRelevant_thenApplicationReferencesCleared() {
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToLicenceApplications(false)
+        .withRelatedLicenceApplications("setting a value to show it is not persisted")
+        .build();
+
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
+
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+    verify(relatedInformationRepository, times(1)).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+    assertThat(persistedRelatedInformation.getRelatedToLicenceApplications()).isFalse();
+    assertThat(persistedRelatedInformation.getRelatedLicenceApplications()).isNull();
+  }
+
+  @Test
+  void createOrUpdateRelatedInformation_whenWellApplicationsRelevant_thenApplicationReferencesSaved() {
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToWellApplications(true)
+        .withRelatedWellApplications("related well applications")
+        .build();
+
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
+
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+    verify(relatedInformationRepository, times(1)).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+    assertThat(persistedRelatedInformation.getRelatedToWellApplications()).isTrue();
+    assertThat(persistedRelatedInformation.getRelatedWellApplications())
+        .isEqualTo("related well applications");
+  }
+
+  @Test
+  void createOrUpdateRelatedInformation_whenNoWellApplicationsRelevant_thenApplicationReferencesCleared() {
+
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToWellApplications(false)
+        .withRelatedWellApplications("setting a value to show it is not persisted")
+        .build();
+
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
+
+    var relatedInformationArgumentCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
+    verify(relatedInformationRepository, times(1)).save(relatedInformationArgumentCaptor.capture());
+
+    var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
+    assertThat(persistedRelatedInformation.getRelatedToWellApplications()).isFalse();
+    assertThat(persistedRelatedInformation.getRelatedWellApplications()).isNull();
   }
 }

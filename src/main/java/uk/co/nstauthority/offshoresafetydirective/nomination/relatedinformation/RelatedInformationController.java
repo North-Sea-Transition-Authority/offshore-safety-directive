@@ -66,7 +66,6 @@ class RelatedInformationController {
   public ModelAndView submitRelatedInformation(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") RelatedInformationForm form,
                                                BindingResult bindingResult) {
-    // TODO OSDOP-269 - Validate and persist form submission
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     relatedInformationValidator.validate(form, bindingResult);
     return controllerHelperService.checkErrorsAndRedirect(
@@ -86,7 +85,7 @@ class RelatedInformationController {
     var modelAndView = new ModelAndView("osd/nomination/relatedInformation/relatedInformation")
         .addObject("pageTitle", PAGE_NAME)
         .addObject("actionUrl", ReverseRouter.route(on(RelatedInformationController.class)
-            .submitRelatedInformation(nominationId, null, null)))
+            .submitRelatedInformation(nominationId, form, ReverseRouter.emptyBindingResult())))
         .addObject("form", form)
         .addObject("fieldRestUrl", ReverseRouter.route(on(FieldRestController.class).getActiveFields(null)))
         .addObject("preselectedFields", preselectedFields)

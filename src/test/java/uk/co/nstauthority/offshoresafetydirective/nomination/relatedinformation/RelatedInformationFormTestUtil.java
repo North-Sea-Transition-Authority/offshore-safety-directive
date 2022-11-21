@@ -1,0 +1,89 @@
+package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
+
+import java.util.ArrayList;
+import java.util.List;
+import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+
+class RelatedInformationFormTestUtil {
+
+  RelatedInformationFormTestUtil() {
+    throw new IllegalUtilClassInstantiationException(this.getClass());
+  }
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  static class Builder {
+
+    private Boolean relatedToAnyFields = true;
+
+    private List<Integer> fields = new ArrayList<>();
+
+    private String fieldSelector;
+
+    private Boolean relatedToAnyLicenceApplications = true;
+
+    private String relatedLicenceApplications = "LICENCE/123";
+
+    private Boolean relatedToAnyWellApplications = true;
+
+    private String relatedWellApplications = "WELL/123";
+
+    private boolean fieldsListInitialised = false;
+
+    Builder withRelatedToAnyFields(Boolean isRelatedToAnyFields) {
+      this.relatedToAnyFields = isRelatedToAnyFields;
+      return this;
+    }
+
+    Builder withField(int fieldId) {
+      this.fields.add(fieldId);
+      fieldsListInitialised = true;
+      return this;
+    }
+
+    Builder withFields(List<Integer> fields) {
+      this.fields = fields;
+      fieldsListInitialised = true;
+      return this;
+    }
+
+    Builder withRelatedToLicenceApplications(Boolean isRelatedToLicenceApplications) {
+      this.relatedToAnyLicenceApplications = isRelatedToLicenceApplications;
+      return this;
+    }
+
+    Builder withRelatedLicenceApplications(String relatedLicenceApplications) {
+      this.relatedLicenceApplications = relatedLicenceApplications;
+      return this;
+    }
+
+    Builder withRelatedToWellApplications(Boolean isRelatedToWellApplications) {
+      this.relatedToAnyWellApplications = isRelatedToWellApplications;
+      return this;
+    }
+
+    Builder withRelatedWellApplications(String relatedWellApplications) {
+      this.relatedWellApplications = relatedWellApplications;
+      return this;
+    }
+
+    RelatedInformationForm build() {
+      var form = new RelatedInformationForm();
+      form.setRelatedToAnyFields(relatedToAnyFields);
+
+      if (!fieldsListInitialised) {
+        fields.add(100);
+      }
+
+      form.setFields(fields);
+      form.setRelatedToAnyLicenceApplications(relatedToAnyLicenceApplications);
+      form.setRelatedLicenceApplications(relatedLicenceApplications);
+      form.setRelatedToAnyWellApplications(relatedToAnyWellApplications);
+      form.setRelatedWellApplications(relatedWellApplications);
+      return form;
+    }
+  }
+
+}

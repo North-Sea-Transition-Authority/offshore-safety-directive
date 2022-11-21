@@ -72,4 +72,88 @@ class RelatedInformationFormServiceTest {
     assertThat(result).extracting(RelatedInformationForm::getRelatedToAnyFields, RelatedInformationForm::getFields)
         .containsExactly(true, List.of(field.getFieldId()));
   }
+
+  @Test
+  void getForm_whenRelatedToLicenceApplications_thenRelatedApplicationsPopulated() {
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToLicenceApplications(true)
+        .withRelatedLicenceApplications("related licence applications")
+        .build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.of(relatedInformation));
+
+    var resultingRelatedInformationForm = relatedInformationFormService.getForm(nominationDetail);
+
+    assertThat(resultingRelatedInformationForm)
+        .extracting(
+            RelatedInformationForm::getRelatedToAnyLicenceApplications,
+            RelatedInformationForm::getRelatedLicenceApplications
+        )
+        .containsExactly(true, "related licence applications");
+  }
+
+  @Test
+  void getForm_whenNotRelatedToLicenceApplications_thenRelatedApplicationsNotPopulated() {
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToLicenceApplications(false)
+        .withRelatedLicenceApplications("populated to ensure this doesn't appear in the form")
+        .build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.of(relatedInformation));
+
+    var resultingRelatedInformationForm = relatedInformationFormService.getForm(nominationDetail);
+
+    assertThat(resultingRelatedInformationForm)
+        .extracting(
+            RelatedInformationForm::getRelatedToAnyLicenceApplications,
+            RelatedInformationForm::getRelatedLicenceApplications
+        )
+        .containsExactly(false, null);
+  }
+
+  @Test
+  void getForm_whenRelatedToWellApplications_thenRelatedApplicationsPopulated() {
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToWellApplications(true)
+        .withRelatedWellApplications("related well applications")
+        .build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.of(relatedInformation));
+
+    var resultingRelatedInformationForm = relatedInformationFormService.getForm(nominationDetail);
+
+    assertThat(resultingRelatedInformationForm)
+        .extracting(
+            RelatedInformationForm::getRelatedToAnyWellApplications,
+            RelatedInformationForm::getRelatedWellApplications
+        )
+        .containsExactly(true, "related well applications");
+  }
+
+  @Test
+  void getForm_whenNotRelatedToWellApplications_thenRelatedApplicationsNotPopulated() {
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToWellApplications(false)
+        .withRelatedWellApplications("populated to ensure this doesn't appear in the form")
+        .build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.of(relatedInformation));
+
+    var resultingRelatedInformationForm = relatedInformationFormService.getForm(nominationDetail);
+
+    assertThat(resultingRelatedInformationForm)
+        .extracting(
+            RelatedInformationForm::getRelatedToAnyWellApplications,
+            RelatedInformationForm::getRelatedWellApplications
+        )
+        .containsExactly(false, null);
+  }
 }
