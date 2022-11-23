@@ -31,3 +31,6 @@ CVE-2022-40156
 
 # Transient vulnerability from org.springframework.security:spring-security-core
 CVE-2022-31692
+
+# Transient vulnerability from spring-boot-starter-freemarker
+CVE-2022-41854
