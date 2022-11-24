@@ -8,15 +8,19 @@ public class NominationDetailTestUtil {
     throw new IllegalStateException("NominationDetailTestUtil is an util class and should not be instantiated");
   }
 
+  public static NominationDetailBuilder builder() {
+    return new NominationDetailBuilder();
+  }
+
   public static class NominationDetailBuilder {
 
-    private int id = 1;
+    private Integer id = 1;
     private Nomination nomination = new NominationTestUtil.NominationBuilder().build();
     private Instant createdInstant = Instant.now();
     private int version = 10;
     private NominationStatus nominationStatus = NominationStatus.DRAFT;
 
-    public NominationDetailBuilder withId(int id) {
+    public NominationDetailBuilder withId(Integer id) {
       this.id = id;
       return this;
     }

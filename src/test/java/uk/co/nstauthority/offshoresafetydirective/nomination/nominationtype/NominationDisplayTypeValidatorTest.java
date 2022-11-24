@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionS
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
-class NominationTypeValidatorTest {
+class NominationDisplayTypeValidatorTest {
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .build();

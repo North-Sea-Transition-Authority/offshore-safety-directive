@@ -62,6 +62,21 @@ public class TeamMemberService {
     return teamMemberRoleRepository.existsByWuaIdAndTeam_UuidAndRoleIn(user.wuaId(), teamId.uuid(), roles);
   }
 
+  public List<TeamMember> getUserAsTeamMembers(ServiceUserDetail user) {
+    Map<Team, List<TeamMemberRole>> teamRoleMap = teamMemberRoleRepository.findAllByWuaId(user.wuaId())
+        .stream()
+        .collect(Collectors.groupingBy(TeamMemberRole::getTeam));
+
+    return teamRoleMap.entrySet()
+        .stream()
+        .map(entry -> new TeamMember(
+            new WebUserAccountId(user.wuaId()),
+            createTeamView(entry.getKey()),
+            mapMemberRolesToTeamRoles(entry.getValue(), entry.getKey())
+        ))
+        .toList();
+  }
+
   private Set<TeamRole> mapMemberRolesToTeamRoles(Collection<TeamMemberRole> roles, Team team) {
     return roles.stream()
         .map(teamMemberRole -> switch (team.getTeamType()) {

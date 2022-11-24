@@ -15,7 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Service
-class RegulatorTeamService {
+public class RegulatorTeamService {
 
   private final TeamService teamService;
 
@@ -31,7 +31,7 @@ class RegulatorTeamService {
     this.teamMemberRoleService = teamMemberRoleService;
   }
 
-  Optional<Team> getRegulatorTeamForUser(ServiceUserDetail user) {
+  public Optional<Team> getRegulatorTeamForUser(ServiceUserDetail user) {
     return teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)
         .stream()
         .findFirst();

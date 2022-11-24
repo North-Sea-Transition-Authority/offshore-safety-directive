@@ -26,4 +26,5 @@ class EnergyPortalApiBeans {
   FieldApi fieldApi(EnergyPortal energyPortal) {
     return new FieldApi(energyPortal);
   }
+
 }

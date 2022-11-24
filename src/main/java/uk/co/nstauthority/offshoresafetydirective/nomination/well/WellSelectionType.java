@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
-enum WellSelectionType implements DisplayableEnumOption {
+public enum WellSelectionType implements DisplayableEnumOption {
   SPECIFIC_WELLS(10, "Yes, I want to provide specific wells"),
   LICENCE_BLOCK_SUBAREA(20, "Yes, I want to provide licence block subareas the nomination is for"),
   NO_WELLS(30, "No");

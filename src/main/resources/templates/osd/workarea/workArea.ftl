@@ -1,6 +1,8 @@
 <#include '../layout/layout.ftl'>
+<#import '_nominationWorkAreaItem.ftl' as _nominationWorkAreaItem>
 
 <#-- @ftlvariable name="startNominationUrl" type="String" -->
+<#-- @ftlvariable name="workAreaItems" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaItem>" -->
 
 <#assign pageTitle = "Work area" />
 
@@ -14,4 +16,12 @@
     linkUrl=springUrl(startNominationUrl)
     linkClass="govuk-button"
   />
+
+    <@fdsResultList.resultList resultCount=workAreaItems?size>
+        <#list workAreaItems as workAreaItem>
+            <#if workAreaItem.type() == "NOMINATION">
+                <@_nominationWorkAreaItem.nominationWorkAreaItem workAreaItem=workAreaItem/>
+            </#if>
+        </#list>
+    </@fdsResultList.resultList>
 </@defaultPage>

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -203,6 +204,42 @@ class TeamMemberServiceTest {
     var result = teamMemberService.getTeamMember(team, wuaId);
 
     assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getUserAsTeamMembers_whenUserIsNotInTeam_thenNoResults() {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(teamMemberRoleRepository.findAllByWuaId(user.wuaId())).thenReturn(List.of());
+
+    var result = teamMemberService.getUserAsTeamMembers(user);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getUserAsTeamMembers_whenUserIsInTeam_thenCorrectlyMapped() {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var team = TeamTestUtil.Builder().build();
+    var teamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(team)
+        .withRole(RegulatorTeamRole.MANAGE_NOMINATION.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+
+    when(teamMemberRoleRepository.findAllByWuaId(user.wuaId())).thenReturn(List.of(teamMemberRole));
+
+    var result = teamMemberService.getUserAsTeamMembers(user);
+
+    assertThat(result).extracting(TeamMember::wuaId, TeamMember::roles, TeamMember::teamView)
+        .containsExactly(
+            Tuple.tuple(
+                new WebUserAccountId(user.wuaId()),
+                Set.of(RegulatorTeamRole.MANAGE_NOMINATION),
+                new TeamView(new TeamId(team.getUuid()), team.getTeamType())
+            )
+        );
   }
 
 }

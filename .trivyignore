@@ -34,3 +34,6 @@ CVE-2022-31692
 
 # Transient vulnerability from spring-boot-starter-freemarker
 CVE-2022-41854
+
+# Transient vulnerability from energyportalapi
+CVE-2022-41946

@@ -1,0 +1,23 @@
+package uk.co.nstauthority.offshoresafetydirective.workarea;
+
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationVersion;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
+
+record NominationWorkAreaItemDto(
+    NominationId nominationId,
+    NominationVersion nominationVersion,
+    PortalOrganisationDto applicantOrganisationUnitDto,
+    NominationReference nominationReference,
+    ApplicantReference applicantReference,
+    PortalOrganisationDto nominatedOrganisationUnitDto,
+    NominationDisplayType nominationDisplay,
+    NominationStatus nominationStatus,
+    NominationCreatedTime createdTime,
+    NominationSubmittedTime submittedTime
+) {
+
+}
