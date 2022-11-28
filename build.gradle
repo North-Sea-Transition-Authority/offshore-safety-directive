@@ -57,7 +57,7 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 
-	runtimeOnly 'org.postgresql:postgresql:42.4.1'
+	runtimeOnly 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
