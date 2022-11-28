@@ -1,8 +1,10 @@
 <#include '../../layout/layout.ftl'>
+<#import '../summary/nominationSummary.ftl' as nominationSummary/>
 
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="isSubmittable" type="Boolean" -->
+<#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
 
 <#assign pageHeading = "Check your answers before submitting your nomination" />
 
@@ -12,6 +14,12 @@
     <@fdsLeftSubNavPageTemplateSubNav smallSubnav=true>
       <@fdsSubNavigation.subNavigation>
         <@fdsSubNavigation.subNavigationSection>
+
+            <@fdsSubNavigation.subNavigationNestedLink
+                linkText="Applicant details"
+                linkUrl="#${summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
+            />
+
         </@fdsSubNavigation.subNavigationSection>
       </@fdsSubNavigation.subNavigation>
     </@fdsLeftSubNavPageTemplateSubNav>
@@ -23,6 +31,12 @@
       <@fdsForm.htmlForm
         actionUrl=springUrl(actionUrl)
       >
+
+
+        <@nominationSummary.nominationSummary
+            summaryView=summaryView
+        />
+
         <#if isSubmittable>
           <@fdsAction.submitButtons
             linkSecondaryAction=true

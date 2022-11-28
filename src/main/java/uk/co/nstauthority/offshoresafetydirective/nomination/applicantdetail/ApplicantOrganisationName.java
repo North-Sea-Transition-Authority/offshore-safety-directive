@@ -1,4 +1,4 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
-public record ApplicantReference(String reference) {
+public record ApplicantOrganisationName(String name) {
 }

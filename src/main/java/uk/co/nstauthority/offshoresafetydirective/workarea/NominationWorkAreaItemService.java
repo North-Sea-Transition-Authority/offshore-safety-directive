@@ -62,7 +62,7 @@ class NominationWorkAreaItemService {
             .addProperty(
                 "applicantReference",
                 Optional.ofNullable(dto.applicantReference())
-                    .map(ApplicantReference::applicantReference)
+                    .map(ApplicantReference::reference)
                     .orElse(DEFAULT_TEXT))
             .addProperty("nominationType", dto.nominationDisplay().getDisplayText())
             .addProperty(

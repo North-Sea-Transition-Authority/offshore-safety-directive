@@ -84,7 +84,7 @@ class NominationWorkAreaItemServiceTest {
             Map.entry("nominationOrganisation",
                 nominatedOrganisation.name()),
             Map.entry("applicantReference",
-                queryResult.getApplicantReference().applicantReference())
+                queryResult.getApplicantReference().reference())
         );
   }
 

@@ -24,7 +24,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 
 @ContextConfiguration(classes = NominationSubmissionController.class)
 class NominationSubmissionControllerTest extends AbstractControllerTest {
@@ -41,12 +43,19 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationDetailService nominationDetailService;
 
+  @MockBean
+  private NominationSummaryService nominationSummaryService;
+
   @Test
   void getSubmissionPage_assertModelProperties() throws Exception {
 
     var isSubmittable = false;
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
     when(nominationSubmissionService.canSubmitNomination(NOMINATION_DETAIL)).thenReturn(isSubmittable);
+    when(nominationSummaryService.getNominationSummaryView(NOMINATION_DETAIL))
+        .thenReturn(new NominationSummaryView(
+            new ApplicantDetailSummaryView(null)
+        ));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))

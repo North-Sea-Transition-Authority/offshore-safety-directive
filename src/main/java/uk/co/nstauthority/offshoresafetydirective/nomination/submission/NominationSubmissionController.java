@@ -21,12 +21,15 @@ public class NominationSubmissionController {
 
   private final NominationSubmissionService nominationSubmissionService;
   private final NominationDetailService nominationDetailService;
+  private final NominationSummaryService nominationSummaryService;
 
   @Autowired
   public NominationSubmissionController(NominationSubmissionService nominationSubmissionService,
-                                        NominationDetailService nominationDetailService) {
+                                        NominationDetailService nominationDetailService,
+                                        NominationSummaryService nominationSummaryService) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
+    this.nominationSummaryService = nominationSummaryService;
   }
 
   @GetMapping
@@ -46,6 +49,8 @@ public class NominationSubmissionController {
     return new ModelAndView("osd/nomination/submission/submitNomination")
         .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject("actionUrl", ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(nominationId)))
-        .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail));
+        .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail))
+        .addObject("summaryView",
+            nominationSummaryService.getNominationSummaryView(nominationDetail));
   }
 }
