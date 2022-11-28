@@ -40,7 +40,7 @@ public class NominationService {
     return nominationDetailRepository.save(nominationDetail);
   }
 
-  Nomination getNominationByIdOrError(NominationId nominationId) {
+  public Nomination getNominationByIdOrError(NominationId nominationId) {
     return nominationRepository.findById(nominationId.id())
         .orElseThrow(() -> {
           throw new OsdEntityNotFoundException(String.format("Cannot find Nomination with ID: %s", nominationId));

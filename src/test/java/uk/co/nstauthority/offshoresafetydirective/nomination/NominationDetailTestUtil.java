@@ -17,6 +17,7 @@ public class NominationDetailTestUtil {
     private Integer id = 1;
     private Nomination nomination = new NominationTestUtil.NominationBuilder().build();
     private Instant createdInstant = Instant.now();
+    private Instant submittedInstant = null;
     private int version = 10;
     private NominationStatus nominationStatus = NominationStatus.DRAFT;
 
@@ -42,6 +43,11 @@ public class NominationDetailTestUtil {
       return this;
     }
 
+    public NominationDetailBuilder withSubmittedInstant(Instant submittedInstant) {
+      this.submittedInstant = submittedInstant;
+      return this;
+    }
+
     public NominationDetailBuilder withVersion(int version) {
       this.version = version;
       return this;
@@ -53,12 +59,14 @@ public class NominationDetailTestUtil {
     }
 
     public NominationDetail build() {
-      return new NominationDetail()
+      var nominationDetail = new NominationDetail()
           .setId(id)
           .setNomination(nomination)
           .setCreatedInstant(createdInstant)
           .setVersion(version)
           .setStatus(nominationStatus);
+      nominationDetail.setSubmittedInstant(submittedInstant);
+      return nominationDetail;
     }
   }
 }

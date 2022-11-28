@@ -1,14 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.concat;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.val;
 
-import java.time.LocalDate;
 import java.util.List;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -45,8 +43,7 @@ class NominationWorkAreaQueryService {
         .select(
             field("n.id"),
             field("ad.portal_organisation_id").as("applicant_organisation_id"),
-            // TODO OSDOP-70 - Change to use correct reference
-            concat(val("WIO/"), val(LocalDate.now().getYear()), val("/"), field("n.id")),
+            field("n.reference"),
             field("ad.applicant_reference"),
             field("nominee.nominated_organisation_id"),
             field("was.selection_type"),

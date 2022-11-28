@@ -12,6 +12,7 @@ public class NominationDetailService {
 
   private final NominationService nominationService;
   private final NominationDetailRepository nominationDetailRepository;
+  private final NominationReferenceService nominationReferenceService;
 
   private final NominationSubmittedEventPublisher nominationSubmittedEventPublisher;
   private final Clock clock;
@@ -20,9 +21,11 @@ public class NominationDetailService {
   public NominationDetailService(
       NominationService nominationService,
       NominationDetailRepository nominationDetailRepository,
+      NominationReferenceService nominationReferenceService,
       NominationSubmittedEventPublisher nominationSubmittedEventPublisher, Clock clock) {
     this.nominationService = nominationService;
     this.nominationDetailRepository = nominationDetailRepository;
+    this.nominationReferenceService = nominationReferenceService;
     this.nominationSubmittedEventPublisher = nominationSubmittedEventPublisher;
     this.clock = clock;
   }
@@ -32,6 +35,9 @@ public class NominationDetailService {
     nominationDetail.setStatus(NominationStatus.SUBMITTED);
     nominationDetail.setSubmittedInstant(clock.instant());
     nominationDetailRepository.save(nominationDetail);
+    if (nominationDetail.getVersion().equals(1)) {
+      nominationReferenceService.setNominationReference(nominationDetail);
+    }
     nominationSubmittedEventPublisher.publishNominationSubmittedEvent(nominationDetail);
   }
 

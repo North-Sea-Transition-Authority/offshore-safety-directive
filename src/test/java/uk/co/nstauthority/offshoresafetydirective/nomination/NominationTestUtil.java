@@ -16,9 +16,15 @@ public class NominationTestUtil {
 
     private Integer id = 10;
     private Instant createdInstant = Instant.now();
+    private String reference = "WIO/2022/%d".formatted(id);
 
     public NominationBuilder withId(Integer id) {
       this.id = id;
+      return this;
+    }
+
+    public NominationBuilder withReference(String reference) {
+      this.reference = reference;
       return this;
     }
 
@@ -28,9 +34,11 @@ public class NominationTestUtil {
     }
 
     public Nomination build() {
-     return new Nomination()
+     var nomination = new Nomination()
          .setId(id)
          .setCreatedInstant(createdInstant);
+     nomination.setReference(reference);
+     return nomination;
     }
   }
 }

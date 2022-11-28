@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -35,14 +36,18 @@ class NominationDetailServiceTest {
   private NominationSubmittedEventPublisher nominationSubmittedEventPublisher;
 
   @Mock
+  private NominationReferenceService nominationReferenceService;
+
+  @Mock
   private Clock clock;
 
   @InjectMocks
   private NominationDetailService nominationDetailService;
 
   @Test
-  void submitNomination_verifyEntityFieldsUpdated() {
+  void submitNomination_whenFirstNominationVersionSubmission_thenVerifyEntityFieldsUpdated() {
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withVersion(1)
         .build();
 
     when(clock.instant()).thenReturn(INSTANT);
@@ -70,6 +75,41 @@ class NominationDetailServiceTest {
         );
 
     verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
+    verify(nominationReferenceService).setNominationReference(savedNominationDetail);
+  }
+
+  @Test
+  void submitNomination_whenSubmissionIsAnUpdate_thenVerifyEntityFieldsUpdated() {
+    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withVersion(2)
+        .build();
+
+    when(clock.instant()).thenReturn(INSTANT);
+
+    nominationDetailService.submitNomination(nominationDetail);
+
+    var nominationDetailCaptor = ArgumentCaptor.forClass(NominationDetail.class);
+    verify(nominationDetailRepository, times(1)).save(nominationDetailCaptor.capture());
+
+    var savedNominationDetail = nominationDetailCaptor.getValue();
+    assertThat(savedNominationDetail)
+        .extracting(
+            NominationDetail::getNomination,
+            NominationDetail::getCreatedInstant,
+            NominationDetail::getVersion,
+            NominationDetail::getStatus,
+            NominationDetail::getSubmittedInstant
+        )
+        .containsExactly(
+            nominationDetail.getNomination(),
+            nominationDetail.getCreatedInstant(),
+            nominationDetail.getVersion(),
+            NominationStatus.SUBMITTED,
+            INSTANT
+        );
+
+    verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
+    verifyNoInteractions(nominationReferenceService);
   }
 
   @Test
