@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 
 @Controller
@@ -60,23 +61,27 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
 
     var teamMember = teamMemberOptional.get();
 
-    var userView = teamMemberViewService.getTeamMemberView(teamMember)
+    var teamMemberView = teamMemberViewService.getTeamMemberView(teamMember)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
     var teamName = customerConfigurationProperties.mnemonic();
+
     var canRemoveTeamMember = regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember);
 
     return new ModelAndView("osd/permissionmanagement/regulator/regulatorRemoveTeamMember")
-        .addObject("pageTitle",
-            regulatorTeamMemberRemovalService.getRemoveScreenPageTitle(teamName, userView, canRemoveTeamMember))
+        .addObject("pageTitle", getPageTitle(canRemoveTeamMember, teamMemberView, teamName))
         .addObject("teamName", teamName)
-        .addObject("teamMember", userView)
-        .addObject("backLinkUrl", ReverseRouter.route(on(RegulatorTeamManagementController.class)
-            .renderMemberList(teamId)))
-        .addObject("removeUrl", ReverseRouter.route(on(RegulatorRemoveMemberController.class)
-            .removeMember(teamId, wuaId, null)))
-        .addObject("canRemoveTeamMember", regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember));
+        .addObject("teamMember", teamMemberView)
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId))
+        )
+        .addObject(
+            "removeUrl",
+            ReverseRouter.route(on(RegulatorRemoveMemberController.class).removeMember(teamId, wuaId, null))
+        )
+        .addObject("canRemoveTeamMember", canRemoveTeamMember);
   }
 
   @PostMapping("/{wuaId}")
@@ -111,5 +116,11 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
 
     return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
 
+  }
+
+  private String getPageTitle(boolean canRemoveMember, TeamMemberView teamMemberView, String teamName) {
+    return canRemoveMember
+        ? "Are you sure you want to remove %s from %s?".formatted(teamMemberView.getDisplayName(), teamName)
+        : "You are unable to remove %s from %s".formatted(teamMemberView.getDisplayName(), teamName);
   }
 }

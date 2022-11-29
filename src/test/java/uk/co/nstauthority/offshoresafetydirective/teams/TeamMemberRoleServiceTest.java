@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class TeamMemberRoleServiceTest {
@@ -34,19 +35,26 @@ class TeamMemberRoleServiceTest {
   @Mock
   private UserDetailService userDetailService;
 
-  @InjectMocks
-  private TeamMemberRoleService teamMemberRoleService;
-
   @Captor
   private ArgumentCaptor<List<TeamMemberRole>> teamMemberRoleCaptor;
 
+  @Mock
+  private TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
+
+  @InjectMocks
+  private TeamMemberRoleService teamMemberRoleService;
+
   @Test
   void addUserTeamRoles_whenAddingUser_thenVerifyCalls() {
+
     var team = TeamTestUtil.Builder().build();
+
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(100)
         .build();
+
     var role = "ROLE_NAME";
+
     var instigatingUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(200L)
         .build();
@@ -76,10 +84,8 @@ class TeamMemberRoleServiceTest {
     var existingUser = TeamMemberTestUtil.Builder()
         .withWebUserAccountId(100)
         .build();
+
     var role = "ROLE_NAME";
-    var instigatingUser = ServiceUserDetailTestUtil.Builder()
-        .withWuaId(200L)
-        .build();
 
     teamMemberRoleService.updateUserTeamRoles(team, existingUser.wuaId(), Set.of(role));
 
@@ -99,9 +105,6 @@ class TeamMemberRoleServiceTest {
     var team = TeamTestUtil.Builder().build();
     var existingUser = TeamMemberTestUtil.Builder()
         .withWebUserAccountId(100)
-        .build();
-    var instigatingUser = ServiceUserDetailTestUtil.Builder()
-        .withWuaId(200L)
         .build();
 
     var firstRole = "FIRST_ROLE_NAME";
@@ -124,6 +127,28 @@ class TeamMemberRoleServiceTest {
     verifyNoInteractions(addedToTeamEventPublisher);
 
     verify(teamMemberRoleRepository).deleteAllByTeamAndWuaId(team, existingUser.wuaId().id());
+  }
+
+  @Test
+  void removeMemberFromTeam_verifyInteractions() {
+
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder().build();
+
+    var instigatingUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(200L)
+        .build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+
+    teamMemberRoleService.removeMemberFromTeam(team, teamMember);
+
+    verify(teamMemberRoleRepository).deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
+
+    verify(teamMemberRemovedEventPublisher, times(1)).publish(
+        teamMember,
+        instigatingUser
+    );
   }
 
 }

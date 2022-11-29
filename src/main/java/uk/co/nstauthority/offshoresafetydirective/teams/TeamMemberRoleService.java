@@ -9,6 +9,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 
 @Service
 public class TeamMemberRoleService {
@@ -19,13 +20,17 @@ public class TeamMemberRoleService {
 
   private final UserDetailService userDetailService;
 
+  private final TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
+
   @Autowired
   public TeamMemberRoleService(TeamMemberRoleRepository teamMemberRoleRepository,
                                AddedToTeamEventPublisher addedToTeamEventPublisher,
-                               UserDetailService userDetailService) {
+                               UserDetailService userDetailService,
+                               TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher) {
     this.teamMemberRoleRepository = teamMemberRoleRepository;
     this.addedToTeamEventPublisher = addedToTeamEventPublisher;
     this.userDetailService = userDetailService;
+    this.teamMemberRemovedEventPublisher = teamMemberRemovedEventPublisher;
   }
 
   @Transactional
@@ -57,6 +62,12 @@ public class TeamMemberRoleService {
     });
 
     teamMemberRoleRepository.saveAll(teamMemberRoles);
+  }
+
+  @Transactional
+  public void removeMemberFromTeam(Team team, TeamMember teamMember) {
+    teamMemberRoleRepository.deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
+    teamMemberRemovedEventPublisher.publish(teamMember, userDetailService.getUserDetail());
   }
 
 }

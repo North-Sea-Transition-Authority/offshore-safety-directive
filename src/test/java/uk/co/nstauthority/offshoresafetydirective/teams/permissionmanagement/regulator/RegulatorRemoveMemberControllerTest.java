@@ -1,15 +1,15 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 @ContextConfiguration(classes = {RegulatorRemoveMemberController.class})
 class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
 
+  private static final RegulatorTeamRole ACCESS_MANAGER_ROLE = RegulatorTeamRole.ACCESS_MANAGER;
+
   @MockBean
   private TeamMemberViewService teamMemberViewService;
 
@@ -52,17 +54,19 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
   private Team regulatorTeam;
   private WebUserAccountId wuaId;
 
-  private ServiceUserDetail authenticatedUser;
+  private ServiceUserDetail loggedInUser;
 
   @BeforeEach
   void setUp() {
+
     regulatorTeam = TeamTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
         .withId(UUID.randomUUID())
         .build();
 
     wuaId = new WebUserAccountId(Math.abs(new Random().nextLong()));
-    authenticatedUser = ServiceUserDetailTestUtil.Builder()
+
+    loggedInUser = ServiceUserDetailTestUtil.Builder()
         .withWuaId(wuaId.id())
         .build();
   }
@@ -75,78 +79,124 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderRemoveMember_whenUserDoesNotHaveRoleInTeam_thenForbidden() throws Exception {
+  void renderRemoveMember_whenNotAccessManager_thenForbidden() throws Exception {
+
+    var teamId = new TeamId(regulatorTeam.getUuid());
 
     // Interceptor setup
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(
-        new TeamId(any()),
-        any(),
-        any())
+        teamId,
+        loggedInUser,
+        Set.of(ACCESS_MANAGER_ROLE.name()))
     ).thenReturn(false);
 
-    when(regulatorTeamService.getRegulatorTeamForUser(authenticatedUser)).thenReturn(Optional.empty());
+    when(regulatorTeamService.getRegulatorTeamForUser(loggedInUser)).thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
         .renderRemoveMember(new TeamId(regulatorTeam.getUuid()), wuaId)))
-        .with(user(authenticatedUser))
+        .with(user(loggedInUser))
     ).andExpect(status().isForbidden());
   }
 
   @Test
-  void renderRemoveMember_whenUserHasRoleInTeam_thenOk() throws Exception {
+  void renderRemoveMember_whenAccessManagerAndUserCanBeRemoved_thenOk() throws Exception {
+
+    var teamId = new TeamId(regulatorTeam.getUuid());
 
     // Interceptor setup
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(
-        new TeamId(any()),
-        any(),
-        any())
+        teamId,
+        loggedInUser,
+        Set.of(ACCESS_MANAGER_ROLE.name()))
     ).thenReturn(true);
 
     // Endpoint setup
     var teamMember = TeamMemberTestUtil.Builder().build();
     var teamMemberView = TeamMemberViewTestUtil.Builder().build();
 
-    var canRemoveTeamMembers = true;
+    var canRemoveTeamMember = true;
+
+    var teamName = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
 
     when(regulatorTeamService.getTeam(new TeamId(regulatorTeam.getUuid()))).thenReturn(Optional.of(regulatorTeam));
     when(teamMemberService.getTeamMember(regulatorTeam, wuaId)).thenReturn(Optional.of(teamMember));
     when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
     when(regulatorTeamMemberRemovalService.canRemoveTeamMember(regulatorTeam, teamMember))
-        .thenReturn(canRemoveTeamMembers);
+        .thenReturn(canRemoveTeamMember);
+
+    mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
+            .renderRemoveMember(teamId, wuaId)))
+            .with(user(loggedInUser)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("teamName", teamName))
+        .andExpect(model().attribute("teamMember", teamMemberView))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(RegulatorTeamManagementController.class)
+                .renderMemberList(new TeamId(regulatorTeam.getUuid())))
+        ))
+        .andExpect(model().attribute(
+            "removeUrl",
+            ReverseRouter.route(on(RegulatorRemoveMemberController.class)
+                .removeMember(new TeamId(regulatorTeam.getUuid()), wuaId, null))
+        ))
+        .andExpect(model().attribute("canRemoveTeamMember", canRemoveTeamMember))
+        .andExpect(model().attribute(
+            "pageTitle",
+            "Are you sure you want to remove %s from %s?".formatted(teamMemberView.getDisplayName(), teamName)
+        ))
+        .andReturn()
+        .getModelAndView();
+  }
+
+  @Test
+  void renderRemoveMember_whenLastAccessManager_thenOk() throws Exception {
+
+    var teamId = new TeamId(regulatorTeam.getUuid());
+
+    // Interceptor setup
+    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(
+        teamId,
+        loggedInUser,
+        Set.of(ACCESS_MANAGER_ROLE.name()))
+    ).thenReturn(true);
+
+    // Endpoint setup
+    var teamMember = TeamMemberTestUtil.Builder().build();
+    var teamMemberView = TeamMemberViewTestUtil.Builder().build();
+
+    var canRemoveTeamMember = false;
 
     var teamName = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
 
-    when(regulatorTeamMemberRemovalService.getRemoveScreenPageTitle(teamName, teamMemberView, canRemoveTeamMembers))
-        .thenCallRealMethod();
+    when(regulatorTeamService.getTeam(new TeamId(regulatorTeam.getUuid()))).thenReturn(Optional.of(regulatorTeam));
+    when(teamMemberService.getTeamMember(regulatorTeam, wuaId)).thenReturn(Optional.of(teamMember));
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
+    when(regulatorTeamMemberRemovalService.canRemoveTeamMember(regulatorTeam, teamMember))
+        .thenReturn(canRemoveTeamMember);
 
-    when(regulatorTeamMemberRemovalService.getAskToRemovePageTitleText(teamName, teamMemberView))
-        .thenCallRealMethod();
-
-    var result = mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
-            .renderRemoveMember(new TeamId(regulatorTeam.getUuid()), wuaId)))
-            .with(user(authenticatedUser)))
+    mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
+            .renderRemoveMember(teamId, wuaId)))
+            .with(user(loggedInUser)))
         .andExpect(status().isOk())
+        .andExpect(model().attribute("teamName", teamName))
+        .andExpect(model().attribute("teamMember", teamMemberView))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(RegulatorTeamManagementController.class)
+                .renderMemberList(new TeamId(regulatorTeam.getUuid())))
+        ))
+        .andExpect(model().attribute(
+            "removeUrl",
+            ReverseRouter.route(on(RegulatorRemoveMemberController.class)
+                .removeMember(new TeamId(regulatorTeam.getUuid()), wuaId, null))
+        ))
+        .andExpect(model().attribute("canRemoveTeamMember", canRemoveTeamMember))
+        .andExpect(model().attribute(
+            "pageTitle",
+            "You are unable to remove %s from %s".formatted(teamMemberView.getDisplayName(), teamName)
+        ))
         .andReturn()
         .getModelAndView();
-
-    assertThat(result).isNotNull();
-
-    var model = result.getModelMap();
-
-    assertThat(model).extractingByKeys(
-        "teamName",
-        "teamMember",
-        "backLinkUrl",
-        "removeUrl",
-        "canRemoveTeamMember"
-    ).containsExactly(
-        applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic(),
-        teamMemberView,
-        ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(new TeamId(
-            regulatorTeam.getUuid()))),
-        ReverseRouter.route(
-            on(RegulatorRemoveMemberController.class).removeMember(new TeamId(regulatorTeam.getUuid()), wuaId, null)),
-        canRemoveTeamMembers
-    );
   }
 }

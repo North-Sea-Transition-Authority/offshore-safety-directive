@@ -10,6 +10,7 @@ import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEvent;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEvent;
 
 @Component
 class EnergyPortalAccessEventListener {
@@ -32,6 +33,19 @@ class EnergyPortalAccessEventListener {
     energyPortalAccessService.addUserToAccessTeam(
         new ResourceType(RESOURCE_TYPE_NAME),
         new TargetWebUserAccountId(event.getAddedUserWebUserAccountId().toInt()),
+        new InstigatingWebUserAccountId(event.getInstigatingUserWebUserAccountId().toInt())
+    );
+  }
+
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleUserRemovedFromTeam(TeamMemberRemovedEvent event) {
+
+    LoggerUtil.info("Removing user with WUA_ID %s from %s"
+        .formatted(event.getTeamMember().wuaId(), RESOURCE_TYPE_NAME));
+
+    energyPortalAccessService.removeUserFromAccessTeam(
+        new ResourceType(RESOURCE_TYPE_NAME),
+        new TargetWebUserAccountId(event.getTeamMember().wuaId().toInt()),
         new InstigatingWebUserAccountId(event.getInstigatingUserWebUserAccountId().toInt())
     );
   }

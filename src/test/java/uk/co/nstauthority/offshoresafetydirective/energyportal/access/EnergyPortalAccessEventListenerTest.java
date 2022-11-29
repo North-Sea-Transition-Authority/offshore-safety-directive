@@ -1,10 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.access;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Set;
@@ -30,14 +29,17 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
 @DataJpaTest(includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
     classes = {
         TeamMemberRoleService.class,
         AddedToTeamEventPublisher.class,
+        TeamMemberRemovedEventPublisher.class,
         EnergyPortalAccessEventListener.class,
         TransactionWrapper.class
     }
@@ -144,7 +146,78 @@ class EnergyPortalAccessEventListenerTest {
       // Do nothing
     }
 
-    verify(energyPortalAccessService, never()).addUserToAccessTeam(any(), any(), any());
+    verifyNoInteractions(energyPortalAccessService);
+  }
+
+  @Test
+  void handleUserRemovedFromTeam_whenTransactionCommit_thenVerifyEventListenerInteractions() {
+
+    var userToRemove = TeamMemberTestUtil.Builder()
+        .withWebUserAccountId(100L)
+        .build();
+
+    var instigatingUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(200L)
+        .build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+
+    transactionWrapper.runInNewTransaction(() -> {
+
+      var team = TeamTestUtil.Builder()
+          .withId(null)
+          .build();
+
+      entityManager.persistAndFlush(team);
+
+      teamMemberRoleService.removeMemberFromTeam(team, userToRemove);
+    });
+
+    verify(energyPortalAccessService, times(1)).removeUserFromAccessTeam(
+        resourceTypeArgumentCaptor.capture(),
+        targetWebUserAccountIdArgumentCaptor.capture(),
+        instigatingWebUserAccountIdArgumentCaptor.capture()
+    );
+
+    assertThat(resourceTypeArgumentCaptor.getValue().name())
+        .isEqualTo(EnergyPortalAccessEventListener.RESOURCE_TYPE_NAME);
+    assertThat(targetWebUserAccountIdArgumentCaptor.getValue().getId())
+        .isEqualTo(userToRemove.wuaId().id());
+    assertThat(instigatingWebUserAccountIdArgumentCaptor.getValue().getId())
+        .isEqualTo(instigatingUser.wuaId());
+  }
+
+  @Test
+  void handleUserRemovedFromTeam_whenTransactionRollback_thenVerifyNoEventListenerInteractions() {
+
+    var userToRemove = TeamMemberTestUtil.Builder()
+        .withWebUserAccountId(100L)
+        .build();
+
+    var instigatingUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(200L)
+        .build();
+
+    when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+
+    try {
+      transactionWrapper.runInNewTransaction(() -> {
+
+        var team = TeamTestUtil.Builder()
+            .withId(null)
+            .build();
+
+        entityManager.persistAndFlush(team);
+
+        teamMemberRoleService.removeMemberFromTeam(team, userToRemove);
+
+        throw new RuntimeException("Triggering a transaction rollback");
+      });
+    } catch (RuntimeException exception) {
+      // Do nothing
+    }
+
+    verifyNoInteractions(energyPortalAccessService);
   }
 
 }

@@ -26,9 +26,6 @@ class TeamMemberServiceTest {
   @Mock
   private TeamMemberRoleRepository teamMemberRoleRepository;
 
-  @Mock
-  private TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
-
   @InjectMocks
   private TeamMemberService teamMemberService;
 

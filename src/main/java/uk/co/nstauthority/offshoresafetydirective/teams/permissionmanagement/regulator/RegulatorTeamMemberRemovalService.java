@@ -6,45 +6,33 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 
 @Service
-class RegulatorTeamMemberRemovalService extends TeamMemberPersistenceService {
+class RegulatorTeamMemberRemovalService {
 
   public static final String LAST_ACCESS_MANAGER_ERROR_MESSAGE = "You cannot remove the last access manager of a team";
 
   private final TeamMemberService teamMemberService;
 
+  private final TeamMemberRoleService teamMemberRoleService;
+
   @Autowired
-  RegulatorTeamMemberRemovalService(TeamMemberService teamMemberService) {
+  RegulatorTeamMemberRemovalService(TeamMemberService teamMemberService, TeamMemberRoleService teamMemberRoleService) {
     this.teamMemberService = teamMemberService;
+    this.teamMemberRoleService = teamMemberRoleService;
   }
 
   void removeTeamMember(Team team, TeamMember teamMember) {
     if (canRemoveTeamMember(team, teamMember)) {
-      super.removeMemberFromTeam(team, teamMember);
+      teamMemberRoleService.removeMemberFromTeam(team, teamMember);
     } else {
       throw new IllegalStateException(
-          "User [%s] cannot be removed from team [%s] as they are the last access manager".formatted(
-              teamMember.wuaId(), team.getUuid()));
+          "User [%s] cannot be removed from team [%s] as they are the last access manager"
+              .formatted(teamMember.wuaId(), team.getUuid())
+      );
     }
-  }
-
-  public String getRemoveScreenPageTitle(String teamName, TeamMemberView teamMemberView, boolean canRemoveTeamMember) {
-    if (canRemoveTeamMember) {
-      return getAskToRemovePageTitleText(teamName, teamMemberView);
-    }
-    return getUnableToRemovePageTitleText(teamName, teamMemberView);
-  }
-
-  String getAskToRemovePageTitleText(String teamName, TeamMemberView teamMemberView) {
-    return "Are you sure you want to remove %s from %s?".formatted(teamMemberView.getDisplayName(), teamName);
-  }
-
-  String getUnableToRemovePageTitleText(String teamName, TeamMemberView teamMemberView) {
-    return "You are unable to remove %s from %s".formatted(teamMemberView.getDisplayName(), teamName);
   }
 
   boolean canRemoveTeamMember(Team team, TeamMember teamMember) {
