@@ -109,4 +109,28 @@ class NominationRepositoryTest {
     assertThat(result).isEqualTo(1);
   }
 
+  @Test
+  void getTotalSubmissionsForYear_whenSubmissionHasNoReference_thenNotIncluded() {
+    var submittedDate = LocalDateTime.now();
+
+    var nomination = NominationTestUtil.builder()
+        .withId(null)
+        .withReference(null)
+        .build();
+    testEntityManager.persistAndFlush(nomination);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(1)
+        .withStatus(NominationStatus.SUBMITTED)
+        .withSubmittedInstant(submittedDate.toInstant(ZoneOffset.UTC))
+        .build();
+
+    testEntityManager.persistAndFlush(nominationDetail);
+
+    var result = nominationRepository.getTotalSubmissionsForYear(submittedDate.getYear());
+    assertThat(result).isZero();
+  }
+
 }
