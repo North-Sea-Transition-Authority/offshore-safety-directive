@@ -16,8 +16,12 @@
         <@fdsSubNavigation.subNavigationSection>
 
             <@fdsSubNavigation.subNavigationNestedLink
-                linkText="Applicant details"
-                linkUrl="#${summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
+              linkText=summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionName().name()
+              linkUrl="#${summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
+            />
+            <@fdsSubNavigation.subNavigationNestedLink
+              linkText=summaryView.nomineeDetailSummaryView().summarySectionDetails().summarySectionName().name()
+              linkUrl="#${summaryView.nomineeDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
             />
 
         </@fdsSubNavigation.subNavigationSection>

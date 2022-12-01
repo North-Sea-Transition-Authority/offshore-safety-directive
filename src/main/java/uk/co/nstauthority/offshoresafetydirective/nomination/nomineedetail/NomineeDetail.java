@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.LocalDate;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -35,6 +36,11 @@ class NomineeDetail {
   private Boolean licenseeAcknowledgeOperatorRequirements;
 
   protected NomineeDetail() {
+  }
+
+  @VisibleForTesting
+  NomineeDetail(int id) {
+    this.id = id;
   }
 
   NomineeDetail(NominationDetail nominationDetail,

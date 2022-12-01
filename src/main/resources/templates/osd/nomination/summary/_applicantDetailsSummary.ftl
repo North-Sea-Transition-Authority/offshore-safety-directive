@@ -1,4 +1,4 @@
-<#include "../../../fds/layout.ftl"/>
+<#import "../../../fds/components/summaryList/summaryList.ftl" as fdsSummaryList/>
 
 <#macro applicantDetailsSummary applicantDetailSummaryView>
   <@fdsSummaryList.summaryListCard

@@ -25,6 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 
@@ -54,7 +55,8 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
     when(nominationSubmissionService.canSubmitNomination(NOMINATION_DETAIL)).thenReturn(isSubmittable);
     when(nominationSummaryService.getNominationSummaryView(NOMINATION_DETAIL))
         .thenReturn(new NominationSummaryView(
-            new ApplicantDetailSummaryView(null)
+            new ApplicantDetailSummaryView(null),
+            new NomineeDetailSummaryView(null)
         ));
 
     mockMvc.perform(

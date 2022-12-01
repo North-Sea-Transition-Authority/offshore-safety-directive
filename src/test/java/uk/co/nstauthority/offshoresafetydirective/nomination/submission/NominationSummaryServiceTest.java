@@ -11,12 +11,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSummaryServiceTest {
 
   @Mock
   private ApplicantDetailSummaryService applicantDetailSummaryService;
+
+  @Mock
+  private NomineeDetailSummaryService nomineeDetailSummaryService;
 
   @InjectMocks
   private NominationSummaryService nominationSummaryService;
@@ -29,10 +34,15 @@ class NominationSummaryServiceTest {
     when(applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail))
         .thenReturn(applicantDetailSummaryView);
 
+    var nomineeDetailSummaryView = new NomineeDetailSummaryView(null);
+    when(nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail))
+        .thenReturn(nomineeDetailSummaryView);
+
     var result = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
     assertThat(result)
-        .hasOnlyFields("applicantDetailSummaryView")
-        .hasFieldOrPropertyWithValue("applicantDetailSummaryView", applicantDetailSummaryView);
+        .hasOnlyFields("applicantDetailSummaryView", "nomineeDetailSummaryView")
+        .hasFieldOrPropertyWithValue("applicantDetailSummaryView", applicantDetailSummaryView)
+        .hasFieldOrPropertyWithValue("nomineeDetailSummaryView", nomineeDetailSummaryView);
   }
 }
