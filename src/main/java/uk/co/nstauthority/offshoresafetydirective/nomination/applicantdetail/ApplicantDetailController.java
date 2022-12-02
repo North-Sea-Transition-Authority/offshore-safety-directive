@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
@@ -24,13 +25,13 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
 @RequestMapping("/nomination")
-@AccessibleByServiceUsers
 public class ApplicantDetailController {
 
   static final String PAGE_NAME = "Applicant details";
@@ -60,11 +61,13 @@ public class ApplicantDetailController {
   }
 
   @GetMapping("/applicant-details")
+  @AccessibleByServiceUsers
   public ModelAndView getNewApplicantDetails() {
     return getCreateApplicantDetailModelAndView(new ApplicantDetailForm());
   }
 
   @PostMapping("/applicant-details")
+  @AccessibleByServiceUsers
   public ModelAndView createApplicantDetails(@ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
     bindingResult = applicantDetailFormService.validate(form, bindingResult);
@@ -82,12 +85,14 @@ public class ApplicantDetailController {
   }
 
   @GetMapping("/{nominationId}/applicant-details")
+  @HasNominationStatus(statuses = NominationStatus.DRAFT)
   public ModelAndView getUpdateApplicantDetails(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getUpdateApplicantDetailModelAndView(applicantDetailFormService.getForm(detail), nominationId);
   }
 
   @PostMapping("/{nominationId}/applicant-details")
+  @HasNominationStatus(statuses = NominationStatus.DRAFT)
   public ModelAndView updateApplicantDetails(@PathVariable("nominationId") NominationId nominationId,
                                              @ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {

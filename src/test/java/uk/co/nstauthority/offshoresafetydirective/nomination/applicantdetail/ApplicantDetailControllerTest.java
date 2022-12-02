@@ -31,6 +31,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -42,10 +44,11 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
-  private final NominationId nominationId = new NominationId(10);
+  private static final NominationId nominationId = new NominationId(10);
 
   private final NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
       .withNominationId(nominationId)
+      .withStatus(NominationStatus.DRAFT)
       .build();
 
   @MockBean
@@ -59,6 +62,68 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @MockBean
   private ApplicantDetailPersistenceService applicantDetailPersistenceService;
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_EDITOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class)
+                .updateApplicantDetails(nominationId, form, bindingResult)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
+  void securityTestEndpointsWithoutNominationId() throws Exception {
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
+            .with(user(NOMINATION_EDITOR_USER))
+    )
+        .andExpect(status().isOk());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
+        )
+        .andExpect(status().isUnauthorized());
+
+    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominationService.startNomination()).thenReturn(nominationDetail);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, bindingResult)))
+                .with(user(NOMINATION_EDITOR_USER))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection());
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, bindingResult)))
+                .with(csrf())
+        )
+        .andExpect(status().isUnauthorized());
+  }
 
   @Test
   void getNewApplicantDetails_assertModelProperties() throws Exception {
@@ -194,6 +259,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
     when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(

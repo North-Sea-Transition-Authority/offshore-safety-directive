@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandin
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
@@ -34,7 +35,8 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     AbstractControllerTest.TestConfig.class,
     WebMvcConfiguration.class,
     PermissionManagementHandlerInterceptor.class,
-    RegulatorPermissionManagementHandlerInterceptor.class
+    RegulatorPermissionManagementHandlerInterceptor.class,
+    NominationInterceptor.class
 })
 public abstract class AbstractControllerTest {
 

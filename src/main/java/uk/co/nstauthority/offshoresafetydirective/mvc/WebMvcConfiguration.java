@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
 
@@ -21,11 +22,15 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor;
   private final RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor;
 
+  private final NominationInterceptor nominationInterceptor;
+
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
-                      RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor) {
+                      RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor,
+                      NominationInterceptor nominationInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.regulatorPermissionManagementHandlerInterceptor = regulatorPermissionManagementHandlerInterceptor;
+    this.nominationInterceptor = nominationInterceptor;
   }
 
   @Override
@@ -45,6 +50,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/permission-management/**");
     registry.addInterceptor(regulatorPermissionManagementHandlerInterceptor)
         .addPathPatterns("/permission-management/regulator/**");
+    registry.addInterceptor(nominationInterceptor)
+        .addPathPatterns("/nomination/**");
   }
 
   @Bean
