@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldAddToListItem;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldRestController;
@@ -37,7 +39,12 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {RelatedInformationController.class})
@@ -64,6 +71,7 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
   @BeforeEach
   void setUp() {
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withStatus(NominationStatus.DRAFT)
         .build();
 
     user = ServiceUserDetailTestUtil.Builder()
@@ -71,6 +79,58 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(new NominationId(nominationDetail)))
         .thenReturn(nominationDetail);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var nominationId = new NominationId(nominationDetail);
+
+    when(relatedInformationFormService.getForm(nominationDetail)).thenReturn(new RelatedInformationForm());
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(user)
+        .withGetEndpoint(
+            ReverseRouter.route(on(RelatedInformationController.class).renderRelatedInformation(nominationId))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(RelatedInformationController.class)
+                .submitRelatedInformation(nominationId, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var nominationId = new NominationId(nominationDetail);
+
+    when(relatedInformationFormService.getForm(nominationDetail)).thenReturn(new RelatedInformationForm());
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(user)
+        .withGetEndpoint(
+            ReverseRouter.route(on(RelatedInformationController.class).renderRelatedInformation(nominationId))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(RelatedInformationController.class)
+                .submitRelatedInformation(nominationId, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
   }
 
   @Test

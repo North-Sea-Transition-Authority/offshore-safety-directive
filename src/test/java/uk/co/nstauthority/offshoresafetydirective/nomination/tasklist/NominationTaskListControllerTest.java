@@ -12,28 +12,46 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListItemView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabel;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabelType;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = NominationTaskListController.class)
 class NominationTaskListControllerTest extends AbstractControllerTest {
 
-  private static final ServiceUserDetail TASK_LIST_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
+
+  private static final NominationId NOMINATION_ID = new NominationId(100);
+
+  private NominationDetail nominationDetail;
 
   @MockBean
   NominationTaskListSection nominationTaskListSection;
@@ -41,15 +59,64 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
   @MockBean
   NominationTaskListItem nominationTaskListItem;
 
-  @Test
-  void getTaskList_assertModelProperties() throws Exception {
+  @BeforeEach
+  void setup() {
 
-    var nominationId = new NominationId(1);
-    var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
-        .withNominationId(nominationId)
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    setupMockTaskListSection("sectionName", 10, "sectionWarningText");
+
+    var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
+
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
+        .build();
+
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    setupMockTaskListSection("sectionName", 10, "sectionWarningText");
+
+    var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
+
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
+        .build();
+
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))
+        )
+        .test();
+  }
+
+  @Test
+  void getTaskList_assertModelProperties() throws Exception {
 
     var sectionName = "section name";
     var sectionDisplayOrder = 10;
@@ -69,8 +136,8 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
-            .with(user(TASK_LIST_USER))
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
     )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/tasklist/taskList"))
