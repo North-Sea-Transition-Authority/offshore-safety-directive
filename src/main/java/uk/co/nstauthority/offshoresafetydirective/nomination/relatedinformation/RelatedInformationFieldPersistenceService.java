@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,10 @@ class RelatedInformationFieldPersistenceService {
                                             EnergyPortalFieldQueryService energyPortalFieldQueryService) {
     this.relatedInformationFieldRepository = relatedInformationFieldRepository;
     this.energyPortalFieldQueryService = energyPortalFieldQueryService;
+  }
+
+  public List<RelatedInformationField> getRelatedInformationFields(RelatedInformation relatedInformation) {
+    return relatedInformationFieldRepository.findAllByRelatedInformation(relatedInformation);
   }
 
   @Transactional

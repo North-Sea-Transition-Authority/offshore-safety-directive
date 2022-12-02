@@ -13,6 +13,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.App
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSummaryServiceTest {
@@ -22,6 +24,9 @@ class NominationSummaryServiceTest {
 
   @Mock
   private NomineeDetailSummaryService nomineeDetailSummaryService;
+
+  @Mock
+  private RelatedInformationSummaryService relatedInformationSummaryService;
 
   @InjectMocks
   private NominationSummaryService nominationSummaryService;
@@ -38,11 +43,16 @@ class NominationSummaryServiceTest {
     when(nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail))
         .thenReturn(nomineeDetailSummaryView);
 
+    var relatedInformationSummaryView = new RelatedInformationSummaryView(null);
+    when(relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail))
+        .thenReturn(relatedInformationSummaryView);
+
     var result = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
     assertThat(result)
-        .hasOnlyFields("applicantDetailSummaryView", "nomineeDetailSummaryView")
+        .hasOnlyFields("applicantDetailSummaryView", "nomineeDetailSummaryView", "relatedInformationSummaryView")
         .hasFieldOrPropertyWithValue("applicantDetailSummaryView", applicantDetailSummaryView)
-        .hasFieldOrPropertyWithValue("nomineeDetailSummaryView", nomineeDetailSummaryView);
+        .hasFieldOrPropertyWithValue("nomineeDetailSummaryView", nomineeDetailSummaryView)
+        .hasFieldOrPropertyWithValue("relatedInformationSummaryView", relatedInformationSummaryView);
   }
 }

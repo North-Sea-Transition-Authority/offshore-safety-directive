@@ -107,4 +107,18 @@ class RelatedInformationFieldPersistenceServiceTest {
     relatedInformationFieldPersistenceService.removeExistingLinkedFields(relatedInformation);
     verify(relatedInformationFieldRepository).deleteAllByRelatedInformation(relatedInformation);
   }
+
+  @Test
+  void getRelatedInformationFields_whenCalled_thenVerifyResult() {
+    var relatedInformation = RelatedInformationTestUtil.builder().build();
+    var field = RelatedInformationFieldTestUtil.builder().build();
+    var fields = List.of(field);
+
+    when(relatedInformationFieldRepository.findAllByRelatedInformation(relatedInformation))
+        .thenReturn(fields);
+
+    var result = relatedInformationFieldPersistenceService.getRelatedInformationFields(relatedInformation);
+
+    assertThat(result).containsExactly(field);
+  }
 }

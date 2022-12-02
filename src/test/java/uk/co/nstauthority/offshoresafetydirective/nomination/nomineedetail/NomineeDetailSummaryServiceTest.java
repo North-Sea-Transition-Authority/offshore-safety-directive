@@ -238,7 +238,7 @@ class NomineeDetailSummaryServiceTest {
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::summarySectionError)
-        .isEqualTo(null);
+        .isNull();
   }
 
 }
