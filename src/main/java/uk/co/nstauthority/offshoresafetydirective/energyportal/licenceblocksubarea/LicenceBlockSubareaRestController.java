@@ -6,11 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 
 @RestController
 @RequestMapping("/api/licence-block-subarea")
+@AccessibleByServiceUsers
 public class LicenceBlockSubareaRestController {
 
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;

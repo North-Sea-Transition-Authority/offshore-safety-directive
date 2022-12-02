@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
+package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,6 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface IsMemberOfTeam {
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Security
+public @interface AccessibleByServiceUsers {
 }

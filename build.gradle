@@ -62,6 +62,8 @@ dependencies {
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
 	testImplementation 'com.h2database:h2:2.1.214'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 

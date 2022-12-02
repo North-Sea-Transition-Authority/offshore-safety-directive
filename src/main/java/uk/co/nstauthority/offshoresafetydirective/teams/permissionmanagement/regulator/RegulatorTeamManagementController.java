@@ -12,12 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeam;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.IsMemberOfTeam;
 
 @Controller
 @RequestMapping("/permission-management/regulator")
@@ -44,6 +45,7 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
   }
 
   @GetMapping
+  @AccessibleByServiceUsers
   public ModelAndView renderMemberListRedirect() {
 
     var team = regulatorTeamService.getRegulatorTeamForUser(userDetailService.getUserDetail())

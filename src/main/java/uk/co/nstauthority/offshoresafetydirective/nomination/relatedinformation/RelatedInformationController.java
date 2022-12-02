@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
@@ -25,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/related-information")
+@AccessibleByServiceUsers
 class RelatedInformationController {
 
   static final String PAGE_NAME = "Related information";

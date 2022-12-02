@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
@@ -27,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/installations/provide-installations")
+@AccessibleByServiceUsers
 public class NominatedInstallationController {
 
   static final String PAGE_TITLE = "Installation nominations";

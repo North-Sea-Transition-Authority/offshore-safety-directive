@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -26,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/wells/block-subarea")
+@AccessibleByServiceUsers
 public class NominatedBlockSubareaController {
 
   static final String PAGE_TITLE = "Licence block subarea nominations";

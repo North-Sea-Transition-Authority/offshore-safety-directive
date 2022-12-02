@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -19,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 @Controller
 @RequestMapping("nomination/{nominationId}/installations")
+@AccessibleByServiceUsers
 public class InstallationInclusionController {
 
   static final String PAGE_TITLE = "Installation nominations";

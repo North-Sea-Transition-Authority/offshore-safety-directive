@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.RegulatorRolesAllowed;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -28,8 +29,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 @RequestMapping("/permission-management/regulator/{teamId}/edit")
 @RegulatorRolesAllowed(roles = {RegulatorTeamRole.ACCESS_MANAGER})
 public class RegulatorEditMemberController extends AbstractRegulatorPermissionManagement {
-
-  private final RegulatorTeamService regulatorTeamService;
   private final TeamMemberService teamMemberService;
   private final TeamMemberViewService teamMemberViewService;
   private final RegulatorTeamMemberEditService regulatorTeamMemberEditService;
@@ -45,7 +44,6 @@ public class RegulatorEditMemberController extends AbstractRegulatorPermissionMa
       ControllerHelperService controllerHelperService,
       RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator) {
     super(regulatorTeamService);
-    this.regulatorTeamService = regulatorTeamService;
     this.teamMemberService = teamMemberService;
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamMemberEditService = regulatorTeamMemberEditService;
