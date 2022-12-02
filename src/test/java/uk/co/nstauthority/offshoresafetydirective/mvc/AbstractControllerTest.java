@@ -15,6 +15,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
@@ -36,7 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     WebMvcConfiguration.class,
     PermissionManagementHandlerInterceptor.class,
     RegulatorPermissionManagementHandlerInterceptor.class,
-    NominationInterceptor.class
+    NominationInterceptor.class,
+    HasPermissionInterceptor.class
 })
 public abstract class AbstractControllerTest {
 

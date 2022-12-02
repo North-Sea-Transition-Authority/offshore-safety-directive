@@ -15,7 +15,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -23,6 +25,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -36,13 +39,21 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSec
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 
 @ContextConfiguration(classes = ApplicantDetailController.class)
 class ApplicantDetailControllerTest extends AbstractControllerTest {
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
 
   private static final NominationId nominationId = new NominationId(10);
 
@@ -63,6 +74,12 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   @MockBean
   private ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
+  @BeforeEach
+  void setup() {
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
   @Test
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
@@ -78,7 +95,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.DRAFT)
         .withNominationDetail(nominationDetail)
-        .withUser(NOMINATION_EDITOR_USER)
+        .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId))
         )
@@ -96,7 +113,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
-            .with(user(NOMINATION_EDITOR_USER))
+            .with(user(NOMINATION_CREATOR_USER))
     )
         .andExpect(status().isOk());
 
@@ -113,7 +130,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, bindingResult)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
                 .with(csrf())
         )
         .andExpect(status().is3xxRedirection());
@@ -126,11 +143,38 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class)
+                .updateApplicantDetails(nominationId, form, bindingResult)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
   void getNewApplicantDetails_assertModelProperties() throws Exception {
 
     mockMvc.perform(
         get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
-            .with(user(NOMINATION_EDITOR_USER))
+            .with(user(NOMINATION_CREATOR_USER))
     )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
@@ -163,7 +207,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))));
@@ -183,7 +227,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk());
 
@@ -201,7 +245,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(
                 on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId)
             ))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
@@ -243,7 +287,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
                 on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null)
             ))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId))));
@@ -267,7 +311,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
                 on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null)
             ))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk());
 

@@ -10,6 +10,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
@@ -24,13 +25,17 @@ class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final NominationInterceptor nominationInterceptor;
 
+  private final HasPermissionInterceptor hasPermissionInterceptor;
+
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
                       RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor,
-                      NominationInterceptor nominationInterceptor) {
+                      NominationInterceptor nominationInterceptor,
+                      HasPermissionInterceptor hasPermissionInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.regulatorPermissionManagementHandlerInterceptor = regulatorPermissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
+    this.hasPermissionInterceptor = hasPermissionInterceptor;
   }
 
   @Override
@@ -52,6 +57,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/permission-management/regulator/**");
     registry.addInterceptor(nominationInterceptor)
         .addPathPatterns("/nomination/**");
+    registry.addInterceptor(hasPermissionInterceptor)
+        .excludePathPatterns(ASSETS_PATH);
   }
 
   @Bean

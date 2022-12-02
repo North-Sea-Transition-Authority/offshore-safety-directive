@@ -75,7 +75,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
           .formatted(
               nominationDetail.getId(),
               nominationDetail.getStatus().name(),
-              StringUtils.join(", ", allowedStatusNames)
+              StringUtils.join(allowedStatusNames)
           );
 
       LoggerUtil.warn(errorMessage);

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
@@ -29,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination")
@@ -86,6 +88,7 @@ public class ApplicantDetailController {
 
   @GetMapping("/{nominationId}/applicant-details")
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
+  @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
   public ModelAndView getUpdateApplicantDetails(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
     return getUpdateApplicantDetailModelAndView(applicantDetailFormService.getForm(detail), nominationId);
@@ -93,6 +96,7 @@ public class ApplicantDetailController {
 
   @PostMapping("/{nominationId}/applicant-details")
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
+  @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
   public ModelAndView updateApplicantDetails(@PathVariable("nominationId") NominationId nominationId,
                                              @ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
