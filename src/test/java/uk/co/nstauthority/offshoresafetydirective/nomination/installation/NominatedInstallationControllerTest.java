@@ -33,7 +33,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
@@ -54,9 +53,6 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @MockBean
   private InstallationQueryService installationQueryService;

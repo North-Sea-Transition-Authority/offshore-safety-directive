@@ -26,7 +26,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -45,9 +44,6 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private InstallationInclusionFormService installationInclusionFormService;
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @MockBean
   private InstallationInclusionValidationService installationInclusionValidationService;

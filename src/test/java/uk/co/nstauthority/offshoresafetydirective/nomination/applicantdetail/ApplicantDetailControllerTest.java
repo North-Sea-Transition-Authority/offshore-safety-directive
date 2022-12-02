@@ -28,7 +28,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
@@ -54,9 +53,6 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationService nominationService;
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @MockBean
   PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;

@@ -35,7 +35,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
@@ -49,9 +48,6 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
       .build();
 
   private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @MockBean
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;

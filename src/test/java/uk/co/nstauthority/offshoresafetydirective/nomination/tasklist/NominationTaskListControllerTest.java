@@ -21,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListItemView;
@@ -35,9 +34,6 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 class NominationTaskListControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail TASK_LIST_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  @MockBean
-  NominationDetailService nominationDetailService;
 
   @MockBean
   NominationTaskListSection nominationTaskListSection;

@@ -29,7 +29,6 @@ import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnu
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -46,9 +45,6 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @MockBean
   private WellSelectionSetupFormService wellSelectionSetupFormService;

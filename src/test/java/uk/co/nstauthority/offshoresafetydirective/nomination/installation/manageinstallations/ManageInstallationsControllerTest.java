@@ -17,7 +17,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionController;
@@ -36,9 +35,6 @@ class ManageInstallationsControllerTest extends AbstractControllerTest {
 
   @MockBean
   ManageInstallationService manageInstallationService;
-
-  @MockBean
-  private NominationDetailService nominationDetailService;
 
   @Test
   void getManageInstallations_assertModelAndViewProperties() throws Exception {
