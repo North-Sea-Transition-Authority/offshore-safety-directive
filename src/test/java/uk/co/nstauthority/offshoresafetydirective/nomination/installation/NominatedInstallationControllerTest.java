@@ -16,7 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,6 +27,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
@@ -35,18 +38,28 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @WebMvcTest
 @ContextConfiguration(classes = NominatedInstallationController.class)
 class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(1);
-  private static final NominationDetail NOMINATION_DETAIL =  new NominationDetailTestUtil.NominationDetailBuilder()
+
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private NominationDetail nominationDetail;
 
   @MockBean
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
@@ -56,6 +69,73 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   @MockBean
   private InstallationQueryService installationQueryService;
+
+  @BeforeEach
+  void setup() {
+
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .build();
+
+    when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominatedInstallationController.class)
+                .saveNominatedInstallationDetail(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .build();
+
+    when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominatedInstallationController.class)
+                .saveNominatedInstallationDetail(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
 
   @Test
   void getNominatedInstallationDetail_assertModelProperties() throws Exception {
@@ -67,14 +147,13 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .withInstallations(List.of(installationDto1.id(), installationDto2.id()))
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+    when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
     when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
         .thenReturn(List.of(installationDto2, installationDto1));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"))
@@ -112,20 +191,19 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
             post(ReverseRouter.route(
                 on(NominatedInstallationController.class).saveNominatedInstallationDetail(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageInstallationsController.class)
             .getManageInstallations(NOMINATION_ID))));
 
     verify(nominatedInstallationDetailPersistenceService, times(1))
-        .createOrUpdateNominatedInstallationDetail(eq(NOMINATION_DETAIL), any(NominatedInstallationDetailForm.class));
+        .createOrUpdateNominatedInstallationDetail(eq(nominationDetail), any(NominatedInstallationDetailForm.class));
   }
 
   @Test
@@ -140,7 +218,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
             post(ReverseRouter.route(
                 on(NominatedInstallationController.class).saveNominatedInstallationDetail(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"));
