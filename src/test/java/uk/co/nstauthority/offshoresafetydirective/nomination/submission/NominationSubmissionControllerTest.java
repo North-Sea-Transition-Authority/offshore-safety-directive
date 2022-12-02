@@ -13,30 +13,43 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationSubmissionController.class)
 class NominationSubmissionControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
-  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private NominationDetail nominationDetail;
 
   @MockBean
   private NominationSubmissionService nominationSubmissionService;
@@ -44,13 +57,80 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationSummaryService nominationSummaryService;
 
+  @BeforeEach
+  void setup() {
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(new NominationSummaryView(
+            new ApplicantDetailSummaryView(null),
+            new NomineeDetailSummaryView(null),
+            new RelatedInformationSummaryView(null)
+        ));
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominationSubmissionController.class)
+                .submitNomination(NOMINATION_ID)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(new NominationSummaryView(
+            new ApplicantDetailSummaryView(null),
+            new NomineeDetailSummaryView(null),
+            new RelatedInformationSummaryView(null)
+        ));
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominationSubmissionController.class)
+                .submitNomination(NOMINATION_ID)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
   @Test
   void getSubmissionPage_assertModelProperties() throws Exception {
 
     var isSubmittable = false;
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominationSubmissionService.canSubmitNomination(NOMINATION_DETAIL)).thenReturn(isSubmittable);
-    when(nominationSummaryService.getNominationSummaryView(NOMINATION_DETAIL))
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
@@ -59,7 +139,7 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -77,17 +157,15 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   @Test
   void submitNomination_verifyMethodCallAndRedirection() throws Exception {
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-
     mockMvc.perform(
             post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)
             .getSubmissionConfirmationPage(NOMINATION_ID))));
 
-    verify(nominationSubmissionService, times(1)).submitNomination(NOMINATION_DETAIL);
+    verify(nominationSubmissionService, times(1)).submitNomination(nominationDetail);
   }
 }
