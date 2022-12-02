@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
@@ -23,12 +24,15 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestCont
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/wells/specific-wells")
-@AccessibleByServiceUsers
+@HasNominationStatus(statuses = NominationStatus.DRAFT)
+@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class NominatedWellDetailController {
 
   static final String PAGE_TITLE = "Specific well nominations";

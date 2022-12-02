@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
@@ -16,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
@@ -23,10 +25,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellD
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/wells/manage")
-@AccessibleByServiceUsers
+@HasNominationStatus(statuses = NominationStatus.DRAFT)
+@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class ManageWellsController {
 
   static final String PAGE_TITLE = "Well nominations";

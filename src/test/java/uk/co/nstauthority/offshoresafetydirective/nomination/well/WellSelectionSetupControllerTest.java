@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,23 +27,33 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = WellSelectionSetupController.class)
 class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
-  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
-      .withNominationId(NOMINATION_ID)
+
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private NominationDetail nominationDetail;
 
   @MockBean
   private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
@@ -51,17 +63,81 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WellSelectionSetupValidationService wellSelectionSetupValidationService;
+  
+  @BeforeEach
+  void setup() {
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+    
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var form = WellSelectionSetupFormTestUtil.builder().build();
+    when(wellSelectionSetupFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(WellSelectionSetupController.class)
+                .saveWellSetup(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .withBodyParam("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var form = WellSelectionSetupFormTestUtil.builder().build();
+    when(wellSelectionSetupFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(WellSelectionSetupController.class)
+                .saveWellSetup(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .withBodyParam("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
+        .test();
+  }
 
   @Test
   void getWellSetup_assertModelAndView() throws Exception {
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     var form = new WellSelectionSetupForm();
-    when(wellSelectionSetupFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+    when(wellSelectionSetupFormService.getForm(nominationDetail)).thenReturn(form);
 
     mockMvc.perform(
         get(ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID)))
-            .with(user(NOMINATION_EDITOR_USER))
+            .with(user(NOMINATION_CREATOR_USER))
     )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/wellSelectionSetup"))
@@ -88,7 +164,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk());
 
@@ -101,12 +177,12 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
                 .param("wellSelectionType", WellSelectionType.SPECIFIC_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
@@ -115,7 +191,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(wellSelectionSetupPersistenceService, times(1))
-        .createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_DETAIL));
+        .createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(nominationDetail));
 
     var capturedForm = wellSetupCaptor.getValue();
     assertEquals(WellSelectionType.SPECIFIC_WELLS.name(), capturedForm.getWellSelectionType());
@@ -127,12 +203,12 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
                 .param("wellSelectionType", WellSelectionType.LICENCE_BLOCK_SUBAREA.name())
         )
         .andExpect(status().is3xxRedirection())
@@ -141,7 +217,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(wellSelectionSetupPersistenceService, times(1))
-        .createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(NOMINATION_DETAIL));
+        .createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(), eq(nominationDetail));
 
     var capturedForm = wellSetupCaptor.getValue();
     assertEquals(WellSelectionType.LICENCE_BLOCK_SUBAREA.name(), capturedForm.getWellSelectionType());
@@ -153,12 +229,12 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(wellSelectionSetupValidationService.validate(any(), any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
                 .param("wellSelectionType", WellSelectionType.NO_WELLS.name())
         )
         .andExpect(status().is3xxRedirection())
@@ -166,7 +242,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
 
     var wellSetupCaptor = ArgumentCaptor.forClass(WellSelectionSetupForm.class);
     verify(wellSelectionSetupPersistenceService, times(1)).createOrUpdateWellSelectionSetup(wellSetupCaptor.capture(),
-        eq(NOMINATION_DETAIL));
+        eq(nominationDetail));
 
     var capturedForm = wellSetupCaptor.getValue();
     assertEquals(WellSelectionType.NO_WELLS.name(), capturedForm.getWellSelectionType());

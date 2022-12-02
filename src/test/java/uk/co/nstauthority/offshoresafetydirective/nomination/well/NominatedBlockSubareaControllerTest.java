@@ -21,6 +21,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import java.util.Collections;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,6 +29,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -37,17 +39,27 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominatedBlockSubareaController.class)
 class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
-  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
+
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private NominationDetail nominationDetail;
 
   @MockBean
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
@@ -61,18 +73,83 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
   @MockBean
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
 
+  @BeforeEach
+  void setup() {
+
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .build();
+
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominatedBlockSubareaController.class)
+                .saveLicenceBlockSubareas(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .build();
+
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominatedBlockSubareaController.class)
+                .saveLicenceBlockSubareas(NOMINATION_ID, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
   @Test
   void getLicenceBlockSubareas_assertModelAndViewProperties() throws Exception {
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-
     var form = new NominatedBlockSubareaForm();
 
-    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(form);
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(form);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/blockSubarea"))
@@ -99,8 +176,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-    when(nominatedBlockSubareaFormService.getForm(NOMINATION_DETAIL)).thenReturn(formWithSubareas);
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
 
     var firstBlockSubareaBySortKey = new LicenceBlockSubareaDto(1, "blockSubarea1", "1");
     var secondBlockSubareaBySortKey = new LicenceBlockSubareaDto(2, "blockSubarea2", "2");
@@ -111,7 +187,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(model().attributeExists("alreadyAddedSubareas"))
@@ -149,20 +225,19 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(new NominatedBlockSubareaForm(), "form");
 
     when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
             post(
                 ReverseRouter.route(
                     on(NominatedBlockSubareaController.class).saveLicenceBlockSubareas(NOMINATION_ID, null, null)))
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))));
 
     verify(nominatedBlockSubareaDetailPersistenceService, times(1))
-        .createOrUpdateNominatedBlockSubareaDetail(eq(NOMINATION_DETAIL), any());
+        .createOrUpdateNominatedBlockSubareaDetail(eq(nominationDetail), any());
   }
 
   @Test
@@ -171,7 +246,6 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
     bindingResult.addError(new FieldError("error", "error field", "error message"));
 
     when(nominatedBlockSubareaFormService.validate(any(), any())).thenReturn(bindingResult);
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     mockMvc.perform(
             post(
@@ -179,7 +253,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
                     .saveLicenceBlockSubareas(NOMINATION_ID, null, null))
             )
                 .with(csrf())
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk());
 

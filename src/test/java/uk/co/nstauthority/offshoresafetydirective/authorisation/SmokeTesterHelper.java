@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.http.HttpMethod;
@@ -13,6 +14,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 
@@ -23,6 +26,8 @@ public abstract class SmokeTesterHelper<T> {
   private final Set<TestableEndpoint> testableEndpoints = new HashSet<>();
 
   private ServiceUserDetail userToTestWith = ServiceUserDetailTestUtil.Builder().build();
+
+  private final MultiValueMap<String, String> bodyParams = new LinkedMultiValueMap<>();
 
   public SmokeTesterHelper(MockMvc mockMvc) {
     this.mockMvc = mockMvc;
@@ -61,6 +66,12 @@ public abstract class SmokeTesterHelper<T> {
     return (T) this;
   }
 
+  @SuppressWarnings("unchecked")
+  public T withBodyParam(String key, String value) {
+    bodyParams.put(key, Collections.singletonList(value));
+    return (T) this;
+  }
+
   public record TestableEndpoint(
       String url,
       HttpMethod requestMethod,
@@ -76,7 +87,11 @@ public abstract class SmokeTesterHelper<T> {
 
     var requestToTest = constructRequestToTest(testableEndpoint);
 
-    return mockMvc.perform(requestToTest.with(user(userToTestWith)));
+    return mockMvc.perform(
+        requestToTest
+            .with(user(userToTestWith))
+            .params(bodyParams)
+    );
   }
 
   private MockHttpServletRequestBuilder constructRequestToTest(TestableEndpoint testableEndpoint) {

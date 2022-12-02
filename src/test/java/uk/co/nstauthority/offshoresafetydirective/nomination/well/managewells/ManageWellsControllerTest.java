@@ -13,16 +13,20 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
@@ -31,43 +35,97 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellD
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = ManageWellsController.class)
 class ManageWellsControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(1);
-  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
-      .build();
 
-  private static final ServiceUserDetail NOMINATION_EDITOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
+  private NominationDetail nominationDetail;
 
   @MockBean
   private ManageWellsService manageWellsService;
 
-  @Test
-  void getWellManagementPage_assertModelProperties() throws Exception {
+  @BeforeEach
+  void setup() {
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+  }
+
+  @Test
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     var wellSelectionView = new WellSelectionSetupViewTestUtil.WellSelectionSetupViewBuilder().build();
 
-    when(manageWellsService.getWellSelectionSetupView(NOMINATION_DETAIL))
+    when(manageWellsService.getWellSelectionSetupView(nominationDetail))
+        .thenReturn(Optional.of(wellSelectionView));
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))
+        )
+        .test();
+  }
+
+  @Test
+  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    var wellSelectionView = new WellSelectionSetupViewTestUtil.WellSelectionSetupViewBuilder().build();
+
+    when(manageWellsService.getWellSelectionSetupView(nominationDetail))
+        .thenReturn(Optional.of(wellSelectionView));
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))
+        )
+        .test();
+  }
+
+  @Test
+  void getWellManagementPage_assertModelProperties() throws Exception {
+
+    var wellSelectionView = new WellSelectionSetupViewTestUtil.WellSelectionSetupViewBuilder().build();
+
+    when(manageWellsService.getWellSelectionSetupView(nominationDetail))
         .thenReturn(Optional.of(wellSelectionView));
 
     var nominatedWellDetailView = new NominatedWellDetailViewTestUtil.NominatedWellDetailViewBuilder().build();
 
-    when(manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL))
+    when(manageWellsService.getNominatedWellDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedWellDetailView));
 
     var nominatedBlockSubareaDetailView = new NominatedBlockSubareaDetailView();
 
-    when(manageWellsService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL))
+    when(manageWellsService.getNominatedBlockSubareaDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/managewells/wellManagement"))
@@ -105,17 +163,15 @@ class ManageWellsControllerTest extends AbstractControllerTest {
   @Test
   void getWellManagementPage_whenNoViewsExist_assertViewsEmpty() throws Exception {
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
-
-    when(manageWellsService.getWellSelectionSetupView(NOMINATION_DETAIL))
+    when(manageWellsService.getWellSelectionSetupView(nominationDetail))
         .thenReturn(Optional.empty());
 
-    when(manageWellsService.getNominatedWellDetailView(NOMINATION_DETAIL))
+    when(manageWellsService.getNominatedWellDetailView(nominationDetail))
         .thenReturn(Optional.empty());
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
-                .with(user(NOMINATION_EDITOR_USER))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andReturn()
