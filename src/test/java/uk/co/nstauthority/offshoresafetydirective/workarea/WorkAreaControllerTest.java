@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -18,6 +20,9 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
 @ContextConfiguration(classes = WorkAreaController.class)
 class WorkAreaControllerTest extends AbstractControllerTest {
@@ -45,7 +50,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void getWorkArea_assertHttpOk() throws Exception {
+  void getWorkArea_assertModelProperties() throws Exception {
 
     var workAreaItem = new WorkAreaItem(
         WorkAreaItemType.NOMINATION,
@@ -61,6 +66,13 @@ class WorkAreaControllerTest extends AbstractControllerTest {
     );
     when(workAreaItemService.getWorkAreaItems()).thenReturn(List.of(workAreaItem));
 
+    var nominationManagerTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(TestTeamRole.CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(WORK_AREA_USER))
+        .thenReturn(Collections.singletonList(nominationManagerTeamMember));
+
     mockMvc.perform(
         get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
             .with(user(WORK_AREA_USER))
@@ -72,5 +84,78 @@ class WorkAreaControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(StartNominationController.class).startNomination())
         ))
         .andExpect(model().attribute("workAreaItems", List.of(workAreaItem)));
+  }
+
+  @Test
+  void getWorkArea_whenUserHasCreateNominationPermission_thenStartNominationUrlInModel() throws Exception {
+
+    var nominationManagerTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(TestTeamRole.CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(WORK_AREA_USER))
+        .thenReturn(Collections.singletonList(nominationManagerTeamMember));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                .with(user(WORK_AREA_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/workarea/workArea"))
+        .andExpect(model().attribute(
+            "startNominationUrl",
+            ReverseRouter.route(on(StartNominationController.class).startNomination())
+        ));
+  }
+
+  @Test
+  void getWorkArea_whenUserHasNoCreateNominationPermission_thenStartNominationUrlInModel() throws Exception {
+
+    var nonNominationManagerTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(TestTeamRole.NON_CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(WORK_AREA_USER))
+        .thenReturn(Collections.singletonList(nonNominationManagerTeamMember));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                .with(user(WORK_AREA_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/workarea/workArea"))
+        .andExpect(model().attributeDoesNotExist("startNominationUrl"));
+  }
+
+  enum TestTeamRole implements TeamRole {
+
+    CREATE_NOMINATION_ROLE(RolePermission.CREATE_NOMINATION),
+    NON_CREATE_NOMINATION_ROLE(RolePermission.VIEW_NOMINATIONS);
+
+    private final RolePermission rolePermission;
+
+    TestTeamRole(RolePermission rolePermission) {
+      this.rolePermission = rolePermission;
+    }
+
+    @Override
+    public String getDescription() {
+      return null;
+    }
+
+    @Override
+    public int getDisplayOrder() {
+      return 0;
+    }
+
+    @Override
+    public String getScreenDisplayText() {
+      return null;
+    }
+
+    @Override
+    public Set<RolePermission> getRolePermissions() {
+      return Set.of(rolePermission);
+    }
   }
 }

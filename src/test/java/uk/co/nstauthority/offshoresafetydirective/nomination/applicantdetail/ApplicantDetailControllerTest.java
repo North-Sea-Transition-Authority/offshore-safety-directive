@@ -110,40 +110,6 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void securityTestEndpointsWithoutNominationId() throws Exception {
-
-    mockMvc.perform(
-        get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
-            .with(user(NOMINATION_CREATOR_USER))
-    )
-        .andExpect(status().isOk());
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
-        )
-        .andExpect(status().isUnauthorized());
-
-    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
-
-    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
-    when(nominationService.startNomination()).thenReturn(nominationDetail);
-
-    mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, bindingResult)))
-                .with(user(NOMINATION_CREATOR_USER))
-                .with(csrf())
-        )
-        .andExpect(status().is3xxRedirection());
-
-    mockMvc.perform(
-            post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, bindingResult)))
-                .with(csrf())
-        )
-        .andExpect(status().isUnauthorized());
-  }
-
-  @Test
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
@@ -155,6 +121,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
+    when(nominationService.startNomination()).thenReturn(nominationDetail);
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
@@ -164,6 +132,15 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .withPostEndpoint(
             ReverseRouter.route(on(ApplicantDetailController.class)
                 .updateApplicantDetails(nominationId, form, bindingResult)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .withGetEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails())
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class)
+                .createApplicantDetails(null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )

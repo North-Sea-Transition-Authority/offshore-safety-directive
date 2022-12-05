@@ -50,7 +50,7 @@ class HasPermissionInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenMemberNotInRegulatorTeam_thenForbidden() throws Exception {
+  void preHandle_whenMemberNotInTeam_thenForbidden() throws Exception {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
 
@@ -80,7 +80,7 @@ class HasPermissionInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenUserDoesNotHaveRequiredPermission_thenForbidden() throws Exception {
+  void preHandle_whenUserDoesNotHaveRequiredPermission_thenOk() throws Exception {
 
     var roleWithoutRequiredPermission = TestTeamRole.NOT_CREATE_NOMINATION_ROLE;
 
