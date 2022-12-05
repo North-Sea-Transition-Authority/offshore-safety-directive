@@ -26,6 +26,7 @@ import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -74,7 +75,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
-  @Test
+  @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     var form = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder().build();
@@ -100,7 +101,7 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         .test();
   }
 
-  @Test
+  @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     var form = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder().build();

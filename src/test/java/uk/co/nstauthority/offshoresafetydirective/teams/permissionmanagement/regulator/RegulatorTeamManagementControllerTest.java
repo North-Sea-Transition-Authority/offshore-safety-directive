@@ -19,6 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -40,14 +41,14 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   @Autowired
   private ApplicationContext applicationContext;
 
-  @Test
+  @SecurityTest
   void renderMemberListRedirect_whenNotAuthenticated_thenUnauthorised() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect())))
         .andExpect(status().isUnauthorized());
   }
 
-  @Test
+  @SecurityTest
   void renderMemberListRedirect_whenNoAccessToRegulatorTeam_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();

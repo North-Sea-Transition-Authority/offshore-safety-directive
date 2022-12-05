@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailController;
@@ -23,6 +24,23 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 class StartNominationControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+
+  @SecurityTest
+  void getStartPage_whenNotLoggedIn_thenUnauthorised() throws Exception {
+    mockMvc.perform(
+        get(ReverseRouter.route(on(StartNominationController.class).getStartPage()))
+    )
+        .andExpect(status().isUnauthorized());
+  }
+
+  @SecurityTest
+  void getStartPage_whenLoggedIn_thenOk() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(StartNominationController.class).getStartPage()))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk());
+  }
 
   @Test
   void getStartPage_assertStatusOk() throws Exception {

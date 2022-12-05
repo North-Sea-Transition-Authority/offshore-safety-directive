@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
@@ -25,6 +26,23 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   @MockBean
   private WorkAreaItemService workAreaItemService;
+
+  @SecurityTest
+  void getWorkArea_whenNotLoggedIn_thenUnauthorised() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+        )
+        .andExpect(status().isUnauthorized());
+  }
+
+  @SecurityTest
+  void getWorkArea_whenLoggedIn_thenOk() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                .with(user(WORK_AREA_USER))
+        )
+        .andExpect(status().isOk());
+  }
 
   @Test
   void getWorkArea_assertHttpOk() throws Exception {

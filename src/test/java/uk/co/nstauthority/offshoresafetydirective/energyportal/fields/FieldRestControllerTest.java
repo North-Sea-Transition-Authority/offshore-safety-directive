@@ -17,6 +17,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -36,15 +37,24 @@ class FieldRestControllerTest extends AbstractControllerTest {
     user = ServiceUserDetailTestUtil.Builder().build();
   }
 
-  @Test
+  @SecurityTest
   void getActiveFields_whenNotLoggedIn_thenUnauthorized() throws Exception {
     var searchTerm = "search term";
     mockMvc.perform(get(ReverseRouter.route(on(FieldRestController.class).getActiveFields(searchTerm))))
         .andExpect(status().isUnauthorized());
   }
 
+  @SecurityTest
+  void getActiveFields_whenLoggedIn_thenOk() throws Exception {
+    var searchTerm = "search term";
+    mockMvc.perform(get(ReverseRouter.route(on(FieldRestController.class).getActiveFields(searchTerm)))
+            .with(user(user))
+        )
+        .andExpect(status().isOk());
+  }
+
   @Test
-  void getActiveFields_whenNotLoggedIn_thenOk() throws Exception {
+  void getActiveFields_assertResult() throws Exception {
     var searchTerm = "search term";
 
     var field = FieldTestUtil.builder().build();

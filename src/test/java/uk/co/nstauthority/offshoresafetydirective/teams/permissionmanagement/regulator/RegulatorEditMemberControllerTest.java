@@ -22,6 +22,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MvcResult;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -72,14 +73,14 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
         .build();
   }
 
-  @Test
+  @SecurityTest
   void renderEditMember_whenNotAuthorised_thenIsUnauthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(RegulatorEditMemberController.class)
             .renderEditMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId())))))
         .andExpect(status().isUnauthorized());
   }
 
-  @Test
+  @SecurityTest
   void renderEditMember_whenNotAccessManager_thenForbidden() throws Exception {
 
     when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), nonAccessManager,
@@ -92,7 +93,7 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void renderEditMember_whenAccessManager_thenOk() throws Exception {
     makeValidRenderEditMemberRequest(Set.of(RegulatorTeamRole.ACCESS_MANAGER));
   }

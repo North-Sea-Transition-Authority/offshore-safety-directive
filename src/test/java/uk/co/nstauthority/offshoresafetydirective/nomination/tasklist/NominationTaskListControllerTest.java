@@ -22,6 +22,7 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -72,7 +73,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
-  @Test
+  @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     setupMockTaskListSection("sectionName", 10, "sectionWarningText");
@@ -94,7 +95,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .test();
   }
 
-  @Test
+  @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     setupMockTaskListSection("sectionName", 10, "sectionWarningText");

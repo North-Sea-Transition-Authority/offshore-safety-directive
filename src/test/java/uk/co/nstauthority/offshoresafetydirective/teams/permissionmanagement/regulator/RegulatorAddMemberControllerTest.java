@@ -28,6 +28,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -64,7 +65,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   @Autowired
   RegulatorTeamMemberRolesValidator regulatorTeamMemberRolesValidator;
 
-  @Test
+  @SecurityTest
   void renderAddTeamMember_whenNotAccessManager_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
@@ -84,7 +85,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void renderAddTeamMember_whenAccessManager_thenOk() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();

@@ -8,9 +8,9 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
@@ -29,14 +29,14 @@ class TestAuthenticationControllerTest extends AbstractControllerTest {
     doCallRealMethod().when(userDetailService).getUserDetail();
   }
 
-  @Test
+  @SecurityTest
   void whenNoUser_thenVerifyAuthenticationRequired() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(TestAuthenticationController.class).requiresUserEndpoint())))
         .andExpect(status().isUnauthorized());
   }
 
-  @Test
+  @SecurityTest
   void whenUser_thenVerifyAuthorised() throws Exception {
 
     var expectedUser = ServiceUserDetailTestUtil.Builder()

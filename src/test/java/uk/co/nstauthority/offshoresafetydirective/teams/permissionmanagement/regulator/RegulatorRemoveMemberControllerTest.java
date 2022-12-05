@@ -21,6 +21,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -71,14 +72,14 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
         .build();
   }
 
-  @Test
+  @SecurityTest
   void renderRemoveMember_whenNotLoggedIn_thenNotAuthorized() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
         .renderRemoveMember(new TeamId(regulatorTeam.getUuid()), wuaId)))
     ).andExpect(status().isUnauthorized());
   }
 
-  @Test
+  @SecurityTest
   void renderRemoveMember_whenNotAccessManager_thenForbidden() throws Exception {
 
     var teamId = new TeamId(regulatorTeam.getUuid());

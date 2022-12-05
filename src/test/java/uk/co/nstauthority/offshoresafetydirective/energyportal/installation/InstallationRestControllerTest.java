@@ -13,6 +13,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
@@ -26,6 +27,23 @@ class InstallationRestControllerTest extends AbstractControllerTest {
 
   @MockBean
   private InstallationQueryService installationQueryService;
+
+  @SecurityTest
+  void searchInstallationsByName_whenNoUser_thenUnauthorised() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(InstallationRestController.class).searchInstallationsByName(SEARCH_TERM)))
+        )
+        .andExpect(status().isUnauthorized());
+  }
+
+  @SecurityTest
+  void searchInstallationsByName_whenUser_thenOk() throws Exception {
+    mockMvc.perform(
+            get(ReverseRouter.route(on(InstallationRestController.class).searchInstallationsByName(SEARCH_TERM)))
+                .with(user(NOMINATION_EDITOR_USER))
+        )
+        .andExpect(status().isOk());
+  }
 
   @Test
   void searchInstallationsByName_verifyMethodCall() throws Exception {

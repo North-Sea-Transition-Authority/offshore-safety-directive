@@ -27,6 +27,7 @@ import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -84,7 +85,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
-  @Test
+  @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -106,7 +107,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .test();
   }
 
-  @Test
+  @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");

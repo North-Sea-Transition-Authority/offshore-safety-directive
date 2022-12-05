@@ -30,6 +30,7 @@ import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -87,7 +88,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
-  @Test
+  @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
@@ -114,7 +115,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .test();
   }
 
-  @Test
+  @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()

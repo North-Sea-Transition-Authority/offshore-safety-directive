@@ -26,6 +26,7 @@ import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -80,7 +81,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
-  @Test
+  @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
 
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
@@ -108,7 +109,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .test();
   }
 
-  @Test
+  @SecurityTest
   void securityTestEndpointsWithoutNominationId() throws Exception {
 
     mockMvc.perform(
