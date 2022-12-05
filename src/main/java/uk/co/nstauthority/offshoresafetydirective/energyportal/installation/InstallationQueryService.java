@@ -1,36 +1,86 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
-import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
+import uk.co.fivium.energyportalapi.generated.client.FacilitiesByIdsProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.client.FacilitiesByNameAndTypesProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.Facility;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @Service
 public class InstallationQueryService {
 
-  //TODO remove this dummy values OSDOP-92
-  private final List<InstallationDto> dummyInstallations = List.of(
-      new InstallationDto(1, "Installation 1"),
-      new InstallationDto(2, "Installation 2"),
-      new InstallationDto(3, "Installation 3"),
-      new InstallationDto(4, "Installation 4")
+  static final List<FacilityType> ALLOWED_INSTALLATION_TYPES = List.of(
+      FacilityType.FLOATING_SEMI_SUBMERSIBLE_PROCESSING_UNIT,
+      FacilityType.FLOATING_PROCESS_STORAGE_OFFLOADING_UNIT,
+      FacilityType.FLOATING_STORAGE_UNIT,
+      FacilityType.FLOATING_SINGLE_WELL_OPERATION_PRODUCTION_SYSTEM,
+      FacilityType.CONCRETE_GRAVITY_BASED_PLATFORM,
+      FacilityType.PLATFORM_JACKET,
+      FacilityType.JACKUP_WITH_CONCRETE_BASE_PLATFORM,
+      FacilityType.JACKUP_PLATFORM,
+      FacilityType.LARGE_STEEL_PLATFORM,
+      FacilityType.SMALL_STEEL_PLATFORM,
+      FacilityType.TENSION_LEG_PLATFORM,
+      FacilityType.UNKNOWN_TO_BE_UPDATED,
+      FacilityType.SUBSEA_WELLHEAD_PROTECTION_STRUCTURE
   );
 
-  List<InstallationDto> queryInstallationsByName(String wellName) {
-    return dummyInstallations.stream()
-        .filter(installationDto ->
-            installationDto.name()
-                .toLowerCase()
-                .contains(StringUtils.defaultIfBlank(wellName.toLowerCase(), ""))
+  static final FacilitiesByNameAndTypesProjectionRoot FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT =
+      new FacilitiesByNameAndTypesProjectionRoot()
+          .id()
+          .name();
+
+  static final FacilitiesByIdsProjectionRoot FACILITIES_BY_IDS_PROJECTION_ROOT =
+      new FacilitiesByIdsProjectionRoot()
+          .id()
+          .name();
+
+  private final FacilityApi facilityApi;
+
+  private final EnergyPortalApiWrapper energyPortalApiWrapper;
+
+  @Autowired
+  public InstallationQueryService(FacilityApi facilityApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
+    this.facilityApi = facilityApi;
+    this.energyPortalApiWrapper = energyPortalApiWrapper;
+  }
+
+  List<InstallationDto> queryInstallationsByName(String facilityName) {
+
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+        facilityApi.searchFacilitiesByNameAndTypeIn(
+            facilityName,
+            ALLOWED_INSTALLATION_TYPES,
+            FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT,
+            requestPurpose,
+            logCorrelationId
         )
-        .sorted(Comparator.comparing(InstallationDto::name))
-        .toList();
+            .stream()
+            .map(this::convertToInstallationDto)
+            .toList()
+    ));
   }
 
   public List<InstallationDto> getInstallationsByIdIn(List<Integer> idList) {
-    return dummyInstallations.stream()
-        .filter(installationDto -> idList.contains(installationDto.id()))
-        .sorted(Comparator.comparing(InstallationDto::name))
-        .toList();
+
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+        facilityApi.searchFacilitiesByIds(
+            idList,
+            FACILITIES_BY_IDS_PROJECTION_ROOT,
+            requestPurpose,
+            logCorrelationId
+        )
+            .stream()
+            .map(this::convertToInstallationDto)
+            .toList()
+    ));
+  }
+
+  private InstallationDto convertToInstallationDto(Facility facility) {
+    return new InstallationDto(facility.getId(), facility.getName());
   }
 }
