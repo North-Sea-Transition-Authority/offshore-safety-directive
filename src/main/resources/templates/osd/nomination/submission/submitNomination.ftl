@@ -27,6 +27,10 @@
               linkText=summaryView.relatedInformationSummaryView().summarySectionDetails().summarySectionName().name()
               linkUrl="#${summaryView.relatedInformationSummaryView().summarySectionDetails().summarySectionId().id()}"
             />
+            <@fdsSubNavigation.subNavigationNestedLink
+              linkText=summaryView.installationSummaryView().summarySectionDetails().summarySectionName().name()
+              linkUrl="#${summaryView.installationSummaryView().summarySectionDetails().summarySectionId().id()}"
+            />
 
         </@fdsSubNavigation.subNavigationSection>
       </@fdsSubNavigation.subNavigation>

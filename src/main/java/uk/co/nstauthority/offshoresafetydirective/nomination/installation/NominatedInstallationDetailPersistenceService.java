@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Optional;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,10 @@ class NominatedInstallationDetailPersistenceService {
           .setDecommissioningPhase(form.getDecommissioningPhase());
     }
     return installationDetail;
+  }
+
+  Optional<NominatedInstallationDetail> findNominatedInstallationDetail(NominationDetail nominationDetail) {
+    return nominatedInstallationDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   private NominatedInstallationDetail newNominatedInstallationDetailFromForm(NominationDetail nominationDetail,

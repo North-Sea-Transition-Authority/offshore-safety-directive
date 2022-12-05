@@ -30,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -80,7 +81,8 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
-            new RelatedInformationSummaryView(null)
+            new RelatedInformationSummaryView(null),
+            new InstallationSummaryView(null)
         ));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
@@ -108,7 +110,8 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
-            new RelatedInformationSummaryView(null)
+            new RelatedInformationSummaryView(null),
+            new InstallationSummaryView(null)
         ));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
@@ -135,7 +138,8 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
-            new RelatedInformationSummaryView(null)
+            new RelatedInformationSummaryView(null),
+            new InstallationSummaryView(null)
         ));
 
     mockMvc.perform(

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
@@ -27,6 +30,9 @@ class NominationSummaryServiceTest {
 
   @Mock
   private RelatedInformationSummaryService relatedInformationSummaryService;
+
+  @Mock
+  private InstallationSummaryService installationSummaryService;
 
   @InjectMocks
   private NominationSummaryService nominationSummaryService;
@@ -47,12 +53,22 @@ class NominationSummaryServiceTest {
     when(relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail))
         .thenReturn(relatedInformationSummaryView);
 
+    var installationSummaryView = new InstallationSummaryView(null);
+    when(installationSummaryService.getInstallationSummaryView(nominationDetail))
+        .thenReturn(installationSummaryView);
+
     var result = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
+    Map<String, Object> expectedFieldsAndValues = Map.ofEntries(
+        Map.entry("applicantDetailSummaryView", applicantDetailSummaryView),
+        Map.entry("nomineeDetailSummaryView", nomineeDetailSummaryView),
+        Map.entry("relatedInformationSummaryView", relatedInformationSummaryView),
+        Map.entry("installationSummaryView", installationSummaryView)
+    );
+
     assertThat(result)
-        .hasOnlyFields("applicantDetailSummaryView", "nomineeDetailSummaryView", "relatedInformationSummaryView")
-        .hasFieldOrPropertyWithValue("applicantDetailSummaryView", applicantDetailSummaryView)
-        .hasFieldOrPropertyWithValue("nomineeDetailSummaryView", nomineeDetailSummaryView)
-        .hasFieldOrPropertyWithValue("relatedInformationSummaryView", relatedInformationSummaryView);
+        .hasOnlyFields(expectedFieldsAndValues.keySet().toArray(String[]::new));
+
+    expectedFieldsAndValues.forEach((s, o) -> assertThat(result).hasFieldOrPropertyWithValue(s, o));
   }
 }

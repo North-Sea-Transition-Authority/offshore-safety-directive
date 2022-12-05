@@ -9,6 +9,10 @@ class NominatedInstallationDetailTestUtil {
   private NominatedInstallationDetailTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
+
+  public static NominatedInstallationDetailBuilder builder() {
+    return new NominatedInstallationDetailBuilder();
+  }
   
   public static class NominatedInstallationDetailBuilder {
 

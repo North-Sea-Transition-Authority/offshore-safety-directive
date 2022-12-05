@@ -9,6 +9,10 @@ public class InstallationInclusionTestUtil {
     throw new IllegalStateException("InstallationInclusionTestUtil is a util class and should not be instantiated");
   }
 
+  public static InstallationInclusionBuilder builder() {
+    return new InstallationInclusionBuilder();
+  }
+
   static class InstallationInclusionBuilder {
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean includeInstallationsInNomination = true;

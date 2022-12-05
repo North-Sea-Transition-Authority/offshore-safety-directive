@@ -10,6 +10,10 @@ public class NominatedInstallationTestUtil {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
+  public static NominatedInstallationBuilder builder() {
+    return new NominatedInstallationBuilder();
+  }
+
   public static class NominatedInstallationBuilder {
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Integer installationId = 1;
