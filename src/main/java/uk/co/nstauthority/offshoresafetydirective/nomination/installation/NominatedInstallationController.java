@@ -109,13 +109,7 @@ public class NominatedInstallationController {
 
     return installationQueryService.getInstallationsByIdIn(form.getInstallations())
         .stream()
-        .map(installationDto ->
-            new InstallationAddToListView(
-                installationDto.id(),
-                installationDto.name(),
-                true
-            )
-        )
+        .map(InstallationAddToListView::new)
         .sorted(Comparator.comparing(InstallationAddToListView::getName))
         .toList();
   }

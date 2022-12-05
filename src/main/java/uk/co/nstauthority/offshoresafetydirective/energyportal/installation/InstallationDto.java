@@ -1,4 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
-public record InstallationDto(int id, String name) {
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
+
+public record InstallationDto(int id, String name, FacilityType type) {
 }

@@ -25,7 +25,7 @@
       title=""
       itemName="Installation"
       noItemText="No installations added"
-      invalidItemText="This installation is invalid"
+      invalidItemText="This installation is not a valid selection and must be removed"
       addToListId="installation-table"
       selectorLabelText="Select an installation to add to this nomination"
       restUrl=springUrl(installationsRestUrl)

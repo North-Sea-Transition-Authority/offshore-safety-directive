@@ -31,7 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -138,19 +138,30 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .test();
   }
 
+
   @Test
   void getNominatedInstallationDetail_assertModelProperties() throws Exception {
 
-    var installationDto1 = new InstallationDto(1, "installation1");
-    var installationDto2 = new InstallationDto(2, "installation2");
-
-    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withInstallations(List.of(installationDto1.id(), installationDto2.id()))
+    var firstInstallationAlphabeticallyByName = InstallationDtoTestUtil.builder()
+        .withId(1)
+        .withName("A installation")
         .build();
 
+    var lastInstallationAlphabeticallyByName = InstallationDtoTestUtil.builder()
+        .withId(2)
+        .withName("B installation")
+        .build();
+
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .withInstallations(List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
-    when(installationQueryService.getInstallationsByIdIn(List.of(installationDto1.id(), installationDto2.id())))
-        .thenReturn(List.of(installationDto2, installationDto1));
+    when(installationQueryService.getInstallationsByIdIn(
+        List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
+    )
+        .thenReturn(List.of(lastInstallationAlphabeticallyByName, firstInstallationAlphabeticallyByName));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
@@ -175,8 +186,8 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "alreadyAddedInstallations",
             List.of(
-                new InstallationAddToListView(installationDto1.id(), installationDto1.name(), true),
-                new InstallationAddToListView(installationDto2.id(), installationDto2.name(), true)
+                new InstallationAddToListView(firstInstallationAlphabeticallyByName),
+                new InstallationAddToListView(lastInstallationAlphabeticallyByName)
             )
         ))
         .andExpect(model().attribute(
@@ -192,6 +203,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(

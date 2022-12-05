@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -34,16 +34,20 @@ class NominatedInstallationPersistenceServiceTest {
   private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
 
   @Test
-  void saveNominatedInstallations_whenFormHasDuplicateWells_verifyNoDuplicateWellsSaved() {
-    var installationId1 = 1;
-    var installationId2 = 2;
-    var installationDto1 = new InstallationDto(installationId1, "installation1");
-    var installationDto2 = new InstallationDto(installationId2, "installation2");
-    var formWithDuplicateInstallation = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withInstallations(List.of(installationId1, installationId2))
+  void saveNominatedInstallations_whenFormHasDuplicateInstallations_verifyNoDuplicateInstallationsSaved() {
+
+    var installationId = 1;
+
+    var installationDto = InstallationDtoTestUtil.builder()
+        .withId(installationId)
         .build();
 
-    when(installationQueryService.getInstallationsByIdIn(List.of(installationId1, installationId2))).thenReturn(List.of(installationDto1, installationDto2));
+    var formWithDuplicateInstallation = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .withInstallations(List.of(installationId, installationId))
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(List.of(installationId)))
+        .thenReturn(List.of(installationDto));
 
     nominatedInstallationPersistenceService.saveNominatedInstallations(NOMINATION_DETAIL, formWithDuplicateInstallation);
 
@@ -58,8 +62,7 @@ class NominatedInstallationPersistenceServiceTest {
         NominatedInstallation::getInstallationId,
         NominatedInstallation::getNominationDetail
     ).containsExactly(
-        tuple(installationDto1.id(), NOMINATION_DETAIL),
-        tuple(installationDto2.id(), NOMINATION_DETAIL)
+        tuple(installationDto.id(), NOMINATION_DETAIL)
     );
   }
 

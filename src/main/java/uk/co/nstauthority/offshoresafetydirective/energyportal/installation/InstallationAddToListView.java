@@ -2,20 +2,20 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;
 
-public record InstallationAddToListView(int id, String name, boolean isValid) implements AddToListItem {
+public record InstallationAddToListView(InstallationDto installation) implements AddToListItem {
 
   @Override
   public String getId() {
-    return String.valueOf(id);
+    return String.valueOf(installation.id());
   }
 
   @Override
   public String getName() {
-    return name;
+    return installation.name();
   }
 
   @Override
   public boolean isValid() {
-    return isValid;
+    return InstallationQueryService.isValidInstallation(installation);
   }
 }

@@ -2,16 +2,20 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
@@ -125,5 +129,30 @@ class InstallationQueryServiceTest {
                 expectedFacility.getName()
             )
         );
+  }
+
+  @Test
+  void isValidInstallation_whenInvalidInstallationType() {
+
+    var invalidInstallationType = Arrays.stream(FacilityType.values())
+        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
+
+    var installationWithInvalidType = InstallationDtoTestUtil.builder()
+        .withType(invalidInstallationType)
+        .build();
+
+    assertFalse(InstallationQueryService.isValidInstallation(installationWithInvalidType));
+  }
+
+  @Test
+  void isValidInstallation_whenValidInstallationType() {
+
+    var installationWithInvalidType = InstallationDtoTestUtil.builder()
+        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+        .build();
+
+    assertTrue(InstallationQueryService.isValidInstallation(installationWithInvalidType));
   }
 }

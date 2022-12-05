@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import java.util.Comparator;
@@ -14,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -137,8 +136,15 @@ class InstallationSummaryServiceTest {
         .withInstallationId(2)
         .build();
 
-    var installationA = new InstallationDto(1, "Installation A");
-    var installationB = new InstallationDto(2, "Installation B");
+    var installationA = InstallationDtoTestUtil.builder()
+        .withId(1)
+        .withName("Installation A")
+        .build();
+
+    var installationB = InstallationDtoTestUtil.builder()
+        .withId(2)
+        .withName("Installation B")
+        .build();
 
     when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));

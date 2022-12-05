@@ -4,14 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -19,9 +26,12 @@ class NominatedInstallationDetailFormValidatorTest {
 
   private static NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
 
+  private static InstallationQueryService installationQueryService;
+
   @BeforeAll
   static void setup() {
-    nominatedInstallationDetailFormValidator = new NominatedInstallationDetailFormValidator();
+    installationQueryService = mock(InstallationQueryService.class);
+    nominatedInstallationDetailFormValidator = new NominatedInstallationDetailFormValidator(installationQueryService);
   }
 
   @Test
@@ -43,18 +53,34 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("installationsSelect", Set.of("installationsSelect.notEmpty"))
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
     );
   }
 
   @Test
   void validate_whenValidFormWithAllInstallationPhasesSelected_thenNoErrors() {
-    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+
+    var installation = InstallationDtoTestUtil.builder().build();
+
+    var form = NominatedInstallationDetailFormTestUtil.builder()
         .withForAllInstallationPhases(true)
+        .withInstallation(installation.id())
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
@@ -64,10 +90,18 @@ class NominatedInstallationDetailFormValidatorTest {
 
   @Test
   void validate_whenValidFormWithNotAllInstallationPhasesSelected_thenNoErrors() {
-    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+
+    var installation = InstallationDtoTestUtil.builder().build();
+
+    var form = NominatedInstallationDetailFormTestUtil.builder()
         .withForAllInstallationPhases(false)
         .withDevelopmentConstructionPhase(true)
+        .withInstallation(installation.id())
         .build();
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
@@ -78,21 +112,41 @@ class NominatedInstallationDetailFormValidatorTest {
 
   @Test
   void validate_whenForAllInstallationPhasesNotSelected_thenError() {
+
+    var installation = InstallationDtoTestUtil.builder().build();
+
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withForAllInstallationPhases(null)
+        .withInstallation(installation.id())
         .build();
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("forAllInstallationPhases", Set.of("forAllInstallationPhases.required"))
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
     );
   }
 
   @Test
   void validate_whenNotForAllInstallationPhasesAndNoPhasesSelected_thenError() {
+
+    var installation = InstallationDtoTestUtil.builder().build();
+
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withForAllInstallationPhases(false)
         .withDevelopmentDesignPhase(null)
@@ -101,18 +155,107 @@ class NominatedInstallationDetailFormValidatorTest {
         .withDevelopmentCommissioningPhase(null)
         .withDevelopmentProductionPhase(null)
         .withDecommissioningPhase(null)
+        .withInstallation(installation.id())
         .build();
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("developmentDesignPhase", Set.of("developmentDesignPhase.required"))
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.SPECIFIC_PHASES_REQUIRED_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
+    );
+  }
+
+  @Test
+  void validate_whenInstallationIdsInFormNotInPortal_thenError() {
+
+    var installation = InstallationDtoTestUtil.builder().build();
+
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        // known installation id
+        .withInstallation(installation.id())
+        // unknown installation id
+        .withInstallation(2000)
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
+    );
+  }
+
+  @Test
+  void validate_whenInvalidInstallationIdsInForm_thenError() {
+
+    var installationWithValidType = InstallationDtoTestUtil.builder()
+        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+        .build();
+
+    var invalidInstallationType = Arrays.stream(FacilityType.values())
+        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
+
+    var installationWithInvalidType = InstallationDtoTestUtil.builder()
+        .withType(invalidInstallationType)
+        .build();
+
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallations(List.of(installationWithValidType.id(), installationWithInvalidType.id()))
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installationWithValidType, installationWithInvalidType));
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATION_NOT_VALID_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
     );
   }
 
   private static class NonSupportedClass {
-
   }
 }

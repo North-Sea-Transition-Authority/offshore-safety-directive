@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -52,8 +52,14 @@ class NominatedInstallationDetailViewServiceTest {
     var nominatedInstallation2 = new NominatedInstallationTestUtil.NominatedInstallationBuilder()
         .withInstallationId(2)
         .build();
-    var installationDto1 = new InstallationDto(nominatedInstallation1.getInstallationId(), "installation1");
-    var installationDto2 = new InstallationDto(nominatedInstallation2.getInstallationId(), "installation2");
+
+    var installationDto1 = InstallationDtoTestUtil.builder()
+        .withId(nominatedInstallation1.getInstallationId())
+        .build();
+
+    var installationDto2 = InstallationDtoTestUtil.builder()
+        .withId(nominatedInstallation2.getInstallationId())
+        .build();
 
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedInstallationDetail));

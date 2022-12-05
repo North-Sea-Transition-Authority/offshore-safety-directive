@@ -13,7 +13,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 @Service
 public class InstallationQueryService {
 
-  static final List<FacilityType> ALLOWED_INSTALLATION_TYPES = List.of(
+  public static final List<FacilityType> ALLOWED_INSTALLATION_TYPES = List.of(
       FacilityType.FLOATING_SEMI_SUBMERSIBLE_PROCESSING_UNIT,
       FacilityType.FLOATING_PROCESS_STORAGE_OFFLOADING_UNIT,
       FacilityType.FLOATING_STORAGE_UNIT,
@@ -32,12 +32,14 @@ public class InstallationQueryService {
   static final FacilitiesByNameAndTypesProjectionRoot FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT =
       new FacilitiesByNameAndTypesProjectionRoot()
           .id()
-          .name();
+          .name()
+          .type().root();
 
   static final FacilitiesByIdsProjectionRoot FACILITIES_BY_IDS_PROJECTION_ROOT =
       new FacilitiesByIdsProjectionRoot()
           .id()
-          .name();
+          .name()
+          .type().root();
 
   private final FacilityApi facilityApi;
 
@@ -80,7 +82,15 @@ public class InstallationQueryService {
     ));
   }
 
+  public static boolean isValidInstallation(InstallationDto installation) {
+    return ALLOWED_INSTALLATION_TYPES.contains(installation.type());
+  }
+
   private InstallationDto convertToInstallationDto(Facility facility) {
-    return new InstallationDto(facility.getId(), facility.getName());
+    return new InstallationDto(
+        facility.getId(),
+        facility.getName(),
+        facility.getType()
+    );
   }
 }

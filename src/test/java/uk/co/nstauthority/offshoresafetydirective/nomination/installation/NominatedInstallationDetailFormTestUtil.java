@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -9,9 +10,14 @@ public class NominatedInstallationDetailFormTestUtil {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
+  public static NominatedInstallationDetailFormBuilder builder() {
+    return new NominatedInstallationDetailFormBuilder();
+  }
+
   public static class NominatedInstallationDetailFormBuilder {
 
-    private List<Integer> installations = List.of(1, 2);
+    private List<Integer> installations = new ArrayList<>();
+    private boolean hasAddedInstallations = false;
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
     private Boolean developmentConstructionPhase;
@@ -22,6 +28,13 @@ public class NominatedInstallationDetailFormTestUtil {
 
     public NominatedInstallationDetailFormBuilder withInstallations(List<Integer> installations) {
       this.installations = installations;
+      hasAddedInstallations = true;
+      return this;
+    }
+
+    public NominatedInstallationDetailFormBuilder withInstallation(int installationId) {
+      this.installations.add(installationId);
+      hasAddedInstallations = true;
       return this;
     }
 
@@ -61,6 +74,12 @@ public class NominatedInstallationDetailFormTestUtil {
     }
 
     public NominatedInstallationDetailForm build() {
+
+      if (!hasAddedInstallations) {
+        installations.add(1);
+        installations.add(2);
+      }
+
       return new NominatedInstallationDetailForm()
           .setInstallations(installations)
           .setForAllInstallationPhases(forAllInstallationPhases)
