@@ -29,6 +29,7 @@
       addToListId="installation-table"
       selectorLabelText="Select an installation to add to this nomination"
       restUrl=springUrl(installationsRestUrl)
+      selectorMinInputLength=3
     />
     <@fdsRadio.radioGroup
       path="form.forAllInstallationPhases"
