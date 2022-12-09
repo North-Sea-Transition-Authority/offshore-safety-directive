@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
 import java.util.List;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
@@ -33,13 +34,15 @@ public class InstallationQueryService {
       new FacilitiesByNameAndTypesProjectionRoot()
           .id()
           .name()
-          .type().root();
+          .type().root()
+          .isInUkcs();
 
   static final FacilitiesByIdsProjectionRoot FACILITIES_BY_IDS_PROJECTION_ROOT =
       new FacilitiesByIdsProjectionRoot()
           .id()
           .name()
-          .type().root();
+          .type().root()
+          .isInUkcs();
 
   private final FacilityApi facilityApi;
 
@@ -62,6 +65,7 @@ public class InstallationQueryService {
             logCorrelationId
         )
             .stream()
+            .filter(this::isInUkcs)
             .map(this::convertToInstallationDto)
             .toList()
     ));
@@ -83,14 +87,21 @@ public class InstallationQueryService {
   }
 
   public static boolean isValidInstallation(InstallationDto installation) {
-    return ALLOWED_INSTALLATION_TYPES.contains(installation.type());
+    return ALLOWED_INSTALLATION_TYPES.contains(installation.type()) && installation.isInUkcs();
   }
 
   private InstallationDto convertToInstallationDto(Facility facility) {
     return new InstallationDto(
         facility.getId(),
         facility.getName(),
-        facility.getType()
+        facility.getType(),
+        isInUkcs(facility)
     );
+  }
+
+  boolean isInUkcs(Facility facility) {
+    // UKCS question is sparsely populated in source dataset so
+    // agreed with client that null means yes
+    return BooleanUtils.isNotFalse(facility.getIsInUkcs());
   }
 }

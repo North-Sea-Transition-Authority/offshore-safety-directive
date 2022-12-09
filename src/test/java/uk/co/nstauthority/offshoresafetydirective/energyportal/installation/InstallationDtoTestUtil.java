@@ -21,6 +21,8 @@ public class InstallationDtoTestUtil {
 
     private FacilityType type = InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0);
 
+    private boolean isInUkcs = true;
+
     public Builder withId(Integer id) {
       this.id = id;
       return this;
@@ -36,8 +38,18 @@ public class InstallationDtoTestUtil {
       return this;
     }
 
+    public Builder isInUkcs(boolean isInUkcs) {
+      this.isInUkcs = isInUkcs;
+      return this;
+    }
+
     public InstallationDto build() {
-      return new InstallationDto(id, name, type);
+      return new InstallationDto(
+          id,
+          name,
+          type,
+          isInUkcs
+      );
     }
   }
 }

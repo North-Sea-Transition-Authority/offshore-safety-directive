@@ -11,12 +11,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -214,28 +219,20 @@ class NominatedInstallationDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenInvalidInstallationIdsInForm_thenError() {
+  @ParameterizedTest
+  @MethodSource("getInvalidInstallationArguments")
+  void validate_whenInvalidInstallationIdsInForm_thenError(InstallationDto invalidInstallation) {
 
     var installationWithValidType = InstallationDtoTestUtil.builder()
         .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
         .build();
 
-    var invalidInstallationType = Arrays.stream(FacilityType.values())
-        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
-
-    var installationWithInvalidType = InstallationDtoTestUtil.builder()
-        .withType(invalidInstallationType)
-        .build();
-
     var form = NominatedInstallationDetailFormTestUtil.builder()
-        .withInstallations(List.of(installationWithValidType.id(), installationWithInvalidType.id()))
+        .withInstallations(List.of(installationWithValidType.id(), invalidInstallation.id()))
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
-        .thenReturn(List.of(installationWithValidType, installationWithInvalidType));
+        .thenReturn(List.of(installationWithValidType, invalidInstallation));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -253,6 +250,33 @@ class NominatedInstallationDetailFormValidatorTest {
 
     assertThat(resultingErrorMessages).containsExactly(
         entry(errorMessage.field(), Set.of(errorMessage.message()))
+    );
+  }
+
+  private static Stream<Arguments> getInvalidInstallationArguments() {
+
+    var invalidInstallationType = Arrays.stream(FacilityType.values())
+        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
+
+    return Stream.of(
+        Arguments.of(
+            InstallationDtoTestUtil.builder()
+                .withType(invalidInstallationType)
+                .build()
+        ),
+        Arguments.of(
+            InstallationDtoTestUtil.builder()
+                .isInUkcs(false)
+                .build()
+        ),
+        Arguments.of(
+            InstallationDtoTestUtil.builder()
+                .withType(invalidInstallationType)
+                .isInUkcs(false)
+                .build()
+        )
     );
   }
 

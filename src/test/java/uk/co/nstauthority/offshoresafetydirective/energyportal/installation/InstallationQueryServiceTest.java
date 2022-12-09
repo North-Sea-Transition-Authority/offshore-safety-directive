@@ -88,6 +88,44 @@ class InstallationQueryServiceTest {
   }
 
   @Test
+  void queryInstallationsByName_whenResults_thenOnlyThoseInUkcsReturned() {
+
+    var searchTerm = "installation";
+
+    var facilityInUkcs = EpaFacilityTestUtil.builder()
+        .withInUkcs(true)
+        .withId(100)
+        .build();
+
+    var facilityNotInUkcs = EpaFacilityTestUtil.builder()
+        .withInUkcs(false)
+        .withId(200)
+        .build();
+
+    var facilityWithInUkcsNull = EpaFacilityTestUtil.builder()
+        .withInUkcs(null)
+        .withId(300)
+        .build();
+
+    when(facilityApi.searchFacilitiesByNameAndTypeIn(
+        eq(searchTerm),
+        eq(InstallationQueryService.ALLOWED_INSTALLATION_TYPES),
+        eq(InstallationQueryService.FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(List.of(facilityInUkcs, facilityNotInUkcs, facilityWithInUkcsNull));
+
+    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm);
+
+    assertThat(resultingFacilities)
+        .extracting(InstallationDto::id)
+        .containsExactlyInAnyOrder(
+            facilityInUkcs.getId(),
+            facilityWithInUkcsNull.getId()
+        );
+  }
+
+  @Test
   void getInstallationsByIdIn_whenNoResults_thenEmptyList() {
 
     var facilityIdList = List.of(100);
@@ -132,27 +170,86 @@ class InstallationQueryServiceTest {
   }
 
   @Test
-  void isValidInstallation_whenInvalidInstallationType() {
+  void isValidInstallations_whenValidTypeAndInUkcs_thenTrue() {
+
+    var validInstallation = InstallationDtoTestUtil.builder()
+        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+        .isInUkcs(true)
+        .build();
+
+    assertTrue(InstallationQueryService.isValidInstallation(validInstallation));
+  }
+
+  @Test
+  void isValidInstallations_whenInvalidTypeAndInUkcs_thenFalse() {
 
     var invalidInstallationType = Arrays.stream(FacilityType.values())
         .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
         .findFirst()
         .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
 
-    var installationWithInvalidType = InstallationDtoTestUtil.builder()
+    var invalidInstallation = InstallationDtoTestUtil.builder()
         .withType(invalidInstallationType)
+        .isInUkcs(true)
         .build();
 
-    assertFalse(InstallationQueryService.isValidInstallation(installationWithInvalidType));
+    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
   }
 
   @Test
-  void isValidInstallation_whenValidInstallationType() {
+  void isValidInstallations_whenInvalidTypeAndNotInUkcs_thenFalse() {
 
-    var installationWithInvalidType = InstallationDtoTestUtil.builder()
-        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+    var invalidInstallationType = Arrays.stream(FacilityType.values())
+        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
+
+    var invalidInstallation = InstallationDtoTestUtil.builder()
+        .withType(invalidInstallationType)
+        .isInUkcs(false)
         .build();
 
-    assertTrue(InstallationQueryService.isValidInstallation(installationWithInvalidType));
+    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
+  }
+
+  @Test
+  void isValidInstallations_whenValidTypeAndNotInUkcs_thenFalse() {
+
+    var invalidInstallation = InstallationDtoTestUtil.builder()
+        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+        .isInUkcs(false)
+        .build();
+
+    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
+  }
+
+  @Test
+  void isInUkcs_whenTrue_thenTrue() {
+
+    var invalidInstallation = EpaFacilityTestUtil.builder()
+        .withInUkcs(true)
+        .build();
+
+    assertTrue(installationQueryService.isInUkcs(invalidInstallation));
+  }
+
+  @Test
+  void isInUkcs_whenNull_thenTrue() {
+
+    var invalidInstallation = EpaFacilityTestUtil.builder()
+        .withInUkcs(null)
+        .build();
+
+    assertTrue(installationQueryService.isInUkcs(invalidInstallation));
+  }
+
+  @Test
+  void isInUkcs_whenFalse_thenFalse() {
+
+    var invalidInstallation = EpaFacilityTestUtil.builder()
+        .withInUkcs(false)
+        .build();
+
+    assertFalse(installationQueryService.isInUkcs(invalidInstallation));
   }
 }
