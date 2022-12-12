@@ -10,7 +10,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 
 @Service
-class NominationSummaryService {
+public class NominationSummaryService {
 
   private final ApplicantDetailSummaryService applicantDetailSummaryService;
   private final NomineeDetailSummaryService nomineeDetailSummaryService;
@@ -29,7 +29,7 @@ class NominationSummaryService {
     this.installationSummaryService = installationSummaryService;
   }
 
-  NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail) {
+  public NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail) {
     return new NominationSummaryView(
         applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail),
         nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail),

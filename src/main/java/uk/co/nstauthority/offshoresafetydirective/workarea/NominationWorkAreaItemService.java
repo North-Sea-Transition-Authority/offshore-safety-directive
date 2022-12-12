@@ -3,15 +3,13 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
@@ -19,9 +17,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 
 @Service
 class NominationWorkAreaItemService {
-
-  public static final String DATE_FORMAT = "dd MMM yyyy HH:mm";
-  public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
   private static final String DEFAULT_TEXT = "Not provided";
 
@@ -48,6 +43,7 @@ class NominationWorkAreaItemService {
     return dto -> switch (dto.nominationStatus()) {
       case DRAFT -> dto.createdTime().instant();
       case SUBMITTED -> dto.submittedTime().instant();
+      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
     };
   }
 
@@ -83,6 +79,7 @@ class NominationWorkAreaItemService {
     return switch (dto.nominationStatus()) {
       case DRAFT -> generateDraftWorkAreaItemHeading(dto);
       case SUBMITTED -> dto.nominationReference().reference();
+      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
     };
   }
 
@@ -95,12 +92,18 @@ class NominationWorkAreaItemService {
 
   private String getWorkAreaItemCaption(NominationWorkAreaItemDto dto) {
     return switch (dto.nominationStatus()) {
-      case DRAFT -> "Created on %s".formatted(
-          LocalDateTime.ofInstant(dto.createdTime().instant(), ZoneId.systemDefault())
-              .format(DATE_TIME_FORMATTER)
-      );
+      case DRAFT -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
       case SUBMITTED -> null;
+      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
     };
+  }
+
+  private IllegalStateException getDeletedNominationInWorkAreaException(NominationWorkAreaItemDto dto) {
+    return new IllegalStateException("Nomination with ID [%d] should not appear in work area as status is [%s]"
+        .formatted(
+            dto.nominationId().id(),
+            dto.nominationStatus()
+        ));
   }
 
 }

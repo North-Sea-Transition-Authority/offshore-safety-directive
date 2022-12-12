@@ -30,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.deletion.DeleteNominationController;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListItemView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabel;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabelType;
@@ -150,6 +151,8 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute("currentPage", NominationTaskListController.PAGE_NAME))
         .andExpect(model().attributeExists("taskListSections"))
+        .andExpect(model().attribute("deleteNominationUrl",
+            ReverseRouter.route(on(DeleteNominationController.class).deleteNomination(NOMINATION_ID, null))))
         .andReturn()
         .getModelAndView();
 

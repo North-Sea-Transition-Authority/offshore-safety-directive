@@ -4,7 +4,8 @@ import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnu
 
 public enum NominationStatus implements DisplayableEnum {
   DRAFT("Draft", 10),
-  SUBMITTED("Submitted", 20);
+  SUBMITTED("Submitted", 20),
+  DELETED("Deleted", 30);
 
   private final String displayText;
   private final Integer displayOrder;

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -13,6 +14,8 @@ import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -134,5 +137,33 @@ class NominationDetailServiceTest {
     when(nominationDetailRepository.findFirstByNominationOrderByVersionDesc(NOMINATION)).thenReturn(Optional.empty());
 
     assertThrows(OsdEntityNotFoundException.class, () -> nominationDetailService.getLatestNominationDetail(nominationId));
+  }
+
+  @Test
+  void deleteNominationDetail_whenCalled_thenVerifyEntityUpdatedAndSaved() {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+    nominationDetailService.deleteNominationDetail(detail);
+    assertThat(detail.getStatus()).isEqualTo(NominationStatus.DELETED);
+    verify(nominationDetailRepository).save(detail);
+  }
+
+  @ParameterizedTest
+  @EnumSource(NominationStatus.class)
+  void deleteNominationDetail_ensureOnlyDraftCanBeDeleted(NominationStatus nominationStatus) {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(nominationStatus)
+        .build();
+
+    if (nominationStatus == NominationStatus.DRAFT) {
+      nominationDetailService.deleteNominationDetail(detail);
+      verify(nominationDetailRepository).save(detail);
+    } else {
+      assertThrows(IllegalArgumentException.class,
+          () -> nominationDetailService.deleteNominationDetail(detail));
+      verify(nominationDetailRepository, never()).save(detail);
+    }
+
   }
 }

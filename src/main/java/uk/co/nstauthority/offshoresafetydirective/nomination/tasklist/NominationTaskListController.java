@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,9 +13,11 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.deletion.DeleteNominationController;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -46,6 +50,8 @@ public class NominationTaskListController {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
     var modelAndView = new ModelAndView("osd/nomination/tasklist/taskList")
+        .addObject("deleteNominationUrl",
+            ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(nominationId)))
         .addObject(
             "taskListSections",
             TaskListSectionUtil.createSectionViews(

@@ -51,4 +51,15 @@ public class NominationDetailService {
           ));
         });
   }
+
+  @Transactional
+  public void deleteNominationDetail(NominationDetail nominationDetail) {
+    if (nominationDetail.getStatus() == NominationStatus.DRAFT) {
+      nominationDetail.setStatus(NominationStatus.DELETED);
+      nominationDetailRepository.save(nominationDetail);
+    } else {
+      throw new IllegalArgumentException("Cannot delete NominationDetail [%d] as NominationStatus is not %s"
+          .formatted(nominationDetail.getId(), NominationStatus.DRAFT));
+    }
+  }
 }

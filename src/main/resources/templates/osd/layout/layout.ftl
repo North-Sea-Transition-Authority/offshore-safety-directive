@@ -62,7 +62,11 @@
 
         <#local bannerContent>
             <#if flash.heading?has_content>
-              <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+                <#if flash.content?has_content>
+                    <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+                <#else>
+                    <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
+                </#if>
             <#else>
                 <p class="govuk-body">
                   ${flash.content}

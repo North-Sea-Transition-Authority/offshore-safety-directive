@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.jooq.impl.DSL.coalesce;
+import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.table;
@@ -68,7 +69,7 @@ class NominationWorkAreaQueryService {
     var nominationStatusCondition =
         getNominationsForRegulatorRole();
 
-    return List.of(nominationStatusCondition);
+    return List.of(nominationStatusCondition, excludeDeletedNominations());
   }
 
   private Condition getNominationsForRegulatorRole() {
@@ -83,10 +84,14 @@ class NominationWorkAreaQueryService {
     if (roles.contains(RegulatorTeamRole.MANAGE_NOMINATION)) {
       return trueCondition();
     } else if (roles.contains(RegulatorTeamRole.VIEW_NOMINATION)) {
-      return field("ND.STATUS").in(NominationStatus.SUBMITTED.name());
+      return field("nd.status").in(NominationStatus.SUBMITTED.name());
     }
 
     return falseCondition();
+  }
+
+  private Condition excludeDeletedNominations() {
+    return condition("nd.status != 'DELETED'");
   }
 }
 

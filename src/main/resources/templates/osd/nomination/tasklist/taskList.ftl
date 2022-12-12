@@ -12,5 +12,10 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   breadcrumbsList=breadcrumbsList
 >
+  <@fdsAction.link
+    linkText="Delete nomination"
+    linkClass="govuk-button govuk-button--secondary"
+    linkUrl=springUrl(deleteNominationUrl)
+  />
   <@taskList.standardTaskList taskListSections=taskListSections />
 </@defaultPage>

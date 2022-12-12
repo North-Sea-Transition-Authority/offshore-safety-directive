@@ -56,7 +56,7 @@ public class NominationDetail implements Serializable {
     return this;
   }
 
-  Instant getCreatedInstant() {
+  public Instant getCreatedInstant() {
     return createdInstant;
   }
 

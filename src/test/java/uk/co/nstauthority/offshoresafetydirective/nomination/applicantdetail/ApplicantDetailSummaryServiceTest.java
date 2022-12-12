@@ -137,7 +137,6 @@ class ApplicantDetailSummaryServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.empty());
-
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
     var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail);

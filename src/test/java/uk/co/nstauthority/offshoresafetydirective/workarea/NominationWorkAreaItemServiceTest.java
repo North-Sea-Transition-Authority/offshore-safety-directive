@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -277,6 +278,19 @@ class NominationWorkAreaItemServiceTest {
         ).containsExactly(
             Tuple.tuple(submittedNomination.getNominationReference().reference(), null)
         );
+
+  }
+
+  @Test
+  void getNominationWorkAreaItems_whenDeleted_thenThrowsError() {
+
+    var deletedNomination = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(NominationStatus.DELETED)
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(deletedNomination));
+
+    assertThrows(IllegalStateException.class, () -> nominationWorkAreaItemService.getNominationWorkAreaItems());
 
   }
 }

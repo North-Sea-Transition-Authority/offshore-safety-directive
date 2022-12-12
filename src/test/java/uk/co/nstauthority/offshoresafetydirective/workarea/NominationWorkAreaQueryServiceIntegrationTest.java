@@ -261,4 +261,76 @@ class NominationWorkAreaQueryServiceIntegrationTest {
 
   }
 
+  @Test
+  void getNominationDetailsForWorkArea_whenStatusIsDeleted_thenExcludedFromResults() {
+
+    // Roles to test status filter rule
+    Set<TeamRole> userRoles = Set.of(RegulatorTeamRole.MANAGE_NOMINATION);
+
+    // Setup user
+    var user = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(1000L)
+        .build();
+
+    // Ensure user is treated as currently logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(user)
+        .setSecurityContext();
+
+    // Stub regulator team
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(team);
+
+    // Add user to team with the previously defined roles
+    teamMemberRoleService.updateUserTeamRoles(team, new WebUserAccountId(user.wuaId()),
+        TeamRoleUtil.getRoleNames(userRoles));
+
+    // Create and persist nomination details
+    var nomination = NominationTestUtil.builder()
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(nomination);
+
+    var deletedNominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .withNominationId(new NominationId(nomination.getId()))
+        .withId(null)
+        .withStatus(NominationStatus.DELETED)
+        .build();
+
+    var draftNominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .withNominationId(new NominationId(nomination.getId()))
+        .withId(null)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    deletedNominationDetail = entityManager.persistAndFlush(deletedNominationDetail);
+    draftNominationDetail = entityManager.persistAndFlush(draftNominationDetail);
+
+    var draftApplicantDetails = ApplicantDetailTestUtil.builder()
+        .withNominationDetail(draftNominationDetail)
+        .withId(null)
+        .build();
+
+    var deletedApplicantDetails = ApplicantDetailTestUtil.builder()
+        .withNominationDetail(deletedNominationDetail)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(draftApplicantDetails);
+    entityManager.persistAndFlush(deletedApplicantDetails);
+
+    var dtos = nominationWorkAreaQueryService.getWorkAreaItems();
+    assertThat(dtos)
+        .map(result -> result.getNominationId().id())
+        .containsExactly(draftNominationDetail.getNomination().getId());
+
+  }
+
 }
