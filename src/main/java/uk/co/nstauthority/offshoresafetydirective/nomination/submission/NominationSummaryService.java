@@ -8,6 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @Service
 public class NominationSummaryService {
@@ -29,13 +30,18 @@ public class NominationSummaryService {
     this.installationSummaryService = installationSummaryService;
   }
 
-  public NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail) {
+  public NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail,
+                                                        SummaryValidationBehaviour validationBehaviour) {
     return new NominationSummaryView(
-        applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail),
-        nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail),
-        relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail),
-        installationSummaryService.getInstallationSummaryView(nominationDetail)
+        applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, validationBehaviour),
+        nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, validationBehaviour),
+        relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail, validationBehaviour),
+        installationSummaryService.getInstallationSummaryView(nominationDetail, validationBehaviour)
     );
+  }
+
+  public NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail) {
+    return getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.VALIDATED);
   }
 
 }

@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -8,20 +10,25 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class RelatedInformationSummaryServiceTest {
+
+  private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.VALIDATED;
 
   @Mock
   private RelatedInformationPersistenceService relatedInformationPersistenceService;
 
   @Mock
-  private RelatedInformationSubmissionService nomineeDetailSubmissionService;
+  private RelatedInformationSubmissionService relatedInformationSubmissionService;
 
   @Mock
   private RelatedInformationFieldPersistenceService relatedInformationFieldPersistenceService;
@@ -58,9 +65,10 @@ class RelatedInformationSummaryServiceTest {
     when(relatedInformationFieldPersistenceService.getRelatedInformationFields(relatedInformation))
         .thenReturn(List.of(fieldB, fieldA));
 
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::relatedToAnyFields)
@@ -108,9 +116,10 @@ class RelatedInformationSummaryServiceTest {
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
         .thenReturn(Optional.of(relatedInformation));
 
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::relatedToAnyFields)
@@ -158,9 +167,10 @@ class RelatedInformationSummaryServiceTest {
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
         .thenReturn(Optional.of(relatedInformation));
 
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::relatedToAnyFields)
@@ -185,9 +195,10 @@ class RelatedInformationSummaryServiceTest {
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
         .thenReturn(Optional.empty());
 
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::relatedToAnyFields)
@@ -211,9 +222,10 @@ class RelatedInformationSummaryServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail)).thenReturn(Optional.empty());
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::summarySectionError)
@@ -226,13 +238,33 @@ class RelatedInformationSummaryServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail)).thenReturn(Optional.empty());
-    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+    when(relatedInformationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail);
+    var result = relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail,
+        VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(RelatedInformationSummaryView::summarySectionError)
         .isNull();
+  }
+
+  @ParameterizedTest
+  @EnumSource(SummaryValidationBehaviour.class)
+  void getRelatedInformationSummaryView_verifyValidationBehaviourInteractions(
+      SummaryValidationBehaviour validationBehaviour
+  ) {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail, validationBehaviour);
+
+    switch (validationBehaviour) {
+      case VALIDATED -> verify(relatedInformationSubmissionService).isSectionSubmittable(nominationDetail);
+      case NOT_VALIDATED -> verify(relatedInformationSubmissionService, never()).isSectionSubmittable(nominationDetail);
+    }
   }
 
 

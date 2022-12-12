@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Comparator;
@@ -10,6 +12,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -18,9 +22,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class InstallationSummaryServiceTest {
+
+  private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.VALIDATED;
 
   @Mock
   private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
@@ -69,7 +76,7 @@ class InstallationSummaryServiceTest {
     when(nominatedInstallationDetailPersistenceService.findNominatedInstallationDetail(nominationDetail))
         .thenReturn(Optional.of(nominatedInstallationDetail));
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     var expectedPhases = Stream.of(InstallationPhase.DEVELOPMENT_INSTALLATION, InstallationPhase.DECOMMISSIONING)
         .sorted(Comparator.comparing(InstallationPhase::getDisplayOrder))
@@ -108,7 +115,7 @@ class InstallationSummaryServiceTest {
     when(nominatedInstallationDetailPersistenceService.findNominatedInstallationDetail(nominationDetail))
         .thenReturn(Optional.of(nominatedInstallationDetail));
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(
@@ -159,7 +166,7 @@ class InstallationSummaryServiceTest {
     when(installationQueryService.getInstallationsByIdIn(List.of(2, 1)))
         .thenReturn(List.of(installationB, installationA));
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(InstallationSummaryView::installationRelatedToNomination)
@@ -185,7 +192,7 @@ class InstallationSummaryServiceTest {
     when(nominatedInstallationDetailPersistenceService.findNominatedInstallationDetail(nominationDetail))
         .thenReturn(Optional.empty());
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(
@@ -210,7 +217,7 @@ class InstallationSummaryServiceTest {
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(
@@ -229,7 +236,7 @@ class InstallationSummaryServiceTest {
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result).isEqualTo(new InstallationSummaryView(null));
   }
@@ -241,10 +248,26 @@ class InstallationSummaryServiceTest {
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = installationSummaryService.getInstallationSummaryView(nominationDetail);
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .isEqualTo(new InstallationSummaryView(SummarySectionError.createWithDefaultMessage("installations")));
+  }
+
+  @ParameterizedTest
+  @EnumSource(SummaryValidationBehaviour.class)
+  void getInstallationSummaryView_verifyValidationBehaviourInteractions(
+      SummaryValidationBehaviour validationBehaviour
+  ) {
+    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    installationSummaryService.getInstallationSummaryView(nominationDetail, validationBehaviour);
+
+    switch (validationBehaviour) {
+      case VALIDATED -> verify(installationSubmissionService).isSectionSubmittable(nominationDetail);
+      case NOT_VALIDATED -> verify(installationSubmissionService, never()).isSectionSubmittable(nominationDetail);
+    }
   }
 
 }

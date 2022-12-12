@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @Service
 public class NomineeDetailSummaryService {
@@ -25,7 +26,15 @@ public class NomineeDetailSummaryService {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
   }
 
-  public NomineeDetailSummaryView getNomineeDetailSummaryView(NominationDetail nominationDetail) {
+  public NomineeDetailSummaryView getNomineeDetailSummaryView(NominationDetail nominationDetail,
+                                                              SummaryValidationBehaviour validationBehaviour) {
+
+    Optional<SummarySectionError> optionalSummarySectionError = validationBehaviour.equals(SummaryValidationBehaviour.VALIDATED)
+        ? getSummarySectionError(nominationDetail)
+        : Optional.empty();
+
+    final var summarySectionError = optionalSummarySectionError.orElse(null);
+
     return nomineeDetailPersistenceService.getNomineeDetail(nominationDetail)
         .map(nomineeDetail -> {
           var organisationUnitView = getNomineeOrganisationUnitView(nomineeDetail);
@@ -43,10 +52,10 @@ public class NomineeDetailSummaryService {
               reason,
               proposedDate,
               conditionsAccepted,
-              getSummarySectionError(nominationDetail).orElse(null)
+              summarySectionError
           );
         })
-        .orElseGet(() -> new NomineeDetailSummaryView(getSummarySectionError(nominationDetail).orElse(null)));
+        .orElseGet(() -> new NomineeDetailSummaryView(summarySectionError));
   }
 
   private NomineeDetailConditionsAccepted getConditionsAccepted(NomineeDetail nomineeDetail) {

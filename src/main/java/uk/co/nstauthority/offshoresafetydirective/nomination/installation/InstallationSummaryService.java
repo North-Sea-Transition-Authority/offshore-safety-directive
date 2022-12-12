@@ -11,6 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @Service
 public class InstallationSummaryService {
@@ -35,7 +36,15 @@ public class InstallationSummaryService {
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
   }
 
-  public InstallationSummaryView getInstallationSummaryView(NominationDetail nominationDetail) {
+  public InstallationSummaryView getInstallationSummaryView(NominationDetail nominationDetail,
+                                                            SummaryValidationBehaviour validationBehaviour) {
+
+    Optional<SummarySectionError> optionalSummarySectionError = validationBehaviour.equals(SummaryValidationBehaviour.VALIDATED)
+        ? getSummarySectionError(nominationDetail)
+        : Optional.empty();
+
+    final var summarySectionError = optionalSummarySectionError.orElse(null);
+
     return installationInclusionPersistenceService.findByNominationDetail(nominationDetail)
         .map(relatedInformation -> {
           var installationRelatedToNomination = getInstallationRelatedToNomination(relatedInformation);
@@ -43,10 +52,10 @@ public class InstallationSummaryService {
           return new InstallationSummaryView(
               installationRelatedToNomination,
               relatedToPearsApplications,
-              getSummarySectionError(nominationDetail).orElse(null)
+              summarySectionError
           );
         })
-        .orElseGet(() -> new InstallationSummaryView(getSummarySectionError(nominationDetail).orElse(null)));
+        .orElseGet(() -> new InstallationSummaryView(summarySectionError));
   }
 
   @Nullable

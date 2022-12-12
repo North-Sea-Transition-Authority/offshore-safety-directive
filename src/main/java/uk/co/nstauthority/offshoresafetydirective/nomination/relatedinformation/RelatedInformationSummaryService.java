@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @Service
 public class RelatedInformationSummaryService {
@@ -26,7 +27,15 @@ public class RelatedInformationSummaryService {
     this.relatedInformationFieldPersistenceService = relatedInformationFieldPersistenceService;
   }
 
-  public RelatedInformationSummaryView getRelatedInformationSummaryView(NominationDetail nominationDetail) {
+  public RelatedInformationSummaryView getRelatedInformationSummaryView(NominationDetail nominationDetail,
+                                                                        SummaryValidationBehaviour validationBehaviour) {
+
+    Optional<SummarySectionError> optionalSummarySectionError = validationBehaviour.equals(SummaryValidationBehaviour.VALIDATED)
+        ? getSummarySectionError(nominationDetail)
+        : Optional.empty();
+
+    final var summarySectionError = optionalSummarySectionError.orElse(null);
+
     return relatedInformationPersistenceService.getRelatedInformation(nominationDetail)
         .map(relatedInformation -> {
           var relatedToAnyFields = getRelatedToAnyFields(relatedInformation);
@@ -36,10 +45,10 @@ public class RelatedInformationSummaryService {
               relatedToAnyFields,
               relatedToPearsApplications,
               relatedToWonsApplications,
-              getSummarySectionError(nominationDetail).orElse(null)
+              summarySectionError
           );
         })
-        .orElseGet(() -> new RelatedInformationSummaryView(getSummarySectionError(nominationDetail).orElse(null)));
+        .orElseGet(() -> new RelatedInformationSummaryView(summarySectionError));
   }
 
   @Nullable

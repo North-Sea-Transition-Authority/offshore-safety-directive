@@ -1,11 +1,15 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -13,9 +17,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantDetailSummaryServiceTest {
+
+  private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.VALIDATED;
 
   @Mock
   private ApplicantDetailSubmissionService applicantDetailSubmissionService;
@@ -50,7 +57,7 @@ class ApplicantDetailSummaryServiceTest {
 
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail);
+    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(ApplicantDetailSummaryView::applicantOrganisationUnitView)
@@ -90,7 +97,7 @@ class ApplicantDetailSummaryServiceTest {
 
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail);
+    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(ApplicantDetailSummaryView::applicantOrganisationUnitView)
@@ -117,7 +124,7 @@ class ApplicantDetailSummaryServiceTest {
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.empty());
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail);
+    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(
@@ -139,7 +146,7 @@ class ApplicantDetailSummaryServiceTest {
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.empty());
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail);
+    var result = applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(
@@ -151,6 +158,25 @@ class ApplicantDetailSummaryServiceTest {
             null,
             SummarySectionError.createWithDefaultMessage("applicant details")
         );
+  }
+
+  @ParameterizedTest
+  @EnumSource(SummaryValidationBehaviour.class)
+  void getApplicantDetailSummaryView_verifyValidationBehaviourInteractions(
+      SummaryValidationBehaviour validationBehaviour
+  ) {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, validationBehaviour);
+
+    switch (validationBehaviour) {
+      case VALIDATED -> verify(applicantDetailSubmissionService).isSectionSubmittable(nominationDetail);
+      case NOT_VALIDATED -> verify(applicantDetailSubmissionService, never()).isSectionSubmittable(nominationDetail);
+    }
   }
 
 }

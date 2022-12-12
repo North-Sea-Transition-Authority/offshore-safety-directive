@@ -37,6 +37,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -70,7 +71,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
-    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
@@ -102,7 +103,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
-    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(new NominationSummaryView(
             new ApplicantDetailSummaryView(null),
             new NomineeDetailSummaryView(null),
@@ -140,7 +141,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
     );
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
     mockMvc.perform(get(ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(NOMINATION_ID)))

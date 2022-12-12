@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @Service
 public class ApplicantDetailSummaryService {
@@ -16,14 +17,22 @@ public class ApplicantDetailSummaryService {
 
   @Autowired
   ApplicantDetailSummaryService(ApplicantDetailSubmissionService applicantDetailSubmissionService,
-                                   ApplicantDetailPersistenceService applicantDetailPersistenceService,
-                                   PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+                                ApplicantDetailPersistenceService applicantDetailPersistenceService,
+                                PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
     this.applicantDetailSubmissionService = applicantDetailSubmissionService;
     this.applicantDetailPersistenceService = applicantDetailPersistenceService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
   }
 
-  public ApplicantDetailSummaryView getApplicantDetailSummaryView(NominationDetail nominationDetail) {
+  public ApplicantDetailSummaryView getApplicantDetailSummaryView(NominationDetail nominationDetail,
+                                                                  SummaryValidationBehaviour validationBehaviour) {
+
+    Optional<SummarySectionError> optionalSummarySectionError = validationBehaviour.equals(SummaryValidationBehaviour.VALIDATED)
+        ? getSummarySectionError(nominationDetail)
+        : Optional.empty();
+
+    final var summarySectionError = optionalSummarySectionError.orElse(null);
+
     return applicantDetailPersistenceService.getApplicantDetail(nominationDetail)
         .map(applicantDetail -> {
           var organisationUnitView = getApplicantOrganisationUnitView(applicantDetail);
@@ -33,10 +42,10 @@ public class ApplicantDetailSummaryService {
           return new ApplicantDetailSummaryView(
               organisationUnitView,
               reference,
-              getSummarySectionError(nominationDetail).orElse(null)
+              summarySectionError
           );
         })
-        .orElseGet(() -> new ApplicantDetailSummaryView(getSummarySectionError(nominationDetail).orElse(null)));
+        .orElseGet(() -> new ApplicantDetailSummaryView(summarySectionError));
   }
 
   private ApplicantOrganisationUnitView getApplicantOrganisationUnitView(ApplicantDetail applicantDetail) {

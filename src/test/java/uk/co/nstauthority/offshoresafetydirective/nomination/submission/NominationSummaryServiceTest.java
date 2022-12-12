@@ -18,9 +18,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSummaryServiceTest {
+
+  private static SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.NOT_VALIDATED;
 
   @Mock
   private ApplicantDetailSummaryService applicantDetailSummaryService;
@@ -42,22 +45,22 @@ class NominationSummaryServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     var applicantDetailSummaryView = new ApplicantDetailSummaryView(null);
-    when(applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail))
+    when(applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
         .thenReturn(applicantDetailSummaryView);
 
     var nomineeDetailSummaryView = new NomineeDetailSummaryView(null);
-    when(nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail))
+    when(nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
         .thenReturn(nomineeDetailSummaryView);
 
     var relatedInformationSummaryView = new RelatedInformationSummaryView(null);
-    when(relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail))
+    when(relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
         .thenReturn(relatedInformationSummaryView);
 
     var installationSummaryView = new InstallationSummaryView(null);
-    when(installationSummaryService.getInstallationSummaryView(nominationDetail))
+    when(installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
         .thenReturn(installationSummaryView);
 
-    var result = nominationSummaryService.getNominationSummaryView(nominationDetail);
+    var result = nominationSummaryService.getNominationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     Map<String, Object> expectedFieldsAndValues = Map.ofEntries(
         Map.entry("applicantDetailSummaryView", applicantDetailSummaryView),

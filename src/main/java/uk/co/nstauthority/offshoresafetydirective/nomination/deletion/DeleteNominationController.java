@@ -23,6 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
@@ -45,7 +46,12 @@ public class DeleteNominationController {
   @GetMapping
   public ModelAndView renderDeleteNomination(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    var nominationSummaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
+
+    var nominationSummaryView = nominationSummaryService.getNominationSummaryView(
+        nominationDetail,
+        SummaryValidationBehaviour.NOT_VALIDATED
+    );
+
     return new ModelAndView("osd/nomination/deletion/deleteNomination")
         .addObject("cancelUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject("deleteUrl", ReverseRouter.route(on(this.getClass()).deleteNomination(nominationId, null)))

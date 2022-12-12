@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Sets;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,9 +27,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailSummaryServiceTest {
+
+  private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.VALIDATED;
 
   @Mock
   private NomineeDetailPersistenceService nomineeDetailPersistenceService;
@@ -67,7 +73,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::nominatedOrganisationUnitView)
@@ -120,7 +126,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::nominatedOrganisationUnitView)
@@ -160,7 +166,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     // Ensure that the only time this can be true is when all three values are true.
     assertThat(result)
@@ -190,7 +196,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     var metadataFields = List.of("summarySectionError", "summarySectionDetails");
     var fields = List.of(
@@ -219,7 +225,7 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail)).thenReturn(Optional.empty());
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::summarySectionError)
@@ -234,11 +240,30 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail)).thenReturn(Optional.empty());
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail);
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::summarySectionError)
         .isNull();
+  }
+
+  @ParameterizedTest
+  @EnumSource(SummaryValidationBehaviour.class)
+  void getNomineeDetailSummaryView_verifyValidationBehaviourInteractions(
+      SummaryValidationBehaviour validationBehaviour
+  ) {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, validationBehaviour);
+
+    switch (validationBehaviour) {
+      case VALIDATED -> verify(nomineeDetailSubmissionService).isSectionSubmittable(nominationDetail);
+      case NOT_VALIDATED -> verify(nomineeDetailSubmissionService, never()).isSectionSubmittable(nominationDetail);
+    }
   }
 
 }
