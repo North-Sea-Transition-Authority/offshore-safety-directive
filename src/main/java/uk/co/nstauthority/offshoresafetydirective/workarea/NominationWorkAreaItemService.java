@@ -13,6 +13,7 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
 @Service
@@ -52,7 +53,7 @@ class NominationWorkAreaItemService {
         WorkAreaItemType.NOMINATION,
         getWorkAreaItemHeading(dto),
         getWorkAreaItemCaption(dto),
-        ReverseRouter.route(on(NominationTaskListController.class).getTaskList(dto.nominationId())),
+        getActionUrl(dto),
         new WorkAreaItemModelProperties()
             .addProperty("status", dto.nominationStatus().getScreenDisplayText())
             .addProperty(
@@ -73,6 +74,15 @@ class NominationWorkAreaItemService {
                     .orElse(DEFAULT_TEXT)
             )
     );
+  }
+
+  private String getActionUrl(NominationWorkAreaItemDto dto) {
+    return switch (dto.nominationStatus()) {
+      case DRAFT -> ReverseRouter.route(on(NominationTaskListController.class).getTaskList(dto.nominationId()));
+      case SUBMITTED -> ReverseRouter.route(on(NominationCaseProcessingController.class)
+          .renderCaseProcessing(dto.nominationId()));
+      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+    };
   }
 
   private String getWorkAreaItemHeading(NominationWorkAreaItemDto dto) {

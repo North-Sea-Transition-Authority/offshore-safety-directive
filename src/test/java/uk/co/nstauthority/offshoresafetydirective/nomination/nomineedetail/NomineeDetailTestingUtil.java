@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
-class NomineeDetailTestingUtil {
+public class NomineeDetailTestingUtil {
 
   private NomineeDetailTestingUtil() {
     throw new IllegalStateException("NomineeDetailTestingUtil is an util class and should not be instantiated");

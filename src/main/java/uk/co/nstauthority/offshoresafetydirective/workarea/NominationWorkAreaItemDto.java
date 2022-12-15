@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;

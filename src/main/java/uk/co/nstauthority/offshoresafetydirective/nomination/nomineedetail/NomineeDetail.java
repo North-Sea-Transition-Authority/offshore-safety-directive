@@ -39,7 +39,7 @@ class NomineeDetail {
   }
 
   @VisibleForTesting
-  NomineeDetail(int id) {
+  NomineeDetail(Integer id) {
     this.id = id;
   }
 

@@ -13,21 +13,21 @@ public class InstallationInclusionTestUtil {
     return new InstallationInclusionBuilder();
   }
 
-  static class InstallationInclusionBuilder {
+  public static class InstallationInclusionBuilder {
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean includeInstallationsInNomination = true;
 
-    InstallationInclusionBuilder withNominationDetail(NominationDetail nominationDetail) {
+    public InstallationInclusionBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
       return this;
     }
 
-    InstallationInclusionBuilder includeInstallationsInNomination(Boolean includeInstallationsInNomination) {
+    public InstallationInclusionBuilder includeInstallationsInNomination(Boolean includeInstallationsInNomination) {
       this.includeInstallationsInNomination = includeInstallationsInNomination;
       return this;
     }
 
-    InstallationInclusion build() {
+    public InstallationInclusion build() {
       return new InstallationInclusion()
           .setNominationDetail(nominationDetail)
           .setIncludeInstallationsInNomination(includeInstallationsInNomination);

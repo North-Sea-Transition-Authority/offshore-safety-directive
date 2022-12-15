@@ -1,9 +1,9 @@
-package uk.co.nstauthority.offshoresafetydirective.workarea;
+package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
-enum NominationDisplayType {
+public enum NominationDisplayType {
 
   WELL("Wells"),
   INSTALLATION("Installations"),

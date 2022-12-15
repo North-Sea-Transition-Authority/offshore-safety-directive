@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
 @ExtendWith(MockitoExtension.class)

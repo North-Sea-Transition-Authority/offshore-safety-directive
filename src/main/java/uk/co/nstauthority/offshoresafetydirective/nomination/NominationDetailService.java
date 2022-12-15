@@ -62,4 +62,5 @@ public class NominationDetailService {
           .formatted(nominationDetail.getId(), NominationStatus.DRAFT));
     }
   }
+
 }

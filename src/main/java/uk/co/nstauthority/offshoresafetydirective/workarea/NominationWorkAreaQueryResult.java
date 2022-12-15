@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.function.Function;
 import javax.annotation.Nullable;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;

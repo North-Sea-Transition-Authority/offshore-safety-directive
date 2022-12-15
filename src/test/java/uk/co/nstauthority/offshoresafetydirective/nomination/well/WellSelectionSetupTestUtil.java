@@ -4,37 +4,37 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
-class WellSelectionSetupTestUtil {
+public class WellSelectionSetupTestUtil {
 
   private WellSelectionSetupTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static WellSelectionSetupBuilder builder() {
+  public static WellSelectionSetupBuilder builder() {
     return new WellSelectionSetupBuilder();
   }
 
-  static class WellSelectionSetupBuilder {
-    private int id = 100;
+  public static class WellSelectionSetupBuilder {
+    private Integer id = 100;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private WellSelectionType wellSelectionType = WellSelectionType.SPECIFIC_WELLS;
 
-    WellSelectionSetupBuilder withId(int id) {
+    public WellSelectionSetupBuilder withId(Integer id) {
       this.id = id;
       return this;
     }
 
-    WellSelectionSetupBuilder withNominationDetail(NominationDetail nominationDetail) {
+    public WellSelectionSetupBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
       return this;
     }
 
-    WellSelectionSetupBuilder withWellSelectionType(WellSelectionType wellSelectionType) {
+    public WellSelectionSetupBuilder withWellSelectionType(WellSelectionType wellSelectionType) {
       this.wellSelectionType = wellSelectionType;
       return this;
     }
 
-    WellSelectionSetup build() {
+    public WellSelectionSetup build() {
       var wellSelectionSetup = new WellSelectionSetup(
           nominationDetail,
           wellSelectionType

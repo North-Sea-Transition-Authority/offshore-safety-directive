@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -16,6 +17,8 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 
 @ExtendWith(MockitoExtension.class)
@@ -172,13 +176,55 @@ class NominationWorkAreaItemServiceTest {
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 
-    assertThat(result).map(WorkAreaItem::actionUrl)
+    assertThat(result)
+        .map(WorkAreaItem::headingText)
         .containsExactly(
-            ReverseRouter.route(
-                on(NominationTaskListController.class).getTaskList(latestNomination.getNominationId())),
-            ReverseRouter.route(
-                on(NominationTaskListController.class).getTaskList(earliestNomination.getNominationId()))
+            latestNomination.getNominationReference().reference(),
+            earliestNomination.getNominationReference().reference()
         );
+  }
+
+  @ParameterizedTest
+  @EnumSource(NominationStatus.class)
+  void getWorkAreaItems_verifyActionUrlForStatuses(NominationStatus status) throws Exception {
+
+    var baseTime = Instant.now();
+
+    var nomination = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(status)
+        .withCreatedTime(baseTime)
+        .withSubmittedTime(baseTime.minus(Period.ofDays(5)))
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(nomination));
+
+    if (status == NominationStatus.DELETED) {
+      assertThatThrownBy(() -> nominationWorkAreaItemService.getNominationWorkAreaItems())
+          .isExactlyInstanceOf(IllegalStateException.class)
+          .hasMessage("Nomination with ID [%d] should not appear in work area as status is [%s]"
+              .formatted(
+                  nomination.getNominationId().id(),
+                  nomination.getNominationStatus().name()
+              ));
+      return;
+    }
+
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+
+    var assertion = assertThat(result)
+        .hasSize(1)
+        .map(WorkAreaItem::actionUrl)
+        .first();
+
+    switch (status) {
+      case DRAFT -> assertion.isEqualTo(
+          ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nomination.getNominationId())));
+      case SUBMITTED -> assertion.isEqualTo(
+          ReverseRouter.route(
+              on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId())));
+      default -> throw new Exception("Status [%s] case not covered".formatted(status));
+    }
+
   }
 
   @Test
@@ -206,7 +252,8 @@ class NominationWorkAreaItemServiceTest {
             ReverseRouter.route(
                 on(NominationTaskListController.class).getTaskList(draftNomination.getNominationId())),
             ReverseRouter.route(
-                on(NominationTaskListController.class).getTaskList(submittedNomination.getNominationId()))
+                on(NominationCaseProcessingController.class)
+                    .renderCaseProcessing(submittedNomination.getNominationId()))
         );
   }
 

@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 interface NominationDetailRepository extends CrudRepository<NominationDetail, Integer> {
 
   Optional<NominationDetail> findFirstByNominationOrderByVersionDesc(Nomination nomination);
+
 }
