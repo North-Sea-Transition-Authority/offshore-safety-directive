@@ -10,6 +10,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
+import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -42,8 +44,17 @@ public class NominationCaseProcessingController {
                 nominationId.id()
             )
         ));
-    return new ModelAndView("osd/nomination/caseProcessing/caseProcessing")
+
+    var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(nominationDetail.getNomination().getReference())
+        .addWorkAreaBreadcrumb()
+        .build();
+
+    var modelAndView = new ModelAndView("osd/nomination/caseProcessing/caseProcessing")
         .addObject("headerInformation", headerInformation);
+
+    BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
+
+    return modelAndView;
   }
 
 }

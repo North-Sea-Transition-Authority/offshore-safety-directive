@@ -8,6 +8,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = {NominationCaseProcessingController.class})
 class NominationCaseProcessingControllerTest extends AbstractControllerTest {
@@ -117,6 +119,13 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .with(user(NOMINATION_CREATOR_USER))
         ).andExpect(status().isOk())
         .andExpect(model().attribute("headerInformation", header))
-        .andReturn();
+        .andExpect(model().attribute(
+            "breadcrumbsList",
+            Map.of(
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
+                WorkAreaController.WORK_AREA_TITLE
+            )
+        ))
+        .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()));
   }
 }
