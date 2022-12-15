@@ -15,6 +15,8 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -25,13 +27,16 @@ public class NominationCaseProcessingController {
 
   private final NominationDetailService nominationDetailService;
   private final NominationCaseProcessingService nominationCaseProcessingService;
+  private final NominationSummaryService nominationSummaryService;
 
   @Autowired
   public NominationCaseProcessingController(
       NominationDetailService nominationDetailService,
-      NominationCaseProcessingService nominationCaseProcessingService) {
+      NominationCaseProcessingService nominationCaseProcessingService,
+      NominationSummaryService nominationSummaryService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationCaseProcessingService = nominationCaseProcessingService;
+    this.nominationSummaryService = nominationSummaryService;
   }
 
   @GetMapping
@@ -50,7 +55,11 @@ public class NominationCaseProcessingController {
         .build();
 
     var modelAndView = new ModelAndView("osd/nomination/caseProcessing/caseProcessing")
-        .addObject("headerInformation", headerInformation);
+        .addObject("headerInformation", headerInformation)
+        .addObject("summaryView", nominationSummaryService.getNominationSummaryView(
+            nominationDetail,
+            SummaryValidationBehaviour.NOT_VALIDATED
+        ));
 
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
 

@@ -26,6 +26,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -46,7 +50,11 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationCaseProcessingService nominationCaseProcessingService;
 
+  @MockBean
+  private NominationSummaryService nominationSummaryService;
+
   private NominationDetail nominationDetail;
+  private NominationSummaryView nominationSummaryView;
 
   @BeforeEach
   void setup() {
@@ -59,6 +67,10 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+
+    nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
   }
 
   @SecurityTest
@@ -126,6 +138,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 WorkAreaController.WORK_AREA_TITLE
             )
         ))
-        .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()));
+        .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
+        .andExpect(model().attribute("summaryView", nominationSummaryView));
   }
 }

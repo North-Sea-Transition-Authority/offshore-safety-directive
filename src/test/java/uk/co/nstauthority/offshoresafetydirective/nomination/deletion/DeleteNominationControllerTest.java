@@ -30,13 +30,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
-import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -72,12 +68,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
-        .thenReturn(new NominationSummaryView(
-            new ApplicantDetailSummaryView(null),
-            new NomineeDetailSummaryView(null),
-            new RelatedInformationSummaryView(null),
-            new InstallationSummaryView(null)
-        ));
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.DRAFT)
@@ -104,12 +95,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
-        .thenReturn(new NominationSummaryView(
-            new ApplicantDetailSummaryView(null),
-            new NomineeDetailSummaryView(null),
-            new RelatedInformationSummaryView(null),
-            new InstallationSummaryView(null)
-        ));
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
@@ -133,12 +119,7 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
         .withStatus(NominationStatus.DRAFT)
         .build();
 
-    var nominationSummaryView = new NominationSummaryView(
-        new ApplicantDetailSummaryView(null),
-        new NomineeDetailSummaryView(null),
-        new RelatedInformationSummaryView(null),
-        new InstallationSummaryView(null)
-    );
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
