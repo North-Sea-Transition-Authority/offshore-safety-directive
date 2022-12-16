@@ -75,6 +75,7 @@ class NominationCaseProcessingService {
   private Map<Integer, String> getPortalOrganisationUnitDtosFromDto(NominationCaseProcessingHeaderDto dto) {
     var ids = Stream.of(dto.nominatedOrganisationId(), dto.applicantOrganisationId())
         .filter(Objects::nonNull)
+        .distinct()
         .toList();
 
     // TODO OSDOP-231 - Change method to get organisation units in bulk

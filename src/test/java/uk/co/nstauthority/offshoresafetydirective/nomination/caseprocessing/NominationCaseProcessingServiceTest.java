@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailCaseProcessingService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationName;
@@ -24,7 +26,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationUnitView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 
 @ExtendWith(MockitoExtension.class)
 class NominationCaseProcessingServiceTest {
@@ -146,6 +147,31 @@ class NominationCaseProcessingServiceTest {
             new NominatedOrganisationUnitView(
                 new NominatedOrganisationId(nominatedOrgUnitId), null)
         );
+
+  }
+
+  @Test
+  void getNominationCaseProcessingHeader_whenDuplicateOrgUnits_thenEnsureNoError() {
+
+    var orgId = 1;
+    var orgName = "applicantOrg";
+
+    var headerDto = NominationCaseProcessingHeaderDtoUtil.builder()
+        .withNominationReference("reference")
+        .withApplicantOrganisationId(orgId)
+        .withNominatedOrganisationId(orgId)
+        .withSelectionType(WellSelectionType.NO_WELLS)
+        .withIncludeInstallationsInNomination(true)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailCaseProcessingService.findCaseProcessingHeaderDto(nominationDetail))
+        .thenReturn(Optional.of(headerDto));
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(orgId))
+        .thenReturn(Optional.of(new PortalOrganisationDto(String.valueOf(orgId), orgName)));
+
+    assertDoesNotThrow(() -> nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail));
 
   }
 }
