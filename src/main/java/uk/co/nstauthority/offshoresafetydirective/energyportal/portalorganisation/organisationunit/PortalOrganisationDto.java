@@ -1,14 +1,21 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
+import java.util.Objects;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 
-public record PortalOrganisationDto(Integer id, String name, OrganisationRegisteredNumber registeredNumber) {
+public record PortalOrganisationDto(Integer id,
+                                    String name,
+                                    OrganisationRegisteredNumber registeredNumber,
+                                    boolean isActive) {
 
   static PortalOrganisationDto fromOrganisationUnit(OrganisationUnit organisationUnit) {
     return new PortalOrganisationDto(
         organisationUnit.getOrganisationUnitId(),
         organisationUnit.getName(),
-        new OrganisationRegisteredNumber(organisationUnit.getRegisteredNumber())
+        new OrganisationRegisteredNumber(organisationUnit.getRegisteredNumber()),
+        // OrganisationUnit from Energy Portal API provides Boolean type so to avoid
+        // dealing with a possible null, assume active unless explicitly told by EPA
+        Objects.requireNonNullElse(organisationUnit.getIsActive(), true)
     );
   }
 

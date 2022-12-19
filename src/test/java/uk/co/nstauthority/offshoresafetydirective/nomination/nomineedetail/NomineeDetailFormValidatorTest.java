@@ -4,28 +4,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Optional;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
+import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 
 @ExtendWith(SpringExtension.class)
 class NomineeDetailFormValidatorTest {
 
-  private NomineeDetailFormValidator nomineeDetailFormValidator;
+  @Mock
+  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
-  @BeforeEach
-  void setup() {
-    nomineeDetailFormValidator = new NomineeDetailFormValidator();
-  }
+  @InjectMocks
+  private NomineeDetailFormValidator nomineeDetailFormValidator;
 
   @Test
   void supports_whenValidClass_assertTrue() {
@@ -39,7 +44,11 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenValidForm_thenNoErrors() {
-    var validForm = NomineeDetailTestingUtil.getValidNomineeDetailForm();
+    var validForm = NomineeDetailFormTestingUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(validForm.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
     var bindingResult = validateNomineeDetailsForm(validForm);
 
     assertFalse(bindingResult.hasErrors());
@@ -63,10 +72,15 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenFirstDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
-    var invalidForm = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    invalidForm.setOperatorHasAuthority(null);
-    invalidForm.setLicenseeAcknowledgeOperatorRequirements(null);
-    invalidForm.setOperatorHasCapacity(null);
+    var invalidForm = NomineeDetailFormTestingUtil.builder()
+        .withOperatorHasAuthority(null)
+        .withLicenseeAcknowledgeOperatorRequirements(null)
+        .withOperatorHasCapacity(null)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
     var bindingResult = validateNomineeDetailsForm(invalidForm);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
@@ -77,9 +91,14 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenSecondDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
-    var invalidForm = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    invalidForm.setLicenseeAcknowledgeOperatorRequirements(null);
-    invalidForm.setOperatorHasCapacity(null);
+    var invalidForm = NomineeDetailFormTestingUtil.builder()
+        .withLicenseeAcknowledgeOperatorRequirements(null)
+        .withOperatorHasCapacity(null)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
     var bindingResult = validateNomineeDetailsForm(invalidForm);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
@@ -90,8 +109,13 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenThirdDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
-    var invalidForm = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    invalidForm.setOperatorHasCapacity(null);
+    var invalidForm = NomineeDetailFormTestingUtil.builder()
+        .withOperatorHasCapacity(null)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
     var bindingResult = validateNomineeDetailsForm(invalidForm);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
@@ -102,10 +126,14 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenDateFieldsAreNotNumbers_assertInvalidFieldsError() {
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    form.setPlannedStartDay("a");
-    form.setPlannedStartMonth("b");
-    form.setPlannedStartYear("c");
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withPlannedStartDateDay("a")
+        .withPlannedStartDateMonth("b")
+        .withPlannedStartDateYear("c")
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
@@ -119,10 +147,14 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenDateIsInThePast_assertInvalidFieldsError() {
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    form.setPlannedStartDay("16");
-    form.setPlannedStartMonth("3");
-    form.setPlannedStartYear("1999");
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withPlannedStartDateDay("16")
+        .withPlannedStartDateMonth("3")
+        .withPlannedStartDateYear("1999")
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
@@ -137,10 +169,13 @@ class NomineeDetailFormValidatorTest {
   @Test
   void validate_whenDateIsToday_assertInvalidFieldsError() {
     LocalDate today = LocalDate.ofInstant(Instant.now(), ZoneId.systemDefault());
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    form.setPlannedStartDay(String.valueOf(today.getDayOfMonth()));
-    form.setPlannedStartMonth(String.valueOf(today.getMonthValue()));
-    form.setPlannedStartYear(String.valueOf(today.getYear()));
+
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withPlannedStartDate(today)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
@@ -155,15 +190,77 @@ class NomineeDetailFormValidatorTest {
   @Test
   void validate_whenDateIsInTheFuture_assertNoErrors() {
     LocalDate dateInTheFuture = LocalDate.ofInstant(Instant.now(), ZoneId.of("Europe/London")).plusYears(1);
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
-    form.setPlannedStartDay(String.valueOf(dateInTheFuture.getDayOfMonth()));
-    form.setPlannedStartMonth(String.valueOf(dateInTheFuture.getMonthValue()));
-    form.setPlannedStartYear(String.valueOf(dateInTheFuture.getYear()));
+
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withPlannedStartDate(dateInTheFuture)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
     assertThat(extractedErrors).isEmpty();
+  }
+
+  @Test
+  void validate_whenNominatedOrganisationNotFound_thenValidationErrors() {
+
+    var form = NomineeDetailFormTestingUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.empty());
+
+    var bindingResult = validateNomineeDetailsForm(form);
+
+    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var expectedFrontEndErrorMessage = NomineeDetailFormValidator.NOMINEE_NOT_FOUND_IN_PORTAL_ERROR;
+
+    assertThat(errorCodes).containsExactly(
+        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.code()))
+    );
+
+    assertThat(errorMessages).containsExactly(
+        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.message()))
+    );
+  }
+
+  @Test
+  void validate_whenNominatedOrganisationNotValid_thenValidationErrors() {
+
+    var form = NomineeDetailFormTestingUtil.builder().build();
+
+    var inactiveOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .isActive(false)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(inactiveOrganisation));
+
+
+    var bindingResult = validateNomineeDetailsForm(form);
+
+    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var expectedFrontEndErrorMessage = new FrontEndErrorMessage(
+        NomineeDetailFormValidator.NOMINEE_FIELD_NAME,
+        "%s.notValid".formatted(NomineeDetailFormValidator.NOMINEE_FIELD_NAME),
+        "%s is not a valid operator selection".formatted(inactiveOrganisation.name())
+    );
+
+    assertThat(errorCodes).containsExactly(
+        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.code()))
+    );
+
+    assertThat(errorMessages).containsExactly(
+        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.message()))
+    );
   }
 
   private BindingResult validateNomineeDetailsForm(NomineeDetailForm form) {

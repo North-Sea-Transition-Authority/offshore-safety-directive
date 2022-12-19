@@ -16,13 +16,15 @@ public class PortalOrganisationUnitQueryService {
       new OrganisationUnitProjectionRoot()
           .organisationUnitId()
           .name()
-          .registeredNumber();
+          .registeredNumber()
+          .isActive();
 
   static final OrganisationUnitsProjectionRoot MULTI_ORGANISATION_PROJECTION_ROOT =
       new OrganisationUnitsProjectionRoot()
           .organisationUnitId()
           .name()
-          .registeredNumber();
+          .registeredNumber()
+          .isActive();
 
   private final OrganisationApi organisationApi;
 

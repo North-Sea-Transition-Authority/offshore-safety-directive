@@ -64,7 +64,7 @@ class NomineeDetailFormServiceTest {
 
   @Test
   void validate_verifyMethodCall() {
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
+    var form = NomineeDetailFormTestingUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nomineeDetailFormService.validate(form, bindingResult);

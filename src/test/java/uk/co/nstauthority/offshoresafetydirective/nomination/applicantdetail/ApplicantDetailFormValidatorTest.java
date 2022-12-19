@@ -4,25 +4,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
+import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicantDetailFormValidatorTest {
 
-  private ApplicantDetailFormValidator applicantDetailFormValidator;
+  @Mock
+  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
-  @BeforeEach
-  void setup() {
-    applicantDetailFormValidator = new ApplicantDetailFormValidator();
-  }
+  @InjectMocks
+  private ApplicantDetailFormValidator applicantDetailFormValidator;
 
   @Test
   void supports_whenApplicationDetailFormClass_thenTrue() {
@@ -40,22 +45,79 @@ class ApplicantDetailFormValidatorTest {
 
   @Test
   void validate_whenValidForm_thenNoValidationErrors() {
-    var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(1);
-    form.setApplicantReference("ref#1");
+
+    var form = ApplicantDetailFormTestUtil.builder().build();
+
+    var validOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .isActive(true)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+        .thenReturn(Optional.of(validOrganisation));
+
     var bindingResult = validateApplicantDetailsForm(form);
 
     assertFalse(bindingResult.hasErrors());
   }
 
   @Test
-  void validate_whenInvalidForm_thenValidationErrors() {
-    var form = new ApplicantDetailForm();
-    var bindingResult = validateApplicantDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+  void validate_whenEmptyForm_thenValidationErrors() {
 
-    assertThat(extractedErrors).containsExactly(
-        entry("portalOrganisationId", Set.of("portalOrganisationId.required"))
+    var emptyForm = new ApplicantDetailForm();
+
+    var bindingResult = validateApplicantDetailsForm(emptyForm);
+
+    assertErrorCodesAndMessages(bindingResult, ApplicantDetailFormValidator.APPLICANT_REQUIRED_ERROR);
+  }
+
+  @Test
+  void validate_whenApplicantOrganisationNotFound_thenValidationErrors() {
+
+    var form = ApplicantDetailFormTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+        .thenReturn(Optional.empty());
+
+    var bindingResult = validateApplicantDetailsForm(form);
+
+    assertErrorCodesAndMessages(bindingResult, ApplicantDetailFormValidator.APPLICANT_NOT_FOUND_IN_PORTAL_ERROR);
+  }
+
+  @Test
+  void validate_whenApplicantOrganisationNotValid_thenValidationErrors() {
+
+    var form = ApplicantDetailFormTestUtil.builder().build();
+
+    var inactiveOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .isActive(false)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+        .thenReturn(Optional.of(inactiveOrganisation));
+
+    var bindingResult = validateApplicantDetailsForm(form);
+
+    var expectedError = new FrontEndErrorMessage(
+        ApplicantDetailFormValidator.APPLICANT_FIELD_NAME,
+        "%s.notValid".formatted(ApplicantDetailFormValidator.APPLICANT_FIELD_NAME),
+        "%s is not a valid operator selection".formatted(inactiveOrganisation.name())
+    );
+
+    assertErrorCodesAndMessages(bindingResult, expectedError);
+  }
+
+  private void assertErrorCodesAndMessages(BindingResult bindingResult, FrontEndErrorMessage frontEndErrorMessage) {
+
+    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorCodes).containsExactly(
+        entry(frontEndErrorMessage.field(), Set.of(frontEndErrorMessage.code()))
+    );
+
+    assertThat(errorMessages).containsExactly(
+        entry(frontEndErrorMessage.field(), Set.of(frontEndErrorMessage.message()))
     );
   }
 

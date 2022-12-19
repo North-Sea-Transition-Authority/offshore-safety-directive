@@ -20,6 +20,8 @@ public class PortalOrganisationDtoTestUtil {
 
     private OrganisationRegisteredNumber registeredNumber = new OrganisationRegisteredNumber("registered number");
 
+    private boolean isActive = true;
+
     public Builder withId(Integer id) {
       this.id = id;
       return this;
@@ -39,11 +41,17 @@ public class PortalOrganisationDtoTestUtil {
       return this;
     }
 
+    public Builder isActive(boolean isActive) {
+      this.isActive = isActive;
+      return this;
+    }
+
     public PortalOrganisationDto build() {
       return new PortalOrganisationDto(
           id,
           name,
-          registeredNumber
+          registeredNumber,
+          isActive
       );
     }
 

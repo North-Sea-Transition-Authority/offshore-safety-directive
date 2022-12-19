@@ -51,7 +51,7 @@ class NomineeDetailPersistenceServiceTest {
   @Test
   void createOrUpdateNomineeDetail_whenNoEntityExists_verifySavedEntityFields() {
 
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
+    var form = NomineeDetailFormTestingUtil.builder().build();
 
     when(nomineeDetailRepository.findByNominationDetail(nominationDetail)).thenReturn(Optional.empty());
 
@@ -93,7 +93,7 @@ class NomineeDetailPersistenceServiceTest {
   @Test
   void createOrUpdateNomineeDetail_whenEntityExists_verifySavedEntityFields() {
 
-    var form = NomineeDetailTestingUtil.getValidNomineeDetailForm();
+    var form = NomineeDetailFormTestingUtil.builder().build();
 
     when(nomineeDetailRepository.findByNominationDetail(nominationDetail)).thenReturn(Optional.of(new NomineeDetail()));
 
