@@ -178,8 +178,13 @@ class NominationCaseProcessingServiceTest {
     when(nominationDetailCaseProcessingService.findCaseProcessingHeaderDto(nominationDetail))
         .thenReturn(Optional.of(headerDto));
 
+    var portalOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(orgId)
+        .withName(orgName)
+        .build();
+
     when(portalOrganisationUnitQueryService.getOrganisationById(orgId))
-        .thenReturn(Optional.of(new PortalOrganisationDto(String.valueOf(orgId), orgName)));
+        .thenReturn(Optional.of(portalOrganisation));
 
     assertDoesNotThrow(() -> nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail));
 

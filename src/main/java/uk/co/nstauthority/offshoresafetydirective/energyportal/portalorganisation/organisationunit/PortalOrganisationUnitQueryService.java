@@ -2,44 +2,84 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
+import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @Service
 public class PortalOrganisationUnitQueryService {
 
-  //TODO OSDOP-197 remove this dummy values
-  private final List<PortalOrganisationDto> dummyPortalOrgs = List.of(
-      new PortalOrganisationDto(1, "SHELL U.K LIMITED"),
-      new PortalOrganisationDto(2, "CHEVRON NORTH SEA LIMITED"),
-      new PortalOrganisationDto(3, "BP EXPLORATION OPERATING COMPANY LIMITED"),
-      new PortalOrganisationDto(4, "FAIRFIELD BETULA LIMITED"),
-      new PortalOrganisationDto(5, "TEXACO BRITAIN LIMITED")
-  );
+  static final OrganisationUnitProjectionRoot SINGLE_ORGANISATION_PROJECTION_ROOT =
+      new OrganisationUnitProjectionRoot()
+          .organisationUnitId()
+          .name()
+          .registeredNumber();
+
+  static final OrganisationUnitsProjectionRoot MULTI_ORGANISATION_PROJECTION_ROOT =
+      new OrganisationUnitsProjectionRoot()
+          .organisationUnitId()
+          .name()
+          .registeredNumber();
+
+  private final OrganisationApi organisationApi;
+
+  private final EnergyPortalApiWrapper energyPortalApiWrapper;
+
+  @Autowired
+  public PortalOrganisationUnitQueryService(OrganisationApi organisationApi,
+                                            EnergyPortalApiWrapper energyPortalApiWrapper) {
+    this.organisationApi = organisationApi;
+    this.energyPortalApiWrapper = energyPortalApiWrapper;
+  }
 
   public Optional<PortalOrganisationDto> getOrganisationById(Integer id) {
-    Predicate<PortalOrganisationDto> findById = view ->
-        String.valueOf(view.id())
-            .contains(StringUtils.defaultIfBlank(id.toString(), ""));
-    return queryPortalOrganisationBy(findById)
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+            organisationApi.findOrganisationUnit(
+                id,
+                SINGLE_ORGANISATION_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
+        ))
         .stream()
+        .map(PortalOrganisationDto::fromOrganisationUnit)
         .findFirst();
   }
 
   List<PortalOrganisationDto> queryOrganisationByName(String organisationName) {
-    Predicate<PortalOrganisationDto> findByName = view ->
-        view.name()
-            .toLowerCase()
-            .contains(StringUtils.defaultIfBlank(organisationName.toLowerCase(), ""));
-    return queryPortalOrganisationBy(findByName);
 
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+        organisationApi.searchOrganisationUnits(
+            organisationName,
+            null,
+            MULTI_ORGANISATION_PROJECTION_ROOT,
+            requestPurpose,
+            logCorrelationId
+        )
+    ))
+        .stream()
+        .filter(organisationUnit -> organisationUnit.getIsActive() == null || organisationUnit.getIsActive())
+        .map(PortalOrganisationDto::fromOrganisationUnit)
+        .toList();
   }
 
-  private List<PortalOrganisationDto> queryPortalOrganisationBy(Predicate<PortalOrganisationDto> predicate) {
-    return dummyPortalOrgs
+  List<PortalOrganisationDto> queryOrganisationByRegisteredNumber(String registeredNumber) {
+
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+            organisationApi.searchOrganisationUnits(
+                null,
+                registeredNumber,
+                MULTI_ORGANISATION_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
+        ))
         .stream()
-        .filter(predicate)
+        .filter(organisationUnit -> organisationUnit.getIsActive() == null || organisationUnit.getIsActive())
+        .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }
 }

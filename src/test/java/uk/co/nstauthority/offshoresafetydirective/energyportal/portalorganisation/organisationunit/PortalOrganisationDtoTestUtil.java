@@ -18,6 +18,8 @@ public class PortalOrganisationDtoTestUtil {
 
     private String name = "Name";
 
+    private OrganisationRegisteredNumber registeredNumber = new OrganisationRegisteredNumber("registered number");
+
     public Builder withId(Integer id) {
       this.id = id;
       return this;
@@ -28,10 +30,20 @@ public class PortalOrganisationDtoTestUtil {
       return this;
     }
 
+    public Builder withRegisteredNumber(String registeredNumber) {
+      return withRegisteredNumber(new OrganisationRegisteredNumber(registeredNumber));
+    }
+
+    public Builder withRegisteredNumber(OrganisationRegisteredNumber registeredNumber) {
+      this.registeredNumber = registeredNumber;
+      return this;
+    }
+
     public PortalOrganisationDto build() {
       return new PortalOrganisationDto(
           id,
-          name
+          name,
+          registeredNumber
       );
     }
 

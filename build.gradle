@@ -54,7 +54,7 @@ dependencies {
 	implementation 'org.flywaydb:flyway-core:8.5.13'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 
-	implementation 'uk.co.fivium.energyportalapi:client:v2.3.0'
+	implementation 'uk.co.fivium.energyportalapi:client:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
