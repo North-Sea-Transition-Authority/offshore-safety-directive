@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Set;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
-import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -31,15 +30,13 @@ public class HasPermissionSecurityTestUtil {
 
     private Set<RolePermission> requiredPermissions = new HashSet<>();
 
-    private ServiceUserDetail userToTestWith = ServiceUserDetailTestUtil.Builder().build();
-
     public SmokeTester(MockMvc mockMvc, TeamMemberService teamMemberService) {
       super(mockMvc);
       this.teamMemberService = teamMemberService;
     }
 
     public SmokeTester withUser(ServiceUserDetail user) {
-      this.userToTestWith = user;
+      super.withUser(user);
       return this;
     }
 
@@ -55,6 +52,7 @@ public class HasPermissionSecurityTestUtil {
           Arrays.stream(RolePermission.values()).forEach(rolePermission -> {
 
             var teamMember = TeamMemberTestUtil.Builder()
+                .withWebUserAccountId(userToTestWith.wuaId())
                 .withRole(new TestTeamRole(rolePermission))
                 .build();
 

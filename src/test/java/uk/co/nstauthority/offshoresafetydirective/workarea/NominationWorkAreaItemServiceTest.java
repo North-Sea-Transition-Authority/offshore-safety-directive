@@ -229,7 +229,7 @@ class NominationWorkAreaItemServiceTest {
           ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nomination.getNominationId())));
       case SUBMITTED -> assertion.isEqualTo(
           ReverseRouter.route(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId())));
+              on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId(), null)));
       default -> throw new Exception("Status [%s] case not covered".formatted(status));
     }
 
@@ -261,7 +261,7 @@ class NominationWorkAreaItemServiceTest {
                 on(NominationTaskListController.class).getTaskList(draftNomination.getNominationId())),
             ReverseRouter.route(
                 on(NominationCaseProcessingController.class)
-                    .renderCaseProcessing(submittedNomination.getNominationId()))
+                    .renderCaseProcessing(submittedNomination.getNominationId(), null))
         );
   }
 

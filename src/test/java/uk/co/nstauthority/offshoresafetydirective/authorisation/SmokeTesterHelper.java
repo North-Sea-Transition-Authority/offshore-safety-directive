@@ -25,7 +25,7 @@ public abstract class SmokeTesterHelper<T> {
 
   private final Set<TestableEndpoint> testableEndpoints = new HashSet<>();
 
-  private ServiceUserDetail userToTestWith = ServiceUserDetailTestUtil.Builder().build();
+  protected ServiceUserDetail userToTestWith = ServiceUserDetailTestUtil.Builder().build();
 
   private final MultiValueMap<String, String> bodyParams = new LinkedMultiValueMap<>();
 

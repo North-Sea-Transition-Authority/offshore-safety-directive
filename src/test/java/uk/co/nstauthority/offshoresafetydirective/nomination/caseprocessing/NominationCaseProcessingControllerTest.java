@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
@@ -41,10 +42,19 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
 
-  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final ServiceUserDetail NOMINATION_MANAGE_USER = ServiceUserDetailTestUtil.Builder()
+      .withWuaId(100L)
+      .build();
+  private static final ServiceUserDetail NOMINATION_VIEW_USER = ServiceUserDetailTestUtil.Builder()
+      .withWuaId(200L)
+      .build();
 
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+  private static final TeamMember NOMINATION_MANAGER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
+
+  private static final TeamMember NOMINATION_VIEWER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.VIEW_NOMINATION)
       .build();
 
   @MockBean
@@ -65,8 +75,11 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGE_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_VIEW_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_VIEWER_TEAM_MEMBER));
 
     nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -84,15 +97,15 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withNominationDetail(nominationDetail)
-        .withUser(NOMINATION_CREATOR_USER)
+        .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
         .test();
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyManageNominationAndViewPermissionsAllowed() {
 
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
 
@@ -100,10 +113,10 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(header));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.CREATE_NOMINATION, RolePermission.VIEW_NOMINATIONS))
-        .withUser(NOMINATION_CREATOR_USER)
+        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
+        .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
         .test();
   }
@@ -114,8 +127,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
-            .with(user(NOMINATION_CREATOR_USER))
+        get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+            .with(user(NOMINATION_MANAGE_USER))
     ).andExpect(status().isNotFound());
   }
 
@@ -127,8 +140,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(header));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
         ).andExpect(status().isOk())
         .andExpect(model().attribute("headerInformation", header))
         .andExpect(model().attribute(
@@ -139,6 +152,39 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
             )
         ))
         .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
-        .andExpect(model().attribute("summaryView", nominationSummaryView));
+        .andExpect(model().attribute("summaryView", nominationSummaryView))
+        .andExpect(model().attribute("qaChecksSubmitUrl", ReverseRouter.route(on(NominationQaChecksController.class)
+            .submitQa(NOMINATION_ID, null))));
+  }
+
+  @Test
+  void renderCaseProcessing_whenCanManageNominations_thenEnsureModelAttributes() throws Exception {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
+        )
+        .andExpect(model().attribute("qaChecksSubmitUrl",
+            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null))))
+        .andExpect(model().attribute("canManageNomination", true));
+  }
+
+  @Test
+  void renderCaseProcessing_whenCannotManageNominations_thenEnsureModelAttributes() throws Exception {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_VIEW_USER))
+        )
+        .andExpect(model().attributeDoesNotExist("qaChecksSubmitUrl"))
+        .andExpect(model().attribute("canManageNomination", false));
   }
 }

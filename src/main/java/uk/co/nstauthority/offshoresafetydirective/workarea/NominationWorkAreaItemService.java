@@ -80,7 +80,7 @@ class NominationWorkAreaItemService {
     return switch (dto.nominationStatus()) {
       case DRAFT -> ReverseRouter.route(on(NominationTaskListController.class).getTaskList(dto.nominationId()));
       case SUBMITTED -> ReverseRouter.route(on(NominationCaseProcessingController.class)
-          .renderCaseProcessing(dto.nominationId()));
+          .renderCaseProcessing(dto.nominationId(), null));
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
     };
   }

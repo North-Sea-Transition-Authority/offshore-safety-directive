@@ -24,13 +24,13 @@ public enum RegulatorTeamRole implements TeamRole {
       "Manage nominations",
       "Can create and process phase one nomination applications",
       30,
-      EnumSet.of(RolePermission.CREATE_NOMINATION)
+      EnumSet.of(RolePermission.CREATE_NOMINATION, RolePermission.MANAGE_NOMINATIONS)
   ),
   VIEW_NOMINATION(
       "View nominations",
       "Can view nominations",
       40,
-      Set.of()
+      Set.of(RolePermission.VIEW_NOMINATIONS)
   ),
   MANAGE_ASSET_OPERATORS(
       "Manage well and installation operators",
