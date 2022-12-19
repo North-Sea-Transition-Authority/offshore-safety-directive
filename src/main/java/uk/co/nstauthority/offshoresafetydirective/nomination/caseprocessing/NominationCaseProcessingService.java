@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Nomina
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationUnitView;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCompanyNumber;
 
 @Service
 class NominationCaseProcessingService {
@@ -44,17 +46,31 @@ class NominationCaseProcessingService {
 
     var portalOrgUnits = getPortalOrganisationUnitDtosFromDto(dto);
 
+    var applicantPortalOrganisation = Optional.ofNullable(portalOrgUnits.get(dto.applicantOrganisationId()));
+
     var applicantOrgUnitView = new ApplicantOrganisationUnitView(
         new ApplicantOrganisationId(dto.applicantOrganisationId()),
-        Optional.ofNullable(portalOrgUnits.get(dto.applicantOrganisationId()))
-            .map(ApplicantOrganisationName::new)
+        applicantPortalOrganisation
+            .map(portalOrganisationDto -> new ApplicantOrganisationName(portalOrganisationDto.name()))
+            .orElse(null),
+        applicantPortalOrganisation
+            .map(portalOrganisationUnitDto ->
+                new RegisteredCompanyNumber(portalOrganisationUnitDto.registeredNumber().value())
+            )
             .orElse(null)
     );
 
+    var nomineePortalOrganisation = Optional.ofNullable(portalOrgUnits.get(dto.nominatedOrganisationId()));
+
     var nominatedOrgUnitView = new NominatedOrganisationUnitView(
         new NominatedOrganisationId(dto.nominatedOrganisationId()),
-        Optional.ofNullable(portalOrgUnits.get(dto.nominatedOrganisationId()))
-            .map(NominatedOrganisationName::new)
+        nomineePortalOrganisation
+            .map(portalOrganisationDto -> new NominatedOrganisationName(portalOrganisationDto.name()))
+            .orElse(null),
+        nomineePortalOrganisation
+            .map(portalOrganisationUnitDto ->
+                new RegisteredCompanyNumber(portalOrganisationUnitDto.registeredNumber().value())
+            )
             .orElse(null)
     );
 
@@ -72,7 +88,7 @@ class NominationCaseProcessingService {
     return Optional.of(header);
   }
 
-  private Map<Integer, String> getPortalOrganisationUnitDtosFromDto(NominationCaseProcessingHeaderDto dto) {
+  private Map<Integer, PortalOrganisationDto> getPortalOrganisationUnitDtosFromDto(NominationCaseProcessingHeaderDto dto) {
     var ids = Stream.of(dto.nominatedOrganisationId(), dto.applicantOrganisationId())
         .filter(Objects::nonNull)
         .distinct()
@@ -82,7 +98,7 @@ class NominationCaseProcessingService {
     return ids.stream()
         .map(portalOrganisationUnitQueryService::getOrganisationById)
         .flatMap(Optional::stream)
-        .collect(Collectors.toMap(PortalOrganisationDto::id, PortalOrganisationDto::name));
+        .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
   }
 
 }

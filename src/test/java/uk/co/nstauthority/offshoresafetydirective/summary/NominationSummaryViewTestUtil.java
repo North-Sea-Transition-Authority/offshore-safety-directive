@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToAnyFields;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToPearsApplications;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToWonsApplications;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCompanyNumber;
 
 public class NominationSummaryViewTestUtil {
 
@@ -38,7 +39,8 @@ public class NominationSummaryViewTestUtil {
     private ApplicantDetailSummaryView applicantDetailSummaryView = new ApplicantDetailSummaryView(
         new ApplicantOrganisationUnitView(
             new ApplicantOrganisationId(100),
-            new ApplicantOrganisationName("Applicant org unit")
+            new ApplicantOrganisationName("Applicant org unit"),
+            new RegisteredCompanyNumber("Registered company number")
         ),
         new ApplicantReference("Applicant reference"),
         null
@@ -47,7 +49,8 @@ public class NominationSummaryViewTestUtil {
     private NomineeDetailSummaryView nomineeDetailSummaryView = new NomineeDetailSummaryView(
         new NominatedOrganisationUnitView(
             new NominatedOrganisationId(200),
-            new NominatedOrganisationName("Nominated org unit")
+            new NominatedOrganisationName("Nominated org unit"),
+            new RegisteredCompanyNumber("Registered company number")
         ),
         new NominationReason("Nomination reason"),
         AppointmentPlannedStartDate.fromDate(LocalDate.now().plusMonths(2)),

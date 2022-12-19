@@ -21,6 +21,13 @@ class OrganisationUnitDisplayUtilTest {
     var result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationUnit);
 
     assertThat(result).isBlank();
+
+    result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(
+        portalOrganisationUnit.name(),
+        portalOrganisationUnit.registeredNumber().value()
+    );
+
+    assertThat(result).isBlank();
   }
 
   @ParameterizedTest
@@ -33,6 +40,13 @@ class OrganisationUnitDisplayUtilTest {
         .build();
 
     var result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationUnit);
+
+    assertThat(result).isEqualTo(portalOrganisationUnit.name());
+
+    result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(
+        portalOrganisationUnit.name(),
+        portalOrganisationUnit.registeredNumber().value()
+    );
 
     assertThat(result).isEqualTo(portalOrganisationUnit.name());
   }
@@ -50,6 +64,15 @@ class OrganisationUnitDisplayUtilTest {
     assertThat(result).isEqualTo(
         "%s (%s)".formatted(portalOrganisationUnit.name(), portalOrganisationUnit.registeredNumber().value())
     );
+
+    result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(
+        portalOrganisationUnit.name(),
+        portalOrganisationUnit.registeredNumber().value()
+    );
+
+    assertThat(result).isEqualTo(
+        "%s (%s)".formatted(portalOrganisationUnit.name(), portalOrganisationUnit.registeredNumber().value())
+    );
   }
 
   @ParameterizedTest
@@ -62,6 +85,13 @@ class OrganisationUnitDisplayUtilTest {
         .build();
 
     var result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationUnit);
+
+    assertThat(result).isEmpty();
+
+    result = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(
+        portalOrganisationUnit.name(),
+        portalOrganisationUnit.registeredNumber().value()
+    );
 
     assertThat(result).isEmpty();
   }

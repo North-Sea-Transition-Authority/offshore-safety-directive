@@ -17,7 +17,7 @@ public class OrganisationUnitDisplayUtil {
     );
   }
 
-  private static String getOrganisationUnitDisplayName(String name, String registeredNumber) {
+  public static String getOrganisationUnitDisplayName(String name, String registeredNumber) {
     if (StringUtils.isBlank(name)) {
       return "";
     } else {

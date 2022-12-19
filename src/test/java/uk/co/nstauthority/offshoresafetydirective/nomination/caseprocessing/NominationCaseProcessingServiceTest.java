@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationUnitView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCompanyNumber;
 
 @ExtendWith(MockitoExtension.class)
 class NominationCaseProcessingServiceTest {
@@ -62,9 +63,11 @@ class NominationCaseProcessingServiceTest {
 
     var applicantOrgUnitId = 1;
     var applicantOrgUnitName = "applicantOrg";
+    var applicantCompanyNumber = "applicant company number";
 
     var nominatedOrgUnitId = 2;
     var nominatedOrgUnitName = "nominatedOrg";
+    var nomineeCompanyNumber = "nominee company number";
 
     var headerDto = NominationCaseProcessingHeaderDtoUtil.builder()
         .withNominationReference("reference")
@@ -83,6 +86,7 @@ class NominationCaseProcessingServiceTest {
             PortalOrganisationDtoTestUtil.builder()
                 .withId(applicantOrgUnitId)
                 .withName(applicantOrgUnitName)
+                .withRegisteredNumber(applicantCompanyNumber)
                 .build()
         ));
 
@@ -91,6 +95,7 @@ class NominationCaseProcessingServiceTest {
             PortalOrganisationDtoTestUtil.builder()
                 .withId(nominatedOrgUnitId)
                 .withName(nominatedOrgUnitName)
+                .withRegisteredNumber(nomineeCompanyNumber)
                 .build()
         ));
 
@@ -112,9 +117,15 @@ class NominationCaseProcessingServiceTest {
             ),
             NominationStatus.DRAFT,
             new ApplicantOrganisationUnitView(
-                new ApplicantOrganisationId(applicantOrgUnitId), new ApplicantOrganisationName(applicantOrgUnitName)),
+                new ApplicantOrganisationId(applicantOrgUnitId),
+                new ApplicantOrganisationName(applicantOrgUnitName),
+                new RegisteredCompanyNumber(applicantCompanyNumber)
+            ),
             new NominatedOrganisationUnitView(
-                new NominatedOrganisationId(nominatedOrgUnitId), new NominatedOrganisationName(nominatedOrgUnitName))
+                new NominatedOrganisationId(nominatedOrgUnitId),
+                new NominatedOrganisationName(nominatedOrgUnitName),
+                new RegisteredCompanyNumber(nomineeCompanyNumber)
+            )
         );
 
   }
@@ -153,9 +164,15 @@ class NominationCaseProcessingServiceTest {
             NominationCaseProcessingHeader::nominatedOrganisationUnitView
         ).containsExactly(
             new ApplicantOrganisationUnitView(
-                new ApplicantOrganisationId(applicantOrgUnitId), null),
+                new ApplicantOrganisationId(applicantOrgUnitId),
+                null,
+                null
+            ),
             new NominatedOrganisationUnitView(
-                new NominatedOrganisationId(nominatedOrgUnitId), null)
+                new NominatedOrganisationId(nominatedOrgUnitId),
+                null,
+                null
+            )
         );
 
   }

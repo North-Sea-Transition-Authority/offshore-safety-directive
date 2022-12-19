@@ -5,6 +5,8 @@
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
+<#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
+<#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 

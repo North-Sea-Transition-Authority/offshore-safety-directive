@@ -8,7 +8,7 @@
   >
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Nominated organisation">
-          ${(nomineeDetailSummaryView.nominatedOrganisationUnitView().name().name())!""}
+          ${(nomineeDetailSummaryView.nominatedOrganisationUnitView().displayName())!""}
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Reason for the nomination">

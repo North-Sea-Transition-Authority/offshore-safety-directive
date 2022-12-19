@@ -8,7 +8,7 @@
   >
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Applicant organisation">
-          ${(applicantDetailSummaryView.applicantOrganisationUnitView().name().name())!""}
+          ${(applicantDetailSummaryView.applicantOrganisationUnitView().displayName())!""}
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Applicant reference">
