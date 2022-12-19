@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,11 +42,17 @@ class NominationWorkAreaItemTransformerServiceTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getApplicantOrganisationId().id()))
         .thenReturn(Optional.of(
-            new PortalOrganisationDto(queryResult.getApplicantOrganisationId().id().toString(), "app org")));
+            PortalOrganisationDtoTestUtil.builder()
+                .withId(queryResult.getApplicantOrganisationId().id())
+                .build()
+        ));
 
     when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getNominatedOrganisationId().id()))
         .thenReturn(Optional.of(
-            new PortalOrganisationDto(queryResult.getNominatedOrganisationId().id().toString(), "nominated org")));
+            PortalOrganisationDtoTestUtil.builder()
+                .withId(queryResult.getNominatedOrganisationId().id())
+                .build()
+        ));
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();
 
@@ -64,10 +70,10 @@ class NominationWorkAreaItemTransformerServiceTest {
     ).containsExactly(
         Tuple.tuple(
             queryResult.getNominationId(),
-            queryResult.getApplicantOrganisationId().id().toString(),
+            queryResult.getApplicantOrganisationId().id(),
             queryResult.getNominationReference(),
             queryResult.getApplicantReference(),
-            queryResult.getNominatedOrganisationId().id().toString(),
+            queryResult.getNominatedOrganisationId().id(),
             queryResult.getNominationDisplayType(),
             queryResult.getNominationStatus(),
             queryResult.getCreatedTime(),

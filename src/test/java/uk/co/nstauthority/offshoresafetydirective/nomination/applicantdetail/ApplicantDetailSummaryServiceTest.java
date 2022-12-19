@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
@@ -41,7 +41,10 @@ class ApplicantDetailSummaryServiceTest {
 
     Integer portalOrgId = 190;
     var portalOrgName = "Portal org";
-    var portalOrgDto = new PortalOrganisationDto(portalOrgId.toString(), portalOrgName);
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var applicantDetail = ApplicantDetailTestUtil.builder()
@@ -81,7 +84,11 @@ class ApplicantDetailSummaryServiceTest {
   void getApplicantDetailSummaryView_whenApplicantDetail_andNoReference_thenAssert() {
     Integer portalOrgId = 190;
     var portalOrgName = "Portal org";
-    var portalOrgDto = new PortalOrganisationDto(portalOrgId.toString(), portalOrgName);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var applicantDetail = ApplicantDetailTestUtil.builder()

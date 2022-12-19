@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
@@ -51,7 +51,12 @@ class NomineeDetailSummaryServiceTest {
 
     Integer portalOrgId = 190;
     var portalOrgName = "Portal org";
-    var portalOrgDto = new PortalOrganisationDto(portalOrgId.toString(), portalOrgName);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
+
     var plannedStartDate = LocalDate.now();
     var reasonForNomination = "Reason for nomination";
 

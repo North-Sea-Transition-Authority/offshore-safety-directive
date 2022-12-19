@@ -36,12 +36,12 @@ class NominationWorkAreaItemTransformerService {
             result.getNominationId(),
             result.getNominationVersion(),
             result.getApplicantOrganisationId() != null
-                ? organisationGroupMap.get(result.getApplicantOrganisationId().id().toString())
+                ? organisationGroupMap.get(result.getApplicantOrganisationId().id())
                 : null,
             result.getNominationReference(),
             result.getApplicantReference(),
             result.getNominatedOrganisationId() != null
-                ? organisationGroupMap.get(result.getNominatedOrganisationId().id().toString())
+                ? organisationGroupMap.get(result.getNominatedOrganisationId().id())
                 : null,
             result.getNominationDisplayType(),
             result.getNominationStatus(),
@@ -51,7 +51,7 @@ class NominationWorkAreaItemTransformerService {
         .toList();
   }
 
-  private Map<String, PortalOrganisationDto> getOrganisationUnitsForResults(
+  private Map<Integer, PortalOrganisationDto> getOrganisationUnitsForResults(
       Collection<NominationWorkAreaQueryResult> queryResults
   ) {
 

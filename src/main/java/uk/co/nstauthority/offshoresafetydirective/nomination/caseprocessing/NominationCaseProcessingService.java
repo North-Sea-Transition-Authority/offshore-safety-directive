@@ -82,7 +82,7 @@ class NominationCaseProcessingService {
     return ids.stream()
         .map(portalOrganisationUnitQueryService::getOrganisationById)
         .flatMap(Optional::stream)
-        .collect(Collectors.toMap(orgDto -> Integer.parseInt(orgDto.id()), PortalOrganisationDto::name));
+        .collect(Collectors.toMap(PortalOrganisationDto::id, PortalOrganisationDto::name));
   }
 
 }

@@ -11,7 +11,7 @@ public record NominatedOrganisationUnitView(
 
   public static NominatedOrganisationUnitView from(PortalOrganisationDto dto) {
     return new NominatedOrganisationUnitView(
-        new NominatedOrganisationId(Integer.parseInt(dto.id())),
+        new NominatedOrganisationId(dto.id()),
         new NominatedOrganisationName(dto.name())
     );
   }

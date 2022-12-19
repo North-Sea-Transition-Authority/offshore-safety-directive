@@ -10,7 +10,7 @@ public record ApplicantOrganisationUnitView(ApplicantOrganisationId id, Applican
 
   public static ApplicantOrganisationUnitView from(PortalOrganisationDto dto) {
     return new ApplicantOrganisationUnitView(
-        new ApplicantOrganisationId(Integer.parseInt(dto.id())),
+        new ApplicantOrganisationId(dto.id()),
         new ApplicantOrganisationName(dto.name())
     );
   }

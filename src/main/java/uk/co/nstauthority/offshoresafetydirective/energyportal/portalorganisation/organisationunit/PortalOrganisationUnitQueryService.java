@@ -11,16 +11,16 @@ public class PortalOrganisationUnitQueryService {
 
   //TODO OSDOP-197 remove this dummy values
   private final List<PortalOrganisationDto> dummyPortalOrgs = List.of(
-      new PortalOrganisationDto("1", "SHELL U.K LIMITED"),
-      new PortalOrganisationDto("2", "CHEVRON NORTH SEA LIMITED"),
-      new PortalOrganisationDto("3", "BP EXPLORATION OPERATING COMPANY LIMITED"),
-      new PortalOrganisationDto("4", "FAIRFIELD BETULA LIMITED"),
-      new PortalOrganisationDto("5", "TEXACO BRITAIN LIMITED")
+      new PortalOrganisationDto(1, "SHELL U.K LIMITED"),
+      new PortalOrganisationDto(2, "CHEVRON NORTH SEA LIMITED"),
+      new PortalOrganisationDto(3, "BP EXPLORATION OPERATING COMPANY LIMITED"),
+      new PortalOrganisationDto(4, "FAIRFIELD BETULA LIMITED"),
+      new PortalOrganisationDto(5, "TEXACO BRITAIN LIMITED")
   );
 
   public Optional<PortalOrganisationDto> getOrganisationById(Integer id) {
     Predicate<PortalOrganisationDto> findById = view ->
-        view.id()
+        String.valueOf(view.id())
             .contains(StringUtils.defaultIfBlank(id.toString(), ""));
     return queryPortalOrganisationBy(findById)
         .stream()

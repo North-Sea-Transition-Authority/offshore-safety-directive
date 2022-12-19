@@ -27,7 +27,7 @@ public class PortalOrganisationUnitRestController {
   public RestSearchResult searchPortalOrganisations(@RequestParam("term") String searchTerm) {
     List<RestSearchItem> searchItemsResult = portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm)
         .stream()
-        .map(view -> new RestSearchItem(view.id(), view.name()))
+        .map(view -> new RestSearchItem(String.valueOf(view.id()), view.name()))
         .toList();
 
     return new RestSearchResult(searchItemsResult);

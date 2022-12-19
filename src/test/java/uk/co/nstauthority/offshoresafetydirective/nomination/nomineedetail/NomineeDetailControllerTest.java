@@ -28,7 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -133,7 +133,10 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     form.setNominatedOrganisationId(100);
 
-    var portalOrganisationUnit = new PortalOrganisationDto("20", "name");
+    var portalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withId(20)
+        .withName("name")
+        .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
         .thenReturn(Optional.of(portalOrganisationUnit));
@@ -152,7 +155,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "preselectedItems",
-            Map.of(portalOrganisationUnit.id(), portalOrganisationUnit.name())
+            Map.of(String.valueOf(portalOrganisationUnit.id()), portalOrganisationUnit.name())
         ))
         .andExpect(model().attribute(
             "actionUrl",

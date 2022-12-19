@@ -11,7 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailCaseProcessingService;
@@ -79,10 +79,20 @@ class NominationCaseProcessingServiceTest {
         .thenReturn(Optional.of(headerDto));
 
     when(portalOrganisationUnitQueryService.getOrganisationById(applicantOrgUnitId))
-        .thenReturn(Optional.of(new PortalOrganisationDto(String.valueOf(applicantOrgUnitId), applicantOrgUnitName)));
+        .thenReturn(Optional.of(
+            PortalOrganisationDtoTestUtil.builder()
+                .withId(applicantOrgUnitId)
+                .withName(applicantOrgUnitName)
+                .build()
+        ));
 
     when(portalOrganisationUnitQueryService.getOrganisationById(nominatedOrgUnitId))
-        .thenReturn(Optional.of(new PortalOrganisationDto(String.valueOf(nominatedOrgUnitId), nominatedOrgUnitName)));
+        .thenReturn(Optional.of(
+            PortalOrganisationDtoTestUtil.builder()
+                .withId(nominatedOrgUnitId)
+                .withName(nominatedOrgUnitName)
+                .build()
+        ));
 
     var result = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail);
     assertThat(result).isPresent();

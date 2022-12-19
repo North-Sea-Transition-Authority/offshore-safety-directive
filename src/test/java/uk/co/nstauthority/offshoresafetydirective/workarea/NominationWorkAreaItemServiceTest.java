@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -69,8 +69,16 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
-    var applicantOrganisation = new PortalOrganisationDto("1", "App org");
-    var nominatedOrganisation = new PortalOrganisationDto("2", "Nominated org");
+    var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("Applicant org")
+        .build();
+
+    var nominatedOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(2)
+        .withName("Nominated org")
+        .build();
+
     when(portalOrganisationUnitQueryService.getOrganisationById(1)).thenReturn(Optional.of(applicantOrganisation));
     when(portalOrganisationUnitQueryService.getOrganisationById(2)).thenReturn(Optional.of(nominatedOrganisation));
 

@@ -151,7 +151,10 @@ public class ApplicantDetailController {
     var selectedItem = new HashMap<String, String>();
     if (form.getPortalOrganisationId() != null) {
       portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId())
-          .ifPresent(organisationView -> selectedItem.put(organisationView.id(), organisationView.name()));
+          .ifPresent(organisationView -> selectedItem.put(
+              String.valueOf(organisationView.id()),
+              organisationView.name()
+          ));
     }
     return selectedItem;
   }

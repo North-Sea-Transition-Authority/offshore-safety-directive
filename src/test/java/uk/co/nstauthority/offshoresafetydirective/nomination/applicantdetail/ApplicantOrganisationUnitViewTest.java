@@ -3,14 +3,19 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 
 class ApplicantOrganisationUnitViewTest {
 
   @Test
   void from() {
-    var portalOrgDto = new PortalOrganisationDto("1", "Org name");
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("Org name")
+        .build();
+
     var result = ApplicantOrganisationUnitView.from(portalOrgDto);
+
     assertThat(result)
         .extracting(
             view -> view.id().id(),

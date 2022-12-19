@@ -103,7 +103,10 @@ public class NomineeDetailController {
     var selectedItem = new HashMap<String, String>();
     if (form.getNominatedOrganisationId() != null) {
       portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId())
-          .ifPresent(organisationView -> selectedItem.put(organisationView.id(), organisationView.name()));
+          .ifPresent(organisationView -> selectedItem.put(
+              String.valueOf(organisationView.id()),
+              organisationView.name()
+          ));
     }
     return selectedItem;
   }
