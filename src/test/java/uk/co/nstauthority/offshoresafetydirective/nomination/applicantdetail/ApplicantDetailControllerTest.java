@@ -17,6 +17,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -217,7 +219,17 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   void getUpdateApplicantDetails_assertModelProperties() throws Exception {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(ApplicantDetailTestUtil.getValidApplicantDetailForm());
+
+    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var portalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withName("name")
+        .withRegisteredNumber("registered number")
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+        .thenReturn(Optional.of(portalOrganisationUnit));
 
     mockMvc.perform(
             get(ReverseRouter.route(
@@ -235,7 +247,13 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
             "actionUrl",
             ReverseRouter.route(on(ApplicantDetailController.class).updateApplicantDetails(nominationId, null, null))
         ))
-        .andExpect(model().attribute("preselectedItems", Map.of()))
+        .andExpect(model().attribute(
+            "preselectedItems",
+            Map.of(
+                String.valueOf(portalOrganisationUnit.id()),
+                "%s (%s)".formatted(portalOrganisationUnit.name(), portalOrganisationUnit.registeredNumber().value())
+            )
+        ))
         .andExpect(model().attribute(
             "breadcrumbsList",
             Map.of(

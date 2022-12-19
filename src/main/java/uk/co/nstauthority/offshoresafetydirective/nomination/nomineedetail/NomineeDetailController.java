@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -103,9 +104,9 @@ public class NomineeDetailController {
     var selectedItem = new HashMap<String, String>();
     if (form.getNominatedOrganisationId() != null) {
       portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId())
-          .ifPresent(organisationView -> selectedItem.put(
-              String.valueOf(organisationView.id()),
-              organisationView.name()
+          .ifPresent(portalOrganisationDto -> selectedItem.put(
+              String.valueOf(portalOrganisationDto.id()),
+              OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationDto)
           ));
     }
     return selectedItem;

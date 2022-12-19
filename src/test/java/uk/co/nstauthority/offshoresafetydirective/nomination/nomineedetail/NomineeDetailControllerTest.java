@@ -136,6 +136,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     var portalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
         .withId(20)
         .withName("name")
+        .withRegisteredNumber("registered number")
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
@@ -155,7 +156,10 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "preselectedItems",
-            Map.of(String.valueOf(portalOrganisationUnit.id()), portalOrganisationUnit.name())
+            Map.of(
+                String.valueOf(portalOrganisationUnit.id()),
+                "%s (%s)".formatted(portalOrganisationUnit.name(), portalOrganisationUnit.registeredNumber().value())
+            )
         ))
         .andExpect(model().attribute(
             "actionUrl",
