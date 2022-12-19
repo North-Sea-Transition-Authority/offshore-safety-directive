@@ -83,7 +83,7 @@ public class NominationCaseProcessingController {
       canManageNomination = true;
       modelAndView
           .addObject("qaChecksSubmitUrl",
-              ReverseRouter.route(on(NominationQaChecksController.class).submitQa(nominationId, null)));
+              ReverseRouter.route(on(NominationQaChecksController.class).submitQa(nominationId, null, null)));
     }
 
     modelAndView.addObject("canManageNomination", canManageNomination);

@@ -154,7 +154,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
         .andExpect(model().attribute("summaryView", nominationSummaryView))
         .andExpect(model().attribute("qaChecksSubmitUrl", ReverseRouter.route(on(NominationQaChecksController.class)
-            .submitQa(NOMINATION_ID, null))));
+            .submitQa(NOMINATION_ID, null, null))));
   }
 
   @Test
@@ -169,7 +169,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(model().attribute("qaChecksSubmitUrl",
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null))))
+            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
         .andExpect(model().attribute("canManageNomination", true));
   }
 
