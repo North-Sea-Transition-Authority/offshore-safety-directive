@@ -14,6 +14,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -38,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = {NominationCaseProcessingController.class})
+@Import(NominationCaseProcessingModelAndViewGenerator.class)
 class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
@@ -99,7 +101,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
         )
         .test();
   }
@@ -116,7 +118,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
         )
         .test();
   }
@@ -127,7 +129,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+        get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
             .with(user(NOMINATION_MANAGE_USER))
     ).andExpect(status().isNotFound());
   }
@@ -140,7 +142,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(header));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
                 .with(user(NOMINATION_MANAGE_USER))
         ).andExpect(status().isOk())
         .andExpect(model().attribute("headerInformation", header))
@@ -165,7 +167,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(header));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(model().attribute("qaChecksSubmitUrl",
@@ -181,7 +183,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(header));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
                 .with(user(NOMINATION_VIEW_USER))
         )
         .andExpect(model().attributeDoesNotExist("qaChecksSubmitUrl"))

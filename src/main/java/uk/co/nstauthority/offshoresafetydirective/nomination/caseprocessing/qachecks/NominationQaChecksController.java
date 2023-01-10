@@ -22,14 +22,17 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/manage/submit-qa")
+@RequestMapping("/nomination/{nominationId}/manage")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
 public class NominationQaChecksController {
+
+  public static final String FORM_NAME = "qaChecksForm";
 
   private final CaseEventService caseEventService;
   private final NominationDetailService nominationDetailService;
@@ -41,9 +44,9 @@ public class NominationQaChecksController {
     this.nominationDetailService = nominationDetailService;
   }
 
-  @PostMapping
+  @PostMapping(params = CaseProcessingAction.QA)
   public ModelAndView submitQa(@PathVariable("nominationId") NominationId nominationId,
-                               @Nullable @ModelAttribute("form") NominationQaChecksForm nominationQaChecksForm,
+                               @Nullable @ModelAttribute(FORM_NAME) NominationQaChecksForm nominationQaChecksForm,
                                @Nullable RedirectAttributes redirectAttributes) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
@@ -62,7 +65,7 @@ public class NominationQaChecksController {
     }
 
     return ReverseRouter.redirect(on(NominationCaseProcessingController.class)
-        .renderCaseProcessing(nominationId, null));
+        .renderCaseProcessing(nominationId));
   }
 
 }

@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -79,7 +80,8 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null)),
+            getParameterizedRouteOf(
+                ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -92,7 +94,8 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null)),
+            getParameterizedRouteOf(
+                ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -103,15 +106,19 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
   void submitQa_whenCommentSupplied_thenCaseEventCreated() throws Exception {
     var comment = "comment text";
 
+    var route = ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null));
+
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null)))
+            post(
+                getParameterizedRouteOf(
+                    ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))
                 .param("comment", comment)
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(
-            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
+            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
         .andExpect(notificationBanner(QA_CHECK_NOTIFICATION_BANNER));
 
     verify(caseEventService).createCompletedQaChecksEvent(nominationDetail, comment);
@@ -121,16 +128,22 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
   void submitQa_whenNoCommentSupplied_thenCaseEventCreated() throws Exception {
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null)))
+            post(
+                getParameterizedRouteOf(
+                    ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(
-            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
+            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
         .andExpect(notificationBanner(QA_CHECK_NOTIFICATION_BANNER));
 
     verify(caseEventService).createCompletedQaChecksEvent(nominationDetail, null);
+  }
+
+  private String getParameterizedRouteOf(String route) {
+    return "%s?%s".formatted(route, CaseProcessingAction.QA);
   }
 
 }

@@ -11,6 +11,7 @@
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="qaChecksSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="canManageNomination" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="caseProcessingAction_QA" type="java.lang.String" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -45,7 +46,12 @@
     </#if>
 
     <#if qaChecksSubmitUrl?has_content>
-        <@_qaChecksSlideout.qaChecksSlideout panelId=qaChecksSlideoutPanelId headingText=qaChecksSlideoutText postUrl=qaChecksSubmitUrl/>
+        <@_qaChecksSlideout.qaChecksSlideout
+            panelId=qaChecksSlideoutPanelId
+            headingText=qaChecksSlideoutText
+            postUrl=qaChecksSubmitUrl
+            postParam=caseProcessingAction_QA
+        />
     </#if>
 
     <@fdsTabs.tabs tabsHeading="Nomination tabs">
