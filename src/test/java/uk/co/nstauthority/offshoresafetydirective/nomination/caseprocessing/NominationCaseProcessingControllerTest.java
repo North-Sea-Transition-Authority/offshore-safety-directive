@@ -27,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
@@ -156,7 +157,9 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
         .andExpect(model().attribute("summaryView", nominationSummaryView))
         .andExpect(model().attribute("qaChecksSubmitUrl", ReverseRouter.route(on(NominationQaChecksController.class)
-            .submitQa(NOMINATION_ID, null, null))));
+            .submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
+        .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
+            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null))));
   }
 
   @Test
@@ -171,7 +174,9 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(model().attribute("qaChecksSubmitUrl",
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
+            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
+        .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
+            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null))))
         .andExpect(model().attribute("canManageNomination", true));
   }
 

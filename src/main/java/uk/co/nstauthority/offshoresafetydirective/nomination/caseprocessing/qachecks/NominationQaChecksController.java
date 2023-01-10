@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
@@ -33,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominationQaChecksController {
 
   public static final String FORM_NAME = "qaChecksForm";
+  public static final String BINDING_RESULT_NAME = "%sBindingResult".formatted(FORM_NAME);
 
   private final CaseEventService caseEventService;
   private final NominationDetailService nominationDetailService;
@@ -46,6 +48,7 @@ public class NominationQaChecksController {
 
   @PostMapping(params = CaseProcessingAction.QA)
   public ModelAndView submitQa(@PathVariable("nominationId") NominationId nominationId,
+                               @Nullable @RequestParam(CaseProcessingAction.QA) String postButtonName,
                                @Nullable @ModelAttribute(FORM_NAME) NominationQaChecksForm nominationQaChecksForm,
                                @Nullable RedirectAttributes redirectAttributes) {
 

@@ -79,9 +79,8 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(
-            getParameterizedRouteOf(
-                ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))),
+        .withPostEndpoint(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID,
+                CaseProcessingAction.QA, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -93,9 +92,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(
-            getParameterizedRouteOf(
-                ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))),
+        .withPostEndpoint(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -106,12 +103,8 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
   void submitQa_whenCommentSupplied_thenCaseEventCreated() throws Exception {
     var comment = "comment text";
 
-    var route = ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null));
-
     mockMvc.perform(
-            post(
-                getParameterizedRouteOf(
-                    ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
+            post(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))
                 .param("comment", comment)
@@ -128,9 +121,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
   void submitQa_whenNoCommentSupplied_thenCaseEventCreated() throws Exception {
 
     mockMvc.perform(
-            post(
-                getParameterizedRouteOf(
-                    ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, null, null))))
+            post(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))
         )
@@ -140,10 +131,6 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .andExpect(notificationBanner(QA_CHECK_NOTIFICATION_BANNER));
 
     verify(caseEventService).createCompletedQaChecksEvent(nominationDetail, null);
-  }
-
-  private String getParameterizedRouteOf(String route) {
-    return "%s?%s".formatted(route, CaseProcessingAction.QA);
   }
 
 }

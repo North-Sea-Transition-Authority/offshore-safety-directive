@@ -2,7 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 public enum CaseEventType {
 
-  QA_CHECKS("QA checks completed");
+  QA_CHECKS("QA checks completed"),
+  DECISION("Decision");
 
   private final String screenDisplayText;
 

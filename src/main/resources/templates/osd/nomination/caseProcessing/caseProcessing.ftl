@@ -3,6 +3,7 @@
 <#import '../summary/nominationSummary.ftl' as nominationSummary/>
 <#import '../../macros/slideOutActionDropdownItem.ftl' as slideOutActionDropdownItem/>
 <#import '_qaChecksSlideout.ftl' as _qaChecksSlideout/>
+<#import '_decisionSlideout.ftl' as _decisionSlideout/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -12,6 +13,9 @@
 <#-- @ftlvariable name="qaChecksSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="canManageNomination" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="caseProcessingAction_QA" type="java.lang.String" -->
+<#-- @ftlvariable name="decisionSubmitUrl" type="java.lang.String" -->
+<#-- @ftlvariable name="caseProcessingAction_DECISION" type="java.lang.String" -->
+<#-- @ftlvariable name="nominationDecisions" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -28,18 +32,25 @@
     pageSize=PageSize.FULL_WIDTH
     backLinkUrl=springUrl(backLinkUrl!"")
     breadcrumbsList=breadcrumbsList
+    errorItems=[]
 >
 
     <@_caseProcessingHeader.caseProcessingHeader headerInformation/>
 
-    <#assign qaChecksSlideoutPanelId = "complete-qa-checks"/>
+    <#assign qaChecksSlideoutPanelId = "qa-checks"/>
     <#assign qaChecksSlideoutText = "Complete QA checks"/>
+
+    <#assign decisionSlideoutPanelId = "decision"/>
+    <#assign decisionSlideoutText = "Decision"/>
 
     <#if canManageNomination>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
                 <#if qaChecksSubmitUrl?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=qaChecksSlideoutText slideOutPanelId=qaChecksSlideoutPanelId/>
+                </#if>
+                <#if decisionSubmitUrl?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=decisionSlideoutText slideOutPanelId=decisionSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -51,6 +62,16 @@
             headingText=qaChecksSlideoutText
             postUrl=qaChecksSubmitUrl
             postParam=caseProcessingAction_QA
+        />
+    </#if>
+
+    <#if decisionSubmitUrl?has_content>
+        <@_decisionSlideout.decisionSlideout
+            panelId=decisionSlideoutPanelId
+            headingText=decisionSlideoutText
+            postUrl=decisionSubmitUrl
+            postParam=caseProcessingAction_DECISION
+            nominationDecisions=nominationDecisions
         />
     </#if>
 

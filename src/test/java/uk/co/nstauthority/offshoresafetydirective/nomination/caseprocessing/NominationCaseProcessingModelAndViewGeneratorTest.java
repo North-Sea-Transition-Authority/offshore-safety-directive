@@ -10,6 +10,8 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +25,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
@@ -63,9 +68,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     nominationId = new NominationId(nominationDetail.getNomination().getId());
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
-    when(nominationDetailService.getLatestNominationDetail(nominationId))
-        .thenReturn(nominationDetail);
-
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
   }
 
@@ -85,8 +87,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .thenReturn(false);
 
     var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationId, qaChecksForm);
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm);
 
     assertThat(result.getModel())
         .extracting(
@@ -111,10 +114,17 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertBreadcrumbs(result, nominationDetail);
   }
 
-  @Test
-  void getCaseProcessingModelAndView_whenCanManageNomination_thenAssertModelProperties() {
+  @ParameterizedTest
+  @EnumSource(NominationStatus.class)
+  void getCaseProcessingModelAndView_whenCanManageNomination_thenAssertModelPropertiesBasedOnNominationStatus(
+      NominationStatus nominationStatus
+  ) {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(nominationStatus)
+        .build();
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
@@ -126,8 +136,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .thenReturn(true);
 
     var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationId, qaChecksForm);
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm);
 
     assertThat(result.getModel())
         .extracting(
@@ -135,16 +146,30 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "summaryView",
             NominationQaChecksController.FORM_NAME,
             "caseProcessingAction_QA",
-            "canManageNomination",
-            "qaChecksSubmitUrl"
+            "canManageNomination"
         ).containsExactly(
             header,
             nominationSummaryView,
             qaChecksForm,
             CaseProcessingAction.QA,
-            true,
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(nominationId, null, null))
+            true
         );
+
+    switch (nominationStatus) {
+      case SUBMITTED -> assertThat(result.getModel())
+          .hasFieldOrPropertyWithValue(
+              "qaChecksSubmitUrl",
+              ReverseRouter.route(
+                  on(NominationQaChecksController.class).submitQa(nominationId, CaseProcessingAction.QA, null, null))
+          )
+          .hasFieldOrPropertyWithValue(
+              "decisionSubmitUrl",
+              ReverseRouter.route(on(NominationDecisionController.class).submitDecision(nominationId, true,
+                  CaseProcessingAction.DECISION, null, null))
+          );
+      default -> assertThat(result.getModel())
+          .doesNotContainKeys("qaChecksSubmitUrl", "decisionSubmitUrl");
+    }
 
     assertBreadcrumbs(result, nominationDetail);
   }
