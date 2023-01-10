@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
@@ -11,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
 @ExtendWith(MockitoExtension.class)
 class NominationDetailServiceTest {
@@ -116,6 +120,42 @@ class NominationDetailServiceTest {
   }
 
   @Test
+  void getLatestSubmittedNominationDetail_whenExists_thenReturnOptional() {
+    var detail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        detail.getNomination().getId(),
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ))
+        .thenReturn(Optional.of(detail));
+
+    var nominationId = new NominationId(detail.getNomination().getId());
+
+    var result = nominationDetailService.getLatestNominationDetailWithStatuses(nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED));
+
+    assertThat(result).contains(detail);
+  }
+
+  @Test
+  void getLatestSubmittedNominationDetail_whenNotExists_thenReturnEmptyOptional() {
+    var detail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        detail.getNomination().getId(),
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ))
+        .thenReturn(Optional.empty());
+
+    var nominationId = new NominationId(detail.getNomination().getId());
+
+    var result = nominationDetailService.getLatestNominationDetailWithStatuses(nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED));
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
   void getLatestNominationDetail_whenExists_thenReturnEntity() {
     var nominationId = new NominationId(42);
 
@@ -136,7 +176,8 @@ class NominationDetailServiceTest {
     when(nominationService.getNominationByIdOrError(nominationId)).thenReturn(NOMINATION);
     when(nominationDetailRepository.findFirstByNominationOrderByVersionDesc(NOMINATION)).thenReturn(Optional.empty());
 
-    assertThrows(OsdEntityNotFoundException.class, () -> nominationDetailService.getLatestNominationDetail(nominationId));
+    assertThrows(OsdEntityNotFoundException.class,
+        () -> nominationDetailService.getLatestNominationDetail(nominationId));
   }
 
   @Test
@@ -165,6 +206,39 @@ class NominationDetailServiceTest {
       verify(nominationDetailRepository, never()).save(detail);
     }
 
+  }
+
+  @ParameterizedTest
+  @EnumSource(NominationStatus.class)
+  void updateNominationDetailStatusByDecision_smokeTestStatus(NominationStatus status) {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(status)
+        .build();
+
+    switch (status) {
+      case SUBMITTED -> assertDoesNotThrow(
+          () -> nominationDetailService.updateNominationDetailStatusByDecision(detail,
+              NominationDecision.NO_OBJECTION));
+      default -> assertThatThrownBy(
+          () -> nominationDetailService.updateNominationDetailStatusByDecision(detail, NominationDecision.NO_OBJECTION),
+          "Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
+              .formatted(detail.getId(), NominationStatus.SUBMITTED));
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(NominationDecision.class)
+  void updateNominationDetailStatusByDecision_assertStatusByDecision(NominationDecision nominationDecision) {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    nominationDetailService.updateNominationDetailStatusByDecision(detail, nominationDecision);
+
+    switch (nominationDecision) {
+      case OBJECTION -> assertThat(detail.getStatus()).isEqualTo(NominationStatus.CLOSED);
+      case NO_OBJECTION -> assertThat(detail.getStatus()).isEqualTo(NominationStatus.AWAITING_CONFIRMATION);
+    }
   }
 
 }

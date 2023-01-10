@@ -16,7 +16,7 @@
         />
         <@fdsDataItems.dataValues
             key="Decision"
-            value=""
+            value=(headerInformation.nominationDecision().displayText)!""
         />
     </@fdsDataItems.dataItem>
 </#macro>

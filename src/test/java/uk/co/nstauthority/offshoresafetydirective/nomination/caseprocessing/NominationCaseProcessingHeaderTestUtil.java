@@ -7,6 +7,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationUnitView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationUnitView;
@@ -37,6 +38,7 @@ public class NominationCaseProcessingHeaderTestUtil {
     );
     private NominationDisplayType nominationDisplayType = NominationDisplayType.INSTALLATION;
     private NominationStatus nominationStatus = NominationStatus.SUBMITTED;
+    private NominationDecision nominationDecision = null;
 
     private Builder() {
     }
@@ -66,13 +68,19 @@ public class NominationCaseProcessingHeaderTestUtil {
       return this;
     }
 
+    public Builder withNominationDecision(NominationDecision nominationDecision) {
+      this.nominationDecision = nominationDecision;
+      return this;
+    }
+
     public NominationCaseProcessingHeader build() {
       return new NominationCaseProcessingHeader(
           nominationReference,
           applicantOrganisationUnitView,
           nominatedOrganisationUnitView,
           nominationDisplayType,
-          nominationStatus
+          nominationStatus,
+          nominationDecision
       );
     }
   }

@@ -21,6 +21,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationUnitView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
@@ -36,6 +38,9 @@ class NominationCaseProcessingServiceTest {
 
   @Mock
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @Mock
+  private CaseEventService caseEventService;
 
   @InjectMocks
   private NominationCaseProcessingService nominationCaseProcessingService;
@@ -68,6 +73,7 @@ class NominationCaseProcessingServiceTest {
     var nominatedOrgUnitId = 2;
     var nominatedOrgUnitName = "nominatedOrg";
     var nomineeCompanyNumber = "nominee company number";
+    var nominationDecision = NominationDecision.NO_OBJECTION;
 
     var headerDto = NominationCaseProcessingHeaderDtoUtil.builder()
         .withNominationReference("reference")
@@ -99,6 +105,9 @@ class NominationCaseProcessingServiceTest {
                 .build()
         ));
 
+    when(caseEventService.getNominationDecisionForNominationDetail(nominationDetail))
+        .thenReturn(Optional.of(nominationDecision));
+
     var result = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail);
     assertThat(result).isPresent();
 
@@ -108,7 +117,8 @@ class NominationCaseProcessingServiceTest {
             NominationCaseProcessingHeader::nominationDisplayType,
             NominationCaseProcessingHeader::nominationStatus,
             NominationCaseProcessingHeader::applicantOrganisationUnitView,
-            NominationCaseProcessingHeader::nominatedOrganisationUnitView
+            NominationCaseProcessingHeader::nominatedOrganisationUnitView,
+            NominationCaseProcessingHeader::nominationDecision
         ).containsExactly(
             headerDto.nominationReference(),
             NominationDisplayType.getByWellSelectionTypeAndHasInstallations(
@@ -125,7 +135,8 @@ class NominationCaseProcessingServiceTest {
                 new NominatedOrganisationId(nominatedOrgUnitId),
                 new NominatedOrganisationName(nominatedOrgUnitName),
                 new RegisteredCompanyNumber(nomineeCompanyNumber)
-            )
+            ),
+            nominationDecision
         );
 
   }

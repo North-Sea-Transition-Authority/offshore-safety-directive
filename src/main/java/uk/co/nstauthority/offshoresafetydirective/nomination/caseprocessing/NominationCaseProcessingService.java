@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationReference
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationName;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationUnitView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
@@ -28,13 +29,16 @@ class NominationCaseProcessingService {
 
   private final NominationDetailCaseProcessingService nominationDetailCaseProcessingService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+  private final CaseEventService caseEventService;
 
   @Autowired
   NominationCaseProcessingService(
       NominationDetailCaseProcessingService nominationDetailCaseProcessingService,
-      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+      CaseEventService caseEventService) {
     this.nominationDetailCaseProcessingService = nominationDetailCaseProcessingService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+    this.caseEventService = caseEventService;
   }
 
   Optional<NominationCaseProcessingHeader> getNominationCaseProcessingHeader(NominationDetail nominationDetail) {
@@ -82,13 +86,15 @@ class NominationCaseProcessingService {
             dto.selectionType(),
             NominationHasInstallations.fromBoolean(dto.includeInstallationsInNomination())
         ),
-        dto.status()
+        dto.status(),
+        caseEventService.getNominationDecisionForNominationDetail(nominationDetail).orElse(null)
     );
 
     return Optional.of(header);
   }
 
-  private Map<Integer, PortalOrganisationDto> getPortalOrganisationUnitDtosFromDto(NominationCaseProcessingHeaderDto dto) {
+  private Map<Integer, PortalOrganisationDto> getPortalOrganisationUnitDtosFromDto(
+      NominationCaseProcessingHeaderDto dto) {
     var ids = Stream.of(dto.nominatedOrganisationId(), dto.applicantOrganisationId())
         .filter(Objects::nonNull)
         .distinct()

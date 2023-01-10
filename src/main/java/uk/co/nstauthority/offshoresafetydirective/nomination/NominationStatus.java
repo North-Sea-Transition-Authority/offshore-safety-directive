@@ -3,16 +3,21 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
 
 public enum NominationStatus implements DisplayableEnum {
-  DRAFT("Draft", 10),
-  SUBMITTED("Submitted", 20),
-  DELETED("Deleted", 30);
+  DRAFT("Draft", 10, NominationStatusSubmissionStage.PRE_SUBMISSION),
+  SUBMITTED("Submitted", 20, NominationStatusSubmissionStage.POST_SUBMISSION),
+  AWAITING_CONFIRMATION("Awaiting confirmation of appointment", 30, NominationStatusSubmissionStage.POST_SUBMISSION),
+  CLOSED("Closed", 40, NominationStatusSubmissionStage.POST_SUBMISSION),
+  DELETED("Deleted", 50, NominationStatusSubmissionStage.PRE_SUBMISSION);
 
   private final String displayText;
   private final Integer displayOrder;
+  private final NominationStatusSubmissionStage submissionStage;
 
-  NominationStatus(String displayText, Integer displayOrder) {
+  NominationStatus(String displayText, Integer displayOrder,
+                   NominationStatusSubmissionStage submissionStage) {
     this.displayText = displayText;
     this.displayOrder = displayOrder;
+    this.submissionStage = submissionStage;
   }
 
   @Override
@@ -25,4 +30,7 @@ public enum NominationStatus implements DisplayableEnum {
     return displayText;
   }
 
+  public NominationStatusSubmissionStage getSubmissionStage() {
+    return submissionStage;
+  }
 }

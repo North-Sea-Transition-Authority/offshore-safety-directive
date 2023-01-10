@@ -2,10 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 
 import java.time.Clock;
+import java.util.Collection;
+import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
 @Service
 public class NominationDetailService {
@@ -52,6 +56,14 @@ public class NominationDetailService {
         });
   }
 
+  public Optional<NominationDetail> getLatestNominationDetailWithStatuses(NominationId nominationId,
+                                                                          Collection<NominationStatus> nominationStatuses) {
+    return nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        nominationId.id(),
+        nominationStatuses
+    );
+  }
+
   @Transactional
   public void deleteNominationDetail(NominationDetail nominationDetail) {
     if (nominationDetail.getStatus() == NominationStatus.DRAFT) {
@@ -61,6 +73,21 @@ public class NominationDetailService {
       throw new IllegalArgumentException("Cannot delete NominationDetail [%d] as NominationStatus is not %s"
           .formatted(nominationDetail.getId(), NominationStatus.DRAFT));
     }
+  }
+
+  @Transactional
+  public void updateNominationDetailStatusByDecision(NominationDetail nominationDetail,
+                                                     @NotNull NominationDecision nominationDecision) {
+    if (nominationDetail.getStatus() != NominationStatus.SUBMITTED) {
+      throw new IllegalArgumentException("Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
+          .formatted(nominationDetail.getId(), NominationStatus.SUBMITTED));
+    }
+    if (nominationDecision.equals(NominationDecision.OBJECTION)) {
+      nominationDetail.setStatus(NominationStatus.CLOSED);
+    } else {
+      nominationDetail.setStatus(NominationStatus.AWAITING_CONFIRMATION);
+    }
+    nominationDetailRepository.save(nominationDetail);
   }
 
 }

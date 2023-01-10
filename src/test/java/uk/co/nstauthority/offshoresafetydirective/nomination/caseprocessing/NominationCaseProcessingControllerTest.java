@@ -90,7 +90,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestNominationStatuses_onlySubmittedPermitted() {
+  void smokeTestNominationStatuses_ensurePermittedStatuses() {
 
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
 
@@ -99,6 +99,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
+        .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withPermittedNominationStatus(NominationStatus.CLOSED)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
@@ -159,7 +161,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("qaChecksSubmitUrl", ReverseRouter.route(on(NominationQaChecksController.class)
             .submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
         .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
-            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null))));
+            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null, null))));
   }
 
   @Test
@@ -174,9 +176,10 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(model().attribute("qaChecksSubmitUrl",
-            ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
+            ReverseRouter.route(
+                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
         .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
-            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null))))
+            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null, null))))
         .andExpect(model().attribute("canManageNomination", true));
   }
 

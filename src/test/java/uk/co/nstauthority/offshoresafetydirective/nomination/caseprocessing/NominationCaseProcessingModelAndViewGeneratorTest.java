@@ -64,7 +64,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @BeforeEach
   void setUp() {
 
-    nominationDetail = NominationDetailTestUtil.builder().build();
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
     nominationId = new NominationId(nominationDetail.getNomination().getId());
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
@@ -112,6 +114,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         );
 
     assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
   }
 
   @ParameterizedTest
@@ -145,18 +148,17 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "headerInformation",
             "summaryView",
             NominationQaChecksController.FORM_NAME,
-            "caseProcessingAction_QA",
-            "canManageNomination"
+            "caseProcessingAction_QA"
         ).containsExactly(
             header,
             nominationSummaryView,
             qaChecksForm,
-            CaseProcessingAction.QA,
-            true
+            CaseProcessingAction.QA
         );
 
     switch (nominationStatus) {
       case SUBMITTED -> assertThat(result.getModel())
+          .hasFieldOrPropertyWithValue("canManageNomination", true)
           .hasFieldOrPropertyWithValue(
               "qaChecksSubmitUrl",
               ReverseRouter.route(
@@ -165,13 +167,15 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
           .hasFieldOrPropertyWithValue(
               "decisionSubmitUrl",
               ReverseRouter.route(on(NominationDecisionController.class).submitDecision(nominationId, true,
-                  CaseProcessingAction.DECISION, null, null))
+                  CaseProcessingAction.DECISION, null, null, null))
           );
       default -> assertThat(result.getModel())
+          .hasFieldOrPropertyWithValue("canManageNomination", false)
           .doesNotContainKeys("qaChecksSubmitUrl", "decisionSubmitUrl");
     }
 
     assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
   }
 
   private void assertBreadcrumbs(ModelAndView modelAndView, NominationDetail nominationDetail) {

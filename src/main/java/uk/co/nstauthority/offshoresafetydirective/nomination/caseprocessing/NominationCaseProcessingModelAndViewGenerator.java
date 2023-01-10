@@ -87,12 +87,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private void addRelevantDropdownActions(ModelAndView modelAndView, NominationDetail nominationDetail) {
-    var nominationId = new NominationId(nominationDetail.getNomination().getId());
     var canManageNomination = false;
+    var nominationId = new NominationId(nominationDetail.getNomination().getId());
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
     if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
-      canManageNomination = true;
 
       if (nominationDetailDto.nominationStatus() == NominationStatus.SUBMITTED) {
         modelAndView
@@ -102,7 +101,9 @@ public class NominationCaseProcessingModelAndViewGenerator {
             .addObject("decisionSubmitUrl",
                 ReverseRouter.route(
                     on(NominationDecisionController.class).submitDecision(nominationId, true,
-                        CaseProcessingAction.DECISION, null, null)));
+                        CaseProcessingAction.DECISION, null, null, null)));
+
+        canManageNomination = true;
       }
     }
 

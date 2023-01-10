@@ -41,7 +41,7 @@
     <#assign qaChecksSlideoutText = "Complete QA checks"/>
 
     <#assign decisionSlideoutPanelId = "decision"/>
-    <#assign decisionSlideoutText = "Decision"/>
+    <#assign decisionSlideoutText = "Record decision"/>
 
     <#if canManageNomination>
         <@fdsAction.buttonGroup>

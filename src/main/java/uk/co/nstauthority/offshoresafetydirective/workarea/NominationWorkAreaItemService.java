@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -41,10 +42,14 @@ class NominationWorkAreaItemService {
   }
 
   private Function<NominationWorkAreaItemDto, Instant> sortByItemDate() {
-    return dto -> switch (dto.nominationStatus()) {
-      case DRAFT -> dto.createdTime().instant();
-      case SUBMITTED -> dto.submittedTime().instant();
-      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+    return dto -> {
+      if (dto.nominationStatus() == NominationStatus.DELETED) {
+        throw getDeletedNominationInWorkAreaException(dto);
+      }
+      return switch (dto.nominationStatus().getSubmissionStage()) {
+        case PRE_SUBMISSION -> dto.createdTime().instant();
+        case POST_SUBMISSION -> dto.submittedTime().instant();
+      };
     };
   }
 
@@ -78,18 +83,23 @@ class NominationWorkAreaItemService {
 
   private String getActionUrl(NominationWorkAreaItemDto dto) {
     return switch (dto.nominationStatus()) {
-      case DRAFT -> ReverseRouter.route(on(NominationTaskListController.class).getTaskList(dto.nominationId()));
-      case SUBMITTED -> ReverseRouter.route(on(NominationCaseProcessingController.class)
-          .renderCaseProcessing(dto.nominationId()));
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+      default -> switch (dto.nominationStatus().getSubmissionStage()) {
+        case PRE_SUBMISSION -> ReverseRouter.route(
+            on(NominationTaskListController.class).getTaskList(dto.nominationId()));
+        case POST_SUBMISSION -> ReverseRouter.route(
+            on(NominationCaseProcessingController.class).renderCaseProcessing(dto.nominationId()));
+      };
     };
   }
 
   private String getWorkAreaItemHeading(NominationWorkAreaItemDto dto) {
     return switch (dto.nominationStatus()) {
-      case DRAFT -> generateDraftWorkAreaItemHeading(dto);
-      case SUBMITTED -> dto.nominationReference().reference();
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+      default -> switch (dto.nominationStatus().getSubmissionStage()) {
+        case PRE_SUBMISSION -> generateDraftWorkAreaItemHeading(dto);
+        case POST_SUBMISSION -> dto.nominationReference().reference();
+      };
     };
   }
 
@@ -103,7 +113,7 @@ class NominationWorkAreaItemService {
   private String getWorkAreaItemCaption(NominationWorkAreaItemDto dto) {
     return switch (dto.nominationStatus()) {
       case DRAFT -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
-      case SUBMITTED -> null;
+      case SUBMITTED, AWAITING_CONFIRMATION, CLOSED -> null;
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
     };
   }

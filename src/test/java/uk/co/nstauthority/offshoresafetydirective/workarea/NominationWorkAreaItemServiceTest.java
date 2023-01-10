@@ -227,7 +227,7 @@ class NominationWorkAreaItemServiceTest {
     switch (status) {
       case DRAFT -> assertion.isEqualTo(
           ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nomination.getNominationId())));
-      case SUBMITTED -> assertion.isEqualTo(
+      case SUBMITTED, AWAITING_CONFIRMATION, CLOSED -> assertion.isEqualTo(
           ReverseRouter.route(
               on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId())));
       default -> throw new Exception("Status [%s] case not covered".formatted(status));
