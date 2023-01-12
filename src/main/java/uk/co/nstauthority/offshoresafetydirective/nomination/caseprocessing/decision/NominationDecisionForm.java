@@ -7,9 +7,9 @@ public class NominationDecisionForm {
 
   private String nominationDecision;
 
-  private StringInput comments = new StringInput("comments", "Decision comments");
-
   private ThreeFieldDateInput decisionDate = new ThreeFieldDateInput("decisionDate", "Decision date");
+
+  private StringInput comments = new StringInput("comments", "Decision comments");
 
   public StringInput getComments() {
     return comments;

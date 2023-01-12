@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,7 +10,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,17 +52,16 @@ class NominationDecisionValidatorTest {
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
-    assertThat(errors)
-        .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "decisionDate.dayInput.inputValue", Set.of("Enter a complete Decision date"),
-                "decisionDate.monthInput.inputValue", Set.of(""),
-                "decisionDate.yearInput.inputValue", Set.of(""),
-                "comments.inputValue", Set.of("Enter Decision comments"),
-                NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME,
-                Set.of(NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE)
-            )
-        );
+    assertThat(errors).containsExactly(
+        entry(
+            NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME,
+            Set.of(NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE)
+        ),
+        entry("decisionDate.dayInput.inputValue", Set.of("Enter a complete Decision date")),
+        entry("decisionDate.monthInput.inputValue", Set.of("")),
+        entry("decisionDate.yearInput.inputValue", Set.of("")),
+        entry("comments.inputValue", Set.of("Enter Decision comments"))
+    );
 
   }
 

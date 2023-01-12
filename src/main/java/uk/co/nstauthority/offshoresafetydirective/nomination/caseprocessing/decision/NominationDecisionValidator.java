@@ -36,17 +36,6 @@ class NominationDecisionValidator implements SmartValidator {
     var hint = (NominationDecisionValidatorHint) validationHints[0];
     var errors = Objects.requireNonNull(nullableErrors);
 
-    StringInputValidator.builder()
-        .validate(form.getComments(), errors);
-
-    var currentDate = LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault());
-    var submittedDate = LocalDate.ofInstant(hint.nominationDetail().getSubmittedInstant(), ZoneId.systemDefault());
-
-    ThreeFieldDateInputValidator.builder()
-        .mustBeBeforeOrEqualTo(currentDate)
-        .mustBeAfterOrEqualTo(submittedDate)
-        .validate(form.getDecisionDate(), errors);
-
     if (StringUtils.isNotBlank(form.getNominationDecision())) {
       var nominationDecision = EnumUtils.getEnum(NominationDecision.class, form.getNominationDecision());
       if (nominationDecision == null) {
@@ -57,6 +46,17 @@ class NominationDecisionValidator implements SmartValidator {
 
     ValidationUtils.rejectIfEmpty(errors, NOMINATION_DECISION_FIELD_NAME, NOMINATION_DECISION_BLANK_ERROR_CODE,
         NOMINATION_DECISION_BLANK_ERROR_MESSAGE);
+
+    var currentDate = LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault());
+    var submittedDate = LocalDate.ofInstant(hint.nominationDetail().getSubmittedInstant(), ZoneId.systemDefault());
+
+    ThreeFieldDateInputValidator.builder()
+        .mustBeBeforeOrEqualTo(currentDate)
+        .mustBeAfterOrEqualTo(submittedDate)
+        .validate(form.getDecisionDate(), errors);
+
+    StringInputValidator.builder()
+        .validate(form.getComments(), errors);
   }
 
   @Override
