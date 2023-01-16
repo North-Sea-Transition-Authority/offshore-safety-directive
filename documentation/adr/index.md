@@ -10,6 +10,8 @@ This log lists the architectural decisions for Offshore Safety Directive.
 * [ADR-0003](0003-case-events-data-model.md) - OSDOP-237: Case events data model
 * [ADR-0004](0004-case-events-functionality.md) - OSDOP-237: Case events functionality
 * [ADR-0005](0005-case-events-rendering.md) - OSDOP-237: Case events rendering
+* [ADR-0006](0006-data-model-for-system-of-record.md) -  OSDOP-254: Data model for phase 1 system of record
+* [ADR-0007](0007-search-system-of-record.md) -  OSDOP-254: Searching the system of record
 
 <!-- adrlogstop -->
 
