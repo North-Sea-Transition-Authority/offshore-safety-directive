@@ -18,12 +18,10 @@ repositories {
 		url "https://build.shibboleth.net/nexus/content/repositories/releases/"
 	}
 	maven {
-		url "http://nexus.fivium.local:8081/repository/maven-releases/"
-		allowInsecureProtocol = true
+		url "https://nexus.fivium.co.uk/repository/maven-releases/"
 	}
 	maven {
-		url "http://nexus.fivium.local:8081/repository/maven-snapshots/"
-		allowInsecureProtocol = true
+		url "https://nexus.fivium.co.uk/repository/maven-snapshots/"
 	}
 }
 
