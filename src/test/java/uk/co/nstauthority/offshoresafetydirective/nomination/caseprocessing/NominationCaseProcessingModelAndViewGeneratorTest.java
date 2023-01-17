@@ -197,6 +197,20 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
               "decisionSubmitUrl",
               ReverseRouter.route(on(NominationDecisionController.class).submitDecision(nominationId, true,
                   CaseProcessingAction.DECISION, null, null, null))
+          )
+          .hasFieldOrPropertyWithValue(
+              "withdrawSubmitUrl",
+              ReverseRouter.route(
+                  on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
+                      CaseProcessingAction.WITHDRAW, null, null, null))
+          );
+      case AWAITING_CONFIRMATION -> assertThat(result.getModel())
+          .hasFieldOrPropertyWithValue("canManageNomination", true)
+          .hasFieldOrPropertyWithValue(
+              "withdrawSubmitUrl",
+              ReverseRouter.route(
+                  on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
+                      CaseProcessingAction.WITHDRAW, null, null, null))
           );
       default -> assertThat(result.getModel())
           .hasFieldOrPropertyWithValue("canManageNomination", false)

@@ -150,4 +150,38 @@ class CaseEventServiceTest {
       default -> assertThat(result).isEmpty();
     }
   }
+
+  @Test
+  void createWithdrawEvent() {
+    var nominationVersion = 2;
+    var reason = "reason";
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createWithdrawEvent(detail, reason);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.WITHDRAWN,
+            reason,
+            serviceUser.wuaId(),
+            clock.instant(),
+            detail.getNomination(),
+            nominationVersion
+        );
+  }
 }

@@ -112,9 +112,11 @@ class NominationWorkAreaItemService {
 
   private String getWorkAreaItemCaption(NominationWorkAreaItemDto dto) {
     return switch (dto.nominationStatus()) {
-      case DRAFT -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
-      case SUBMITTED, AWAITING_CONFIRMATION, CLOSED -> null;
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+      default -> switch (dto.nominationStatus().getSubmissionStage()) {
+        case POST_SUBMISSION -> null;
+        case PRE_SUBMISSION -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
+      };
     };
   }
 

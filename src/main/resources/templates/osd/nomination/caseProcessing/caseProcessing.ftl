@@ -80,6 +80,7 @@
             headingText=decisionSlideoutText
             postUrl=decisionSubmitUrl
             postParam=caseProcessingAction_DECISION
+            errorList=errorList![]
             nominationDecisions=nominationDecisions
         />
     </#if>
@@ -89,6 +90,7 @@
             panelId=withdrawSlideoutPanelId
             headingText=withdrawSlideoutText
             postUrl=withdrawSubmitUrl
+            errorList=errorList![]
             postParam=caseProcessingAction_WITHDRAW
         />
     </#if>

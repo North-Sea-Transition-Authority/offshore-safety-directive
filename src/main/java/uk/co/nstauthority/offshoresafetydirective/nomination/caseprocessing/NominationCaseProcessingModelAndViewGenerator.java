@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
@@ -113,6 +114,23 @@ public class NominationCaseProcessingModelAndViewGenerator {
                     on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null, null)
                 ));
 
+        canManageNomination = true;
+      }
+
+      var openStatuses = Arrays.stream(NominationStatus.values())
+          .filter(nominationStatus ->
+              nominationStatus.getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION)
+                  && !NominationStatus.getClosedStatuses().contains(nominationStatus)
+          )
+          .toList();
+
+      if (openStatuses.contains(nominationDetailDto.nominationStatus())) {
+        modelAndView
+            .addObject("withdrawSubmitUrl",
+                ReverseRouter.route(
+                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
+                        CaseProcessingAction.WITHDRAW, null, null, null)
+                ));
         canManageNomination = true;
       }
     }

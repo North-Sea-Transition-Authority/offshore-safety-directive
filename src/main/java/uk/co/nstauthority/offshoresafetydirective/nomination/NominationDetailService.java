@@ -3,7 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Clock;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -87,6 +89,25 @@ public class NominationDetailService {
     } else {
       nominationDetail.setStatus(NominationStatus.AWAITING_CONFIRMATION);
     }
+    nominationDetailRepository.save(nominationDetail);
+  }
+
+  @Transactional
+  public void withdrawNominationDetail(NominationDetail nominationDetail) {
+    var allowedStatuses = EnumSet.of(
+        NominationStatus.SUBMITTED,
+        NominationStatus.AWAITING_CONFIRMATION
+    );
+
+    if (!allowedStatuses.contains(nominationDetail.getStatus())) {
+      var statuses = allowedStatuses.stream()
+          .map(Enum::name)
+          .collect(Collectors.joining(","));
+      throw new IllegalArgumentException("Cannot withdrawn NominationDetail [%d] as NominationStatus is not one of [%s]"
+          .formatted(nominationDetail.getId(), statuses));
+    }
+
+    nominationDetail.setStatus(NominationStatus.WITHDRAWN);
     nominationDetailRepository.save(nominationDetail);
   }
 

@@ -48,6 +48,11 @@ public class CaseEventService {
         decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
   }
 
+  @Transactional
+  public void createWithdrawEvent(NominationDetail nominationDetail, String reason) {
+    createEvent(CaseEventType.WITHDRAWN, reason, clock.instant(), nominationDetail);
+  }
+
   private void createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,
                            NominationDetail nominationDetail) {
     var caseEvent = new CaseEvent();

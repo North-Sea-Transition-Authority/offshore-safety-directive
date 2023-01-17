@@ -19,7 +19,10 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/manage")
 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
-@HasNominationStatus(statuses = {NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION})
+@HasNominationStatus(statuses = {
+    NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
+    NominationStatus.WITHDRAWN
+})
 public class NominationCaseProcessingController {
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;

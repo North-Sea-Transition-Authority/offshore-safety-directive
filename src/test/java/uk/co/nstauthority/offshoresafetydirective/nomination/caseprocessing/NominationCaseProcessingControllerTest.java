@@ -101,6 +101,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
         .withPermittedNominationStatus(NominationStatus.CLOSED)
+        .withPermittedNominationStatus(NominationStatus.WITHDRAWN)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(

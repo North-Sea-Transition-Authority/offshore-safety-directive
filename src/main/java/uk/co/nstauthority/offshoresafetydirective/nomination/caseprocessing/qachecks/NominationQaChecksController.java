@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qac
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.EnumSet;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.stereotype.Controller;
@@ -14,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -51,7 +53,16 @@ public class NominationQaChecksController {
                                @Nullable @ModelAttribute(FORM_NAME) NominationQaChecksForm nominationQaChecksForm,
                                @Nullable RedirectAttributes redirectAttributes) {
 
-    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ).orElseThrow(() -> {
+      throw new OsdEntityNotFoundException(String.format(
+          "Cannot find latest NominationDetail with ID: %s and status: %s",
+          nominationId.id(), NominationStatus.SUBMITTED.name()
+      ));
+    });
+
     caseEventService.createCompletedQaChecksEvent(
         nominationDetail,
         Objects.requireNonNull(nominationQaChecksForm).getComment()

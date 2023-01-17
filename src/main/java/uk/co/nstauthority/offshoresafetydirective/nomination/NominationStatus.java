@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.EnumSet;
+import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
 
 public enum NominationStatus implements DisplayableEnum {
@@ -7,11 +9,14 @@ public enum NominationStatus implements DisplayableEnum {
   SUBMITTED("Submitted", 20, NominationStatusSubmissionStage.POST_SUBMISSION),
   AWAITING_CONFIRMATION("Awaiting confirmation of appointment", 30, NominationStatusSubmissionStage.POST_SUBMISSION),
   CLOSED("Closed", 40, NominationStatusSubmissionStage.POST_SUBMISSION),
-  DELETED("Deleted", 50, NominationStatusSubmissionStage.PRE_SUBMISSION);
+  WITHDRAWN("Withdrawn", 50, NominationStatusSubmissionStage.POST_SUBMISSION),
+  DELETED("Deleted", 60, NominationStatusSubmissionStage.PRE_SUBMISSION);
 
   private final String displayText;
   private final Integer displayOrder;
   private final NominationStatusSubmissionStage submissionStage;
+
+  private static final Set<NominationStatus> CLOSED_STATUSES = EnumSet.of(CLOSED, WITHDRAWN, DELETED);
 
   NominationStatus(String displayText, Integer displayOrder,
                    NominationStatusSubmissionStage submissionStage) {
@@ -32,5 +37,9 @@ public enum NominationStatus implements DisplayableEnum {
 
   public NominationStatusSubmissionStage getSubmissionStage() {
     return submissionStage;
+  }
+
+  public static Set<NominationStatus> getClosedStatuses() {
+    return CLOSED_STATUSES;
   }
 }

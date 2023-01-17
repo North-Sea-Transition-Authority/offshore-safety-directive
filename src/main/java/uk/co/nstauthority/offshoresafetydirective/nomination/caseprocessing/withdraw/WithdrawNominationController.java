@@ -1,5 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.EnumSet;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,18 +18,26 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/manage")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+@HasNominationStatus(statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION})
 public class WithdrawNominationController {
 
   public static final String FORM_NAME = "withdrawNominationForm";
@@ -34,26 +46,67 @@ public class WithdrawNominationController {
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final CaseEventService caseEventService;
+  private final WithdrawNominationValidator withdrawNominationValidator;
 
   @Autowired
   public WithdrawNominationController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       ControllerHelperService controllerHelperService, NominationDetailService nominationDetailService,
-      CaseEventService caseEventService) {
+      CaseEventService caseEventService,
+      WithdrawNominationValidator withdrawNominationValidator) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.caseEventService = caseEventService;
+    this.withdrawNominationValidator = withdrawNominationValidator;
   }
 
   @PostMapping(params = CaseProcessingAction.WITHDRAW)
   public ModelAndView withdrawNomination(@PathVariable NominationId nominationId,
                                          @RequestParam("withdraw") Boolean slideoutOpen,
                                          @Nullable @RequestParam(CaseProcessingAction.WITHDRAW) String postButtonName,
-                                         @Nullable @ModelAttribute("form") WithdrawNominationForm withdrawNominationForm,
+                                         @Nullable @ModelAttribute(FORM_NAME) WithdrawNominationForm withdrawNominationForm,
                                          @Nullable BindingResult bindingResult,
                                          @Nullable RedirectAttributes redirectAttributes) {
-    // TODO OSDOP-245 - Validate and process withdrawal
-    return null;
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+    ).orElseThrow(() -> {
+      throw new OsdEntityNotFoundException(String.format(
+          "Cannot find latest NominationDetail with ID: %s and status: %s",
+          nominationId.id(), NominationStatus.SUBMITTED.name()
+      ));
+    });
+
+    withdrawNominationValidator.validate(
+        Objects.requireNonNull(withdrawNominationForm),
+        Objects.requireNonNull(bindingResult)
+    );
+
+    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+        nominationDetail,
+        new NominationQaChecksForm(),
+        new NominationDecisionForm(),
+        withdrawNominationForm
+    );
+
+    return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, withdrawNominationForm, () -> {
+
+      caseEventService.createWithdrawEvent(nominationDetail, withdrawNominationForm.getReason().getInputValue());
+      nominationDetailService.withdrawNominationDetail(nominationDetail);
+
+      if (redirectAttributes != null) {
+        var notificationBanner = NotificationBanner.builder()
+            .withBannerType(NotificationBannerType.SUCCESS)
+            .withTitle("Withdrawn nomination")
+            .withHeading("Withdrawn nomination %s".formatted(nominationDetail.getNomination().getReference()))
+            .build();
+
+        NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+      }
+
+      return ReverseRouter.redirect(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId));
+    });
   }
 }

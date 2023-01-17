@@ -241,4 +241,35 @@ class NominationDetailServiceTest {
     }
   }
 
+  @ParameterizedTest
+  @EnumSource(NominationStatus.class)
+  void withdrawNominationDetail_assertStatus(NominationStatus nominationStatus) {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(nominationStatus)
+        .build();
+
+    switch (nominationStatus) {
+      case SUBMITTED, AWAITING_CONFIRMATION -> assertDoesNotThrow(() ->
+          nominationDetailService.withdrawNominationDetail(detail));
+
+      default -> assertThrows(IllegalArgumentException.class, () ->
+          nominationDetailService.withdrawNominationDetail(detail));
+    }
+  }
+
+  @Test
+  void withdrawNominationDetail_verifyWithdrawn() {
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    nominationDetailService.withdrawNominationDetail(detail);
+
+    var captor = ArgumentCaptor.forClass(NominationDetail.class);
+    verify(nominationDetailRepository).save(captor.capture());
+
+    assertThat(captor.getValue()).isEqualTo(detail);
+    assertThat(captor.getValue().getStatus()).isEqualTo(NominationStatus.WITHDRAWN);
+  }
+
 }

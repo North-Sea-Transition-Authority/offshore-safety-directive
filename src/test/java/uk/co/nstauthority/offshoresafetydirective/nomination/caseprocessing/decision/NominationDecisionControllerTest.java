@@ -78,6 +78,11 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.of(nominationDetail));
+
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
         .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
 
@@ -138,7 +143,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     when(
         nominationCaseProcessingModelAndViewGenerator
-        .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
+            .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
         .thenReturn(new ModelAndView(expectedViewName));
 
     mockMvc.perform(post(
@@ -165,7 +170,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     when(
         nominationCaseProcessingModelAndViewGenerator
-        .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
+            .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
         .thenReturn(new ModelAndView());
 
     var expectedNotificationBanner = NotificationBanner.builder()

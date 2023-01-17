@@ -72,15 +72,14 @@ public class NominationDecisionController {
                                      @Nullable RedirectAttributes redirectAttributes) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
-            nominationId,
-            EnumSet.of(NominationStatus.SUBMITTED)
-        )
-        .orElseThrow(() -> {
-          throw new OsdEntityNotFoundException(String.format(
-              "Cannot find latest NominationDetail with ID: %s and status: %s",
-              nominationId.id(), NominationStatus.SUBMITTED.name()
-          ));
-        });
+        nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ).orElseThrow(() -> {
+      throw new OsdEntityNotFoundException(String.format(
+          "Cannot find latest NominationDetail with ID: %s and status: %s",
+          nominationId.id(), NominationStatus.SUBMITTED.name()
+      ));
+    });
 
     nominationDecisionValidator.validate(
         Objects.requireNonNull(nominationDecisionForm),
