@@ -137,7 +137,8 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
     var expectedViewName = "some_template";
 
     when(
-        nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any()))
+        nominationCaseProcessingModelAndViewGenerator
+        .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
         .thenReturn(new ModelAndView(expectedViewName));
 
     mockMvc.perform(post(
@@ -163,7 +164,8 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(nominationDetail));
 
     when(
-        nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any()))
+        nominationCaseProcessingModelAndViewGenerator
+        .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
         .thenReturn(new ModelAndView());
 
     var expectedNotificationBanner = NotificationBanner.builder()

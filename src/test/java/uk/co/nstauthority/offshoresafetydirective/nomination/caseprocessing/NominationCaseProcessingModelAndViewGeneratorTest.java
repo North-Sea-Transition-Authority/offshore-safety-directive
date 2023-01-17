@@ -26,10 +26,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
@@ -90,8 +93,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
+    var withdrawNominationForm = new WithdrawNominationForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm);
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm,
+        withdrawNominationForm);
 
     assertThat(result.getModel())
         .extracting(
@@ -99,18 +104,30 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "summaryView",
             NominationQaChecksController.FORM_NAME,
             "caseProcessingAction_QA",
-            "canManageNomination"
+            "canManageNomination",
+            NominationDecisionController.FORM_NAME,
+            "caseProcessingAction_DECISION",
+            "nominationDecisions",
+            WithdrawNominationController.FORM_NAME,
+            "caseProcessingAction_WITHDRAW"
         ).containsExactly(
             header,
             nominationSummaryView,
             qaChecksForm,
             CaseProcessingAction.QA,
-            false
+            false,
+            decisionForm,
+            CaseProcessingAction.DECISION,
+            NominationDecision.values(),
+            withdrawNominationForm,
+            CaseProcessingAction.WITHDRAW
         );
 
     assertThat(result.getModel())
         .doesNotContainKeys(
-            "qaChecksSubmitUrl"
+            "qaChecksSubmitUrl",
+            "decisionSubmitUrl",
+            "withdrawSubmitUrl"
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -140,20 +157,32 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
+    var withdrawForm = new WithdrawNominationForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm);
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm,
+        withdrawForm);
 
     assertThat(result.getModel())
         .extracting(
             "headerInformation",
             "summaryView",
             NominationQaChecksController.FORM_NAME,
-            "caseProcessingAction_QA"
+            "caseProcessingAction_QA",
+            NominationDecisionController.FORM_NAME,
+            "caseProcessingAction_DECISION",
+            "nominationDecisions",
+            WithdrawNominationController.FORM_NAME,
+            "caseProcessingAction_WITHDRAW"
         ).containsExactly(
             header,
             nominationSummaryView,
             qaChecksForm,
-            CaseProcessingAction.QA
+            CaseProcessingAction.QA,
+            decisionForm,
+            CaseProcessingAction.DECISION,
+            NominationDecision.values(),
+            withdrawForm,
+            CaseProcessingAction.WITHDRAW
         );
 
     switch (nominationStatus) {

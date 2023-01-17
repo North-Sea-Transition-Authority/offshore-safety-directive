@@ -34,7 +34,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominationQaChecksController {
 
   public static final String FORM_NAME = "qaChecksForm";
-  public static final String BINDING_RESULT_NAME = "%sBindingResult".formatted(FORM_NAME);
 
   private final CaseEventService caseEventService;
   private final NominationDetailService nominationDetailService;

@@ -13,6 +13,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -37,11 +38,12 @@ public class NominationCaseProcessingController {
 
     var nominationQaChecksForm = new NominationQaChecksForm();
     var nominationDecisionForm = new NominationDecisionForm();
+    var withdrawNominationForm = new WithdrawNominationForm();
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
     return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail,
-        nominationQaChecksForm, nominationDecisionForm);
+        nominationQaChecksForm, nominationDecisionForm, withdrawNominationForm);
 
   }
 

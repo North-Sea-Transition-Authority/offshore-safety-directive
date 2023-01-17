@@ -4,6 +4,7 @@
 <#import '../../macros/slideOutActionDropdownItem.ftl' as slideOutActionDropdownItem/>
 <#import '_qaChecksSlideout.ftl' as _qaChecksSlideout/>
 <#import '_decisionSlideout.ftl' as _decisionSlideout/>
+<#import '_withdrawSlideout.ftl' as _withdrawSlideout/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -16,6 +17,8 @@
 <#-- @ftlvariable name="decisionSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="caseProcessingAction_DECISION" type="java.lang.String" -->
 <#-- @ftlvariable name="nominationDecisions" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision>" -->
+<#-- @ftlvariable name="withdrawSubmitUrl" type="java.lang.String" -->
+<#-- @ftlvariable name="caseProcessingAction_WITHDRAW" type="java.lang.String" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -43,6 +46,9 @@
     <#assign decisionSlideoutPanelId = "decision"/>
     <#assign decisionSlideoutText = "Record decision"/>
 
+    <#assign withdrawSlideoutPanelId = "withdraw"/>
+    <#assign withdrawSlideoutText = "Withdraw nomination"/>
+
     <#if canManageNomination>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
@@ -51,6 +57,9 @@
                 </#if>
                 <#if decisionSubmitUrl?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=decisionSlideoutText slideOutPanelId=decisionSlideoutPanelId/>
+                </#if>
+                <#if withdrawSubmitUrl?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=withdrawSlideoutText slideOutPanelId=withdrawSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -72,6 +81,15 @@
             postUrl=decisionSubmitUrl
             postParam=caseProcessingAction_DECISION
             nominationDecisions=nominationDecisions
+        />
+    </#if>
+
+    <#if withdrawSubmitUrl?has_content>
+        <@_withdrawSlideout.withdrawSlideout
+            panelId=withdrawSlideoutPanelId
+            headingText=withdrawSlideoutText
+            postUrl=withdrawSubmitUrl
+            postParam=caseProcessingAction_WITHDRAW
         />
     </#if>
 

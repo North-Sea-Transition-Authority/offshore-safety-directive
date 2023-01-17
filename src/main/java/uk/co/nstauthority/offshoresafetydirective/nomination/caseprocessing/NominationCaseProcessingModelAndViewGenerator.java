@@ -25,6 +25,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -50,7 +52,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
                                                     NominationQaChecksForm nominationQaChecksForm,
-                                                    NominationDecisionForm nominationDecisionForm) {
+                                                    NominationDecisionForm nominationDecisionForm,
+                                                    WithdrawNominationForm withdrawNominationForm) {
 
     var headerInformation = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -77,7 +80,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject("nominationDecisions", Arrays.stream(NominationDecision.values())
             .sorted(Comparator.comparing(NominationDecision::getDisplayOrder))
             .collect(Collectors.toList())
-        );
+        )
+        .addObject("nominationDecisions", NominationDecision.values())
+        .addObject(WithdrawNominationController.FORM_NAME, withdrawNominationForm)
+        .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW);
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
 
@@ -101,7 +107,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
             .addObject("decisionSubmitUrl",
                 ReverseRouter.route(
                     on(NominationDecisionController.class).submitDecision(nominationId, true,
-                        CaseProcessingAction.DECISION, null, null, null)));
+                        CaseProcessingAction.DECISION, null, null, null)))
+            .addObject("withdrawSubmitUrl",
+                ReverseRouter.route(
+                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null, null)
+                ));
 
         canManageNomination = true;
       }

@@ -32,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.Case
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -41,7 +42,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominationDecisionController {
 
   public static final String FORM_NAME = "nominationDecisionForm";
-  public static final String BINDING_RESULT_NAME = "%sBindingResult".formatted(FORM_NAME);
 
   private final NominationDecisionValidator nominationDecisionValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
@@ -89,7 +89,7 @@ public class NominationDecisionController {
     );
 
     var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail,
-        new NominationQaChecksForm(), nominationDecisionForm);
+        new NominationQaChecksForm(), nominationDecisionForm, new WithdrawNominationForm());
 
     return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, nominationDecisionForm,
         () -> {
