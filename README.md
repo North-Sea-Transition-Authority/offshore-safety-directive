@@ -2,37 +2,43 @@
 
 ## Background
 
-In April 2010 an explosion on the Deepwater Horizon drilling rig in the Gulf of Mexico resulted in the 
-largest marine oil spill in the history of the petroleum industry. Millions of barrels of oil was released 
-with widespread marine, coastal and economic impact.
+In April 2010 an explosion on the Deepwater Horizon drilling rig in the Gulf of Mexico resulted in the largest marine
+oil spill in the history of the petroleum industry. Millions of barrels of oil was released with widespread marine,
+coastal and economic impact.
 
-In response to the Deepwater Horizon accident the EU issued a Directive on the on safety of offshore oil 
-and gas operations. The EU Directive was implemented in UK law by the Offshore Petroleum Licensing 
+In response to the Deepwater Horizon accident the EU issued a Directive on the on safety of offshore oil and gas
+operations. The EU Directive was implemented in UK law by the Offshore Petroleum Licensing
 (Offshore Safety Directive) Regulations 2015.
 
 ## Pre-requisites
+
 - Java 17
 - Node LTS + NPM
 - [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
-  (See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
+  (
+  See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
   for further information about adding your account to the `docker-users` group)
 
 ## Setup
 
 ### 1. Run the backend services
+
 - Ensure that you have [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
-  installed and running (or an alternative way of running docker).  
-- Run the backing services defined in the `local-dev-compose.yml`. This can be done by clicking the run icon
-  next to `services` when in the file.
-  - If IntelliJ doesn't detect the file as a docker compose file automatically you may need to 
-    [Associate docker-compose as file type](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360009394620-Associate-docker-compose-as-file-type) manually.
+  installed and running (or an alternative way of running docker).
+- Run the backing services defined in the `local-dev-compose.yml`. This can be done by clicking the run icon next
+  to `services` when in the file.
+    - If IntelliJ doesn't detect the file as a docker compose file automatically you may need to
+      [Associate docker-compose as file type](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360009394620-Associate-docker-compose-as-file-type)
+      manually.
 
 ### 2. Add the required profile
 
 ### Development
+
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 
 ### Production
+
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
 - The following environment variables are required when using this profile:
 
@@ -50,20 +56,31 @@ and gas operations. The EU Directive was implemented in UK law by the Offshore P
 | OSD_ENERGY_PORTAL_TEAM_ACCESS_API_BASE_URL | The Energy Portal team access API base url. (ending in the fox 5 context for the environment)      |
 | OSD_ENERGY_PORTAL_TEAM_ACCESS_API_TOKEN    | The Energy Portal team access API token                                                            |
 | OSD_ENERGY_PORTAL_REGISTRATION_URL         | The Energy Portal registration url for the environment                                             |
-| OSD_ENERGY_PORTAL_LOGOUT_URL               | The URL to the log out entry theme of the Energy Portal                                            | 
-
-
-
+| OSD_ENERGY_PORTAL_LOGOUT_URL               | The URL to the log out entry theme of the Energy Portal                                            |
+| OSD_S3_ACCESS_KEY                          | S3 username for document uploads / downloads                                                       |
+| OSD_S3_SECRET_KEY                          | S3 secret for document uploads / downloads                                                         |
+| OSD_S3_BUCKET_NAME                         | S3 bucket for document uploads / downloads                                                         |
+| OSD_S3_ENDPOINT                            | S3 endpoint for document uploads / downloads                                                       |
+| OSD_S3_REGION_NAME                         | S3 region for document uploads / downloads                                                         |
+| OSD_S3_DISABLE_SSL                         | Disable S3 SSL (default `false`)                                                                   |
+| OSD_S3_PROXY_HOST                          | The hostname to access the S3 proxy (Optional)                                                     |
+| OSD_S3_PROXY_PORT                          | The port number to access the S3 proxy (Optional)                                                  |
+| OSD_CLAMAV_HOST                            | The host URL for ClamAV                                                                            |
+| OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                       |
+| OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                             |
 
 ### 3. Initialise the Fivium Design System
+
 - `git submodule update --init --recursive`
 - `cd fivium-design-system-core && npm install && npx gulp build && cd ..`
 
 ### 4. Build frontend components
+
 - `npm install`
 - `npx gulp buildAll`
 
 ### 5. Run the app
+
 Create a run configuration for the Spring app and start the application.
 
 The application will be running on `localhost:8080/wios/<endpoint>`
@@ -71,8 +88,9 @@ The application will be running on `localhost:8080/wios/<endpoint>`
 ## Development setup
 
 ### Checkstyle
+
 1. In Intellij install the Checkstyle-IDEA plugin (from third-party repositories)
-2. Go to File > Settings > Checkstyle 
+2. Go to File > Settings > Checkstyle
 3. Click the plus icon under "Configuration File"
 4. Select "Use a local Checkstyle file"
 5. Select `devtools/checkstyle.xml`

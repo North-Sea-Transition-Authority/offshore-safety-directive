@@ -12,5 +12,20 @@ services:
       POSTGRES_PASSWORD: dev
       POSTGRES_USER: osd
 
+  s3mock:
+    image: adobe/s3mock:2.1.28
+    ports:
+      - "9090:9090"
+      - "9191:9191"
+    environment:
+      initialBuckets: wios-dev
+      retainFilesOnExit: "true"
+      root: ./s3data
+
+  clamav:
+    image: clamav/clamav:0.105
+    ports:
+      - "3310:3310"
+
 volumes:
   db-volume:
