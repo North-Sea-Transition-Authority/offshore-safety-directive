@@ -14,6 +14,7 @@ import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
 class NominationDecisionValidator implements SmartValidator {
@@ -22,6 +23,11 @@ class NominationDecisionValidator implements SmartValidator {
   public static final String NOMINATION_DECISION_BLANK_ERROR_CODE = "%s.empty".formatted(
       NOMINATION_DECISION_FIELD_NAME);
   public static final String NOMINATION_DECISION_BLANK_ERROR_MESSAGE = "Select a nomination decision";
+
+  private static final String FILES_FIELD_NAME = "files";
+  private static final String FILES_EMPTY_ERROR_MESSAGE = "Upload a decision document";
+  private static final String FILES_TOO_MANY_ERROR_MESSAGE = "Only one decision document can be uploaded";
+
 
   private final Clock clock;
 
@@ -57,6 +63,12 @@ class NominationDecisionValidator implements SmartValidator {
 
     StringInputValidator.builder()
         .validate(form.getComments(), errors);
+
+    FileValidationUtil.validator()
+        .withMinimumNumberOfFiles(1, FILES_EMPTY_ERROR_MESSAGE)
+        .withMaximumNumberOfFiles(1, FILES_TOO_MANY_ERROR_MESSAGE)
+        .validate(errors, form.getFiles(), FILES_FIELD_NAME);
+
   }
 
   @Override

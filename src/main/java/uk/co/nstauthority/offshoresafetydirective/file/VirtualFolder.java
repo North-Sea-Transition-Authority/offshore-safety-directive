@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 public enum VirtualFolder {
-  SUPPORTING_DOCUMENTS("supporting-documents"),
+  NOMINATION_DECISION("case-events/nomination-decision"),
   ;
 
   private final String folderPath;

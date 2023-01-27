@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
+import java.util.Collection;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,8 +22,9 @@ public class FileUploadValidationService {
     this.fileUploadConfig = fileUploadConfig;
   }
 
-  public Optional<UploadErrorType> validateFileUpload(MultipartFile multipartFile, long fileSize, String filename) {
-    if (!isFileExtensionAllowed(filename)) {
+  public Optional<UploadErrorType> validateFileUpload(MultipartFile multipartFile, long fileSize, String filename,
+                                                      Collection<String> allowedExtensions) {
+    if (!isFileExtensionAllowed(filename, allowedExtensions)) {
       return Optional.of(UploadErrorType.EXTENSION_NOT_ALLOWED);
     }
 
@@ -44,10 +46,9 @@ public class FileUploadValidationService {
     return Optional.empty();
   }
 
-  private boolean isFileExtensionAllowed(String filename) {
+  private boolean isFileExtensionAllowed(String filename, Collection<String> allowedExtensions) {
     var lowercaseFilename = filename.toLowerCase();
-    var isFileExtensionAllowed = fileUploadConfig.getAllowedFileExtensions()
-        .stream()
+    var isFileExtensionAllowed = allowedExtensions.stream()
         .map(String::trim)
         .anyMatch(lowercaseFilename::endsWith);
 

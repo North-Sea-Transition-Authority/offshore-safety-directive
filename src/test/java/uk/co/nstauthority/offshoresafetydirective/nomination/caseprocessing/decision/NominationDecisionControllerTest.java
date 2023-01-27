@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -14,13 +16,16 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -31,6 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -38,7 +45,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -65,7 +71,10 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   @MockBean
-  private CaseEventService caseEventService;
+  private FileUploadService fileUploadService;
+
+  @MockBean
+  private NominationDecisionSubmissionService nominationDecisionSubmissionService;
 
   private NominationDetail nominationDetail;
 
@@ -93,6 +102,11 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any(),
+        any()))
+        .thenReturn(new ModelAndView("test"));
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withNominationDetail(nominationDetail)
@@ -111,6 +125,11 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any(),
+        any()))
+        .thenReturn(new ModelAndView("test"));
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
@@ -163,6 +182,14 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     var commentText = "comment text";
     var decisionDate = LocalDate.now();
+    var fileUuid = UUID.randomUUID();
+    var fileDescription = "description";
+    var fileUploadInstant = Instant.now();
+
+    var fileUploadForm = new FileUploadForm();
+    fileUploadForm.setUploadedFileId(fileUuid);
+    fileUploadForm.setUploadedFileInstant(fileUploadInstant);
+    fileUploadForm.setUploadedFileDescription(fileDescription);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)))
@@ -191,15 +218,28 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             .param("decisionDate.yearInput.inputValue", String.valueOf(decisionDate.getYear()))
             .param("comments.inputValue", commentText)
             .param("nominationDecision", NominationDecision.OBJECTION.name())
+            .param("files[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
+            .param("files[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
+            .param("files[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))));
 
-    verify(caseEventService).createDecisionEvent(nominationDetail, decisionDate, commentText,
-        NominationDecision.OBJECTION);
-    verify(nominationDetailService).updateNominationDetailStatusByDecision(nominationDetail,
-        NominationDecision.OBJECTION);
+    var captor = ArgumentCaptor.forClass(NominationDecisionForm.class);
+
+    verify(nominationDecisionSubmissionService).submitNominationDecision(eq(nominationDetail), captor.capture());
+
+    var files = captor.getValue().getFiles();
+    assertThat(files)
+        .extracting(
+            FileUploadForm::getUploadedFileId,
+            FileUploadForm::getUploadedFileDescription,
+            FileUploadForm::getUploadedFileInstant
+        ).containsExactly(
+            tuple(fileUuid, fileDescription, fileUploadInstant)
+        );
+
   }
 }

@@ -23,6 +23,14 @@ public class FileUploadConfig {
     this.filenameDisallowedCharactersRegex = filenameDisallowedCharactersRegex;
   }
 
+  FileUploadConfig(Integer maxFileUploadBytes, List<String> allowedFileExtensions,
+                   String filenameDisallowedCharactersRegex) {
+
+    this.maxFileUploadBytes = maxFileUploadBytes;
+    this.allowedFileExtensions = allowedFileExtensions;
+    this.filenameDisallowedCharactersRegex = filenameDisallowedCharactersRegex;
+  }
+
   public Integer getMaxFileUploadBytes() {
     return maxFileUploadBytes;
   }

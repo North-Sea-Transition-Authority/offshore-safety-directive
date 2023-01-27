@@ -5,7 +5,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.EnumSet;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -23,11 +22,13 @@ import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundExc
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -41,25 +42,28 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
 public class NominationDecisionController {
 
-  public static final String FORM_NAME = "nominationDecisionForm";
+  public static final String FORM_NAME = "form";
 
   private final NominationDecisionValidator nominationDecisionValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
-  private final CaseEventService caseEventService;
+  private final FileUploadService fileUploadService;
+  private final NominationDecisionSubmissionService nominationDecisionSubmissionService;
 
   @Autowired
   public NominationDecisionController(NominationDecisionValidator nominationDecisionValidator,
                                       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
                                       ControllerHelperService controllerHelperService,
                                       NominationDetailService nominationDetailService,
-                                      CaseEventService caseEventService) {
+                                      FileUploadService fileUploadService,
+                                      NominationDecisionSubmissionService nominationDecisionSubmissionService) {
     this.nominationDecisionValidator = nominationDecisionValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
-    this.caseEventService = caseEventService;
+    this.fileUploadService = fileUploadService;
+    this.nominationDecisionSubmissionService = nominationDecisionSubmissionService;
   }
 
   @PostMapping(params = CaseProcessingAction.DECISION)
@@ -87,22 +91,20 @@ public class NominationDecisionController {
         new NominationDecisionValidatorHint(nominationDetail)
     );
 
+    var files = nominationDecisionForm.getFiles()
+        .stream()
+        .map(FileUploadForm::getUploadedFileId)
+        .map(UploadedFileId::new)
+        .toList();
+
     var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail,
-        new NominationQaChecksForm(), nominationDecisionForm, new WithdrawNominationForm());
+            new NominationQaChecksForm(), nominationDecisionForm, new WithdrawNominationForm())
+        .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files));
 
     return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, nominationDecisionForm,
         () -> {
-          caseEventService.createDecisionEvent(
-              nominationDetail,
-              nominationDecisionForm.getDecisionDate().getAsLocalDate()
-                  .orElseThrow(() -> new IllegalStateException("Decision date is null and passed validation")),
-              nominationDecisionForm.getComments().getInputValue(),
-              EnumUtils.getEnum(NominationDecision.class, nominationDecisionForm.getNominationDecision())
-          );
-          nominationDetailService.updateNominationDetailStatusByDecision(
-              nominationDetail,
-              EnumUtils.getEnum(NominationDecision.class, nominationDecisionForm.getNominationDecision())
-          );
+
+          nominationDecisionSubmissionService.submitNominationDecision(nominationDetail, nominationDecisionForm);
 
           if (redirectAttributes != null) {
             var notificationBanner = NotificationBanner.builder()

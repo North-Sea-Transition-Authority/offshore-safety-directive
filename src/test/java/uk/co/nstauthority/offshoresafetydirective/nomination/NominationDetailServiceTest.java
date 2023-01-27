@@ -272,4 +272,23 @@ class NominationDetailServiceTest {
     assertThat(captor.getValue().getStatus()).isEqualTo(NominationStatus.WITHDRAWN);
   }
 
+  @Test
+  void getNominationDetailWithVersion_assertResult() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailRepository.findFirstByNominationAndVersion(
+        nominationDetail.getNomination(),
+        nominationDetail.getVersion())
+    )
+        .thenReturn(Optional.of(nominationDetail));
+
+    var result = nominationDetailService.getNominationDetailWithVersion(
+        nominationDetail.getNomination(),
+        nominationDetail.getVersion()
+    );
+
+    assertThat(result).contains(nominationDetail);
+  }
+
 }

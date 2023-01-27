@@ -55,7 +55,7 @@
                 <#if qaChecksSubmitUrl?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=qaChecksSlideoutText slideOutPanelId=qaChecksSlideoutPanelId/>
                 </#if>
-                <#if decisionSubmitUrl?has_content>
+                <#if ((nominationDecisionAttributes.submitUrl())!"")?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=decisionSlideoutText slideOutPanelId=decisionSlideoutPanelId/>
                 </#if>
                 <#if withdrawSubmitUrl?has_content>
@@ -74,14 +74,12 @@
         />
     </#if>
 
-    <#if decisionSubmitUrl?has_content>
+    <#if ((nominationDecisionAttributes.submitUrl())!"")?has_content>
         <@_decisionSlideout.decisionSlideout
             panelId=decisionSlideoutPanelId
             headingText=decisionSlideoutText
-            postUrl=decisionSubmitUrl
-            postParam=caseProcessingAction_DECISION
             errorList=errorList![]
-            nominationDecisions=nominationDecisions
+            nominationDecisionAttributes=nominationDecisionAttributes
         />
     </#if>
 

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
@@ -9,11 +10,12 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -28,6 +30,8 @@ public abstract class SmokeTesterHelper<T> {
   protected ServiceUserDetail userToTestWith = ServiceUserDetailTestUtil.Builder().build();
 
   private final MultiValueMap<String, String> bodyParams = new LinkedMultiValueMap<>();
+
+  private MockMultipartFile mockMultipartFile;
 
   public SmokeTesterHelper(MockMvc mockMvc) {
     this.mockMvc = mockMvc;
@@ -46,18 +50,26 @@ public abstract class SmokeTesterHelper<T> {
   public T withGetEndpoint(String endpoint,
                            ResultMatcher accessGrantedResultMatcher,
                            ResultMatcher accessDeniedResultMatcher) {
-    return withEndpoint(endpoint, HttpMethod.GET, accessGrantedResultMatcher, accessDeniedResultMatcher);
+    return withEndpoint(endpoint, SmokeTestHttpMethod.GET, accessGrantedResultMatcher, accessDeniedResultMatcher);
   }
 
   public T withPostEndpoint(String endpoint,
                             ResultMatcher accessGrantedResultMatcher,
                             ResultMatcher accessDeniedResultMatcher) {
-    return withEndpoint(endpoint, HttpMethod.POST, accessGrantedResultMatcher, accessDeniedResultMatcher);
+    return withEndpoint(endpoint, SmokeTestHttpMethod.POST, accessGrantedResultMatcher, accessDeniedResultMatcher);
+  }
+
+  public T withMultipartFilePostEndpoint(String endpoint,
+                                         MockMultipartFile mockMultipartFile,
+                                         ResultMatcher accessGrantedResultMatcher,
+                                         ResultMatcher accessDeniedResultMatcher) {
+    this.mockMultipartFile = mockMultipartFile;
+    return withEndpoint(endpoint, SmokeTestHttpMethod.POST_FILE, accessGrantedResultMatcher, accessDeniedResultMatcher);
   }
 
   @SuppressWarnings("unchecked")
   private T withEndpoint(String endpoint,
-                         HttpMethod requestMethod,
+                         SmokeTestHttpMethod requestMethod,
                          ResultMatcher accessGrantedResultMatcher,
                          ResultMatcher accessDeniedResultMatcher) {
     testableEndpoints.add(
@@ -74,10 +86,11 @@ public abstract class SmokeTesterHelper<T> {
 
   public record TestableEndpoint(
       String url,
-      HttpMethod requestMethod,
+      SmokeTestHttpMethod requestMethod,
       ResultMatcher accessGrantedResultMatcher,
       ResultMatcher accessDeniedResultMatcher
-  ) {}
+  ) {
+  }
 
   public Set<TestableEndpoint> getTestableEndpoints() {
     return testableEndpoints;
@@ -86,6 +99,11 @@ public abstract class SmokeTesterHelper<T> {
   public ResultActions performRequest(TestableEndpoint testableEndpoint) throws Exception {
 
     var requestToTest = constructRequestToTest(testableEndpoint);
+
+    if (testableEndpoint.requestMethod().equals(SmokeTestHttpMethod.POST_FILE)) {
+      var multipartRequestToTest = (MockMultipartHttpServletRequestBuilder) requestToTest;
+      multipartRequestToTest.file(mockMultipartFile);
+    }
 
     return mockMvc.perform(
         requestToTest
@@ -98,10 +116,12 @@ public abstract class SmokeTesterHelper<T> {
 
     MockHttpServletRequestBuilder requestToTest;
 
-    if (testableEndpoint.requestMethod().equals(HttpMethod.GET)) {
+    if (testableEndpoint.requestMethod().equals(SmokeTestHttpMethod.GET)) {
       requestToTest = get(testableEndpoint.url());
-    } else if (testableEndpoint.requestMethod().equals(HttpMethod.POST)) {
+    } else if (testableEndpoint.requestMethod().equals(SmokeTestHttpMethod.POST)) {
       requestToTest = post(testableEndpoint.url()).with(csrf());
+    } else if (testableEndpoint.requestMethod().equals(SmokeTestHttpMethod.POST_FILE)) {
+      requestToTest = multipart(testableEndpoint.url()).with(csrf());
     } else {
       throw new IllegalArgumentException(
           "Unsupported HttpMethod %s".formatted(testableEndpoint.requestMethod().name())

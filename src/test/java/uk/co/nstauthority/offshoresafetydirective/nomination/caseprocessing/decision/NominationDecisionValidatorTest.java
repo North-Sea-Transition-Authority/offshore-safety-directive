@@ -10,7 +10,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +21,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -60,7 +63,8 @@ class NominationDecisionValidatorTest {
         entry("decisionDate.dayInput.inputValue", Set.of("Enter a complete Decision date")),
         entry("decisionDate.monthInput.inputValue", Set.of("")),
         entry("decisionDate.yearInput.inputValue", Set.of("")),
-        entry("comments.inputValue", Set.of("Enter Decision comments"))
+        entry("comments.inputValue", Set.of("Enter Decision comments")),
+        entry("files", Set.of("Upload a decision document"))
     );
 
   }
@@ -70,9 +74,15 @@ class NominationDecisionValidatorTest {
     var nominationDecisionForm = new NominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
+    var uploadedFileForm = new FileUploadForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
+    uploadedFileForm.setUploadedFileInstant(Instant.now());
+    uploadedFileForm.setUploadedFileDescription("File description");
+
     nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
     nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
     nominationDecisionForm.getComments().setInputValue("comment text");
+    nominationDecisionForm.setFiles(List.of(uploadedFileForm));
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
     assertFalse(bindingResult.hasErrors());
@@ -233,6 +243,50 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
     assertFalse(nominationDecisionForm.getComments().fieldHasErrors(bindingResult));
+  }
+
+  @Test
+  void validate_whenFileHasNoDescription_thenVerifyHasError() {
+    var nominationDecisionForm = new NominationDecisionForm();
+    var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
+
+    var uploadedFileForm = new FileUploadForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
+    uploadedFileForm.setUploadedFileInstant(Instant.now());
+
+    nominationDecisionForm.setFiles(List.of(uploadedFileForm));
+
+    nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
+
+    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errors).contains(
+        entry("files[0].uploadedFileDescription", Set.of("Enter a description of this file"))
+    );
+  }
+
+  @Test
+  void validate_whenMoreThanOneFile_thenVerifyHasError() {
+    var nominationDecisionForm = new NominationDecisionForm();
+    var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
+
+    var firstUploadedFileForm = new FileUploadForm();
+    firstUploadedFileForm.setUploadedFileId(UUID.randomUUID());
+    firstUploadedFileForm.setUploadedFileInstant(Instant.now());
+
+    var secondUploadedFileForm = new FileUploadForm();
+    secondUploadedFileForm.setUploadedFileId(UUID.randomUUID());
+    secondUploadedFileForm.setUploadedFileInstant(Instant.now());
+
+    nominationDecisionForm.setFiles(List.of(firstUploadedFileForm, secondUploadedFileForm));
+
+    nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
+
+    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errors).contains(
+        entry("files", Set.of("Only one decision document can be uploaded"))
+    );
   }
 
   @Test

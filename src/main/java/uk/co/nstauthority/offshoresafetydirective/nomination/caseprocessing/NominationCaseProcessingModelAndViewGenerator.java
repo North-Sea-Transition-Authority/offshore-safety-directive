@@ -3,9 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -15,13 +13,14 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -39,16 +38,19 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final NominationSummaryService nominationSummaryService;
   private final PermissionService permissionService;
   private final UserDetailService userDetailService;
+  private final FileUploadConfig fileUploadConfig;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(NominationCaseProcessingService nominationCaseProcessingService,
                                                        NominationSummaryService nominationSummaryService,
                                                        PermissionService permissionService,
-                                                       UserDetailService userDetailService) {
+                                                       UserDetailService userDetailService,
+                                                       FileUploadConfig fileUploadConfig) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
     this.userDetailService = userDetailService;
+    this.fileUploadConfig = fileUploadConfig;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -78,11 +80,6 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject("caseProcessingAction_QA", CaseProcessingAction.QA)
         .addObject(NominationDecisionController.FORM_NAME, nominationDecisionForm)
         .addObject("caseProcessingAction_DECISION", CaseProcessingAction.DECISION)
-        .addObject("nominationDecisions", Arrays.stream(NominationDecision.values())
-            .sorted(Comparator.comparing(NominationDecision::getDisplayOrder))
-            .collect(Collectors.toList())
-        )
-        .addObject("nominationDecisions", NominationDecision.values())
         .addObject(WithdrawNominationController.FORM_NAME, withdrawNominationForm)
         .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW);
 
@@ -101,6 +98,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
     if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
 
       if (nominationDetailDto.nominationStatus() == NominationStatus.SUBMITTED) {
+
         modelAndView
             .addObject("qaChecksSubmitUrl",
                 ReverseRouter.route(
@@ -109,6 +107,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
                 ReverseRouter.route(
                     on(NominationDecisionController.class).submitDecision(nominationId, true,
                         CaseProcessingAction.DECISION, null, null, null)))
+            .addObject("nominationDecisionAttributes",
+                NominationDecisionAttributeView.createAttributeView(
+                    new NominationId(nominationDetail),
+                    fileUploadConfig
+                ))
             .addObject("withdrawSubmitUrl",
                 ReverseRouter.route(
                     on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null, null)

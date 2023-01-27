@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -9,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
@@ -34,6 +37,9 @@ class CaseEventServiceTest {
 
   @Mock
   private CaseEventRepository caseEventRepository;
+
+  @Mock
+  private CaseEventFileService caseEventFileService;
 
   @InjectMocks
   private CaseEventService caseEventService;
@@ -83,6 +89,7 @@ class CaseEventServiceTest {
     var nominationVersion = 5;
     var decisionDate = LocalDate.now();
     var comment = "comment text";
+    var fileUploadForm = new FileUploadForm();
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
@@ -91,7 +98,10 @@ class CaseEventServiceTest {
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
-    caseEventService.createDecisionEvent(nominationDetail, decisionDate, comment, nominationDecision);
+    when(caseEventRepository.save(any(CaseEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    caseEventService.createDecisionEvent(nominationDetail, decisionDate, comment, nominationDecision,
+        List.of(fileUploadForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
 
@@ -119,6 +129,7 @@ class CaseEventServiceTest {
             nominationVersion
         );
 
+    verify(caseEventFileService).finalizeFileUpload(captor.getValue(), List.of(fileUploadForm));
   }
 
   @ParameterizedTest

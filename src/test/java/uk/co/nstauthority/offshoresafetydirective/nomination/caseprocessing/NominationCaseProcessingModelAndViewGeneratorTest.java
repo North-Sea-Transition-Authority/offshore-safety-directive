@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,13 +19,14 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -41,6 +41,8 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ExtendWith(MockitoExtension.class)
 class NominationCaseProcessingModelAndViewGeneratorTest {
+
+  private FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder().build();
 
   @Mock
   private NominationDetailService nominationDetailService;
@@ -57,7 +59,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private UserDetailService userDetailService;
 
-  @InjectMocks
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -74,6 +75,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
+
+    modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
+        nominationSummaryService, permissionService, userDetailService, fileUploadConfig);
   }
 
   @Test
@@ -107,7 +111,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "canManageNomination",
             NominationDecisionController.FORM_NAME,
             "caseProcessingAction_DECISION",
-            "nominationDecisions",
             WithdrawNominationController.FORM_NAME,
             "caseProcessingAction_WITHDRAW"
         ).containsExactly(
@@ -118,7 +121,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             false,
             decisionForm,
             CaseProcessingAction.DECISION,
-            NominationDecision.values(),
             withdrawNominationForm,
             CaseProcessingAction.WITHDRAW
         );
@@ -170,7 +172,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "caseProcessingAction_QA",
             NominationDecisionController.FORM_NAME,
             "caseProcessingAction_DECISION",
-            "nominationDecisions",
             WithdrawNominationController.FORM_NAME,
             "caseProcessingAction_WITHDRAW"
         ).containsExactly(
@@ -180,7 +181,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             CaseProcessingAction.QA,
             decisionForm,
             CaseProcessingAction.DECISION,
-            NominationDecision.values(),
             withdrawForm,
             CaseProcessingAction.WITHDRAW
         );

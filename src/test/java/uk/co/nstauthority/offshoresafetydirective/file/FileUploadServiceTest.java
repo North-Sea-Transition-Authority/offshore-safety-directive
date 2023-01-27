@@ -30,6 +30,9 @@ class FileUploadServiceTest {
   @Mock
   private UploadedFilePersistenceService uploadedFilePersistenceService;
 
+  @Mock
+  private UploadedFileRepository uploadedFileRepository;
+
   private FileUploadService fileUploadService;
 
 

@@ -58,6 +58,10 @@ public class NominationDetailService {
         });
   }
 
+  public Optional<NominationDetail> getNominationDetailWithVersion(Nomination nomination, int version) {
+    return nominationDetailRepository.findFirstByNominationAndVersion(nomination, version);
+  }
+
   public Optional<NominationDetail> getLatestNominationDetailWithStatuses(NominationId nominationId,
                                                                           Collection<NominationStatus> nominationStatuses) {
     return nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(

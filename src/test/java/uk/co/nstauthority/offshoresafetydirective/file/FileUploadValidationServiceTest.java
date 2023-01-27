@@ -22,7 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.virus.VirusCheckService;
 
 @ExtendWith(MockitoExtension.class)
 class FileUploadValidationServiceTest {
-  
+
   @Mock
   VirusCheckService virusCheckService;
 
@@ -55,7 +55,8 @@ class FileUploadValidationServiceTest {
     long fileSize = allowedFileSize;
     String filename = "text.exe";
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.EXTENSION_NOT_ALLOWED);
   }
@@ -66,7 +67,8 @@ class FileUploadValidationServiceTest {
     long fileSize = allowedFileSize;
     var filename = allowedFilenameAndExtension;
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -77,7 +79,8 @@ class FileUploadValidationServiceTest {
     long fileSize = 1025L;
     var filename = allowedFilenameAndExtension;
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.MAX_FILE_SIZE_EXCEEDED);
   }
@@ -88,7 +91,8 @@ class FileUploadValidationServiceTest {
     long fileSize = allowedFileSize;
     var filename = allowedFilenameAndExtension;
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -99,7 +103,8 @@ class FileUploadValidationServiceTest {
     var filename = allowedFilenameAndExtension;
     when(virusCheckService.hasVirus(any(InputStream.class))).thenReturn(true);
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.VIRUS_FOUND_IN_FILE);
   }
@@ -111,7 +116,8 @@ class FileUploadValidationServiceTest {
     var filename = allowedFilenameAndExtension;
     when(virusCheckService.hasVirus(any(InputStream.class))).thenReturn(false);
 
-    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+    var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+        fileUploadConfig.getAllowedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -121,10 +127,13 @@ class FileUploadValidationServiceTest {
 
     long fileSize = allowedFileSize;
     var filename = allowedFilenameAndExtension;
+    var allowedFileExtensions = fileUploadConfig.getAllowedFileExtensions();
+
     when(virusCheckService.hasVirus(any(InputStream.class))).thenThrow(MockitoException.class);
 
     assertThatExceptionOfType(VirusCheckFailedException.class).isThrownBy(() -> {
-      var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename);
+      var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
+          allowedFileExtensions);
     });
   }
 }
