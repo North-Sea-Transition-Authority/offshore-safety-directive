@@ -353,7 +353,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
     var expectedConfirmAppointmentAttributes =
-        ConfirmNominationAppointmentAttributeView.createAttributeView(nominationId);
+        ConfirmNominationAppointmentAttributeView.createAttributeView(nominationId, fileUploadConfig);
 
     var expectedWithdrawSubmitUrl = ReverseRouter.route(on(WithdrawNominationController.class)
         .withdrawNomination(nominationId, true, null, null, null, null));

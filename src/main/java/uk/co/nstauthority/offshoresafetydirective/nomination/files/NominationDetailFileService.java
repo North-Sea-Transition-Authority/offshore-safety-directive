@@ -71,6 +71,7 @@ public class NominationDetailFileService {
         .map(fileUploadForm -> new UploadedFileId(fileUploadForm.getUploadedFileId()))
         .toList();
 
+    fileUploadService.updateFileUploadDescriptions(fileUploadForms);
     this.updateFileStatuses(fileIds, nominationDetail, FileStatus.SUBMITTED);
 
     var detailDto = NominationDetailDto.fromNominationDetail(nominationDetail);

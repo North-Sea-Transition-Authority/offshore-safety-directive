@@ -201,6 +201,7 @@ class CaseEventServiceTest {
     var nominationVersion = 2;
     var date = LocalDate.now();
     var comment = "comment text";
+    var fileUploadForm = new FileUploadForm();
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
@@ -208,7 +209,7 @@ class CaseEventServiceTest {
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
-    caseEventService.createAppointmentConfirmationEvent(detail, date, comment);
+    caseEventService.createAppointmentConfirmationEvent(detail, date, comment, List.of(fileUploadForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
     verify(caseEventRepository).save(captor.capture());

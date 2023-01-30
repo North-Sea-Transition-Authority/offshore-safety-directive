@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -15,13 +17,16 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -34,15 +39,15 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -63,16 +68,16 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
       .build();
 
   @MockBean
-  private CaseEventService caseEventService;
-
-  @MockBean
   private ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
 
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   @MockBean
-  private NominationDetailStatusService nominationDetailStatusService;
+  private ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
+
+  @MockBean
+  private FileUploadService fileUploadService;
 
   private NominationDetail nominationDetail;
 
@@ -97,6 +102,9 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   @SecurityTest
   void smokeTestNominationStatuses_assertPermitted() {
 
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
+        .thenReturn(new ModelAndView("test"));
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
         .withNominationDetail(nominationDetail)
@@ -115,6 +123,9 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
 
   @SecurityTest
   void smokeTestPermissions_assertAllowedPermissions() {
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
+        .thenReturn(new ModelAndView("test"));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
@@ -148,6 +159,13 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
             ))
         .build();
 
+    var fileId = UUID.randomUUID();
+    var fileInstant = Instant.now();
+    var fileDescription = "description";
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
+        .thenReturn(new ModelAndView("test"));
+
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
             .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
@@ -156,14 +174,30 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
             .param("appointmentDate.monthInput.inputValue", String.valueOf(appointmentDate.getMonthValue()))
             .param("appointmentDate.yearInput.inputValue", String.valueOf(appointmentDate.getYear()))
             .param("comments.inputValue", comment)
+            .param("files[0].uploadedFileId", fileId.toString())
+            .param("files[0].uploadedFileInstant", fileInstant.toString())
+            .param("files[0].uploadedFileDescription", fileDescription)
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
-    verify(caseEventService).createAppointmentConfirmationEvent(nominationDetail, appointmentDate, comment);
-    verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
+    var formCaptor = ArgumentCaptor.forClass(ConfirmNominationAppointmentForm.class);
+
+    verify(confirmNominationAppointmentSubmissionService)
+        .submitAppointmentConfirmation(eq(nominationDetail), formCaptor.capture());
+
+    assertThat(formCaptor.getValue().getFiles())
+        .extracting(
+            FileUploadForm::getUploadedFileId,
+            FileUploadForm::getUploadedFileInstant,
+            FileUploadForm::getUploadedFileDescription
+        )
+        .containsExactly(
+            tuple(fileId, fileInstant, fileDescription)
+        );
+
   }
 
   @Test
@@ -182,6 +216,10 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView(viewName));
 
+    var fileId = UUID.randomUUID();
+    var fileInstant = Instant.now();
+    var fileDescription = "description";
+
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
             .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
@@ -190,12 +228,14 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
             .param("appointmentDate.monthInput.inputValue", String.valueOf(appointmentDate.getMonthValue()))
             .param("appointmentDate.yearInput.inputValue", String.valueOf(appointmentDate.getYear()))
             .param("comments.inputValue", comment)
+            .param("files[0].uploadedFileId", fileId.toString())
+            .param("files[0].uploadedFileInstant", fileInstant.toString())
+            .param("files[0].uploadedFileDescription", fileDescription)
         )
         .andExpect(status().isOk())
         .andExpect(view().name(viewName));
 
-    verify(caseEventService, never()).createAppointmentConfirmationEvent(nominationDetail, appointmentDate, comment);
-    verify(nominationDetailStatusService, never()).confirmAppointment(nominationDetail);
+    verify(confirmNominationAppointmentSubmissionService, never()).submitAppointmentConfirmation(any(), any());
   }
 
 }

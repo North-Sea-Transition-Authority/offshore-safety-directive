@@ -115,6 +115,7 @@ class NominationDetailFileServiceTest {
     );
 
     verifyNoMoreInteractions(nominationDetailFileRepository);
+    verifyNoMoreInteractions(fileUploadService);
   }
 
   @Test
@@ -155,6 +156,7 @@ class NominationDetailFileServiceTest {
         VirtualFolder.NOMINATION_DECISION
     );
 
+    verify(fileUploadService).updateFileUploadDescriptions(List.of(fileUploadForm));
     verify(nominationDetailFileRepository).deleteAll(List.of(nominationDetailFile));
     verify(fileUploadService).deleteFile(uploadedFile);
     verify(nominationDetailFileRepository).saveAll(List.of(nominationDetailFile));

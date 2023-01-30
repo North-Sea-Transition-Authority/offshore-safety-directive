@@ -17,6 +17,19 @@
                 labelText="Appointment comments"
                 optionalLabel=true
             />
+            <@fdsFileUpload.fileUpload
+                id="confirm-appointment-files"
+                path="confirmAppointmentForm.files"
+                uploadUrl=attributes.fileUploadTemplate().uploadUrl()
+                deleteUrl=attributes.fileUploadTemplate().deleteUrl()
+                downloadUrl=attributes.fileUploadTemplate().downloadUrl()
+                maxAllowedSize=attributes.fileUploadTemplate().maxAllowedSize()
+                allowedExtensions=attributes.fileUploadTemplate().allowedExtensions()
+                formName="confirmAppointmentForm"
+                existingFiles=confirmNominationFiles![]
+            >
+
+            </@fdsFileUpload.fileUpload>
             <@fdsAction.button buttonName=attributes.postParam() buttonText="Confirm appointment"/>
         </@fdsForm.htmlForm>
     </@fdsSlideOutPanel.slideOutPanel>

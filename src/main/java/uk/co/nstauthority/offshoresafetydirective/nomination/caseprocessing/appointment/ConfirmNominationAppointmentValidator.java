@@ -13,6 +13,7 @@ import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
 class ConfirmNominationAppointmentValidator implements SmartValidator {
@@ -49,6 +50,9 @@ class ConfirmNominationAppointmentValidator implements SmartValidator {
     StringInputValidator.builder()
         .isOptional()
         .validate(form.getComments(), errors);
+
+    FileValidationUtil.validator()
+        .validate(errors, form.getFiles(), "files");
   }
 
   @Override

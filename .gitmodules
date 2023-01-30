@@ -1,4 +1,4 @@
 [submodule "fivium-design-system-core"]
 	path = fivium-design-system-core
 	url = git@bitbucket.org:fiviumuk/fivium-design-system-core.git
-	branch = release/v5.4.3-govuk-4.3.1
+	branch = beta/v5.4.4-beta-govuk-4.3.1

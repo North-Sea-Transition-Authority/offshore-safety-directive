@@ -64,9 +64,12 @@ public class CaseEventService {
   @Transactional
   public void createAppointmentConfirmationEvent(NominationDetail nominationDetail,
                                                  LocalDate appointmentEffectiveDate,
-                                                 @Nullable String comments) {
-    createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
+                                                 @Nullable String comments,
+                                                 List<FileUploadForm> fileUploadForms) {
+    var caseEvent = createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
         appointmentEffectiveDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
+
+    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
   }
 
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,

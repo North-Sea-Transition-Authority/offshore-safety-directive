@@ -117,7 +117,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
       if (canConfirmAppointments(nominationDetailDto)) {
         dropdownAttributeMap.put("confirmAppointmentAttributes",
-            ConfirmNominationAppointmentAttributeView.createAttributeView(new NominationId(nominationDetail)));
+            ConfirmNominationAppointmentAttributeView.createAttributeView(
+                new NominationId(nominationDetail),
+                fileUploadConfig
+            ));
       }
 
       if (!dropdownAttributeMap.isEmpty()) {

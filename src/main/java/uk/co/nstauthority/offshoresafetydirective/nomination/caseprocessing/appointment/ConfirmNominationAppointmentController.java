@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.app
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.EnumSet;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,12 +24,13 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
@@ -43,27 +45,27 @@ public class ConfirmNominationAppointmentController {
 
   public static final String FORM_NAME = "confirmAppointmentForm";
 
-  private final CaseEventService caseEventService;
   private final NominationDetailService nominationDetailService;
   private final ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
   private final ControllerHelperService controllerHelperService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final NominationDetailStatusService nominationDetailStatusService;
+  private final FileUploadService fileUploadService;
+  private final ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
 
   @Autowired
   public ConfirmNominationAppointmentController(
-      CaseEventService caseEventService,
       NominationDetailService nominationDetailService,
       ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator,
       ControllerHelperService controllerHelperService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      NominationDetailStatusService nominationDetailStatusService) {
-    this.caseEventService = caseEventService;
+      FileUploadService fileUploadService,
+      ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService) {
     this.nominationDetailService = nominationDetailService;
     this.confirmNominationAppointmentValidator = confirmNominationAppointmentValidator;
     this.controllerHelperService = controllerHelperService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.nominationDetailStatusService = nominationDetailStatusService;
+    this.fileUploadService = fileUploadService;
+    this.confirmNominationAppointmentSubmissionService = confirmNominationAppointmentSubmissionService;
   }
 
   @PostMapping(params = CaseProcessingAction.CONFIRM_APPOINTMENT)
@@ -93,10 +95,17 @@ public class ConfirmNominationAppointmentController {
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withConfirmNominationAppointmentForm(confirmNominationAppointmentForm)
         .build();
+
+    var files = Objects.requireNonNull(confirmNominationAppointmentForm).getFiles()
+        .stream()
+        .map(FileUploadForm::getUploadedFileId)
+        .map(UploadedFileId::new)
+        .toList();
+
     var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         nominationDetail,
         modelAndViewDto
-    );
+    ).addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files));
 
     return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, confirmNominationAppointmentForm,
         () -> {
@@ -108,9 +117,8 @@ public class ConfirmNominationAppointmentController {
                       nominationId.id()
                   )));
 
-          caseEventService.createAppointmentConfirmationEvent(nominationDetail, appointmentDate,
-              confirmNominationAppointmentForm.getComments().getInputValue());
-          nominationDetailStatusService.confirmAppointment(nominationDetail);
+          confirmNominationAppointmentSubmissionService.submitAppointmentConfirmation(nominationDetail,
+              confirmNominationAppointmentForm);
 
           if (redirectAttributes != null) {
 
