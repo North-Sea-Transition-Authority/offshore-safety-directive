@@ -99,8 +99,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawNominationForm = new WithdrawNominationForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm,
-        withdrawNominationForm);
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawNominationForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
     assertThat(result.getModel())
         .extracting(
@@ -161,8 +166,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
 
-    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, qaChecksForm, decisionForm,
-        withdrawForm);
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
     assertThat(result.getModel())
         .extracting(

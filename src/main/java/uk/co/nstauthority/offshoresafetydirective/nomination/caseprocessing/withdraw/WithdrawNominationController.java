@@ -28,10 +28,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -84,11 +83,13 @@ public class WithdrawNominationController {
         Objects.requireNonNull(bindingResult)
     );
 
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withWithdrawNominationForm(withdrawNominationForm)
+        .build();
+
     var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         nominationDetail,
-        new NominationQaChecksForm(),
-        new NominationDecisionForm(),
-        withdrawNominationForm
+        modelAndViewDto
     );
 
     return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, withdrawNominationForm, () -> {

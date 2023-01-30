@@ -139,7 +139,7 @@ class WithdrawNominationControllerTest extends AbstractControllerTest {
 
     when(
         nominationCaseProcessingModelAndViewGenerator
-            .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
+            .getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView(expectedViewName));
 
     mockMvc.perform(post(ReverseRouter.route(on(WithdrawNominationController.class)

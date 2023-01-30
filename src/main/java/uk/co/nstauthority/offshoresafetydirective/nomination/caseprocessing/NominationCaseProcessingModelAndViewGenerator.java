@@ -22,11 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -54,9 +51,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
-                                                    NominationQaChecksForm nominationQaChecksForm,
-                                                    NominationDecisionForm nominationDecisionForm,
-                                                    WithdrawNominationForm withdrawNominationForm) {
+                                                    CaseProcessingFormDto modelAndViewDto) {
 
     var headerInformation = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -76,11 +71,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
             nominationDetail,
             SummaryValidationBehaviour.NOT_VALIDATED
         ))
-        .addObject(NominationQaChecksController.FORM_NAME, nominationQaChecksForm)
+        .addObject(NominationQaChecksController.FORM_NAME, modelAndViewDto.getNominationQaChecksForm())
         .addObject("caseProcessingAction_QA", CaseProcessingAction.QA)
-        .addObject(NominationDecisionController.FORM_NAME, nominationDecisionForm)
+        .addObject(NominationDecisionController.FORM_NAME, modelAndViewDto.getNominationDecisionForm())
         .addObject("caseProcessingAction_DECISION", CaseProcessingAction.DECISION)
-        .addObject(WithdrawNominationController.FORM_NAME, withdrawNominationForm)
+        .addObject(WithdrawNominationController.FORM_NAME, modelAndViewDto.getWithdrawNominationForm())
         .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW);
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
@@ -114,7 +109,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
                 ))
             .addObject("withdrawSubmitUrl",
                 ReverseRouter.route(
-                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null, null)
+                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null,
+                        null)
                 ));
 
         canManageNomination = true;

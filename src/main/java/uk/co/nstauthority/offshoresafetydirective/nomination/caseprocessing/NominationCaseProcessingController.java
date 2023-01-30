@@ -11,9 +11,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -39,14 +36,13 @@ public class NominationCaseProcessingController {
   @GetMapping
   public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId) {
 
-    var nominationQaChecksForm = new NominationQaChecksForm();
-    var nominationDecisionForm = new NominationDecisionForm();
-    var withdrawNominationForm = new WithdrawNominationForm();
-
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
-    return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail,
-        nominationQaChecksForm, nominationDecisionForm, withdrawNominationForm);
+    var modelAndViewDto = CaseProcessingFormDto.builder().build();
+    return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+        nominationDetail,
+        modelAndViewDto
+    );
 
   }
 

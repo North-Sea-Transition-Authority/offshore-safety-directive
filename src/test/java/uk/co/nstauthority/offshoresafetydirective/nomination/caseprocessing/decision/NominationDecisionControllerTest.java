@@ -103,8 +103,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
 
-    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any(),
-        any()))
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView("test"));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
@@ -126,8 +125,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
-    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any(), any(),
-        any()))
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView("test"));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
@@ -160,9 +158,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     var expectedViewName = "some_template";
 
-    when(
-        nominationCaseProcessingModelAndViewGenerator
-            .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView(expectedViewName));
 
     mockMvc.perform(post(
@@ -195,9 +191,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         EnumSet.of(NominationStatus.SUBMITTED)))
         .thenReturn(Optional.of(nominationDetail));
 
-    when(
-        nominationCaseProcessingModelAndViewGenerator
-            .getCaseProcessingModelAndView(eq(nominationDetail), any(), any(), any()))
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(new ModelAndView());
 
     var expectedNotificationBanner = NotificationBanner.builder()
