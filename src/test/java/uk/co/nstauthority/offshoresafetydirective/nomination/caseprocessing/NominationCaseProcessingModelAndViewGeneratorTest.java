@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -27,7 +28,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
@@ -42,7 +45,7 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @ExtendWith(MockitoExtension.class)
 class NominationCaseProcessingModelAndViewGeneratorTest {
 
-  private FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder().build();
+  private final FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder().build();
 
   @Mock
   private NominationDetailService nominationDetailService;
@@ -82,9 +85,11 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
   @Test
   void getCaseProcessingModelAndView_whenCannotManageNomination_thenAssertModelProperties() {
-
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .build();
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
@@ -97,44 +102,52 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
-    var withdrawNominationForm = new WithdrawNominationForm();
+    var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
-        .withWithdrawNominationForm(withdrawNominationForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
+    var persistentAttributes = List.of(
+        "breadcrumbsList",
+        "hasDropdownActions",
+        "currentPage",
+        "headerInformation",
+        "summaryView",
+        "qaChecksForm",
+        "caseProcessingAction_QA",
+        "form",
+        "withdrawNominationForm",
+        "caseProcessingAction_WITHDRAW",
+        "confirmAppointmentForm"
+    );
+
+    var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
+    var assertionAttributes = persistentAttributes.stream()
+        .filter(s -> !ignoredAttributes.contains(s))
+        .toList();
+
+    var hasDropdownActions = false;
+
     assertThat(result.getModel())
-        .extracting(
-            "headerInformation",
-            "summaryView",
-            NominationQaChecksController.FORM_NAME,
-            "caseProcessingAction_QA",
-            "canManageNomination",
-            NominationDecisionController.FORM_NAME,
-            "caseProcessingAction_DECISION",
-            WithdrawNominationController.FORM_NAME,
-            "caseProcessingAction_WITHDRAW"
-        ).containsExactly(
+        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
+        .extracting(assertionAttributes.toArray(String[]::new))
+        .containsExactly(
+            hasDropdownActions,
             header,
             nominationSummaryView,
             qaChecksForm,
             CaseProcessingAction.QA,
-            false,
             decisionForm,
-            CaseProcessingAction.DECISION,
-            withdrawNominationForm,
-            CaseProcessingAction.WITHDRAW
-        );
-
-    assertThat(result.getModel())
-        .doesNotContainKeys(
-            "qaChecksSubmitUrl",
-            "decisionSubmitUrl",
-            "withdrawSubmitUrl"
+            withdrawForm,
+            CaseProcessingAction.WITHDRAW,
+            confirmAppointmentForm
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -142,8 +155,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(NominationStatus.class)
-  void getCaseProcessingModelAndView_whenCanManageNomination_thenAssertModelPropertiesBasedOnNominationStatus(
+  @EnumSource(
+      value = NominationStatus.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"SUBMITTED", "AWAITING_CONFIRMATION"}
+  )
+  void getCaseProcessingModelAndView_whenCanManageNomination_assertStatusesWithNoDropdownActions(
       NominationStatus nominationStatus
   ) {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
@@ -165,67 +182,221 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
         .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
+    var persistentAttributes = List.of(
+        "breadcrumbsList",
+        "hasDropdownActions",
+        "currentPage",
+        "headerInformation",
+        "summaryView",
+        "qaChecksForm",
+        "caseProcessingAction_QA",
+        "form",
+        "withdrawNominationForm",
+        "caseProcessingAction_WITHDRAW",
+        "confirmAppointmentForm"
+    );
+
+    var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
+    var assertionAttributes = persistentAttributes.stream()
+        .filter(s -> !ignoredAttributes.contains(s))
+        .toList();
+
+    var hasDropdownActions = false;
+
     assertThat(result.getModel())
-        .extracting(
-            "headerInformation",
-            "summaryView",
-            NominationQaChecksController.FORM_NAME,
-            "caseProcessingAction_QA",
-            NominationDecisionController.FORM_NAME,
-            "caseProcessingAction_DECISION",
-            WithdrawNominationController.FORM_NAME,
-            "caseProcessingAction_WITHDRAW"
-        ).containsExactly(
+        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
+        .extracting(assertionAttributes.toArray(String[]::new))
+        .containsExactly(
+            hasDropdownActions,
             header,
             nominationSummaryView,
             qaChecksForm,
             CaseProcessingAction.QA,
             decisionForm,
-            CaseProcessingAction.DECISION,
             withdrawForm,
-            CaseProcessingAction.WITHDRAW
+            CaseProcessingAction.WITHDRAW,
+            confirmAppointmentForm
         );
 
-    switch (nominationStatus) {
-      case SUBMITTED -> assertThat(result.getModel())
-          .hasFieldOrPropertyWithValue("canManageNomination", true)
-          .hasFieldOrPropertyWithValue(
-              "qaChecksSubmitUrl",
-              ReverseRouter.route(
-                  on(NominationQaChecksController.class).submitQa(nominationId, CaseProcessingAction.QA, null, null))
-          )
-          .hasFieldOrPropertyWithValue(
-              "decisionSubmitUrl",
-              ReverseRouter.route(on(NominationDecisionController.class).submitDecision(nominationId, true,
-                  CaseProcessingAction.DECISION, null, null, null))
-          )
-          .hasFieldOrPropertyWithValue(
-              "withdrawSubmitUrl",
-              ReverseRouter.route(
-                  on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
-                      CaseProcessingAction.WITHDRAW, null, null, null))
-          );
-      case AWAITING_CONFIRMATION -> assertThat(result.getModel())
-          .hasFieldOrPropertyWithValue("canManageNomination", true)
-          .hasFieldOrPropertyWithValue(
-              "withdrawSubmitUrl",
-              ReverseRouter.route(
-                  on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
-                      CaseProcessingAction.WITHDRAW, null, null, null))
-          );
-      default -> assertThat(result.getModel())
-          .hasFieldOrPropertyWithValue("canManageNomination", false)
-          .doesNotContainKeys("qaChecksSubmitUrl", "decisionSubmitUrl");
-    }
+    assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_thenAssertModelProperties() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
+
+    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+        .thenReturn(true);
+
+    var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
+    var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    var expectedNominationDecisionAttributes = NominationDecisionAttributeView.createAttributeView(nominationId,
+        FileUploadConfigTestUtil.builder().build());
+
+    var expectedWithdrawSubmitUrl = ReverseRouter.route(on(WithdrawNominationController.class)
+        .withdrawNomination(nominationId, true, null, null, null, null));
+
+    var expectedQaChecksSubmitUrl = ReverseRouter.route(on(NominationQaChecksController.class)
+        .submitQa(nominationId, CaseProcessingAction.QA, null, null));
+
+    var hasDropdownActions = true;
+
+    var persistentAttributes = List.of(
+        "breadcrumbsList",
+        "hasDropdownActions",
+        "currentPage",
+        "headerInformation",
+        "summaryView",
+        "qaChecksForm",
+        "caseProcessingAction_QA",
+        "form",
+        "withdrawNominationForm",
+        "caseProcessingAction_WITHDRAW",
+        "confirmAppointmentForm",
+        "withdrawSubmitUrl",
+        "nominationDecisionAttributes",
+        "qaChecksSubmitUrl"
+    );
+
+    var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
+    var assertionAttributes = persistentAttributes.stream()
+        .filter(s -> !ignoredAttributes.contains(s))
+        .toList();
+
+    assertThat(result.getModel())
+        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
+        .extracting(assertionAttributes.toArray(String[]::new))
+        .containsExactly(
+            hasDropdownActions,
+            header,
+            nominationSummaryView,
+            qaChecksForm,
+            CaseProcessingAction.QA,
+            decisionForm,
+            withdrawForm,
+            CaseProcessingAction.WITHDRAW,
+            confirmAppointmentForm,
+            expectedWithdrawSubmitUrl,
+            expectedNominationDecisionAttributes,
+            expectedQaChecksSubmitUrl
+        );
+
+    assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenCanManageNomination_andStatusAwaitingConfirmation_thenAssertModelProperties() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
+
+    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+        .thenReturn(true);
+
+    var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
+    var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    var expectedConfirmAppointmentAttributes =
+        ConfirmNominationAppointmentAttributeView.createAttributeView(nominationId);
+
+    var expectedWithdrawSubmitUrl = ReverseRouter.route(on(WithdrawNominationController.class)
+        .withdrawNomination(nominationId, true, null, null, null, null));
+
+    var hasDropdownActions = true;
+
+    var persistentAttributes = List.of(
+        "breadcrumbsList",
+        "hasDropdownActions",
+        "currentPage",
+        "headerInformation",
+        "summaryView",
+        "qaChecksForm",
+        "caseProcessingAction_QA",
+        "form",
+        "withdrawNominationForm",
+        "caseProcessingAction_WITHDRAW",
+        "confirmAppointmentForm",
+        "withdrawSubmitUrl",
+        "confirmAppointmentAttributes"
+    );
+
+    var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
+    var assertionAttributes = persistentAttributes.stream()
+        .filter(s -> !ignoredAttributes.contains(s))
+        .toList();
+
+    assertThat(result.getModel())
+        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
+        .extracting(assertionAttributes.toArray(String[]::new))
+        .containsExactly(
+            hasDropdownActions,
+            header,
+            nominationSummaryView,
+            qaChecksForm,
+            CaseProcessingAction.QA,
+            decisionForm,
+            withdrawForm,
+            CaseProcessingAction.WITHDRAW,
+            confirmAppointmentForm,
+            expectedWithdrawSubmitUrl,
+            expectedConfirmAppointmentAttributes
+        );
 
     assertBreadcrumbs(result, nominationDetail);
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");

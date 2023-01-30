@@ -4,6 +4,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
@@ -29,8 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
@@ -162,43 +161,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
         .andExpect(model().attribute("summaryView", nominationSummaryView))
-        .andExpect(model().attribute("qaChecksSubmitUrl", ReverseRouter.route(on(NominationQaChecksController.class)
-            .submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
-        .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
-            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null, null))));
+        .andExpect(view().name("osd/nomination/caseProcessing/caseProcessing"));
   }
 
-  @Test
-  void renderCaseProcessing_whenCanManageNominations_thenEnsureModelAttributes() throws Exception {
-    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
-
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.of(header));
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
-                .with(user(NOMINATION_MANAGE_USER))
-        )
-        .andExpect(model().attribute("qaChecksSubmitUrl",
-            ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, CaseProcessingAction.QA, null, null))))
-        .andExpect(model().attribute("decisionSubmitUrl", ReverseRouter.route(on(NominationDecisionController.class)
-            .submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION, null, null, null))))
-        .andExpect(model().attribute("canManageNomination", true));
-  }
-
-  @Test
-  void renderCaseProcessing_whenCannotManageNominations_thenEnsureModelAttributes() throws Exception {
-    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
-
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.of(header));
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
-                .with(user(NOMINATION_VIEW_USER))
-        )
-        .andExpect(model().attributeDoesNotExist("qaChecksSubmitUrl"))
-        .andExpect(model().attribute("canManageNomination", false));
-  }
 }

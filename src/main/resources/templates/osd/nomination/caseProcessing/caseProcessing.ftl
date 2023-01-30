@@ -5,6 +5,7 @@
 <#import '_qaChecksSlideout.ftl' as _qaChecksSlideout/>
 <#import '_decisionSlideout.ftl' as _decisionSlideout/>
 <#import '_withdrawSlideout.ftl' as _withdrawSlideout/>
+<#import '_confirmAppointmentSlideout.ftl' as _confirmAppointmentSlideout/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -12,7 +13,7 @@
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="qaChecksSubmitUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="canManageNomination" type="java.lang.Boolean" -->
+<#-- @ftlvariable name="hasDropdownActions" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="caseProcessingAction_QA" type="java.lang.String" -->
 <#-- @ftlvariable name="decisionSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="caseProcessingAction_DECISION" type="java.lang.String" -->
@@ -49,17 +50,23 @@
     <#assign withdrawSlideoutPanelId = "withdraw"/>
     <#assign withdrawSlideoutText = "Withdraw nomination"/>
 
-    <#if canManageNomination>
+    <#assign confirmAppointmentSlideoutPanelId = "confirm-appointment"/>
+    <#assign confirmAppointmentSlideoutText = "Confirm appointment"/>
+
+    <#if hasDropdownActions>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
                 <#if qaChecksSubmitUrl?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=qaChecksSlideoutText slideOutPanelId=qaChecksSlideoutPanelId/>
                 </#if>
-                <#if ((nominationDecisionAttributes.submitUrl())!"")?has_content>
+                <#if nominationDecisionAttributes?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=decisionSlideoutText slideOutPanelId=decisionSlideoutPanelId/>
                 </#if>
                 <#if withdrawSubmitUrl?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=withdrawSlideoutText slideOutPanelId=withdrawSlideoutPanelId/>
+                </#if>
+                <#if confirmAppointmentAttributes?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=confirmAppointmentSlideoutText slideOutPanelId=confirmAppointmentSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -74,7 +81,7 @@
         />
     </#if>
 
-    <#if ((nominationDecisionAttributes.submitUrl())!"")?has_content>
+    <#if nominationDecisionAttributes?has_content>
         <@_decisionSlideout.decisionSlideout
             panelId=decisionSlideoutPanelId
             headingText=decisionSlideoutText
@@ -90,6 +97,15 @@
             postUrl=withdrawSubmitUrl
             errorList=errorList![]
             postParam=caseProcessingAction_WITHDRAW
+        />
+    </#if>
+
+    <#if confirmAppointmentAttributes?has_content>
+        <@_confirmAppointmentSlideout.confirmAppointmentSlideout
+        panelId=confirmAppointmentSlideoutPanelId
+        headingText=confirmAppointmentSlideoutText
+        errorList=errorList![]
+        attributes=confirmAppointmentAttributes
         />
     </#if>
 

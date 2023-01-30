@@ -2,7 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -74,9 +76,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(NominationQaChecksController.FORM_NAME, modelAndViewDto.getNominationQaChecksForm())
         .addObject("caseProcessingAction_QA", CaseProcessingAction.QA)
         .addObject(NominationDecisionController.FORM_NAME, modelAndViewDto.getNominationDecisionForm())
-        .addObject("caseProcessingAction_DECISION", CaseProcessingAction.DECISION)
         .addObject(WithdrawNominationController.FORM_NAME, modelAndViewDto.getWithdrawNominationForm())
-        .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW);
+        .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW)
+        .addObject(ConfirmNominationAppointmentController.FORM_NAME,
+            modelAndViewDto.getConfirmNominationAppointmentForm());
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
 
@@ -86,55 +89,62 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private void addRelevantDropdownActions(ModelAndView modelAndView, NominationDetail nominationDetail) {
-    var canManageNomination = false;
+    var hasDropdownActions = false;
     var nominationId = new NominationId(nominationDetail.getNomination().getId());
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
     if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
 
-      if (nominationDetailDto.nominationStatus() == NominationStatus.SUBMITTED) {
+      var dropdownAttributeMap = new HashMap<String, Object>();
 
-        modelAndView
-            .addObject("qaChecksSubmitUrl",
-                ReverseRouter.route(
-                    on(NominationQaChecksController.class).submitQa(nominationId, CaseProcessingAction.QA, null, null)))
-            .addObject("decisionSubmitUrl",
-                ReverseRouter.route(
-                    on(NominationDecisionController.class).submitDecision(nominationId, true,
-                        CaseProcessingAction.DECISION, null, null, null)))
-            .addObject("nominationDecisionAttributes",
-                NominationDecisionAttributeView.createAttributeView(
-                    new NominationId(nominationDetail),
-                    fileUploadConfig
-                ))
-            .addObject("withdrawSubmitUrl",
-                ReverseRouter.route(
-                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null,
-                        null)
-                ));
-
-        canManageNomination = true;
+      if (canSubmitQaChecks(nominationDetailDto)) {
+        dropdownAttributeMap.put("qaChecksSubmitUrl",
+            ReverseRouter.route(
+                on(NominationQaChecksController.class).submitQa(nominationId, CaseProcessingAction.QA, null, null)));
       }
 
-      var openStatuses = Arrays.stream(NominationStatus.values())
-          .filter(nominationStatus ->
-              nominationStatus.getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION)
-                  && !NominationStatus.getClosedStatuses().contains(nominationStatus)
-          )
-          .toList();
-
-      if (openStatuses.contains(nominationDetailDto.nominationStatus())) {
-        modelAndView
-            .addObject("withdrawSubmitUrl",
-                ReverseRouter.route(
-                    on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
-                        CaseProcessingAction.WITHDRAW, null, null, null)
-                ));
-        canManageNomination = true;
+      if (canWithdrawnNomination(nominationDetailDto)) {
+        dropdownAttributeMap.put("withdrawSubmitUrl",
+            ReverseRouter.route(
+                on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null,
+                    null)));
       }
+
+      if (canSubmitDecision(nominationDetailDto)) {
+        dropdownAttributeMap.put("nominationDecisionAttributes",
+            NominationDecisionAttributeView.createAttributeView(new NominationId(nominationDetail), fileUploadConfig));
+      }
+
+      if (canConfirmAppointments(nominationDetailDto)) {
+        dropdownAttributeMap.put("confirmAppointmentAttributes",
+            ConfirmNominationAppointmentAttributeView.createAttributeView(new NominationId(nominationDetail)));
+      }
+
+      if (!dropdownAttributeMap.isEmpty()) {
+        hasDropdownActions = true;
+      }
+
+      modelAndView.addAllObjects(dropdownAttributeMap);
     }
 
-    modelAndView.addObject("canManageNomination", canManageNomination);
+    modelAndView.addObject("hasDropdownActions", hasDropdownActions);
+  }
+
+  private boolean canWithdrawnNomination(NominationDetailDto dto) {
+    return EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+        .contains(dto.nominationStatus());
+  }
+
+  private boolean canSubmitQaChecks(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canSubmitDecision(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canConfirmAppointments(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.AWAITING_CONFIRMATION;
   }
 
 }
