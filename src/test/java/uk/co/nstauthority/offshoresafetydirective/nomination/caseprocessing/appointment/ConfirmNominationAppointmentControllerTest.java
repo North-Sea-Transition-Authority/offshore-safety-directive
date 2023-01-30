@@ -1,27 +1,51 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -38,6 +62,18 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
+  @MockBean
+  private CaseEventService caseEventService;
+
+  @MockBean
+  private ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
+
+  @MockBean
+  private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
+
+  @MockBean
+  private NominationDetailStatusService nominationDetailStatusService;
+
   private NominationDetail nominationDetail;
 
   @BeforeEach
@@ -51,7 +87,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)
+        EnumSet.of(NominationStatus.AWAITING_CONFIRMATION)
     )).thenReturn(Optional.of(nominationDetail));
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
@@ -71,6 +107,9 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
             status().is3xxRedirection(),
             status().isForbidden()
         )
+        .withBodyParam("appointmentDate.dayInput.inputValue", "1")
+        .withBodyParam("appointmentDate.monthInput.inputValue", "1")
+        .withBodyParam("appointmentDate.yearInput.inputValue", "2023")
         .test();
   }
 
@@ -86,7 +125,77 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
             status().is3xxRedirection(),
             status().isForbidden()
         )
+        .withBodyParam("appointmentDate.dayInput.inputValue", "1")
+        .withBodyParam("appointmentDate.monthInput.inputValue", "1")
+        .withBodyParam("appointmentDate.yearInput.inputValue", "2023")
         .test();
+  }
+
+  @Test
+  void confirmAppointment_whenFormValid_thenVerifyRedirect() throws Exception {
+
+    var appointmentDate = LocalDate.now();
+    var formattedDate = DateUtil.formatDate(appointmentDate);
+    var comment = "comment text";
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Appointment confirmed")
+        .withHeading(
+            "Appointment confirmed for nomination %s on %s".formatted(
+                nominationDetail.getNomination().getReference(),
+                formattedDate
+            ))
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .with(csrf())
+            .with(user(NOMINATION_MANAGER_USER))
+            .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))
+            .param("appointmentDate.monthInput.inputValue", String.valueOf(appointmentDate.getMonthValue()))
+            .param("appointmentDate.yearInput.inputValue", String.valueOf(appointmentDate.getYear()))
+            .param("comments.inputValue", comment)
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(caseEventService).createAppointmentConfirmationEvent(nominationDetail, appointmentDate, comment);
+    verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
+  }
+
+  @Test
+  void confirmAppointment_whenFormInvalid_thenVerifyOk() throws Exception {
+
+    var appointmentDate = LocalDate.now();
+    var viewName = "test_view";
+    var comment = "comment text";
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new ObjectError("error", "error"));
+      return invocation;
+    }).when(confirmNominationAppointmentValidator).validate(any(), any(), any());
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
+        .thenReturn(new ModelAndView(viewName));
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .with(csrf())
+            .with(user(NOMINATION_MANAGER_USER))
+            .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))
+            .param("appointmentDate.monthInput.inputValue", String.valueOf(appointmentDate.getMonthValue()))
+            .param("appointmentDate.yearInput.inputValue", String.valueOf(appointmentDate.getYear()))
+            .param("comments.inputValue", comment)
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name(viewName));
+
+    verify(caseEventService, never()).createAppointmentConfirmationEvent(nominationDetail, appointmentDate, comment);
+    verify(nominationDetailStatusService, never()).confirmAppointment(nominationDetail);
   }
 
 }

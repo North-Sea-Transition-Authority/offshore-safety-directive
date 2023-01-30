@@ -195,4 +195,39 @@ class CaseEventServiceTest {
             nominationVersion
         );
   }
+
+  @Test
+  void createAppointmentConfirmationEvent() {
+    var nominationVersion = 2;
+    var date = LocalDate.now();
+    var comment = "comment text";
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createAppointmentConfirmationEvent(detail, date, comment);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.CONFIRM_APPOINTMENT,
+            comment,
+            serviceUser.wuaId(),
+            date.atStartOfDay().toInstant(ZoneOffset.UTC),
+            detail.getNomination(),
+            nominationVersion
+        );
+  }
 }

@@ -42,7 +42,8 @@ public class CaseEventService {
   }
 
   @Transactional
-  public void createDecisionEvent(NominationDetail nominationDetail, LocalDate decisionDate, String decisionComment,
+  public void createDecisionEvent(NominationDetail nominationDetail, LocalDate decisionDate,
+                                  String decisionComment,
                                   NominationDecision nominationDecision, List<FileUploadForm> fileUploadForms) {
     var eventType = switch (nominationDecision) {
       case NO_OBJECTION -> CaseEventType.NO_OBJECTION_DECISION;
@@ -58,6 +59,14 @@ public class CaseEventService {
   @Transactional
   public void createWithdrawEvent(NominationDetail nominationDetail, String reason) {
     createEvent(CaseEventType.WITHDRAWN, reason, clock.instant(), nominationDetail);
+  }
+
+  @Transactional
+  public void createAppointmentConfirmationEvent(NominationDetail nominationDetail,
+                                                 LocalDate appointmentEffectiveDate,
+                                                 @Nullable String comments) {
+    createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
+        appointmentEffectiveDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
   }
 
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,

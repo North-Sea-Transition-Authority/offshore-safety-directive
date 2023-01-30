@@ -5,7 +5,8 @@ public enum CaseEventType {
   QA_CHECKS("QA checks completed"),
   NO_OBJECTION_DECISION("No objections"),
   OBJECTION_DECISION("Objected"),
-  WITHDRAWN("Withdrawn");
+  WITHDRAWN("Withdrawn"),
+  CONFIRM_APPOINTMENT("Confirm appointment");
 
   private final String screenDisplayText;
 
