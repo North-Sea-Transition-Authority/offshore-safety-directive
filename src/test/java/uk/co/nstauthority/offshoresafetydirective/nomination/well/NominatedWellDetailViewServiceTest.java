@@ -12,8 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -37,22 +38,35 @@ class NominatedWellDetailViewServiceTest {
 
   @Test
   void getNominatedWellDetailView_whenEntityExist_assertFields() {
+
     var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
         .withForAllWellPhases(false)
         .withExplorationAndAppraisalPhase(true)
         .withDevelopmentPhase(true)
         .build();
-    var wellDto1 = new WellDto(1, "well1", "0001");
-    var wellDto2 = new WellDto(2, "well2", "0002");
-    var nominatedWell1 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
-    var nominatedWell2 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
 
-    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
-    when(nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL)).thenReturn(
-        List.of(nominatedWell1, nominatedWell2));
-    when(wellQueryService.getWellsByIdIn(List.of(nominatedWell1.getWellId(), nominatedWell2.getWellId())))
-        .thenReturn(List.of(wellDto1, wellDto2));
+    var firstWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(1)
+        .build();
+
+    var secondWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(2)
+        .build();
+
+    var firstNominatedWell = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
+    var secondNominatedWell = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
+
+    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedWellDetail));
+
+    when(nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(List.of(firstNominatedWell, secondNominatedWell));
+
+    when(wellQueryService.getWellsByIds(
+        List.of(new WellboreId(firstNominatedWell.getWellId()), new WellboreId(secondNominatedWell.getWellId()))
+    ))
+        .thenReturn(List.of(firstWellDto, secondWellDto));
 
     var nominatedWellDetailView = getNominatedWellDetailView.getNominatedWellDetailView(NOMINATION_DETAIL);
 
@@ -64,7 +78,7 @@ class NominatedWellDetailViewServiceTest {
             NominatedWellDetailView::getWellPhases
         )
         .containsExactly(
-            List.of(wellDto1, wellDto2),
+            List.of(firstWellDto, secondWellDto),
             nominatedWellDetail.getForAllWellPhases(),
             List.of(WellPhase.EXPLORATION_AND_APPRAISAL, WellPhase.DEVELOPMENT)
         );

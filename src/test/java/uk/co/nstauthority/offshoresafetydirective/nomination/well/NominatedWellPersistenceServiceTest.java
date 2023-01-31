@@ -13,8 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -35,18 +36,26 @@ class NominatedWellPersistenceServiceTest {
 
   @Test
   void saveWells_whenFormHasDuplicateWells_verifyNoDuplicateWellsSaved() {
-    var wellId1 = 1;
-    var wellId2 = 2;
-    var wellDto1 = new WellDto(wellId1, "well1", "1");
-    var wellDto2 = new WellDto(wellId2, "well2", "2");
 
-    var formWithDuplicateWell = NominatedWellFormTestUtil.builder()
-        .withWell(wellId1)
-        .withWell(wellId2)
-        .withWell(wellId2)
+    var firstWellboreId = new WellboreId(1);
+    var secondWellboreId = new WellboreId(2);
+
+    var firstWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(firstWellboreId.id())
         .build();
 
-    when(wellQueryService.getWellsByIdIn(List.of(wellId1, wellId2))).thenReturn(List.of(wellDto1, wellDto2));
+    var secondWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(secondWellboreId.id())
+        .build();
+
+    var formWithDuplicateWell = NominatedWellFormTestUtil.builder()
+        .withWell(firstWellboreId.id())
+        .withWell(secondWellboreId.id())
+        .withWell(secondWellboreId.id())
+        .build();
+
+    when(wellQueryService.getWellsByIds(List.of(firstWellboreId, secondWellboreId)))
+        .thenReturn(List.of(firstWellDto, secondWellDto));
 
     nominatedWellPersistenceService.saveNominatedWells(NOMINATION_DETAIL, formWithDuplicateWell);
 
@@ -62,8 +71,8 @@ class NominatedWellPersistenceServiceTest {
         NominatedWell::getWellId,
         NominatedWell::getNominationDetail
     ).containsExactly(
-        tuple(wellDto1.id(), NOMINATION_DETAIL),
-        tuple(wellDto2.id(), NOMINATION_DETAIL)
+        tuple(firstWellDto.wellboreId().id(), NOMINATION_DETAIL),
+        tuple(secondWellDto.wellboreId().id(), NOMINATION_DETAIL)
     );
   }
 

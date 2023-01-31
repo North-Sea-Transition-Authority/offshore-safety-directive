@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,10 +28,13 @@ public class WellRestController {
   @GetMapping
   @ResponseBody
   public RestSearchResult searchWells(@RequestParam("term") String searchTerm) {
-    List<RestSearchItem> searchItemsResult = wellQueryService.queryWellByName(searchTerm)
+    
+    List<RestSearchItem> searchItemsResult = Optional.ofNullable(wellQueryService.searchWellsByRegistrationNumber(searchTerm))
+        .orElse(Collections.emptyList())
         .stream()
-        .map(wellDto -> new RestSearchItem(String.valueOf(wellDto.id()), wellDto.name()))
+        .map(wellDto -> new RestSearchItem(String.valueOf(wellDto.wellboreId().id()), wellDto.name()))
         .toList();
+
     return new RestSearchResult(searchItemsResult);
   }
 }

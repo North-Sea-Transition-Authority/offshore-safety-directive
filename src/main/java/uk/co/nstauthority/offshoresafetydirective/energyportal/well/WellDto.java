@@ -1,4 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
-public record WellDto(int id, String name, String sortKey) {
+import uk.co.fivium.energyportalapi.generated.types.Wellbore;
+
+public record WellDto(WellboreId wellboreId, String name) {
+
+  static WellDto fromPortalWellbore(Wellbore wellbore) {
+    return new WellDto(
+        new WellboreId(wellbore.getId()),
+        wellbore.getRegistrationNumber()
+    );
+  }
 }

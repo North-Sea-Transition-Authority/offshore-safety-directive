@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -32,9 +31,10 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -170,19 +170,38 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         ));
   }
 
+  /**
+   * Wellbores are sorted by a series of properties (block, platform letters, drilling sequence etc.) which
+   * are values not exposed over the EPA api. Assert that the wells are ordered by the order they are returned
+   * from the well query service
+   */
   @Test
-  void renderNominatedWellDetail_whenSavedWells_assertWellsAreSorted() throws Exception {
+  void renderNominatedWellDetail_whenSavedWells_thenWellInOrderFromQueryService() throws Exception {
 
-    var formWithWells = NominatedWellFormTestUtil.builder().build();
+    var formWithWells = NominatedWellFormTestUtil.builder()
+        .withWell(1)
+        .withWell(2)
+        .build();
+
+    var wellboreIdsFromForm = formWithWells.getWells()
+        .stream()
+        .map(WellboreId::new)
+        .toList();
 
     when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(formWithWells);
 
-    var firstWellDtoBySortKey = new WellDto(1, "wellDto1", "1");
-    var secondWellDtoBySortKey = new WellDto(2, "wellDto2", "2");
-    var thirdWellDtoBySortKey = new WellDto(3, "wellDto3", "3");
+    var firstWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(1)
+        .build();
 
-    when(wellQueryService.getWellsByIdIn(formWithWells.getWells()))
-        .thenReturn(List.of(secondWellDtoBySortKey, thirdWellDtoBySortKey, firstWellDtoBySortKey));
+    var secondWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(2)
+        .build();
+
+    // controller should return wellbores in the same order as they
+    // are returned from the query service
+    when(wellQueryService.getWellsByIds(wellboreIdsFromForm))
+        .thenReturn(List.of(secondWellDto, firstWellDto));
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
@@ -199,14 +218,10 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     var returnedAlreadyAddedWells = (List<WellAddToListView>) modelAndView.getModel().get("alreadyAddedWells");
 
     assertThat(returnedAlreadyAddedWells)
-        .extracting(
-            WellAddToListView::getId,
-            WellAddToListView::getSortKey
-        )
+        .extracting(WellAddToListView::getId)
         .containsExactly(
-            tuple(String.valueOf(firstWellDtoBySortKey.id()), firstWellDtoBySortKey.sortKey()),
-            tuple(String.valueOf(secondWellDtoBySortKey.id()), secondWellDtoBySortKey.sortKey()),
-            tuple(String.valueOf(thirdWellDtoBySortKey.id()), thirdWellDtoBySortKey.sortKey())
+            String.valueOf(secondWellDto.wellboreId().id()),
+            String.valueOf(firstWellDto.wellboreId().id())
         );
   }
 

@@ -1,36 +1,64 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
-import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
+import uk.co.fivium.energyportalapi.generated.client.WellboresProjectionRoot;
+import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @Service
 public class WellQueryService {
 
-  //TODO remove this dummy values OSDOP-91
-  private final List<WellDto> dummyWells = List.of(
-      new WellDto(1, "16/01-3", "0002"),
-      new WellDto(2, "24/99-12", "0004"),
-      new WellDto(3, "23/04-96", "0003"),
-      new WellDto(4, "06/03-96", "0001")
-  );
+  static final WellboresProjectionRoot WELLBORES_PROJECTION_ROOT =
+      new WellboresProjectionRoot()
+          .id()
+          .registrationNumber()
+          .regulatoryJurisdiction().root();
 
-  List<WellDto> queryWellByName(String wellName) {
-    return dummyWells.stream()
-        .filter(wellDto ->
-            wellDto.name()
-                .toLowerCase()
-                .contains(StringUtils.defaultIfBlank(wellName.toLowerCase(), ""))
-        )
-        .sorted(Comparator.comparing(WellDto::sortKey))
-        .toList();
+  private final WellboreApi wellboreApi;
+
+  private final EnergyPortalApiWrapper energyPortalApiWrapper;
+
+  @Autowired
+  public WellQueryService(WellboreApi wellboreApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
+    this.wellboreApi = wellboreApi;
+    this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  public List<WellDto> getWellsByIdIn(List<Integer> idList) {
-    return dummyWells.stream()
-        .filter(wellDto -> idList.contains(wellDto.id()))
-        .sorted(Comparator.comparing(WellDto::sortKey))
-        .toList();
+  List<WellDto> searchWellsByRegistrationNumber(String wellRegistrationNumber) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+      wellboreApi.searchWellboresByRegistrationNumber(
+          wellRegistrationNumber,
+          WELLBORES_PROJECTION_ROOT,
+          requestPurpose,
+          logCorrelationId
+      )
+          .stream()
+          .filter(wellbore -> RegulatoryJurisdiction.SEAWARD.equals(wellbore.getRegulatoryJurisdiction()))
+          .map(WellDto::fromPortalWellbore)
+          .toList()
+    ));
+  }
+
+  public List<WellDto> getWellsByIds(List<WellboreId> wellboreIds) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+
+      var wellboreIdLiterals = wellboreIds
+          .stream()
+          .map(WellboreId::id)
+          .toList();
+
+      return wellboreApi.searchWellboresByIds(
+          wellboreIdLiterals,
+          WELLBORES_PROJECTION_ROOT,
+          requestPurpose,
+          logCorrelationId
+      )
+          .stream()
+          .map(WellDto::fromPortalWellbore)
+          .toList();
+    }));
   }
 }

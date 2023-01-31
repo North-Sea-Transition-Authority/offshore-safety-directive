@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
@@ -21,14 +22,20 @@ class NominatedWellPersistenceService {
 
   @Transactional
   public void saveNominatedWells(NominationDetail nominationDetail, NominatedWellDetailForm form) {
-    List<Integer> wellIds = form.getWells().stream()
-        .distinct()
-        .toList();
-    List<NominatedWell> nominatedWells = wellQueryService.getWellsByIdIn(wellIds)
+
+    List<WellboreId> wellIds = form.getWells()
         .stream()
-        .map(wellDto -> new NominatedWell(nominationDetail, wellDto.id()))
+        .distinct()
+        .map(WellboreId::new)
         .toList();
+
+    List<NominatedWell> nominatedWells = wellQueryService.getWellsByIds(wellIds)
+        .stream()
+        .map(wellDto -> new NominatedWell(nominationDetail, wellDto.wellboreId().id()))
+        .toList();
+
     deleteByNominationDetail(nominationDetail);
+
     nominatedWellRepository.saveAll(nominatedWells);
   }
 

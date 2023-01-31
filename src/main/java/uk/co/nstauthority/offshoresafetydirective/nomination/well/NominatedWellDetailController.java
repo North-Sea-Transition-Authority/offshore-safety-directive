@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnu
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -105,17 +105,20 @@ public class NominatedWellDetailController {
       return Collections.emptyList();
     }
 
-    return wellQueryService.getWellsByIdIn(form.getWells())
+    var wellboreIds = form.getWells()
+        .stream()
+        .map(WellboreId::new)
+        .toList();
+
+    return wellQueryService.getWellsByIds(wellboreIds)
         .stream()
         .map(wellDto ->
             new WellAddToListView(
-                wellDto.id(),
+                wellDto.wellboreId().id(),
                 wellDto.name(),
-                true,
-                wellDto.sortKey()
+                true
             )
         )
-        .sorted(Comparator.comparing(WellAddToListView::getSortKey))
         .toList();
   }
 }

@@ -114,7 +114,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getWellSelectionSetupView(nominationDetail))
         .thenReturn(Optional.of(wellSelectionView));
 
-    var nominatedWellDetailView = new NominatedWellDetailViewTestUtil.NominatedWellDetailViewBuilder().build();
+    var nominatedWellDetailView = NominatedWellDetailViewTestUtil.builder().build();
 
     when(manageWellsService.getNominatedWellDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedWellDetailView));

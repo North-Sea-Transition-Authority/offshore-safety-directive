@@ -8,6 +8,7 @@ import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
+import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 
 @Configuration
 class EnergyPortalApiBeans {
@@ -43,5 +44,10 @@ class EnergyPortalApiBeans {
   @Bean
   SubareaApi subareaApi(EnergyPortal energyPortal) {
     return new SubareaApi(energyPortal);
+  }
+
+  @Bean
+  WellboreApi wellboreApi(EnergyPortal energyPortal) {
+    return new WellboreApi(energyPortal);
   }
 }

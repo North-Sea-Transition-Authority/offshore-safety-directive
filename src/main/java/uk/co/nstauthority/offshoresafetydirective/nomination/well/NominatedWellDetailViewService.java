@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
@@ -26,12 +27,16 @@ public class NominatedWellDetailViewService {
   public Optional<NominatedWellDetailView> getNominatedWellDetailView(NominationDetail nominationDetail) {
     return nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> {
+
           var nominatedWellIds = nominatedWellPersistenceService.findAllByNominationDetail(nominationDetail)
               .stream()
-              .map(NominatedWell::getWellId)
+              .map(nominatedWell -> new WellboreId(nominatedWell.getWellId()))
               .toList();
-          var wellDtos = wellQueryService.getWellsByIdIn(nominatedWellIds);
+
+          var wellDtos = wellQueryService.getWellsByIds(nominatedWellIds);
+
           var wellPhases = new ArrayList<WellPhase>();
+
           if (entity.getExplorationAndAppraisalPhase() != null) {
             wellPhases.add(WellPhase.EXPLORATION_AND_APPRAISAL);
           }

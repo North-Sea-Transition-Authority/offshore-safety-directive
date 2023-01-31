@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;
 
-public record WellAddToListView(int id, String name, boolean isValid, String sortKey) implements AddToListItem {
+public record WellAddToListView(int id, String name, boolean isValid) implements AddToListItem {
 
   @Override
   public String getId() {
@@ -17,9 +17,5 @@ public record WellAddToListView(int id, String name, boolean isValid, String sor
   @Override
   public boolean isValid() {
     return isValid;
-  }
-
-  public String getSortKey() {
-    return sortKey;
   }
 }
