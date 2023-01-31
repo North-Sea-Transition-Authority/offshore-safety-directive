@@ -32,7 +32,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -179,9 +178,19 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
     when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
 
-    var firstBlockSubareaBySortKey = new LicenceBlockSubareaDto(1, "blockSubarea1", "1");
-    var secondBlockSubareaBySortKey = new LicenceBlockSubareaDto(2, "blockSubarea2", "2");
-    var thirdBlockSubareaBySortKey = new LicenceBlockSubareaDto(3, "blockSubarea3", "3");
+    var firstBlockSubareaBySortKey = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("id-1")
+        .withSortKey("1")
+        .build();
+
+    var secondBlockSubareaBySortKey = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("id-2")
+        .withSortKey("2")
+        .build();
+    var thirdBlockSubareaBySortKey = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("id-3")
+        .withSortKey("3")
+        .build();
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(formWithSubareas.getSubareas()))
         .thenReturn(List.of(secondBlockSubareaBySortKey, thirdBlockSubareaBySortKey, firstBlockSubareaBySortKey));
@@ -207,15 +216,15 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         )
         .containsExactly(
             tuple(
-                String.valueOf(firstBlockSubareaBySortKey.id()),
+                firstBlockSubareaBySortKey.subareaId().id(),
                 firstBlockSubareaBySortKey.sortKey()
             ),
             tuple(
-                String.valueOf(secondBlockSubareaBySortKey.id()),
+                secondBlockSubareaBySortKey.subareaId().id(),
                 secondBlockSubareaBySortKey.sortKey()
             ),
             tuple(
-                String.valueOf(thirdBlockSubareaBySortKey.id()),
+                thirdBlockSubareaBySortKey.subareaId().id(),
                 thirdBlockSubareaBySortKey.sortKey()
             )
         );

@@ -2,14 +2,18 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import java.util.List;
 
-public class NominatedBlockSubareaFormTestUtil {
+class NominatedBlockSubareaFormTestUtil {
 
   private NominatedBlockSubareaFormTestUtil() {
     throw new IllegalStateException("NominatedBlockSubareaFormTestUtil is a test util and should not be instantiated");
   }
+
+  static NominatedBlockSubareaFormBuilder builder() {
+    return new NominatedBlockSubareaFormBuilder();
+  }
   
-  public static class NominatedBlockSubareaFormBuilder {
-    private List<Integer> subareas = List.of(1, 2);
+  static class NominatedBlockSubareaFormBuilder {
+    private List<String> subareas = List.of("1", "2");
 
     private Boolean validForFutureWellsInSubarea = true;
     private Boolean forAllWellPhases = false;
@@ -17,44 +21,45 @@ public class NominatedBlockSubareaFormTestUtil {
     private Boolean developmentPhase = true;
     private Boolean decommissioningPhase = true;
 
-    public NominatedBlockSubareaFormBuilder withSubareas(List<Integer> subareas) {
+    NominatedBlockSubareaFormBuilder withSubareas(List<String> subareas) {
       this.subareas = subareas;
       return this;
     }
 
-    public NominatedBlockSubareaFormBuilder withValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
+    NominatedBlockSubareaFormBuilder withValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
       this.validForFutureWellsInSubarea = validForFutureWellsInSubarea;
       return this;
     }
 
-    public NominatedBlockSubareaFormBuilder withForAllWellPhases(Boolean forAllWellPhases) {
+    NominatedBlockSubareaFormBuilder withForAllWellPhases(Boolean forAllWellPhases) {
       this.forAllWellPhases = forAllWellPhases;
       return this;
     }
 
-    public NominatedBlockSubareaFormBuilder withExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
+    NominatedBlockSubareaFormBuilder withExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
       this.explorationAndAppraisalPhase = explorationAndAppraisalPhase;
       return this;
     }
 
-    public NominatedBlockSubareaFormBuilder withDevelopmentPhase(Boolean developmentPhase) {
+    NominatedBlockSubareaFormBuilder withDevelopmentPhase(Boolean developmentPhase) {
       this.developmentPhase = developmentPhase;
       return this;
     }
 
-    public NominatedBlockSubareaFormBuilder withDecommissioningPhase(Boolean decommissioningPhase) {
+    NominatedBlockSubareaFormBuilder withDecommissioningPhase(Boolean decommissioningPhase) {
       this.decommissioningPhase = decommissioningPhase;
       return this;
     }
 
-    public NominatedBlockSubareaForm build() {
-      return new NominatedBlockSubareaForm()
-          .setSubareas(subareas)
-          .setValidForFutureWellsInSubarea(validForFutureWellsInSubarea)
-          .setForAllWellPhases(forAllWellPhases)
-          .setExplorationAndAppraisalPhase(explorationAndAppraisalPhase)
-          .setDevelopmentPhase(developmentPhase)
-          .setDecommissioningPhase(decommissioningPhase);
+    NominatedBlockSubareaForm build() {
+      var form = new NominatedBlockSubareaForm();
+      form.setSubareas(subareas);
+      form.setValidForFutureWellsInSubarea(validForFutureWellsInSubarea);
+      form.setForAllWellPhases(forAllWellPhases);
+      form.setExplorationAndAppraisalPhase(explorationAndAppraisalPhase);
+      form.setDevelopmentPhase(developmentPhase);
+      form.setDecommissioningPhase(decommissioningPhase);
+      return form;
     }
   }
 }

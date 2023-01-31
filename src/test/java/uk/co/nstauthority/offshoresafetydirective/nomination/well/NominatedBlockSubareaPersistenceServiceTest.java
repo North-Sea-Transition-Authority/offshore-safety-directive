@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -35,16 +35,24 @@ class NominatedBlockSubareaPersistenceServiceTest {
 
   @Test
   void saveNominatedLicenceBlockSubareas_whenFormHasDuplicateSubareas_verifyNoDuplicateSubareasSaved() {
-    var subareaId1 = 1;
-    var subareaId2 = 2;
-    var blockSubareaDto1 = new LicenceBlockSubareaDto(subareaId1, "well1", "1");
-    var blockSubareaDto2 = new LicenceBlockSubareaDto(subareaId2, "well2", "2");
-    var formWithDuplicateSubarea = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .withSubareas(List.of(subareaId1, subareaId2, subareaId2))
+
+    var firstSubareaId = new LicenceBlockSubareaId("1");
+    var secondSubareaId = new LicenceBlockSubareaId("2");
+
+    var firstSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(firstSubareaId)
         .build();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(List.of(subareaId1, subareaId2)))
-        .thenReturn(List.of(blockSubareaDto1, blockSubareaDto2));
+    var secondSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(secondSubareaId)
+        .build();
+
+    var formWithDuplicateSubarea = NominatedBlockSubareaFormTestUtil.builder()
+        .withSubareas(List.of(firstSubareaId.id(), secondSubareaId.id(), secondSubareaId.id()))
+        .build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(List.of(firstSubareaId.id(), secondSubareaId.id())))
+        .thenReturn(List.of(firstSubareaDto, secondSubareaDto));
 
     nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(NOMINATION_DETAIL, formWithDuplicateSubarea);
 
@@ -59,8 +67,8 @@ class NominatedBlockSubareaPersistenceServiceTest {
         NominatedBlockSubarea::getBlockSubareaId,
         NominatedBlockSubarea::getNominationDetail
     ).containsExactly(
-        tuple(blockSubareaDto1.id(), NOMINATION_DETAIL),
-        tuple(blockSubareaDto2.id(), NOMINATION_DETAIL)
+        tuple(firstSubareaId.id(), NOMINATION_DETAIL),
+        tuple(secondSubareaId.id(), NOMINATION_DETAIL)
     );
   }
 

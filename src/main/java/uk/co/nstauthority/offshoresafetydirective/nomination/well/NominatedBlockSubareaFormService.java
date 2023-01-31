@@ -40,12 +40,15 @@ class NominatedBlockSubareaFormService {
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> blockSubareaIds = nominatedBlockSubareaPersistenceService
+
+    List<String> blockSubareaIds = nominatedBlockSubareaPersistenceService
         .findAllByNominationDetail(entity.getNominationDetail())
         .stream()
         .map(NominatedBlockSubarea::getBlockSubareaId)
         .toList();
+
     form.setSubareas(blockSubareaIds);
+
     return form;
   }
 }

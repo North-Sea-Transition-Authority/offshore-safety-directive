@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksuba
 
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;
 
-public record LicenceBlockSubareaAddToListView(int id, String name, boolean isValid, String sortKey) implements AddToListItem {
+public record LicenceBlockSubareaAddToListView(String id, String name, boolean isValid, String sortKey) implements AddToListItem {
 
   @Override
   public String getId() {

@@ -50,13 +50,13 @@ class NominatedBlockSubareaFormServiceTest {
     var nominatedBlockSubareaDetail = new NominatedBlockSubareaDetailTestUtil.NominatedBlockSubareaDetailBuilder()
         .withNominationDetail(NOMINATION_DETAIL)
         .build();
-    var subarea1 = new NominatedBlockSubareaTestUtil.NominatedBlockSubareaBuilder()
+    var subarea1 = NominatedBlockSubareaTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
-        .withBlockSubareaId(1)
+        .withBlockSubareaId("1")
         .build();
-    var subarea2 = new NominatedBlockSubareaTestUtil.NominatedBlockSubareaBuilder()
+    var subarea2 = NominatedBlockSubareaTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
-        .withBlockSubareaId(2)
+        .withBlockSubareaId("2")
         .build();
 
     when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))

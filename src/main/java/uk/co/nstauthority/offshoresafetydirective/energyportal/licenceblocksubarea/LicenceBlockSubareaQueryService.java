@@ -10,10 +10,10 @@ public class LicenceBlockSubareaQueryService {
 
   //TODO remove this dummy values OSDOP-125
   private final List<LicenceBlockSubareaDto> dummyLicenceBlocks = List.of(
-      new LicenceBlockSubareaDto(1, "P1234 1/1 West", "0004"),
-      new LicenceBlockSubareaDto(2, "A2245 2/4 North", "0002"),
-      new LicenceBlockSubareaDto(3, "A1234 1/1 South", "0001"),
-      new LicenceBlockSubareaDto(4, "C4242 04/2 East", "0003")
+      new LicenceBlockSubareaDto(new LicenceBlockSubareaId("1"), "P1234 1/1 West", "0004"),
+      new LicenceBlockSubareaDto(new LicenceBlockSubareaId("2"), "A2245 2/4 North", "0002"),
+      new LicenceBlockSubareaDto(new LicenceBlockSubareaId("3"), "A1234 1/1 South", "0001"),
+      new LicenceBlockSubareaDto(new LicenceBlockSubareaId("4"), "C4242 04/2 East", "0003")
   );
 
   List<LicenceBlockSubareaDto> queryLicenceBlockSubareaByName(String wellName) {
@@ -27,9 +27,9 @@ public class LicenceBlockSubareaQueryService {
         .toList();
   }
 
-  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIdIn(List<Integer> idList) {
+  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIdIn(List<String> idList) {
     return dummyLicenceBlocks.stream()
-        .filter(wellDto -> idList.contains(wellDto.id()))
+        .filter(subareaDto -> idList.contains(subareaDto.subareaId().id()))
         .sorted(Comparator.comparing(LicenceBlockSubareaDto::sortKey))
         .toList();
   }

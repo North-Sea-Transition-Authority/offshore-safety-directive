@@ -27,7 +27,7 @@ public class LicenceBlockSubareaRestController {
     List<RestSearchItem> searchItemsResult = licenceBlockSubareaQueryService.queryLicenceBlockSubareaByName(searchTerm)
         .stream()
         .map(licenceBlockSubareaDto ->
-            new RestSearchItem(String.valueOf(licenceBlockSubareaDto.id()), licenceBlockSubareaDto.name())
+            new RestSearchItem(String.valueOf(licenceBlockSubareaDto.subareaId().id()), licenceBlockSubareaDto.name())
         )
         .toList();
     return new RestSearchResult(searchItemsResult);

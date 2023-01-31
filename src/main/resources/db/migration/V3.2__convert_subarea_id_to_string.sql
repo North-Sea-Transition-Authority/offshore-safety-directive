@@ -1,0 +1,2 @@
+ALTER TABLE osd.nominated_licence_block_subareas
+ALTER COLUMN block_subarea_id TYPE TEXT

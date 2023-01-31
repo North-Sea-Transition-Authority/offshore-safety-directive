@@ -62,6 +62,7 @@ class RelatedInformationFieldPersistenceServiceTest {
 
     verify(relatedInformationFieldPersistenceService).removeExistingLinkedFields(relatedInformation);
 
+    @SuppressWarnings("unchecked")
     ArgumentCaptor<List<RelatedInformationField>> fieldCaptor = ArgumentCaptor.forClass(List.class);
     verify(relatedInformationFieldRepository).saveAll(fieldCaptor.capture());
 
@@ -88,6 +89,7 @@ class RelatedInformationFieldPersistenceServiceTest {
 
     verify(relatedInformationFieldPersistenceService).removeExistingLinkedFields(relatedInformation);
 
+    @SuppressWarnings("unchecked")
     ArgumentCaptor<List<RelatedInformationField>> fieldCaptor = ArgumentCaptor.forClass(List.class);
     verify(relatedInformationFieldRepository).saveAll(fieldCaptor.capture());
 

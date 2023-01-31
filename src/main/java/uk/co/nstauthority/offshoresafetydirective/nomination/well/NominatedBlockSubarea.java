@@ -21,7 +21,7 @@ class NominatedBlockSubarea {
   @JoinColumn(name = "nomination_detail")
   private NominationDetail nominationDetail;
 
-  private Integer blockSubareaId;
+  private String blockSubareaId;
 
   Integer getId() {
     return id;
@@ -31,17 +31,15 @@ class NominatedBlockSubarea {
     return nominationDetail;
   }
 
-  NominatedBlockSubarea setNominationDetail(NominationDetail nominationDetail) {
+  void setNominationDetail(NominationDetail nominationDetail) {
     this.nominationDetail = nominationDetail;
-    return this;
   }
 
-  Integer getBlockSubareaId() {
+  String getBlockSubareaId() {
     return blockSubareaId;
   }
 
-  NominatedBlockSubarea setBlockSubareaId(Integer blockSubareaId) {
+  void setBlockSubareaId(String blockSubareaId) {
     this.blockSubareaId = blockSubareaId;
-    return this;
   }
 }

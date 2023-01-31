@@ -107,7 +107,7 @@ public class NominatedBlockSubareaController {
         .stream()
         .map(blockSubareaDto ->
             new LicenceBlockSubareaAddToListView(
-                blockSubareaDto.id(),
+                blockSubareaDto.subareaId().id(),
                 blockSubareaDto.name(),
                 true,
                 blockSubareaDto.sortKey()

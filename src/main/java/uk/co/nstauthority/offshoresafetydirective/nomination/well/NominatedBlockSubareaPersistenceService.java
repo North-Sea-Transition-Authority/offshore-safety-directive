@@ -23,16 +23,19 @@ class NominatedBlockSubareaPersistenceService {
   @Transactional
   public void saveNominatedLicenceBlockSubareas(NominationDetail nominationDetail,
                                                 NominatedBlockSubareaForm form) {
-    List<Integer> blockSubareaIds = form.getSubareas().stream()
+    List<String> blockSubareaIds = form.getSubareas().stream()
         .distinct()
         .toList();
+
     List<NominatedBlockSubarea> nominatedBlockSubareas = licenceBlockSubareaQueryService
         .getLicenceBlockSubareasByIdIn(blockSubareaIds)
         .stream()
-        .map(blockSubareaDto -> new NominatedBlockSubarea()
-            .setNominationDetail(nominationDetail)
-            .setBlockSubareaId(blockSubareaDto.id())
-        )
+        .map(blockSubareaDto -> {
+          var nominatedBlockSubarea = new NominatedBlockSubarea();
+          nominatedBlockSubarea.setNominationDetail(nominationDetail);
+          nominatedBlockSubarea.setBlockSubareaId(blockSubareaDto.subareaId().id());
+          return nominatedBlockSubarea;
+        })
         .toList();
     deleteByNominationDetail(nominationDetail);
     nominatedBlockSubareaRepository.saveAll(nominatedBlockSubareas);

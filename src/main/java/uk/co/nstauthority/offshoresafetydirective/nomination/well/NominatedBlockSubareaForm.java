@@ -4,7 +4,7 @@ import java.util.List;
 
 public class NominatedBlockSubareaForm {
 
-  private List<Integer> subareas;
+  private List<String> subareas;
 
   private String subareasSelect;
 
@@ -22,63 +22,56 @@ public class NominatedBlockSubareaForm {
     return validForFutureWellsInSubarea;
   }
 
-  public NominatedBlockSubareaForm setValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
+  public void setValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
     this.validForFutureWellsInSubarea = validForFutureWellsInSubarea;
-    return this;
   }
 
-  public List<Integer> getSubareas() {
+  public List<String> getSubareas() {
     return subareas;
   }
 
-  public NominatedBlockSubareaForm setSubareas(List<Integer> subareas) {
+  public void setSubareas(List<String> subareas) {
     this.subareas = subareas;
-    return this;
   }
 
   public String getSubareasSelect() {
     return subareasSelect;
   }
 
-  public NominatedBlockSubareaForm setSubareasSelect(String subareasSelect) {
+  public void setSubareasSelect(String subareasSelect) {
     this.subareasSelect = subareasSelect;
-    return this;
   }
 
   public Boolean getForAllWellPhases() {
     return forAllWellPhases;
   }
 
-  public NominatedBlockSubareaForm setForAllWellPhases(Boolean forAllWellPhases) {
+  public void setForAllWellPhases(Boolean forAllWellPhases) {
     this.forAllWellPhases = forAllWellPhases;
-    return this;
   }
 
   public Boolean getExplorationAndAppraisalPhase() {
     return explorationAndAppraisalPhase;
   }
 
-  public NominatedBlockSubareaForm setExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
+  public void setExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
     this.explorationAndAppraisalPhase = explorationAndAppraisalPhase;
-    return this;
   }
 
   public Boolean getDevelopmentPhase() {
     return developmentPhase;
   }
 
-  public NominatedBlockSubareaForm setDevelopmentPhase(Boolean developmentPhase) {
+  public void setDevelopmentPhase(Boolean developmentPhase) {
     this.developmentPhase = developmentPhase;
-    return this;
   }
 
   public Boolean getDecommissioningPhase() {
     return decommissioningPhase;
   }
 
-  public NominatedBlockSubareaForm setDecommissioningPhase(Boolean decommissioningPhase) {
+  public void setDecommissioningPhase(Boolean decommissioningPhase) {
     this.decommissioningPhase = decommissioningPhase;
-    return this;
   }
 
   @Override
