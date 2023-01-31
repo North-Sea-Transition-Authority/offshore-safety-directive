@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,13 +25,36 @@ public class LicenceBlockSubareaRestController {
   }
 
   @GetMapping
-  public RestSearchResult searchWells(@RequestParam("term") String searchTerm) {
-    List<RestSearchItem> searchItemsResult = licenceBlockSubareaQueryService.queryLicenceBlockSubareaByName(searchTerm)
+  public RestSearchResult searchSubareas(@RequestParam("term") String searchTerm) {
+
+    Set<LicenceBlockSubareaDto> matchedSubareas = new HashSet<>();
+
+    var matchedSubareasByName = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm);
+
+    if (matchedSubareasByName != null && !matchedSubareasByName.isEmpty()) {
+      matchedSubareas.addAll(matchedSubareasByName);
+    }
+
+    var matchedSubareasByLicence = licenceBlockSubareaQueryService.searchSubareasByLicenceReference(searchTerm);
+
+    if (matchedSubareasByLicence != null && !matchedSubareasByLicence.isEmpty()) {
+      matchedSubareas.addAll(matchedSubareasByLicence);
+    }
+
+    var matchedSubareasByBlockReference = licenceBlockSubareaQueryService.searchSubareasByBlockReference(searchTerm);
+
+    if (matchedSubareasByBlockReference != null && !matchedSubareasByBlockReference.isEmpty()) {
+      matchedSubareas.addAll(matchedSubareasByBlockReference);
+    }
+
+    List<RestSearchItem> searchItemsResult = matchedSubareas
         .stream()
+        .sorted(LicenceBlockSubareaDto.sort())
         .map(licenceBlockSubareaDto ->
-            new RestSearchItem(String.valueOf(licenceBlockSubareaDto.subareaId().id()), licenceBlockSubareaDto.name())
+            new RestSearchItem(licenceBlockSubareaDto.subareaId().id(), licenceBlockSubareaDto.displayName())
         )
         .toList();
+
     return new RestSearchResult(searchItemsResult);
   }
 }

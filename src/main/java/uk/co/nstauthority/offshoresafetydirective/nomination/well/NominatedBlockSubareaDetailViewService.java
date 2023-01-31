@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
@@ -27,11 +29,18 @@ public class NominatedBlockSubareaDetailViewService {
   public Optional<NominatedBlockSubareaDetailView> getNominatedBlockSubareaDetailView(NominationDetail nominationDetail) {
     return nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(nominationDetail)
         .map(entity -> {
+
           var licenceBlockSubareaIds = nominatedBlockSubareaPersistenceService.findAllByNominationDetail(nominationDetail)
               .stream()
-              .map(NominatedBlockSubarea::getBlockSubareaId)
+              .map(nominatedBlockSubarea -> new LicenceBlockSubareaId(nominatedBlockSubarea.getBlockSubareaId()))
               .toList();
-          var licenceBlockSubareaDtos = licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(licenceBlockSubareaIds);
+
+          var licenceBlockSubareaDtos = licenceBlockSubareaQueryService
+              .getLicenceBlockSubareasByIds(licenceBlockSubareaIds)
+              .stream()
+              .sorted(LicenceBlockSubareaDto.sort())
+              .toList();
+
           var wellPhases = new ArrayList<WellPhase>();
           if (entity.getExplorationAndAppraisalPhase() != null) {
             wellPhases.add(WellPhase.EXPLORATION_AND_APPRAISAL);

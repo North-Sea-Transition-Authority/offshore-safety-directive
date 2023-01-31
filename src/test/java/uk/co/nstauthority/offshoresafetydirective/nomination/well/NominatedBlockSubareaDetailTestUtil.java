@@ -9,7 +9,11 @@ class NominatedBlockSubareaDetailTestUtil {
     throw new IllegalStateException("NominatedBlockSubareaDetailTestUtil is a test util and should not be instantiated");
   }
 
-  public static class NominatedBlockSubareaDetailBuilder {
+  static NominatedBlockSubareaDetailBuilder builder() {
+    return new NominatedBlockSubareaDetailBuilder();
+  }
+
+  static class NominatedBlockSubareaDetailBuilder {
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean validForFutureWellsInSubarea = true;
     private Boolean forAllWellPhases = false;
@@ -17,37 +21,37 @@ class NominatedBlockSubareaDetailTestUtil {
     private Boolean developmentPhase = true;
     private Boolean decommissioningPhase = true;
 
-    public NominatedBlockSubareaDetailBuilder withNominationDetail(NominationDetail nominationDetail) {
+    NominatedBlockSubareaDetailBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
       return this;
     }
 
-    public NominatedBlockSubareaDetailBuilder withValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
+    NominatedBlockSubareaDetailBuilder withValidForFutureWellsInSubarea(Boolean validForFutureWellsInSubarea) {
       this.validForFutureWellsInSubarea = validForFutureWellsInSubarea;
       return this;
     }
 
-    public NominatedBlockSubareaDetailBuilder withForAllWellPhases(Boolean forAllWellPhases) {
+    NominatedBlockSubareaDetailBuilder withForAllWellPhases(Boolean forAllWellPhases) {
       this.forAllWellPhases = forAllWellPhases;
       return this;
     }
 
-    public NominatedBlockSubareaDetailBuilder withExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
+    NominatedBlockSubareaDetailBuilder withExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
       this.explorationAndAppraisalPhase = explorationAndAppraisalPhase;
       return this;
     }
 
-    public NominatedBlockSubareaDetailBuilder withDevelopmentPhase(Boolean developmentPhase) {
+    NominatedBlockSubareaDetailBuilder withDevelopmentPhase(Boolean developmentPhase) {
       this.developmentPhase = developmentPhase;
       return this;
     }
 
-    public NominatedBlockSubareaDetailBuilder withDecommissioningPhase(Boolean decommissioningPhase) {
+    NominatedBlockSubareaDetailBuilder withDecommissioningPhase(Boolean decommissioningPhase) {
       this.decommissioningPhase = decommissioningPhase;
       return this;
     }
 
-    public NominatedBlockSubareaDetail build() {
+    NominatedBlockSubareaDetail build() {
       return new NominatedBlockSubareaDetail()
           .setNominationDetail(nominationDetail)
           .setValidForFutureWellsInSubarea(validForFutureWellsInSubarea)

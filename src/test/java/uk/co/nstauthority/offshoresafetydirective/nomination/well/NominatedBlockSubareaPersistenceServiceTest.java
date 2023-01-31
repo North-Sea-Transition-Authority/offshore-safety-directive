@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -40,18 +41,18 @@ class NominatedBlockSubareaPersistenceServiceTest {
     var secondSubareaId = new LicenceBlockSubareaId("2");
 
     var firstSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
-        .withSubareaId(firstSubareaId)
+        .withSubareaId(firstSubareaId.id())
         .build();
 
     var secondSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
-        .withSubareaId(secondSubareaId)
+        .withSubareaId(secondSubareaId.id())
         .build();
 
     var formWithDuplicateSubarea = NominatedBlockSubareaFormTestUtil.builder()
         .withSubareas(List.of(firstSubareaId.id(), secondSubareaId.id(), secondSubareaId.id()))
         .build();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(List.of(firstSubareaId.id(), secondSubareaId.id())))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(firstSubareaId, secondSubareaId)))
         .thenReturn(List.of(firstSubareaDto, secondSubareaDto));
 
     nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(NOMINATION_DETAIL, formWithDuplicateSubarea);

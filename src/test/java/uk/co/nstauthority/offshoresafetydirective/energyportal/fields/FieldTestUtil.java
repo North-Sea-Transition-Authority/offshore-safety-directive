@@ -66,7 +66,14 @@ public class FieldTestUtil {
     }
 
     public Field build() {
-      return new Field(fieldId, fieldName, shore, status, subType, geographicArea);
+      return Field.newBuilder()
+          .fieldId(fieldId)
+          .fieldName(fieldName)
+          .shore(shore)
+          .status(status)
+          .subType(subType)
+          .geographicArea(geographicArea)
+          .build();
     }
   }
 }

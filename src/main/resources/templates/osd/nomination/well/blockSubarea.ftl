@@ -32,6 +32,7 @@ backLinkUrl=springUrl(backLinkUrl)
       addToListId="block-subarea-table"
       selectorLabelText="Select a licence block subarea to add to this nomination"
       restUrl=springUrl(blockSubareaRestUrl)
+      selectorMinInputLength=2
     />
     <@fdsRadio.radioGroup
       path="form.validForFutureWellsInSubarea"

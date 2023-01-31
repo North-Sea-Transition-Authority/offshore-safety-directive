@@ -12,7 +12,7 @@
     <@fdsSummaryList.summaryList>
       <@fdsSummaryList.summaryListRowNoAction keyText="Licence block subareas">
         <#list nominatedBlockSubareaDetailView.licenceBlockSubareas as subarea>
-          <div>${subarea.name()}</div>
+          <p class="govuk-!-margin-top-0">${subarea.displayName()}</p>
         </#list>
       </@fdsSummaryList.summaryListRowNoAction>
       <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for future wells drilled in the selected subareas?">

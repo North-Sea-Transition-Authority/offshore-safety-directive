@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,6 +17,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -95,7 +96,7 @@ public class NominatedBlockSubareaController {
   }
 
   private String getLicenceBlockSubareaSearchUrl() {
-    return RestApiUtil.route(on(LicenceBlockSubareaRestController.class).searchWells(null));
+    return RestApiUtil.route(on(LicenceBlockSubareaRestController.class).searchSubareas(null));
   }
 
   private List<LicenceBlockSubareaAddToListView> getLicenceBlockSubareaViews(NominatedBlockSubareaForm form) {
@@ -103,17 +104,21 @@ public class NominatedBlockSubareaController {
       return Collections.emptyList();
     }
 
-    return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIdIn(form.getSubareas())
+    var licenceBlockSubareaIds = form.getSubareas()
         .stream()
+        .map(LicenceBlockSubareaId::new)
+        .toList();
+
+    return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(licenceBlockSubareaIds)
+        .stream()
+        .sorted(LicenceBlockSubareaDto.sort())
         .map(blockSubareaDto ->
             new LicenceBlockSubareaAddToListView(
                 blockSubareaDto.subareaId().id(),
-                blockSubareaDto.name(),
-                true,
-                blockSubareaDto.sortKey()
+                blockSubareaDto.displayName(),
+                true
             )
         )
-        .sorted(Comparator.comparing(LicenceBlockSubareaAddToListView::getSortKey))
         .toList();
   }
 }
