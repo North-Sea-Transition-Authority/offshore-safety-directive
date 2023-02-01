@@ -24,6 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appo
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
@@ -79,7 +81,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(WithdrawNominationController.FORM_NAME, modelAndViewDto.getWithdrawNominationForm())
         .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW)
         .addObject(ConfirmNominationAppointmentController.FORM_NAME,
-            modelAndViewDto.getConfirmNominationAppointmentForm());
+            modelAndViewDto.getConfirmNominationAppointmentForm())
+        .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm());
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
 
@@ -123,6 +126,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
             ));
       }
 
+      if (canAddGeneralCaseNote(nominationDetailDto)) {
+        dropdownAttributeMap.put("generalCaseNoteAttributes",
+            GeneralCaseNoteAttributeView.createAttributeView(nominationId));
+      }
+
       if (!dropdownAttributeMap.isEmpty()) {
         hasDropdownActions = true;
       }
@@ -148,6 +156,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
   private boolean canConfirmAppointments(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.AWAITING_CONFIRMATION;
+  }
+
+  private boolean canAddGeneralCaseNote(NominationDetailDto dto) {
+    return EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+        .contains(dto.nominationStatus());
   }
 
 }

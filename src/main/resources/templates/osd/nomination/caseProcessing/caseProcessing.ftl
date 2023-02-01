@@ -6,6 +6,7 @@
 <#import '_decisionSlideout.ftl' as _decisionSlideout/>
 <#import '_withdrawSlideout.ftl' as _withdrawSlideout/>
 <#import '_confirmAppointmentSlideout.ftl' as _confirmAppointmentSlideout/>
+<#import '_generalCaseNoteSlideout.ftl' as _generalCaseNoteSlideout/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -53,6 +54,9 @@
     <#assign confirmAppointmentSlideoutPanelId = "confirm-appointment"/>
     <#assign confirmAppointmentSlideoutText = "Confirm appointment"/>
 
+    <#assign generalCaseNoteSlideoutPanelId = "case-note"/>
+    <#assign generalCaseNoteSlideoutText = "Add a case note"/>
+
     <#if hasDropdownActions>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
@@ -67,6 +71,9 @@
                 </#if>
                 <#if confirmAppointmentAttributes?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=confirmAppointmentSlideoutText slideOutPanelId=confirmAppointmentSlideoutPanelId/>
+                </#if>
+                <#if generalCaseNoteAttributes?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=generalCaseNoteSlideoutText slideOutPanelId=generalCaseNoteSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -106,6 +113,15 @@
         headingText=confirmAppointmentSlideoutText
         errorList=errorList![]
         attributes=confirmAppointmentAttributes
+        />
+    </#if>
+
+    <#if generalCaseNoteAttributes?has_content>
+        <@_generalCaseNoteSlideout.generalCaseNoteSlideout
+            panelId=generalCaseNoteSlideoutPanelId
+            headingText=generalCaseNoteSlideoutText
+            errorList=errorList![]
+            attributes=generalCaseNoteAttributes
         />
     </#if>
 

@@ -32,6 +32,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appo
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
@@ -104,12 +106,14 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
         .withWithdrawNominationForm(withdrawForm)
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -125,7 +129,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "form",
         "withdrawNominationForm",
         "caseProcessingAction_WITHDRAW",
-        "confirmAppointmentForm"
+        "confirmAppointmentForm",
+        "generalCaseNoteForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -147,7 +152,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             decisionForm,
             withdrawForm,
             CaseProcessingAction.WITHDRAW,
-            confirmAppointmentForm
+            confirmAppointmentForm,
+            generalCaseNoteForm
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -183,12 +189,14 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
         .withWithdrawNominationForm(withdrawForm)
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -204,7 +212,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "form",
         "withdrawNominationForm",
         "caseProcessingAction_WITHDRAW",
-        "confirmAppointmentForm"
+        "confirmAppointmentForm",
+        "generalCaseNoteForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -226,7 +235,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             decisionForm,
             withdrawForm,
             CaseProcessingAction.WITHDRAW,
-            confirmAppointmentForm
+            confirmAppointmentForm,
+            generalCaseNoteForm
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -255,12 +265,14 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
         .withWithdrawNominationForm(withdrawForm)
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -273,6 +285,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var expectedQaChecksSubmitUrl = ReverseRouter.route(on(NominationQaChecksController.class)
         .submitQa(nominationId, CaseProcessingAction.QA, null, null));
+
+    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId);
 
     var hasDropdownActions = true;
 
@@ -290,7 +304,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "confirmAppointmentForm",
         "withdrawSubmitUrl",
         "nominationDecisionAttributes",
-        "qaChecksSubmitUrl"
+        "qaChecksSubmitUrl",
+        "generalCaseNoteForm",
+        "generalCaseNoteAttributes"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -313,7 +329,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             confirmAppointmentForm,
             expectedWithdrawSubmitUrl,
             expectedNominationDecisionAttributes,
-            expectedQaChecksSubmitUrl
+            expectedQaChecksSubmitUrl,
+            generalCaseNoteForm,
+            expectedGeneralCaseNoteAttributes
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -342,12 +360,14 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
         .withNominationDecisionForm(decisionForm)
         .withWithdrawNominationForm(withdrawForm)
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -357,6 +377,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var expectedWithdrawSubmitUrl = ReverseRouter.route(on(WithdrawNominationController.class)
         .withdrawNomination(nominationId, true, null, null, null, null));
+
+    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId);
 
     var hasDropdownActions = true;
 
@@ -373,7 +395,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "caseProcessingAction_WITHDRAW",
         "confirmAppointmentForm",
         "withdrawSubmitUrl",
-        "confirmAppointmentAttributes"
+        "confirmAppointmentAttributes",
+        "generalCaseNoteForm",
+        "generalCaseNoteAttributes"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -395,7 +419,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             CaseProcessingAction.WITHDRAW,
             confirmAppointmentForm,
             expectedWithdrawSubmitUrl,
-            expectedConfirmAppointmentAttributes
+            expectedConfirmAppointmentAttributes,
+            generalCaseNoteForm,
+            expectedGeneralCaseNoteAttributes
         );
 
     assertBreadcrumbs(result, nominationDetail);

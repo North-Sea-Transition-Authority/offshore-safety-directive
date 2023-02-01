@@ -6,6 +6,7 @@ public class CaseProcessingAction {
   public static final String QA = "QA";
   public static final String WITHDRAW = "WITHDRAW";
   public static final String CONFIRM_APPOINTMENT = "CONFIRM_APPOINTMENT";
+  public static final String GENERAL_NOTE = "GENERAL_CASE_NOTE";
 
   private CaseProcessingAction() {
   }
