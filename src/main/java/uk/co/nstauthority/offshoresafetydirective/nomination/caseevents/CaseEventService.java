@@ -72,11 +72,23 @@ public class CaseEventService {
     caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
   }
 
+  @Transactional
+  public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body) {
+    createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
+  }
+
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,
                                 NominationDetail nominationDetail) {
+    return createEvent(caseEventType, null, comment, createdInstant, nominationDetail);
+  }
+
+
+  private CaseEvent createEvent(CaseEventType caseEventType, @Nullable String overrideTitle, String comment,
+                                Instant createdInstant, NominationDetail nominationDetail) {
     var caseEvent = new CaseEvent();
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
     caseEvent.setCaseEventType(caseEventType);
+    caseEvent.setTitle(overrideTitle);
     caseEvent.setComment(comment);
     caseEvent.setCreatedBy(userDetailService.getUserDetail().wuaId());
     caseEvent.setCreatedInstant(createdInstant);

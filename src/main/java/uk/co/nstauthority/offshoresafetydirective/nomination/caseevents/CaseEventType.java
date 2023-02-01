@@ -6,7 +6,8 @@ public enum CaseEventType {
   NO_OBJECTION_DECISION("No objections"),
   OBJECTION_DECISION("Objected"),
   WITHDRAWN("Withdrawn"),
-  CONFIRM_APPOINTMENT("Confirm appointment");
+  CONFIRM_APPOINTMENT("Confirm appointment"),
+  GENERAL_NOTE("General note");
 
   private final String screenDisplayText;
 

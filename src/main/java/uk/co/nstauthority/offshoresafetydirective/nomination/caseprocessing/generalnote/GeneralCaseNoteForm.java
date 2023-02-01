@@ -4,7 +4,7 @@ import uk.co.fivium.formlibrary.input.StringInput;
 
 public class GeneralCaseNoteForm {
 
-  private StringInput caseNoteSubject = new StringInput("caseNoteSubject", "case note subject");
+  private StringInput caseNoteSubject = new StringInput("caseNoteSubject", "a case note subject");
 
   private StringInput caseNoteText = new StringInput("caseNoteText", "case note text");
 

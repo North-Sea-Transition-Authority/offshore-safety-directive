@@ -67,6 +67,7 @@ class CaseEventServiceTest {
     assertThat(captor.getValue())
         .extracting(
             CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
@@ -74,6 +75,7 @@ class CaseEventServiceTest {
             CaseEvent::getNominationVersion
         ).containsExactly(
             CaseEventType.QA_CHECKS,
+            null,
             comment,
             serviceUser.wuaId(),
             createdInstant,
@@ -115,6 +117,7 @@ class CaseEventServiceTest {
     assertThat(captor.getValue())
         .extracting(
             CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
@@ -122,6 +125,7 @@ class CaseEventServiceTest {
             CaseEvent::getNominationVersion
         ).containsExactly(
             expectedCaseEventType,
+            null,
             comment,
             serviceUser.wuaId(),
             decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC),
@@ -181,6 +185,7 @@ class CaseEventServiceTest {
     assertThat(captor.getValue())
         .extracting(
             CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
@@ -188,6 +193,7 @@ class CaseEventServiceTest {
             CaseEvent::getNominationVersion
         ).containsExactly(
             CaseEventType.WITHDRAWN,
+            null,
             reason,
             serviceUser.wuaId(),
             clock.instant(),
@@ -217,6 +223,7 @@ class CaseEventServiceTest {
     assertThat(captor.getValue())
         .extracting(
             CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
@@ -224,9 +231,47 @@ class CaseEventServiceTest {
             CaseEvent::getNominationVersion
         ).containsExactly(
             CaseEventType.CONFIRM_APPOINTMENT,
+            null,
             comment,
             serviceUser.wuaId(),
             date.atStartOfDay().toInstant(ZoneOffset.UTC),
+            detail.getNomination(),
+            nominationVersion
+        );
+  }
+
+  @Test
+  void createGeneralCaseNoteEvent() {
+    var nominationVersion = 2;
+    var subject = "Test case note";
+    var caseNoteText = "Body text";
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.GENERAL_NOTE,
+            subject,
+            caseNoteText,
+            serviceUser.wuaId(),
+            clock.instant(),
             detail.getNomination(),
             nominationVersion
         );

@@ -31,9 +31,12 @@ class CaseEvent {
   @Enumerated(EnumType.STRING)
   private CaseEventType caseEventType;
 
+  private String title;
+
   @ManyToOne
   @JoinColumn(name = "nomination_id")
   private Nomination nomination;
+
 
   private int nominationVersion;
 
@@ -59,6 +62,14 @@ class CaseEvent {
 
   void setCaseEventType(CaseEventType caseEventType) {
     this.caseEventType = caseEventType;
+  }
+
+  String getTitle() {
+    return title;
+  }
+
+  void setTitle(String title) {
+    this.title = title;
   }
 
   Nomination getNomination() {
