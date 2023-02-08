@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -54,6 +57,9 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationSummaryService nominationSummaryService;
+
+  @MockBean
+  private FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
 
   @BeforeEach
   void setup() {
@@ -119,6 +125,7 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   void getSubmissionPage_assertModelProperties() throws Exception {
 
     var isSubmittable = false;
+
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
@@ -138,6 +145,24 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID))
         ))
         .andExpect(model().attribute("isSubmittable", isSubmittable));
+  }
+
+  @Test
+  void getSubmissionPage_verifyNominatedWellsFinalised() throws Exception {
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"));
+
+    then(finaliseNominatedSubareaWellsService)
+        .should(onlyOnce())
+        .finaliseNominatedSubareaWells(nominationDetail);
   }
 
   @Test

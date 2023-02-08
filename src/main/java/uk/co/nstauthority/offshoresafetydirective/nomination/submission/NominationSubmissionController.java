@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -28,19 +29,29 @@ public class NominationSubmissionController {
   private final NominationSubmissionService nominationSubmissionService;
   private final NominationDetailService nominationDetailService;
   private final NominationSummaryService nominationSummaryService;
+  private final FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
 
   @Autowired
   public NominationSubmissionController(NominationSubmissionService nominationSubmissionService,
                                         NominationDetailService nominationDetailService,
-                                        NominationSummaryService nominationSummaryService) {
+                                        NominationSummaryService nominationSummaryService,
+                                        FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
     this.nominationSummaryService = nominationSummaryService;
+    this.finaliseNominatedSubareaWellsService = finaliseNominatedSubareaWellsService;
   }
 
   @GetMapping
   public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId) {
+
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+
+    // Materialise the wellbores in any nominated subareas so applicants can check the wells that are included
+    // on the nomination prior to submission. If we did this on submission the applicant will not know which
+    // wells the service will include on the nomination until after submission.
+    finaliseNominatedSubareaWellsService.finaliseNominatedSubareaWells(nominationDetail);
+
     return getModelAndView(nominationId, nominationDetail);
   }
 

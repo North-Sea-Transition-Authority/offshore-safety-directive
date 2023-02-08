@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,6 +95,37 @@ class ExcludedWellAccessServiceTest {
                 expectedExcludedWell.getWellboreId()
             )
         );
+  }
+
+  @Test
+  void getExcludedWellIds_whenNoExcludedWells_thenEmptySetReturned() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    given(excludedWellRepository.findByNominationDetail(nominationDetail))
+        .willReturn(Collections.emptyList());
+
+    var resultingExcludedWells = excludedWellAccessService.getExcludedWellIds(nominationDetail);
+
+    assertThat(resultingExcludedWells).isEmpty();
+  }
+
+  @Test
+  void getExcludedWellIds_whenExcludedWells_thenResultsReturned() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    var expectedExcludedWell = ExcludedWellTestUtil.builder()
+        .withWellboreId(100)
+        .build();
+
+    given(excludedWellRepository.findByNominationDetail(nominationDetail))
+        .willReturn(List.of(expectedExcludedWell));
+
+    var resultingExcludedWells = excludedWellAccessService.getExcludedWellIds(nominationDetail);
+
+    assertThat(resultingExcludedWells)
+        .containsExactly(new WellboreId(expectedExcludedWell.getWellboreId()));
   }
 
 }
