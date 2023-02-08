@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class LicenceBlockSubareaDtoTestUtil {
@@ -89,10 +90,10 @@ public class LicenceBlockSubareaDtoTestUtil {
               new LicenceBlock.BlockSuffix(blockSuffix),
               new LicenceBlock.BlockReference(blockReference)
           ),
-          new Licence(
-              new Licence.LicenceType(licenceType),
-              new Licence.LicenceNumber(licenceNumber),
-              new Licence.LicenceReference(licenceReference)
+          new LicenceDto(
+              new LicenceDto.LicenceType(licenceType),
+              new LicenceDto.LicenceNumber(licenceNumber),
+              new LicenceDto.LicenceReference(licenceReference)
           )
       );
     }

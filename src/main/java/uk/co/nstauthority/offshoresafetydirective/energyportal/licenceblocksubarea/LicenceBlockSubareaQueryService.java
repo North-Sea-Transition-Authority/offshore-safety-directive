@@ -28,6 +28,24 @@ public class LicenceBlockSubareaQueryService {
         .licenceRef()
         .root();
 
+  static final SubareasProjectionRoot SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT =
+      new SubareasProjectionRoot()
+          .id()
+          .wellbores()
+            .id()
+            .registrationNumber()
+            .totalDepthLicence()
+              .licenceType()
+              .licenceNo()
+              .licenceRef()
+              .parent()
+            .originLicence()
+              .licenceType()
+              .licenceNo()
+              .licenceRef()
+              .parent()
+            .mechanicalStatus().root();
+
   private final SubareaApi subareaApi;
 
   private final EnergyPortalApiWrapper energyPortalApiWrapper;
@@ -102,6 +120,25 @@ public class LicenceBlockSubareaQueryService {
       );
 
       return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
+    }));
+  }
+
+  List<LicenceBlockSubareaWellboreDto> getLicenceBlockSubareasWithWellboresByIds(
+      List<LicenceBlockSubareaId> licenceBlockSubareaIds
+  ) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+
+      var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();
+
+      return subareaApi.searchSubareasByIds(
+          subareaIdLiterals,
+          SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT,
+          requestPurpose,
+          logCorrelationId
+      )
+          .stream()
+          .map(LicenceBlockSubareaWellboreDto::fromPortalSubarea)
+          .toList();
     }));
   }
 

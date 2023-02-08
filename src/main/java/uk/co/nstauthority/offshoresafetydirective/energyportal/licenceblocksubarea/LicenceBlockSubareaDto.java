@@ -1,17 +1,25 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 
-public record LicenceBlockSubareaDto(
-    LicenceBlockSubareaId subareaId,
-    SubareaName subareaName,
-    LicenceBlock licenceBlock,
-    Licence licence
-) {
+public class LicenceBlockSubareaDto extends SubareaDto {
+
+  private final SubareaName subareaName;
+  private final LicenceBlock licenceBlock;
+  private final LicenceDto licenceDto;
+
+  public LicenceBlockSubareaDto(LicenceBlockSubareaId subareaId,
+                                SubareaName subareaName,
+                                LicenceBlock licenceBlock,
+                                LicenceDto licenceDto) {
+    super(subareaId);
+    this.subareaName = subareaName;
+    this.licenceBlock = licenceBlock;
+    this.licenceDto = licenceDto;
+  }
 
   static LicenceBlockSubareaDto fromPortalSubarea(Subarea subarea) {
-
-    var licence = subarea.getLicence();
 
     var licenceBlock = subarea.getLicenceBlock();
 
@@ -24,17 +32,25 @@ public record LicenceBlockSubareaDto(
             new LicenceBlock.BlockSuffix(licenceBlock.getSuffix()),
             new LicenceBlock.BlockReference(licenceBlock.getReference())
         ),
-        new Licence(
-            new Licence.LicenceType(licence.getLicenceType()),
-            new Licence.LicenceNumber(licence.getLicenceNo()),
-            new Licence.LicenceReference(licence.getLicenceRef())
-        )
+        LicenceDto.fromPortalLicence(subarea.getLicence())
     );
+  }
+
+  public SubareaName subareaName() {
+    return subareaName;
+  }
+
+  public LicenceBlock licenceBlock() {
+    return licenceBlock;
+  }
+
+  public LicenceDto licence() {
+    return licenceDto;
   }
 
   public String displayName() {
     return "%s %s %s".formatted(
-        licence.licenceReference().value(),
+        licenceDto.licenceReference().value(),
         licenceBlock.reference().value(),
         subareaName.value()
     );

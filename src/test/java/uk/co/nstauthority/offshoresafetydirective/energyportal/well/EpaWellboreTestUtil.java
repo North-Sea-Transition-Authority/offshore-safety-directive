@@ -8,17 +8,17 @@ import uk.co.fivium.energyportalapi.generated.types.Wellbore;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.EpaLicenceTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
-class EpaWellboreTestUtil {
+public class EpaWellboreTestUtil {
 
   private EpaWellboreTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private Integer wellboreId = 250;
 
@@ -36,42 +36,42 @@ class EpaWellboreTestUtil {
 
     private Builder() {}
 
-    Builder withId(Integer wellboreId) {
+    public Builder withId(Integer wellboreId) {
       this.wellboreId = wellboreId;
       return this;
     }
 
-    Builder withRegistrationNumber(String registrationNumber) {
+    public Builder withRegistrationNumber(String registrationNumber) {
       this.registrationNumber = registrationNumber;
       return this;
     }
 
-    Builder withMechanicalStatus(MechanicalStatus mechanicalStatus) {
+    public Builder withMechanicalStatus(MechanicalStatus mechanicalStatus) {
       this.mechanicalStatus = mechanicalStatus;
       return this;
     }
 
-    Builder withOperationalStatus(OperationalStatus operationalStatus) {
+    public Builder withOperationalStatus(OperationalStatus operationalStatus) {
       this.operationalStatus = operationalStatus;
       return this;
     }
 
-    Builder withOriginLicence(Licence originLicence) {
+    public Builder withOriginLicence(Licence originLicence) {
       this.originLicence = originLicence;
       return this;
     }
 
-    Builder withTotalDepthLicence(Licence totalDepthLicence) {
+    public Builder withTotalDepthLicence(Licence totalDepthLicence) {
       this.totalDepthLicence = totalDepthLicence;
       return this;
     }
 
-    Builder withRegulatoryJurisdiction(RegulatoryJurisdiction regulatoryJurisdiction) {
+    public Builder withRegulatoryJurisdiction(RegulatoryJurisdiction regulatoryJurisdiction) {
       this.regulatoryJurisdiction = regulatoryJurisdiction;
       return this;
     }
 
-    Wellbore build() {
+    public Wellbore build() {
       return Wellbore.newBuilder()
           .id(wellboreId)
           .registrationNumber(registrationNumber)

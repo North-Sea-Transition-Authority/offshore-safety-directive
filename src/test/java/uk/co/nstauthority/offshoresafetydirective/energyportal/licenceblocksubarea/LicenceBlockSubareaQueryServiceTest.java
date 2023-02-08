@@ -18,6 +18,7 @@ import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaShoreLocation;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreTestUtil;
 
 class LicenceBlockSubareaQueryServiceTest {
 
@@ -293,6 +294,76 @@ class LicenceBlockSubareaQueryServiceTest {
     );
 
     assertResultingLicenceBlockSubareaProperties(resultingSubareas, expectedSubarea);
+  }
+
+  @Test
+  void getLicenceBlockSubareasWithWellboresByIds_whenNoResults_thenEmptyList() {
+
+    var nonMatchingSubareaId = new LicenceBlockSubareaId("not a match");
+
+    given(subareaApi.searchSubareasByIds(
+        eq(List.of(nonMatchingSubareaId.id())),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(Collections.emptyList());
+
+    var resultingSubareas = licenceBlockSubareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
+        List.of(nonMatchingSubareaId)
+    );
+
+    assertThat(resultingSubareas).isEmpty();
+  }
+
+  @Test
+  void getLicenceBlockSubareasWithWellboresByIds_whenResults_thenPopulatedList() {
+
+    var matchingSubareaId = new LicenceBlockSubareaId("a match");
+
+    var expectedWellbore = EpaWellboreTestUtil.builder().build();
+
+    var subareaWithWellbore = EpaSubareaTestUtil.builder()
+        .withSubareaId("with wellbore")
+        .withWellbore(expectedWellbore)
+        .build();
+
+    var subareaWithoutWellbore = EpaSubareaTestUtil.builder()
+        .withSubareaId("without wellbore")
+        .withWellbores(Collections.emptyList())
+        .build();
+
+    given(subareaApi.searchSubareasByIds(
+        eq(List.of(matchingSubareaId.id())),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(subareaWithWellbore, subareaWithoutWellbore));
+
+    var resultingSubareas = licenceBlockSubareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
+        List.of(matchingSubareaId)
+    );
+
+    assertThat(resultingSubareas)
+        .extracting(
+            licenceBlockSubareaWellboreDto -> licenceBlockSubareaWellboreDto.subareaId().id(),
+            licenceBlockSubareaWellboreDto ->
+                licenceBlockSubareaWellboreDto.wellbores()
+                    .stream()
+                    .map(wellDto -> wellDto.wellboreId().id())
+                    .toList()
+        )
+        .containsExactlyInAnyOrder(
+            tuple(
+                subareaWithWellbore.getId(),
+                List.of(expectedWellbore.getId())
+            ),
+            tuple(
+                subareaWithoutWellbore.getId(),
+                Collections.emptyList()
+            )
+        );
   }
 
   private void assertResultingLicenceBlockSubareaProperties(List<LicenceBlockSubareaDto> resultingLicenceBlockSubareas,
