@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -38,13 +40,21 @@ public class ExcludedWellboreController {
 
   private final NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
 
+  private final ControllerHelperService controllerHelperService;
+
+  private final ExcludedWellValidator excludedWellValidator;
+
   @Autowired
   ExcludedWellboreController(NominationDetailService nominationDetailService,
                              LicenceBlockSubareaWellboreService subareaWellboreService,
-                             NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService) {
+                             NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService,
+                             ControllerHelperService controllerHelperService,
+                             ExcludedWellValidator excludedWellValidator) {
     this.nominationDetailService = nominationDetailService;
     this.subareaWellboreService = subareaWellboreService;
     this.nominatedBlockSubareaAccessService = nominatedBlockSubareaAccessService;
+    this.controllerHelperService = controllerHelperService;
+    this.excludedWellValidator = excludedWellValidator;
   }
 
   @GetMapping
@@ -55,9 +65,19 @@ public class ExcludedWellboreController {
 
   @PostMapping
   ModelAndView saveWellsToExclude(@PathVariable("nominationId") NominationId nominationId,
-                                  @ModelAttribute("form") WellExclusionForm wellExclusionForm) {
-    getNominationDetail(nominationId);
-    return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
+                                  @ModelAttribute("form") WellExclusionForm wellExclusionForm,
+                                  BindingResult bindingResult) {
+
+    var nominationDetail = getNominationDetail(nominationId);
+
+    excludedWellValidator.validate(wellExclusionForm, bindingResult, new ExcludedWellValidatorHint(nominationDetail));
+
+    return controllerHelperService.checkErrorsAndRedirect(
+        bindingResult,
+        getRenderPossibleWellsToExcludeView(nominationDetail, wellExclusionForm),
+        wellExclusionForm,
+        () -> ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId))
+    );
   }
 
   private ModelAndView getRenderPossibleWellsToExcludeView(NominationDetail nominationDetail,
@@ -78,7 +98,7 @@ public class ExcludedWellboreController {
         .addObject(
             "actionUrl",
             ReverseRouter.route(on(ExcludedWellboreController.class)
-                .saveWellsToExclude(nominationId, wellExclusionForm))
+                .saveWellsToExclude(nominationId, wellExclusionForm, ReverseRouter.emptyBindingResult()))
         )
         .addObject("wellbores", subareaWellboreService.getSubareaRelatedWellbores(nominatedSubareaIds))
         .addObject("backLinkUrl", subareaSelectionUrl)

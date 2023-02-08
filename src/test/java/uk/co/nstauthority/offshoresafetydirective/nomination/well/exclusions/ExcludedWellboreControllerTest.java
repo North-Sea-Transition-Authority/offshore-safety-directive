@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -33,7 +36,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -58,6 +60,9 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
 
   @MockBean
   NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
+
+  @MockBean
+  private ExcludedWellValidator excludedWellValidator;
 
   @BeforeEach
   void setup() {
@@ -88,7 +93,7 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(ExcludedWellboreController.class)
-                .saveWellsToExclude(NOMINATION_ID, null)),
+                .saveWellsToExclude(NOMINATION_ID, null, ReverseRouter.emptyBindingResult())),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -106,7 +111,7 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(ExcludedWellboreController.class)
-                .saveWellsToExclude(NOMINATION_ID, null)),
+                .saveWellsToExclude(NOMINATION_ID, null, ReverseRouter.emptyBindingResult())),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -128,28 +133,25 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeExists("form"))
         .andExpect(model().attribute(
             "actionUrl",
-            ReverseRouter.route(on(ExcludedWellboreController.class).saveWellsToExclude(NOMINATION_ID, null))
+            ReverseRouter.route(on(ExcludedWellboreController.class)
+                .saveWellsToExclude(NOMINATION_ID, null, ReverseRouter.emptyBindingResult()))
         ))
         .andExpect(model().attribute(
             "backLinkUrl",
                 ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))
         ))
-        .andExpect(model().attribute(
-            "subareaSelectionUrl",
-            ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID))
-        ))
-        .andExpect(model().attribute(
-            "wellSelectionTypeUrl",
-            ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
-        ))
         .andExpect(model().attribute("wellbores", Collections.emptyList()));
   }
 
   @Test
-  void saveWellsToExclude_verifyRedirection() throws Exception {
+  void saveWellsToExclude_whenValidForm_verifyRedirection() throws Exception {
+
+    doAnswer(invocation -> ReverseRouter.emptyBindingResult())
+        .when(excludedWellValidator).validate(any(), any(), any());
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(ExcludedWellboreController.class).saveWellsToExclude(NOMINATION_ID, null)))
+            post(ReverseRouter.route(on(ExcludedWellboreController.class)
+                .saveWellsToExclude(NOMINATION_ID, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_CREATOR_USER))
         )
@@ -157,6 +159,25 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
         .andExpect(
             redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
         );
+  }
+
+  @Test
+  void saveWellsToExclude_whenInvalidForm_verifyNoRedirection() throws Exception {
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.rejectValue("hasWellsToExclude", "code", "message");
+      return bindingResult;
+    }).when(excludedWellValidator).validate(any(), any(), any());
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ExcludedWellboreController.class)
+                .saveWellsToExclude(NOMINATION_ID, null, null)))
+                .with(csrf())
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/well/exclusions/wellsToExclude"));
   }
 
 }

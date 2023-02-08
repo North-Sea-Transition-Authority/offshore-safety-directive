@@ -4,6 +4,7 @@
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 
 <#assign pageTitle = "Are any wells to be excluded from this nomination?" />
 
@@ -31,10 +32,12 @@
           />
         <#else>
           <p class="govuk-body">
-            None of the subareas included in this nomination contain any wellbores.
-            You can
-            <@fdsAction.link linkUrl=springUrl(subareaSelectionUrl) linkText="change the subareas included in this nomination"/>
-            or select to <@fdsAction.link linkUrl=springUrl(wellSelectionTypeUrl) linkText="nominate a specific well"/> instead.
+            None of the subareas included in this nomination contain any wells.
+            If you know that wells exist in these subareas then contact
+            <@mailTo.mailToLink
+              linkText=customerBranding.mnemonic()
+              mailToEmailAddress=customerBranding.businessEmailAddress()
+            />.
           </p>
         </#if>
       </@fdsRadio.radioYes>

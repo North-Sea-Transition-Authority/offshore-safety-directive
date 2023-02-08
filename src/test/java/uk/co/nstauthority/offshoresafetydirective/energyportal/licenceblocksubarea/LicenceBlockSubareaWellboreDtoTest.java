@@ -5,15 +5,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import uk.co.fivium.energyportalapi.generated.types.Wellbore;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreTestUtil;
 
 class LicenceBlockSubareaWellboreDtoTest {
 
-  @Test
-  void fromPortalSubarea_whenNoWellbores_thenEmptyList() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  void fromPortalSubarea_whenNoWellbores_thenEmptyList(List<Wellbore> wellbores) {
 
     var portalSubarea = EpaSubareaTestUtil.builder()
-        .withWellbores(Collections.emptyList())
+        .withWellbores(wellbores)
         .build();
 
     var resultingSubareaDto = LicenceBlockSubareaWellboreDto.fromPortalSubarea(portalSubarea);

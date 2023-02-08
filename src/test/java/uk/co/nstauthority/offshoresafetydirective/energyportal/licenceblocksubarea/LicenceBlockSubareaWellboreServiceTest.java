@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -118,6 +120,19 @@ class LicenceBlockSubareaWellboreServiceTest {
     assertThat(resultingWellbores)
         .extracting(WellDto::wellboreId)
         .containsExactly(new WellboreId(100));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getSubareaRelatedWellbores_whenEmptyListNoSubareaMatches_thenEmptyList(
+      List<LicenceBlockSubareaId> licenceBlockSubareaIds
+  ) {
+
+    var resultingWellbores = licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(
+        licenceBlockSubareaIds
+    );
+
+    assertThat(resultingWellbores).isEmpty();
   }
 
 }

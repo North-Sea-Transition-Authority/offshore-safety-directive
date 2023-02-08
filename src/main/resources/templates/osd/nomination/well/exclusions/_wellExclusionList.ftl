@@ -23,7 +23,13 @@
     <tbody class="govuk-table__body">
       <#list wellbores as wellbore>
 
-        <#local id=fdsUtil.sanitiseId("${fdsUtil.getSpringStatusExpression()}-${wellbore?index}")>
+        <#-- ensure the first item in the list matches the form field name so we can bind errors correctly -->
+        <#if wellbore?index == 0>
+          <#local id=fdsUtil.sanitiseId("${fdsUtil.getSpringStatusExpression()}")/>
+        <#else>
+          <#local id=fdsUtil.sanitiseId("${fdsUtil.getSpringStatusExpression()}-${wellbore?index}")/>
+        </#if>
+
         <#local name=fdsUtil.getSpringStatusExpression()>
 
         <#-- Convert to number to avoid issues with 1000 -> 1,000 if used as string -->
