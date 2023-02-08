@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSectionSubmissionService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellSubmissionService;
 
 @Service
 class WellSubmissionService implements NominationSectionSubmissionService {
@@ -21,6 +22,8 @@ class WellSubmissionService implements NominationSectionSubmissionService {
 
   private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
+  private final ExcludedWellSubmissionService excludedWellSubmissionService;
+
   @Autowired
   WellSubmissionService(WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService,
                         NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
@@ -28,7 +31,8 @@ class WellSubmissionService implements NominationSectionSubmissionService {
                         NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
                         NominatedWellPersistenceService nominatedWellPersistenceService,
                         NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService,
-                        NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService) {
+                        NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService,
+                        ExcludedWellSubmissionService excludedWellSubmissionService) {
     this.wellSelectionSetupPersistenceService = wellSelectionSetupPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
@@ -36,6 +40,7 @@ class WellSubmissionService implements NominationSectionSubmissionService {
     this.nominatedWellPersistenceService = nominatedWellPersistenceService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaDetailPersistenceService;
     this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaPersistenceService;
+    this.excludedWellSubmissionService = excludedWellSubmissionService;
   }
 
   @Override
@@ -74,10 +79,18 @@ class WellSubmissionService implements NominationSectionSubmissionService {
   }
 
   private boolean isLicenceBlockSubareaJourneyComplete(NominationDetail nominationDetail) {
+    return isNominatedBlockSubareaFormComplete(nominationDetail) && isExcludedWellsFormComplete(nominationDetail);
+  }
+
+  private boolean isNominatedBlockSubareaFormComplete(NominationDetail nominationDetail) {
     var licenceBlockSubareaForm = nominatedBlockSubareaFormService.getForm(nominationDetail);
     var bindingResult = new BeanPropertyBindingResult(licenceBlockSubareaForm, "form");
     nominatedBlockSubareaFormService.validate(licenceBlockSubareaForm, bindingResult);
     return !bindingResult.hasErrors();
+  }
+
+  private boolean isExcludedWellsFormComplete(NominationDetail nominationDetail) {
+    return excludedWellSubmissionService.isExcludedWellJourneyComplete(nominationDetail);
   }
 
   private void cleanUpSpecificWellData(NominationDetail nominationDetail) {
@@ -88,5 +101,6 @@ class WellSubmissionService implements NominationSectionSubmissionService {
   private void cleanUpLicenceBlockSubareaData(NominationDetail nominationDetail) {
     nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(nominationDetail);
     nominatedBlockSubareaPersistenceService.deleteByNominationDetail(nominationDetail);
+    excludedWellSubmissionService.cleanUpExcludedWellData(nominationDetail);
   }
 }

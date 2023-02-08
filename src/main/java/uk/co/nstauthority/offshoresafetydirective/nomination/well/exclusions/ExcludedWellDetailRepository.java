@@ -10,4 +10,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 interface ExcludedWellDetailRepository extends CrudRepository<ExcludedWellDetail, UUID> {
 
   Optional<ExcludedWellDetail> findByNominationDetail(NominationDetail nominationDetail);
+
+  void deleteByNominationDetail(NominationDetail nominationDetail);
 }

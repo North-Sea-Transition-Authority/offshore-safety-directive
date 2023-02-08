@@ -187,4 +187,28 @@ class ExcludedWellPersistenceServiceTest {
         .saveAll(anyCollection());
   }
 
+  @Test
+  void deleteExcludedWellDetail_verifyInteractions() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    excludedWellPersistenceService.deleteExcludedWellDetail(nominationDetail);
+
+    then(excludedWellDetailRepository)
+        .should()
+        .deleteByNominationDetail(nominationDetail);
+  }
+
+  @Test
+  void deleteExcludedWells_verifyInteractions() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    excludedWellPersistenceService.deleteExcludedWells(nominationDetail);
+
+    then(excludedWellRepository)
+        .should()
+        .deleteAllByNominationDetail(nominationDetail);
+  }
+
 }

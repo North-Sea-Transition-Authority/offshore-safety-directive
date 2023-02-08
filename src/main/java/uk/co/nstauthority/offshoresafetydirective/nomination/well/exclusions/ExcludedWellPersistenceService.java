@@ -35,7 +35,7 @@ class ExcludedWellPersistenceService {
 
     excludedWellDetailRepository.save(excludedWellDetail);
 
-    excludedWellRepository.deleteAllByNominationDetail(nominationDetail);
+    deleteExcludedWells(nominationDetail);
 
     if (hasWellsToExclude) {
 
@@ -50,5 +50,15 @@ class ExcludedWellPersistenceService {
 
       excludedWellRepository.saveAll(excludedWellsToPersist);
     }
+  }
+
+  @Transactional
+  public void deleteExcludedWellDetail(NominationDetail nominationDetail) {
+    excludedWellDetailRepository.deleteByNominationDetail(nominationDetail);
+  }
+
+  @Transactional
+  public void deleteExcludedWells(NominationDetail nominationDetail) {
+    excludedWellRepository.deleteAllByNominationDetail(nominationDetail);
   }
 }
