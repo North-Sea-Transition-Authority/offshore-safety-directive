@@ -1,8 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
+import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 import uk.co.fivium.energyportalapi.generated.client.WellboresProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
@@ -43,6 +45,11 @@ public class WellQueryService {
   }
 
   public List<WellDto> getWellsByIds(List<WellboreId> wellboreIds) {
+
+    if (CollectionUtils.isEmpty(wellboreIds)) {
+      return Collections.emptyList();
+    }
+
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       var wellboreIdLiterals = wellboreIds

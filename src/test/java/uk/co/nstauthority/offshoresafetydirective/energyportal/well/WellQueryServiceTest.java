@@ -3,9 +3,12 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
@@ -210,6 +214,19 @@ class WellQueryServiceTest {
                 expectedWellbore.getRegistrationNumber()
             )
         );
+  }
+
+  @ParameterizedTest(name = "{index} => wellbore id list=''{0}''")
+  @NullAndEmptySource
+  void getWellsByIds_whenIdInputListNullOrEmpty_thenEmptyListReturned(List<WellboreId> wellboreIds) {
+
+    var resultingWellbores = wellQueryService.getWellsByIds(wellboreIds);
+
+    assertThat(resultingWellbores).isEmpty();
+
+    then(wellboreApi)
+        .should(never())
+        .searchWellboresByIds(anyList(), any(), any(), any());
   }
 
 }

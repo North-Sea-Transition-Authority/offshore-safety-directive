@@ -18,6 +18,8 @@
     nominatedWellDetailViewChangeUrl=nominatedWellDetailViewChangeUrl
     nominatedBlockSubareaDetailView=nominatedBlockSubareaDetailView
     nominatedBlockSubareaDetailViewChangeUrl=nominatedBlockSubareaDetailViewChangeUrl
+    excludedWellView=excludedWellView
+    excludedWellChangeUrl=excludedWellChangeUrl
   />
   <@fdsAction.link linkText="Save and continue" linkUrl=springUrl(saveAndContinueUrl) linkClass="govuk-button"/>
 </@defaultPage>

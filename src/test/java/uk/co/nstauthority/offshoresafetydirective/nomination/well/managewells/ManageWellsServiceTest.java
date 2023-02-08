@@ -1,8 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,6 +16,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
 
 @ExtendWith(MockitoExtension.class)
 class ManageWellsServiceTest {
@@ -28,6 +33,9 @@ class ManageWellsServiceTest {
 
   @Mock
   private NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
+
+  @Mock
+  private ExcludedWellSummaryService excludedWellSummaryService;
 
   @InjectMocks
   private ManageWellsService manageWellsService;
@@ -51,5 +59,29 @@ class ManageWellsServiceTest {
     manageWellsService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
 
     verify(nominatedBlockSubareaDetailViewService, times(1)).getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+  }
+
+  @Test
+  void getExcludedWellView_whenNoViewObjectFound_thenEmptyOptional() {
+
+    when(excludedWellSummaryService.getExcludedWellView(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
+
+    var excludedWellView = manageWellsService.getExcludedWellView(NOMINATION_DETAIL);
+
+    assertThat(excludedWellView).isEmpty();
+  }
+
+  @Test
+  void getExcludedWellView_whenViewObjectFound_thenPopulatedOptional() {
+
+    var expectedExcludedWellView = new ExcludedWellView();
+
+    when(excludedWellSummaryService.getExcludedWellView(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(expectedExcludedWellView));
+
+    var excludedWellView = manageWellsService.getExcludedWellView(NOMINATION_DETAIL);
+
+    assertThat(excludedWellView).contains(expectedExcludedWellView);
   }
 }

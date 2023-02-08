@@ -25,6 +25,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellD
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -83,7 +85,17 @@ public class ManageWellsController {
         .addObject(
             "nominatedBlockSubareaDetailViewChangeUrl",
             ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId))
+        )
+        .addObject(
+            "excludedWellView",
+            manageWellsService.getExcludedWellView(nominationDetail)
+                .orElse(new ExcludedWellView())
+        )
+        .addObject(
+            "excludedWellChangeUrl",
+            ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(nominationId))
         );
+
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_TITLE)
         .addWorkAreaBreadcrumb()
         .addBreadcrumb(NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId))

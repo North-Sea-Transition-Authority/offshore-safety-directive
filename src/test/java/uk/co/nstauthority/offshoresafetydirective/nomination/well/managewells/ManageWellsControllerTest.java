@@ -36,6 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellD
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -124,6 +126,11 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getNominatedBlockSubareaDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
 
+    var excludedWellView = new ExcludedWellView();
+
+    when(manageWellsService.getExcludedWellView(nominationDetail))
+        .thenReturn(Optional.of(excludedWellView));
+
     mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
                 .with(user(NOMINATION_CREATOR_USER))
@@ -158,7 +165,15 @@ class ManageWellsControllerTest extends AbstractControllerTest {
                 NominationTaskListController.PAGE_NAME
             )
         ))
-        .andExpect(model().attribute("currentPage", ManageWellsController.PAGE_TITLE));
+        .andExpect(model().attribute("currentPage", ManageWellsController.PAGE_TITLE))
+        .andExpect(model().attribute(
+            "excludedWellView",
+            excludedWellView
+        ))
+        .andExpect(model().attribute(
+            "excludedWellChangeUrl",
+            ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID))
+        ));
   }
 
   @Test
@@ -168,6 +183,12 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     when(manageWellsService.getNominatedWellDetailView(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    when(manageWellsService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    when(manageWellsService.getExcludedWellView(nominationDetail))
         .thenReturn(Optional.empty());
 
     var modelAndView = mockMvc.perform(
@@ -183,6 +204,7 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     var model = modelAndView.getModel();
 
     assertThat(model.get("wellSelectionSetupView")).hasAllNullFieldsOrProperties();
+
     assertThat((NominatedWellDetailView) model.get("nominatedWellDetailView"))
         .extracting(
             NominatedWellDetailView::getWells,
@@ -191,6 +213,30 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         )
         .containsExactly(
             Collections.emptyList(),
+            null,
+            Collections.emptyList()
+        );
+
+    assertThat((NominatedBlockSubareaDetailView) model.get("nominatedBlockSubareaDetailView"))
+        .extracting(
+            NominatedBlockSubareaDetailView::getLicenceBlockSubareas,
+            NominatedBlockSubareaDetailView::getValidForFutureWellsInSubarea,
+            NominatedBlockSubareaDetailView::getForAllWellPhases,
+            NominatedBlockSubareaDetailView::getWellPhases
+        )
+        .containsExactly(
+            Collections.emptyList(),
+            null,
+            null,
+            Collections.emptyList()
+        );
+
+    assertThat((ExcludedWellView) model.get("excludedWellView"))
+        .extracting(
+            ExcludedWellView::hasWellsToExclude,
+            ExcludedWellView::excludedWells
+        )
+        .containsExactly(
             null,
             Collections.emptyList()
         );

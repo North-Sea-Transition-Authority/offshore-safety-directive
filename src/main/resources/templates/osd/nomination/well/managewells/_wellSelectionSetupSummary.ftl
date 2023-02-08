@@ -5,6 +5,7 @@
 <#macro wellSelectionSetupSummary wellSelectionSetupView changeUrl="">
   <@fdsSummaryList.summaryListWrapper
     headingText="Well nomination type"
+    headingClass="govuk-heading-m"
     summaryListId="summary-list-well-nomination-type"
     showSummaryListActions=changeUrl?has_content
     changeLinkUrl=springUrl(changeUrl)

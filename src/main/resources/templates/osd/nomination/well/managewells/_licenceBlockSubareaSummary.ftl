@@ -5,6 +5,7 @@
 <#macro licenceBlockSubareaSummary nominatedBlockSubareaDetailView changeUrl="">
   <@fdsSummaryList.summaryListWrapper
     headingText="Licence block subarea nominations"
+    headingClass="govuk-heading-m"
     summaryListId="summary-list-subarea-nomination-type"
     showSummaryListActions=changeUrl?has_content
     changeLinkUrl=springUrl(changeUrl)
