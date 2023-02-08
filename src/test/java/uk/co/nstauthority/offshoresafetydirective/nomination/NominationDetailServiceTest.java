@@ -31,7 +31,7 @@ class NominationDetailServiceTest {
 
   private static final Instant INSTANT = Instant.parse("2021-03-16T10:15:30Z");
 
-  private static final Nomination NOMINATION = new Nomination();
+  private static final Nomination NOMINATION = NominationTestUtil.builder().build();
 
   @Mock
   private NominationService nominationService;
@@ -209,21 +209,29 @@ class NominationDetailServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(NominationStatus.class)
-  void updateNominationDetailStatusByDecision_smokeTestStatus(NominationStatus status) {
+  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "SUBMITTED")
+  void updateNominationDetailStatusByDecision_whenNotSubmittedStatus_thenException(NominationStatus status) {
+
     var detail = NominationDetailTestUtil.builder()
         .withStatus(status)
         .build();
 
-    switch (status) {
-      case SUBMITTED -> assertDoesNotThrow(
-          () -> nominationDetailService.updateNominationDetailStatusByDecision(detail,
-              NominationDecision.NO_OBJECTION));
-      default -> assertThatThrownBy(
-          () -> nominationDetailService.updateNominationDetailStatusByDecision(detail, NominationDecision.NO_OBJECTION),
-          "Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
-              .formatted(detail.getId(), NominationStatus.SUBMITTED));
-    }
+    assertThatThrownBy(
+        () -> nominationDetailService.updateNominationDetailStatusByDecision(detail, NominationDecision.NO_OBJECTION),
+        "Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
+            .formatted(detail.getId(), NominationStatus.SUBMITTED));
+  }
+
+  @Test
+  void updateNominationDetailStatusByDecision_whenSubmittedStatus_thenNoException() {
+
+    var detail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    assertDoesNotThrow(
+        () -> nominationDetailService.updateNominationDetailStatusByDecision(detail, NominationDecision.NO_OBJECTION)
+    );
   }
 
   @ParameterizedTest
@@ -289,6 +297,34 @@ class NominationDetailServiceTest {
     );
 
     assertThat(result).contains(nominationDetail);
+  }
+
+  @Test
+  void getLatestNominationDetailOptional_whenNotFound_thenEmptyOptional() {
+
+    var nominationId = new NominationId(NOMINATION.getId());
+
+    when(nominationDetailRepository.findFirstByNomination_IdOrderByVersionDesc(nominationId.id()))
+        .thenReturn(Optional.empty());
+
+    var resultingNominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId);
+
+    assertThat(resultingNominationDetail).isEmpty();
+  }
+
+  @Test
+  void getLatestNominationDetailOptional_whenFound_thenPopulatedOptional() {
+
+    var nominationId = new NominationId(NOMINATION.getId());
+
+    var expectedNominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailRepository.findFirstByNomination_IdOrderByVersionDesc(nominationId.id()))
+        .thenReturn(Optional.of(expectedNominationDetail));
+
+    var resultingNominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId);
+
+    assertThat(resultingNominationDetail).contains(expectedNominationDetail);
   }
 
 }

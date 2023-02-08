@@ -2,17 +2,17 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
-class LicenceDtoTestUtil {
+public class LicenceDtoTestUtil {
 
   private LicenceDtoTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private String licenceType = "licence type";
 
@@ -22,7 +22,7 @@ class LicenceDtoTestUtil {
 
     private Builder() {}
 
-    Builder withLicenceType(String licenceType) {
+    public Builder withLicenceType(String licenceType) {
       this.licenceType = licenceType;
       return this;
     }
@@ -32,12 +32,12 @@ class LicenceDtoTestUtil {
       return this;
     }
 
-    Builder withLicenceReference(String licenceReference) {
+    public Builder withLicenceReference(String licenceReference) {
       this.licenceReference = licenceReference;
       return this;
     }
 
-    LicenceDto build() {
+    public LicenceDto build() {
       return new LicenceDto(
           new LicenceDto.LicenceType(licenceType),
           new LicenceDto.LicenceNumber(licenceNumber),

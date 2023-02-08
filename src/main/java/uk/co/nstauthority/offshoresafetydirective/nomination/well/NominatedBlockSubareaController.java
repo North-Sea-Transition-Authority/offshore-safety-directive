@@ -25,7 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -77,7 +77,8 @@ public class NominatedBlockSubareaController {
           var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
           nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
           nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
-          return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
+          return ReverseRouter.redirect(on(ExcludedWellboreController.class)
+              .renderPossibleWellsToExclude(nominationId));
         }
     );
   }

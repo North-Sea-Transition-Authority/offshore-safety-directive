@@ -12,6 +12,8 @@ interface NominationDetailRepository extends CrudRepository<NominationDetail, In
 
   Optional<NominationDetail> findFirstByNominationOrderByVersionDesc(Nomination nomination);
 
+  Optional<NominationDetail> findFirstByNomination_IdOrderByVersionDesc(Integer nominationId);
+
   Optional<NominationDetail> findFirstByNomination_IdAndStatusInOrderByVersionDesc(
       Integer nominationId,
       Collection<NominationStatus> nominationStatuses

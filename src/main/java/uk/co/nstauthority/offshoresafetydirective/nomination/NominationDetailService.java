@@ -62,6 +62,10 @@ public class NominationDetailService {
     return nominationDetailRepository.findFirstByNominationAndVersion(nomination, version);
   }
 
+  public Optional<NominationDetail> getLatestNominationDetailOptional(NominationId nominationId) {
+    return nominationDetailRepository.findFirstByNomination_IdOrderByVersionDesc(nominationId.id());
+  }
+
   public Optional<NominationDetail> getLatestNominationDetailWithStatuses(NominationId nominationId,
                                                                           Collection<NominationStatus> nominationStatuses) {
     return nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(

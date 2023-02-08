@@ -44,7 +44,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -462,7 +462,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
                 .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID))));
+        .andExpect(
+            redirectedUrl(ReverseRouter.route(on(ExcludedWellboreController.class)
+                .renderPossibleWellsToExclude(NOMINATION_ID)))
+        );
 
     verify(nominatedBlockSubareaDetailPersistenceService, times(1))
         .createOrUpdateNominatedBlockSubareaDetail(eq(nominationDetail), any());

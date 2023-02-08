@@ -43,12 +43,12 @@ public class EpaLicenceTestUtil {
       return this;
     }
 
-    Builder withLicenceNumber(Integer licenceNumber) {
+    public Builder withLicenceNumber(Integer licenceNumber) {
       this.licenceNumber = licenceNumber;
       return this;
     }
 
-    Builder withLicenceReference(String licenceReference) {
+    public Builder withLicenceReference(String licenceReference) {
       this.licenceReference = licenceReference;
       return this;
     }
