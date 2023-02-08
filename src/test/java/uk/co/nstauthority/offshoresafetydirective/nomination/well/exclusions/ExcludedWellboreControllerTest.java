@@ -1,9 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,6 +20,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -64,6 +70,12 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
   @MockBean
   private ExcludedWellValidator excludedWellValidator;
 
+  @MockBean
+  private ExcludedWellPersistenceService excludedWellPersistenceService;
+
+  @MockBean
+  private ExcludedWellFormService excludedWellFormService;
+
   @BeforeEach
   void setup() {
 
@@ -84,10 +96,15 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    given(excludedWellFormService.getExcludedWellForm(any()))
+        .willReturn(WellExclusionFormTestUtil.builder().build());
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.DRAFT)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_CREATOR_USER)
+        .withBodyParam("hasWellsToExclude", "false")
         .withGetEndpoint(
             ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID))
         )
@@ -103,9 +120,13 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
+    given(excludedWellFormService.getExcludedWellForm(any()))
+        .willReturn(WellExclusionFormTestUtil.builder().build());
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withBodyParam("hasWellsToExclude", "false")
         .withGetEndpoint(
             ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID))
         )
@@ -124,13 +145,18 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
     given(subareaWellboreService.getSubareaRelatedWellbores(anyList()))
         .willReturn(Collections.emptyList());
 
+    var expectedForm = new WellExclusionForm();
+
+    given(excludedWellFormService.getExcludedWellForm(nominationDetail))
+        .willReturn(expectedForm);
+
     mockMvc.perform(
             get(ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID)))
                 .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/exclusions/wellsToExclude"))
-        .andExpect(model().attributeExists("form"))
+        .andExpect(model().attribute("form", expectedForm))
         .andExpect(model().attribute(
             "actionUrl",
             ReverseRouter.route(on(ExcludedWellboreController.class)
@@ -146,23 +172,34 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
   @Test
   void saveWellsToExclude_whenValidForm_verifyRedirection() throws Exception {
 
-    doAnswer(invocation -> ReverseRouter.emptyBindingResult())
-        .when(excludedWellValidator).validate(any(), any(), any());
+    given(excludedWellFormService.getExcludedWellForm(nominationDetail))
+        .willReturn(WellExclusionFormTestUtil.builder().build());
+
+    doAnswer(invocation -> ReverseRouter.emptyBindingResult()).when(excludedWellValidator).validate(any(), any(), any());
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ExcludedWellboreController.class)
                 .saveWellsToExclude(NOMINATION_ID, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_CREATOR_USER))
+                .param("excludedWells", "1,2")
+                .param("hasWellsToExclude", "true")
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(
             redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
         );
+
+    then(excludedWellPersistenceService)
+        .should()
+        .saveWellsToExclude(nominationDetail, List.of(new WellboreId(1), new WellboreId(2)), true);
   }
 
   @Test
   void saveWellsToExclude_whenInvalidForm_verifyNoRedirection() throws Exception {
+
+    given(excludedWellFormService.getExcludedWellForm(nominationDetail))
+        .willReturn(new WellExclusionForm());
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
@@ -178,6 +215,10 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/exclusions/wellsToExclude"));
+
+    then(excludedWellPersistenceService)
+        .should(never())
+        .saveWellsToExclude(eq(nominationDetail), anyList(), anyBoolean());
   }
 
 }

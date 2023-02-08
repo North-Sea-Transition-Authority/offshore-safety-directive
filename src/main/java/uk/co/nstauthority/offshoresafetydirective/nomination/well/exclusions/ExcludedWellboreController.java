@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -44,23 +45,32 @@ public class ExcludedWellboreController {
 
   private final ExcludedWellValidator excludedWellValidator;
 
+  private final ExcludedWellPersistenceService excludedWellPersistenceService;
+
+  private final ExcludedWellFormService excludedWellFormService;
+
   @Autowired
   ExcludedWellboreController(NominationDetailService nominationDetailService,
                              LicenceBlockSubareaWellboreService subareaWellboreService,
                              NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService,
                              ControllerHelperService controllerHelperService,
-                             ExcludedWellValidator excludedWellValidator) {
+                             ExcludedWellValidator excludedWellValidator,
+                             ExcludedWellPersistenceService excludedWellPersistenceService,
+                             ExcludedWellFormService excludedWellFormService) {
     this.nominationDetailService = nominationDetailService;
     this.subareaWellboreService = subareaWellboreService;
     this.nominatedBlockSubareaAccessService = nominatedBlockSubareaAccessService;
     this.controllerHelperService = controllerHelperService;
     this.excludedWellValidator = excludedWellValidator;
+    this.excludedWellPersistenceService = excludedWellPersistenceService;
+    this.excludedWellFormService = excludedWellFormService;
   }
 
   @GetMapping
   public ModelAndView renderPossibleWellsToExclude(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = getNominationDetail(nominationId);
-    return getRenderPossibleWellsToExcludeView(nominationDetail, new WellExclusionForm());
+    var form = excludedWellFormService.getExcludedWellForm(nominationDetail);
+    return getRenderPossibleWellsToExcludeView(nominationDetail, form);
   }
 
   @PostMapping
@@ -76,7 +86,20 @@ public class ExcludedWellboreController {
         bindingResult,
         getRenderPossibleWellsToExcludeView(nominationDetail, wellExclusionForm),
         wellExclusionForm,
-        () -> ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId))
+        () -> {
+
+          var excludedWellboreIds = wellExclusionForm.getExcludedWells()
+              .stream()
+              .map(wellboreId -> new WellboreId(Integer.parseInt(wellboreId)))
+              .toList();
+
+          excludedWellPersistenceService.saveWellsToExclude(
+              nominationDetail,
+              excludedWellboreIds,
+              wellExclusionForm.hasWellsToExclude()
+          );
+          return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
+        }
     );
   }
 
