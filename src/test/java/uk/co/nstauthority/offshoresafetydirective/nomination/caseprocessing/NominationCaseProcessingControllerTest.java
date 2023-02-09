@@ -1,23 +1,22 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -31,18 +30,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
-import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
-import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = {NominationCaseProcessingController.class})
 @EnableConfigurationProperties(FileUploadConfig.class)
-@Import(NominationCaseProcessingModelAndViewGenerator.class)
 class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
@@ -63,13 +59,12 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private NominationCaseProcessingService nominationCaseProcessingService;
-
-  @MockBean
   private NominationSummaryService nominationSummaryService;
 
+  @MockBean
+  private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
+
   private NominationDetail nominationDetail;
-  private NominationSummaryView nominationSummaryView;
 
   @BeforeEach
   void setup() {
@@ -86,19 +81,13 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_VIEW_USER))
         .thenReturn(Collections.singletonList(NOMINATION_VIEWER_TEAM_MEMBER));
 
-    nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
   }
 
   @SecurityTest
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
-
-    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
-
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.of(header));
-
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -114,12 +103,6 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestPermissions_onlyManageNominationAndViewPermissionsAllowed() {
-
-    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
-
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.of(header));
-
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
@@ -130,38 +113,19 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderCaseProcessing_whenNoHeader_thenExpectNotFound() throws Exception {
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.empty());
-
-    mockMvc.perform(
-        get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
-            .with(user(NOMINATION_MANAGE_USER))
-    ).andExpect(status().isNotFound());
-  }
-
-  @Test
-  void renderCaseProcessing_whenHeader_thenIsOk() throws Exception {
-    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
-
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
-        .thenReturn(Optional.of(header));
+  void renderCaseProcessing_verifyReturn() throws Exception {
+    var viewName = "test_view";
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+        eq(nominationDetail),
+        any(CaseProcessingFormDto.class))
+    ).thenReturn(new ModelAndView(viewName));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
                 .with(user(NOMINATION_MANAGE_USER))
-        ).andExpect(status().isOk())
-        .andExpect(model().attribute("headerInformation", header))
-        .andExpect(model().attribute(
-            "breadcrumbsList",
-            Map.of(
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                WorkAreaController.WORK_AREA_TITLE
-            )
-        ))
-        .andExpect(model().attribute("currentPage", nominationDetail.getNomination().getReference()))
-        .andExpect(model().attribute("summaryView", nominationSummaryView))
-        .andExpect(view().name("osd/nomination/caseProcessing/caseProcessing"));
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name(viewName));
   }
 
 }

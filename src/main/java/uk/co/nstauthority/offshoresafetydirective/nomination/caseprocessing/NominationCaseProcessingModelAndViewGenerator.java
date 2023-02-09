@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
@@ -40,18 +41,21 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final PermissionService permissionService;
   private final UserDetailService userDetailService;
   private final FileUploadConfig fileUploadConfig;
+  private final CaseEventQueryService caseEventQueryService;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(NominationCaseProcessingService nominationCaseProcessingService,
                                                        NominationSummaryService nominationSummaryService,
                                                        PermissionService permissionService,
                                                        UserDetailService userDetailService,
-                                                       FileUploadConfig fileUploadConfig) {
+                                                       FileUploadConfig fileUploadConfig,
+                                                       CaseEventQueryService caseEventQueryService) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
     this.userDetailService = userDetailService;
     this.fileUploadConfig = fileUploadConfig;
+    this.caseEventQueryService = caseEventQueryService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -82,7 +86,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW)
         .addObject(ConfirmNominationAppointmentController.FORM_NAME,
             modelAndViewDto.getConfirmNominationAppointmentForm())
-        .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm());
+        .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
+        .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail));
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
 

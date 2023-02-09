@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
@@ -64,6 +67,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private UserDetailService userDetailService;
 
+  @Mock
+  private CaseEventQueryService caseEventQueryService;
+
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -82,19 +88,23 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
-        nominationSummaryService, permissionService, userDetailService, fileUploadConfig);
+        nominationSummaryService, permissionService, userDetailService, fileUploadConfig, caseEventQueryService);
   }
 
   @Test
   void getCaseProcessingModelAndView_whenCannotManageNomination_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
 
     nominationDetail = NominationDetailTestUtil.builder()
         .build();
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
@@ -130,7 +140,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "withdrawNominationForm",
         "caseProcessingAction_WITHDRAW",
         "confirmAppointmentForm",
-        "generalCaseNoteForm"
+        "generalCaseNoteForm",
+        "caseEvents"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -153,7 +164,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             withdrawForm,
             CaseProcessingAction.WITHDRAW,
             confirmAppointmentForm,
-            generalCaseNoteForm
+            generalCaseNoteForm,
+            List.of(caseEventView)
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -171,6 +183,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   ) {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(nominationStatus)
@@ -178,6 +191,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
@@ -213,7 +229,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "withdrawNominationForm",
         "caseProcessingAction_WITHDRAW",
         "confirmAppointmentForm",
-        "generalCaseNoteForm"
+        "generalCaseNoteForm",
+        "caseEvents"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -236,7 +253,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             withdrawForm,
             CaseProcessingAction.WITHDRAW,
             confirmAppointmentForm,
-            generalCaseNoteForm
+            generalCaseNoteForm,
+            List.of(caseEventView)
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -247,6 +265,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
@@ -254,6 +273,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
@@ -306,7 +328,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "nominationDecisionAttributes",
         "qaChecksSubmitUrl",
         "generalCaseNoteForm",
-        "generalCaseNoteAttributes"
+        "generalCaseNoteAttributes",
+        "caseEvents"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -331,7 +354,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             expectedNominationDecisionAttributes,
             expectedQaChecksSubmitUrl,
             generalCaseNoteForm,
-            expectedGeneralCaseNoteAttributes
+            expectedGeneralCaseNoteAttributes,
+            List.of(caseEventView)
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -342,6 +366,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusAwaitingConfirmation_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -349,6 +374,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
         .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
@@ -397,7 +425,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "withdrawSubmitUrl",
         "confirmAppointmentAttributes",
         "generalCaseNoteForm",
-        "generalCaseNoteAttributes"
+        "generalCaseNoteAttributes",
+        "caseEvents"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -421,7 +450,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             expectedWithdrawSubmitUrl,
             expectedConfirmAppointmentAttributes,
             generalCaseNoteForm,
-            expectedGeneralCaseNoteAttributes
+            expectedGeneralCaseNoteAttributes,
+            List.of(caseEventView)
         );
 
     assertBreadcrumbs(result, nominationDetail);

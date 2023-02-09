@@ -7,6 +7,7 @@
 <#import '_withdrawSlideout.ftl' as _withdrawSlideout/>
 <#import '_confirmAppointmentSlideout.ftl' as _confirmAppointmentSlideout/>
 <#import '_generalCaseNoteSlideout.ftl' as _generalCaseNoteSlideout/>
+<#import '../events/eventList.ftl' as eventList/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -21,6 +22,7 @@
 <#-- @ftlvariable name="nominationDecisions" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision>" -->
 <#-- @ftlvariable name="withdrawSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="caseProcessingAction_WITHDRAW" type="java.lang.String" -->
+<#-- @ftlvariable name="caseEvents" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -128,11 +130,16 @@
     <@fdsTabs.tabs tabsHeading="Nomination tabs">
         <@fdsTabs.tabList>
             <@fdsTabs.tab tabLabel="Nomination form" tabAnchor="nomination-form-tab"/>
+            <@fdsTabs.tab tabLabel="Case events" tabAnchor="case-events-tab"/>
         </@fdsTabs.tabList>
 
         <@fdsTabs.tabContent tabAnchor="nomination-form-tab">
             <h2 class="govuk-heading-l">Nomination form</h2>
             <@nominationSummary.nominationSummary summaryView=summaryView/>
+        </@fdsTabs.tabContent>
+
+        <@fdsTabs.tabContent tabAnchor="case-events-tab">
+            <@eventList.eventList caseEvents/>
         </@fdsTabs.tabContent>
 
     </@fdsTabs.tabs>

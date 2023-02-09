@@ -52,4 +52,19 @@ class DateUtilTest {
     assertThat(result).isEqualTo("1 Jan 2022");
   }
 
+
+  @Test
+  void formatLongDate_whenInstant_thenExpectFormattedDate() {
+    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48).toInstant(ZoneOffset.UTC);
+    var result = DateUtil.formatLongDate(timeToFormat);
+    assertThat(result).isEqualTo("16 January 2022");
+  }
+
+  @Test
+  void formatLongDate_whenInstant_andDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay() {
+    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48).toInstant(ZoneOffset.UTC);
+    var result = DateUtil.formatLongDate(timeToFormat);
+    assertThat(result).isEqualTo("1 January 2022");
+  }
+
 }

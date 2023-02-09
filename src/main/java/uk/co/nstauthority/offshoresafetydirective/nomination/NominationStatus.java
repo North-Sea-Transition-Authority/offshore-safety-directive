@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
 
 public enum NominationStatus implements DisplayableEnum {
@@ -41,5 +43,11 @@ public enum NominationStatus implements DisplayableEnum {
 
   public static Set<NominationStatus> getClosedStatuses() {
     return CLOSED_STATUSES;
+  }
+
+  public static Set<NominationStatus> getAllStatusesForSubmissionStage(NominationStatusSubmissionStage stage) {
+    return Arrays.stream(values())
+        .filter(nominationStatus -> nominationStatus.getSubmissionStage().equals(stage))
+        .collect(Collectors.toSet());
   }
 }

@@ -11,6 +11,7 @@ public class DateUtil {
 
   static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("d MMM yyyy HH:mm");
   static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMM yyyy");
+  static final DateTimeFormatter LONG_DATE_FORMATTER = DateTimeFormatter.ofPattern("d MMMM yyyy");
 
   private DateUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
@@ -45,6 +46,17 @@ public class DateUtil {
    */
   public static String formatDate(LocalDate localDate) {
     return DATE_FORMATTER.format(localDate);
+  }
+
+  /**
+   * Produce a GDS-complaint string for the provided date.
+   *
+   * @param instant The Instant to format
+   * @return The formatted temporal in a GDS-complaint format
+   */
+  public static String formatLongDate(Instant instant) {
+    var localDate = LocalDate.ofInstant(instant, ZoneId.systemDefault());
+    return LONG_DATE_FORMATTER.format(localDate);
   }
 
 }
