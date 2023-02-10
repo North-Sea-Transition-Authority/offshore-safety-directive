@@ -105,6 +105,7 @@ public class CaseEventQueryService {
             .build();
         case CONFIRM_APPOINTMENT -> caseEventBuilder
             .withCustomDatePrompt("Appointment date")
+            .withCreatedInstant(caseEvent.getCreatedInstant(), DateUtil.formatLongDate(caseEvent.getCreatedInstant()))
             .withCustomCreatorPrompt("Confirmed by")
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Appointment comments")

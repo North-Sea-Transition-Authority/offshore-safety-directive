@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
@@ -210,7 +211,8 @@ class CaseEventQueryServiceTest {
         "createdBy",
         "nominationVersion",
         "body",
-        "fileViews"
+        "fileViews",
+        "formattedCreatedTime"
     );
 
     var prompts = List.of(
@@ -221,17 +223,12 @@ class CaseEventQueryServiceTest {
         "customFilePrompt"
     );
 
-    var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
-    );
-
     var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-    var allProperties = Stream.concat(fieldsAndPrompts.stream(), fieldsToNotAssert.stream()).toList();
 
     assertThat(result)
         .hasSize(1)
         .first()
-        .hasOnlyFields(allProperties.toArray(String[]::new));
+        .hasOnlyFields(fieldsAndPrompts.toArray(String[]::new));
 
     assertThat(result.get(0))
         .extracting(fields.toArray(String[]::new))
@@ -241,7 +238,8 @@ class CaseEventQueryServiceTest {
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
             caseEvent.getComment(),
-            List.of(caseEventFileView)
+            List.of(caseEventFileView),
+            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
         );
 
     assertThat(result.get(0))
@@ -350,7 +348,8 @@ class CaseEventQueryServiceTest {
         "createdBy",
         "nominationVersion",
         "body",
-        "fileViews"
+        "fileViews",
+        "formattedCreatedTime"
     );
 
     var prompts = List.of(
@@ -361,17 +360,12 @@ class CaseEventQueryServiceTest {
         "customFilePrompt"
     );
 
-    var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
-    );
-
     var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-    var allProperties = Stream.concat(fieldsAndPrompts.stream(), fieldsToNotAssert.stream()).toList();
 
     assertThat(result)
         .hasSize(1)
         .first()
-        .hasOnlyFields(allProperties.toArray(String[]::new));
+        .hasOnlyFields(fieldsAndPrompts.toArray(String[]::new));
 
     assertThat(result.get(0))
         .extracting(fields.toArray(String[]::new))
@@ -381,7 +375,8 @@ class CaseEventQueryServiceTest {
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
             caseEvent.getComment(),
-            List.of(caseEventFileView)
+            List.of(caseEventFileView),
+            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
         );
 
     assertThat(result.get(0))
