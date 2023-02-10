@@ -28,6 +28,12 @@ public class ExcludedWellAccessService {
     return excludedWellDetailRepository.findByNominationDetail(nominationDetail);
   }
 
+  public Boolean hasWellsToExclude(NominationDetail nominationDetail) {
+    return getExcludedWellDetail(nominationDetail)
+        .map(ExcludedWellDetail::hasWellsToExclude)
+        .orElse(null);
+  }
+
   List<ExcludedWell> getExcludedWells(NominationDetail nominationDetail) {
     return excludedWellRepository.findByNominationDetail(nominationDetail);
   }

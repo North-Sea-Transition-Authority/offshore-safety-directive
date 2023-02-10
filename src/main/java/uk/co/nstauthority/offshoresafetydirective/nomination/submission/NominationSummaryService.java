@@ -7,6 +7,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.App
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -18,16 +19,20 @@ public class NominationSummaryService {
   private final RelatedInformationSummaryService relatedInformationSummaryService;
   private final InstallationSummaryService installationSummaryService;
 
+  private final WellSummaryService wellSummaryService;
+
   @Autowired
   NominationSummaryService(
       ApplicantDetailSummaryService applicantDetailSummaryService,
       NomineeDetailSummaryService nomineeDetailSummaryService,
       RelatedInformationSummaryService relatedInformationSummaryService,
-      InstallationSummaryService installationSummaryService) {
+      InstallationSummaryService installationSummaryService,
+      WellSummaryService wellSummaryService) {
     this.applicantDetailSummaryService = applicantDetailSummaryService;
     this.nomineeDetailSummaryService = nomineeDetailSummaryService;
     this.relatedInformationSummaryService = relatedInformationSummaryService;
     this.installationSummaryService = installationSummaryService;
+    this.wellSummaryService = wellSummaryService;
   }
 
   public NominationSummaryView getNominationSummaryView(NominationDetail nominationDetail,
@@ -36,7 +41,8 @@ public class NominationSummaryService {
         applicantDetailSummaryService.getApplicantDetailSummaryView(nominationDetail, validationBehaviour),
         nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, validationBehaviour),
         relatedInformationSummaryService.getRelatedInformationSummaryView(nominationDetail, validationBehaviour),
-        installationSummaryService.getInstallationSummaryView(nominationDetail, validationBehaviour)
+        installationSummaryService.getInstallationSummaryView(nominationDetail, validationBehaviour),
+        wellSummaryService.getWellSummaryView(nominationDetail, validationBehaviour)
     );
   }
 

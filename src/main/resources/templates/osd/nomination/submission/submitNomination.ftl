@@ -8,59 +8,50 @@
 
 <#assign pageHeading = "Check your answers before submitting your nomination" />
 
-<@defaultPageWithSubNavigation
-  pageHeading=pageHeading
->
-    <@fdsLeftSubNavPageTemplateSubNav smallSubnav=true>
-      <@fdsSubNavigation.subNavigation>
-        <@fdsSubNavigation.subNavigationSection>
+<@defaultPageWithSubNavigation pageHeading=pageHeading>
 
-            <@fdsSubNavigation.subNavigationNestedLink
-              linkText=summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionName().name()
-              linkUrl="#${summaryView.applicantDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
-            />
-            <@fdsSubNavigation.subNavigationNestedLink
-              linkText=summaryView.nomineeDetailSummaryView().summarySectionDetails().summarySectionName().name()
-              linkUrl="#${summaryView.nomineeDetailSummaryView().summarySectionDetails().summarySectionId().id()}"
-            />
-            <@fdsSubNavigation.subNavigationNestedLink
-              linkText=summaryView.relatedInformationSummaryView().summarySectionDetails().summarySectionName().name()
-              linkUrl="#${summaryView.relatedInformationSummaryView().summarySectionDetails().summarySectionId().id()}"
-            />
-            <@fdsSubNavigation.subNavigationNestedLink
-              linkText=summaryView.installationSummaryView().summarySectionDetails().summarySectionName().name()
-              linkUrl="#${summaryView.installationSummaryView().summarySectionDetails().summarySectionId().id()}"
-            />
+  <@fdsLeftSubNavPageTemplateSubNav smallSubnav=true>
+    <@fdsSubNavigation.subNavigation>
+      <@fdsSubNavigation.subNavigationSection>
+        <@subNavigationLink summarySectionDetail=summaryView.applicantDetailSummaryView().summarySectionDetails() />
+        <@subNavigationLink summarySectionDetail=summaryView.nomineeDetailSummaryView().summarySectionDetails() />
+        <@subNavigationLink summarySectionDetail=summaryView.relatedInformationSummaryView().summarySectionDetails() />
+        <@subNavigationLink summarySectionDetail=summaryView.installationSummaryView().summarySectionDetails() />
+        <@subNavigationLink summarySectionDetail=summaryView.wellSummaryView().summarySectionDetail />
+      </@fdsSubNavigation.subNavigationSection>
+    </@fdsSubNavigation.subNavigation>
+  </@fdsLeftSubNavPageTemplateSubNav>
 
-        </@fdsSubNavigation.subNavigationSection>
-      </@fdsSubNavigation.subNavigation>
-    </@fdsLeftSubNavPageTemplateSubNav>
-    <@fdsBackToTop.backToTop/>
-    <@fdsLeftSubNavPageTemplateContent
-      pageHeading=pageHeading
-      singleErrorMessage=isSubmittable?then("", "You cannot submit your nomination until all sections shown on the task list are completed")
-    >
-      <@fdsForm.htmlForm
-        actionUrl=springUrl(actionUrl)
-      >
+  <@fdsBackToTop.backToTop/>
 
+  <@fdsLeftSubNavPageTemplateContent
+    pageHeading=pageHeading
+    singleErrorMessage=isSubmittable?then("", "You cannot submit your nomination until all sections shown on the task list are completed")
+  >
+    <@fdsForm.htmlForm actionUrl=springUrl(actionUrl)>
 
-        <@nominationSummary.nominationSummary
-            summaryView=summaryView
+      <@nominationSummary.nominationSummary summaryView=summaryView />
+
+      <#if isSubmittable>
+        <@fdsAction.submitButtons
+          linkSecondaryAction=true
+          linkSecondaryActionUrl=springUrl(backLinkUrl)
+          primaryButtonText="Submit"
+          secondaryLinkText="Back to task list"
         />
+      <#else>
+        <p class="govuk-body">
+          <@fdsAction.link linkText="Back to task list" linkUrl=springUrl(backLinkUrl)/>
+        </p>
+      </#if>
 
-        <#if isSubmittable>
-          <@fdsAction.submitButtons
-            linkSecondaryAction=true
-            linkSecondaryActionUrl=springUrl(backLinkUrl)
-            primaryButtonText="Submit"
-            secondaryLinkText="Back to task list"
-          />
-        <#else>
-          <p class="govuk-body">
-            <@fdsAction.link linkText="Back to task list" linkUrl=springUrl(backLinkUrl)/>
-          </p>
-        </#if>
-      </@fdsForm.htmlForm>
-    </@fdsLeftSubNavPageTemplateContent>
+    </@fdsForm.htmlForm>
+  </@fdsLeftSubNavPageTemplateContent>
 </@defaultPageWithSubNavigation>
+
+<#macro subNavigationLink summarySectionDetail>
+  <@fdsSubNavigation.subNavigationNestedLink
+    linkText=summarySectionDetail.summarySectionName().name()
+    linkUrl="#${summarySectionDetail.summarySectionId().id()}"
+  />
+</#macro>

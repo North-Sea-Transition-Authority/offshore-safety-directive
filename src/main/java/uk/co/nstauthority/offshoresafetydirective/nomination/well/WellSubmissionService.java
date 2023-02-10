@@ -8,7 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.submission.Nominati
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellSubmissionService;
 
 @Service
-class WellSubmissionService implements NominationSectionSubmissionService {
+public class WellSubmissionService implements NominationSectionSubmissionService {
 
   private final WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
   private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;

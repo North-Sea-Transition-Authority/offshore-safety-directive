@@ -128,4 +128,51 @@ class ExcludedWellAccessServiceTest {
         .containsExactly(new WellboreId(expectedExcludedWell.getWellboreId()));
   }
 
+  @Test
+  void hasWellsToExclude_whenNotAnswered_thenNullReturned() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    given(excludedWellDetailRepository.findByNominationDetail(nominationDetail))
+        .willReturn(Optional.empty());
+
+    var resultingHasWellsToExclude = excludedWellAccessService.hasWellsToExclude(nominationDetail);
+
+    assertThat(resultingHasWellsToExclude).isNull();
+  }
+
+  @Test
+  void hasWellsToExclude_whenAnsweredTrue_thenTrueReturned() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    var expectedExcludedWellDetail = ExcludedWellDetailTestUtil.builder()
+        .hasWellsToExclude(true)
+        .build();
+
+    given(excludedWellDetailRepository.findByNominationDetail(nominationDetail))
+        .willReturn(Optional.of(expectedExcludedWellDetail));
+
+    var resultingHasWellsToExclude = excludedWellAccessService.hasWellsToExclude(nominationDetail);
+
+    assertThat(resultingHasWellsToExclude).isTrue();
+  }
+
+  @Test
+  void hasWellsToExclude_whenAnsweredFalse_thenFalseReturned() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    var expectedExcludedWellDetail = ExcludedWellDetailTestUtil.builder()
+        .hasWellsToExclude(false)
+        .build();
+
+    given(excludedWellDetailRepository.findByNominationDetail(nominationDetail))
+        .willReturn(Optional.of(expectedExcludedWellDetail));
+
+    var resultingHasWellsToExclude = excludedWellAccessService.hasWellsToExclude(nominationDetail);
+
+    assertThat(resultingHasWellsToExclude).isFalse();
+  }
+
 }

@@ -20,18 +20,21 @@ public class NominatedWellDetailViewTestUtil {
     private Boolean isNominationForALlWellPhases = false;
     private List<WellPhase> wellPhases = new ArrayList<>();
 
-    private NominatedWellDetailViewBuilder() {
-      wellDtos.add(WellDtoTestUtil.builder().build());
-      wellPhases.addAll(List.of(WellPhase.DEVELOPMENT, WellPhase.DECOMMISSIONING));
-    }
+    private boolean wellsAdded = false;
+
+    private boolean wellPhasesAdded = false;
+
+    private NominatedWellDetailViewBuilder() {}
 
     public NominatedWellDetailViewBuilder withWellDtos(List<WellDto> wellDtos) {
       this.wellDtos = wellDtos;
+      this.wellsAdded = true;
       return this;
     }
 
     public NominatedWellDetailViewBuilder withWellDto(WellDto wellDto) {
       this.wellDtos.add(wellDto);
+      this.wellsAdded = true;
       return this;
     }
 
@@ -42,15 +45,26 @@ public class NominatedWellDetailViewTestUtil {
 
     public NominatedWellDetailViewBuilder withWellPhases(List<WellPhase> wellPhases) {
       this.wellPhases = wellPhases;
+      this.wellPhasesAdded = true;
       return this;
     }
 
     public NominatedWellDetailViewBuilder withWellPhase(WellPhase wellPhase) {
       this.wellPhases.add(wellPhase);
+      this.wellPhasesAdded = true;
       return this;
     }
 
     public NominatedWellDetailView build() {
+
+      if (!wellsAdded) {
+        wellDtos.add(WellDtoTestUtil.builder().build());
+      }
+
+      if (!wellPhasesAdded) {
+        wellPhases.addAll(List.of(WellPhase.DEVELOPMENT, WellPhase.DECOMMISSIONING));
+      }
+
       return new NominatedWellDetailView(wellDtos, isNominationForALlWellPhases, wellPhases);
     }
   }

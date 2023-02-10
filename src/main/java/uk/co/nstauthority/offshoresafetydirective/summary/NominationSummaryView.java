@@ -4,12 +4,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.App
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 
 public record NominationSummaryView(
     ApplicantDetailSummaryView applicantDetailSummaryView,
     NomineeDetailSummaryView nomineeDetailSummaryView,
     RelatedInformationSummaryView relatedInformationSummaryView,
-    InstallationSummaryView installationSummaryView
+    InstallationSummaryView installationSummaryView,
+    WellSummaryView wellSummaryView
 ) {
 
 }

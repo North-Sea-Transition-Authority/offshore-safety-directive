@@ -22,6 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToAnyFields;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToPearsApplications;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToWonsApplications;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCompanyNumber;
 
 public class NominationSummaryViewTestUtil {
@@ -71,6 +73,8 @@ public class NominationSummaryViewTestUtil {
         null
     );
 
+    private WellSummaryView wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();
+
     private Builder() {
     }
 
@@ -94,12 +98,18 @@ public class NominationSummaryViewTestUtil {
       return this;
     }
 
+    public Builder withWellSummaryView(WellSummaryView wellSummaryView) {
+      this.wellSummaryView = wellSummaryView;
+      return this;
+    }
+
     public NominationSummaryView build() {
       return new NominationSummaryView(
           applicantDetailSummaryView,
           nomineeDetailSummaryView,
           relatedInformationSummaryView,
-          installationSummaryView
+          installationSummaryView,
+          wellSummaryView
       );
     }
   }

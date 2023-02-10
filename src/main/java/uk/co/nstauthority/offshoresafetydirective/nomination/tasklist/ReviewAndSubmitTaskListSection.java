@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReviewAndSubmitTaskListSection implements NominationTaskListSection {
 
-  public static final String SECTION_NAME = "Review and Submit";
+  public static final String SECTION_NAME = "Review and submit";
 
   static final int SECTION_DISPLAY_ORDER = Integer.MAX_VALUE; //Make sure it's the last one
 

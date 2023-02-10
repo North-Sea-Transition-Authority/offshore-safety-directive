@@ -18,12 +18,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSummaryServiceTest {
 
-  private static SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.NOT_VALIDATED;
+  private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.NOT_VALIDATED;
 
   @Mock
   private ApplicantDetailSummaryService applicantDetailSummaryService;
@@ -36,6 +39,9 @@ class NominationSummaryServiceTest {
 
   @Mock
   private InstallationSummaryService installationSummaryService;
+
+  @Mock
+  private WellSummaryService wellSummaryService;
 
   @InjectMocks
   private NominationSummaryService nominationSummaryService;
@@ -60,13 +66,18 @@ class NominationSummaryServiceTest {
     when(installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
         .thenReturn(installationSummaryView);
 
+    var wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();
+    when(wellSummaryService.getWellSummaryView(nominationDetail, VALIDATION_BEHAVIOUR))
+        .thenReturn(wellSummaryView);
+
     var result = nominationSummaryService.getNominationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     Map<String, Object> expectedFieldsAndValues = Map.ofEntries(
         Map.entry("applicantDetailSummaryView", applicantDetailSummaryView),
         Map.entry("nomineeDetailSummaryView", nomineeDetailSummaryView),
         Map.entry("relatedInformationSummaryView", relatedInformationSummaryView),
-        Map.entry("installationSummaryView", installationSummaryView)
+        Map.entry("installationSummaryView", installationSummaryView),
+        Map.entry("wellSummaryView", wellSummaryView)
     );
 
     assertThat(result)
