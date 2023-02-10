@@ -12,6 +12,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionS
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsView;
 
 @Service
 class ManageWellsService {
@@ -22,15 +24,19 @@ class ManageWellsService {
 
   private final ExcludedWellSummaryService excludedWellSummaryService;
 
+  private final NominatedSubareaWellsSummaryService nominatedSubareaWellsSummaryService;
+
   @Autowired
   ManageWellsService(NominatedWellDetailViewService nominatedWellDetailViewService,
                      NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService,
                      WellSelectionSetupViewService wellSelectionSetupViewService,
-                     ExcludedWellSummaryService excludedWellSummaryService) {
+                     ExcludedWellSummaryService excludedWellSummaryService,
+                     NominatedSubareaWellsSummaryService nominatedSubareaWellsSummaryService) {
     this.nominatedWellDetailViewService = nominatedWellDetailViewService;
     this.nominatedBlockSubareaDetailViewService = nominatedBlockSubareaDetailViewService;
     this.wellSelectionSetupViewService = wellSelectionSetupViewService;
     this.excludedWellSummaryService = excludedWellSummaryService;
+    this.nominatedSubareaWellsSummaryService = nominatedSubareaWellsSummaryService;
   }
 
   Optional<WellSelectionSetupView> getWellSelectionSetupView(NominationDetail nominationDetail) {
@@ -47,5 +53,9 @@ class ManageWellsService {
 
   Optional<ExcludedWellView> getExcludedWellView(NominationDetail nominationDetail) {
     return excludedWellSummaryService.getExcludedWellView(nominationDetail);
+  }
+
+  Optional<NominatedSubareaWellsView> getNominatedSubareaWellsView(NominationDetail nominationDetail) {
+    return nominatedSubareaWellsSummaryService.getNominatedSubareaWellsView(nominationDetail);
   }
 }

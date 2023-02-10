@@ -18,6 +18,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellD
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsView;
 
 @ExtendWith(MockitoExtension.class)
 class ManageWellsServiceTest {
@@ -36,6 +38,9 @@ class ManageWellsServiceTest {
 
   @Mock
   private ExcludedWellSummaryService excludedWellSummaryService;
+
+  @Mock
+  private NominatedSubareaWellsSummaryService nominatedSubareaWellsSummaryService;
 
   @InjectMocks
   private ManageWellsService manageWellsService;
@@ -83,5 +88,29 @@ class ManageWellsServiceTest {
     var excludedWellView = manageWellsService.getExcludedWellView(NOMINATION_DETAIL);
 
     assertThat(excludedWellView).contains(expectedExcludedWellView);
+  }
+
+  @Test
+  void getNominatedSubareaWellsView_whenViewObjectFound_thenPopulatedOptional() {
+
+    var expectedNominatedSubareaWellsView = new NominatedSubareaWellsView();
+
+    when(nominatedSubareaWellsSummaryService.getNominatedSubareaWellsView(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(expectedNominatedSubareaWellsView));
+
+    var nominatedSubareaWellsView = manageWellsService.getNominatedSubareaWellsView(NOMINATION_DETAIL);
+
+    assertThat(nominatedSubareaWellsView).contains(expectedNominatedSubareaWellsView);
+  }
+
+  @Test
+  void getNominatedSubareaWellsView_whenViewObjectNotFound_thenEmptyOptional() {
+
+    when(nominatedSubareaWellsSummaryService.getNominatedSubareaWellsView(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
+
+    var nominatedSubareaWellsView = manageWellsService.getNominatedSubareaWellsView(NOMINATION_DETAIL);
+
+    assertThat(nominatedSubareaWellsView).isEmpty();
   }
 }

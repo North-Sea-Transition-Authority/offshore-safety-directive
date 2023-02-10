@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionS
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -131,6 +132,11 @@ class ManageWellsControllerTest extends AbstractControllerTest {
     when(manageWellsService.getExcludedWellView(nominationDetail))
         .thenReturn(Optional.of(excludedWellView));
 
+    var nominatedSubareaWellsView = new NominatedSubareaWellsView();
+
+    when(manageWellsService.getNominatedSubareaWellsView(nominationDetail))
+        .thenReturn(Optional.of(nominatedSubareaWellsView));
+
     mockMvc.perform(
             get(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(NOMINATION_ID)))
                 .with(user(NOMINATION_CREATOR_USER))
@@ -173,7 +179,8 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "excludedWellChangeUrl",
             ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID))
-        ));
+        ))
+        .andExpect(model().attribute("nominatedSubareaWellsView", nominatedSubareaWellsView));
   }
 
   @Test
@@ -189,6 +196,9 @@ class ManageWellsControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     when(manageWellsService.getExcludedWellView(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    when(manageWellsService.getNominatedSubareaWellsView(nominationDetail))
         .thenReturn(Optional.empty());
 
     var modelAndView = mockMvc.perform(
@@ -240,5 +250,8 @@ class ManageWellsControllerTest extends AbstractControllerTest {
             null,
             Collections.emptyList()
         );
+
+    assertThat(((NominatedSubareaWellsView) model.get("nominatedSubareaWellsView")).nominatedSubareaWellbores())
+        .isEmpty();
   }
 }

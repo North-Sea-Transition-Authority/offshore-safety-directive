@@ -17,7 +17,10 @@ public class WellQueryService {
       new WellboresProjectionRoot()
           .id()
           .registrationNumber()
-          .regulatoryJurisdiction().root();
+          .mechanicalStatus().root()
+          .regulatoryJurisdiction().root()
+          .originLicence().licenceRef().root()
+          .totalDepthLicence().licenceRef().root();
 
   private final WellboreApi wellboreApi;
 

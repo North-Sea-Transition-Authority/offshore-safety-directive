@@ -2,6 +2,7 @@
 <#import '_nominatedWellDetailSummary.ftl' as nominatedWellDetailSummary>
 <#import '_licenceBlockSubareaSummary.ftl' as licenceBlockSubareaSummary>
 <#import '_excludedWellSummary.ftl' as excludedWellSummary>
+<#import '_nominatedSubareaWellsSummary.ftl' as nominatedSubareaWellsSummary>
 
 <#-- @ftlvariable name="wellSelectionSetupView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView" -->
 <#-- @ftlvariable name="nominatedWellDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView" -->
@@ -13,6 +14,7 @@
   nominatedWellDetailView
   nominatedBlockSubareaDetailView
   excludedWellView
+  nominatedSubareaWellsView
   wellSelectionSetupChangeUrl=""
   nominatedWellDetailViewChangeUrl=""
   nominatedBlockSubareaDetailViewChangeUrl=""
@@ -39,9 +41,14 @@
       nominatedBlockSubareaDetailView=nominatedBlockSubareaDetailView
       changeUrl=nominatedBlockSubareaDetailViewChangeUrl
     />
-    <@excludedWellSummary.excludedWellSummary
-      excludedWellView=excludedWellView
-      changeUrl=excludedWellChangeUrl
-    />
+    <#if nominatedBlockSubareaDetailView.licenceBlockSubareas?has_content>
+      <@excludedWellSummary.excludedWellSummary
+        excludedWellView=excludedWellView
+        changeUrl=excludedWellChangeUrl
+      />
+      <@nominatedSubareaWellsSummary.nominatedSubareaWellsSummary
+        nominatedSubareaWellsView=nominatedSubareaWellsView
+      />
+    </#if>
   </#if>
 </#macro>
