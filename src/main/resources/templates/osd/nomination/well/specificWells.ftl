@@ -29,6 +29,7 @@
       addToListId="well-table"
       selectorLabelText="Select a well to add to this nomination"
       restUrl=springUrl(wellsRestUrl)
+      selectorMinInputLength=3
     />
     <@fdsRadio.radioGroup
       path="form.forAllWellPhases"

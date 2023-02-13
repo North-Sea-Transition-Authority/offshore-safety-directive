@@ -22,6 +22,12 @@ public class WellQueryService {
           .originLicence().licenceRef().root()
           .totalDepthLicence().licenceRef().root();
 
+  static final WellboresProjectionRoot SEARCH_WELLBORES_PROJECTION_ROOT =
+      new WellboresProjectionRoot()
+          .id()
+          .registrationNumber()
+          .regulatoryJurisdiction().root();
+
   private final WellboreApi wellboreApi;
 
   private final EnergyPortalApiWrapper energyPortalApiWrapper;
@@ -36,7 +42,7 @@ public class WellQueryService {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
       wellboreApi.searchWellboresByRegistrationNumber(
           wellRegistrationNumber,
-          WELLBORES_PROJECTION_ROOT,
+          SEARCH_WELLBORES_PROJECTION_ROOT,
           requestPurpose,
           logCorrelationId
       )

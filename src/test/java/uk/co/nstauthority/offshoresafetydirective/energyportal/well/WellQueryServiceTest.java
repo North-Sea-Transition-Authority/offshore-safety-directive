@@ -75,7 +75,7 @@ class WellQueryServiceTest {
 
     given(wellboreApi.searchWellboresByRegistrationNumber(
         eq(searchTerm),
-        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        eq(WellQueryService.SEARCH_WELLBORES_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
@@ -111,7 +111,7 @@ class WellQueryServiceTest {
 
     given(wellboreApi.searchWellboresByRegistrationNumber(
         eq(searchTerm),
-        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        eq(WellQueryService.SEARCH_WELLBORES_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
