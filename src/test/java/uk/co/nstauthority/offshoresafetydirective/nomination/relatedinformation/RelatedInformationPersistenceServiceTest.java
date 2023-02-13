@@ -4,10 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -89,8 +95,11 @@ class RelatedInformationPersistenceServiceTest {
     verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
-  @Test
-  void createOrUpdateRelatedInformation_whenLicenceApplicationsRelevant_thenApplicationReferencesSaved() {
+  @ParameterizedTest
+  @MethodSource("getCreateAndUpdateEntityArguments")
+  void createOrUpdateRelatedInformation_whenLicenceApplicationsRelevant_thenApplicationReferencesSaved(
+      RelatedInformation relatedInformation
+  ) {
 
     var form = RelatedInformationFormTestUtil.builder()
         .withRelatedToLicenceApplications(true)
@@ -98,6 +107,9 @@ class RelatedInformationPersistenceServiceTest {
         .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.ofNullable(relatedInformation));
 
     relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
@@ -110,8 +122,11 @@ class RelatedInformationPersistenceServiceTest {
         .isEqualTo("related licence applications");
   }
 
-  @Test
-  void createOrUpdateRelatedInformation_whenNoLicenceApplicationsRelevant_thenApplicationReferencesCleared() {
+  @ParameterizedTest
+  @MethodSource("getCreateAndUpdateEntityArguments")
+  void createOrUpdateRelatedInformation_whenNoLicenceApplicationsRelevant_thenApplicationReferencesCleared(
+      RelatedInformation relatedInformation
+  ) {
 
     var form = RelatedInformationFormTestUtil.builder()
         .withRelatedToLicenceApplications(false)
@@ -119,6 +134,9 @@ class RelatedInformationPersistenceServiceTest {
         .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.ofNullable(relatedInformation));
 
     relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
@@ -130,8 +148,11 @@ class RelatedInformationPersistenceServiceTest {
     assertThat(persistedRelatedInformation.getRelatedLicenceApplications()).isNull();
   }
 
-  @Test
-  void createOrUpdateRelatedInformation_whenWellApplicationsRelevant_thenApplicationReferencesSaved() {
+  @ParameterizedTest
+  @MethodSource("getCreateAndUpdateEntityArguments")
+  void createOrUpdateRelatedInformation_whenWellApplicationsRelevant_thenApplicationReferencesSaved(
+      RelatedInformation relatedInformation
+  ) {
 
     var form = RelatedInformationFormTestUtil.builder()
         .withRelatedToWellApplications(true)
@@ -139,6 +160,9 @@ class RelatedInformationPersistenceServiceTest {
         .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.ofNullable(relatedInformation));
 
     relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
@@ -151,8 +175,11 @@ class RelatedInformationPersistenceServiceTest {
         .isEqualTo("related well applications");
   }
 
-  @Test
-  void createOrUpdateRelatedInformation_whenNoWellApplicationsRelevant_thenApplicationReferencesCleared() {
+  @ParameterizedTest
+  @MethodSource("getCreateAndUpdateEntityArguments")
+  void createOrUpdateRelatedInformation_whenNoWellApplicationsRelevant_thenApplicationReferencesCleared(
+      RelatedInformation relatedInformation
+  ) {
 
     var form = RelatedInformationFormTestUtil.builder()
         .withRelatedToWellApplications(false)
@@ -160,6 +187,9 @@ class RelatedInformationPersistenceServiceTest {
         .build();
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
+
+    when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
+        .thenReturn(Optional.ofNullable(relatedInformation));
 
     relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
 
@@ -169,5 +199,19 @@ class RelatedInformationPersistenceServiceTest {
     var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
     assertThat(persistedRelatedInformation.getRelatedToWellApplications()).isFalse();
     assertThat(persistedRelatedInformation.getRelatedWellApplications()).isNull();
+  }
+
+  private static Stream<Arguments> getCreateAndUpdateEntityArguments() {
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToLicenceApplications(true)
+        .withRelatedLicenceApplications("related licence applications")
+        .withRelatedToWellApplications(true)
+        .withRelatedWellApplications("related well applications")
+        .build();
+
+    // to test the create or update functionality pass a fully populated
+    // entity for update and a null for create
+    return Stream.of(Arguments.of(relatedInformation), null);
   }
 }

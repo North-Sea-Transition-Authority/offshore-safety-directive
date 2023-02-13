@@ -46,7 +46,7 @@ class RelatedInformationPersistenceService {
     if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyWellApplications())) {
       relatedInformation.setRelatedWellApplications(relatedInformationForm.getRelatedWellApplications());
     } else {
-      relatedInformation.setRelatedLicenceApplications(null);
+      relatedInformation.setRelatedWellApplications(null);
     }
 
     relatedInformationRepository.save(relatedInformation);

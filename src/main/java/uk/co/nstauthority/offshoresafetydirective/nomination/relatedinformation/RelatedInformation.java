@@ -31,59 +31,72 @@ class RelatedInformation {
 
   private String relatedWellApplications;
 
-  public Integer getId() {
+  Integer getId() {
     return id;
   }
 
-  public void setId(Integer id) {
+  void setId(Integer id) {
     this.id = id;
   }
 
-  public NominationDetail getNominationDetail() {
+  NominationDetail getNominationDetail() {
     return nominationDetail;
   }
 
-  public void setNominationDetail(NominationDetail nominationDetail) {
+  void setNominationDetail(NominationDetail nominationDetail) {
     this.nominationDetail = nominationDetail;
   }
 
-  public Boolean getRelatedToFields() {
+  Boolean getRelatedToFields() {
     return relatedToFields;
   }
 
-  public void setRelatedToFields(Boolean relatedToFields) {
+  void setRelatedToFields(Boolean relatedToFields) {
     this.relatedToFields = relatedToFields;
   }
 
-  public Boolean getRelatedToLicenceApplications() {
+  Boolean getRelatedToLicenceApplications() {
     return relatedToLicenceApplications;
   }
 
-  public void setRelatedToLicenceApplications(Boolean relatedToLicenceApplications) {
+  void setRelatedToLicenceApplications(Boolean relatedToLicenceApplications) {
     this.relatedToLicenceApplications = relatedToLicenceApplications;
   }
 
-  public String getRelatedLicenceApplications() {
+  String getRelatedLicenceApplications() {
     return relatedLicenceApplications;
   }
 
-  public void setRelatedLicenceApplications(String relatedLicenceApplications) {
+  void setRelatedLicenceApplications(String relatedLicenceApplications) {
     this.relatedLicenceApplications = relatedLicenceApplications;
   }
 
-  public Boolean getRelatedToWellApplications() {
+  Boolean getRelatedToWellApplications() {
     return relatedToWellApplications;
   }
 
-  public void setRelatedWellApplications(String relatedWellApplications) {
+  void setRelatedWellApplications(String relatedWellApplications) {
     this.relatedWellApplications = relatedWellApplications;
   }
 
-  public String getRelatedWellApplications() {
+  String getRelatedWellApplications() {
     return relatedWellApplications;
   }
 
-  public void setRelatedToWellApplications(Boolean relatedToWellApplications) {
+  void setRelatedToWellApplications(Boolean relatedToWellApplications) {
     this.relatedToWellApplications = relatedToWellApplications;
+  }
+
+  @Override
+  public String toString() {
+    return "RelatedInformation{" +
+        "id=" + id +
+        ", nominationDetail=" + nominationDetail +
+        ", relatedToFields=" + relatedToFields +
+        ", relatedToLicenceApplications=" + relatedToLicenceApplications +
+        ", relatedLicenceApplications='" + relatedLicenceApplications + '\'' +
+        ", relatedToWellApplications=" + relatedToWellApplications +
+        ", relatedWellApplications='" + relatedWellApplications + '\'' +
+        '}';
   }
 }
