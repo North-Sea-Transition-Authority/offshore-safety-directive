@@ -115,6 +115,8 @@ public class CaseEventQueryService {
         case GENERAL_NOTE -> caseEventBuilder
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Case note text")
+            .withFileViews(uploadedFileViews)
+            .withCustomFilePrompt("Case note documents")
             .build();
       };
     };

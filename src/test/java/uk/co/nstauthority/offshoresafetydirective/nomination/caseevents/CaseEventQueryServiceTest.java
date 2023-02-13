@@ -446,7 +446,7 @@ class CaseEventQueryServiceTest {
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
             caseEvent.getComment(),
-            null
+            List.of(caseEventFileView)
         );
 
     assertThat(result.get(0))
@@ -456,7 +456,7 @@ class CaseEventQueryServiceTest {
             null,
             null,
             "Case note text",
-            null
+            "Case note documents"
         );
   }
 
