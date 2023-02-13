@@ -7,6 +7,7 @@
 <#import '_withdrawSlideout.ftl' as _withdrawSlideout/>
 <#import '_confirmAppointmentSlideout.ftl' as _confirmAppointmentSlideout/>
 <#import '_generalCaseNoteSlideout.ftl' as _generalCaseNoteSlideout/>
+<#import '_portalReferenceSlideout.ftl' as _systemReferenceSlideout/>
 <#import '../events/eventList.ftl' as eventList/>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
@@ -59,6 +60,9 @@
     <#assign generalCaseNoteSlideoutPanelId = "case-note"/>
     <#assign generalCaseNoteSlideoutText = "Add a case note"/>
 
+    <#assign pearsSystemReferenceSlideoutPanelId = "pears-references"/>
+    <#assign pearsSystemReferenceSlideoutText = "Update related PEARS applications"/>
+
     <#if hasDropdownActions>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
@@ -76,6 +80,9 @@
                 </#if>
                 <#if generalCaseNoteAttributes?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=generalCaseNoteSlideoutText slideOutPanelId=generalCaseNoteSlideoutPanelId/>
+                </#if>
+                <#if pearsReferenceAttributes?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=pearsSystemReferenceSlideoutText slideOutPanelId=pearsSystemReferenceSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -125,6 +132,14 @@
             errorList=errorList![]
             attributes=generalCaseNoteAttributes
         />
+    </#if>
+
+    <#if pearsReferenceAttributes?has_content>
+      <@_systemReferenceSlideout.pearsReferenceSlideout
+        panelId=pearsSystemReferenceSlideoutPanelId
+        headingText=pearsSystemReferenceSlideoutText
+        attributes=pearsReferenceAttributes
+      />
     </#if>
 
     <@fdsTabs.tabs tabsHeading="Nomination tabs">

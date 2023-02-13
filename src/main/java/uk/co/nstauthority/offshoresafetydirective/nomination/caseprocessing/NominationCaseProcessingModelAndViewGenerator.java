@@ -27,6 +27,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
@@ -87,6 +90,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(ConfirmNominationAppointmentController.FORM_NAME,
             modelAndViewDto.getConfirmNominationAppointmentForm())
         .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
+        .addObject(NominationPortalReferenceController.PEARS_FORM_NAME, modelAndViewDto.getPearsPortalReferenceForm())
         .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail));
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
@@ -136,6 +140,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
             GeneralCaseNoteAttributeView.createAttributeView(nominationId));
       }
 
+      if (canUpdatePearsReferences(nominationDetailDto)) {
+        dropdownAttributeMap.put("pearsReferenceAttributes",
+            NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.PEARS));
+      }
+
       if (!dropdownAttributeMap.isEmpty()) {
         hasDropdownActions = true;
       }
@@ -166,6 +175,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private boolean canAddGeneralCaseNote(NominationDetailDto dto) {
     return EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
         .contains(dto.nominationStatus());
+  }
+
+  private boolean canUpdatePearsReferences(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 
 }

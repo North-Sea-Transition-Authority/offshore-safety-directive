@@ -1,6 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -17,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEventTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToPearsApplications;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSubmissionPortalReferencesCopyForwardListenerTest {
@@ -26,6 +30,9 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
   @Mock
   private NominationPortalReferenceRepository nominationPortalReferenceRepository;
+
+  @Mock
+  private NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService;
 
   @InjectMocks
   private NominationSubmissionPortalReferencesCopyForwardListener nominationSubmissionPortalReferencesCopyForwardListener;
@@ -55,6 +62,9 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
     when(relatedInformationAccessService.getRelatedInformationDto(nominationDetail))
         .thenReturn(Optional.of(relatedInformationDto));
+
+    when(nominationPortalReferencePersistenceService.createPortalReference(eq(nominationDetail.getNomination()), any()))
+        .thenCallRealMethod();
 
     var event = NominationSubmittedEventTestUtil.createEvent(nominationDetail);
 

@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences;
 
-enum PortalReferenceType {
+public enum PortalReferenceType {
 
   PEARS,
   WONS

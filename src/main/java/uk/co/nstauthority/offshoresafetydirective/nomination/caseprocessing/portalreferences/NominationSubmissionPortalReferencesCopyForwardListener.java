@@ -22,14 +22,16 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
 
   private final RelatedInformationAccessService relatedInformationAccessService;
   private final NominationPortalReferenceRepository nominationPortalReferenceRepository;
+  private final NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService;
 
   @Autowired
   NominationSubmissionPortalReferencesCopyForwardListener(
       RelatedInformationAccessService relatedInformationAccessService,
-      NominationPortalReferenceRepository nominationPortalReferenceRepository
-  ) {
+      NominationPortalReferenceRepository nominationPortalReferenceRepository,
+      NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService) {
     this.relatedInformationAccessService = relatedInformationAccessService;
     this.nominationPortalReferenceRepository = nominationPortalReferenceRepository;
+    this.nominationPortalReferencePersistenceService = nominationPortalReferencePersistenceService;
   }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
@@ -54,9 +56,11 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
           event.getNominationDetail().getNomination().getId())
       );
 
-      var portalReference = new NominationPortalReference();
-      portalReference.setNomination(event.getNominationDetail().getNomination());
-      portalReference.setPortalReferenceType(systemType);
+      var portalReference = nominationPortalReferencePersistenceService.createPortalReference(
+          event.getNominationDetail().getNomination(),
+          PortalReferenceType.PEARS
+      );
+
       portalReference.setPortalReferences(getRefsForPortalReference(relatedInformationDto, systemType));
       referencesToSave.add(portalReference);
     });
