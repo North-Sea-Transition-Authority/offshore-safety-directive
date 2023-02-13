@@ -321,7 +321,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var expectedQaChecksSubmitUrl = ReverseRouter.route(on(NominationQaChecksController.class)
         .submitQa(nominationId, CaseProcessingAction.QA, null, null));
 
-    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId);
+    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId,
+        fileUploadConfig);
 
     var expectedPearsSystemReferenceAttributes =
         NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.PEARS);
@@ -428,7 +429,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var expectedWithdrawSubmitUrl = ReverseRouter.route(on(WithdrawNominationController.class)
         .withdrawNomination(nominationId, true, null, null, null, null));
 
-    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId);
+    var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId,
+        fileUploadConfig);
 
     var hasDropdownActions = true;
 

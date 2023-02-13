@@ -131,6 +131,7 @@
             headingText=generalCaseNoteSlideoutText
             errorList=errorList![]
             attributes=generalCaseNoteAttributes
+            uploadedFiles=existingCaseNoteFiles![]
         />
     </#if>
 

@@ -73,8 +73,10 @@ public class CaseEventService {
   }
 
   @Transactional
-  public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body) {
-    createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
+  public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body,
+                                         List<FileUploadForm> fileUploadForms) {
+    var caseEvent = createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
+    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
   }
 
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,

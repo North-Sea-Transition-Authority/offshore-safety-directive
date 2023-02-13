@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
 class GeneralCaseNoteValidator implements Validator {
@@ -25,5 +26,8 @@ class GeneralCaseNoteValidator implements Validator {
 
     StringInputValidator.builder()
         .validate(form.getCaseNoteText(), errors);
+
+    FileValidationUtil.validator()
+        .validate(errors, form.getCaseNoteFiles(), "caseNoteFiles");
   }
 }

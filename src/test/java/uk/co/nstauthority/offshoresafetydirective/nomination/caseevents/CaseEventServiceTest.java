@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -248,11 +249,13 @@ class CaseEventServiceTest {
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
+    var fileUploadForm = new FileUploadForm();
+    fileUploadForm.setUploadedFileId(UUID.randomUUID());
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
-    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText);
+    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(fileUploadForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
     verify(caseEventRepository).save(captor.capture());

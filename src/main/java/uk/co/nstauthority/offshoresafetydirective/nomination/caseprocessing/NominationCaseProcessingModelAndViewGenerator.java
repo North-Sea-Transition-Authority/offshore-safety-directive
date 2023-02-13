@@ -137,7 +137,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
       if (canAddGeneralCaseNote(nominationDetailDto)) {
         dropdownAttributeMap.put("generalCaseNoteAttributes",
-            GeneralCaseNoteAttributeView.createAttributeView(nominationId));
+            GeneralCaseNoteAttributeView.createAttributeView(nominationId, fileUploadConfig));
       }
 
       if (canUpdatePearsReferences(nominationDetailDto)) {

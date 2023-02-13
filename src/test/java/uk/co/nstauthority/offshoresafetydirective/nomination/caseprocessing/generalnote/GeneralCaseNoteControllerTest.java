@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -15,10 +16,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,6 +36,9 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -68,6 +75,9 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
+  @MockBean
+  private FileUploadService fileUploadService;
+
   private NominationDetail nominationDetail;
 
   @BeforeEach
@@ -91,6 +101,10 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
 
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail),
+        any(CaseProcessingFormDto.class)))
+        .thenReturn(new ModelAndView("test_view"));
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -107,6 +121,10 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail),
+        any(CaseProcessingFormDto.class)))
+        .thenReturn(new ModelAndView("test_view"));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
@@ -130,6 +148,10 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             nominationDetail.getNomination().getReference()
         ))
         .build();
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail),
+        any(CaseProcessingFormDto.class)))
+        .thenReturn(new ModelAndView("test_view"));
 
     mockMvc.perform(post(ReverseRouter.route(
             on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
@@ -160,13 +182,20 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             .getCaseProcessingModelAndView(eq(nominationDetail), any(CaseProcessingFormDto.class))
     ).thenReturn(new ModelAndView(viewName));
 
+    var uploadedFileId = new UploadedFileId(UUID.randomUUID());
+    var uploadedFileView = new UploadedFileView("fileId", "fileName", "fileSize", "fileDescription", Instant.now());
+    when(fileUploadService.getUploadedFileViewList(List.of(uploadedFileId)))
+        .thenReturn(List.of(uploadedFileView));
+
     mockMvc.perform(post(ReverseRouter.route(
             on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
                 CaseProcessingAction.GENERAL_NOTE, null, null, null)))
             .with(csrf())
-            .with(user(NOMINATION_MANAGER_USER)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .param("caseNoteFiles[0].uploadedFileId", uploadedFileId.uuid().toString()))
         .andExpect(status().isOk())
-        .andExpect(view().name(viewName));
+        .andExpect(view().name(viewName))
+        .andExpect(model().attribute("existingCaseNoteFiles", List.of(uploadedFileView)));
 
     verify(generalCaseNoteSubmissionService, never()).submitCaseNote(eq(nominationDetail),
         any(GeneralCaseNoteForm.class));

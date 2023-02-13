@@ -23,6 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundExc
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -48,18 +51,21 @@ public class GeneralCaseNoteController {
   private final ControllerHelperService controllerHelperService;
   private final GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
+  private final FileUploadService fileUploadService;
 
   public GeneralCaseNoteController(
       NominationDetailService nominationDetailService,
       GeneralCaseNoteValidator generalCaseNoteValidator,
       ControllerHelperService controllerHelperService,
       GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService,
-      NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator) {
+      NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
+      FileUploadService fileUploadService) {
     this.nominationDetailService = nominationDetailService;
     this.generalCaseNoteValidator = generalCaseNoteValidator;
     this.controllerHelperService = controllerHelperService;
     this.generalCaseNoteSubmissionService = generalCaseNoteSubmissionService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
+    this.fileUploadService = fileUploadService;
   }
 
   @PostMapping(params = CaseProcessingAction.GENERAL_NOTE)
@@ -92,10 +98,16 @@ public class GeneralCaseNoteController {
         .withGeneralCaseNoteForm(generalCaseNoteForm)
         .build();
 
+    var files = Objects.requireNonNull(generalCaseNoteForm).getCaseNoteFiles()
+        .stream()
+        .map(FileUploadForm::getUploadedFileId)
+        .map(UploadedFileId::new)
+        .toList();
+
     var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         nominationDetail,
         formDto
-    );
+    ).addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files));
 
     return controllerHelperService.checkErrorsAndRedirect(
         Objects.requireNonNull(bindingResult),
