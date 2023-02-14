@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.repository.CrudRepository;
@@ -11,5 +12,7 @@ interface NominationPortalReferenceRepository extends CrudRepository<NominationP
 
   Optional<NominationPortalReference> findByNominationAndPortalReferenceType(Nomination nomination,
                                                                              PortalReferenceType portalReferenceType);
+
+  List<NominationPortalReference> findAllByNomination(Nomination nomination);
 
 }

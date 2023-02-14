@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Set;
@@ -27,8 +28,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
@@ -45,6 +49,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final UserDetailService userDetailService;
   private final FileUploadConfig fileUploadConfig;
   private final CaseEventQueryService caseEventQueryService;
+  private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(NominationCaseProcessingService nominationCaseProcessingService,
@@ -52,13 +57,15 @@ public class NominationCaseProcessingModelAndViewGenerator {
                                                        PermissionService permissionService,
                                                        UserDetailService userDetailService,
                                                        FileUploadConfig fileUploadConfig,
-                                                       CaseEventQueryService caseEventQueryService) {
+                                                       CaseEventQueryService caseEventQueryService,
+                                                       NominationPortalReferenceAccessService referenceAccessService) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
     this.userDetailService = userDetailService;
     this.fileUploadConfig = fileUploadConfig;
     this.caseEventQueryService = caseEventQueryService;
+    this.nominationPortalReferenceAccessService = referenceAccessService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -75,6 +82,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(nominationDetail.getNomination().getReference())
         .addWorkAreaBreadcrumb()
         .build();
+
+    var portalReferences = nominationPortalReferenceAccessService
+        .getNominationPortalReferenceDtosByNomination(nominationDetail.getNomination());
+
+    populatePearsReferenceForm(modelAndViewDto.getPearsPortalReferenceForm(), portalReferences);
 
     var modelAndView = new ModelAndView("osd/nomination/caseProcessing/caseProcessing")
         .addObject("headerInformation", headerInformation)
@@ -179,6 +191,16 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
   private boolean canUpdatePearsReferences(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private void populatePearsReferenceForm(NominationPortalReferenceForm form,
+                                          Collection<NominationPortalReferenceDto> dtos) {
+
+    dtos.stream()
+        .filter(dto -> dto.portalReferenceType().equals(PortalReferenceType.PEARS))
+        .findFirst()
+        .ifPresent(nominationPortalReferenceDto -> form.getReferences()
+            .setInputValue(nominationPortalReferenceDto.references()));
   }
 
 }

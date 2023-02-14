@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -73,6 +77,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private CaseEventQueryService caseEventQueryService;
 
+  @Mock
+  private NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
+
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -91,7 +98,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
-        nominationSummaryService, permissionService, userDetailService, fileUploadConfig, caseEventQueryService);
+        nominationSummaryService, permissionService, userDetailService, fileUploadConfig, caseEventQueryService,
+        nominationPortalReferenceAccessService);
   }
 
   @Test
@@ -482,6 +490,30 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     assertBreadcrumbs(result, nominationDetail);
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenPearsPortalReference_assertFormPopulated() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    var referenceText = "ref/1";
+    var portalReferenceDto = new NominationPortalReferenceDto(PortalReferenceType.PEARS, referenceText);
+
+    when(nominationPortalReferenceAccessService.getNominationPortalReferenceDtosByNomination(
+        nominationDetail.getNomination()
+    )).thenReturn(List.of(portalReferenceDto));
+
+    var modelAndViewDto = CaseProcessingFormDto.builder().build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    assertThat(result.getModel().get(NominationPortalReferenceController.PEARS_FORM_NAME))
+        .asInstanceOf(InstanceOfAssertFactories.type(NominationPortalReferenceForm.class))
+        .extracting(form -> form.getReferences().getInputValue())
+        .isEqualTo(referenceText);
   }
 
   private void assertBreadcrumbs(ModelAndView modelAndView, NominationDetail nominationDetail) {
