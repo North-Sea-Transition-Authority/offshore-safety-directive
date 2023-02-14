@@ -16,8 +16,8 @@
         <@subNavigationLink summarySectionDetail=summaryView.applicantDetailSummaryView().summarySectionDetails() />
         <@subNavigationLink summarySectionDetail=summaryView.nomineeDetailSummaryView().summarySectionDetails() />
         <@subNavigationLink summarySectionDetail=summaryView.relatedInformationSummaryView().summarySectionDetails() />
-        <@subNavigationLink summarySectionDetail=summaryView.installationSummaryView().summarySectionDetails() />
         <@subNavigationLink summarySectionDetail=summaryView.wellSummaryView().summarySectionDetail />
+        <@subNavigationLink summarySectionDetail=summaryView.installationSummaryView().summarySectionDetails() />
       </@fdsSubNavigation.subNavigationSection>
     </@fdsSubNavigation.subNavigation>
   </@fdsLeftSubNavPageTemplateSubNav>

@@ -14,10 +14,10 @@
   <@_relatedInformationSummary.relatedInformationSummary
     relatedInformationSummaryView=summaryView.relatedInformationSummaryView()
   />
-  <@_installationSummary.installationSummary
-    installationSummaryView=summaryView.installationSummaryView()
-  />
   <@_wellSummary.wellSummary
     wellSummaryView=summaryView.wellSummaryView()
+  />
+  <@_installationSummary.installationSummary
+    installationSummaryView=summaryView.installationSummaryView()
   />
 </#macro>
