@@ -86,7 +86,17 @@ public class NominationCaseProcessingModelAndViewGenerator {
     var portalReferences = nominationPortalReferenceAccessService
         .getNominationPortalReferenceDtosByNomination(nominationDetail.getNomination());
 
-    populatePearsReferenceForm(modelAndViewDto.getPearsPortalReferenceForm(), portalReferences);
+    populatePortalReferenceForm(
+        modelAndViewDto.getPearsPortalReferenceForm(),
+        PortalReferenceType.PEARS,
+        portalReferences
+    );
+
+    populatePortalReferenceForm(
+        modelAndViewDto.getWonsPortalReferenceForm(),
+        PortalReferenceType.WONS,
+        portalReferences
+    );
 
     var modelAndView = new ModelAndView("osd/nomination/caseProcessing/caseProcessing")
         .addObject("headerInformation", headerInformation)
@@ -103,6 +113,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
             modelAndViewDto.getConfirmNominationAppointmentForm())
         .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
         .addObject(NominationPortalReferenceController.PEARS_FORM_NAME, modelAndViewDto.getPearsPortalReferenceForm())
+        .addObject(NominationPortalReferenceController.WONS_FORM_NAME, modelAndViewDto.getWonsPortalReferenceForm())
         .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail));
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
@@ -157,6 +168,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
             NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.PEARS));
       }
 
+      if (canUpdateWonsReferences(nominationDetailDto)) {
+        dropdownAttributeMap.put("wonsReferenceAttributes",
+            NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.WONS));
+      }
+
       if (!dropdownAttributeMap.isEmpty()) {
         hasDropdownActions = true;
       }
@@ -193,11 +209,15 @@ public class NominationCaseProcessingModelAndViewGenerator {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 
-  private void populatePearsReferenceForm(NominationPortalReferenceForm form,
-                                          Collection<NominationPortalReferenceDto> dtos) {
+  private boolean canUpdateWonsReferences(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private void populatePortalReferenceForm(NominationPortalReferenceForm form, PortalReferenceType portalReferenceType,
+                                           Collection<NominationPortalReferenceDto> dtos) {
 
     dtos.stream()
-        .filter(dto -> dto.portalReferenceType().equals(PortalReferenceType.PEARS))
+        .filter(dto -> dto.portalReferenceType().equals(portalReferenceType))
         .findFirst()
         .ifPresent(nominationPortalReferenceDto -> form.getReferences()
             .setInputValue(nominationPortalReferenceDto.references()));

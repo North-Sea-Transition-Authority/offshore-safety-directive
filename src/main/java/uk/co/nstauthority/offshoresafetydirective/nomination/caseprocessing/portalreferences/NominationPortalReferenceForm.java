@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.por
 
 import uk.co.fivium.formlibrary.input.StringInput;
 
-public class NominationPortalReferenceForm {
+public abstract class NominationPortalReferenceForm {
 
   private StringInput references = new StringInput("references", "references");
 

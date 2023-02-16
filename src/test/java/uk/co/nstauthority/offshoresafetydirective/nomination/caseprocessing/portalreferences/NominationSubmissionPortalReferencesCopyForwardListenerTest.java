@@ -20,7 +20,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEventTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToPearsApplications;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSubmissionPortalReferencesCopyForwardListenerTest {
@@ -55,9 +54,11 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(1)
         .build();
-    var relatedToPearsApplicationsText = "related/1";
+    var relatedToPearsApplicationsText = "pears/1";
+    var relatedToWonsApplicationsText = "wons/1";
     var relatedInformationDto = RelatedInformationDtoTestUtil.builder()
         .withRelatedApplicationReference(relatedToPearsApplicationsText)
+        .withRelatedWonsReference(relatedToWonsApplicationsText)
         .build();
 
     when(relatedInformationAccessService.getRelatedInformationDto(nominationDetail))
@@ -76,9 +77,10 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
     assertThat(captor.getAllValues())
         .flatExtracting(nsr -> nsr)
-        .extracting(NominationPortalReference::getPortalReferenceType)
+        .extracting(NominationPortalReference::getPortalReferenceType, NominationPortalReference::getPortalReferences)
         .containsExactlyInAnyOrder(
-            PortalReferenceType.PEARS
+            tuple(PortalReferenceType.PEARS, relatedToPearsApplicationsText),
+            tuple(PortalReferenceType.WONS, relatedToWonsApplicationsText)
         );
   }
 }

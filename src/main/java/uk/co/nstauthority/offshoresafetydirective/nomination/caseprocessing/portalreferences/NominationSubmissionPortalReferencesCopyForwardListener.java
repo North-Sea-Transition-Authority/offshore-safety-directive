@@ -17,7 +17,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 class NominationSubmissionPortalReferencesCopyForwardListener {
 
   static final Set<PortalReferenceType> COPY_FORWARD_PORTAL_TYPES = EnumSet.of(
-      PortalReferenceType.PEARS
+      PortalReferenceType.PEARS,
+      PortalReferenceType.WONS
   );
 
   private final RelatedInformationAccessService relatedInformationAccessService;
@@ -49,19 +50,19 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
 
     var referencesToSave = new ArrayList<NominationPortalReference>();
 
-    COPY_FORWARD_PORTAL_TYPES.forEach(systemType -> {
+    COPY_FORWARD_PORTAL_TYPES.forEach(portalReferenceType -> {
 
       LoggerUtil.info("Copy-forwarding %s references for nomination %s".formatted(
-          systemType.name(),
+          portalReferenceType.name(),
           event.getNominationDetail().getNomination().getId())
       );
 
       var portalReference = nominationPortalReferencePersistenceService.createPortalReference(
           event.getNominationDetail().getNomination(),
-          PortalReferenceType.PEARS
+          portalReferenceType
       );
 
-      portalReference.setPortalReferences(getRefsForPortalReference(relatedInformationDto, systemType));
+      portalReference.setPortalReferences(getRefsForPortalReference(relatedInformationDto, portalReferenceType));
       referencesToSave.add(portalReference);
     });
 
@@ -72,8 +73,7 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
                                            PortalReferenceType portalReferenceType) {
     return switch (portalReferenceType) {
       case PEARS -> relatedInformationDto.relatedToPearsApplications().applications();
-      case WONS -> throw new IllegalArgumentException(
-          "System type [%s] is not supported".formatted(portalReferenceType.name()));
+      case WONS -> relatedInformationDto.relatedToWonsApplications().applications();
     };
   }
 

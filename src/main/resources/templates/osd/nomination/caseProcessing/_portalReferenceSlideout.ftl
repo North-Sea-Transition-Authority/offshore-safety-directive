@@ -12,3 +12,12 @@
         </@fdsForm.htmlForm>
     </@fdsSlideOutPanel.slideOutPanel>
 </#macro>
+
+<#macro wonsReferenceSlideout panelId headingText attributes>
+    <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
+        <@fdsForm.htmlForm actionUrl=fdsGeneric.springUrl(attributes.submitUrl())>
+            <@fdsTextarea.textarea path="wonsPortalReferenceForm.references.inputValue" labelText="Related WONS application references" optionalLabel=true/>
+            <@fdsAction.button buttonName=attributes.postParam() buttonText="Update references"/>
+        </@fdsForm.htmlForm>
+    </@fdsSlideOutPanel.slideOutPanel>
+</#macro>

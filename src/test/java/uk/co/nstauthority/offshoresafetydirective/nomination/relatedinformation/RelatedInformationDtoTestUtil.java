@@ -15,6 +15,7 @@ public class RelatedInformationDtoTestUtil {
   public static class Builder {
 
     private RelatedToPearsApplications relatedToPearsApplications = new RelatedToPearsApplications(false, null);
+    private RelatedToWonsApplications relatedToWonsApplications = new RelatedToWonsApplications(false, null);
 
     private Builder() {
     }
@@ -27,13 +28,26 @@ public class RelatedInformationDtoTestUtil {
       return this;
     }
 
+    public Builder withRelatedWonsReference(String wonsReference) {
+      this.relatedToWonsApplications = new RelatedToWonsApplications(
+          relatedToWonsApplications.related(),
+          wonsReference
+      );
+      return this;
+    }
+
     public Builder withRelatedToPearsApplications(RelatedToPearsApplications relatedToPearsApplications) {
       this.relatedToPearsApplications = relatedToPearsApplications;
       return this;
     }
 
+    public Builder withRelatedToWonsApplications(RelatedToWonsApplications relatedToWonsApplications) {
+      this.relatedToWonsApplications = relatedToWonsApplications;
+      return this;
+    }
+
     public RelatedInformationDto build() {
-      return new RelatedInformationDto(relatedToPearsApplications);
+      return new RelatedInformationDto(relatedToPearsApplications, relatedToWonsApplications);
     }
 
   }

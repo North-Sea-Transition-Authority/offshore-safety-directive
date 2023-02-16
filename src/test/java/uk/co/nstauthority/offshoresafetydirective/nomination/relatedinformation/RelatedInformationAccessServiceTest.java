@@ -23,28 +23,35 @@ class RelatedInformationAccessServiceTest {
   @Test
   void getRelatedInformationDto_whenPresent_assertResult() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var relatedInformation = RelatedInformationTestUtil.builder().build();
+
+    var pearsRelated = true;
+    var pearsReferences = "pears/ref/1";
+    var wonsRelated = true;
+    var wonsReferences = "wons/ref/1";
+
+    var relatedInformation = RelatedInformationTestUtil.builder()
+        .withRelatedToLicenceApplications(pearsRelated)
+        .withRelatedLicenceApplications(pearsReferences)
+        .withRelatedToWellApplications(wonsRelated)
+        .withRelatedWellApplications(wonsReferences)
+        .build();
     when(relatedInformationPersistenceService.getRelatedInformation(nominationDetail))
         .thenReturn(Optional.of(relatedInformation));
-
-    var expectedDto = RelatedInformationDtoTestUtil.builder()
-        .withRelatedToPearsApplications(new RelatedToPearsApplications(
-           relatedInformation.getRelatedToLicenceApplications(),
-           relatedInformation.getRelatedLicenceApplications()
-        ))
-        .build();
 
     var result = relatedInformationAccessService.getRelatedInformationDto(nominationDetail);
 
     assertThat(result).get()
-        .extracting(RelatedInformationDto::relatedToPearsApplications)
         .extracting(
-            RelatedToPearsApplications::related,
-            RelatedToPearsApplications::applications
+            dto -> dto.relatedToPearsApplications().related(),
+            dto -> dto.relatedToPearsApplications().applications(),
+            dto -> dto.relatedToWonsApplications().related(),
+            dto -> dto.relatedToWonsApplications().applications()
         )
         .containsExactly(
-            expectedDto.relatedToPearsApplications().related(),
-            expectedDto.relatedToPearsApplications().applications()
+            pearsRelated,
+            pearsReferences,
+            wonsRelated,
+            wonsReferences
         );
   }
 

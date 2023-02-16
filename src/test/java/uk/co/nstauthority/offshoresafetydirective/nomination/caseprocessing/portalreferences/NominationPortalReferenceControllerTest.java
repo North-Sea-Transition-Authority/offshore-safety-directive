@@ -78,8 +78,13 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateReferences(
+        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updatePearsReferences(
                 NOMINATION_ID, true, CaseProcessingAction.PEARS_REFERENCES, null, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateWonsReferences(
+                NOMINATION_ID, true, CaseProcessingAction.WONS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -91,8 +96,13 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateReferences(
+        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updatePearsReferences(
                 NOMINATION_ID, true, CaseProcessingAction.PEARS_REFERENCES, null, null, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateWonsReferences(
+                NOMINATION_ID, true, CaseProcessingAction.WONS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -100,7 +110,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void updateReferences_whenNewReferenceProvided_thenVerifyUpdated() throws Exception {
+  void updatePearsReferences_whenNewReferenceProvided_thenVerifyUpdated() throws Exception {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -114,7 +124,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
     var newReferences = "new/ref";
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationPortalReferenceController.class).updateReferences(NOMINATION_ID, true,
+            on(NominationPortalReferenceController.class).updatePearsReferences(NOMINATION_ID, true,
                 CaseProcessingAction.PEARS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
@@ -128,7 +138,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void updateReferences_whenNoReferenceProvided_thenVerifyUpdated() throws Exception {
+  void updatePearsReferences_whenNoReferenceProvided_thenVerifyUpdated() throws Exception {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -140,7 +150,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationPortalReferenceController.class).updateReferences(NOMINATION_ID, true,
+            on(NominationPortalReferenceController.class).updatePearsReferences(NOMINATION_ID, true,
                 CaseProcessingAction.PEARS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
@@ -150,5 +160,58 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
 
     verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
         PortalReferenceType.PEARS, null);
+  }
+
+  @Test
+  void updateWonsReferences_whenNewReferenceProvided_thenVerifyUpdated() throws Exception {
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Updated references")
+        .withHeading(
+            "WONS references for %s have been updated"
+                .formatted(nominationDetail.getNomination().getReference())
+        )
+        .build();
+
+    var newReferences = "new/ref";
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationPortalReferenceController.class).updateWonsReferences(NOMINATION_ID, true,
+                CaseProcessingAction.WONS_REFERENCES, null, null, null)))
+            .with(csrf())
+            .with(user(NOMINATION_MANAGER_USER))
+            .param("references.inputValue", newReferences))
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
+        PortalReferenceType.WONS, newReferences);
+  }
+
+  @Test
+  void updateWonsReferences_whenNoReferenceProvided_thenVerifyUpdated() throws Exception {
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Updated references")
+        .withHeading(
+            "WONS references for %s have been updated"
+                .formatted(nominationDetail.getNomination().getReference())
+        )
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationPortalReferenceController.class).updateWonsReferences(NOMINATION_ID, true,
+                CaseProcessingAction.WONS_REFERENCES, null, null, null)))
+            .with(csrf())
+            .with(user(NOMINATION_MANAGER_USER)))
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
+        PortalReferenceType.WONS, null);
   }
 }

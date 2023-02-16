@@ -63,6 +63,9 @@
     <#assign pearsSystemReferenceSlideoutPanelId = "pears-references"/>
     <#assign pearsSystemReferenceSlideoutText = "Update related PEARS applications"/>
 
+    <#assign wonsSystemReferenceSlideoutPanelId = "wons-references"/>
+    <#assign wonsSystemReferenceSlideoutText = "Update related WONS applications"/>
+
     <#if hasDropdownActions>
         <@fdsAction.buttonGroup>
             <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
@@ -83,6 +86,9 @@
                 </#if>
                 <#if pearsReferenceAttributes?has_content>
                     <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=pearsSystemReferenceSlideoutText slideOutPanelId=pearsSystemReferenceSlideoutPanelId/>
+                </#if>
+                <#if wonsReferenceAttributes?has_content>
+                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=wonsSystemReferenceSlideoutText slideOutPanelId=wonsSystemReferenceSlideoutPanelId/>
                 </#if>
             </@fdsActionDropdown.actionDropdown>
         </@fdsAction.buttonGroup>
@@ -141,6 +147,14 @@
         headingText=pearsSystemReferenceSlideoutText
         attributes=pearsReferenceAttributes
       />
+    </#if>
+
+    <#if wonsReferenceAttributes?has_content>
+        <@_systemReferenceSlideout.wonsReferenceSlideout
+        panelId=wonsSystemReferenceSlideoutPanelId
+        headingText=wonsSystemReferenceSlideoutText
+        attributes=wonsReferenceAttributes
+        />
     </#if>
 
     <@fdsTabs.tabs tabsHeading="Nomination tabs">

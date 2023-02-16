@@ -42,8 +42,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.port
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.WonsPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
@@ -128,7 +129,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
     var generalCaseNoteForm = new GeneralCaseNoteForm();
-    var pearsPortalReferenceForm = new NominationPortalReferenceForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -137,6 +139,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .withGeneralCaseNoteForm(generalCaseNoteForm)
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -155,6 +158,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "confirmAppointmentForm",
         "generalCaseNoteForm",
         "pearsPortalReferenceForm",
+        "wonsPortalReferenceForm",
         "caseEvents"
     );
 
@@ -180,6 +184,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             confirmAppointmentForm,
             generalCaseNoteForm,
             pearsPortalReferenceForm,
+            wonsPortalReferenceForm,
             List.of(caseEventView)
         );
 
@@ -221,7 +226,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
     var generalCaseNoteForm = new GeneralCaseNoteForm();
-    var pearsPortalReferenceForm = new NominationPortalReferenceForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -230,6 +236,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .withGeneralCaseNoteForm(generalCaseNoteForm)
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -248,6 +255,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "confirmAppointmentForm",
         "generalCaseNoteForm",
         "pearsPortalReferenceForm",
+        "wonsPortalReferenceForm",
         "caseEvents"
     );
 
@@ -273,6 +281,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             confirmAppointmentForm,
             generalCaseNoteForm,
             pearsPortalReferenceForm,
+            wonsPortalReferenceForm,
             List.of(caseEventView)
         );
 
@@ -307,7 +316,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
     var generalCaseNoteForm = new GeneralCaseNoteForm();
-    var pearsPortalReferenceForm = new NominationPortalReferenceForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -316,6 +326,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .withGeneralCaseNoteForm(generalCaseNoteForm)
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -334,6 +345,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var expectedPearsSystemReferenceAttributes =
         NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.PEARS);
+    var expectedWonsSystemReferenceAttributes =
+        NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.WONS);
 
     var hasDropdownActions = true;
 
@@ -356,6 +369,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "generalCaseNoteAttributes",
         "pearsPortalReferenceForm",
         "pearsReferenceAttributes",
+        "wonsPortalReferenceForm",
+        "wonsReferenceAttributes",
         "caseEvents"
     );
 
@@ -384,6 +399,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             expectedGeneralCaseNoteAttributes,
             pearsPortalReferenceForm,
             expectedPearsSystemReferenceAttributes,
+            wonsPortalReferenceForm,
+            expectedWonsSystemReferenceAttributes,
             List.of(caseEventView)
         );
 
@@ -418,7 +435,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var withdrawForm = new WithdrawNominationForm();
     var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
     var generalCaseNoteForm = new GeneralCaseNoteForm();
-    var pearsPortalReferenceForm = new NominationPortalReferenceForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -427,6 +445,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withConfirmNominationAppointmentForm(confirmAppointmentForm)
         .withGeneralCaseNoteForm(generalCaseNoteForm)
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -459,6 +478,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "generalCaseNoteForm",
         "generalCaseNoteAttributes",
         "pearsPortalReferenceForm",
+        "wonsPortalReferenceForm",
         "caseEvents"
     );
 
@@ -485,6 +505,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             generalCaseNoteForm,
             expectedGeneralCaseNoteAttributes,
             pearsPortalReferenceForm,
+            wonsPortalReferenceForm,
             List.of(caseEventView)
         );
 
@@ -511,7 +532,31 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
     assertThat(result.getModel().get(NominationPortalReferenceController.PEARS_FORM_NAME))
-        .asInstanceOf(InstanceOfAssertFactories.type(NominationPortalReferenceForm.class))
+        .asInstanceOf(InstanceOfAssertFactories.type(PearsPortalReferenceForm.class))
+        .extracting(form -> form.getReferences().getInputValue())
+        .isEqualTo(referenceText);
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenWonsPortalReference_assertFormPopulated() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    var referenceText = "ref/1";
+    var portalReferenceDto = new NominationPortalReferenceDto(PortalReferenceType.WONS, referenceText);
+
+    when(nominationPortalReferenceAccessService.getNominationPortalReferenceDtosByNomination(
+        nominationDetail.getNomination()
+    )).thenReturn(List.of(portalReferenceDto));
+
+    var modelAndViewDto = CaseProcessingFormDto.builder().build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    assertThat(result.getModel().get(NominationPortalReferenceController.WONS_FORM_NAME))
+        .asInstanceOf(InstanceOfAssertFactories.type(WonsPortalReferenceForm.class))
         .extracting(form -> form.getReferences().getInputValue())
         .isEqualTo(referenceText);
   }

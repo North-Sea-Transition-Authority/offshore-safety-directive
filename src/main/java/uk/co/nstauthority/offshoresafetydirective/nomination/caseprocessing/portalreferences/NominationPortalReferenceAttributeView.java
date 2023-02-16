@@ -16,18 +16,21 @@ public record NominationPortalReferenceAttributeView(
 
     var processingAction = switch (portalReferenceType) {
       case PEARS -> CaseProcessingAction.PEARS_REFERENCES;
-      default -> throw new IllegalArgumentException(
-          "SystemType [%s] is unsupported in NominationSystemReferenceAttributeView for nomination [%s]".formatted(
-              portalReferenceType.name(),
-              nominationId.id()
-          ));
+      case WONS -> CaseProcessingAction.WONS_REFERENCES;
     };
 
-    return new NominationPortalReferenceAttributeView(
-        ReverseRouter.route(on(NominationPortalReferenceController.class)
-            .updateReferences(nominationId, true, processingAction, null, null, null)),
-        processingAction
-    );
+    return switch (portalReferenceType) {
+      case PEARS -> new NominationPortalReferenceAttributeView(
+          ReverseRouter.route(on(NominationPortalReferenceController.class)
+              .updatePearsReferences(nominationId, true, processingAction, null, null, null)),
+          processingAction
+      );
+      case WONS -> new NominationPortalReferenceAttributeView(
+          ReverseRouter.route(on(NominationPortalReferenceController.class)
+              .updateWonsReferences(nominationId, true, processingAction, null, null, null)),
+          processingAction
+      );
+    };
 
   }
 

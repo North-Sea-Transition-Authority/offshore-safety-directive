@@ -25,7 +25,11 @@ public class RelatedInformationAccessService {
         relatedInformation.getRelatedToLicenceApplications(),
         relatedInformation.getRelatedLicenceApplications()
     );
-    return new RelatedInformationDto(relatedPears);
+    var relatedWons = new RelatedToWonsApplications(
+        relatedInformation.getRelatedToWellApplications(),
+        relatedInformation.getRelatedWellApplications()
+    );
+    return new RelatedInformationDto(relatedPears, relatedWons);
   }
 
 }

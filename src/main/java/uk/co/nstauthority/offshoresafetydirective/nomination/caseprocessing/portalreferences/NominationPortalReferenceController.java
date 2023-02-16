@@ -35,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominationPortalReferenceController {
 
   public static final String PEARS_FORM_NAME = "pearsPortalReferenceForm";
+  public static final String WONS_FORM_NAME = "wonsPortalReferenceForm";
 
   private final NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService;
   private final NominationDetailService nominationDetailService;
@@ -49,14 +50,34 @@ public class NominationPortalReferenceController {
   }
 
   @PostMapping(params = CaseProcessingAction.PEARS_REFERENCES)
-  public ModelAndView updateReferences(@PathVariable("nominationId") NominationId nominationId,
-                                       @RequestParam("pears-references") Boolean slideoutOpen,
-                                       // Used for ReverseRouter to call correct route
-                                       @Nullable
-                                       @RequestParam(CaseProcessingAction.PEARS_REFERENCES) String postButtonName,
-                                       @Nullable @ModelAttribute(PEARS_FORM_NAME) NominationPortalReferenceForm form,
-                                       @Nullable BindingResult bindingResult,
-                                       @Nullable RedirectAttributes redirectAttributes) {
+  public ModelAndView updatePearsReferences(@PathVariable("nominationId") NominationId nominationId,
+                                            @RequestParam("pears-references") Boolean slideoutOpen,
+                                            // Used for ReverseRouter to call correct route
+                                            @Nullable
+                                            @RequestParam(CaseProcessingAction.PEARS_REFERENCES) String postButtonName,
+                                            @Nullable @ModelAttribute(PEARS_FORM_NAME) PearsPortalReferenceForm form,
+                                            @Nullable BindingResult bindingResult,
+                                            @Nullable RedirectAttributes redirectAttributes) {
+
+    return processAndReturn(PortalReferenceType.PEARS, nominationId, form, redirectAttributes);
+  }
+
+  @PostMapping(params = CaseProcessingAction.WONS_REFERENCES)
+  public ModelAndView updateWonsReferences(@PathVariable("nominationId") NominationId nominationId,
+                                           @RequestParam("wons-references") Boolean slideoutOpen,
+                                           // Used for ReverseRouter to call correct route
+                                           @Nullable
+                                           @RequestParam(CaseProcessingAction.WONS_REFERENCES) String postButtonName,
+                                           @Nullable @ModelAttribute(WONS_FORM_NAME) WonsPortalReferenceForm form,
+                                           @Nullable BindingResult bindingResult,
+                                           @Nullable RedirectAttributes redirectAttributes) {
+
+    return processAndReturn(PortalReferenceType.WONS, nominationId, form, redirectAttributes);
+  }
+
+  private ModelAndView processAndReturn(PortalReferenceType portalReferenceType, NominationId nominationId,
+                                        NominationPortalReferenceForm form,
+                                        @Nullable RedirectAttributes redirectAttributes) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(nominationId, EnumSet.of(
             NominationStatus.SUBMITTED))
@@ -68,15 +89,15 @@ public class NominationPortalReferenceController {
         ));
 
     nominationPortalReferencePersistenceService.updatePortalReferences(nominationDetail.getNomination(),
-        PortalReferenceType.PEARS, Objects.requireNonNull(form).getReferences().getInputValue());
+        portalReferenceType, Objects.requireNonNull(form).getReferences().getInputValue());
 
     if (redirectAttributes != null) {
       var notificationBanner = NotificationBanner.builder()
           .withBannerType(NotificationBannerType.SUCCESS)
           .withTitle("Updated references")
           .withHeading(
-              "PEARS references for %s have been updated"
-                  .formatted(nominationDetail.getNomination().getReference())
+              "%s references for %s have been updated"
+                  .formatted(portalReferenceType.name(), nominationDetail.getNomination().getReference())
           )
           .build();
 
