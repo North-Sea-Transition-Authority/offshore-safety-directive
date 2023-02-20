@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -52,7 +53,8 @@ class NominationWorkAreaQueryService {
             field("nd.status"),
             field("nd.created_datetime"),
             field("nd.submitted_datetime"),
-            field("nd.version")
+            field("nd.version"),
+            field("nprp.portal_references").as("pears_references")
         )
         .from(table("nominations").as("n"))
         .join(table("nomination_details").as("nd")).on(field("nd.nomination_id").eq(field("n.id")))
@@ -60,6 +62,10 @@ class NominationWorkAreaQueryService {
         .leftJoin(table("nominee_details").as("nominee")).on(field("nominee.nomination_detail").eq(field("nd.id")))
         .leftJoin(table("well_selection_setup").as("was")).on(field("was.nomination_detail").eq(field("nd.id")))
         .leftJoin(table("installation_inclusion").as("ii")).on(field("ii.nomination_detail").eq(field("nd.id")))
+        .leftJoin(
+            table("nomination_portal_references").as("nprp")).on(field("nprp.nomination_id").eq(field("nd.nomination_id"))
+            .and(field("nprp.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
+        )
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
         .fetchInto(NominationWorkAreaQueryResult.class);

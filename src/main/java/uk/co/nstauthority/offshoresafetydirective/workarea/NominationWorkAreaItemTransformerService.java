@@ -46,7 +46,8 @@ class NominationWorkAreaItemTransformerService {
             result.getNominationDisplayType(),
             result.getNominationStatus(),
             result.getCreatedTime(),
-            result.getSubmittedTime()
+            result.getSubmittedTime(),
+            result.getPearsReferences()
         ))
         .toList();
   }

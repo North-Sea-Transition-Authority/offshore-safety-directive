@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.ActivePortalReferencesView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
@@ -108,6 +109,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .build();
@@ -123,6 +125,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
         .thenReturn(false);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -159,7 +164,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "generalCaseNoteForm",
         "pearsPortalReferenceForm",
         "wonsPortalReferenceForm",
-        "caseEvents"
+        "caseEvents",
+        "activePortalReferencesView"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -185,7 +191,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             generalCaseNoteForm,
             pearsPortalReferenceForm,
             wonsPortalReferenceForm,
-            List.of(caseEventView)
+            List.of(caseEventView),
+            activePortalReferencesView
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -204,6 +211,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(nominationStatus)
@@ -220,6 +228,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
         .thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -256,7 +267,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "generalCaseNoteForm",
         "pearsPortalReferenceForm",
         "wonsPortalReferenceForm",
-        "caseEvents"
+        "caseEvents",
+        "activePortalReferencesView"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -282,7 +294,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             generalCaseNoteForm,
             pearsPortalReferenceForm,
             wonsPortalReferenceForm,
-            List.of(caseEventView)
+            List.of(caseEventView),
+            activePortalReferencesView
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -294,6 +307,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
@@ -310,6 +324,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
         .thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -371,7 +388,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "pearsReferenceAttributes",
         "wonsPortalReferenceForm",
         "wonsReferenceAttributes",
-        "caseEvents"
+        "caseEvents",
+        "activePortalReferencesView"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -401,7 +419,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             expectedPearsSystemReferenceAttributes,
             wonsPortalReferenceForm,
             expectedWonsSystemReferenceAttributes,
-            List.of(caseEventView)
+            List.of(caseEventView),
+            activePortalReferencesView
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -413,6 +432,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
     var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -429,6 +449,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
         .thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -479,7 +502,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "generalCaseNoteAttributes",
         "pearsPortalReferenceForm",
         "wonsPortalReferenceForm",
-        "caseEvents"
+        "caseEvents",
+        "activePortalReferencesView"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -506,7 +530,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             expectedGeneralCaseNoteAttributes,
             pearsPortalReferenceForm,
             wonsPortalReferenceForm,
-            List.of(caseEventView)
+            List.of(caseEventView),
+            activePortalReferencesView
         );
 
     assertBreadcrumbs(result, nominationDetail);

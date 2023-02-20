@@ -37,10 +37,22 @@
                 key="Nominee"
                 value=modelProperties["nominationOrganisation"]
             />
-            <@fdsResultList.resultListDataValue
-                key=""
-                value=""
-            />
+            <#if modelProperties?keys?seq_contains("pearsReferences")>
+                <div class="fds-data-items-list__container">
+                    <dt class="fds-data-items-list__key">PEARS references</dt>
+                    <dd class="fds-data-items-list__value">
+                        ${modelProperties["pearsReferences"]?has_content?then(modelProperties["pearsReferences"], "Not provided")}
+                        <#if modelProperties["pearsReferencesAbbreviated"]!false>
+                            <span class="govuk-visually-hidden">(references truncated)</span>
+                        </#if>
+                    </dd>
+                </div>
+            <#else>
+                <@fdsResultList.resultListDataValue
+                    key=""
+                    value=""
+                />
+            </#if>
         </@fdsResultList.resultListDataItem>
 
     </@fdsResultList.resultListItem>

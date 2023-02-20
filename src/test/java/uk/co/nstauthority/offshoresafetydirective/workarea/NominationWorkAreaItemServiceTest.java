@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -26,8 +27,10 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationWorkAreaItemServiceTest {
@@ -58,6 +61,7 @@ class NominationWorkAreaItemServiceTest {
   @Test
   void getWorkAreaItems_whenItemReturned_thenHasCorrectPropertiesSet() {
     var baseTime = Instant.now();
+    var pearsReference = "pears/ref/1";
 
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
         .withNominationStatus(NominationStatus.SUBMITTED)
@@ -65,6 +69,7 @@ class NominationWorkAreaItemServiceTest {
         .withSubmittedTime(baseTime)
         .withApplicantOrganisationId(1)
         .withNominatedOrganisationId(2)
+        .withPearsReferences(pearsReference)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
@@ -97,8 +102,33 @@ class NominationWorkAreaItemServiceTest {
             Map.entry("nominationOrganisation",
                 nominatedOrganisation.name()),
             Map.entry("applicantReference",
-                queryResult.getApplicantReference().reference())
+                queryResult.getApplicantReference().reference()),
+            Map.entry("pearsReferences",
+                queryResult.getPearsReferences().references())
         );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "DELETED")
+  void getWorkAreaItems_assertPearsReferenceOnlyVisibleForPostSubmission(NominationStatus nominationStatus) {
+    var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(nominationStatus)
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
+
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+
+    var assertion = assertThat(result)
+        .first()
+        .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().keySet().stream().toList())
+        .asList();
+
+    if (nominationStatus.getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION)) {
+      assertion.contains("pearsReferences");
+    } else {
+      assertion.doesNotContain("pearsReferences");
+    }
   }
 
   @Test
@@ -112,6 +142,7 @@ class NominationWorkAreaItemServiceTest {
         .withApplicantOrganisationId(1)
         .withNominatedOrganisationId(2)
         .withApplicantReference(null)
+        .withPearsReferences(null)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
@@ -131,7 +162,34 @@ class NominationWorkAreaItemServiceTest {
                 queryResult.getNominationDisplayType().getDisplayText()),
             Map.entry("applicantOrganisation", "Not provided"),
             Map.entry("nominationOrganisation", "Not provided"),
-            Map.entry("applicantReference", "Not provided")
+            Map.entry("applicantReference", "Not provided"),
+            Map.entry("pearsReferences", "")
+        )
+        .map(Map.Entry::getKey)
+        .doesNotContain("pearsReferencesAbbreviated");
+  }
+
+  @Test
+  void getWorkAreaItems_assertPearsReferenceAbbreviation() {
+    var reference = "a".repeat(NominationWorkAreaItemService.PEARS_REFERENCE_MAX_LENGTH + 10);
+    var expectedAbbreviation =
+        "a".repeat(NominationWorkAreaItemService.PEARS_REFERENCE_MAX_LENGTH - 3) + StringUtil.ELLIPSIS_CHARACTER;
+    var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(NominationStatus.SUBMITTED)
+        .withPearsReferences(reference)
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
+
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+
+    assertThat(result)
+        .hasSize(1);
+
+    assertThat(result.get(0).modelProperties().getProperties().entrySet())
+        .contains(
+            entry("pearsReferences", expectedAbbreviation),
+            entry("pearsReferencesAbbreviated", true)
         );
   }
 

@@ -114,7 +114,11 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
         .addObject(NominationPortalReferenceController.PEARS_FORM_NAME, modelAndViewDto.getPearsPortalReferenceForm())
         .addObject(NominationPortalReferenceController.WONS_FORM_NAME, modelAndViewDto.getWonsPortalReferenceForm())
-        .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail));
+        .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .addObject(
+            "activePortalReferencesView",
+            nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination())
+        );
 
     addRelevantDropdownActions(modelAndView, nominationDetail);
 

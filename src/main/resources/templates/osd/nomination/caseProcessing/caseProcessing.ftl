@@ -9,6 +9,7 @@
 <#import '_generalCaseNoteSlideout.ftl' as _generalCaseNoteSlideout/>
 <#import '_portalReferenceSlideout.ftl' as _systemReferenceSlideout/>
 <#import '../events/eventList.ftl' as eventList/>
+<#import '_activePortalReferences.ftl' as _activePortalReferences>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -165,6 +166,7 @@
 
         <@fdsTabs.tabContent tabAnchor="nomination-form-tab">
             <h2 class="govuk-heading-l">Nomination form</h2>
+            <@_activePortalReferences.activePortalReferences activePortalReferencesView/>
             <@nominationSummary.nominationSummary summaryView=summaryView/>
         </@fdsTabs.tabContent>
 

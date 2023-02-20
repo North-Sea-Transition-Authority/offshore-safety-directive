@@ -11,6 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationVersion;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsReferences;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
@@ -27,17 +28,20 @@ class NominationWorkAreaQueryResult {
   private final NominationCreatedTime createdTime;
   private final NominationSubmittedTime submittedTime;
   private final NominationVersion nominationVersion;
+  private final PearsReferences pearsReferences;
 
   NominationWorkAreaQueryResult(Integer nominationId, Integer applicantOrganisationId, String nominationReference,
                                 String applicantReference, Integer nominatedOrganisationId, String wellsSelectionType,
                                 boolean hasInstallations, String nominationStatus, Timestamp createdTime,
-                                Timestamp submittedTime, Integer nominationVersion) {
+                                Timestamp submittedTime, Integer nominationVersion,
+                                String pearsReferences) {
 
     this.nominationId = getRecordOrNull(nominationId, NominationId::new);
     this.applicantOrganisationId = getRecordOrNull(applicantOrganisationId, ApplicantOrganisationId::new);
     this.nominationReference = getRecordOrNull(nominationReference, NominationReference::new);
     this.applicantReference = getRecordOrNull(applicantReference, ApplicantReference::new);
     this.nominatedOrganisationId = getRecordOrNull(nominatedOrganisationId, NominatedOrganisationId::new);
+    this.pearsReferences = getRecordOrNull(pearsReferences, PearsReferences::new);
     this.nominationDisplayType = NominationDisplayType.getByWellSelectionTypeAndHasInstallations(
         getWellSelectionTypeFromString(wellsSelectionType),
         NominationHasInstallations.fromBoolean(hasInstallations)
@@ -100,5 +104,9 @@ class NominationWorkAreaQueryResult {
 
   public NominationVersion getNominationVersion() {
     return nominationVersion;
+  }
+
+  public PearsReferences getPearsReferences() {
+    return pearsReferences;
   }
 }

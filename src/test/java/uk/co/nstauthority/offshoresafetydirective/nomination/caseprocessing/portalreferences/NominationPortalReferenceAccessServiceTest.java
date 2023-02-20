@@ -43,4 +43,101 @@ class NominationPortalReferenceAccessServiceTest {
         )
         .containsExactly(tuple(PortalReferenceType.PEARS, referenceText));
   }
+
+  @Test
+  void getActivePortalReferenceView_whenPearsAndWonsReferencesProvided_assertResult() {
+    var nomination = NominationTestUtil.builder().build();
+    var pearsPortalReference = NominationPortalReferenceTestUtil.builder()
+        .withPortalReferenceType(PortalReferenceType.PEARS)
+        .withPortalReferences("pears/ref/1")
+        .build();
+
+    var wonsPortalReference = NominationPortalReferenceTestUtil.builder()
+        .withPortalReferenceType(PortalReferenceType.WONS)
+        .withPortalReferences("wons/ref/1")
+        .build();
+
+    when(nominationPortalReferenceRepository.findAllByNomination(nomination))
+        .thenReturn(List.of(pearsPortalReference, wonsPortalReference));
+
+    var result = nominationPortalReferenceAccessService.getActivePortalReferenceView(nomination);
+
+    assertThat(result)
+        .extracting(
+            view -> view.pearsReferences().references(),
+            view -> view.wonsReferences().references()
+        )
+        .containsExactly(
+            pearsPortalReference.getPortalReferences(),
+            wonsPortalReference.getPortalReferences()
+        );
+  }
+
+  @Test
+  void getActivePortalReferenceView_whenPearsReferencesProvided_assertResult() {
+    var nomination = NominationTestUtil.builder().build();
+    var pearsPortalReference = NominationPortalReferenceTestUtil.builder()
+        .withPortalReferenceType(PortalReferenceType.PEARS)
+        .withPortalReferences("pears/ref/1")
+        .build();
+
+    when(nominationPortalReferenceRepository.findAllByNomination(nomination))
+        .thenReturn(List.of(pearsPortalReference));
+
+    var result = nominationPortalReferenceAccessService.getActivePortalReferenceView(nomination);
+
+    assertThat(result)
+        .extracting(
+            view -> view.pearsReferences().references(),
+            ActivePortalReferencesView::wonsReferences
+        )
+        .containsExactly(
+            pearsPortalReference.getPortalReferences(),
+            null
+        );
+  }
+
+  @Test
+  void getActivePortalReferenceView_whenWonsReferencesProvided_assertResult() {
+    var nomination = NominationTestUtil.builder().build();
+    var wonsPortalReference = NominationPortalReferenceTestUtil.builder()
+        .withPortalReferenceType(PortalReferenceType.WONS)
+        .withPortalReferences("wons/ref/1")
+        .build();
+
+    when(nominationPortalReferenceRepository.findAllByNomination(nomination))
+        .thenReturn(List.of(wonsPortalReference));
+
+    var result = nominationPortalReferenceAccessService.getActivePortalReferenceView(nomination);
+
+    assertThat(result)
+        .extracting(
+            ActivePortalReferencesView::pearsReferences,
+            view -> view.wonsReferences().references()
+        )
+        .containsExactly(
+            null,
+            wonsPortalReference.getPortalReferences()
+        );
+  }
+
+  @Test
+  void getActivePortalReferenceView_whenNoReferencesProvided_assertResult() {
+    var nomination = NominationTestUtil.builder().build();
+
+    when(nominationPortalReferenceRepository.findAllByNomination(nomination))
+        .thenReturn(List.of());
+
+    var result = nominationPortalReferenceAccessService.getActivePortalReferenceView(nomination);
+
+    assertThat(result)
+        .extracting(
+            ActivePortalReferencesView::pearsReferences,
+            ActivePortalReferencesView::wonsReferences
+        )
+        .containsExactly(
+            null,
+            null
+        );
+  }
 }

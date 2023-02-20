@@ -7,6 +7,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationReference
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationVersion;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsReferences;
 
 record NominationWorkAreaItemDto(
     NominationId nominationId,
@@ -18,7 +19,8 @@ record NominationWorkAreaItemDto(
     NominationDisplayType nominationDisplay,
     NominationStatus nominationStatus,
     NominationCreatedTime createdTime,
-    NominationSubmittedTime submittedTime
+    NominationSubmittedTime submittedTime,
+    PearsReferences pearsReferences
 ) {
 
 }

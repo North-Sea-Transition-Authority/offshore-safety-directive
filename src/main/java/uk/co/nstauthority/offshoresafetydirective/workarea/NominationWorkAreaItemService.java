@@ -13,14 +13,18 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsReferences;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @Service
 class NominationWorkAreaItemService {
 
   private static final String DEFAULT_TEXT = "Not provided";
+  public static final int PEARS_REFERENCE_MAX_LENGTH = 40;
 
   private final NominationWorkAreaItemTransformerService nominationWorkAreaItemTransformerService;
 
@@ -54,30 +58,37 @@ class NominationWorkAreaItemService {
   }
 
   private WorkAreaItem generateWorkAreaItem(NominationWorkAreaItemDto dto) {
+
+    var modelProperties = new WorkAreaItemModelProperties()
+        .addProperty("status", dto.nominationStatus().getScreenDisplayText())
+        .addProperty(
+            "applicantReference",
+            Optional.ofNullable(dto.applicantReference())
+                .map(ApplicantReference::reference)
+                .orElse(DEFAULT_TEXT))
+        .addProperty("nominationType", dto.nominationDisplay().getDisplayText())
+        .addProperty(
+            "applicantOrganisation",
+            Optional.ofNullable(dto.applicantOrganisationUnitDto())
+                .map(PortalOrganisationDto::name)
+                .orElse(DEFAULT_TEXT))
+        .addProperty(
+            "nominationOrganisation",
+            Optional.ofNullable(dto.nominatedOrganisationUnitDto())
+                .map(PortalOrganisationDto::name)
+                .orElse(DEFAULT_TEXT)
+        );
+
+    if (canAddPearsReferencesToModelProperties(dto)) {
+      addPearsReferencesToModelProperties(modelProperties, dto);
+    }
+
     return new WorkAreaItem(
         WorkAreaItemType.NOMINATION,
         getWorkAreaItemHeading(dto),
         getWorkAreaItemCaption(dto),
         getActionUrl(dto),
-        new WorkAreaItemModelProperties()
-            .addProperty("status", dto.nominationStatus().getScreenDisplayText())
-            .addProperty(
-                "applicantReference",
-                Optional.ofNullable(dto.applicantReference())
-                    .map(ApplicantReference::reference)
-                    .orElse(DEFAULT_TEXT))
-            .addProperty("nominationType", dto.nominationDisplay().getDisplayText())
-            .addProperty(
-                "applicantOrganisation",
-                Optional.ofNullable(dto.applicantOrganisationUnitDto())
-                    .map(PortalOrganisationDto::name)
-                    .orElse(DEFAULT_TEXT))
-            .addProperty(
-                "nominationOrganisation",
-                Optional.ofNullable(dto.nominatedOrganisationUnitDto())
-                    .map(PortalOrganisationDto::name)
-                    .orElse(DEFAULT_TEXT)
-            )
+        modelProperties
     );
   }
 
@@ -118,6 +129,28 @@ class NominationWorkAreaItemService {
         case PRE_SUBMISSION -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
       };
     };
+  }
+
+  private boolean canAddPearsReferencesToModelProperties(NominationWorkAreaItemDto dto) {
+    return switch (dto.nominationStatus()) {
+      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
+      default -> dto.nominationStatus().getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION);
+    };
+  }
+
+  private void addPearsReferencesToModelProperties(WorkAreaItemModelProperties modelProperties,
+                                                   NominationWorkAreaItemDto dto) {
+
+    var reference = Optional.ofNullable(dto.pearsReferences()).map(PearsReferences::references).orElse("");
+    var abbreviatedReference = StringUtil.abbreviate(reference, PEARS_REFERENCE_MAX_LENGTH);
+
+    modelProperties
+        .addProperty("pearsReferences", abbreviatedReference);
+
+    if (!reference.equals(abbreviatedReference)) {
+      modelProperties
+          .addProperty("pearsReferencesAbbreviated", true);
+    }
   }
 
   private IllegalStateException getDeletedNominationInWorkAreaException(NominationWorkAreaItemDto dto) {
