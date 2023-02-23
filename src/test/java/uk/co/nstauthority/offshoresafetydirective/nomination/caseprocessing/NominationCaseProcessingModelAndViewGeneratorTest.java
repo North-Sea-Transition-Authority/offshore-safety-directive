@@ -355,7 +355,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withdrawNomination(nominationId, true, null, null, null, null));
 
     var expectedQaChecksSubmitUrl = ReverseRouter.route(on(NominationQaChecksController.class)
-        .submitQa(nominationId, CaseProcessingAction.QA, null, null));
+        .submitQa(nominationId, true, CaseProcessingAction.QA, null, null, null));
 
     var expectedGeneralCaseNoteAttributes = GeneralCaseNoteAttributeView.createAttributeView(nominationId,
         fileUploadConfig);
