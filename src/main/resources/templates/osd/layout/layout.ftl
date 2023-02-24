@@ -10,6 +10,7 @@
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
+<#-- @ftlvariable name="flash" type="uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner" -->
 
 <#assign SERVICE_NAME = serviceBranding.name() />
 <#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
@@ -24,6 +25,8 @@
   backLinkUrl=""
   breadcrumbsList={}
   singleErrorMessage=""
+  showNavigationItems=true
+  allowSearchEngineIndexing=true
 >
 
   <#assign fullWidthColumn=false />
@@ -60,29 +63,29 @@
   <#assign notificationBannerContent>
     <#if flash?has_content>
 
-        <#local bannerContent>
-            <#if flash.heading?has_content>
-                <#if flash.content?has_content>
-                    <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
-                <#else>
-                    <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
-                </#if>
-            <#else>
-                <p class="govuk-body">
-                  ${flash.content}
-                </p>
-            </#if>
-        </#local>
-
-        <#if flash.type.name() == "INFO">
-          <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
-              ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerInfo>
-        <#elseif flash.type.name() == "SUCCESS">
-          <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
-              ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerSuccess>
+      <#local bannerContent>
+        <#if flash.heading?has_content>
+          <#if flash.content?has_content>
+            <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+          <#else>
+            <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
+          </#if>
+        <#else>
+          <p class="govuk-body">
+            ${flash.content}
+          </p>
         </#if>
+      </#local>
+
+      <#if flash.type.name() == "INFO">
+        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
+          ${bannerContent}
+        </@fdsNotificationBanner.notificationBannerInfo>
+      <#elseif flash.type.name() == "SUCCESS">
+        <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
+          ${bannerContent}
+        </@fdsNotificationBanner.notificationBannerSuccess>
+      </#if>
     </#if>
   </#assign>
 
@@ -101,7 +104,7 @@
     twoThirdsColumn=twoThirdsColumn
     twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
     oneQuarterColumn=oneQuarterColumn
-    topNavigation=true
+    topNavigation=showNavigationItems
     errorItems=errorItems
     backLink=backLink
     backLinkUrl=backLinkUrl
@@ -111,6 +114,7 @@
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
+    noIndex=!allowSearchEngineIndexing
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -120,6 +124,8 @@
   pageHeading
   htmlTitle=pageHeading
   phaseBanner=true
+  showNavigationItems=true
+  allowSearchEngineIndexing=true
 >
   <#assign serviceHeader>
     <@_serviceHeader/>
@@ -129,9 +135,10 @@
     htmlTitle=htmlTitle
     htmlAppTitle=pageHeading
     phaseBanner=phaseBanner
-    topNavigation=true
+    topNavigation=showNavigationItems
     logoProductText=CUSTOMER_MNEMONIC
     headerContent=serviceHeader
+    noIndex=!allowSearchEngineIndexing
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
