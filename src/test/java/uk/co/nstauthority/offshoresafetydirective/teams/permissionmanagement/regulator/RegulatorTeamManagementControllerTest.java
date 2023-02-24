@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,10 +43,10 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   private ApplicationContext applicationContext;
 
   @SecurityTest
-  void renderMemberListRedirect_whenNotAuthenticated_thenUnauthorised() throws Exception {
+  void renderMemberListRedirect_whenNotAuthenticated_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect())))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
@@ -82,11 +83,11 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderMemberList_whenNotAuthenticated_thenUnauthorised() throws Exception {
+  void renderMemberList_whenNotAuthenticated_thenRedirectionToLoginUrl() throws Exception {
     var teamId = new TeamId(UUID.randomUUID());
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

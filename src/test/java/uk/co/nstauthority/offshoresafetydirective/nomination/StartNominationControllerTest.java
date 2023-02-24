@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,11 @@ class StartNominationControllerTest extends AbstractControllerTest {
       .build();
 
   @SecurityTest
-  void getStartPage_whenNotLoggedIn_thenUnauthorised() throws Exception {
+  void getStartPage_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(StartNominationController.class).getStartPage()))
     )
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

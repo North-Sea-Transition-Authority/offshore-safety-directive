@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ class TestAuthenticationControllerTest extends AbstractControllerTest {
   void whenNoUser_thenVerifyAuthenticationRequired() throws Exception {
     mockMvc.perform(
         get(ReverseRouter.route(on(TestAuthenticationController.class).requiresUserEndpoint())))
-        .andExpect(status().isUnauthorized());
+          .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

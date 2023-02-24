@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -36,9 +37,9 @@ class WellRestControllerTest extends AbstractControllerTest {
   private WellQueryService wellQueryService;
 
   @SecurityTest
-  void searchWells_whenNoUser_thenUnauthorised() throws Exception {
+  void searchWells_whenNoUser_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(WellRestController.class).searchWells(SEARCH_TERM))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

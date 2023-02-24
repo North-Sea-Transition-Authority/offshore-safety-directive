@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -34,11 +35,11 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @SecurityTest
-  void searchSubareas_whenNotLoggedIn_thenUnauthorized() throws Exception {
+  void searchSubareas_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(get(
             ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas("searchTerm"))
         ))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
