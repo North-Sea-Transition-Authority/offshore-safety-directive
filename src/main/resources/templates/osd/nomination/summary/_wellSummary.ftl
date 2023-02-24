@@ -1,5 +1,6 @@
 <#import '../../../fds/components/summaryList/summaryList.ftl' as fdsSummaryList/>
 <#import '../../../fds/components/insetText/insetText.ftl' as fdsInsetText/>
+<#import '../well/_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 
 <#macro wellSummary wellSummaryView>
 
@@ -137,10 +138,11 @@
                   </#if>
                 </td>
                 <td class="govuk-table__cell">
-                  <#if nominatedSubareaWellbore.relatedLicences()?has_content>
-                    <#list nominatedSubareaWellbore.relatedLicences() as licence>
-                      ${licence.licenceReference().value()}<#sep>, </#sep>
-                    </#list>
+                  <#if (nominatedSubareaWellbore.originLicenceDto())?has_content || (nominatedSubareaWellbore.totalDepthLicenceDto())?has_content>
+                      <@_wellDtoLicenceDisplay.wellDtoLicenceDisplay
+                        originDto=nominatedSubareaWellbore.originLicenceDto()
+                        totalDepthDto=nominatedSubareaWellbore.totalDepthLicenceDto()
+                      />
                   </#if>
                 </td>
               </tr>

@@ -41,8 +41,11 @@ class WellDtoTest {
             portalWellbore.getMechanicalStatus()
         );
 
-    assertThat(resultingWellboreDto.relatedLicences())
-        .extracting(licenceDto -> licenceDto.licenceReference().value())
+    assertThat(resultingWellboreDto)
+        .extracting(
+            wellDto -> wellDto.originLicenceDto().licenceReference().value(),
+            wellDto -> wellDto.totalDepthLicenceDto().licenceReference().value()
+        )
         .containsExactly(
             portalWellbore.getOriginLicence().getLicenceRef(),
             portalWellbore.getTotalDepthLicence().getLicenceRef()
@@ -50,7 +53,7 @@ class WellDtoTest {
   }
 
   @Test
-  void fromPortalWellbore_whenNoLicences_thenEmptyLicenceList() {
+  void fromPortalWellbore_whenNoLicences_thenLicenceDtosAreNull() {
 
     var portalWellbore = EpaWellboreTestUtil.builder()
         .withOriginLicence(null)
@@ -59,29 +62,15 @@ class WellDtoTest {
 
     var resultingWellboreDto = WellDto.fromPortalWellbore(portalWellbore);
 
-    assertThat(resultingWellboreDto.relatedLicences()).isEmpty();
-  }
-
-  @Test
-  void fromPortalWellbore_whenAllLicencesTheSame_thenOnlyOneLicenceAdded() {
-
-    var portalLicence = EpaLicenceTestUtil.builder()
-        .withLicenceReference("licence reference")
-        .build();
-
-    var portalWellbore = EpaWellboreTestUtil.builder()
-        .withId(10)
-        .withRegistrationNumber("registration number")
-        .withMechanicalStatus(MechanicalStatus.PLANNED)
-        .withOriginLicence(portalLicence)
-        .withTotalDepthLicence(portalLicence)
-        .build();
-
-    var resultingWellboreDto = WellDto.fromPortalWellbore(portalWellbore);
-
-    assertThat(resultingWellboreDto.relatedLicences())
-        .extracting(licenceDto -> licenceDto.licenceReference().value())
-        .containsExactly(portalLicence.getLicenceRef());
+    assertThat(resultingWellboreDto)
+        .extracting(
+            WellDto::originLicenceDto,
+            WellDto::totalDepthLicenceDto
+        )
+        .containsExactly(
+            null,
+            null
+        );
   }
 
 }

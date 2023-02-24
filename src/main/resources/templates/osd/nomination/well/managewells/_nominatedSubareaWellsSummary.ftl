@@ -1,5 +1,6 @@
 <#import '../../../../fds/components/details/details.ftl' as fdsDetails>
 <#import '../../../../fds/components/insetText/insetText.ftl' as fdsInsetText>
+<#import '../_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 
 <#-- @ftlvariable name="nominatedSubareaWellsView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellsView" -->
 
@@ -27,10 +28,11 @@
               </#if>
             </td>
             <td class="govuk-table__cell">
-              <#if nominatedSubareaWellbore.relatedLicences()?has_content>
-                <#list nominatedSubareaWellbore.relatedLicences() as licence>
-                  ${licence.licenceReference().value()}<#sep>, </#sep>
-                </#list>
+              <#if (nominatedSubareaWellbore.originLicenceDto())?has_content || (nominatedSubareaWellbore.totalDepthLicenceDto())?has_content>
+                  <@_wellDtoLicenceDisplay.wellDtoLicenceDisplay
+                    originDto=nominatedSubareaWellbore.originLicenceDto()
+                    totalDepthDto=nominatedSubareaWellbore.totalDepthLicenceDto()
+                  />
               </#if>
             </td>
           </tr>
