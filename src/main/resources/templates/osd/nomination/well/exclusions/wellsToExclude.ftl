@@ -1,5 +1,6 @@
 <#include '../../../layout/layout.ftl'>
 <#import '_wellExclusionList.ftl' as exclusions>
+<#import '../_listWellbores.ftl' as _listWellbores>
 
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
@@ -43,6 +44,10 @@
       </@fdsRadio.radioYes>
       <@fdsRadio.radioNo path="form.hasWellsToExclude" />
     </@fdsRadio.radioGroup>
+
+    <@fdsDetails.summaryDetails summaryTitle="What wells are part of this nomination?">
+        <@_listWellbores.listWellbores wellbores/>
+    </@fdsDetails.summaryDetails>
 
     <@fdsAction.button buttonText="Save and continue"/>
 
