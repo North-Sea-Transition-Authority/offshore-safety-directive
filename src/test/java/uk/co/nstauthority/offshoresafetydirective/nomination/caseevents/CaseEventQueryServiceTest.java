@@ -132,7 +132,7 @@ class CaseEventQueryServiceTest {
     var caseEvent = CaseEventTestUtil.builder()
         .withCaseEventType(CaseEventType.CONFIRM_APPOINTMENT)
         .withNominationVersion(nominationVersion)
-        .withCreatedInstant(confirmationInstant)
+        .withEventInstant(confirmationInstant)
         .build();
 
     when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
@@ -183,6 +183,7 @@ class CaseEventQueryServiceTest {
 
     var fields = List.of(
         "title",
+        "eventInstant",
         "createdInstant",
         "createdBy",
         "nominationVersion",
@@ -199,7 +200,7 @@ class CaseEventQueryServiceTest {
     );
 
     var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
+        "formattedEventTime"
     );
 
     var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
@@ -214,6 +215,7 @@ class CaseEventQueryServiceTest {
         .extracting(fields.toArray(String[]::new))
         .containsExactly(
             caseEventType.getScreenDisplayText(),
+            caseEvent.getEventInstant(),
             caseEvent.getCreatedInstant(),
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
@@ -253,12 +255,13 @@ class CaseEventQueryServiceTest {
 
     var fields = List.of(
         "title",
+        "eventInstant",
         "createdInstant",
         "createdBy",
         "nominationVersion",
         "body",
         "fileViews",
-        "formattedCreatedTime"
+        "formattedEventTime"
     );
 
     var prompts = List.of(
@@ -280,12 +283,13 @@ class CaseEventQueryServiceTest {
         .extracting(fields.toArray(String[]::new))
         .containsExactly(
             caseEventType.getScreenDisplayText(),
+            caseEvent.getEventInstant(),
             caseEvent.getCreatedInstant(),
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
             caseEvent.getComment(),
             List.of(caseEventFileView),
-            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
+            DateUtil.formatLongDate(caseEvent.getEventInstant())
         );
 
     assertThat(result.get(0))
@@ -320,6 +324,7 @@ class CaseEventQueryServiceTest {
 
     var fields = List.of(
         "title",
+        "eventInstant",
         "createdInstant",
         "createdBy",
         "nominationVersion",
@@ -336,7 +341,7 @@ class CaseEventQueryServiceTest {
     );
 
     var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
+        "formattedEventTime"
     );
 
     var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
@@ -351,6 +356,7 @@ class CaseEventQueryServiceTest {
         .extracting(fields.toArray(String[]::new))
         .containsExactly(
             caseEventType.getScreenDisplayText(),
+            caseEvent.getEventInstant(),
             caseEvent.getCreatedInstant(),
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
@@ -390,12 +396,13 @@ class CaseEventQueryServiceTest {
 
     var fields = List.of(
         "title",
+        "eventInstant",
         "createdInstant",
         "createdBy",
         "nominationVersion",
         "body",
         "fileViews",
-        "formattedCreatedTime"
+        "formattedEventTime"
     );
 
     var prompts = List.of(
@@ -417,12 +424,13 @@ class CaseEventQueryServiceTest {
         .extracting(fields.toArray(String[]::new))
         .containsExactly(
             caseEventType.getScreenDisplayText(),
+            caseEvent.getEventInstant(),
             caseEvent.getCreatedInstant(),
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
             caseEvent.getComment(),
             List.of(caseEventFileView),
-            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
+            DateUtil.formatLongDate(caseEvent.getEventInstant())
         );
 
     assertThat(result.get(0))
@@ -457,6 +465,7 @@ class CaseEventQueryServiceTest {
 
     var fields = List.of(
         "title",
+        "eventInstant",
         "createdInstant",
         "createdBy",
         "nominationVersion",
@@ -473,7 +482,7 @@ class CaseEventQueryServiceTest {
     );
 
     var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
+        "formattedEventTime"
     );
 
     var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
@@ -488,6 +497,7 @@ class CaseEventQueryServiceTest {
         .extracting(fields.toArray(String[]::new))
         .containsExactly(
             caseEventType.getScreenDisplayText(),
+            caseEvent.getEventInstant(),
             caseEvent.getCreatedInstant(),
             caseEventCreator.displayName(),
             NOMINATION_DETAIL_VERSION,
@@ -532,10 +542,10 @@ class CaseEventQueryServiceTest {
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
     assertThat(result)
-        .extracting(CaseEventView::getCreatedInstant)
+        .extracting(CaseEventView::getEventInstant)
         .containsExactly(
-            firstCaseEventByCreatedDate.getCreatedInstant(),
-            secondCaseEventByCreatedDate.getCreatedInstant()
+            firstCaseEventByCreatedDate.getEventInstant(),
+            secondCaseEventByCreatedDate.getEventInstant()
         );
   }
 }

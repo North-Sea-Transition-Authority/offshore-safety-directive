@@ -45,6 +45,9 @@ class CaseEvent {
   @Column(name = "created_timestamp")
   private Instant createdInstant;
 
+  @Column(name = "event_timestamp")
+  private Instant eventInstant;
+
   @Nullable
   private String comment;
 
@@ -102,6 +105,14 @@ class CaseEvent {
 
   void setCreatedInstant(Instant createdInstant) {
     this.createdInstant = createdInstant;
+  }
+
+  Instant getEventInstant() {
+    return eventInstant;
+  }
+
+  void setEventInstant(Instant eventInstant) {
+    this.eventInstant = eventInstant;
   }
 
   @Nullable

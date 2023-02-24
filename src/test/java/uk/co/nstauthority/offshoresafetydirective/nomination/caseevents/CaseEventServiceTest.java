@@ -54,9 +54,9 @@ class CaseEventServiceTest {
     var comment = "comment text";
 
     var createdInstant = Instant.now();
-    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
-
     when(clock.instant()).thenReturn(createdInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
     caseEventService.createCompletedQaChecksEvent(nominationDetail, comment);
@@ -72,6 +72,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -79,6 +80,7 @@ class CaseEventServiceTest {
             null,
             comment,
             serviceUser.wuaId(),
+            createdInstant,
             createdInstant,
             nominationDetail.getNomination(),
             nominationVersion
@@ -97,6 +99,9 @@ class CaseEventServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
@@ -122,6 +127,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -129,6 +135,7 @@ class CaseEventServiceTest {
             null,
             comment,
             serviceUser.wuaId(),
+            createdInstant,
             decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC),
             nominationDetail.getNomination(),
             nominationVersion
@@ -175,6 +182,9 @@ class CaseEventServiceTest {
         .withVersion(nominationVersion)
         .build();
 
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
@@ -190,6 +200,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -197,7 +208,8 @@ class CaseEventServiceTest {
             null,
             reason,
             serviceUser.wuaId(),
-            clock.instant(),
+            createdInstant,
+            createdInstant,
             detail.getNomination(),
             nominationVersion
         );
@@ -212,6 +224,9 @@ class CaseEventServiceTest {
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
@@ -228,6 +243,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -235,6 +251,7 @@ class CaseEventServiceTest {
             null,
             comment,
             serviceUser.wuaId(),
+            createdInstant,
             date.atStartOfDay().toInstant(ZoneOffset.UTC),
             detail.getNomination(),
             nominationVersion
@@ -252,6 +269,9 @@ class CaseEventServiceTest {
     var fileUploadForm = new FileUploadForm();
     fileUploadForm.setUploadedFileId(UUID.randomUUID());
 
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
@@ -267,6 +287,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -274,7 +295,8 @@ class CaseEventServiceTest {
             subject,
             caseNoteText,
             serviceUser.wuaId(),
-            clock.instant(),
+            createdInstant,
+            createdInstant,
             detail.getNomination(),
             nominationVersion
         );

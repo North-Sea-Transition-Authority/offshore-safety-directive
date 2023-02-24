@@ -108,7 +108,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   void getCaseProcessingModelAndView_whenCannotManageNomination_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
-    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName()).build();
+
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
@@ -210,7 +215,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   ) {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
-    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName()).build();
+
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
@@ -306,7 +316,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
-    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName()).build();
+
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
@@ -431,7 +446,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusAwaitingConfirmation_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
-    var caseEventView = CaseEventView.builder("Case title", 2, Instant.now(), userDetail.displayName()).build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName()).build();
+
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()

@@ -40,7 +40,7 @@ public class CaseEventQueryService {
             EnumSet.of(CaseEventType.NO_OBJECTION_DECISION, CaseEventType.OBJECTION_DECISION),
             nominationDetail.getNomination(),
             dto.version())
-        .map(caseEvent -> LocalDate.ofInstant(caseEvent.getCreatedInstant(), ZoneId.systemDefault()));
+        .map(caseEvent -> LocalDate.ofInstant(caseEvent.getEventInstant(), ZoneId.systemDefault()));
   }
 
   public Optional<LocalDate> getAppointmentConfirmationDateForNominationDetail(NominationDetail nominationDetail) {
@@ -49,7 +49,7 @@ public class CaseEventQueryService {
             EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
             nominationDetail.getNomination(),
             dto.version())
-        .map(caseEvent -> LocalDate.ofInstant(caseEvent.getCreatedInstant(), ZoneId.systemDefault()));
+        .map(caseEvent -> LocalDate.ofInstant(caseEvent.getEventInstant(), ZoneId.systemDefault()));
   }
 
   public List<CaseEventView> getCaseEventViewsForNominationDetail(NominationDetail nominationDetail) {
@@ -87,6 +87,7 @@ public class CaseEventQueryService {
           Optional.ofNullable(caseEvent.getTitle()).orElse(caseEvent.getCaseEventType().getScreenDisplayText()),
           caseEvent.getNominationVersion(),
           caseEvent.getCreatedInstant(),
+          caseEvent.getEventInstant(),
           userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName()
       );
 
@@ -99,7 +100,7 @@ public class CaseEventQueryService {
             .build();
         case NO_OBJECTION_DECISION, OBJECTION_DECISION -> caseEventBuilder
             .withCustomDatePrompt("Decision date")
-            .withCreatedInstant(caseEvent.getCreatedInstant(), DateUtil.formatLongDate(caseEvent.getCreatedInstant()))
+            .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
             .withCustomCreatorPrompt("Decided by")
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Decision comment")
@@ -114,7 +115,7 @@ public class CaseEventQueryService {
             .build();
         case CONFIRM_APPOINTMENT -> caseEventBuilder
             .withCustomDatePrompt("Appointment date")
-            .withCreatedInstant(caseEvent.getCreatedInstant(), DateUtil.formatLongDate(caseEvent.getCreatedInstant()))
+            .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
             .withCustomCreatorPrompt("Confirmed by")
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Appointment comments")
