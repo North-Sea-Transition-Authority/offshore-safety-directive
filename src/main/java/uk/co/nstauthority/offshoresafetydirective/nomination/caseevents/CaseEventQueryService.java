@@ -43,6 +43,15 @@ public class CaseEventQueryService {
         .map(caseEvent -> LocalDate.ofInstant(caseEvent.getCreatedInstant(), ZoneId.systemDefault()));
   }
 
+  public Optional<LocalDate> getAppointmentConfirmationDateForNominationDetail(NominationDetail nominationDetail) {
+    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    return caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+            EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
+            nominationDetail.getNomination(),
+            dto.version())
+        .map(caseEvent -> LocalDate.ofInstant(caseEvent.getCreatedInstant(), ZoneId.systemDefault()));
+  }
+
   public List<CaseEventView> getCaseEventViewsForNominationDetail(NominationDetail nominationDetail) {
     var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
     var events = caseEventRepository.findAllByNominationAndNominationVersion(

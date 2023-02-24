@@ -15,26 +15,34 @@ class ConfirmNominationAppointmentSubmissionService {
   private final CaseEventService caseEventService;
   private final NominationDetailFileService nominationDetailFileService;
   private final NominationDetailStatusService nominationDetailStatusService;
+  private final AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher;
 
   public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONFIRM_APPOINTMENTS;
 
   @Autowired
   ConfirmNominationAppointmentSubmissionService(CaseEventService caseEventService,
                                                 NominationDetailFileService nominationDetailFileService,
-                                                NominationDetailStatusService nominationDetailStatusService) {
+                                                NominationDetailStatusService nominationDetailStatusService,
+                                                AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher) {
     this.caseEventService = caseEventService;
     this.nominationDetailFileService = nominationDetailFileService;
     this.nominationDetailStatusService = nominationDetailStatusService;
+    this.appointmentConfirmedEventPublisher = appointmentConfirmedEventPublisher;
   }
 
   @Transactional
   public void submitAppointmentConfirmation(NominationDetail nominationDetail,
                                             ConfirmNominationAppointmentForm confirmNominationAppointmentForm) {
 
+    var appointmentConfirmationDate = confirmNominationAppointmentForm.getAppointmentDate().getAsLocalDate()
+        .orElseThrow(
+            () -> new IllegalStateException("Appointment date is invalid in form for nomination [%s]".formatted(
+              nominationDetail.getNomination().getId()
+            )));
+
     caseEventService.createAppointmentConfirmationEvent(
         nominationDetail,
-        confirmNominationAppointmentForm.getAppointmentDate().getAsLocalDate()
-            .orElseThrow(() -> new IllegalStateException("Appointment date is null and passed validation")),
+        appointmentConfirmationDate,
         confirmNominationAppointmentForm.getComments().getInputValue(),
         confirmNominationAppointmentForm.getFiles()
     );
@@ -46,6 +54,8 @@ class ConfirmNominationAppointmentSubmissionService {
     );
 
     nominationDetailStatusService.confirmAppointment(nominationDetail);
+
+    appointmentConfirmedEventPublisher.publish(nominationDetail);
   }
 
 }

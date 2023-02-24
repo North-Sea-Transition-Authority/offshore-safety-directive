@@ -120,6 +120,52 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
+  void getAppointmentConfirmationDateForNominationDetail_whenCaseEventFound_thenAssertDate() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.CLOSED)
+        .build();
+
+    var confirmationInstant = Instant.now();
+
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.CONFIRM_APPOINTMENT)
+        .withNominationVersion(nominationVersion)
+        .withCreatedInstant(confirmationInstant)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.of(caseEvent));
+
+    var result = caseEventQueryService.getAppointmentConfirmationDateForNominationDetail(detail);
+
+    assertThat(result).contains(LocalDate.ofInstant(confirmationInstant, ZoneId.systemDefault()));
+  }
+
+  @Test
+  void getAppointmentConfirmationDateForNominationDetail_whenCaseEventNotFound_thenEmptyOptional() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.CLOSED)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.empty());
+
+    var result = caseEventQueryService.getAppointmentConfirmationDateForNominationDetail(detail);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
   void getCaseEventViewsForNominationDetail_whenQaChecksEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.QA_CHECKS;
     var caseEvent = caseEventBuilder

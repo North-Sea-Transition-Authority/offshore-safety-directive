@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
-enum InstallationPhase implements DisplayableEnumOption {
+public enum InstallationPhase implements DisplayableEnumOption {
   DEVELOPMENT_DESIGN(10, "Development - Design"),
   DEVELOPMENT_CONSTRUCTION(20, "Development - Construction"),
   DEVELOPMENT_INSTALLATION(30, "Development - Installation"),
