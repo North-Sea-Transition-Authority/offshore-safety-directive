@@ -12,7 +12,8 @@ public record AppointmentSearchItemDto(
     AssetName assetName,
     AppointedOperatorName appointedOperatorName,
     LocalDate appointmentDate,
-    AppointmentType appointmentType
+    AppointmentType appointmentType,
+    String timelineUrl
 ) {
 
   public String displayableAppointmentDate() {

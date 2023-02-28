@@ -1,5 +1,6 @@
 <#import '../../../fds/patterns/search/search.ftl' as fdsSearch>
 <#import '../../../fds/components/resultList/resultList.ftl' as fdsResultList>
+<#import '../../util/url.ftl' as url>
 
 <#macro searchSystemOfRecord resultCount appointments searchFilterContent="">
   <@fdsSearch.searchPage>
@@ -10,7 +11,10 @@
         resultCountSuffix="appointment"
       >
         <#list appointments as appointment>
-          <@fdsResultList.resultListItem linkHeadingUrl="#" linkHeadingText=_assetName(appointment)>
+          <@fdsResultList.resultListItem
+            linkHeadingUrl=url.springUrl(appointment.timelineUrl())
+            linkHeadingText=_assetName(appointment)
+          >
             <@fdsResultList.resultListDataItem>
               <@fdsResultList.resultListDataValue key="Appointed operator" value=_appointedOperatorName(appointment)/>
               <@fdsResultList.resultListDataValue key="Appointment date" value=appointment.displayableAppointmentDate()!""/>

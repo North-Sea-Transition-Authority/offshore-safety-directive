@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,10 +27,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
 
 @Service
 class AppointmentSearchService {
@@ -189,17 +194,18 @@ class AppointmentSearchService {
 
       // add appointments for assets we don't have in the energy portal api anymore
       appointmentQueryResultItems
-          .keySet()
+          .entrySet()
           .stream()
-          .filter(appointedPortalAssetId -> !assetIdsKnownByEnergyPortal.contains(appointedPortalAssetId))
-          .forEach(appointedPortalAssetId -> {
+          .filter(appointmentResult -> !assetIdsKnownByEnergyPortal.contains(appointmentResult.getKey()))
+          .forEach(appointmentResult -> {
 
             AppointmentQueryResultItemDto appointmentQueryResultItem =
-                appointmentQueryResultItems.get(appointedPortalAssetId);
+                appointmentQueryResultItems.get(appointmentResult.getKey());
 
             AppointmentSearchItemDto appointment = createAppointmentSearchItem(
-                appointedPortalAssetId,
+                appointmentResult.getKey(),
                 new AssetName(appointmentQueryResultItem.getAssetName()),
+                appointmentResult.getValue().getPortalAssetType(),
                 appointmentQueryResultItem,
                 organisationUnits
             );
@@ -219,6 +225,7 @@ class AppointmentSearchService {
     return createAppointmentSearchItem(
         new AppointedPortalAssetId(String.valueOf(installation.id())),
         new AssetName(installation.name()),
+        PortalAssetType.INSTALLATION,
         appointmentQueryResultItems,
         organisations
     );
@@ -232,6 +239,7 @@ class AppointmentSearchService {
     return createAppointmentSearchItem(
         new AppointedPortalAssetId(String.valueOf(wellbore.wellboreId().id())),
         new AssetName(wellbore.name()),
+        PortalAssetType.WELLBORE,
         appointmentQueryResultItems,
         organisations
     );
@@ -245,6 +253,7 @@ class AppointmentSearchService {
     return createAppointmentSearchItem(
         new AppointedPortalAssetId(String.valueOf(subarea.subareaId().id())),
         new AssetName(subarea.displayName()),
+        PortalAssetType.SUBAREA,
         appointmentQueryResultItems,
         organisations
     );
@@ -253,6 +262,7 @@ class AppointmentSearchService {
   private Optional<AppointmentSearchItemDto> createAppointmentSearchItem(
       AppointedPortalAssetId assetId,
       AssetName assetName,
+      PortalAssetType portalAssetType,
       Map<AppointedPortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems,
       Map<Integer, PortalOrganisationDto> organisations
   ) {
@@ -267,6 +277,7 @@ class AppointmentSearchService {
       var appointmentSearchItem = createAppointmentSearchItem(
           assetId,
           assetName,
+          portalAssetType,
           appointment,
           organisations
       );
@@ -278,23 +289,37 @@ class AppointmentSearchService {
   }
 
   private AppointmentSearchItemDto createAppointmentSearchItem(
-      AppointedPortalAssetId assetId,
+      AppointedPortalAssetId portalAssetId,
       AssetName assetName,
+      PortalAssetType portalAssetType,
       AppointmentQueryResultItemDto appointmentQueryResultItem,
       Map<Integer, PortalOrganisationDto> organisations
   ) {
 
     var operatorName = Optional.ofNullable(
-        organisations.get(Integer.parseInt(appointmentQueryResultItem.getAppointedOperatorId().id())).name()
-    )
+            organisations.get(Integer.parseInt(appointmentQueryResultItem.getAppointedOperatorId().id())).name()
+        )
         .orElse("");
 
     return new AppointmentSearchItemDto(
-        assetId,
+        portalAssetId,
         assetName,
         new AppointedOperatorName(operatorName),
         appointmentQueryResultItem.getAppointmentDate().toLocalDate(),
-        appointmentQueryResultItem.getAppointmentType()
+        appointmentQueryResultItem.getAppointmentType(),
+        getTimelineUrl(portalAssetId, portalAssetType)
     );
+  }
+
+  private String getTimelineUrl(AppointedPortalAssetId appointedPortalAssetId, PortalAssetType portalAssetType) {
+    PortalAssetId portalAssetId = new PortalAssetId(appointedPortalAssetId.id());
+    return switch (portalAssetType) {
+      case INSTALLATION -> ReverseRouter.route(on(AppointmentTimelineController.class)
+          .renderInstallationAppointmentTimeline(portalAssetId));
+      case WELLBORE -> ReverseRouter.route(on(AppointmentTimelineController.class)
+          .renderWellboreAppointmentTimeline(portalAssetId));
+      case SUBAREA -> ReverseRouter.route(on(AppointmentTimelineController.class)
+          .renderSubareaAppointmentTimeline(portalAssetId));
+    };
   }
 }

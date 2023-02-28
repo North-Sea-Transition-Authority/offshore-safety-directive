@@ -23,10 +23,12 @@
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
+  backLinkWithBrowserBack=false
   breadcrumbsList={}
   singleErrorMessage=""
   showNavigationItems=true
   allowSearchEngineIndexing=true
+  pageHeadingCaption=""
 >
 
   <#assign fullWidthColumn=false />
@@ -55,9 +57,13 @@
     <#assign useBreadCrumbs=true>
   </#if>
 
-  <#assign backLink = false>
+  <#assign showBackLink = false>
+
   <#if backLinkUrl?has_content && useBreadCrumbs==false>
-    <#assign backLink=true/>
+    <#assign showBackLink=true/>
+  <#elseif backLinkWithBrowserBack == true && useBreadCrumbs == false>
+    <#assign showBackLink=true/>
+    <#assign backLinkUrl = ""/>
   </#if>
 
   <#assign notificationBannerContent>
@@ -106,7 +112,7 @@
     oneQuarterColumn=oneQuarterColumn
     topNavigation=showNavigationItems
     errorItems=errorItems
-    backLink=backLink
+    backLink=showBackLink
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsList
@@ -115,6 +121,7 @@
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
+    caption=pageHeadingCaption
   >
     <#nested />
   </@fdsDefaultPageTemplate>

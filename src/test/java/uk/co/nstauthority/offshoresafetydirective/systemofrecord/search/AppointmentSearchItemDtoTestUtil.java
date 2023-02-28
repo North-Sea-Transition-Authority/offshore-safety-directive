@@ -29,6 +29,8 @@ class AppointmentSearchItemDtoTestUtil {
 
     private AppointmentType appointmentType = AppointmentType.DEEMED;
 
+    private String timelineUrl = "/timeline-url";
+
     Builder withAssetId(String assetId) {
       this.assetId = new AppointedPortalAssetId(assetId);
       return this;
@@ -54,13 +56,19 @@ class AppointmentSearchItemDtoTestUtil {
       return this;
     }
 
+    Builder withTimelineUrl(String timelineUrl) {
+      this.timelineUrl = timelineUrl;
+      return this;
+    }
+
     AppointmentSearchItemDto build() {
       return new AppointmentSearchItemDto(
           assetId,
           assetName,
           appointedOperatorName,
           appointmentDate,
-          appointmentType
+          appointmentType,
+          timelineUrl
       );
     }
   }

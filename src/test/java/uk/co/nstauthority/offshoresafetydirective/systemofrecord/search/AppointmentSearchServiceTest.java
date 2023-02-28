@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +28,11 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentSearchServiceTest {
@@ -111,7 +115,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -119,7 +124,12 @@ class AppointmentSearchServiceTest {
                 appointedInstallation.name(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                installationAppointment.getAppointmentDate().toLocalDate()
+                installationAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderInstallationAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedInstallationId.id()))
+                    )
+                )
             )
         );
 
@@ -226,7 +236,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -234,7 +245,12 @@ class AppointmentSearchServiceTest {
                 appointedWellbore.name(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                wellboreAppointment.getAppointmentDate().toLocalDate()
+                wellboreAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedWellboreId.id()))
+                    )
+                )
             )
         );
 
@@ -341,7 +357,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -349,7 +366,12 @@ class AppointmentSearchServiceTest {
                 appointedSubarea.displayName(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                subareaAppointment.getAppointmentDate().toLocalDate()
+                subareaAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderSubareaAppointmentTimeline(
+                        new PortalAssetId(appointedSubareaId.id())
+                    )
+                )
             )
         );
 
@@ -740,7 +762,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -748,7 +771,12 @@ class AppointmentSearchServiceTest {
                 appointedInstallation.name(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                installationAppointment.getAppointmentDate().toLocalDate()
+                installationAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderInstallationAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedInstallationId.id()))
+                    )
+                )
             )
         );
 
@@ -938,7 +966,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -946,7 +975,12 @@ class AppointmentSearchServiceTest {
                 appointedWellbore.name(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                wellboreAppointment.getAppointmentDate().toLocalDate()
+                wellboreAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedWellboreId.id()))
+                    )
+                )
             )
         );
 
@@ -1139,7 +1173,8 @@ class AppointmentSearchServiceTest {
             appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
             appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
             AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
         )
         .containsExactly(
             tuple(
@@ -1147,7 +1182,12 @@ class AppointmentSearchServiceTest {
                 appointedSubarea.displayName(),
                 appointedOperator.name(),
                 AppointmentType.NOMINATED,
-                subareaAppointment.getAppointmentDate().toLocalDate()
+                subareaAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderSubareaAppointmentTimeline(
+                        new PortalAssetId(appointedSubareaId.id())
+                    )
+                )
             )
         );
 

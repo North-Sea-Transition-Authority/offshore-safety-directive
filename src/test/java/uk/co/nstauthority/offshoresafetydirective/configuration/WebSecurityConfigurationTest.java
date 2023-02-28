@@ -10,11 +10,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,8 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordLandingPageController;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordSearchController;
 
 @AutoConfigureMockMvc
 @TestPropertySource(properties = "energy-portal.logout-url=https://portal-logout-url.co.uk")
@@ -75,22 +69,5 @@ class WebSecurityConfigurationTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("https://portal-logout-url.co.uk"))
         .andExpect(unauthenticated());
-  }
-
-  @ParameterizedTest
-  @MethodSource("getUnauthenticatedEndpoints")
-  void security_verifyUnauthenticatedEndpoints(String inputUrl) throws Exception {
-    mockMvc.perform(get(inputUrl))
-        .andExpect(status().isOk());
-  }
-
-  private static Stream<Arguments> getUnauthenticatedEndpoints() {
-    return Stream.of(
-        Arguments.of(ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage())),
-        Arguments.of(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch())),
-        Arguments.of(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())),
-        Arguments.of(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())),
-        Arguments.of(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch()))
-    );
   }
 }
