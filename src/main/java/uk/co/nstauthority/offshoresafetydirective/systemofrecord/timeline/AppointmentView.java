@@ -13,6 +13,8 @@ public record AppointmentView(
     String appointedOperatorName,
     AppointmentFromDate appointmentFromDate,
     AppointmentToDate appointmentToDate,
-    List<AssetAppointmentPhase> phases
+    List<AssetAppointmentPhase> phases,
+    String createdByReference,
+    String nominationUrl
 ) {
 }

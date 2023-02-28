@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -21,19 +22,30 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentTimelineServiceTest {
@@ -52,6 +64,15 @@ class AppointmentTimelineServiceTest {
 
   @Mock
   private AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
+
+  @Mock
+  private UserDetailService userDetailService;
+
+  @Mock
+  private PermissionService permissionService;
+
+  @Mock
+  private NominationAccessService nominationAccessService;
 
   @InjectMocks
   private AppointmentTimelineService appointmentTimelineService;
@@ -609,6 +630,342 @@ class AppointmentTimelineServiceTest {
         .containsExactly(
             firstPhaseByDisplayOrder.getScreenDisplayText(),
             secondPhaseByDisplayOrder.getScreenDisplayText()
+        );
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenDeemedAppointment_thenCreatedByReferenceIsDeemed() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var deemedAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(deemedAppointment));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("Deemed appointment");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenForwardApprovedAppointment_thenCreatedByReferenceIsForwardApproved() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var forwardApprovalAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(forwardApprovalAppointment));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("Forward approval appointment");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenAppointmentFromLegacyNomination_thenCreatedByReferenceIsLegacyReference() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var legacyAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withLegacyNominationReference("legacy nomination reference")
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(legacyAppointment));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("legacy nomination reference");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenAppointmentFromNomination_thenCreatedByReferenceIsNominationReference() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var nominationDto = NominationDtoTestUtil.builder()
+        .withNominationId(200)
+        .withNominationReference("nomination reference")
+        .build();
+
+    var nominatedAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withLegacyNominationReference(null)
+        .withNominationId(nominationDto.nominationId())
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(nominatedAppointment));
+
+    given(nominationAccessService.getNomination(nominationDto.nominationId()))
+        .willReturn(Optional.of(nominationDto));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("nomination reference");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenAppointmentFromUnknownNomination_thenCreatedByReferenceIsUnknown() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var unknownNominationId = new NominationId(-1);
+
+    var unknownNominationAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withLegacyNominationReference(null)
+        .withNominationId(unknownNominationId)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(unknownNominationAppointment));
+
+    given(nominationAccessService.getNomination(unknownNominationId))
+        .willReturn(Optional.empty());
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("Unknown");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenAppointmentFromUnknownSource_thenCreatedByReferenceIsUnknown() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentWithUnknownType = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(null)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentWithUnknownType));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::createdByReference)
+        .isEqualTo("Unknown");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenNoNominationId_thenNominationUrlIsNull() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var noNominationIdAppointment = AppointmentDtoTestUtil.builder()
+        .withNominationId(null)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(noNominationIdAppointment));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::nominationUrl)
+        .isNull();
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserNotLoggedIn_thenNominationUrlIsNull() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::nominationUrl)
+        .isNull();
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserLoggedButNoPermissionOnNomination_thenNominationUrlIsNull() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+    )
+        .willReturn(false);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::nominationUrl)
+        .isNull();
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndHasPermissionOnNomination_thenNominationUrlIsNotNull() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+    )
+        .willReturn(true);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::nominationUrl)
+        .isEqualTo(
+            ReverseRouter.route(on(NominationCaseProcessingController.class)
+                .renderCaseProcessing(appointmentDto.nominationId()))
         );
   }
 }

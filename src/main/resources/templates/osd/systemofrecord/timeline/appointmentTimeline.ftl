@@ -29,9 +29,11 @@
               <@fdsDataItems.dataItem>
                 <@fdsDataItems.dataValues key="From" value=appointment.appointmentFromDate().formattedValue()/>
                 <@fdsDataItems.dataValues key="To" value=_appointmentToDate(appointment)/>
+                <@fdsDataItems.dataValues key="Created by" value=_appointmentCreatedByReference(appointment)/>
               </@fdsDataItems.dataItem>
               <@fdsDataItems.dataItem>
                 <@fdsDataItems.dataValues key="Phases" value=_appointmentPhases(appointment)/>
+                <@fdsDataItems.dataValues key="" value=""/>
                 <@fdsDataItems.dataValues key="" value=""/>
               </@fdsDataItems.dataItem>
             </@fdsTimeline.timelineEvent>
@@ -72,4 +74,20 @@
     </#if>
   </#assign>
   <#return appointmentPhases/>
+</#function>
+
+<#function _appointmentCreatedByReference appointment>
+  <#assign createdByReference>
+    <#if appointment.nominationUrl()?has_content>
+      <@fdsAction.link
+        linkText=appointment.createdByReference()
+        linkUrl=springUrl(appointment.nominationUrl())
+        openInNewTab=true
+        linkClass="govuk-link govuk-link--no-visited-state"
+      />
+    <#else>
+       ${appointment.createdByReference()}
+    </#if>
+  </#assign>
+  <#return createdByReference/>
 </#function>

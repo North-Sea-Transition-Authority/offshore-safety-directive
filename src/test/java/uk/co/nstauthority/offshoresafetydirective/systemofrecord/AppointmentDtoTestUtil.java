@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 public class AppointmentDtoTestUtil {
 
@@ -31,6 +32,12 @@ public class AppointmentDtoTestUtil {
     private AppointmentToDate appointmentToDate = new AppointmentToDate(null);
 
     private Instant appointmentCreatedDate = Instant.now();
+
+    private AppointmentType appointmentType = AppointmentType.NOMINATED;
+
+    private String legacyNominationReference = "";
+
+    private NominationId nominationId = new NominationId(123);
 
     public Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
@@ -62,6 +69,21 @@ public class AppointmentDtoTestUtil {
       return this;
     }
 
+    public Builder withAppointmentType(AppointmentType appointmentType) {
+      this.appointmentType = appointmentType;
+      return this;
+    }
+
+    public Builder withLegacyNominationReference(String legacyNominationReference) {
+      this.legacyNominationReference = legacyNominationReference;
+      return this;
+    }
+
+    public Builder withNominationId(NominationId nominationId) {
+      this.nominationId = nominationId;
+      return this;
+    }
+
     public AppointmentDto build() {
       return new AppointmentDto(
           appointmentId,
@@ -69,7 +91,10 @@ public class AppointmentDtoTestUtil {
           appointedOperatorId,
           appointmentFromDate,
           appointmentToDate,
-          appointmentCreatedDate
+          appointmentCreatedDate,
+          appointmentType,
+          legacyNominationReference,
+          nominationId
       );
     }
   }

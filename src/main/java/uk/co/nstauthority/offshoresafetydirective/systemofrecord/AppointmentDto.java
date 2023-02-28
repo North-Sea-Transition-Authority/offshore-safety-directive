@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import java.time.Instant;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 public record AppointmentDto(
     AppointmentId appointmentId,
@@ -8,7 +9,10 @@ public record AppointmentDto(
     AppointedOperatorId appointedOperatorId,
     AppointmentFromDate appointmentFromDate,
     AppointmentToDate appointmentToDate,
-    Instant appointmentCreatedDate
+    Instant appointmentCreatedDate,
+    AppointmentType appointmentType,
+    String legacyNominationReference,
+    NominationId nominationId
 ) {
 
   static AppointmentDto fromAppointment(Appointment appointment) {
@@ -18,7 +22,12 @@ public record AppointmentDto(
         new AppointedOperatorId(String.valueOf(appointment.getAppointedPortalOperatorId())),
         new AppointmentFromDate(appointment.getResponsibleFromDate()),
         new AppointmentToDate(appointment.getResponsibleToDate()),
-        appointment.getCreatedDatetime()
+        appointment.getCreatedDatetime(),
+        appointment.getAppointmentType(),
+        appointment.getCreatedByLegacyNominationReference(),
+        (appointment.getCreatedByNominationId() != null)
+            ? new NominationId(appointment.getCreatedByNominationId())
+            : null
     );
   }
 }

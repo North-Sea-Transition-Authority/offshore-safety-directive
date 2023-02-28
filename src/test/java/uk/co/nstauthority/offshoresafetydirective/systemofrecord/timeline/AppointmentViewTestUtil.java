@@ -40,6 +40,10 @@ class AppointmentViewTestUtil {
 
     private List<AssetAppointmentPhase> phases = new ArrayList<>();
 
+    private String createdByReference = "legacy nomination reference";
+
+    private String nominationUrl = "/nomination-url";
+
     Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
       return this;
@@ -83,6 +87,16 @@ class AppointmentViewTestUtil {
       return this;
     }
 
+    Builder withCreatedByReference(String createdByReference) {
+      this.createdByReference = createdByReference;
+      return this;
+    }
+
+    Builder withNominationUrl(String nominationUrl) {
+      this.nominationUrl = nominationUrl;
+      return this;
+    }
+
     AppointmentView build() {
       return new AppointmentView(
           appointmentId,
@@ -90,7 +104,9 @@ class AppointmentViewTestUtil {
           appointedOperatorName,
           appointmentFromDate,
           appointmentToDate,
-          phases
+          phases,
+          createdByReference,
+          nominationUrl
       );
     }
 
