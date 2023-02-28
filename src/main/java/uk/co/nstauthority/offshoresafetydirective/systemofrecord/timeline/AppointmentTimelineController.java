@@ -50,6 +50,8 @@ public class AppointmentTimelineController {
 
     return new ModelAndView("osd/systemofrecord/timeline/appointmentTimeline")
         .addObject("assetName", assetAppointmentHistory.assetName().value())
-        .addObject("assetTypeDisplayName", portalAssetType.getDisplayName());
+        .addObject("assetTypeDisplayName", portalAssetType.getDisplayName())
+        .addObject("assetTypeDisplayNameSentenceCase", portalAssetType.getSentenceCaseDisplayName())
+        .addObject("appointments", assetAppointmentHistory.appointments());
   }
 }

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -78,8 +79,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
+    var appointmentView = AppointmentViewTestUtil.builder().build();
+
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
+        .withAppointmentView(appointmentView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -95,7 +99,12 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
         .andExpect(model().attribute("assetName", assetName))
-        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.INSTALLATION.getDisplayName()));
+        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.INSTALLATION.getDisplayName()))
+        .andExpect(model().attribute(
+            "assetTypeDisplayNameSentenceCase",
+            PortalAssetType.INSTALLATION.getSentenceCaseDisplayName())
+        )
+        .andExpect(model().attribute("appointments", List.of(appointmentView)));
   }
 
   @Test
@@ -103,8 +112,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
+    var appointmentView = AppointmentViewTestUtil.builder().build();
+
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
+        .withAppointmentView(appointmentView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -120,7 +132,12 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
         .andExpect(model().attribute("assetName", assetName))
-        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.WELLBORE.getDisplayName()));
+        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.WELLBORE.getDisplayName()))
+        .andExpect(model().attribute(
+            "assetTypeDisplayNameSentenceCase",
+            PortalAssetType.WELLBORE.getSentenceCaseDisplayName())
+        )
+        .andExpect(model().attribute("appointments", List.of(appointmentView)));
   }
 
   @Test
@@ -128,8 +145,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
+    var appointmentView = AppointmentViewTestUtil.builder().build();
+
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
+        .withAppointmentView(appointmentView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -145,7 +165,12 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
         .andExpect(model().attribute("assetName", assetName))
-        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.SUBAREA.getDisplayName()));
+        .andExpect(model().attribute("assetTypeDisplayName", PortalAssetType.SUBAREA.getDisplayName()))
+        .andExpect(model().attribute(
+            "assetTypeDisplayNameSentenceCase",
+            PortalAssetType.SUBAREA.getSentenceCaseDisplayName())
+        )
+        .andExpect(model().attribute("appointments", List.of(appointmentView)));
   }
 
   @Test

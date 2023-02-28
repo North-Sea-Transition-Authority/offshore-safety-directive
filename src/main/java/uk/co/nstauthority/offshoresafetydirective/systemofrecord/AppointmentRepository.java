@@ -11,4 +11,6 @@ interface AppointmentRepository extends CrudRepository<Appointment, UUID> {
 
   List<Appointment> findAllByAssetInAndResponsibleToDateIsNull(Collection<Asset> asset);
 
+  List<Appointment> findAllByAsset_id(UUID assetId);
+
 }
