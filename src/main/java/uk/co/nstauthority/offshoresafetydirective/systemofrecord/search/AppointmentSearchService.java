@@ -25,6 +25,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 @Service

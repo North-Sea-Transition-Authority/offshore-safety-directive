@@ -4,6 +4,9 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 

@@ -2,7 +2,10 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import java.time.LocalDate;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 
 class AppointmentSearchItemDtoTestUtil {
 
