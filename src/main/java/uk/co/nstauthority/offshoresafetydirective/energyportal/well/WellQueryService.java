@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -77,5 +78,11 @@ public class WellQueryService {
           .map(WellDto::fromPortalWellbore)
           .toList();
     }));
+  }
+
+  public Optional<WellDto> getWell(WellboreId wellboreId) {
+    return getWellsByIds(List.of(wellboreId))
+        .stream()
+        .findFirst();
   }
 }

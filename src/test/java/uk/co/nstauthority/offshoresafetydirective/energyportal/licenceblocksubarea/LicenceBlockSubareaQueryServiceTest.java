@@ -394,4 +394,47 @@ class LicenceBlockSubareaQueryServiceTest {
             )
         );
   }
+
+  @Test
+  void getLicenceBlockSubarea_whenNoMatch_thenEmptyOptionalReturned() {
+
+    var unmatchedSubareaId = new LicenceBlockSubareaId("not a match");
+
+    given(subareaApi.searchSubareasByIds(
+        eq(List.of(unmatchedSubareaId.id())),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(Collections.emptyList());
+
+    var resultingSubarea = licenceBlockSubareaQueryService.getLicenceBlockSubarea(unmatchedSubareaId);
+
+    assertThat(resultingSubarea).isEmpty();
+  }
+
+  @Test
+  void getLicenceBlockSubarea_whenMatch_thenPopulatedOptionalReturned() {
+
+    var matchedSubareaId = new LicenceBlockSubareaId("matching id");
+
+    var expectedSubarea = EpaSubareaTestUtil.builder()
+        .withSubareaId(matchedSubareaId)
+        .build();
+
+    given(subareaApi.searchSubareasByIds(
+        eq(List.of(matchedSubareaId.id())),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedSubarea));
+
+    var resultingSubarea = licenceBlockSubareaQueryService.getLicenceBlockSubarea(matchedSubareaId);
+
+    assertThat(resultingSubarea).isPresent();
+    assertThat(resultingSubarea.get())
+        .extracting(LicenceBlockSubareaDto::subareaId)
+        .isEqualTo(matchedSubareaId);
+  }
 }

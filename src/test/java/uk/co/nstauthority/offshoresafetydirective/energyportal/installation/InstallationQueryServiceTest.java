@@ -331,4 +331,45 @@ class InstallationQueryServiceTest {
         .should(never())
         .searchFacilitiesByIds(anyList(), any(), any(), any());
   }
+
+  @Test
+  void getInstallation_whenNoMatch_thenEmptyOptionalReturned() {
+
+    var unmatchedInstallationId = new InstallationId(-1);
+
+    when(facilityApi.searchFacilitiesByIds(
+        eq(List.of(unmatchedInstallationId.id())),
+        eq(InstallationQueryService.FACILITIES_BY_IDS_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(Collections.emptyList());
+
+    var resultingInstallation = installationQueryService.getInstallation(unmatchedInstallationId);
+
+    assertThat(resultingInstallation).isEmpty();
+  }
+
+  @Test
+  void getInstallation_whenMatch_thenPopulatedOptionalReturned() {
+
+    var matchedInstallationId = new InstallationId(1);
+
+    var expectedInstallation = EpaFacilityTestUtil.builder()
+        .withId(matchedInstallationId)
+        .build();
+
+    when(facilityApi.searchFacilitiesByIds(
+        eq(List.of(matchedInstallationId.id())),
+        eq(InstallationQueryService.FACILITIES_BY_IDS_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(List.of(expectedInstallation));
+
+    var resultingInstallation = installationQueryService.getInstallation(matchedInstallationId);
+
+    assertThat(resultingInstallation).isPresent();
+    assertThat(resultingInstallation.get())
+        .extracting(InstallationDto::id)
+        .isEqualTo(matchedInstallationId.id());
+  }
 }

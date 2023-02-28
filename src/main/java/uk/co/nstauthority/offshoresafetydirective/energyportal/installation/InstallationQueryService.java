@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -105,6 +106,12 @@ public class InstallationQueryService {
 
     var installationIdList = installationIds.stream().map(InstallationId::id).toList();
     return getInstallationsByIdIn(installationIdList);
+  }
+
+  public Optional<InstallationDto> getInstallation(InstallationId installationId) {
+    return getInstallationsByIds(List.of(installationId))
+        .stream()
+        .findFirst();
   }
 
   private InstallationDto convertToInstallationDto(Facility facility) {
