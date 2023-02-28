@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,13 +17,18 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 class AppointmentService {
 
   private final AppointmentRepository appointmentRepository;
+
   private final NomineeDetailAccessService nomineeDetailAccessService;
+
+  private final Clock clock;
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
-                     NomineeDetailAccessService nomineeDetailAccessService) {
+                     NomineeDetailAccessService nomineeDetailAccessService,
+                     Clock clock) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
+    this.clock = clock;
   }
 
   @Transactional
@@ -47,6 +53,7 @@ class AppointmentService {
       appointment.setCreatedByNominationId(nominationDetail.getNomination().getId());
       appointment.setAppointmentType(AppointmentType.NOMINATED);
       appointment.setAppointedPortalOperatorId(nomineeDetailDto.nominatedOrganisationId().id());
+      appointment.setCreatedDatetime(clock.instant());
       newAppointments.add(appointment);
     });
 

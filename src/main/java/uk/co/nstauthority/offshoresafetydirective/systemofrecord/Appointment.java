@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import javax.persistence.Column;
@@ -41,6 +42,8 @@ public class Appointment {
   private Integer createdByNominationId;
   private String createdByLegacyNominationReference;
   private UUID createdByAppointmentId;
+
+  private Instant createdDatetime;
 
   @VisibleForTesting
   Appointment(UUID id) {
@@ -116,5 +119,13 @@ public class Appointment {
 
   void setCreatedByAppointmentId(UUID createdByAppointmentId) {
     this.createdByAppointmentId = createdByAppointmentId;
+  }
+
+  Instant getCreatedDatetime() {
+    return createdDatetime;
+  }
+
+  void setCreatedDatetime(Instant createdDatetime) {
+    this.createdDatetime = createdDatetime;
   }
 }

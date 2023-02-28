@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
@@ -25,6 +26,7 @@ public class AppointmentTestUtil {
     private Integer createdByNominationId = 12321;
     private String createdByLegacyNominationReference;
     private UUID createdByAppointmentId;
+    private Instant createdDatetime = Instant.now();
 
     public Builder withId(UUID id) {
       this.id = id;
@@ -72,6 +74,11 @@ public class AppointmentTestUtil {
       return this;
     }
 
+    public Builder withCreatedDatetime(Instant createdDatetime) {
+      this.createdDatetime = createdDatetime;
+      return this;
+    }
+
     private Builder() {
     }
 
@@ -85,6 +92,7 @@ public class AppointmentTestUtil {
       appointment.setCreatedByNominationId(createdByNominationId);
       appointment.setCreatedByLegacyNominationReference(createdByLegacyNominationReference);
       appointment.setCreatedByAppointmentId(createdByAppointmentId);
+      appointment.setCreatedDatetime(createdDatetime);
       return appointment;
     }
 
