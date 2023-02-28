@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Arrays;
+import java.util.Objects;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
 public enum InstallationPhase implements DisplayableEnumOption {
@@ -31,5 +33,12 @@ public enum InstallationPhase implements DisplayableEnumOption {
   @Override
   public String getFormValue() {
     return this.name();
+  }
+
+  public static InstallationPhase valueOfOrNull(String installationPhase) {
+    return Arrays.stream(InstallationPhase.values())
+        .filter(phase -> Objects.equals(phase.name(), installationPhase))
+        .findFirst()
+        .orElse(null);
   }
 }

@@ -8,17 +8,17 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
-class AssetDtoTestUtil {
+public class AssetDtoTestUtil {
 
   private AssetDtoTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private AssetId assetId = new AssetId(UUID.randomUUID());
 
@@ -28,27 +28,27 @@ class AssetDtoTestUtil {
 
     private PortalAssetType portalAssetType = PortalAssetType.INSTALLATION;
 
-    Builder withAssetId(UUID assetId) {
+    public Builder withAssetId(UUID assetId) {
       this.assetId = new AssetId(assetId);
       return this;
     }
 
-    Builder withPortalAssetId(String portalAssetId) {
+    public Builder withPortalAssetId(String portalAssetId) {
       this.portalAssetId = new PortalAssetId(portalAssetId);
       return this;
     }
 
-    Builder withAssetName(String assetName) {
+    public Builder withAssetName(String assetName) {
       this.assetName = new AssetName(assetName);
       return this;
     }
 
-    Builder withPortalAssetType(PortalAssetType portalAssetType) {
+    public Builder withPortalAssetType(PortalAssetType portalAssetType) {
       this.portalAssetType = portalAssetType;
       return this;
     }
 
-    AssetDto build() {
+    public AssetDto build() {
       return new AssetDto(
           assetId,
           portalAssetId,

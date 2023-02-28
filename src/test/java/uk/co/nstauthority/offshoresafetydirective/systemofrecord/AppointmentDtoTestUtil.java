@@ -22,7 +22,7 @@ public class AppointmentDtoTestUtil {
 
     private AppointedPortalAssetId portalAssetId = new AppointedPortalAssetId("portal asset id");
 
-    private AppointedOperatorId appointedOperatorId = new AppointedOperatorId("operator id");
+    private AppointedOperatorId appointedOperatorId = new AppointedOperatorId("123");
 
     private AppointmentFromDate appointmentFromDate = new AppointmentFromDate(
         LocalDate.now().minus(1, ChronoUnit.DAYS)

@@ -30,6 +30,10 @@
                 <@fdsDataItems.dataValues key="From" value=appointment.appointmentFromDate().formattedValue()/>
                 <@fdsDataItems.dataValues key="To" value=_appointmentToDate(appointment)/>
               </@fdsDataItems.dataItem>
+              <@fdsDataItems.dataItem>
+                <@fdsDataItems.dataValues key="Phases" value=_appointmentPhases(appointment)/>
+                <@fdsDataItems.dataValues key="" value=""/>
+              </@fdsDataItems.dataItem>
             </@fdsTimeline.timelineEvent>
           </@fdsTimeline.timelineTimeStamp>
         </#list>
@@ -51,4 +55,21 @@
     </#if>
   </#assign>
   <#return appointmentToDate/>
+</#function>
+
+<#function _appointmentPhases appointment>
+  <#assign appointmentPhases>
+    <#if appointment.phases()?has_content && appointment.phases()?size != 1>
+      <ol class="govuk-list">
+        <#list appointment.phases() as phase>
+          <li class="govuk-list__item">${phase.value()}</li>
+        </#list>
+      </ol>
+    <#else>
+      <#list appointment.phases() as phase>
+        ${phase.value()}
+      </#list>
+    </#if>
+  </#assign>
+  <#return appointmentPhases/>
 </#function>

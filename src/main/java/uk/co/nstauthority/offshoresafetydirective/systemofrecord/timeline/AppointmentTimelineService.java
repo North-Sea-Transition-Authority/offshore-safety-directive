@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +15,15 @@ import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
@@ -34,15 +40,19 @@ class AppointmentTimelineService {
 
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
+  private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
+
   @Autowired
   AppointmentTimelineService(PortalAssetNameService portalAssetNameService,
                              AssetAccessService assetAccessService,
                              AppointmentAccessService appointmentAccessService,
-                             PortalOrganisationUnitQueryService organisationUnitQueryService) {
+                             PortalOrganisationUnitQueryService organisationUnitQueryService,
+                             AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService) {
     this.portalAssetNameService = portalAssetNameService;
     this.assetAccessService = assetAccessService;
     this.appointmentAccessService = appointmentAccessService;
     this.organisationUnitQueryService = organisationUnitQueryService;
+    this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
   }
 
   Optional<AssetAppointmentHistory> getAppointmentHistoryForPortalAsset(PortalAssetId portalAssetId,
@@ -68,7 +78,7 @@ class AppointmentTimelineService {
           .toList();
 
       if (!CollectionUtils.isEmpty(appointments)) {
-        appointmentViews = getAppointmentViews(appointments);
+        appointmentViews = getAppointmentViews(appointments, asset);
       }
 
       cachedAssetName = asset.assetName();
@@ -95,11 +105,14 @@ class AppointmentTimelineService {
         ));
   }
 
-  private List<AppointmentView> getAppointmentViews(List<AppointmentDto> appointments) {
+  private List<AppointmentView> getAppointmentViews(List<AppointmentDto> appointments, AssetDto assetDto) {
 
     List<AppointmentView> appointmentViews = new ArrayList<>();
 
     Map<AppointedOperatorId, PortalOrganisationDto> organisationUnitLookup = getAppointedOperators(appointments);
+
+    Map<AppointmentId, List<AssetAppointmentPhase>> appointmentPhases = assetAppointmentPhaseAccessService
+        .getAppointmentPhases(assetDto);
 
     appointments
         .stream()
@@ -110,7 +123,11 @@ class AppointmentTimelineService {
               .map(PortalOrganisationDto::name)
               .orElse("Unknown operator");
 
-          var appointmentView = convertToAppointmentView(appointment, operatorName);
+          var phases = Optional.ofNullable(appointmentPhases.get(appointment.appointmentId()))
+              .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
+              .orElse(Collections.emptyList());
+
+          var appointmentView = convertToAppointmentView(appointment, operatorName, phases);
 
           appointmentViews.add(appointmentView);
         });
@@ -119,13 +136,35 @@ class AppointmentTimelineService {
   }
 
   private AppointmentView convertToAppointmentView(AppointmentDto appointmentDto,
-                                                   String operatorName) {
+                                                   String operatorName,
+                                                   List<AssetAppointmentPhase> phases) {
     return new AppointmentView(
         appointmentDto.appointmentId(),
         appointmentDto.portalAssetId(),
         operatorName,
         appointmentDto.appointmentFromDate(),
-        appointmentDto.appointmentToDate()
+        appointmentDto.appointmentToDate(),
+        phases
     );
+  }
+
+  private List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
+                                                                      List<AssetAppointmentPhase> assetPhases) {
+    return switch (assetDto.portalAssetType()) {
+      case INSTALLATION -> assetPhases
+          .stream()
+          .map(assetPhase -> Optional.ofNullable(InstallationPhase.valueOfOrNull(assetPhase.value())))
+          .flatMap(Optional::stream)
+          .sorted(Comparator.comparing(InstallationPhase::getDisplayOrder))
+          .map(installationPhase -> new AssetAppointmentPhase(installationPhase.getScreenDisplayText()))
+          .toList();
+      case WELLBORE, SUBAREA -> assetPhases
+          .stream()
+          .map(assetPhase -> Optional.ofNullable(WellPhase.valueOfOrNull(assetPhase.value())))
+          .flatMap(Optional::stream)
+          .sorted(Comparator.comparing(WellPhase::getDisplayOrder))
+          .map(wellPhase -> new AssetAppointmentPhase(wellPhase.getScreenDisplayText()))
+          .toList();
+    };
   }
 }

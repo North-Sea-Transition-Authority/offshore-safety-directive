@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.Arrays;
+import java.util.Objects;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
 public enum WellPhase implements DisplayableEnumOption {
@@ -29,5 +31,12 @@ public enum WellPhase implements DisplayableEnumOption {
   @Override
   public String getFormValue() {
     return this.name();
+  }
+
+  public static WellPhase valueOfOrNull(String wellPhase) {
+    return Arrays.stream(WellPhase.values())
+        .filter(phase -> Objects.equals(phase.name(), wellPhase))
+        .findFirst()
+        .orElse(null);
   }
 }
