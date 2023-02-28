@@ -15,5 +15,5 @@
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
 >
-  <@sorSearch.searchSystemOfRecord resultCount=0 />
+  <@sorSearch.searchSystemOfRecord resultCount=appointments?size appointments=appointments/>
 </@defaultPage>

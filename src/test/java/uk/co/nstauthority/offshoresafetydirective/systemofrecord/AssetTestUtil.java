@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 

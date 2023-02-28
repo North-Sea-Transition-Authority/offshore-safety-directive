@@ -16,7 +16,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "appointments")
-class Appointment {
+public class Appointment {
 
   @Id
   @GeneratedValue(generator = "uuid")
@@ -50,7 +50,7 @@ class Appointment {
   protected Appointment() {
   }
 
-  UUID getId() {
+  public UUID getId() {
     return id;
   }
 
