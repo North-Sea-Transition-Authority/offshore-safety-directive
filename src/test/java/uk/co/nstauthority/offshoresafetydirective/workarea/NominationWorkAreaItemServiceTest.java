@@ -345,7 +345,7 @@ class NominationWorkAreaItemServiceTest {
             WorkAreaItem::headingText,
             WorkAreaItem::captionText
         ).containsExactly(
-            Tuple.tuple("Draft nomination", "Created on 23 Nov 2022 16:40")
+            Tuple.tuple("Draft nomination", "Created on 23 November 2022 16:40")
         );
   }
 
@@ -369,7 +369,7 @@ class NominationWorkAreaItemServiceTest {
             WorkAreaItem::headingText,
             WorkAreaItem::captionText
         ).containsExactly(
-            Tuple.tuple(draftNomination.getNominationReference().reference(), "Created on 23 Nov 2022 16:40")
+            Tuple.tuple(draftNomination.getNominationReference().reference(), "Created on 23 November 2022 16:40")
         );
   }
 

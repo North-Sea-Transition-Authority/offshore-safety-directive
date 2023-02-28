@@ -1,9 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
@@ -49,6 +52,30 @@ public class PortalOrganisationUnitQueryService {
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .findFirst();
+  }
+
+  public List<PortalOrganisationDto> getOrganisationByIds(Collection<PortalOrganisationUnitId> organisationUnitIds) {
+
+    if (CollectionUtils.isEmpty(organisationUnitIds)) {
+      return Collections.emptyList();
+    }
+
+    var organisationUnitIdToRequest = organisationUnitIds
+        .stream()
+        .map(PortalOrganisationUnitId::id)
+        .toList();
+
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+            organisationApi.getOrganisationUnitsByIds(
+                organisationUnitIdToRequest,
+                MULTI_ORGANISATION_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
+        ))
+        .stream()
+        .map(PortalOrganisationDto::fromOrganisationUnit)
+        .toList();
   }
 
   List<PortalOrganisationDto> queryOrganisationByName(String organisationName) {

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -107,7 +108,9 @@ public class LicenceBlockSubareaQueryService {
     }));
   }
 
-  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(List<LicenceBlockSubareaId> licenceBlockSubareaIds) {
+  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(
+      Collection<LicenceBlockSubareaId> licenceBlockSubareaIds
+  ) {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();

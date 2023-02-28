@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
@@ -205,5 +208,66 @@ class PortalOrganisationUnitQueryServiceTest {
     var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(numberToSearchFor);
 
     assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(activeOrganisationUnit));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getOrganisationByIds_whenInputIdsNullOrEmpty_thenEmptyListReturned(List<PortalOrganisationUnitId> organisationUnitIds) {
+
+    organisationApi = mock(OrganisationApi.class);
+
+    portalOrganisationUnitQueryService = new PortalOrganisationUnitQueryService(
+        organisationApi,
+        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+    );
+
+    var resultingOrganisationUnits = portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds);
+
+    assertThat(resultingOrganisationUnits).isEmpty();
+
+    then(organisationApi).shouldHaveNoInteractions();
+  }
+
+  @Test
+  void getOrganisationByIds_whenNoMatch_thenEmptyListReturned() {
+
+    var unmatchedOrganisationUnitId = new PortalOrganisationUnitId(-1);
+
+    when(organisationApi.getOrganisationUnitsByIds(
+        eq(List.of(unmatchedOrganisationUnitId.id())),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(Collections.emptyList());
+
+    var resultingOrganisationUnits = portalOrganisationUnitQueryService
+        .getOrganisationByIds(List.of(unmatchedOrganisationUnitId));
+
+    assertThat(resultingOrganisationUnits).isEmpty();
+  }
+
+  @Test
+  void getOrganisationByIds_whenMatch_thenPopulatedListReturned() {
+
+    var matchedOrganisationUnitId = new PortalOrganisationUnitId(100);
+
+    var expectedOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
+        .withId(matchedOrganisationUnitId.id())
+        .build();
+
+    when(organisationApi.getOrganisationUnitsByIds(
+        eq(List.of(matchedOrganisationUnitId.id())),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(List.of(expectedOrganisationUnit));
+
+    var resultingOrganisationUnits = portalOrganisationUnitQueryService
+        .getOrganisationByIds(List.of(matchedOrganisationUnitId));
+
+    assertThat(resultingOrganisationUnits)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(matchedOrganisationUnitId.id());
+
   }
 }

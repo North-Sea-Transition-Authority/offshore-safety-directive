@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ public class WellQueryService {
     ));
   }
 
-  public List<WellDto> getWellsByIds(List<WellboreId> wellboreIds) {
+  public List<WellDto> getWellsByIds(Collection<WellboreId> wellboreIds) {
 
     if (CollectionUtils.isEmpty(wellboreIds)) {
       return Collections.emptyList();

@@ -126,7 +126,7 @@ class NominationWorkAreaItemService {
       case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
       default -> switch (dto.nominationStatus().getSubmissionStage()) {
         case POST_SUBMISSION -> null;
-        case PRE_SUBMISSION -> "Created on %s".formatted(DateUtil.formatDateTime(dto.createdTime().instant()));
+        case PRE_SUBMISSION -> "Created on %s".formatted(DateUtil.formatLongDateTime(dto.createdTime().instant()));
       };
     };
   }

@@ -119,7 +119,7 @@ public class CaseEventView {
       this.nominationVersion = nominationVersion;
       this.createdInstant = createdInstant;
       this.eventInstant = eventInstant;
-      this.formattedEventTime = DateUtil.formatDateTime(eventInstant);
+      this.formattedEventTime = DateUtil.formatLongDateTime(eventInstant);
       this.createdBy = createdBy;
     }
 

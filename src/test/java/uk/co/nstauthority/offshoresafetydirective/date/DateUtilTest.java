@@ -6,65 +6,89 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneOffset;
-import org.junit.jupiter.api.Test;
+import java.time.temporal.Temporal;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class DateUtilTest {
 
-  @Test
-  void formatDateTime_whenInstant_thenExpectFormattedDate() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48).toInstant(ZoneOffset.UTC);
-    var result = DateUtil.formatDateTime(timeToFormat);
-    assertThat(result).isEqualTo("16 Jan 2022 17:05");
+  @ParameterizedTest
+  @MethodSource("getMiddleOfMonthTestDateTimes")
+  void formatDateTime_thenExpectFormattedDate(Temporal temporalToFormat) {
+    var result = DateUtil.formatLongDateTime(temporalToFormat);
+    assertThat(result).isEqualTo("16 January 2022 17:05");
   }
 
-  @Test
-  void formatDateTime_whenLocalDateTime_thenExpectFormattedDate() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48);
-    var result = DateUtil.formatDateTime(timeToFormat);
-    assertThat(result).isEqualTo("16 Jan 2022 17:05");
+  @ParameterizedTest
+  @MethodSource("getStartOfMonthTestDateTimes")
+  void formatDateTime_whenDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay(Temporal temporalToFormat) {
+    var result = DateUtil.formatLongDateTime(temporalToFormat);
+    assertThat(result).isEqualTo("1 January 2022 17:05");
   }
 
-  @Test
-  void formatDate_whenLocalDate_thenExpectFormattedDate() {
-    var timeToFormat = LocalDate.of(2022, Month.JANUARY, 16);
-    var result = DateUtil.formatDate(timeToFormat);
+  @ParameterizedTest
+  @MethodSource("getMiddleOfMonthTestDates")
+  void formatShortDate_thenExpectFormattedDate(Temporal temporalToFormat) {
+    var result = DateUtil.formatShortDate(temporalToFormat);
     assertThat(result).isEqualTo("16 Jan 2022");
   }
 
-  @Test
-  void formatDateTime_whenInstant_andDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48).toInstant(ZoneOffset.UTC);
-    var result = DateUtil.formatDateTime(timeToFormat);
-    assertThat(result).isEqualTo("1 Jan 2022 17:05");
-  }
-
-  @Test
-  void formatDateTime_whenLocalDateTime_andDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48);
-    var result = DateUtil.formatDateTime(timeToFormat);
-    assertThat(result).isEqualTo("1 Jan 2022 17:05");
-  }
-
-  @Test
-  void formatDate_whenLocalDate_andDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay() {
-    var timeToFormat = LocalDate.of(2022, Month.JANUARY, 1);
-    var result = DateUtil.formatDate(timeToFormat);
+  @ParameterizedTest
+  @MethodSource("getStartOfMonthTestDates")
+  void formatShortDate_whenDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay(Temporal temporalToFormat) {
+    var result = DateUtil.formatShortDate(temporalToFormat);
     assertThat(result).isEqualTo("1 Jan 2022");
   }
 
 
-  @Test
-  void formatLongDate_whenInstant_thenExpectFormattedDate() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48).toInstant(ZoneOffset.UTC);
-    var result = DateUtil.formatLongDate(timeToFormat);
+  @ParameterizedTest
+  @MethodSource("getMiddleOfMonthTestDates")
+  void formatLongDate_thenExpectFormattedDate(Temporal temporalToFormat) {
+    var result = DateUtil.formatLongDate(temporalToFormat);
     assertThat(result).isEqualTo("16 January 2022");
   }
 
-  @Test
-  void formatLongDate_whenInstant_andDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay() {
-    var timeToFormat = LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48).toInstant(ZoneOffset.UTC);
-    var result = DateUtil.formatLongDate(timeToFormat);
+  @ParameterizedTest
+  @MethodSource("getStartOfMonthTestDates")
+  void formatLongDate_whenDayIsSingleDigit_thenExpectFormattedDateWithSingleDigitDay(Temporal temporalToFormat) {
+    var result = DateUtil.formatLongDate(temporalToFormat);
     assertThat(result).isEqualTo("1 January 2022");
+  }
+
+  private static Stream<Arguments> getMiddleOfMonthTestDates() {
+
+    // instant and local date of the same date
+    return Stream.of(
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48).toInstant(ZoneOffset.UTC)),
+        Arguments.of(LocalDate.of(2022, Month.JANUARY, 16))
+    );
+  }
+
+  private static Stream<Arguments> getMiddleOfMonthTestDateTimes() {
+
+    // instant and local date time of the same date time
+    return Stream.of(
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48).toInstant(ZoneOffset.UTC)),
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 16, 17, 5, 48))
+    );
+  }
+
+  private static Stream<Arguments> getStartOfMonthTestDates() {
+    // instant and local date of the same date
+    return Stream.of(
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48).toInstant(ZoneOffset.UTC)),
+        Arguments.of(LocalDate.of(2022, Month.JANUARY, 1))
+    );
+  }
+
+  private static Stream<Arguments> getStartOfMonthTestDateTimes() {
+    // instant and local date time of the same date time
+    return Stream.of(
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48).toInstant(ZoneOffset.UTC)),
+        Arguments.of(LocalDateTime.of(2022, Month.JANUARY, 1, 17, 5, 48))
+    );
   }
 
 }

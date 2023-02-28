@@ -202,7 +202,7 @@ class NominationDecisionValidatorTest {
         "decisionDate.yearInput.inputValue"
     ).containsExactly(
         Set.of("Decision date must be the same as or after %s".formatted(
-            DateUtil.formatDate(submittedDate))),
+            DateUtil.formatShortDate(submittedDate))),
         Set.of(""),
         Set.of("")
     );
@@ -228,7 +228,7 @@ class NominationDecisionValidatorTest {
         "decisionDate.yearInput.inputValue"
     ).containsExactly(
         Set.of("Decision date must be the same as or before %s".formatted(
-            DateUtil.formatDate(maxDecisionDate))),
+            DateUtil.formatShortDate(maxDecisionDate))),
         Set.of(""),
         Set.of("")
     );

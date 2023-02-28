@@ -5,15 +5,20 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
@@ -30,8 +35,8 @@ class InstallationQueryServiceTest {
 
   private static InstallationQueryService installationQueryService;
 
-  @BeforeAll
-  static void setup() {
+  @BeforeEach
+  void setup() {
 
     facilityApi = mock(FacilityApi.class);
 
@@ -251,5 +256,79 @@ class InstallationQueryServiceTest {
         .build();
 
     assertFalse(installationQueryService.isInUkcs(invalidInstallation));
+  }
+
+  @Test
+  void getInstallationsByIds_whenNoMatches_thenEmptyListReturned() {
+
+    var unmatchedFacilityId = List.of(-1);
+
+    when(facilityApi.searchFacilitiesByIds(
+        eq(unmatchedFacilityId),
+        eq(InstallationQueryService.FACILITIES_BY_IDS_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(Collections.emptyList());
+
+    var resultingFacilities = installationQueryService.getInstallationsByIdIn(unmatchedFacilityId);
+
+    assertThat(resultingFacilities).isEmpty();
+  }
+
+  @Test
+  void getInstallationsByIds_whenMatches_thenPopulatedListReturned() {
+
+    var facilityId = new InstallationId(100);
+
+    var expectedFacility = EpaFacilityTestUtil.builder().build();
+
+    when(facilityApi.searchFacilitiesByIds(
+        eq(List.of(facilityId.id())),
+        eq(InstallationQueryService.FACILITIES_BY_IDS_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(List.of(expectedFacility));
+
+    var resultingFacilities = installationQueryService.getInstallationsByIds(List.of(facilityId));
+
+    assertThat(resultingFacilities)
+        .extracting(
+            InstallationDto::id,
+            InstallationDto::name,
+            InstallationDto::type,
+            InstallationDto::isInUkcs
+        )
+        .containsExactly(
+            tuple(
+                expectedFacility.getId(),
+                expectedFacility.getName(),
+                expectedFacility.getType(),
+                expectedFacility.getIsInUkcs()
+            )
+        );
+  }
+
+  @ParameterizedTest(name = "{index} => wellbore id list=''{0}''")
+  @NullAndEmptySource
+  void getInstallationsByIds_whenInputIdsNullOrEmpty_thenEmptyListReturned(List<InstallationId> installationIds) {
+
+    var resultingFacilities = installationQueryService.getInstallationsByIds(installationIds);
+
+    assertThat(resultingFacilities).isEmpty();
+
+    then(facilityApi).should(never()).searchFacilitiesByIds(anyList(), any(), any(), any());
+  }
+
+  @ParameterizedTest(name = "{index} => wellbore id list=''{0}''")
+  @NullAndEmptySource
+  void getInstallationsByIdIn_whenInputIdsNullOrEmpty_thenEmptyListReturned(List<Integer> installationIds) {
+
+    var resultingFacilities = installationQueryService.getInstallationsByIdIn(installationIds);
+
+    assertThat(resultingFacilities).isEmpty();
+
+    then(facilityApi)
+        .should(never())
+        .searchFacilitiesByIds(anyList(), any(), any(), any());
   }
 }

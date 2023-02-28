@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
-class LicenceBlockSubareaComparator implements Comparator<LicenceBlockSubareaDto> {
+public class LicenceBlockSubareaComparator implements Comparator<LicenceBlockSubareaDto> {
 
   @Override
   public int compare(LicenceBlockSubareaDto firstSubarea, LicenceBlockSubareaDto secondSubarea) {
