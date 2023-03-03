@@ -102,8 +102,8 @@ class NominationWorkAreaQueryServiceIntegrationTest {
 
     var dtos = nominationWorkAreaQueryService.getWorkAreaItems();
 
-    switch (nominationStatus) {
-      case SUBMITTED -> assertThat(dtos)
+    switch (nominationStatus.getSubmissionStage()) {
+      case POST_SUBMISSION -> assertThat(dtos)
           .map(result -> result.getNominationId().id())
           .containsExactly(submittedNominationDetail.getNomination().getId());
       default -> assertThat(dtos).isEmpty();
