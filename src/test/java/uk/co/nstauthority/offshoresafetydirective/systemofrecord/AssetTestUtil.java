@@ -16,7 +16,7 @@ public class AssetTestUtil {
   public static class Builder {
 
     private UUID id = UUID.randomUUID();
-    private String portalAssetId = "600";
+    private String portalAssetId = UUID.randomUUID().toString();
     private PortalAssetType portalAssetType = PortalAssetType.INSTALLATION;
     private String assetName = "asset name";
 

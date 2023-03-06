@@ -17,29 +17,33 @@ public class SystemOfRecordUpdateService {
   private final AppointmentService appointmentService;
   private final AssetPhasePersistenceService assetPhasePersistenceService;
   private final InstallationAssetService installationAssetService;
+  private final WellAssetService wellAssetService;
 
   @Autowired
   public SystemOfRecordUpdateService(AssetPersistenceService assetPersistenceService,
                                      AppointmentService appointmentService,
                                      AssetPhasePersistenceService assetPhasePersistenceService,
-                                     InstallationAssetService installationAssetService) {
+                                     InstallationAssetService installationAssetService,
+                                     WellAssetService wellAssetService) {
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentService = appointmentService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
     this.installationAssetService = installationAssetService;
+    this.wellAssetService = wellAssetService;
   }
 
   public void updateSystemOfRecordByNominationDetail(NominationDetail nominationDetail, LocalDate confirmationDate) {
 
-    var nominatedInstallationAssets = installationAssetService.getInstallationAssetDtos(nominationDetail);
-    if (nominatedInstallationAssets.isEmpty()) {
-      return;
-    }
+    var nominatedInstallationAssetDtos = installationAssetService.getInstallationAssetDtos(nominationDetail);
+    var nominatedWellAssetDtos = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
 
-    var persistedAssetDtos = assetPersistenceService.persistNominatedAssets(nominatedInstallationAssets);
+    var nominatedAssetDtos = Stream.concat(nominatedInstallationAssetDtos.stream(), nominatedWellAssetDtos.stream())
+        .toList();
+
+    var persistedAssetDtos = assetPersistenceService.persistNominatedAssets(nominatedAssetDtos);
     var appointments = appointmentService.addAppointments(nominationDetail, confirmationDate, persistedAssetDtos);
 
-    Map<PortalAssetType, List<NominatedAssetDto>> groupedNominatedAssets = nominatedInstallationAssets.stream()
+    Map<PortalAssetType, List<NominatedAssetDto>> groupedNominatedAssets = nominatedAssetDtos.stream()
         .collect(Collectors.groupingBy(NominatedAssetDto::portalAssetType));
 
     List<AssetPhaseDto> assetPhaseCreationDtos = groupedNominatedAssets.entrySet()
@@ -69,7 +73,7 @@ public class SystemOfRecordUpdateService {
     return assets.stream()
         .filter(asset -> asset.getPortalAssetId().equals(id))
         .findFirst()
-        .orElseThrow(() -> new IllegalStateException("No asset found with ID [%s]".formatted(id)));
+        .orElseThrow(() -> new IllegalStateException("No asset found with PortalAssetId [%s]".formatted(id)));
   }
 
   private Stream<AssetPhaseDto> constructAssetPhaseDtoStream(Map<Asset, List<Appointment>> groupedAppointments,
