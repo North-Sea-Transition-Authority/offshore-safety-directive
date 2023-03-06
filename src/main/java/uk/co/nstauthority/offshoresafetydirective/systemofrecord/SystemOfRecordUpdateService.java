@@ -1,77 +1,83 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.BooleanUtils;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailViewService;
 
 @Service
-class SystemOfRecordUpdateService {
+public class SystemOfRecordUpdateService {
 
   private final AssetPersistenceService assetPersistenceService;
-  private final NominatedInstallationDetailViewService nominatedInstallationDetailViewService;
   private final AppointmentService appointmentService;
   private final AssetPhasePersistenceService assetPhasePersistenceService;
+  private final InstallationAssetService installationAssetService;
 
   @Autowired
   public SystemOfRecordUpdateService(AssetPersistenceService assetPersistenceService,
-                                     NominatedInstallationDetailViewService nominatedInstallationDetailViewService,
                                      AppointmentService appointmentService,
-                                     AssetPhasePersistenceService assetPhasePersistenceService) {
+                                     AssetPhasePersistenceService assetPhasePersistenceService,
+                                     InstallationAssetService installationAssetService) {
     this.assetPersistenceService = assetPersistenceService;
-    this.nominatedInstallationDetailViewService = nominatedInstallationDetailViewService;
     this.appointmentService = appointmentService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
+    this.installationAssetService = installationAssetService;
   }
 
   public void updateSystemOfRecordByNominationDetail(NominationDetail nominationDetail, LocalDate confirmationDate) {
-    var optionalInstallationDetailView =
-        nominatedInstallationDetailViewService.getNominatedInstallationDetailView(nominationDetail);
 
-    if (optionalInstallationDetailView.isEmpty()) {
+    var nominatedInstallationAssets = installationAssetService.getInstallationAssetDtos(nominationDetail);
+    if (nominatedInstallationAssets.isEmpty()) {
       return;
     }
 
-    var installationDetailView = optionalInstallationDetailView.get();
-    var assets = assetPersistenceService.getExistingOrCreateAssets(installationDetailView);
-    var appointments = appointmentService.addAppointments(nominationDetail, confirmationDate, assets);
-    var assetPhaseCreationDtos = buildAssetPhaseDtos(assets, appointments, installationDetailView);
+    var persistedAssetDtos = assetPersistenceService.persistNominatedAssets(nominatedInstallationAssets);
+    var appointments = appointmentService.addAppointments(nominationDetail, confirmationDate, persistedAssetDtos);
+
+    Map<PortalAssetType, List<NominatedAssetDto>> groupedNominatedAssets = nominatedInstallationAssets.stream()
+        .collect(Collectors.groupingBy(NominatedAssetDto::portalAssetType));
+
+    List<AssetPhaseDto> assetPhaseCreationDtos = groupedNominatedAssets.entrySet()
+        .stream()
+        .flatMap(entry -> buildAssetPhaseDtos(entry.getValue(), appointments).stream())
+        .toList();
+
     assetPhasePersistenceService.createAssetPhases(assetPhaseCreationDtos);
   }
 
-  private List<AssetPhaseDto> buildAssetPhaseDtos(Collection<Asset> assets,
-                                                  Collection<Appointment> appointments,
-                                                  NominatedInstallationDetailView installationDetailView) {
-    var groupedAppointments = appointments.stream()
+  private List<AssetPhaseDto> buildAssetPhaseDtos(Collection<NominatedAssetDto> nominatedAssetDtos,
+                                                  Collection<Appointment> appointments) {
+
+    Map<Asset, List<Appointment>> groupedAppointments = appointments.stream()
         .collect(Collectors.groupingBy(Appointment::getAsset));
 
-    var phaseNames = getInstallationPhaseNames(installationDetailView);
+    return nominatedAssetDtos.stream()
+        .flatMap(assetDto -> constructAssetPhaseDtoStream(
+            groupedAppointments,
+            getAssetWithId(groupedAppointments.keySet(), assetDto.portalAssetId().id()),
+            assetDto
+        ))
+        .toList();
+  }
 
+  private Asset getAssetWithId(Collection<Asset> assets, String id) {
     return assets.stream()
-        .flatMap(asset -> groupedAppointments.getOrDefault(asset, List.of())
-            .stream()
-            .map(appointment -> new AssetPhaseDto(asset, appointment, phaseNames)))
-        .toList();
+        .filter(asset -> asset.getPortalAssetId().equals(id))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException("No asset found with ID [%s]".formatted(id)));
   }
 
-  private List<String> getInstallationPhaseNames(NominatedInstallationDetailView installationDetailView) {
-    List<InstallationPhase> installationPhases;
-    if (BooleanUtils.isTrue(installationDetailView.getForAllInstallationPhases())) {
-      installationPhases = Arrays.stream(InstallationPhase.values()).toList();
-    } else {
-      installationPhases = installationDetailView.getInstallationPhases();
-    }
-    return installationPhases.stream()
-        .map(Enum::name)
-        .toList();
-  }
+  private Stream<AssetPhaseDto> constructAssetPhaseDtoStream(Map<Asset, List<Appointment>> groupedAppointments,
+                                                             Asset asset,
+                                                             NominatedAssetDto nominatedAssetDto) {
 
+    return groupedAppointments.getOrDefault(asset, List.of())
+        .stream()
+        .map(appointment -> new AssetPhaseDto(asset, appointment, nominatedAssetDto.phases()));
+  }
 }

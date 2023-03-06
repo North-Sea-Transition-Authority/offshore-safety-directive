@@ -1,13 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailView;
 
 @Service
 class AssetPersistenceService {
@@ -20,36 +19,58 @@ class AssetPersistenceService {
   }
 
   @Transactional
-  public List<Asset> getExistingOrCreateAssets(NominatedInstallationDetailView installationDetailView) {
-    var assetIds = installationDetailView.getInstallations()
-        .stream()
-        .map(dto -> String.valueOf(dto.id()))
-        .toList();
+  public List<Asset> persistNominatedAssets(Collection<NominatedAssetDto> nominatedAssetDtos) {
+    var existingAssets = getExistingAssets(nominatedAssetDtos);
 
-    var retrievedAssets = assetRepository.findAllByPortalAssetIdIn(assetIds);
+    List<Asset> missingAssets = createNonExistingAssets(nominatedAssetDtos, existingAssets);
 
-    var missingAssets = installationDetailView.getInstallations()
-        .stream()
-        .filter(dto ->
-            retrievedAssets.stream()
-                .noneMatch(asset -> asset.getPortalAssetId().equals(String.valueOf(dto.id())))
-        )
-        .map(this::createAssetFromDto)
-        .toList();
-
+    Stream<Asset> savedAssets = Stream.empty();
     if (!missingAssets.isEmpty()) {
-      missingAssets = ImmutableList.copyOf(assetRepository.saveAll(missingAssets));
+      savedAssets = Streams.stream(assetRepository.saveAll(missingAssets));
     }
 
-    return Stream.concat(retrievedAssets.stream(), missingAssets.stream()).toList();
+    return Stream.concat(existingAssets.stream(), savedAssets).toList();
   }
 
-  private Asset createAssetFromDto(InstallationDto dto) {
+  private List<Asset> getExistingAssets(Collection<NominatedAssetDto> nominatedAssetDtos) {
+    var allPortalAssetIds = nominatedAssetDtos.stream()
+        .map(NominatedAssetDto::portalAssetId)
+        .map(PortalAssetId::id)
+        .toList();
+
+    var allAssets = assetRepository.findAllByPortalAssetIdIn(allPortalAssetIds);
+
+    return allAssets.stream()
+        .filter(asset ->
+            nominatedAssetDtos.stream().anyMatch(nominatedAssetDto ->
+                nominatedAssetDto.portalAssetType().equals(asset.getPortalAssetType())
+                    && nominatedAssetDto.portalAssetId().id().equals(asset.getPortalAssetId())
+            )
+        )
+        .toList();
+  }
+
+  private List<Asset> createNonExistingAssets(
+      Collection<NominatedAssetDto> nominatedAssetDtos,
+      List<Asset> existingAssets
+  ) {
+    return nominatedAssetDtos.stream()
+        .filter(nominatedAssetDto ->
+            existingAssets.stream().noneMatch(asset ->
+                asset.getPortalAssetType().equals(nominatedAssetDto.portalAssetType())
+                    && asset.getPortalAssetId().equals(nominatedAssetDto.portalAssetId().id())
+            )
+        )
+        .map(this::createAssetEntity)
+        .toList();
+  }
+
+  private Asset createAssetEntity(NominatedAssetDto nominatedAssetDto) {
     var asset = new Asset();
-    // TODO OSDOP-341 - Use names attached to installation entity
+    // TODO OSDOP-341 - Use names attached to portal asset
     asset.setAssetName("PLACEHOLDER");
-    asset.setPortalAssetId(String.valueOf(dto.id()));
-    asset.setPortalAssetType(PortalAssetType.INSTALLATION);
+    asset.setPortalAssetId(nominatedAssetDto.portalAssetId().id());
+    asset.setPortalAssetType(nominatedAssetDto.portalAssetType());
     return asset;
   }
 
