@@ -32,7 +32,7 @@ public class NominatedSubareaWellsService {
     this.excludedWellAccessService = excludedWellAccessService;
   }
 
-  public Set<NominatedSubareaWellDto> getNominatedSubareaWellbores(NominationDetail nominationDetail) {
+  public Set<NominatedSubareaWellDto> determineNominatedSubareaWellbores(NominationDetail nominationDetail) {
 
     // get nominated subareas from nomination
     List<LicenceBlockSubareaId> nominatedSubareaIds = nominatedBlockSubareaAccessService

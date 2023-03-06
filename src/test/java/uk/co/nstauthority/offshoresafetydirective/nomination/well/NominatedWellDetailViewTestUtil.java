@@ -38,7 +38,7 @@ public class NominatedWellDetailViewTestUtil {
       return this;
     }
 
-    public NominatedWellDetailViewBuilder withIsNominationForALlWellPhases(Boolean isNominationForALlWellPhases) {
+    public NominatedWellDetailViewBuilder withIsNominationForAllWellPhases(Boolean isNominationForALlWellPhases) {
       this.isNominationForALlWellPhases = isNominationForALlWellPhases;
       return this;
     }

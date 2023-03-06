@@ -35,7 +35,7 @@ class NominatedSubareaWellsServiceTest {
   private NominatedSubareaWellsService nominatedSubareaWellsService;
 
   @Test
-  void getNominatedSubareaWellbores_whenSubareasSelectedAndNoWellbores_thenNoWellboresReturned() {
+  void determineNominatedSubareaWellbores_whenSubareasSelectedAndNoWellbores_thenNoWellboresReturned() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -50,13 +50,13 @@ class NominatedSubareaWellsServiceTest {
         .willReturn(Collections.emptyList());
 
     var resultingNominatedSubareaWells =
-        nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+        nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
     assertThat(resultingNominatedSubareaWells).isEmpty();
   }
 
   @Test
-  void getNominatedSubareaWellbores_whenSubareasSelectedAndWellboresIncluded_thenWellboresReturned() {
+  void determineNominatedSubareaWellbores_whenSubareasSelectedAndWellboresIncluded_thenWellboresReturned() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -73,7 +73,7 @@ class NominatedSubareaWellsServiceTest {
         .willReturn(List.of(expectedNominatedWellInSubarea));
 
     var resultingNominatedSubareaWells =
-        nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+        nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
     assertThat(resultingNominatedSubareaWells)
         .extracting(NominatedSubareaWellDto::wellboreId)
@@ -81,7 +81,7 @@ class NominatedSubareaWellsServiceTest {
   }
 
   @Test
-  void getNominatedSubareaWellbores_whenSubareasSelectedAndSameWellboresInMultipleSubareas_thenDistinctWellboresReturned() {
+  void determineNominatedSubareaWellbores_whenSubareasSelectedAndSameWellboresInMultipleSubareas_thenDistinctWellboresReturned() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -104,7 +104,7 @@ class NominatedSubareaWellsServiceTest {
         .willReturn(List.of(firstNominatedWellInSubarea, secondDuplicateNominatedWellInSubarea));
 
     var resultingNominatedSubareaWells =
-        nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+        nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
     assertThat(resultingNominatedSubareaWells)
         .extracting(NominatedSubareaWellDto::wellboreId)
@@ -112,7 +112,7 @@ class NominatedSubareaWellsServiceTest {
   }
 
   @Test
-  void getNominatedSubareaWellbores_whenSubareasSelectedAndWellboreExcluded_thenExcludedWellboreNotReturned() {
+  void determineNominatedSubareaWellbores_whenSubareasSelectedAndWellboreExcluded_thenExcludedWellboreNotReturned() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -138,7 +138,7 @@ class NominatedSubareaWellsServiceTest {
         .willReturn(Set.of(excludedNominatedWellInSubarea.wellboreId()));
 
     var resultingNominatedSubareaWells =
-        nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+        nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
     assertThat(resultingNominatedSubareaWells)
         .extracting(NominatedSubareaWellDto::wellboreId)
@@ -146,7 +146,7 @@ class NominatedSubareaWellsServiceTest {
   }
 
   @Test
-  void getNominatedSubareaWellbores_whenSubareasSelectedAndAllWellboresExcluded_thenNoWellboresReturned() {
+  void determineNominatedSubareaWellbores_whenSubareasSelectedAndAllWellboresExcluded_thenNoWellboresReturned() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -168,7 +168,7 @@ class NominatedSubareaWellsServiceTest {
         .willReturn(Set.of(excludedNominatedWellInSubarea.wellboreId()));
 
     var resultingNominatedSubareaWells =
-        nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+        nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
     assertThat(resultingNominatedSubareaWells).isEmpty();
   }

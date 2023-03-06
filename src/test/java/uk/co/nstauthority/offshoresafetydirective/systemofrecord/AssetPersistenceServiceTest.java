@@ -75,4 +75,45 @@ class AssetPersistenceServiceTest {
         );
   }
 
+  @Test
+  void persistNominatedAssets_whenNoExisting_verifySavedMissing() {
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    var newAssetId = new PortalAssetId("portal/asset/1");
+    var newAssetDto = new NominatedAssetDto(
+        newAssetId,
+        portalAssetType,
+        List.of(InstallationPhase.DECOMMISSIONING.name())
+    );
+
+    when(assetRepository.findAllByPortalAssetIdIn(List.of(newAssetId.id())))
+        .thenReturn(List.of());
+
+    // Return collection that was passed into saveAll call.
+    when(assetRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var assets = assetPersistenceService.persistNominatedAssets(List.of(newAssetDto));
+
+    // Assert both missing and existing assets are returned
+    assertThat(assets)
+        .extracting(Asset::getPortalAssetId)
+        .containsExactly(
+            newAssetId.id()
+        );
+
+    // Verify only one asset was missing and saved
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Asset>> persistedAssetCaptor = ArgumentCaptor.forClass(List.class);
+    verify(assetRepository).saveAll(persistedAssetCaptor.capture());
+
+    assertThat(persistedAssetCaptor.getValue())
+        .extracting(
+            Asset::getPortalAssetId,
+            Asset::getAssetName,
+            Asset::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(newAssetId.id(), "PLACEHOLDER", portalAssetType)
+        );
+  }
+
 }

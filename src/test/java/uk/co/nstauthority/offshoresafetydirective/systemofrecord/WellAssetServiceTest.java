@@ -14,13 +14,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.NominatedSubareaWellAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellDto;
 
 @ExtendWith(MockitoExtension.class)
 class WellAssetServiceTest {
@@ -30,6 +35,12 @@ class WellAssetServiceTest {
 
   @Mock
   NominatedWellDetailViewService nominatedWellDetailViewService;
+
+  @Mock
+  NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
+
+  @Mock
+  NominatedSubareaWellAccessService nominatedSubareaWellAccessService;
 
   @InjectMocks
   private WellAssetService wellAssetService;
@@ -41,20 +52,6 @@ class WellAssetServiceTest {
         .thenReturn(Optional.of(WellSelectionType.NO_WELLS));
     var resultDtos = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
     assertThat(resultDtos).isEmpty();
-  }
-
-  @Test
-  void getWellAssetDtos_whenLicenceBlockSubarea_assertThrows() {
-    var nominationDetail = NominationDetailTestUtil.builder().build();
-    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
-        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
-
-    assertThatThrownBy(() -> wellAssetService.getNominatedWellAssetDtos(nominationDetail))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Unsupported WellSelectionType [%s] when retrieving AssetDto for NominationDetail [%s]".formatted(
-            WellSelectionType.LICENCE_BLOCK_SUBAREA.name(), nominationDetailDto.nominationDetailId()
-        ));
   }
 
   @Test
@@ -109,7 +106,7 @@ class WellAssetServiceTest {
         .withWellboreId(newWellboreId)
         .build();
     var wellDetailView = NominatedWellDetailViewTestUtil.builder()
-        .withIsNominationForALlWellPhases(true)
+        .withIsNominationForAllWellPhases(true)
         .withWellDtos(List.of(newWellDto))
         .build();
 
@@ -126,11 +123,11 @@ class WellAssetServiceTest {
         .toArray();
 
     assertThat(resultDtos)
-        .hasSize(1)
-        .first()
         .extracting(NominatedAssetDto::phases)
         .asList()
-        .containsExactly(expectedPhases);
+        .containsExactly(
+            List.of(expectedPhases)
+        );
 
   }
 
@@ -142,7 +139,7 @@ class WellAssetServiceTest {
         .withWellboreId(newWellboreId)
         .build();
     var wellDetailView = NominatedWellDetailViewTestUtil.builder()
-        .withIsNominationForALlWellPhases(false)
+        .withIsNominationForAllWellPhases(false)
         .withWellPhases(List.of(
             WellPhase.DECOMMISSIONING,
             WellPhase.DEVELOPMENT
@@ -164,5 +161,133 @@ class WellAssetServiceTest {
             List.of(WellPhase.DECOMMISSIONING.name(), WellPhase.DEVELOPMENT.name())
         );
 
+  }
+
+  @Test
+  void getWellAssetDtos_whenLicenceBlockSubarea_assertResult() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
+        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+
+    var firstWellboreId = new WellboreId(123);
+    var secondWellboreId = new WellboreId(456);
+
+    var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder().build();
+
+    when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
+        .thenReturn(List.of(
+            new NominatedSubareaWellDto(firstWellboreId),
+            new NominatedSubareaWellDto(secondWellboreId)
+        ));
+
+    var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
+
+    assertThat(result)
+        .extracting(
+            nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
+            NominatedAssetDto::portalAssetType
+        )
+        .containsExactly(
+            tuple(String.valueOf(firstWellboreId.id()), PortalAssetType.WELLBORE),
+            tuple(String.valueOf(secondWellboreId.id()), PortalAssetType.WELLBORE)
+        );
+  }
+
+  @Test
+  void getWellAssetDtos_whenLicenceBlockSubarea_andSpecificPhases_assertResult() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
+        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+
+    var firstWellboreId = new WellboreId(123);
+    var secondWellboreId = new WellboreId(456);
+    var wellPhase = WellPhase.EXPLORATION_AND_APPRAISAL;
+
+    var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder()
+        .withForAllWellPhases(false)
+        .addWellPhase(wellPhase)
+        .build();
+
+    when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
+        .thenReturn(List.of(
+            new NominatedSubareaWellDto(firstWellboreId),
+            new NominatedSubareaWellDto(secondWellboreId)
+        ));
+
+    var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
+
+    assertThat(result)
+        .extracting(
+            nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
+            NominatedAssetDto::phases
+        )
+        .containsExactly(
+            tuple(String.valueOf(firstWellboreId.id()), List.of(wellPhase.name())),
+            tuple(String.valueOf(secondWellboreId.id()), List.of(wellPhase.name()))
+        );
+  }
+
+  @Test
+  void getWellAssetDtos_whenLicenceBlockSubarea_andAllPhases_assertResult() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
+        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+
+    var firstWellboreId = new WellboreId(123);
+    var secondWellboreId = new WellboreId(456);
+
+    var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder()
+        .withForAllWellPhases(true)
+        .withWellPhases(List.of())
+        .build();
+
+    when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
+        .thenReturn(List.of(
+            new NominatedSubareaWellDto(firstWellboreId),
+            new NominatedSubareaWellDto(secondWellboreId)
+        ));
+
+    var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
+
+    var wellPhaseNames = Arrays.stream(WellPhase.values())
+        .map(Enum::name)
+        .toList();
+
+    assertThat(result)
+        .extracting(
+            nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
+            NominatedAssetDto::phases,
+            NominatedAssetDto::portalAssetType
+        )
+        .containsExactly(
+            tuple(String.valueOf(firstWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE),
+            tuple(String.valueOf(secondWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE)
+        );
+  }
+
+  @Test
+  void getWellAssetDtos_whenLicenceBlockSubarea_andNoDetailView_thenThrowsError() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
+        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+
+    when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> wellAssetService.getNominatedWellAssetDtos(nominationDetail))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No NominatedBlockSubareaDetailView for NominationDetail [%s]".formatted(
+            nominationDetailDto.nominationDetailId().id()
+        ));
   }
 }
