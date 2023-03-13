@@ -1,19 +1,31 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 
 @ContextConfiguration(classes = SystemOfRecordSearchController.class)
 class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
@@ -21,27 +33,101 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
   @MockBean
   private AppointmentSearchService appointmentSearchService;
 
+  @MockBean
+  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
   @SecurityTest
   void renderOperatorSearch_verifyUnauthenticatedAccess() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch())))
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null))))
         .andExpect(status().isOk());
   }
 
   @Test
-  void renderOperatorSearch_verifyModelProperties() throws Exception {
-
-    var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
-
-    given(appointmentSearchService.searchAppointments())
-        .willReturn(List.of(expectedAppointment));
-
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch())))
+  void renderOperatorSearch_whenDirectEntry_verifyModelProperties() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null))))
         .andExpect(view().name("osd/systemofrecord/search/operator/searchAppointmentsByOperator"))
         .andExpect(model().attribute(
             "backLinkUrl",
             ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
         )
-        .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
+        .andExpect(model().attribute("appointments", Collections.emptyList()))
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", false))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null));
+  }
+
+  @Test
+  void renderOperatorSearch_whenFormProvided_verifyModelProperties() throws Exception {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withAppointedOperatorId(100)
+        .build();
+
+    var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder().build();
+
+    given(portalOrganisationUnitQueryService.getOrganisationById(searchForm.getAppointedOperatorId()))
+        .willReturn(Optional.of(expectedAppointedOperator));
+
+    var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
+
+    given(appointmentSearchService.searchAppointments(any(SystemOfRecordSearchForm.class)))
+        .willReturn(List.of(expectedAppointment));
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(searchForm)))
+            .param("appointedOperatorId", String.valueOf(searchForm.getAppointedOperatorId()))
+    )
+        .andExpect(view().name("osd/systemofrecord/search/operator/searchAppointmentsByOperator"))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
+        )
+        .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", true))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", expectedAppointedOperator));
+  }
+
+  @Test
+  void renderOperatorSearch_whenEmptySearchForm_thenNoSearchInteraction() throws Exception {
+    mockMvc.perform(
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null)))
+            .param("appointedOperatorId", "")
+    )
+        .andExpect(model().attribute("appointments", Collections.emptyList()))
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", false))
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null));
+
+    then(portalOrganisationUnitQueryService)
+        .shouldHaveNoInteractions();
+
+    then(appointmentSearchService)
+        .shouldHaveNoInteractions();
+  }
+
+  @SecurityTest
+  void searchOperatorAppointments_verifyUnauthenticatedAccess() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+            .searchOperatorAppointments(searchForm, null)
+        ))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(searchForm))
+        ));
   }
 
   @SecurityTest
@@ -55,7 +141,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
 
-    given(appointmentSearchService.searchInstallationAppointments())
+    given(appointmentSearchService.searchInstallationAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
     mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())))
@@ -66,6 +152,13 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "backLinkUrl",
             ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
         )
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", true))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
   }
 
@@ -80,7 +173,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
 
-    given(appointmentSearchService.searchWellboreAppointments())
+    given(appointmentSearchService.searchWellboreAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
     mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())))
@@ -89,6 +182,13 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "backLinkUrl",
             ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
         )
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", true))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
   }
 
@@ -105,7 +205,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
 
-    given(appointmentSearchService.searchForwardApprovalAppointments())
+    given(appointmentSearchService.searchForwardApprovalAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
     mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class)
@@ -118,6 +218,13 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "backLinkUrl",
             ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
         )
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", true))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
   }
 }

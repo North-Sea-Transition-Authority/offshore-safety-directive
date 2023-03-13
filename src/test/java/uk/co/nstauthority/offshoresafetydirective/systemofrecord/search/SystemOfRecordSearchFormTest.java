@@ -1,0 +1,50 @@
+package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.test.util.ReflectionTestUtils;
+
+class SystemOfRecordSearchFormTest {
+
+  @Test
+  void isEmpty_whenEmpty_thenTrue() {
+    var form = new SystemOfRecordSearchForm();
+    assertTrue(form.isEmpty());
+  }
+
+  @ParameterizedTest
+  @MethodSource("getSystemOfRecordSearchFormFields")
+  void isEmpty_whenNotEmpty_thenFalse(Field field) {
+
+    var form = new SystemOfRecordSearchForm();
+
+    Object fieldValue;
+
+    if (field.getType().equals(Integer.class)) {
+      fieldValue = 1;
+    } else if (field.getType().equals(String.class)) {
+      fieldValue = "NON NULL VALUE";
+    } else {
+      throw new IllegalStateException("Unsupported field type %s".formatted(field.getType().getSimpleName()));
+    }
+
+    ReflectionTestUtils.setField(form, field.getName(), fieldValue);
+
+    assertFalse(form.isEmpty());
+  }
+
+  private static Stream<Arguments> getSystemOfRecordSearchFormFields() {
+    return Arrays.stream(SystemOfRecordSearchForm.class.getDeclaredFields())
+        .map(field -> Arguments.of(Named.of(field.getName(), field)));
+  }
+
+}

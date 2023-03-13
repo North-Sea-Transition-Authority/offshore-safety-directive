@@ -22,7 +22,8 @@ class AppointmentQueryService {
     this.dslContext = dslContext;
   }
 
-  List<AppointmentQueryResultItemDto> search(Collection<PortalAssetType> portalAssetTypeRestrictions) {
+  List<AppointmentQueryResultItemDto> search(Collection<PortalAssetType> portalAssetTypeRestrictions,
+                                             SystemOfRecordSearchForm searchForm) {
     return dslContext
         .select(
             field("assets.portal_asset_id"),
@@ -36,12 +37,13 @@ class AppointmentQueryService {
         .from(table("assets"))
         .join(table("appointments"))
           .on(field("appointments.asset_id").eq(field("assets.id")))
-        .where(getPredicateConditions(portalAssetTypeRestrictions))
+        .where(getPredicateConditions(portalAssetTypeRestrictions, searchForm))
         .fetchInto(AppointmentQueryResultItemDto.class);
   }
 
 
-  private List<Condition> getPredicateConditions(Collection<PortalAssetType> portalAssetTypeRestrictions) {
+  private List<Condition> getPredicateConditions(Collection<PortalAssetType> portalAssetTypeRestrictions,
+                                                 SystemOfRecordSearchForm searchForm) {
 
     List<Condition> predicateList = new ArrayList<>();
 
@@ -51,6 +53,13 @@ class AppointmentQueryService {
     // only asset types which match the types provided
     predicateList.add(field("assets.portal_asset_type")
         .in(portalAssetTypeRestrictions.stream().map(PortalAssetType::name).toList()));
+
+    // if operator ID filter provided then filter by appointed operator
+    if (searchForm.getAppointedOperatorId() != null) {
+      predicateList.add(
+          field("appointments.appointed_portal_operator_id").eq(String.valueOf(searchForm.getAppointedOperatorId()))
+      );
+    }
 
     return predicateList;
   }

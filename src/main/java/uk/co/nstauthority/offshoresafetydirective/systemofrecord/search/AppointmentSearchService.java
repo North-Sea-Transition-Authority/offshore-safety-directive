@@ -61,20 +61,20 @@ class AppointmentSearchService {
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
-  List<AppointmentSearchItemDto> searchAppointments() {
-    return search(Set.of(PortalAssetType.values()));
+  List<AppointmentSearchItemDto> searchAppointments(SystemOfRecordSearchForm searchForm) {
+    return search(Set.of(PortalAssetType.values()), searchForm);
   }
 
-  List<AppointmentSearchItemDto> searchInstallationAppointments() {
-    return search(Set.of(PortalAssetType.INSTALLATION));
+  List<AppointmentSearchItemDto> searchInstallationAppointments(SystemOfRecordSearchForm searchForm) {
+    return search(Set.of(PortalAssetType.INSTALLATION), searchForm);
   }
 
-  List<AppointmentSearchItemDto> searchWellboreAppointments() {
-    return search(Set.of(PortalAssetType.WELLBORE));
+  List<AppointmentSearchItemDto> searchWellboreAppointments(SystemOfRecordSearchForm searchForm) {
+    return search(Set.of(PortalAssetType.WELLBORE), searchForm);
   }
 
-  List<AppointmentSearchItemDto> searchForwardApprovalAppointments() {
-    return search(Set.of(PortalAssetType.SUBAREA));
+  List<AppointmentSearchItemDto> searchForwardApprovalAppointments(SystemOfRecordSearchForm searchForm) {
+    return search(Set.of(PortalAssetType.SUBAREA), searchForm);
   }
 
   /**
@@ -86,9 +86,11 @@ class AppointmentSearchService {
    * 4) Any appointments for assets that no longer exist in the Energy Portal
    *
    * @param assetTypeRestrictions The assets types to restrict results to
+   * @param searchForm The form with the search filters
    * @return a list of appointments matching the search criteria
    */
-  private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions) {
+  private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
+                                                SystemOfRecordSearchForm searchForm) {
 
     List<AppointmentSearchItemDto> appointments = new ArrayList<>();
 
@@ -97,9 +99,12 @@ class AppointmentSearchService {
     Set<WellboreId> wellboreIds = new HashSet<>();
     Set<LicenceBlockSubareaId> subareaIds = new HashSet<>();
 
+    List<AppointmentQueryResultItemDto> resultingAppointments =
+        appointmentQueryService.search(assetTypeRestrictions, searchForm);
+
     // convert resulting appointments to a map for ease of lookup
     Map<AppointedPortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems =
-        Optional.ofNullable(appointmentQueryService.search(assetTypeRestrictions))
+        Optional.ofNullable(resultingAppointments)
             .orElse(Collections.emptyList())
             .stream()
             .collect(Collectors.toMap(AppointmentQueryResultItemDto::getAppointedPortalAssetId, Function.identity()));

@@ -23,7 +23,7 @@ public class SystemOfRecordLandingPageController {
     return new ModelAndView("osd/systemofrecord/search/systemOfRecordLandingPage")
         .addObject(
             "operatorSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null))
         )
         .addObject(
             "installationSearchUrl",

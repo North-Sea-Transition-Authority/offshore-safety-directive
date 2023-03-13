@@ -29,7 +29,10 @@ class AppointmentQueryServiceTest {
 
   @Test
   void search_whenNoResults_thenEmptyListReturned() {
-    var resultingAppointments = appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION));
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        new SystemOfRecordSearchForm()
+    );
     assertThat(resultingAppointments).isEmpty();
   }
 
@@ -74,7 +77,10 @@ class AppointmentQueryServiceTest {
 
     entityManager.persistAndFlush(endedAppointmentOnSecondAsset);
 
-    var resultingAppointments = appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION));
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        new SystemOfRecordSearchForm()
+    );
 
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
@@ -99,7 +105,10 @@ class AppointmentQueryServiceTest {
 
     entityManager.persistAndFlush(installationAppointment);
 
-    var resultingAppointments = appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE));
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        new SystemOfRecordSearchForm()
+    );
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -137,10 +146,141 @@ class AppointmentQueryServiceTest {
 
     entityManager.persistAndFlush(wellboreAppointment);
 
-    var resultingAppointments = appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE));
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        new SystemOfRecordSearchForm()
+    );
 
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
         .containsExactly(wellboreAppointment.getId());
+  }
+
+  @Test
+  void search_whenAppointedOperatorFilterAddedAndMatchingAppointments_thenOnlyAppointmentsForOperatorReturned() {
+
+    var filteredAppointedOperatorId = 10;
+
+    // given a search form with an appointed operator filter
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withAppointedOperatorId(filteredAppointedOperatorId)
+        .build();
+
+    var installationAsset = AssetTestUtil.builder()
+        .withId(null)
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+
+    entityManager.persistAndFlush(installationAsset);
+
+    // and an appointment for the filtered operator
+    var installationAppointmentForFilteredOperator = AppointmentTestUtil.builder()
+        .withAppointedPortalOperatorId(filteredAppointedOperatorId)
+        .withResponsibleToDate(null)
+        .withAsset(installationAsset)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAppointmentForFilteredOperator);
+
+    var wellboreAsset = AssetTestUtil.builder()
+        .withId(null)
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAsset);
+
+    // and an appointment for a different operator
+    var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
+        .withAppointedPortalOperatorId(20)
+        .withResponsibleToDate(null)
+        .withAsset(wellboreAsset)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION, PortalAssetType.WELLBORE),
+        searchForm
+    );
+
+    // then the resulting search items will only be appointments for the filtered operator
+    assertThat(resultingAppointments).hasSize(1);
+    assertThat(resultingAppointments)
+        .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
+        .containsExactly(String.valueOf(filteredAppointedOperatorId));
+  }
+
+  @Test
+  void search_whenAppointedOperatorFilterAddedAndNoMatchingAppointments_thenNoResultsReturned() {
+
+    var filteredAppointedOperatorId = 10;
+
+    // given a search form with an appointed operator filter
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withAppointedOperatorId(filteredAppointedOperatorId)
+        .build();
+
+    var wellboreAsset = AssetTestUtil.builder()
+        .withId(null)
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAsset);
+
+    // and an appointment for a different operator
+    var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
+        .withAppointedPortalOperatorId(20)
+        .withResponsibleToDate(null)
+        .withAsset(wellboreAsset)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        searchForm
+    );
+
+    // then no resulting search items are returned
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void search_whenNoAppointedOperatorFilter_thenResultsReturned() {
+
+    // given a search form without an appointed operator filter
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withAppointedOperatorId(null)
+        .build();
+
+    var wellboreAsset = AssetTestUtil.builder()
+        .withId(null)
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAsset);
+
+    // and an appointment for an operator exists
+    var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
+        .withAppointedPortalOperatorId(20)
+        .withResponsibleToDate(null)
+        .withAsset(wellboreAsset)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        searchForm
+    );
+
+    // then appointments returned regardless of operator
+    assertThat(resultingAppointments)
+        .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
+        .containsExactly(String.valueOf(20));
   }
 }

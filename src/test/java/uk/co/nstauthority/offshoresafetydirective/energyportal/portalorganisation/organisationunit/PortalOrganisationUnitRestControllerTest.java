@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
-import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
@@ -33,11 +32,11 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @SecurityTest
-  void searchPortalOrganisations_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
+  void searchPortalOrganisations_whenNotLoggedIn_thenOk() throws Exception {
     mockMvc.perform(get(
         ReverseRouter.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations("searchTerm"))
     ))
-        .andExpect(redirectionToLoginUrl());
+        .andExpect(status().isOk());
   }
 
   @SecurityTest

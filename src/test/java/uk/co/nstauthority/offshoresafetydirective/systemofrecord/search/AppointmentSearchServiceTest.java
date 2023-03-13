@@ -37,6 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.Appoin
 @ExtendWith(MockitoExtension.class)
 class AppointmentSearchServiceTest {
 
+  private static final SystemOfRecordSearchForm SYSTEM_OF_RECORD_SEARCH_FORM = new SystemOfRecordSearchForm();
+
   @Mock
   private AppointmentQueryService appointmentQueryService;
 
@@ -63,10 +65,10 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(resultItemDtos);
 
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -97,7 +99,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(installationAppointment));
 
     given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
@@ -107,7 +109,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -167,7 +169,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
@@ -178,7 +180,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     // then the asset name is the cached name in the appointment and not the name of the asset from the API
     assertThat(resultingAppointments)
@@ -218,7 +220,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(wellboreAppointment));
 
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
@@ -228,7 +230,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -288,7 +290,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(wellboreAppointment));
 
     // when the API doesn't return the asset
@@ -299,7 +301,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value()
@@ -339,7 +341,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(subareaAppointment));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
@@ -349,7 +351,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -409,7 +411,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
@@ -420,7 +422,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
@@ -495,7 +497,7 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(installationAppointment, wellboreAppointment, subareaAppointment));
 
     // and all assets are returned from the API
@@ -514,7 +516,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedInstallationOperator, appointedWellboreOperator, appointedSubareaOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     // then we expect all three asset appointments to be returned
     assertThat(resultingAppointments)
@@ -675,7 +677,7 @@ class AppointmentSearchServiceTest {
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
     // return the assets out of order
-    given(appointmentQueryService.search(assetTypeRestrictions))
+    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(
             appointmentForFirstWellbore,
             appointmentForSecondWellbore,
@@ -690,7 +692,7 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchAppointments();
+    var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     // the assets are returned in the order we expect
     assertThat(resultingAppointments)
@@ -712,10 +714,11 @@ class AppointmentSearchServiceTest {
       List<AppointmentQueryResultItemDto> resultItemDtos
   ) {
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(resultItemDtos);
 
-    var resultingAppointments = appointmentSearchService.searchInstallationAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -744,7 +747,7 @@ class AppointmentSearchServiceTest {
         .withAssetName(appointedInstallation.name())
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(installationAppointment));
 
     given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
@@ -754,7 +757,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchInstallationAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -812,7 +816,7 @@ class AppointmentSearchServiceTest {
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
@@ -823,7 +827,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchInstallationAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     // then the asset name is the cached name in the appointment and not the name of the asset from the API
     assertThat(resultingAppointments)
@@ -892,14 +897,15 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(
             appointmentForFirstInstallation,
             appointmentForSecondInstallation,
             appointmentForNotInPortalInstallation
         ));
 
-    var resultingAppointmentSearchItems = appointmentSearchService.searchInstallationAppointments();
+    var resultingAppointmentSearchItems =
+        appointmentSearchService.searchInstallationAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointmentSearchItems)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
@@ -916,10 +922,11 @@ class AppointmentSearchServiceTest {
       List<AppointmentQueryResultItemDto> resultItemDtos
   ) {
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(resultItemDtos);
 
-    var resultingAppointments = appointmentSearchService.searchWellboreAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -948,7 +955,7 @@ class AppointmentSearchServiceTest {
         .withAssetName(appointedWellbore.name())
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(wellboreAppointment));
 
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
@@ -958,7 +965,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchWellboreAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -1016,7 +1024,7 @@ class AppointmentSearchServiceTest {
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(wellboreAppointment));
 
     // when the API doesn't return the asset
@@ -1027,7 +1035,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchWellboreAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value()
@@ -1099,14 +1108,15 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(
             appointmentForFirstWellbore,
             appointmentForSecondWellbore,
             appointmentForWellboreNotInPortal
         ));
 
-    var resultingAppointmentSearchItems = appointmentSearchService.searchWellboreAppointments();
+    var resultingAppointmentSearchItems =
+        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointmentSearchItems)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
@@ -1123,10 +1133,11 @@ class AppointmentSearchServiceTest {
       List<AppointmentQueryResultItemDto> resultItemDtos
   ) {
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(resultItemDtos);
 
-    var resultingAppointments = appointmentSearchService.searchForwardApprovalAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchForwardApprovalAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -1155,7 +1166,7 @@ class AppointmentSearchServiceTest {
         .withAssetName(appointedSubarea.displayName())
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(subareaAppointment));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
@@ -1165,7 +1176,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchForwardApprovalAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchForwardApprovalAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -1223,7 +1235,7 @@ class AppointmentSearchServiceTest {
         .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
@@ -1234,7 +1246,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
-    var resultingAppointments = appointmentSearchService.searchForwardApprovalAppointments();
+    var resultingAppointments =
+        appointmentSearchService.searchForwardApprovalAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
@@ -1302,10 +1315,11 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA)))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
         .willReturn(List.of(appointmentForFirstSubarea, appointmentForSecondSubarea, appointmentForNotInPortalSubarea));
 
-    var resultingAppointmentSearchItems = appointmentSearchService.searchForwardApprovalAppointments();
+    var resultingAppointmentSearchItems =
+        appointmentSearchService.searchForwardApprovalAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointmentSearchItems)
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
