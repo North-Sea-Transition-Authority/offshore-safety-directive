@@ -17,7 +17,11 @@ public record AppointmentSearchItemDto(
 ) {
 
   public String displayableAppointmentDate() {
-    return DateUtil.formatLongDate(appointmentDate);
+    if (appointmentDate != null) {
+      return DateUtil.formatLongDate(appointmentDate);
+    } else {
+      return "";
+    }
   }
 
 }

@@ -17,8 +17,12 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 
 @Controller
 @RequestMapping("/system-of-record")
@@ -41,20 +45,26 @@ public class SystemOfRecordSearchController {
 
   private static final String HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME = "hasAddedFilter";
 
+  private static final String SEARCH_FORM_ATTRIBUTE_NAME = "searchForm";
+
   private final AppointmentSearchService appointmentSearchService;
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
+  private final PortalAssetRetrievalService portalAssetRetrievalService;
+
   @Autowired
   public SystemOfRecordSearchController(AppointmentSearchService appointmentSearchService,
-                                        PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+                                        PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+                                        PortalAssetRetrievalService portalAssetRetrievalService) {
     this.appointmentSearchService = appointmentSearchService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+    this.portalAssetRetrievalService = portalAssetRetrievalService;
   }
 
   @GetMapping("/operators")
   public ModelAndView renderOperatorSearch(
-      @Nullable @ModelAttribute("searchForm") SystemOfRecordSearchForm searchForm
+      @Nullable @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
   ) {
 
     if (searchForm == null) {
@@ -70,10 +80,10 @@ public class SystemOfRecordSearchController {
   }
 
   @PostMapping("/operators")
-  public ModelAndView searchOperatorAppointments(@ModelAttribute("searchForm") SystemOfRecordSearchForm searchForm,
+  public ModelAndView searchOperatorAppointments(@ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm,
                                                  RedirectAttributes redirectAttributes) {
     if (redirectAttributes != null) {
-      redirectAttributes.addFlashAttribute("searchForm", searchForm);
+      redirectAttributes.addFlashAttribute(SEARCH_FORM_ATTRIBUTE_NAME, searchForm);
     }
     return ReverseRouter.redirect(on(SystemOfRecordSearchController.class).renderOperatorSearch(null));
   }
@@ -90,14 +100,44 @@ public class SystemOfRecordSearchController {
   }
 
   @GetMapping("/wells")
-  public ModelAndView renderWellSearch() {
-    var searchForm = new SystemOfRecordSearchForm();
+  public ModelAndView renderWellSearch(
+      @Nullable @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    if (searchForm == null) {
+      searchForm = new SystemOfRecordSearchForm();
+    }
+
+    List<AppointmentSearchItemDto> appointments = (searchForm.isEmpty())
+        ? Collections.emptyList()
+        : appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    WellDto filteredWellbore = null;
+
+    if (searchForm.getWellboreId() != null) {
+      filteredWellbore = portalAssetRetrievalService
+          .getWellbore(new WellboreId(searchForm.getWellboreId()))
+          .orElse(null);
+    }
+
     return getBaseSearchModelAndView(WELLBORES_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
+        .addObject("filteredWellbore", filteredWellbore)
         .addObject(
-            APPOINTMENTS_MODEL_ATTRIBUTE_NAME,
-            appointmentSearchService.searchWellboreAppointments(searchForm)
-        )
-        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, true);
+            "wellboreRestUrl",
+            RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        );
+  }
+
+  @PostMapping("/wells")
+  public ModelAndView searchWellboreAppointments(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm,
+      RedirectAttributes redirectAttributes
+  ) {
+    if (redirectAttributes != null) {
+      redirectAttributes.addFlashAttribute(SEARCH_FORM_ATTRIBUTE_NAME, searchForm);
+    }
+    return ReverseRouter.redirect(on(SystemOfRecordSearchController.class).renderWellSearch(null));
   }
 
   @GetMapping("/forward-area-approvals")
@@ -127,7 +167,7 @@ public class SystemOfRecordSearchController {
             ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage())
         )
         .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, Collections.emptyList())
-        .addObject("searchForm", searchForm)
+        .addObject(SEARCH_FORM_ATTRIBUTE_NAME, searchForm)
         .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, !searchForm.isEmpty())
         .addObject("filteredAppointedOperator", filteredAppointedOperator)
         .addObject(

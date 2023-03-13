@@ -31,7 +31,7 @@ public class SystemOfRecordLandingPageController {
         )
         .addObject(
             "wellSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null))
         )
         .addObject(
             "forwardAreaApprovalSearchUrl",

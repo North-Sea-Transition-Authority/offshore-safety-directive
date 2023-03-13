@@ -14,7 +14,9 @@ class SystemOfRecordSearchFormTestUtil {
 
   static class Builder {
 
-    private Integer appointedOperatorId = 100;
+    private Integer appointedOperatorId = null;
+
+    private Integer wellboreId = null;
 
     private Builder() {
     }
@@ -24,9 +26,15 @@ class SystemOfRecordSearchFormTestUtil {
       return this;
     }
 
+    Builder withWellboreId(Integer wellboreId) {
+      this.wellboreId = wellboreId;
+      return this;
+    }
+
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
       form.setAppointedOperatorId(appointedOperatorId);
+      form.setWellboreId(wellboreId);
       return form;
     }
   }

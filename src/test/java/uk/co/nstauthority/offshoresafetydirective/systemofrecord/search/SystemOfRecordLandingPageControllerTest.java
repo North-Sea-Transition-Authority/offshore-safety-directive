@@ -55,7 +55,7 @@ class SystemOfRecordLandingPageControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "wellSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null))
         ))
         .andExpect(model().attribute(
             "forwardAreaApprovalSearchUrl",

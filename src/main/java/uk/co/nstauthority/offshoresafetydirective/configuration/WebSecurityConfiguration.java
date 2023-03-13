@@ -48,7 +48,12 @@ public class WebSecurityConfiguration {
 
     httpSecurity
         .authorizeHttpRequests()
-        .mvcMatchers("/assets/**", "/system-of-record/**", "/api/portal-organisations/**")
+        .mvcMatchers(
+            "/assets/**",
+            "/system-of-record/**",
+            "/api/portal-organisations/**",
+            "/api/well/**"
+        )
           .permitAll()
         .mvcMatchers("/*")
           .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)

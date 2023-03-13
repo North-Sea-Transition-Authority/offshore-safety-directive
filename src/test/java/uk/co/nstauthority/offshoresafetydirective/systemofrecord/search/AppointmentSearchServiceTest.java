@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -1328,5 +1330,185 @@ class AppointmentSearchServiceTest {
             secondSubareaByLicence.displayName(),
             appointmentForNotInPortalSubarea.getAssetName()
         );
+  }
+
+  @Test
+  void searchWellboreAppointments_whenOnlySearchingForWellboreAndNoAppointmentsFound_thenNoOperatorAppointmentReturned() {
+
+    // given a search form with a wellbore ID
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(100)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
+        .willReturn(Collections.emptyList());
+
+    var expectedWellbore = WellDtoTestUtil.builder()
+        .withWellboreId(searchFormWithWellboreId.getWellboreId())
+        .build();
+
+    // and the wellbore is a valid wellbore
+    given(wellQueryService.getWell(new WellboreId(searchFormWithWellboreId.getWellboreId())))
+        .willReturn(Optional.of(expectedWellbore));
+
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
+
+    // then a no operator appointment is returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::appointmentType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(searchFormWithWellboreId.getWellboreId()),
+                expectedWellbore.name(),
+                "No wellbore operator",
+                null,
+                null
+            )
+        );
+  }
+
+  @Test
+  void searchWellboreAppointments_whenNotOnlySearchingForWellboreAndNoAppointmentsFound_thenEmptyListReturned() {
+
+    // given a search form with a wellbore ID and another property
+    var searchFormWithWellboreIdAndOtherProperty = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(100)
+        .withAppointedOperatorId(200)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreIdAndOtherProperty))
+        .willReturn(Collections.emptyList());
+
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreIdAndOtherProperty);
+
+    assertThat(resultingAppointments).isEmpty();
+
+    then(wellQueryService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void searchWellboreAppointments_whenEmptySearchFormAndNoAppointmentsFound_thenEmptyListReturned() {
+
+    // given an empty search form
+    var emptySearchForm = new SystemOfRecordSearchForm();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), emptySearchForm))
+        .willReturn(Collections.emptyList());
+
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(emptySearchForm);
+
+    assertThat(resultingAppointments).isEmpty();
+
+    then(wellQueryService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void searchWellboreAppointments_whenSearchByOnlyWellboreIdAndNoAppointmentAndWellboreDoesNotExist_thenEmptyList() {
+
+    // given a search form with a wellbore ID that doesn't exist
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(-1)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
+        .willReturn(Collections.emptyList());
+
+    // and the wellbore doesn't exist
+    given(wellQueryService.getWell(new WellboreId(searchFormWithWellboreId.getWellboreId())))
+        .willReturn(Optional.empty());
+
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
+
+    // then no results returned
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void searchWellboreAppointments_whenAppointmentsFoundAndSearchedForWellbore_thenAppointmentsReturned() {
+
+    // given a form with a wellbore filter
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(100)
+        .build();
+
+    var appointedWellboreId = new WellboreId(100);
+
+    var appointedWellbore = WellDtoTestUtil.builder()
+        .withWellboreId(appointedWellboreId.id())
+        .build();
+
+    var appointedOperatorId = new PortalOrganisationUnitId(200);
+
+    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withId(appointedOperatorId.id())
+        .build();
+
+    // and a wellbore appointment for a wellbore matching that filter exists
+    var wellboreAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
+        .withAssetType(PortalAssetType.WELLBORE)
+        .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
+        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAssetName(appointedWellbore.name())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
+        .willReturn(List.of(wellboreAppointment));
+
+    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
+        .willReturn(List.of(appointedWellbore));
+
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+        .willReturn(List.of(appointedOperator));
+
+    // when we search appointments
+    var resultingAppointments =
+        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
+
+    // the valid operator appointments is returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentType,
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(appointedWellboreId.id()),
+                appointedWellbore.name(),
+                appointedOperator.name(),
+                AppointmentType.NOMINATED,
+                wellboreAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedWellboreId.id()))
+                    )
+                )
+            )
+        );
+
+    // and we don't get the wellbore to add a no operator appointment
+    then(wellQueryService)
+        .should(never())
+        .getWell(appointedWellboreId);
   }
 }

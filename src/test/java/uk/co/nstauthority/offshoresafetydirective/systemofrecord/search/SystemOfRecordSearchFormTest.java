@@ -42,9 +42,56 @@ class SystemOfRecordSearchFormTest {
     assertFalse(form.isEmpty());
   }
 
+  @ParameterizedTest
+  @MethodSource("getSystemOfRecordSearchFormFields")
+  void isEmptyExcept_whenOnlyExcludedFieldsNotNull_thenTrue(Field field) {
+
+    var form = new SystemOfRecordSearchForm();
+
+    ReflectionTestUtils.setField(form, field.getName(), getNonNullValueForFieldType(field));
+
+    assertTrue(form.isEmptyExcept(field.getName()));
+  }
+
+  @Test
+  void isEmptyExcept_whenEmptyFormAndNoExceptions_thenTrue() {
+    var form = new SystemOfRecordSearchForm();
+    assertTrue(form.isEmptyExcept());
+  }
+
+  @Test
+  void isEmptyExcept_whenPopulatedFormNoExceptions_thenFalse() {
+    var form = new SystemOfRecordSearchForm();
+    form.setAppointedOperatorId(100);
+    assertFalse(form.isEmptyExcept());
+  }
+
+  @Test
+  void isEmptyExcept_whenExcludingNonNullFields_thenTrue() {
+    var form = new SystemOfRecordSearchForm();
+    form.setAppointedOperatorId(100);
+    assertTrue(form.isEmptyExcept("appointedOperatorId"));
+  }
+
+  @Test
+  void isEmptyExcept_whenNotValidFieldNameAndAllFieldValuesNull_thenTrue() {
+    var form = new SystemOfRecordSearchForm();
+    assertTrue(form.isEmptyExcept("NOT_A_FIELD_NAME"));
+  }
+
   private static Stream<Arguments> getSystemOfRecordSearchFormFields() {
     return Arrays.stream(SystemOfRecordSearchForm.class.getDeclaredFields())
         .map(field -> Arguments.of(Named.of(field.getName(), field)));
+  }
+
+  private Object getNonNullValueForFieldType(Field field) {
+    if (field.getType().equals(Integer.class)) {
+      return  1;
+    } else if (field.getType().equals(String.class)) {
+      return "NON NULL VALUE";
+    } else {
+      throw new IllegalStateException("Unsupported field type %s".formatted(field.getType().getSimpleName()));
+    }
   }
 
 }

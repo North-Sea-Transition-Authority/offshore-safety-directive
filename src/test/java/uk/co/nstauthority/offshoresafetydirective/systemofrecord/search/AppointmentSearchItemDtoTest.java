@@ -20,4 +20,14 @@ class AppointmentSearchItemDtoTest {
     assertThat(appointmentSearchItemDto.displayableAppointmentDate()).isEqualTo("16 January 2022");
   }
 
+  @Test
+  void displayableAppointmentDate_whenNullThenEmptyString() {
+
+    var appointmentSearchItemDto = AppointmentSearchItemDtoTestUtil.builder()
+        .withAppointmentDate(null)
+        .build();
+
+    assertThat(appointmentSearchItemDto.displayableAppointmentDate()).isEmpty();
+  }
+
 }

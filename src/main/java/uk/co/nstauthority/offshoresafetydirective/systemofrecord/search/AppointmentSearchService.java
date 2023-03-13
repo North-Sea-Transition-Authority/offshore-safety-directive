@@ -70,7 +70,29 @@ class AppointmentSearchService {
   }
 
   List<AppointmentSearchItemDto> searchWellboreAppointments(SystemOfRecordSearchForm searchForm) {
-    return search(Set.of(PortalAssetType.WELLBORE), searchForm);
+
+    var resultingAppointments = search(Set.of(PortalAssetType.WELLBORE), searchForm);
+
+    // if we have no results, and have only searched for a wellbore then add the wellbore
+    // to the result list to show as a no operator appointment
+    if (
+        CollectionUtils.isEmpty(resultingAppointments)
+            && searchForm.getWellboreId() != null
+            && searchForm.isEmptyExcept("wellboreId")
+    ) {
+      wellQueryService.getWell(new WellboreId(searchForm.getWellboreId()))
+          .ifPresent(wellbore ->
+              resultingAppointments.add(
+                  createNoAppointedOperatorItem(
+                      new AppointedPortalAssetId(String.valueOf(wellbore.wellboreId().id())),
+                      PortalAssetType.WELLBORE,
+                      new AssetName(wellbore.name())
+                  )
+              )
+          );
+    }
+
+    return resultingAppointments;
   }
 
   List<AppointmentSearchItemDto> searchForwardApprovalAppointments(SystemOfRecordSearchForm searchForm) {
@@ -326,5 +348,18 @@ class AppointmentSearchService {
       case SUBAREA -> ReverseRouter.route(on(AppointmentTimelineController.class)
           .renderSubareaAppointmentTimeline(portalAssetId));
     };
+  }
+
+  private AppointmentSearchItemDto createNoAppointedOperatorItem(AppointedPortalAssetId portalAssetId,
+                                                                 PortalAssetType portalAssetType,
+                                                                 AssetName assetName) {
+    return new AppointmentSearchItemDto(
+        portalAssetId,
+        assetName,
+        new AppointedOperatorName("No %s operator".formatted(portalAssetType.getSentenceCaseDisplayName())),
+        null,
+        null,
+        getTimelineUrl(portalAssetId, portalAssetType)
+    );
   }
 }

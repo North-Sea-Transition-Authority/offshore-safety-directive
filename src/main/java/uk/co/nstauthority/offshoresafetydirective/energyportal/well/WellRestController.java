@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 
 @RestController
 @RequestMapping("/api/well")
-@AccessibleByServiceUsers
+@Unauthenticated
 public class WellRestController {
 
   private final WellQueryService wellQueryService;

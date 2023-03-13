@@ -23,9 +23,14 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 
 @ContextConfiguration(classes = SystemOfRecordSearchController.class)
 class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
@@ -35,6 +40,9 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @MockBean
+  private PortalAssetRetrievalService portalAssetRetrievalService;
 
   @SecurityTest
   void renderOperatorSearch_verifyUnauthenticatedAccess() throws Exception {
@@ -164,19 +172,27 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderWellSearch_verifyUnauthenticatedAccess() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())))
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null))))
         .andExpect(status().isOk());
   }
 
   @Test
-  void renderWellSearch_verifyModelProperties() throws Exception {
+  void renderWellSearch_whenSearchFormFiltersAdded_thenVerifyModelProperties() throws Exception {
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
 
     given(appointmentSearchService.searchWellboreAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch())))
+    var expectedWellbore = WellDtoTestUtil.builder().build();
+
+    given(portalAssetRetrievalService.getWellbore(new WellboreId(10)))
+        .willReturn(Optional.of(expectedWellbore));
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null)))
+            .param("wellboreId", "10")
+    )
         .andExpect(view().name("osd/systemofrecord/search/well/searchWellAppointments"))
         .andExpect(model().attribute(
             "backLinkUrl",
@@ -189,7 +205,58 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
         .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
-        .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
+        .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
+        .andExpect(model().attribute("filteredWellbore", expectedWellbore))
+        .andExpect(model().attribute(
+            "wellboreRestUrl",
+            RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        ));
+  }
+
+  @Test
+  void renderWellSearch_whenEmptySearchForm_thenVerifyNoSearchInteraction() throws Exception {
+
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null))))
+        .andExpect(view().name("osd/systemofrecord/search/well/searchWellAppointments"))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
+        )
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", false))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("appointments", Collections.emptyList()))
+        .andExpect(model().attribute("filteredWellbore", (WellDto) null))
+        .andExpect(model().attribute(
+            "wellboreRestUrl",
+            RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        ));
+
+    then(appointmentSearchService)
+        .shouldHaveNoInteractions();
+
+    then(portalAssetRetrievalService)
+        .shouldHaveNoInteractions();
+  }
+
+  @SecurityTest
+  void searchWellboreAppointments_verifyUnauthenticatedAccess() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+                .searchWellboreAppointments(searchForm, null)
+            ))
+                .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(searchForm))
+        ));
   }
 
   @SecurityTest

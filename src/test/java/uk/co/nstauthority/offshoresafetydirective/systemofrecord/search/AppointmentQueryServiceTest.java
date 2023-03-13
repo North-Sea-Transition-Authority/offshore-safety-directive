@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -282,5 +283,195 @@ class AppointmentQueryServiceTest {
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
         .containsExactly(String.valueOf(20));
+  }
+
+  @Test
+  void search_whenWellboreIdFilterAndNoMatchingAppointments_thenEmptyListReturned() {
+
+    // given a search form with a wellbore ID provided
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(100)
+        .build();
+
+    // and an asset with a different wellbore ID exists
+    var unmatchedWellboreAsset = AssetTestUtil.builder()
+        .withPortalAssetId("200")
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(unmatchedWellboreAsset);
+
+    // and an appointment exists for the wellbore not matching the filter
+    var unmatchedWellboreAppointment = AppointmentTestUtil.builder()
+        .withAsset(unmatchedWellboreAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(unmatchedWellboreAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        searchFormWithWellboreId
+    );
+
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void search_whenWellboreIdFilterAndMatchingAppointments_thenPopulatedListReturned() {
+
+    var filteredWellboreId = 100;
+
+    // given a search form with a wellbore ID provided
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(filteredWellboreId)
+        .build();
+
+    // and an asset with that wellbore ID exists
+    var matchedWellboreAsset = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredWellboreId))
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedWellboreAsset);
+
+    // and an appointment exists for the wellbore matching the filter
+    var matchedWellboreAppointment = AppointmentTestUtil.builder()
+        .withAsset(matchedWellboreAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedWellboreAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        searchFormWithWellboreId
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(filteredWellboreId),
+                PortalAssetType.WELLBORE
+            )
+        );
+  }
+
+  @Test
+  void search_whenWellboreIdFilterAndNoWellboreAssetTypeRestriction_thenVerifyOnlyWellboresReturned() {
+
+    var filteredWellboreId = 100;
+
+    // given a search form with a wellbore ID provided
+    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(filteredWellboreId)
+        .build();
+
+    // and an asset with that wellbore ID exists
+    var matchedWellboreAsset = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredWellboreId))
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedWellboreAsset);
+
+    // and an appointment exists for the wellbore matching the filter
+    var matchedWellboreAppointment = AppointmentTestUtil.builder()
+        .withAsset(matchedWellboreAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedWellboreAppointment);
+
+    // and a non wellbore asset exists with the same ID as a wellbore asset
+    var installationAssetWithSameIdAsWellbore = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredWellboreId))
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAssetWithSameIdAsWellbore);
+
+    // and an appointment exists for the installation with the matching wellbore ID
+    var installationAppointment = AppointmentTestUtil.builder()
+        .withAsset(installationAssetWithSameIdAsWellbore)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAppointment);
+
+    // and the restrictions provided by the consumer includes other asset types that are not wellbores
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE, PortalAssetType.INSTALLATION),
+        searchFormWithWellboreId
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(filteredWellboreId),
+                PortalAssetType.WELLBORE
+            )
+        );
+  }
+
+  @Test
+  void search_whenNoWellboreIdFilter_thenResultsReturned() {
+
+    // given a search form without a wellbore ID provided
+    var searchFormWithoutWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(null)
+        .build();
+
+    // and a wellbore asset exists
+    var wellboreAsset = AssetTestUtil.builder()
+        .withPortalAssetId("200")
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAsset);
+
+    // and an appointment exists for the wellbore
+    var wellboreAppointment = AppointmentTestUtil.builder()
+        .withAsset(wellboreAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE),
+        searchFormWithoutWellboreId
+    );
+
+    // then search items are still returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                "200",
+                PortalAssetType.WELLBORE
+            )
+        );
   }
 }
