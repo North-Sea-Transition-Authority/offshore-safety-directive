@@ -2,15 +2,13 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.api;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 
 class EnergyPortalApiWrapperTest {
 
@@ -25,15 +23,13 @@ class EnergyPortalApiWrapperTest {
 
   @Test
   void makeRequest_verifyLogCorrelationId() {
+    var correlationId = UUID.randomUUID().toString();
 
-    var logCorrelationId = energyPortalApiWrapper.makeRequest(this::returnLogCorrelationId);
+    CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
 
-    List<String> logCorrelationIdComponents = Arrays.asList(logCorrelationId.split(" "));
+    var returnedCorrelationId = energyPortalApiWrapper.makeRequest(this::returnLogCorrelationId);
 
-    assertThat(logCorrelationIdComponents).hasSize(3);
-    assertThat(logCorrelationIdComponents.get(0)).isEqualTo(serviceConfigurationProperties.mnemonic());
-    assertThat(logCorrelationIdComponents.get(1)).isEqualTo(EnergyPortalApiWrapper.API_REQUEST_PREFIX + ":");
-    assertThatNoException().isThrownBy(() -> UUID.fromString(logCorrelationIdComponents.get(2)));
+    assertThat(returnedCorrelationId).isEqualTo(correlationId);
   }
 
   @Test
