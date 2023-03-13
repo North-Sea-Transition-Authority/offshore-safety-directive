@@ -10,7 +10,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   errorItems=[]
-  pageSize=PageSize.FULL_WIDTH
+  pageSize=PageSize.FULL_PAGE
   backLinkUrl=springUrl(backLinkUrl)
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false

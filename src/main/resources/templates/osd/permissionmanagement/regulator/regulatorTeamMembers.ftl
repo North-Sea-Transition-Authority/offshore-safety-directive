@@ -17,7 +17,7 @@
   htmlTitle=pageTitle
   pageHeading=pageTitle
   errorItems=errorList
-  pageSize=PageSize.FULL_WIDTH
+  pageSize=PageSize.FULL_COLUMN
 >
 
   <@roleDescriptions.roleDescriptions roles=teamRoles/>

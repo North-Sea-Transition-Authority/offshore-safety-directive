@@ -31,25 +31,28 @@
   pageHeadingCaption=""
 >
 
-  <#assign fullWidthColumn=false />
-  <#assign oneHalfColumn=false />
-  <#assign oneThirdColumn=false />
-  <#assign twoThirdsColumn=false />
-  <#assign twoThirdsOneThirdColumn=false />
-  <#assign oneQuarterColumn=false />
+  <#assign isFullColumnWidth=false />
+  <#assign isOneHalfColumnWidth=false />
+  <#assign isOneThirdColumnWidth=false />
+  <#assign isTwoThirdsColumnWidth=false />
+  <#assign isTwoThirdsOneThirdColumnWidth=false />
+  <#assign isOneQuarterColumnWidth=false />
+  <#assign isFullPageWidth=false />
 
-  <#if pageSize == PageSize.FULL_WIDTH>
-    <#assign fullWidthColumn=true/>
+  <#if pageSize == PageSize.FULL_COLUMN>
+    <#assign isFullColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_HALF_COLUMN>
-    <#assign oneHalfColumn=true/>
+    <#assign isOneHalfColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_THIRD_COLUMN>
-    <#assign oneThirdColumn=true/>
+    <#assign isOneThirdColumnWidth=true/>
   <#elseif pageSize == PageSize.TWO_THIRDS_ONE_THIRD_COLUMN>
-    <#assign twoThirdsOneThirdColumn=true/>
+    <#assign isTwoThirdsOneThirdColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_QUARTER>
-    <#assign oneQuarterColumn=true/>
+    <#assign isOneQuarterColumnWidth=true/>
+  <#elseif pageSize == PageSize.FULL_PAGE>
+    <#assign isFullPageWidth=true/>
   <#else>
-    <#assign twoThirdsColumn=true/>
+    <#assign isTwoThirdsColumnWidth=true/>
   </#if>
 
   <#assign useBreadCrumbs=false>
@@ -96,7 +99,7 @@
   </#assign>
 
   <#assign serviceHeader>
-    <@_serviceHeader/>
+    <@_serviceHeader pageSize=pageSize />
   </#assign>
 
   <@fdsDefaultPageTemplate
@@ -104,12 +107,12 @@
     htmlAppTitle=SERVICE_NAME
     pageHeading=pageHeading
     phaseBanner=phaseBanner
-    fullWidthColumn=fullWidthColumn
-    oneHalfColumn=oneHalfColumn
-    oneThirdColumn=oneThirdColumn
-    twoThirdsColumn=twoThirdsColumn
-    twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
-    oneQuarterColumn=oneQuarterColumn
+    fullWidthColumn=isFullColumnWidth
+    oneHalfColumn=isOneHalfColumnWidth
+    oneThirdColumn=isOneThirdColumnWidth
+    twoThirdsColumn=isTwoThirdsColumnWidth
+    twoThirdsOneThirdColumn=isTwoThirdsOneThirdColumnWidth
+    oneQuarterColumn=isOneQuarterColumnWidth
     topNavigation=showNavigationItems
     errorItems=errorItems
     backLink=showBackLink
@@ -122,6 +125,7 @@
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
     caption=pageHeadingCaption
+    wrapperWidth=isFullPageWidth
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -135,7 +139,7 @@
   allowSearchEngineIndexing=true
 >
   <#assign serviceHeader>
-    <@_serviceHeader/>
+    <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
   </#assign>
 
   <@fdsLeftSubNavPageTemplate
@@ -151,12 +155,13 @@
   </@fdsLeftSubNavPageTemplate>
 </#macro>
 
-<#macro _serviceHeader>
+<#macro _serviceHeader pageSize>
   <@pageHeader.header
     serviceName=SERVICE_NAME
     customerMnemonic=CUSTOMER_MNEMONIC
     serviceHomeUrl=SERVICE_HOME_URL
     signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
     signOutUrl=springUrl("/logout")
+    pageSize=pageSize
   />
 </#macro>

@@ -12,7 +12,7 @@
   pageHeading=assetName
   pageHeadingCaption=assetTypeDisplayName
   errorItems=[]
-  pageSize=PageSize.FULL_WIDTH
+  pageSize=PageSize.FULL_COLUMN
   backLinkWithBrowserBack=true
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
