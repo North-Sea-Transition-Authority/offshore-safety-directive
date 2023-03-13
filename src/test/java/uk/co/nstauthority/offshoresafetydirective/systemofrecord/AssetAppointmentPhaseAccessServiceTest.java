@@ -40,67 +40,43 @@ class AssetAppointmentPhaseAccessServiceTest {
   @Test
   void getAppointmentPhases_whenAssetPhasesFound_thenGroupedByAppointment() {
 
-    var asset = AssetDtoTestUtil.builder().build();
+    var asset = AssetTestUtil.builder().build();
 
-    var firstAppointmentId = new AppointmentId(UUID.randomUUID());
+    var firstAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
 
-    var firstAppointmentPhase = new AssetPhaseTestProjection(
-        asset.assetId().id(),
-        firstAppointmentId.id(),
-        "FIRST_APPOINTMENT_PHASE"
-    );
+    var firstAppointmentPhase = AssetPhaseTestUtil.builder()
+        .withAsset(asset)
+        .withAppointment(firstAppointment)
+        .withPhase("FIRST_APPOINTMENT_PHASE")
+        .build();
 
-    var secondAppointmentId = new AppointmentId(UUID.randomUUID());
+    var secondAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
 
-    var secondAppointmentPhase = new AssetPhaseTestProjection(
-        asset.assetId().id(),
-        secondAppointmentId.id(),
-        "SECOND_APPOINTMENT_PHASE"
-    );
+    var secondAppointmentPhase = AssetPhaseTestUtil.builder()
+        .withAsset(asset)
+        .withAppointment(secondAppointment)
+        .withPhase("SECOND_APPOINTMENT_PHASE")
+        .build();
 
-    given(assetPhaseRepository.findByAsset_Id(asset.assetId().id()))
+    given(assetPhaseRepository.findByAsset_Id(asset.getId()))
         .willReturn(List.of(firstAppointmentPhase, secondAppointmentPhase));
 
     Map<AppointmentId, List<AssetAppointmentPhase>> resultingAppointmentPhases =
-        assetAppointmentPhaseAccessService.getAppointmentPhases(asset);
+        assetAppointmentPhaseAccessService.getAppointmentPhases(AssetDto.fromAsset(asset));
 
     assertThat(resultingAppointmentPhases)
         .containsAllEntriesOf(
             Map.of(
-                firstAppointmentId, List.of(new AssetAppointmentPhase(firstAppointmentPhase.getPhase())),
-                secondAppointmentId, List.of(new AssetAppointmentPhase(secondAppointmentPhase.getPhase()))
+                new AppointmentId(firstAppointment.getId()),
+                List.of(new AssetAppointmentPhase(firstAppointmentPhase.getPhase())),
+                new AppointmentId(secondAppointment.getId()),
+                List.of(new AssetAppointmentPhase(secondAppointmentPhase.getPhase()))
             )
         );
-  }
-
-  static class AssetPhaseTestProjection implements AssetPhaseProjection {
-
-    private final UUID assetId;
-
-    private final UUID appointmentId;
-
-    private final String phase;
-
-    AssetPhaseTestProjection(UUID assetId, UUID appointmentId, String phase) {
-      this.assetId = assetId;
-      this.appointmentId = appointmentId;
-      this.phase = phase;
-    }
-
-    @Override
-    public UUID getAssetId() {
-      return assetId;
-    }
-
-    @Override
-    public UUID getAppointmentId() {
-      return appointmentId;
-    }
-
-    @Override
-    public String getPhase() {
-      return phase;
-    }
   }
 
 }

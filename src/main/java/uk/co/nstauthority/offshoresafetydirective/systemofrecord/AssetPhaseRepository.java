@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 interface AssetPhaseRepository extends CrudRepository<AssetPhase, UUID> {
 
-  List<AssetPhaseProjection> findByAsset_Id(UUID assetId);
+  List<AssetPhase> findByAsset_Id(UUID assetId);
 
 }

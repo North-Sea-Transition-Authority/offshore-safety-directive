@@ -20,7 +20,7 @@ public class AssetAppointmentPhaseAccessService {
     return assetPhaseRepository.findByAsset_Id(assetDto.assetId().id())
         .stream()
         .collect(Collectors.groupingBy(
-            assetPhaseProjection -> new AppointmentId(assetPhaseProjection.getAppointmentId()),
+            assetPhase -> new AppointmentId(assetPhase.getAppointment().getId()),
             Collectors.mapping(assetPhase -> new AssetAppointmentPhase(assetPhase.getPhase()), Collectors.toList())
         ));
   }

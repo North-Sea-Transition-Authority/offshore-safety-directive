@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-import java.util.Arrays;
-import java.util.Objects;
+import org.apache.commons.lang3.EnumUtils;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
 public enum InstallationPhase implements DisplayableEnumOption {
@@ -36,9 +35,6 @@ public enum InstallationPhase implements DisplayableEnumOption {
   }
 
   public static InstallationPhase valueOfOrNull(String installationPhase) {
-    return Arrays.stream(InstallationPhase.values())
-        .filter(phase -> Objects.equals(phase.name(), installationPhase))
-        .findFirst()
-        .orElse(null);
+    return EnumUtils.getEnum(InstallationPhase.class, installationPhase);
   }
 }
