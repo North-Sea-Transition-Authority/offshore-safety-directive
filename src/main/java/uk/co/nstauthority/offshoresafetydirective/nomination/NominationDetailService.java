@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
 @Service
@@ -21,6 +22,7 @@ public class NominationDetailService {
   private final NominationReferenceService nominationReferenceService;
 
   private final NominationSubmittedEventPublisher nominationSubmittedEventPublisher;
+  private final CaseEventService caseEventService;
   private final Clock clock;
 
   @Autowired
@@ -28,11 +30,12 @@ public class NominationDetailService {
       NominationService nominationService,
       NominationDetailRepository nominationDetailRepository,
       NominationReferenceService nominationReferenceService,
-      NominationSubmittedEventPublisher nominationSubmittedEventPublisher, Clock clock) {
+      NominationSubmittedEventPublisher nominationSubmittedEventPublisher, CaseEventService caseEventService, Clock clock) {
     this.nominationService = nominationService;
     this.nominationDetailRepository = nominationDetailRepository;
     this.nominationReferenceService = nominationReferenceService;
     this.nominationSubmittedEventPublisher = nominationSubmittedEventPublisher;
+    this.caseEventService = caseEventService;
     this.clock = clock;
   }
 
@@ -44,6 +47,7 @@ public class NominationDetailService {
     if (nominationDetail.getVersion().equals(1)) {
       nominationReferenceService.setNominationReference(nominationDetail);
     }
+    caseEventService.createSubmissionEvent(nominationDetail);
     nominationSubmittedEventPublisher.publishNominationSubmittedEvent(nominationDetail);
   }
 

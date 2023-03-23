@@ -37,6 +37,11 @@ public class CaseEventService {
   }
 
   @Transactional
+  public void createSubmissionEvent(NominationDetail nominationDetail) {
+    createEvent(CaseEventType.NOMINATION_SUBMITTED, null, nominationDetail.getSubmittedInstant(), nominationDetail);
+  }
+
+  @Transactional
   public void createCompletedQaChecksEvent(NominationDetail nominationDetail, @Nullable String comment) {
     createEvent(CaseEventType.QA_CHECKS, comment, clock.instant(), nominationDetail);
   }

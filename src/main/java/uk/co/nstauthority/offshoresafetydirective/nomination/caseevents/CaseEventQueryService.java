@@ -128,6 +128,10 @@ public class CaseEventQueryService {
             .withFileViews(uploadedFileViews)
             .withCustomFilePrompt("Case note documents")
             .build();
+        case NOMINATION_SUBMITTED -> caseEventBuilder
+            .withCustomDatePrompt("Submitted on")
+            .withCustomCreatorPrompt("Submitted by")
+            .build();
       };
     };
   }

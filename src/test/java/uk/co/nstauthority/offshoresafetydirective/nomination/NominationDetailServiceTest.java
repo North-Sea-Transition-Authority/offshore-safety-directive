@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +45,9 @@ class NominationDetailServiceTest {
 
   @Mock
   private NominationReferenceService nominationReferenceService;
+
+  @Mock
+  private CaseEventService caseEventService;
 
   @Mock
   private Clock clock;
@@ -83,6 +87,7 @@ class NominationDetailServiceTest {
 
     verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
     verify(nominationReferenceService).setNominationReference(savedNominationDetail);
+    verify(caseEventService).createSubmissionEvent(savedNominationDetail);
   }
 
   @Test
@@ -116,6 +121,7 @@ class NominationDetailServiceTest {
         );
 
     verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
+    verify(caseEventService).createSubmissionEvent(savedNominationDetail);
     verifyNoInteractions(nominationReferenceService);
   }
 

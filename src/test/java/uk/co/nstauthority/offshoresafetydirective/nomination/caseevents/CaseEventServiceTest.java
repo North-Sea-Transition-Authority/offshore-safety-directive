@@ -88,6 +88,49 @@ class CaseEventServiceTest {
 
   }
 
+  @Test
+  void createSubmissionEvent() {
+    var submittedInstant = Instant.now();
+    var nominationVersion = 5;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withSubmittedInstant(submittedInstant)
+        .build();
+
+    when(clock.instant()).thenReturn(submittedInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createSubmissionEvent(nominationDetail);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.NOMINATION_SUBMITTED,
+            null,
+            null,
+            serviceUser.wuaId(),
+            submittedInstant,
+            submittedInstant,
+            nominationDetail.getNomination(),
+            nominationVersion
+        );
+
+  }
+
   @ParameterizedTest
   @EnumSource(NominationDecision.class)
   void createDecisionEvent(NominationDecision nominationDecision) {
