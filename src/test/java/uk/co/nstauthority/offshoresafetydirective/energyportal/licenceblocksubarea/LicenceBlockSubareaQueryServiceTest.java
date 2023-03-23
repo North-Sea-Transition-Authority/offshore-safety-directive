@@ -16,6 +16,7 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaShoreLocation;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreTestUtil;
@@ -368,6 +369,9 @@ class LicenceBlockSubareaQueryServiceTest {
 
   private void assertResultingLicenceBlockSubareaProperties(List<LicenceBlockSubareaDto> resultingLicenceBlockSubareas,
                                                             Subarea expectedSubarea) {
+
+    var isExtant = SubareaStatus.EXTANT.equals(expectedSubarea.getStatus());
+
     assertThat(resultingLicenceBlockSubareas)
         .extracting(
             subareaDto -> subareaDto.subareaId().id(),
@@ -378,7 +382,8 @@ class LicenceBlockSubareaQueryServiceTest {
             subareaDto -> subareaDto.licenceBlock().reference().value(),
             subareaDto -> subareaDto.licence().licenceType().value(),
             subareaDto -> subareaDto.licence().licenceNumber().value(),
-            subareaDto -> subareaDto.licence().licenceReference().value()
+            subareaDto -> subareaDto.licence().licenceReference().value(),
+            LicenceBlockSubareaDto::isExtant
         )
         .containsExactly(
             tuple(
@@ -390,7 +395,8 @@ class LicenceBlockSubareaQueryServiceTest {
                 expectedSubarea.getLicenceBlock().getReference(),
                 expectedSubarea.getLicence().getLicenceType(),
                 expectedSubarea.getLicence().getLicenceNo(),
-                expectedSubarea.getLicence().getLicenceRef()
+                expectedSubarea.getLicence().getLicenceRef(),
+                isExtant
             )
         );
   }

@@ -24,6 +24,7 @@ public class LicenceBlockSubareaQueryService {
         .suffix()
         .reference()
         .root()
+      .status().root()
       .licence()
         .licenceType()
         .licenceNo()
@@ -46,7 +47,8 @@ public class LicenceBlockSubareaQueryService {
               .licenceNo()
               .licenceRef()
               .parent()
-            .mechanicalStatus().root();
+            .mechanicalStatus().root()
+          .status().root();
 
   private final SubareaApi subareaApi;
 
