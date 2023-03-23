@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.enumutil.EnumUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailView;
@@ -45,9 +46,7 @@ class InstallationAssetService {
     } else {
       installationPhases = installationDetailView.getInstallationPhases();
     }
-    return installationPhases.stream()
-        .map(Enum::name)
-        .toList();
+    return EnumUtil.getEnumNames(installationPhases);
   }
 
 }

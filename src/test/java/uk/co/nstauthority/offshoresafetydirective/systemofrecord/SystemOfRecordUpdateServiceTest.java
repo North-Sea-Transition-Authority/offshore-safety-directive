@@ -34,6 +34,9 @@ class SystemOfRecordUpdateServiceTest {
   @Mock
   private WellAssetService wellAssetService;
 
+  @Mock
+  private SubareaAssetService subareaAssetService;
+
   @InjectMocks
   private SystemOfRecordUpdateService systemOfRecordUpdateService;
 
@@ -126,7 +129,7 @@ class SystemOfRecordUpdateServiceTest {
   }
 
   @Test
-  void updateSystemOfRecordByNominationDetail_whenInstallationAndWellAssets_verifyInteractions() {
+  void updateSystemOfRecordByNominationDetail_whenMultipleAssets_verifyInteractions() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var confirmationDate = LocalDate.now().minusDays(1);
     var installationAsset = AssetTestUtil.builder()
@@ -182,6 +185,53 @@ class SystemOfRecordUpdateServiceTest {
         ).containsExactlyInAnyOrder(
             tuple(installationAsset, installationAppointment, List.of("stub installation phase")),
             tuple(wellAsset, wellAppointment, List.of("stub well phase"))
+        );
+  }
+
+  @Test
+  void updateSystemOfRecordByNominationDetail_whenSubareaAssets_verifyInteractions() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var confirmationDate = LocalDate.now().minusDays(1);
+    var existingAsset = AssetTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+    var assetDto = new NominatedAssetDto(
+        new PortalAssetId(existingAsset.getPortalAssetId()),
+        PortalAssetType.SUBAREA,
+        List.of("stub phase")
+    );
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(existingAsset)
+        .build();
+
+    when(installationAssetService.getInstallationAssetDtos(nominationDetail))
+        .thenReturn(List.of());
+
+    when(wellAssetService.getNominatedWellAssetDtos(nominationDetail))
+        .thenReturn(List.of());
+
+    when(subareaAssetService.getForwardApprovedSubareaAssetDtos(nominationDetail))
+        .thenReturn(List.of(assetDto));
+
+    when(assetPersistenceService.persistNominatedAssets(List.of(assetDto)))
+        .thenReturn(List.of(existingAsset));
+
+    when(appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(existingAsset)))
+        .thenReturn(List.of(appointment));
+
+    systemOfRecordUpdateService.updateSystemOfRecordByNominationDetail(nominationDetail, confirmationDate);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<AssetPhaseDto>> assetPhaseDtoListCaptor = ArgumentCaptor.forClass(List.class);
+    verify(assetPhasePersistenceService).createAssetPhases(assetPhaseDtoListCaptor.capture());
+
+    assertThat(assetPhaseDtoListCaptor.getValue())
+        .extracting(
+            AssetPhaseDto::asset,
+            AssetPhaseDto::appointment,
+            AssetPhaseDto::phases
+        ).containsExactly(
+            tuple(existingAsset, appointment, List.of("stub phase"))
         );
   }
 }

@@ -1,12 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.enumutil.EnumUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
@@ -93,12 +93,6 @@ class WellAssetService {
     return new PortalAssetId(String.valueOf(wellboreId.id()));
   }
 
-  private List<String> wellPhasesToNames(Collection<WellPhase> wellPhases) {
-    return wellPhases.stream()
-        .map(Enum::name)
-        .toList();
-  }
-
   private List<String> getWellPhases(NominatedWellDetailView wellDetailView) {
     List<WellPhase> wellPhases;
     if (BooleanUtils.isTrue(wellDetailView.getIsNominationForAllWellPhases())) {
@@ -106,7 +100,7 @@ class WellAssetService {
     } else {
       wellPhases = wellDetailView.getWellPhases();
     }
-    return wellPhasesToNames(wellPhases);
+    return EnumUtil.getEnumNames(wellPhases);
   }
 
   private List<String> getWellPhases(NominatedBlockSubareaDetailView detailView) {
@@ -116,7 +110,7 @@ class WellAssetService {
     } else {
       wellPhases = detailView.getWellPhases();
     }
-    return wellPhasesToNames(wellPhases);
+    return EnumUtil.getEnumNames(wellPhases);
   }
 
 }

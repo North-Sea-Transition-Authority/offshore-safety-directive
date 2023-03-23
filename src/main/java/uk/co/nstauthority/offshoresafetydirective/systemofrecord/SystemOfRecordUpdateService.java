@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,26 +19,34 @@ public class SystemOfRecordUpdateService {
   private final AssetPhasePersistenceService assetPhasePersistenceService;
   private final InstallationAssetService installationAssetService;
   private final WellAssetService wellAssetService;
+  private final SubareaAssetService subareaAssetService;
 
   @Autowired
   public SystemOfRecordUpdateService(AssetPersistenceService assetPersistenceService,
                                      AppointmentService appointmentService,
                                      AssetPhasePersistenceService assetPhasePersistenceService,
                                      InstallationAssetService installationAssetService,
-                                     WellAssetService wellAssetService) {
+                                     WellAssetService wellAssetService, SubareaAssetService subareaAssetService) {
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentService = appointmentService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
     this.installationAssetService = installationAssetService;
     this.wellAssetService = wellAssetService;
+    this.subareaAssetService = subareaAssetService;
   }
 
   public void updateSystemOfRecordByNominationDetail(NominationDetail nominationDetail, LocalDate confirmationDate) {
 
     var nominatedInstallationAssetDtos = installationAssetService.getInstallationAssetDtos(nominationDetail);
     var nominatedWellAssetDtos = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
+    var nominatedSubareaAssetDtos = subareaAssetService.getForwardApprovedSubareaAssetDtos(nominationDetail);
 
-    var nominatedAssetDtos = Stream.concat(nominatedInstallationAssetDtos.stream(), nominatedWellAssetDtos.stream())
+    var nominatedAssetDtos = Stream.of(
+            nominatedInstallationAssetDtos.stream(),
+            nominatedWellAssetDtos.stream(),
+            nominatedSubareaAssetDtos.stream()
+        )
+        .flatMap(Function.identity())
         .toList();
 
     var persistedAssetDtos = assetPersistenceService.persistNominatedAssets(nominatedAssetDtos);
