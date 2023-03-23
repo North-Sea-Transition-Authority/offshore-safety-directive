@@ -142,6 +142,49 @@ class SubareaAssetServiceTest {
     verify(licenceBlockSubareaQueryService, never()).getLicenceBlockSubareasByIds(any());
   }
 
+  @Test
+  void getForwardApprovedSubareaAssetDtos_whenLicenceBlockSubarea_verifyNonExtantNotCopiedForward() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
+        .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+
+    var subareaExtant = LicenceBlockSubareaDtoTestUtil.builder()
+        .isExtant(true)
+        .withSubareaId("extant")
+        .build();
+    var subareaNonExtant = LicenceBlockSubareaDtoTestUtil.builder()
+        .isExtant(false)
+        .withSubareaId("nonExtant")
+        .build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(
+        subareaExtant.subareaId(),
+        subareaNonExtant.subareaId()
+    )))
+        .thenReturn(List.of(subareaExtant, subareaNonExtant));
+
+    var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder()
+        .withForAllWellPhases(true)
+        .withValidForFutureWellsInSubarea(true)
+        .addLicenceBlockSubarea(subareaExtant)
+        .addLicenceBlockSubarea(subareaNonExtant)
+        .build();
+
+    when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
+
+    var result = subareaAssetService.getForwardApprovedSubareaAssetDtos(nominationDetail);
+
+    assertThat(result)
+        .extracting(
+            nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
+            NominatedAssetDto::portalAssetType
+        )
+        .containsExactly(
+            tuple(String.valueOf(subareaExtant.subareaId().id()), PortalAssetType.SUBAREA)
+        );
+  }
+
   @ParameterizedTest
   @EnumSource(value = WellSelectionType.class, names = "LICENCE_BLOCK_SUBAREA", mode = EnumSource.Mode.EXCLUDE)
   void getForwardApprovedSubareaAssetDtos_whenNotLicenceBlockSubarea_verifyCalls(WellSelectionType wellSelectionType) {

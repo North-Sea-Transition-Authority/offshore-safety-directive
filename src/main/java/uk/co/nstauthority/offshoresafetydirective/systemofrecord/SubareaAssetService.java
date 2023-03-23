@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.enumutil.EnumUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -61,6 +62,7 @@ class SubareaAssetService {
 
       return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(licenceBlockIds)
           .stream()
+          .filter(LicenceBlockSubareaDto::isExtant)
           .map(dto -> new NominatedAssetDto(
               new PortalAssetId(dto.subareaId().id()),
               PortalAssetType.SUBAREA,
