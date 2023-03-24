@@ -1,8 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.sns;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.CreateTopicResponse;
+import software.amazon.awssdk.services.sns.model.PublishRequest;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqMessage;
 
 @ExtendWith(MockitoExtension.class)
 class SnsServiceTest {
@@ -21,11 +28,18 @@ class SnsServiceTest {
   @Mock
   private SnsClient snsClient;
 
+  @Mock
+  private ObjectMapper objectMapper;
+
   private SnsService snsService;
 
   @BeforeEach
   void setUp() {
-    snsService = new SnsService(snsClient, new SnsConfigurationProperties(null, null, null, TOPIC_SUFFIX));
+    snsService = new SnsService(
+        snsClient,
+        new SnsConfigurationProperties(null, null, null, TOPIC_SUFFIX),
+        objectMapper
+    );
   }
 
   @Test
@@ -43,5 +57,26 @@ class SnsServiceTest {
     ).thenReturn(CreateTopicResponse.builder().topicArn(topicArn).build());
 
     assertThat(snsService.getOrCreateTopic(topicBaseName)).isEqualTo(new SnsTopicArn(topicArn));
+  }
+
+  @Test
+  void publishMessage() throws JsonProcessingException {
+    var topicArn = new SnsTopicArn("test-topic-arn");
+    var epmqMessage = mock(OsdEpmqMessage.class);
+
+    var message = "{ \"service\": \"OSD\" }";
+
+    when(objectMapper.writeValueAsString(epmqMessage)).thenReturn(message);
+
+    snsService.publishMessage(topicArn, epmqMessage);
+
+    verify(snsClient).publish(
+        PublishRequest.builder()
+            .topicArn(topicArn.arn())
+            .message(message)
+            .messageDeduplicationId(any())
+            .messageGroupId(topicArn.arn())
+            .build()
+    );
   }
 }
