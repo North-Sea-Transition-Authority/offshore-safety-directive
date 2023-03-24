@@ -40,7 +40,7 @@ steps:
     image: eclipse-temurin:17-jdk
     commands:
       - chmod +x gradlew
-      - ./gradlew checkstyleMain test bootJar
+      - ./gradlew checkstyleMain test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar
 
   - name: sync-reports
     image: alpine:3.16.0
@@ -144,6 +144,36 @@ steps:
         - develop
       status:
         - success
+
+  - name: publish-epmq-messages-jar-snapshot
+    image: eclipse-temurin:17-jdk
+    environment:
+      NEXUS_USERNAME: jenkins
+      NEXUS_PASSWORD:
+        from_secret: nexus_password
+    commands:
+      - export EPMQ_MESSAGES_JAR_VERSION=$(echo ${DRONE_BRANCH} | sed 's/feature\\\///g' | sed 's/\\\//-/g')-SNAPSHOT
+      - echo $EPMQ_MESSAGES_JAR_VERSION
+      - ./gradlew :publishEpmqMessagesPublicationToSnapshotsRepository
+    when:
+      branch:
+        - develop
+        - feature/**
+      event:
+        - push
+
+  - name: publish-epmq-messages-jar-release
+    image: eclipse-temurin:17-jdk
+    environment:
+      NEXUS_USERNAME: jenkins
+      NEXUS_PASSWORD:
+        from_secret: nexus_password
+    commands:
+      - export EPMQ_MESSAGES_JAR_VERSION=${DRONE_BRANCH/\//-}-${DRONE_BUILD_NUMBER}
+      - ./gradlew :publishEpmqMessagesPublicationToReleasesRepository
+    when:
+      event:
+        - tag
 
   - name: rebuild-cache
     image: drillster/drone-volume-cache
@@ -306,3 +336,9 @@ data: lqompHM7600FBdLksr8h6RehvqMqQG1cYShynA4++2hd8P5y6kdqfJhuw1egioLvBI2fBgLbE/
 kind: secret
 name: drone_token
 data: WDOPuypCNVJ4qwu0gkfO7+8XspeSrhxqebUILxvkQsdhQBoVu090+Iggcv0XvC2xdqUyRSMp2HyKuBEB
+
+---
+
+kind: secret
+name: nexus_password
+data: tUqqxLEq9I73Ld0q5X0YUVjWbW/32/zxVUAHbnkrTaJy01yfog==

@@ -5,6 +5,7 @@ plugins {
 	id "org.sonarqube" version "3.3"
 	id 'checkstyle'
 	id 'jacoco'
+	id 'maven-publish'
 }
 
 group = 'uk.co.nstauthority'
@@ -12,6 +13,7 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	maven {
 		// Required for opensaml deps
@@ -23,6 +25,10 @@ repositories {
 	maven {
 		url "https://nexus.fivium.co.uk/repository/maven-snapshots/"
 	}
+}
+
+sourceSets {
+	epmqMessagesJarIntegrationTest {}
 }
 
 dependencies {
@@ -70,6 +76,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
+	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
 }
 
 tasks {
@@ -118,4 +126,66 @@ jacocoTestReport {
 	reports {
 		xml.required = true
 	}
+}
+
+tasks.register('epmqMessagesJar', Jar) {
+	from sourceSets.main.output
+	include 'uk/co/nstauthority/offshoresafetydirective/epmqmessage/**'
+	archiveBaseName = 'offshore-safety-directive-epmq-messages'
+}
+
+publishing {
+	publications {
+		epmqMessages(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = System.getenv("EPMQ_MESSAGES_JAR_VERSION") ?: version
+
+			artifact(epmqMessagesJar)
+		}
+		epmqMessagesIntegrationTest(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = 'integration-test'
+
+			artifact(epmqMessagesJar)
+		}
+	}
+	repositories {
+		maven {
+			name = 'snapshots'
+			url = 'https://nexus.fivium.co.uk/repository/maven-snapshots'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+
+		maven {
+			name = 'releases'
+			url = 'https://nexus.fivium.co.uk/repository/maven-releases'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+	}
+}
+
+tasks.register('epmqMessagesJarIntegrationTest', Test) {
+	useJUnitPlatform()
+	group 'verification'
+	//Need to explicitly override the default classesDirs and classpath for a test task
+	testClassesDirs = sourceSets.epmqMessagesJarIntegrationTest.output.classesDirs
+	classpath = sourceSets.epmqMessagesJarIntegrationTest.runtimeClasspath
+
+	mustRunAfter(publishEpmqMessagesIntegrationTestPublicationToMavenLocal)
+}
+
+tasks.register('epmqMessagesJarIntegrationTestReport', TestReport) {
+	destinationDir = file("$buildDir/reports/epmqMessagesJarIntegrationTests")
+	//Specify test result directory rather than task names so this task runs even if the tests fail
+	testResultDirs = [epmqMessagesJarIntegrationTest.binResultsDir]
+
+	mustRunAfter(epmqMessagesJarIntegrationTest)
 }
