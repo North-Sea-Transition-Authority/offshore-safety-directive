@@ -11,7 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
 @Table(name = "related_information")
-class RelatedInformation {
+public class RelatedInformation {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
