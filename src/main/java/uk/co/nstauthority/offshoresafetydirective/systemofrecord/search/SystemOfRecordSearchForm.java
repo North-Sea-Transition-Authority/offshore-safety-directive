@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.ReflectionUtils;
 
 public class SystemOfRecordSearchForm {
@@ -56,5 +57,37 @@ public class SystemOfRecordSearchForm {
     );
 
     return fieldValues.stream().allMatch(Objects::isNull);
+  }
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  static class Builder {
+
+    private Integer appointedOperator;
+
+    private Integer wellbore;
+
+    Builder withAppointedOperatorId(String appointedOperatorId) {
+      this.appointedOperator = (StringUtils.isNotBlank(appointedOperatorId))
+          ? Integer.parseInt(appointedOperatorId)
+          : null;
+      return this;
+    }
+
+    Builder withWellbore(String wellboreId) {
+      this.wellbore = (StringUtils.isNotBlank(wellboreId))
+          ? Integer.parseInt(wellboreId)
+          : null;
+      return this;
+    }
+
+    SystemOfRecordSearchForm build() {
+      var form = new SystemOfRecordSearchForm();
+      form.setAppointedOperatorId(appointedOperator);
+      form.setWellboreId(wellbore);
+      return form;
+    }
   }
 }

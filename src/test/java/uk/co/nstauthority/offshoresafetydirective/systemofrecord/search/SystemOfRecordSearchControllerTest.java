@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -16,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -86,8 +88,8 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .willReturn(List.of(expectedAppointment));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(searchForm)))
-            .param("appointedOperatorId", String.valueOf(searchForm.getAppointedOperatorId()))
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null)))
+            .param("appointedOperator", String.valueOf(searchForm.getAppointedOperatorId()))
     )
         .andExpect(view().name("osd/systemofrecord/search/operator/searchAppointmentsByOperator"))
         .andExpect(model().attribute(
@@ -122,19 +124,90 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .shouldHaveNoInteractions();
   }
 
+  @Test
+  void renderOperatorSearch_whenQueryParamAddedThatIsNotAScreenFilter_thenParamIsIgnored() throws Exception {
+
+    mockMvc.perform(get(
+        ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null)))
+            // a query param which for a filter on screen
+            .param("appointedOperator", "123")
+            // a query param which doesn't have a filter on screen
+            .param("wellbore", "456")
+        )
+        .andExpect(status().isOk());
+
+    var systemOfRecordSearchFormCaptor = ArgumentCaptor.forClass(SystemOfRecordSearchForm.class);
+
+    then(appointmentSearchService).should().searchAppointments(systemOfRecordSearchFormCaptor.capture());
+
+    assertThat(systemOfRecordSearchFormCaptor.getValue())
+        .extracting(
+            SystemOfRecordSearchForm::getAppointedOperatorId,
+            SystemOfRecordSearchForm::getWellboreId
+        )
+        .containsExactly(
+            123,
+            null // the wellbore id param is not passed to the form
+        );
+  }
+
   @SecurityTest
   void searchOperatorAppointments_verifyUnauthenticatedAccess() throws Exception {
 
     var searchForm = new SystemOfRecordSearchForm();
 
     mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
-            .searchOperatorAppointments(searchForm, null)
+            .searchOperatorAppointments(searchForm)
         ))
             .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(searchForm))
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null))
+        ));
+  }
+
+  @Test
+  void searchOperatorAppointments_whenSearchInputProvided_verifyRedirectionWithQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
+        .withAppointedOperatorId(123)
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+                .searchOperatorAppointments(searchForm)
+            ))
+            .with(csrf())
+            .param("appointedOperatorId", searchUrlParams.appointedOperator())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderOperatorSearch(null),
+                Collections.emptyMap(),
+                true,
+                searchUrlParams.getUrlQueryParams()
+            )
+        ));
+  }
+
+  @Test
+  void searchOperatorAppointments_whenNoSearchInputProvided_verifyRedirectionWithoutQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+                .searchOperatorAppointments(searchForm)
+            ))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderOperatorSearch(null)
+            )
         ));
   }
 
@@ -191,7 +264,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null)))
-            .param("wellboreId", "10")
+            .param("wellbore", "10")
     )
         .andExpect(view().name("osd/systemofrecord/search/well/searchWellAppointments"))
         .andExpect(model().attribute(
@@ -243,19 +316,90 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .shouldHaveNoInteractions();
   }
 
+  @Test
+  void renderWellSearch_whenQueryParamAddedThatIsNotAScreenFilter_thenParamIsIgnored() throws Exception {
+
+    mockMvc.perform(get(
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null)))
+            // a query param which for a filter on screen
+            .param("wellbore", "123")
+            // a query param which doesn't have a filter on screen
+            .param("appointedOperator", "456")
+        )
+        .andExpect(status().isOk());
+
+    var systemOfRecordSearchFormCaptor = ArgumentCaptor.forClass(SystemOfRecordSearchForm.class);
+
+    then(appointmentSearchService).should().searchWellboreAppointments(systemOfRecordSearchFormCaptor.capture());
+
+    assertThat(systemOfRecordSearchFormCaptor.getValue())
+        .extracting(
+            SystemOfRecordSearchForm::getWellboreId,
+            SystemOfRecordSearchForm::getAppointedOperatorId
+        )
+        .containsExactly(
+            123,
+            null // the operator id param is not passed to the form
+        );
+  }
+
   @SecurityTest
   void searchWellboreAppointments_verifyUnauthenticatedAccess() throws Exception {
 
     var searchForm = new SystemOfRecordSearchForm();
 
     mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
-                .searchWellboreAppointments(searchForm, null)
+                .searchWellboreAppointments(searchForm)
             ))
-                .with(csrf())
+            .with(csrf())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(searchForm))
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null))
+        ));
+  }
+
+  @Test
+  void searchWellboreAppointments_whenSearchInputProvided_verifyRedirectionWithQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
+        .withWellboreId(123)
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+                .searchWellboreAppointments(searchForm)
+            ))
+            .with(csrf())
+            .param("wellboreId", searchUrlParams.wellbore())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderWellSearch(null),
+                Collections.emptyMap(),
+                true,
+                searchUrlParams.getUrlQueryParams()
+            )
+        ));
+  }
+
+  @Test
+  void searchWellboreAppointments_whenNoSearchInputProvided_verifyRedirectionWithoutQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
+                .searchWellboreAppointments(searchForm)
+            ))
+            .with(csrf())
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderWellSearch(null)
+            )
         ));
   }
 

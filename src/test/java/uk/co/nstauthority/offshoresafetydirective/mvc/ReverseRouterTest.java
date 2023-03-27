@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -94,6 +96,37 @@ class ReverseRouterTest extends AbstractControllerTest {
   }
 
   @Test
+  void route_whenQueryParamsProvided_thenExpandedInRequest() {
+
+    var urlQueryParams = new LinkedMultiValueMap<String, String>();
+    urlQueryParams.set("param", "value");
+
+    var resultingRoute = ReverseRouter.route(
+        on(NoPathVariableTestController.class).testMethod(),
+        Collections.emptyMap(),
+        true,
+        urlQueryParams
+    );
+
+    assertThat(resultingRoute).isEqualTo("/test/?param=value");
+  }
+
+  @Test
+  void route_whenNoQueryParamsProvided_thenNotExpandedInRequest() {
+
+    var urlQueryParams = new LinkedMultiValueMap<String, String>();
+
+    var resultingRoute = ReverseRouter.route(
+        on(NoPathVariableTestController.class).testMethod(),
+        Collections.emptyMap(),
+        true,
+        urlQueryParams
+    );
+
+    assertThat(resultingRoute).isEqualTo("/test/");
+  }
+
+  @Test
   void redirect_whenMethodCallVariant_thenVerifyRoute() {
     // redirect should behave as route does, with "redirect:/" prefix on results
     var redirectModelAndView = ReverseRouter.redirect(on(TestController.class).testMethod("method_child_id"));
@@ -122,6 +155,38 @@ class ReverseRouterTest extends AbstractControllerTest {
   }
 
   @Test
+  void redirect_whenQueryParams_thenVerifyRoute() {
+
+    var urlParams = new LinkedMultiValueMap<String, String>();
+    urlParams.set("param", "value");
+
+    var resultingModelAndView = ReverseRouter.redirect(
+        on(NoPathVariableTestController.class).testMethod(),
+        urlParams
+    );
+
+    assertThat(resultingModelAndView.getViewName())
+        .isEqualTo("redirect:/test/?param=value");
+  }
+
+  @Test
+  void redirect_whenUriVariablesAndQueryParams_thenVerifyRoute() {
+
+    var urlParams = new LinkedMultiValueMap<String, String>();
+    urlParams.set("param", "value");
+
+    var resultingModelAndView = ReverseRouter.redirect(
+        on(TestController.class).testMethod("method_child_id"),
+        Map.of("parentId", "map_parent_id"),
+        false,
+        urlParams
+    );
+
+    assertThat(resultingModelAndView.getViewName())
+        .isEqualTo("redirect:/parent/map_parent_id/child/method_child_id?param=value");
+  }
+
+  @Test
   void emptyBindingResult_verifyResponse() {
     var emptyBindingResult = (BeanPropertyBindingResult) ReverseRouter.emptyBindingResult();
     assertThat(emptyBindingResult.getTarget()).isNull();
@@ -139,6 +204,17 @@ class ReverseRouterTest extends AbstractControllerTest {
     @GetMapping("/child/{childId}")
     ModelAndView testMethod(@PathVariable String childId) {
       return new ModelAndView(childId);
+    }
+  }
+
+  @RequestMapping("/test")
+  static class NoPathVariableTestController {
+
+    static final String VIEW_NAME = "view-name";
+
+    @GetMapping
+    ModelAndView testMethod() {
+      return new ModelAndView(VIEW_NAME);
     }
   }
 }

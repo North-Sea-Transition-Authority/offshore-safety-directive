@@ -5,14 +5,12 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Collections;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -63,11 +61,15 @@ public class SystemOfRecordSearchController {
   }
 
   @GetMapping("/operators")
-  public ModelAndView renderOperatorSearch(
-      @Nullable @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
-  ) {
+  public ModelAndView renderOperatorSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
 
-    if (searchForm == null) {
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withAppointedOperatorId(systemOfRecordSearchUrlParams.appointedOperator())
+          .build();
+    } else {
       searchForm = new SystemOfRecordSearchForm();
     }
 
@@ -80,12 +82,18 @@ public class SystemOfRecordSearchController {
   }
 
   @PostMapping("/operators")
-  public ModelAndView searchOperatorAppointments(@ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm,
-                                                 RedirectAttributes redirectAttributes) {
-    if (redirectAttributes != null) {
-      redirectAttributes.addFlashAttribute(SEARCH_FORM_ATTRIBUTE_NAME, searchForm);
-    }
-    return ReverseRouter.redirect(on(SystemOfRecordSearchController.class).renderOperatorSearch(null));
+  public ModelAndView searchOperatorAppointments(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withAppointedOperatorId(searchForm.getAppointedOperatorId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderOperatorSearch(null),
+        searchParams.getUrlQueryParams()
+    );
   }
 
   @GetMapping("/installations")
@@ -100,11 +108,15 @@ public class SystemOfRecordSearchController {
   }
 
   @GetMapping("/wells")
-  public ModelAndView renderWellSearch(
-      @Nullable @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
-  ) {
+  public ModelAndView renderWellSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
 
-    if (searchForm == null) {
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withWellbore(systemOfRecordSearchUrlParams.wellbore())
+          .build();
+    } else {
       searchForm = new SystemOfRecordSearchForm();
     }
 
@@ -131,13 +143,17 @@ public class SystemOfRecordSearchController {
 
   @PostMapping("/wells")
   public ModelAndView searchWellboreAppointments(
-      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm,
-      RedirectAttributes redirectAttributes
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
   ) {
-    if (redirectAttributes != null) {
-      redirectAttributes.addFlashAttribute(SEARCH_FORM_ATTRIBUTE_NAME, searchForm);
-    }
-    return ReverseRouter.redirect(on(SystemOfRecordSearchController.class).renderWellSearch(null));
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withWellboreId(searchForm.getWellboreId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderWellSearch(null),
+        searchParams.getUrlQueryParams()
+    );
   }
 
   @GetMapping("/forward-area-approvals")

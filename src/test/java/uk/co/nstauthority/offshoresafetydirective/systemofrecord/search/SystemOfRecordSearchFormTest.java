@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 class SystemOfRecordSearchFormTest {
@@ -77,6 +79,37 @@ class SystemOfRecordSearchFormTest {
   void isEmptyExcept_whenNotValidFieldNameAndAllFieldValuesNull_thenTrue() {
     var form = new SystemOfRecordSearchForm();
     assertTrue(form.isEmptyExcept("NOT_A_FIELD_NAME"));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void build_whenNullOrEmpty_thenNullReturned(String inputToTest) {
+
+    var searchForm = SystemOfRecordSearchForm.builder()
+        .withAppointedOperatorId(inputToTest)
+        .withWellbore(inputToTest)
+        .build();
+
+    assertThat(searchForm).hasAllNullFieldsOrProperties();
+  }
+
+  @Test
+  void build_whenInputNotBlank_thenValueReturned() {
+
+    var searchForm = SystemOfRecordSearchForm.builder()
+        .withAppointedOperatorId("123")
+        .withWellbore("456")
+        .build();
+
+    assertThat(searchForm)
+        .extracting(
+            SystemOfRecordSearchForm::getAppointedOperatorId,
+            SystemOfRecordSearchForm::getWellboreId
+        )
+        .containsExactly(
+            123,
+            456
+        );
   }
 
   private static Stream<Arguments> getSystemOfRecordSearchFormFields() {
