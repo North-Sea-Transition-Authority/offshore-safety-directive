@@ -24,7 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSu
 @Configuration
 public class WebSecurityConfiguration {
 
-  static final String IDP_ACCESS_GRANTED_AUTHORITY_NAME = "WIOS_ACCESS_PRIVILEGE";
+  public static final String IDP_ACCESS_GRANTED_AUTHORITY_NAME = "WIOS_ACCESS_PRIVILEGE";
 
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
@@ -48,10 +48,15 @@ public class WebSecurityConfiguration {
 
     httpSecurity
         .authorizeHttpRequests()
+        .mvcMatchers(
+            "/assets/**",
+            "/system-of-record/**",
+            "/api/portal-organisations/**",
+            "/api/well/**"
+        )
+          .permitAll()
         .mvcMatchers("/*")
           .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
-        .mvcMatchers("/assets/**")
-          .permitAll()
         .anyRequest()
           .authenticated()
         .and()

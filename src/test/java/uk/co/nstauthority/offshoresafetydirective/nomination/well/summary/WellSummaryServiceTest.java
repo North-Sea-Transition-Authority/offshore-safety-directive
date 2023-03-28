@@ -143,7 +143,7 @@ class WellSummaryServiceTest {
 
     var specificWellSummaryView = NominatedWellDetailViewTestUtil.builder()
         .withWellDto(expectedWell)
-        .withIsNominationForALlWellPhases(false)
+        .withIsNominationForAllWellPhases(false)
         .withWellPhase(WellPhase.EXPLORATION_AND_APPRAISAL)
         .build();
 

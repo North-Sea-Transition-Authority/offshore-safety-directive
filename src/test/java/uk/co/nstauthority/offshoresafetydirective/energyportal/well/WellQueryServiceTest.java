@@ -229,4 +229,47 @@ class WellQueryServiceTest {
         .searchWellboresByIds(anyList(), any(), any(), any());
   }
 
+  @Test
+  void getWell_whenNoMatch_thenEmptyOptionalReturned() {
+
+    var unmatchedWellboreId = new WellboreId(-1);
+
+    given(wellboreApi.searchWellboresByIds(
+        eq(List.of(unmatchedWellboreId.id())),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(Collections.emptyList());
+
+    var resultingWellbore = wellQueryService.getWell(unmatchedWellboreId);
+
+    assertThat(resultingWellbore).isEmpty();
+  }
+
+  @Test
+  void getWell_whenMatch_thenPopulatedOptionalReturned() {
+
+    var matchedWellboreId = new WellboreId(1);
+
+    var expectedWellbore = EpaWellboreTestUtil.builder()
+        .withId(matchedWellboreId)
+        .build();
+
+    given(wellboreApi.searchWellboresByIds(
+        eq(List.of(matchedWellboreId.id())),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedWellbore));
+
+    var resultingWellbore = wellQueryService.getWell(matchedWellboreId);
+
+    assertThat(resultingWellbore).isPresent();
+    assertThat(resultingWellbore.get())
+        .extracting(WellDto::wellboreId)
+        .isEqualTo(matchedWellboreId);
+  }
+
 }

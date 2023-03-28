@@ -25,6 +25,7 @@ public class CaseEventTestUtil {
     private int nominationVersion = 10;
     private Long createdBy = ServiceUserDetailTestUtil.Builder().build().wuaId();
     private Instant createdInstant = Instant.now();
+    private Instant eventInstant = Instant.now();
     private String comment = "case event comment";
 
     private Builder() {
@@ -61,6 +62,11 @@ public class CaseEventTestUtil {
       return this;
     }
 
+    public Builder withEventInstant(Instant eventInstant) {
+      this.eventInstant = eventInstant;
+      return this;
+    }
+
     public Builder withComment(String comment) {
       this.comment = comment;
       return this;
@@ -73,6 +79,7 @@ public class CaseEventTestUtil {
       caseEvent.setNomination(nomination);
       caseEvent.setNominationVersion(nominationVersion);
       caseEvent.setCreatedBy(createdBy);
+      caseEvent.setEventInstant(eventInstant);
       caseEvent.setCreatedInstant(createdInstant);
       caseEvent.setComment(comment);
       return caseEvent;

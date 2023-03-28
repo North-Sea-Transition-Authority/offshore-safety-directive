@@ -1,6 +1,7 @@
 <#import '/spring.ftl' as spring>
 <#import '../../../../fds/components/checkboxes/checkboxes.ftl' as fdsCheckbox>
 <#import '../../../../fds/utilities/utilities.ftl' as fdsUtil>
+<#import '../_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 
 <#macro _wellsExcludeList wellbores excludedWellsFormPath>
 
@@ -70,12 +71,13 @@
             </#if>
           </td>
           <td class="govuk-table__cell">
-            <#if wellbore.relatedLicences()?has_content>
+            <#if (wellbore.originLicenceDto())?has_content || (wellbore.totalDepthLicenceDto())?has_content>
               <label class="govuk-checkboxes__label govuk-!-padding-left-0 govuk-!-width-full" for="${id}">
                 <span class="govuk-visually-hidden"> on licences </span>
-                <#list wellbore.relatedLicences() as licence>
-                  ${licence.licenceReference().value()}<#sep>, </#sep>
-                </#list>
+                  <@_wellDtoLicenceDisplay.wellDtoLicenceDisplay
+                    originDto=wellbore.originLicenceDto()
+                    totalDepthDto=wellbore.totalDepthLicenceDto()
+                  />
               </label>
             </#if>
           </td>

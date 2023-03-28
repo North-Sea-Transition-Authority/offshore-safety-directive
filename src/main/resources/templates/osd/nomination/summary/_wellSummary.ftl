@@ -1,5 +1,7 @@
 <#import '../../../fds/components/summaryList/summaryList.ftl' as fdsSummaryList/>
 <#import '../../../fds/components/insetText/insetText.ftl' as fdsInsetText/>
+<#import '../well/_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
+<#import '../well/_listWellbores.ftl' as _listWellbores>
 
 <#macro wellSummary wellSummaryView>
 
@@ -117,36 +119,7 @@
       headingText="Wells in this nomination"
     >
       <#if wellSummaryView.subareaWellsIncludedOnNomination?has_content>
-        <table class="govuk-table">
-          <thead class="govuk-table__head">
-            <tr class="govuk-table__row">
-              <th scope="col" class="govuk-table__header">Wellbore</th>
-              <th scope="col" class="govuk-table__header">Mechanical status</th>
-              <th scope="col" class="govuk-table__header">WONS licences</th>
-            </tr>
-          </thead>
-          <tbody class="govuk-table__body">
-            <#list wellSummaryView.subareaWellsIncludedOnNomination as nominatedSubareaWellbore>
-              <tr class="govuk-table__row">
-                <td class="govuk-table__cell">
-                  ${nominatedSubareaWellbore.name()}
-                </td>
-                <td class="govuk-table__cell">
-                  <#if nominatedSubareaWellbore.mechanicalStatus()?has_content>
-                    ${nominatedSubareaWellbore.mechanicalStatus().displayName()}
-                  </#if>
-                </td>
-                <td class="govuk-table__cell">
-                  <#if nominatedSubareaWellbore.relatedLicences()?has_content>
-                    <#list nominatedSubareaWellbore.relatedLicences() as licence>
-                      ${licence.licenceReference().value()}<#sep>, </#sep>
-                    </#list>
-                  </#if>
-                </td>
-              </tr>
-            </#list>
-          </tbody>
-        </table>
+          <@_listWellbores.listWellbores wellSummaryView.subareaWellsIncludedOnNomination/>
       <#else>
         <@fdsInsetText.insetText>
           None of the subareas included in this nomination contain any wells,

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 import java.time.LocalDate;
@@ -28,6 +29,9 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
   @Mock
   private NominationDetailStatusService nominationDetailStatusService;
 
+  @Mock
+  private AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher;
+
   @InjectMocks
   private ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
 
@@ -53,5 +57,22 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
         VirtualFolder.CONFIRM_APPOINTMENTS);
 
     verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
+    verify(appointmentConfirmedEventPublisher).publish(nominationDetail);
+  }
+
+  @Test
+  void submitAppointmentConfirmation_whenFormHasInvalidDate_verifyThrowsError() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    var form = new ConfirmNominationAppointmentForm();
+    form.getAppointmentDate().getDayInput().setInputValue("a");
+
+    assertThatThrownBy(() ->
+        confirmNominationAppointmentSubmissionService.submitAppointmentConfirmation(nominationDetail, form)
+    )
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Appointment date is invalid in form for nomination [%s]".formatted(
+            nominationDetail.getNomination().getId()
+        ));
   }
 }

@@ -1,0 +1,194 @@
+package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
+
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.Collections;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
+
+@Controller
+@RequestMapping("/system-of-record")
+@Unauthenticated
+public class SystemOfRecordSearchController {
+
+  private static final String OPERATORS_MODEL_AND_VIEW_NAME =
+      "osd/systemofrecord/search/operator/searchAppointmentsByOperator";
+
+  private static final String INSTALLATIONS_MODEL_AND_VIEW_NAME =
+      "osd/systemofrecord/search/installation/searchInstallationAppointments";
+
+  private static final String WELLBORES_MODEL_AND_VIEW_NAME =
+      "osd/systemofrecord/search/well/searchWellAppointments";
+
+  private static final String FORWARD_APPROVALS_MODEL_AND_VIEW_NAME =
+      "osd/systemofrecord/search/forwardapproval/searchForwardAreaApprovalAppointments";
+
+  private static final String APPOINTMENTS_MODEL_ATTRIBUTE_NAME = "appointments";
+
+  private static final String HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME = "hasAddedFilter";
+
+  private static final String SEARCH_FORM_ATTRIBUTE_NAME = "searchForm";
+
+  private final AppointmentSearchService appointmentSearchService;
+
+  private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  private final PortalAssetRetrievalService portalAssetRetrievalService;
+
+  @Autowired
+  public SystemOfRecordSearchController(AppointmentSearchService appointmentSearchService,
+                                        PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+                                        PortalAssetRetrievalService portalAssetRetrievalService) {
+    this.appointmentSearchService = appointmentSearchService;
+    this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+    this.portalAssetRetrievalService = portalAssetRetrievalService;
+  }
+
+  @GetMapping("/operators")
+  public ModelAndView renderOperatorSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
+
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withAppointedOperatorId(systemOfRecordSearchUrlParams.appointedOperator())
+          .build();
+    } else {
+      searchForm = new SystemOfRecordSearchForm();
+    }
+
+    List<AppointmentSearchItemDto> appointments = (searchForm.isEmpty())
+        ? Collections.emptyList()
+        : appointmentSearchService.searchAppointments(searchForm);
+
+    return getBaseSearchModelAndView(OPERATORS_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments);
+  }
+
+  @PostMapping("/operators")
+  public ModelAndView searchOperatorAppointments(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withAppointedOperatorId(searchForm.getAppointedOperatorId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderOperatorSearch(null),
+        searchParams.getUrlQueryParams()
+    );
+  }
+
+  @GetMapping("/installations")
+  public ModelAndView renderInstallationSearch() {
+    var searchForm = new SystemOfRecordSearchForm();
+    return getBaseSearchModelAndView(INSTALLATIONS_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(
+            APPOINTMENTS_MODEL_ATTRIBUTE_NAME,
+            appointmentSearchService.searchInstallationAppointments(searchForm)
+        )
+        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, true);
+  }
+
+  @GetMapping("/wells")
+  public ModelAndView renderWellSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
+
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withWellbore(systemOfRecordSearchUrlParams.wellbore())
+          .build();
+    } else {
+      searchForm = new SystemOfRecordSearchForm();
+    }
+
+    List<AppointmentSearchItemDto> appointments = (searchForm.isEmpty())
+        ? Collections.emptyList()
+        : appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    WellDto filteredWellbore = null;
+
+    if (searchForm.getWellboreId() != null) {
+      filteredWellbore = portalAssetRetrievalService
+          .getWellbore(new WellboreId(searchForm.getWellboreId()))
+          .orElse(null);
+    }
+
+    return getBaseSearchModelAndView(WELLBORES_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
+        .addObject("filteredWellbore", filteredWellbore)
+        .addObject(
+            "wellboreRestUrl",
+            RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        );
+  }
+
+  @PostMapping("/wells")
+  public ModelAndView searchWellboreAppointments(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withWellboreId(searchForm.getWellboreId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderWellSearch(null),
+        searchParams.getUrlQueryParams()
+    );
+  }
+
+  @GetMapping("/forward-area-approvals")
+  public ModelAndView renderForwardAreaApprovalSearch() {
+    var searchForm = new SystemOfRecordSearchForm();
+    return getBaseSearchModelAndView(FORWARD_APPROVALS_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(
+            APPOINTMENTS_MODEL_ATTRIBUTE_NAME,
+            appointmentSearchService.searchForwardApprovalAppointments(searchForm)
+        )
+        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, true);
+  }
+
+  private ModelAndView getBaseSearchModelAndView(String modelAndViewName, SystemOfRecordSearchForm searchForm) {
+
+    PortalOrganisationDto filteredAppointedOperator = null;
+
+    if (searchForm.getAppointedOperatorId() != null) {
+      filteredAppointedOperator = portalOrganisationUnitQueryService
+          .getOrganisationById(searchForm.getAppointedOperatorId())
+          .orElse(null);
+    }
+
+    return new ModelAndView(modelAndViewName)
+        .addObject(
+            "backLinkUrl",
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage())
+        )
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, Collections.emptyList())
+        .addObject(SEARCH_FORM_ATTRIBUTE_NAME, searchForm)
+        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, !searchForm.isEmpty())
+        .addObject("filteredAppointedOperator", filteredAppointedOperator)
+        .addObject(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+        );
+  }
+}

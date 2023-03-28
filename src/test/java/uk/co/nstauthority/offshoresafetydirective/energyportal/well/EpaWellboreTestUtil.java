@@ -41,6 +41,10 @@ public class EpaWellboreTestUtil {
       return this;
     }
 
+    public Builder withId(WellboreId wellboreId) {
+      return withId(wellboreId.id());
+    }
+
     public Builder withRegistrationNumber(String registrationNumber) {
       this.registrationNumber = registrationNumber;
       return this;

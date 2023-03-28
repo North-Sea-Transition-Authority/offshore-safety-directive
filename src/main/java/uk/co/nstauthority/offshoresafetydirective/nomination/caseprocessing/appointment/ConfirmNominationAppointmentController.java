@@ -122,7 +122,7 @@ public class ConfirmNominationAppointmentController {
 
           if (redirectAttributes != null) {
 
-            var formattedDate = DateUtil.formatDate(appointmentDate);
+            var formattedDate = DateUtil.formatLongDate(appointmentDate);
 
             var notificationBanner = NotificationBanner.builder()
                 .withBannerType(NotificationBannerType.SUCCESS)

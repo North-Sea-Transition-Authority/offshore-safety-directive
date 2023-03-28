@@ -36,9 +36,9 @@ class WellRestControllerTest extends AbstractControllerTest {
   private WellQueryService wellQueryService;
 
   @SecurityTest
-  void searchWells_whenNoUser_thenUnauthorised() throws Exception {
+  void searchWells_whenNoUser_thenOkResponse() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(WellRestController.class).searchWells(SEARCH_TERM))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(status().isOk());
   }
 
   @SecurityTest

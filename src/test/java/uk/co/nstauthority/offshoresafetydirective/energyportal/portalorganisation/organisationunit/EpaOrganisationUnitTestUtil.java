@@ -102,21 +102,22 @@ class EpaOrganisationUnitTestUtil {
     }
 
     OrganisationUnit build() {
-      return new OrganisationUnit(
-          organisationUnitId,
-          name,
-          shortName,
-          registeredNumber,
-          foreignRegisteredNumber,
-          foreignRegisteredName,
-          countryOfOrigin,
-          originCountryCode,
-          startDate,
-          endDate,
-          isDuplicate,
-          isActive,
-          Collections.emptyList()
-      );
+
+      return OrganisationUnit.newBuilder()
+          .organisationUnitId(organisationUnitId)
+          .name(name)
+          .shortName(shortName)
+          .registeredNumber(registeredNumber)
+          .foreignRegisteredNumber(foreignRegisteredNumber)
+          .foreignRegisteredName(foreignRegisteredName)
+          .countryOfOrigin(countryOfOrigin)
+          .originCountryCode(originCountryCode)
+          .startDate(startDate)
+          .endDate(endDate)
+          .isDuplicate(isDuplicate)
+          .isActive(isActive)
+          .organisationGroups(Collections.emptyList())
+          .build();
     }
   }
 }

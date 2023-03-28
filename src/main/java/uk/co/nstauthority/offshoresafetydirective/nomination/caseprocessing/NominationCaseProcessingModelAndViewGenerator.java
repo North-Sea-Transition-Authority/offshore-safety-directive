@@ -139,7 +139,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
       if (canSubmitQaChecks(nominationDetailDto)) {
         dropdownAttributeMap.put("qaChecksSubmitUrl",
             ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(nominationId, CaseProcessingAction.QA, null, null)));
+                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingAction.QA, null, null,
+                    null)));
       }
 
       if (canWithdrawnNomination(nominationDetailDto)) {

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 
 public class LicenceBlockSubareaDto extends SubareaDto {
@@ -8,15 +9,18 @@ public class LicenceBlockSubareaDto extends SubareaDto {
   private final SubareaName subareaName;
   private final LicenceBlock licenceBlock;
   private final LicenceDto licenceDto;
+  private final boolean isExtant;
 
   public LicenceBlockSubareaDto(LicenceBlockSubareaId subareaId,
                                 SubareaName subareaName,
                                 LicenceBlock licenceBlock,
-                                LicenceDto licenceDto) {
+                                LicenceDto licenceDto,
+                                boolean isExtant) {
     super(subareaId);
     this.subareaName = subareaName;
     this.licenceBlock = licenceBlock;
     this.licenceDto = licenceDto;
+    this.isExtant = isExtant;
   }
 
   static LicenceBlockSubareaDto fromPortalSubarea(Subarea subarea) {
@@ -32,7 +36,8 @@ public class LicenceBlockSubareaDto extends SubareaDto {
             new LicenceBlock.BlockSuffix(licenceBlock.getSuffix()),
             new LicenceBlock.BlockReference(licenceBlock.getReference())
         ),
-        LicenceDto.fromPortalLicence(subarea.getLicence())
+        LicenceDto.fromPortalLicence(subarea.getLicence()),
+        subarea.getStatus().equals(SubareaStatus.EXTANT)
     );
   }
 
@@ -46,6 +51,10 @@ public class LicenceBlockSubareaDto extends SubareaDto {
 
   public LicenceDto licence() {
     return licenceDto;
+  }
+
+  public boolean isExtant() {
+    return isExtant;
   }
 
   public String displayName() {

@@ -10,6 +10,7 @@
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
+<#-- @ftlvariable name="flash" type="uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner" -->
 
 <#assign SERVICE_NAME = serviceBranding.name() />
 <#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
@@ -22,29 +23,36 @@
   phaseBanner=true
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
+  backLinkWithBrowserBack=false
   breadcrumbsList={}
   singleErrorMessage=""
+  showNavigationItems=true
+  allowSearchEngineIndexing=true
+  pageHeadingCaption=""
 >
 
-  <#assign fullWidthColumn=false />
-  <#assign oneHalfColumn=false />
-  <#assign oneThirdColumn=false />
-  <#assign twoThirdsColumn=false />
-  <#assign twoThirdsOneThirdColumn=false />
-  <#assign oneQuarterColumn=false />
+  <#assign isFullColumnWidth=false />
+  <#assign isOneHalfColumnWidth=false />
+  <#assign isOneThirdColumnWidth=false />
+  <#assign isTwoThirdsColumnWidth=false />
+  <#assign isTwoThirdsOneThirdColumnWidth=false />
+  <#assign isOneQuarterColumnWidth=false />
+  <#assign isFullPageWidth=false />
 
-  <#if pageSize == PageSize.FULL_WIDTH>
-    <#assign fullWidthColumn=true/>
+  <#if pageSize == PageSize.FULL_COLUMN>
+    <#assign isFullColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_HALF_COLUMN>
-    <#assign oneHalfColumn=true/>
+    <#assign isOneHalfColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_THIRD_COLUMN>
-    <#assign oneThirdColumn=true/>
+    <#assign isOneThirdColumnWidth=true/>
   <#elseif pageSize == PageSize.TWO_THIRDS_ONE_THIRD_COLUMN>
-    <#assign twoThirdsOneThirdColumn=true/>
+    <#assign isTwoThirdsOneThirdColumnWidth=true/>
   <#elseif pageSize == PageSize.ONE_QUARTER>
-    <#assign oneQuarterColumn=true/>
+    <#assign isOneQuarterColumnWidth=true/>
+  <#elseif pageSize == PageSize.FULL_PAGE>
+    <#assign isFullPageWidth=true/>
   <#else>
-    <#assign twoThirdsColumn=true/>
+    <#assign isTwoThirdsColumnWidth=true/>
   </#if>
 
   <#assign useBreadCrumbs=false>
@@ -52,42 +60,46 @@
     <#assign useBreadCrumbs=true>
   </#if>
 
-  <#assign backLink = false>
+  <#assign showBackLink = false>
+
   <#if backLinkUrl?has_content && useBreadCrumbs==false>
-    <#assign backLink=true/>
+    <#assign showBackLink=true/>
+  <#elseif backLinkWithBrowserBack == true && useBreadCrumbs == false>
+    <#assign showBackLink=true/>
+    <#assign backLinkUrl = ""/>
   </#if>
 
   <#assign notificationBannerContent>
     <#if flash?has_content>
 
-        <#local bannerContent>
-            <#if flash.heading?has_content>
-                <#if flash.content?has_content>
-                    <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
-                <#else>
-                    <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
-                </#if>
-            <#else>
-                <p class="govuk-body">
-                  ${flash.content}
-                </p>
-            </#if>
-        </#local>
-
-        <#if flash.type.name() == "INFO">
-          <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
-              ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerInfo>
-        <#elseif flash.type.name() == "SUCCESS">
-          <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
-              ${bannerContent}
-          </@fdsNotificationBanner.notificationBannerSuccess>
+      <#local bannerContent>
+        <#if flash.heading?has_content>
+          <#if flash.content?has_content>
+            <@fdsNotificationBanner.notificationBannerContent headingText=flash.heading moreContent=flash.content/>
+          <#else>
+            <@fdsNotificationBanner.notificationBannerContent>${flash.heading}</@fdsNotificationBanner.notificationBannerContent>
+          </#if>
+        <#else>
+          <p class="govuk-body">
+            ${flash.content}
+          </p>
         </#if>
+      </#local>
+
+      <#if flash.type.name() == "INFO">
+        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText=flash.title>
+          ${bannerContent}
+        </@fdsNotificationBanner.notificationBannerInfo>
+      <#elseif flash.type.name() == "SUCCESS">
+        <@fdsNotificationBanner.notificationBannerSuccess bannerTitleText=flash.title>
+          ${bannerContent}
+        </@fdsNotificationBanner.notificationBannerSuccess>
+      </#if>
     </#if>
   </#assign>
 
   <#assign serviceHeader>
-    <@_serviceHeader/>
+    <@_serviceHeader pageSize=pageSize />
   </#assign>
 
   <@fdsDefaultPageTemplate
@@ -95,15 +107,15 @@
     htmlAppTitle=SERVICE_NAME
     pageHeading=pageHeading
     phaseBanner=phaseBanner
-    fullWidthColumn=fullWidthColumn
-    oneHalfColumn=oneHalfColumn
-    oneThirdColumn=oneThirdColumn
-    twoThirdsColumn=twoThirdsColumn
-    twoThirdsOneThirdColumn=twoThirdsOneThirdColumn
-    oneQuarterColumn=oneQuarterColumn
-    topNavigation=true
+    fullWidthColumn=isFullColumnWidth
+    oneHalfColumn=isOneHalfColumnWidth
+    oneThirdColumn=isOneThirdColumnWidth
+    twoThirdsColumn=isTwoThirdsColumnWidth
+    twoThirdsOneThirdColumn=isTwoThirdsOneThirdColumnWidth
+    oneQuarterColumn=isOneQuarterColumnWidth
+    topNavigation=showNavigationItems
     errorItems=errorItems
-    backLink=backLink
+    backLink=showBackLink
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsList
@@ -111,6 +123,9 @@
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
+    noIndex=!allowSearchEngineIndexing
+    caption=pageHeadingCaption
+    wrapperWidth=isFullPageWidth
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -120,29 +135,33 @@
   pageHeading
   htmlTitle=pageHeading
   phaseBanner=true
+  showNavigationItems=true
+  allowSearchEngineIndexing=true
 >
   <#assign serviceHeader>
-    <@_serviceHeader/>
+    <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
   </#assign>
 
   <@fdsLeftSubNavPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=pageHeading
     phaseBanner=phaseBanner
-    topNavigation=true
+    topNavigation=showNavigationItems
     logoProductText=CUSTOMER_MNEMONIC
     headerContent=serviceHeader
+    noIndex=!allowSearchEngineIndexing
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
 </#macro>
 
-<#macro _serviceHeader>
+<#macro _serviceHeader pageSize>
   <@pageHeader.header
     serviceName=SERVICE_NAME
     customerMnemonic=CUSTOMER_MNEMONIC
     serviceHomeUrl=SERVICE_HOME_URL
     signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
     signOutUrl=springUrl("/logout")
+    pageSize=pageSize
   />
 </#macro>

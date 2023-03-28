@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import java.util.Random;
@@ -73,10 +74,11 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void renderRemoveMember_whenNotLoggedIn_thenNotAuthorized() throws Exception {
+  void renderRemoveMember_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(RegulatorRemoveMemberController.class)
         .renderRemoveMember(new TeamId(regulatorTeam.getUuid()), wuaId)))
-    ).andExpect(status().isUnauthorized());
+    )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Optional;
 import java.util.Random;
@@ -74,10 +75,10 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void renderEditMember_whenNotAuthorised_thenIsUnauthorized() throws Exception {
+  void renderEditMember_whenNotAuthorised_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(RegulatorEditMemberController.class)
             .renderEditMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId())))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

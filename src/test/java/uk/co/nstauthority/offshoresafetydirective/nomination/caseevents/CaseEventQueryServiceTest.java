@@ -11,7 +11,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventQueryServiceTest {
@@ -120,6 +120,52 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
+  void getAppointmentConfirmationDateForNominationDetail_whenCaseEventFound_thenAssertDate() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.CLOSED)
+        .build();
+
+    var confirmationInstant = Instant.now();
+
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.CONFIRM_APPOINTMENT)
+        .withNominationVersion(nominationVersion)
+        .withEventInstant(confirmationInstant)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.of(caseEvent));
+
+    var result = caseEventQueryService.getAppointmentConfirmationDateForNominationDetail(detail);
+
+    assertThat(result).contains(LocalDate.ofInstant(confirmationInstant, ZoneId.systemDefault()));
+  }
+
+  @Test
+  void getAppointmentConfirmationDateForNominationDetail_whenCaseEventNotFound_thenEmptyOptional() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.CLOSED)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.CONFIRM_APPOINTMENT),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.empty());
+
+    var result = caseEventQueryService.getAppointmentConfirmationDateForNominationDetail(detail);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
   void getCaseEventViewsForNominationDetail_whenQaChecksEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.QA_CHECKS;
     var caseEvent = caseEventBuilder
@@ -135,55 +181,24 @@ class CaseEventQueryServiceTest {
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
-    var fields = List.of(
-        "title",
-        "createdInstant",
-        "createdBy",
-        "nominationVersion",
-        "body",
-        "fileViews"
-    );
-
-    var prompts = List.of(
-        "customVersionPrompt",
-        "customDatePrompt",
-        "customCreatorPrompt",
-        "customBodyPrompt",
-        "customFilePrompt"
-    );
-
-    var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
-    );
-
-    var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-    var allProperties = Stream.concat(fieldsAndPrompts.stream(), fieldsToNotAssert.stream()).toList();
-
-    assertThat(result)
+    var caseEventAssertObject = assertThat(result)
         .hasSize(1)
-        .first()
-        .hasOnlyFields(allProperties.toArray(String[]::new));
+        .first();
 
-    assertThat(result.get(0))
-        .extracting(fields.toArray(String[]::new))
-        .containsExactly(
-            caseEventType.getScreenDisplayText(),
-            caseEvent.getCreatedInstant(),
-            caseEventCreator.displayName(),
-            NOMINATION_DETAIL_VERSION,
-            caseEvent.getComment(),
-            null
-        );
-
-    assertThat(result.get(0))
-        .extracting(prompts.toArray(String[]::new))
-        .containsExactly(
-            null,
-            "Completion date",
-            "Completed by",
-            "QA comments",
-            null
-        );
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Completion date")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Completed by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "QA comments")
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
   }
 
   @ParameterizedTest
@@ -205,52 +220,25 @@ class CaseEventQueryServiceTest {
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
-    var fields = List.of(
-        "title",
-        "createdInstant",
-        "createdBy",
-        "nominationVersion",
-        "body",
-        "fileViews",
-        "formattedCreatedTime"
-    );
-
-    var prompts = List.of(
-        "customVersionPrompt",
-        "customDatePrompt",
-        "customCreatorPrompt",
-        "customBodyPrompt",
-        "customFilePrompt"
-    );
-
-    var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-
-    assertThat(result)
+    var caseEventAssertObject = assertThat(result)
         .hasSize(1)
-        .first()
-        .hasOnlyFields(fieldsAndPrompts.toArray(String[]::new));
+        .first();
 
-    assertThat(result.get(0))
-        .extracting(fields.toArray(String[]::new))
-        .containsExactly(
-            caseEventType.getScreenDisplayText(),
-            caseEvent.getCreatedInstant(),
-            caseEventCreator.displayName(),
-            NOMINATION_DETAIL_VERSION,
-            caseEvent.getComment(),
-            List.of(caseEventFileView),
-            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
-        );
-
-    assertThat(result.get(0))
-        .extracting(prompts.toArray(String[]::new))
-        .containsExactly(
-            null,
-            "Decision date",
-            "Decided by",
-            "Decision comment",
-            "Decision document"
-        );
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Decision date")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Decided by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Decision comment")
+        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Decision document")
+        .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
+        .hasAssertedAllProperties();
   }
 
   @Test
@@ -272,55 +260,24 @@ class CaseEventQueryServiceTest {
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
-    var fields = List.of(
-        "title",
-        "createdInstant",
-        "createdBy",
-        "nominationVersion",
-        "body",
-        "fileViews"
-    );
-
-    var prompts = List.of(
-        "customVersionPrompt",
-        "customDatePrompt",
-        "customCreatorPrompt",
-        "customBodyPrompt",
-        "customFilePrompt"
-    );
-
-    var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
-    );
-
-    var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-    var allProperties = Stream.concat(fieldsAndPrompts.stream(), fieldsToNotAssert.stream()).toList();
-
-    assertThat(result)
+    var caseEventAssertObject = assertThat(result)
         .hasSize(1)
-        .first()
-        .hasOnlyFields(allProperties.toArray(String[]::new));
+        .first();
 
-    assertThat(result.get(0))
-        .extracting(fields.toArray(String[]::new))
-        .containsExactly(
-            caseEventType.getScreenDisplayText(),
-            caseEvent.getCreatedInstant(),
-            caseEventCreator.displayName(),
-            NOMINATION_DETAIL_VERSION,
-            caseEvent.getComment(),
-            null
-        );
-
-    assertThat(result.get(0))
-        .extracting(prompts.toArray(String[]::new))
-        .containsExactly(
-            null,
-            "Withdrawal date",
-            "Withdrawn by",
-            "Withdrawal reason",
-            null
-        );
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Withdrawal date")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Withdrawn by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Withdrawal reason")
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
   }
 
   @Test
@@ -342,52 +299,25 @@ class CaseEventQueryServiceTest {
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
-    var fields = List.of(
-        "title",
-        "createdInstant",
-        "createdBy",
-        "nominationVersion",
-        "body",
-        "fileViews",
-        "formattedCreatedTime"
-    );
-
-    var prompts = List.of(
-        "customVersionPrompt",
-        "customDatePrompt",
-        "customCreatorPrompt",
-        "customBodyPrompt",
-        "customFilePrompt"
-    );
-
-    var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-
-    assertThat(result)
+    var caseEventAssertObject = assertThat(result)
         .hasSize(1)
-        .first()
-        .hasOnlyFields(fieldsAndPrompts.toArray(String[]::new));
+        .first();
 
-    assertThat(result.get(0))
-        .extracting(fields.toArray(String[]::new))
-        .containsExactly(
-            caseEventType.getScreenDisplayText(),
-            caseEvent.getCreatedInstant(),
-            caseEventCreator.displayName(),
-            NOMINATION_DETAIL_VERSION,
-            caseEvent.getComment(),
-            List.of(caseEventFileView),
-            DateUtil.formatLongDate(caseEvent.getCreatedInstant())
-        );
-
-    assertThat(result.get(0))
-        .extracting(prompts.toArray(String[]::new))
-        .containsExactly(
-            null,
-            "Appointment date",
-            "Confirmed by",
-            "Appointment comments",
-            "Appointment documents"
-        );
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Appointment date")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Confirmed by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Appointment comments")
+        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Appointment documents")
+        .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
+        .hasAssertedAllProperties();
   }
 
   @Test
@@ -409,55 +339,60 @@ class CaseEventQueryServiceTest {
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
-    var fields = List.of(
-        "title",
-        "createdInstant",
-        "createdBy",
-        "nominationVersion",
-        "body",
-        "fileViews"
-    );
-
-    var prompts = List.of(
-        "customVersionPrompt",
-        "customDatePrompt",
-        "customCreatorPrompt",
-        "customBodyPrompt",
-        "customFilePrompt"
-    );
-
-    var fieldsToNotAssert = List.of(
-        "formattedCreatedTime"
-    );
-
-    var fieldsAndPrompts = Stream.concat(fields.stream(), prompts.stream()).toList();
-    var allProperties = Stream.concat(fieldsAndPrompts.stream(), fieldsToNotAssert.stream()).toList();
-
-    assertThat(result)
+    var caseEventAssertObject = assertThat(result)
         .hasSize(1)
-        .first()
-        .hasOnlyFields(allProperties.toArray(String[]::new));
+        .first();
 
-    assertThat(result.get(0))
-        .extracting(fields.toArray(String[]::new))
-        .containsExactly(
-            caseEventType.getScreenDisplayText(),
-            caseEvent.getCreatedInstant(),
-            caseEventCreator.displayName(),
-            NOMINATION_DETAIL_VERSION,
-            caseEvent.getComment(),
-            List.of(caseEventFileView)
-        );
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", null)
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Case note text")
+        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Case note documents")
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
 
-    assertThat(result.get(0))
-        .extracting(prompts.toArray(String[]::new))
-        .containsExactly(
-            null,
-            null,
-            null,
-            "Case note text",
-            "Case note documents"
-        );
+  @Test
+  void getCaseEventViewsForNominationDetail_whenNominationSubmittedEvent_thenVerifyResult() {
+    var caseEventType = CaseEventType.NOMINATION_SUBMITTED;
+    var caseEvent = caseEventBuilder
+        .withCaseEventType(caseEventType)
+        .build();
+
+    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
+        NOMINATION_DETAIL_VERSION))
+        .thenReturn(List.of(caseEvent));
+
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+        .thenReturn(List.of(caseEventCreator));
+
+    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+
+    var caseEventAssertObject = assertThat(result)
+        .hasSize(1)
+        .first();
+
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Submitted on")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Submitted by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", null)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", null)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
   }
 
   @Test
@@ -480,16 +415,17 @@ class CaseEventQueryServiceTest {
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
         .thenReturn(List.of(caseEventCreator));
 
-    when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate)))
+    when(caseEventFileService.getFileViewMapFromCaseEvents(
+        List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate)))
         .thenReturn(Map.of(firstCaseEventByCreatedDate, List.of(caseEventFileView)));
 
     var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
 
     assertThat(result)
-        .extracting(CaseEventView::getCreatedInstant)
+        .extracting(CaseEventView::getEventInstant)
         .containsExactly(
-            firstCaseEventByCreatedDate.getCreatedInstant(),
-            secondCaseEventByCreatedDate.getCreatedInstant()
+            firstCaseEventByCreatedDate.getEventInstant(),
+            secondCaseEventByCreatedDate.getEventInstant()
         );
   }
 }

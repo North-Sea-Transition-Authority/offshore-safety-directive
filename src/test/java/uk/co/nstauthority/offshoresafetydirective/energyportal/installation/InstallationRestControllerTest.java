@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,11 +30,11 @@ class InstallationRestControllerTest extends AbstractControllerTest {
   private InstallationQueryService installationQueryService;
 
   @SecurityTest
-  void searchInstallationsByName_whenNoUser_thenUnauthorised() throws Exception {
+  void searchInstallationsByName_whenNoUser_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(InstallationRestController.class).searchInstallationsByName(SEARCH_TERM)))
         )
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest
