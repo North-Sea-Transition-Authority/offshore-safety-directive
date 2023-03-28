@@ -32,6 +32,10 @@ class EpaFacilityTestUtil {
       return this;
     }
 
+    Builder withId(InstallationId installationId) {
+      return withId(installationId.id());
+    }
+
     Builder withName(String name) {
       this.name = name;
       return this;

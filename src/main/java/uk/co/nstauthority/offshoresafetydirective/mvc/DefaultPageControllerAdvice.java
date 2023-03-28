@@ -10,6 +10,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
@@ -66,6 +67,11 @@ public class DefaultPageControllerAdvice {
   }
 
   private void addUser(Model model) {
-    model.addAttribute("loggedInUser", userDetailService.getUserDetail());
+    try {
+      var user = userDetailService.getUserDetail();
+      model.addAttribute("loggedInUser", user);
+    } catch (InvalidAuthenticationException exception) {
+     // catch exception as unauthenticated endpoints won't have a logged-in user
+    }
   }
 }

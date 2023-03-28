@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,11 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 class WebMvcConfiguration implements WebMvcConfigurer {
 
   private static final String ASSETS_PATH = "/assets/**";
+  private static final String SYSTEM_OF_RECORD_PATH = "/system-of-record/**";
+
+  private static final List<String> UNAUTHENTICATED_URL_PATHS = List.of(
+      ASSETS_PATH, SYSTEM_OF_RECORD_PATH
+  );
 
   private final PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor;
   private final RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor;
@@ -58,7 +64,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(nominationInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(hasPermissionInterceptor)
-        .excludePathPatterns(ASSETS_PATH);
+        .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);
   }
 
   @Bean

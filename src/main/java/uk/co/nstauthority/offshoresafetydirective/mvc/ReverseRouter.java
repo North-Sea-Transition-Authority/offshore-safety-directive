@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestAttributes;
@@ -18,6 +20,8 @@ public class ReverseRouter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ReverseRouter.class);
 
+  private static final String REDIRECT_PREFIX = "redirect:";
+
   private ReverseRouter() {
     throw new IllegalStateException("ReverseRouter is a static utility class and should not be instantiated");
   }
@@ -30,10 +34,18 @@ public class ReverseRouter {
     return route(methodCall, uriVariables, true);
   }
 
-  @SuppressWarnings("unchecked")
   public static String route(Object methodCall,
                              Map<String, Object> uriVariables,
                              boolean expandUriVariablesFromRequest) {
+    return route(methodCall, uriVariables, expandUriVariablesFromRequest, new LinkedMultiValueMap<>());
+  }
+
+  @SuppressWarnings("unchecked")
+  public static String route(Object methodCall,
+                             Map<String, Object> uriVariables,
+                             boolean expandUriVariablesFromRequest,
+                             MultiValueMap<String, String> queryParams) {
+
     //Establish URI variables to substitute - explicitly provided should take precedence
     Map<String, Object> allUriVariables = new HashMap<>();
 
@@ -58,6 +70,12 @@ public class ReverseRouter {
 
     // Use a UriComponentsBuilder which is not scoped to the request to get relative URIs (instead of absolute)
     var uriComponentsBuilder = UriComponentsBuilder.newInstance();
+
+    if (!queryParams.isEmpty()) {
+      uriComponentsBuilder
+          .queryParams(queryParams);
+    }
+
     return MvcUriComponentsBuilder.fromMethodCall(uriComponentsBuilder, methodCall)
         .buildAndExpand(allUriVariables)
         .toUriString();
@@ -74,7 +92,22 @@ public class ReverseRouter {
   public static ModelAndView redirect(Object methodCall,
                                       Map<String, Object> uriVariables,
                                       boolean expandUriVariablesFromRequest) {
-    return new ModelAndView("redirect:" + route(methodCall, uriVariables, expandUriVariablesFromRequest));
+    return new ModelAndView(REDIRECT_PREFIX + route(methodCall, uriVariables, expandUriVariablesFromRequest));
+  }
+
+  public static ModelAndView redirect(Object methodCall,
+                                      Map<String, Object> uriVariables,
+                                      boolean expandUriVariablesFromRequest,
+                                      MultiValueMap<String, String> queryParams) {
+    return new ModelAndView(
+        REDIRECT_PREFIX + route(methodCall, uriVariables, expandUriVariablesFromRequest, queryParams)
+    );
+  }
+
+  public static ModelAndView redirect(Object methodCall, MultiValueMap<String, String> queryParams) {
+    return new ModelAndView(
+        REDIRECT_PREFIX + route(methodCall, Collections.emptyMap(), true, queryParams)
+    );
   }
 
   /**

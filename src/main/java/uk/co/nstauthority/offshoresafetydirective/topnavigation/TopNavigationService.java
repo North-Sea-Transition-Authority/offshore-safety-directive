@@ -8,13 +8,16 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordLandingPageController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamManagementController;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Service
 public class TopNavigationService {
 
-  public static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Manage teams";
+  static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Manage teams";
+
+  static final String SEARCH_SYSTEM_OF_RECORD_NAVIGATION_ITEM_TITLE = "Search appointments";
 
   public List<TopNavigationItem> getTopNavigationItems() {
     var navigationItems = new ArrayList<TopNavigationItem>();
@@ -23,8 +26,17 @@ public class TopNavigationService {
     );
 
     navigationItems.add(
-        new TopNavigationItem(TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect()))
+        new TopNavigationItem(
+            TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
+            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect())
+        )
+    );
+
+    navigationItems.add(
+        new TopNavigationItem(
+            SEARCH_SYSTEM_OF_RECORD_NAVIGATION_ITEM_TITLE,
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage())
+        )
     );
 
     return navigationItems;

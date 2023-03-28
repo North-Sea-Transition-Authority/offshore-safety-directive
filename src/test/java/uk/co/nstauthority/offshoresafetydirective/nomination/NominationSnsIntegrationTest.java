@@ -14,6 +14,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationTestUtil;
@@ -45,6 +46,8 @@ class NominationSnsIntegrationTest {
 
   @Test
   void submittingNominationPublishesSnsMessage() throws JsonProcessingException {
+    SamlAuthenticationUtil.Builder().setSecurityContext();
+
     var correlationId = UUID.randomUUID().toString();
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);

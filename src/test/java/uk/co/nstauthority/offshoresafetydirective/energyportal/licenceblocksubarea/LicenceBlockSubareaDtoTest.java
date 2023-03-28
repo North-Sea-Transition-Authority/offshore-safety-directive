@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksuba
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 
 class LicenceBlockSubareaDtoTest {
 
@@ -50,6 +51,34 @@ class LicenceBlockSubareaDtoTest {
             portalSubarea.getLicence().getLicenceNo(),
             portalSubarea.getLicence().getLicenceRef()
         );
+  }
+
+  @Test
+  void fromPortalSubarea_verifyExtantMapping() {
+
+    var portalSubarea = EpaSubareaTestUtil.builder()
+        .withStatus(SubareaStatus.EXTANT)
+        .build();
+
+    var resultingLicenceBlockSubarea = LicenceBlockSubareaDto.fromPortalSubarea(portalSubarea);
+
+    assertThat(resultingLicenceBlockSubarea)
+        .extracting(LicenceBlockSubareaDto::isExtant)
+        .isEqualTo(true);
+  }
+
+  @Test
+  void fromPortalSubarea_verifyNonExtantMapping() {
+
+    var portalSubarea = EpaSubareaTestUtil.builder()
+        .withStatus(SubareaStatus.NOT_EXTANT)
+        .build();
+
+    var resultingLicenceBlockSubarea = LicenceBlockSubareaDto.fromPortalSubarea(portalSubarea);
+
+    assertThat(resultingLicenceBlockSubarea)
+        .extracting(LicenceBlockSubareaDto::isExtant)
+        .isEqualTo(false);
   }
 
 }

@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,11 +34,11 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   private WorkAreaItemService workAreaItemService;
 
   @SecurityTest
-  void getWorkArea_whenNotLoggedIn_thenUnauthorised() throws Exception {
+  void getWorkArea_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(
             get(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
         )
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

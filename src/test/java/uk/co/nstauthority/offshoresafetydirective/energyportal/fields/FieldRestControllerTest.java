@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -38,10 +39,10 @@ class FieldRestControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void getActiveFields_whenNotLoggedIn_thenUnauthorized() throws Exception {
+  void getActiveFields_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     var searchTerm = "search term";
     mockMvc.perform(get(ReverseRouter.route(on(FieldRestController.class).getActiveFields(searchTerm))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @SecurityTest

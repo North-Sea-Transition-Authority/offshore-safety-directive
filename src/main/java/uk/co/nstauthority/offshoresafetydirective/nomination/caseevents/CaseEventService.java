@@ -37,6 +37,11 @@ public class CaseEventService {
   }
 
   @Transactional
+  public void createSubmissionEvent(NominationDetail nominationDetail) {
+    createEvent(CaseEventType.NOMINATION_SUBMITTED, null, nominationDetail.getSubmittedInstant(), nominationDetail);
+  }
+
+  @Transactional
   public void createCompletedQaChecksEvent(NominationDetail nominationDetail, @Nullable String comment) {
     createEvent(CaseEventType.QA_CHECKS, comment, clock.instant(), nominationDetail);
   }
@@ -79,21 +84,22 @@ public class CaseEventService {
     caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
   }
 
-  private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant createdInstant,
+  private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant eventInstant,
                                 NominationDetail nominationDetail) {
-    return createEvent(caseEventType, null, comment, createdInstant, nominationDetail);
+    return createEvent(caseEventType, null, comment, eventInstant, nominationDetail);
   }
 
 
   private CaseEvent createEvent(CaseEventType caseEventType, @Nullable String overrideTitle, String comment,
-                                Instant createdInstant, NominationDetail nominationDetail) {
+                                Instant eventInstant, NominationDetail nominationDetail) {
     var caseEvent = new CaseEvent();
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
     caseEvent.setCaseEventType(caseEventType);
     caseEvent.setTitle(overrideTitle);
     caseEvent.setComment(comment);
     caseEvent.setCreatedBy(userDetailService.getUserDetail().wuaId());
-    caseEvent.setCreatedInstant(createdInstant);
+    caseEvent.setCreatedInstant(clock.instant());
+    caseEvent.setEventInstant(eventInstant);
     caseEvent.setNomination(nominationDetail.getNomination());
     caseEvent.setNominationVersion(nominationDetailDto.version());
     return caseEventRepository.save(caseEvent);

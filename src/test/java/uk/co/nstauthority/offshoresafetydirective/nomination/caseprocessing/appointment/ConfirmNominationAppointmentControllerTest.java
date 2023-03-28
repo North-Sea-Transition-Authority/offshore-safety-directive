@@ -146,7 +146,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   void confirmAppointment_whenFormValid_thenVerifyRedirect() throws Exception {
 
     var appointmentDate = LocalDate.now();
-    var formattedDate = DateUtil.formatDate(appointmentDate);
+    var formattedDate = DateUtil.formatLongDate(appointmentDate);
     var comment = "comment text";
 
     var expectedNotificationBanner = NotificationBanner.builder()

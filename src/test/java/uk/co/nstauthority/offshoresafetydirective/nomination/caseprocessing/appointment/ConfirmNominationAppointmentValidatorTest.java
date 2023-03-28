@@ -139,7 +139,7 @@ class ConfirmNominationAppointmentValidatorTest {
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var formattedDate = DateUtil.formatDate(localDateNow);
+    var formattedDate = DateUtil.formatShortDate(localDateNow);
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
@@ -173,7 +173,7 @@ class ConfirmNominationAppointmentValidatorTest {
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var formattedDate = DateUtil.formatDate(decisionDate);
+    var formattedDate = DateUtil.formatShortDate(decisionDate);
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 

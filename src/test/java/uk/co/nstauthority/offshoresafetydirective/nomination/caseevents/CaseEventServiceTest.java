@@ -54,9 +54,9 @@ class CaseEventServiceTest {
     var comment = "comment text";
 
     var createdInstant = Instant.now();
-    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
-
     when(clock.instant()).thenReturn(createdInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
     caseEventService.createCompletedQaChecksEvent(nominationDetail, comment);
@@ -72,6 +72,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -80,6 +81,50 @@ class CaseEventServiceTest {
             comment,
             serviceUser.wuaId(),
             createdInstant,
+            createdInstant,
+            nominationDetail.getNomination(),
+            nominationVersion
+        );
+
+  }
+
+  @Test
+  void createSubmissionEvent() {
+    var submittedInstant = Instant.now();
+    var nominationVersion = 5;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withSubmittedInstant(submittedInstant)
+        .build();
+
+    when(clock.instant()).thenReturn(submittedInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createSubmissionEvent(nominationDetail);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.NOMINATION_SUBMITTED,
+            null,
+            null,
+            serviceUser.wuaId(),
+            submittedInstant,
+            submittedInstant,
             nominationDetail.getNomination(),
             nominationVersion
         );
@@ -97,6 +142,9 @@ class CaseEventServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
@@ -122,6 +170,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -129,6 +178,7 @@ class CaseEventServiceTest {
             null,
             comment,
             serviceUser.wuaId(),
+            createdInstant,
             decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC),
             nominationDetail.getNomination(),
             nominationVersion
@@ -175,6 +225,9 @@ class CaseEventServiceTest {
         .withVersion(nominationVersion)
         .build();
 
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
@@ -190,6 +243,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -197,7 +251,8 @@ class CaseEventServiceTest {
             null,
             reason,
             serviceUser.wuaId(),
-            clock.instant(),
+            createdInstant,
+            createdInstant,
             detail.getNomination(),
             nominationVersion
         );
@@ -212,6 +267,9 @@ class CaseEventServiceTest {
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
@@ -228,6 +286,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -235,6 +294,7 @@ class CaseEventServiceTest {
             null,
             comment,
             serviceUser.wuaId(),
+            createdInstant,
             date.atStartOfDay().toInstant(ZoneOffset.UTC),
             detail.getNomination(),
             nominationVersion
@@ -252,6 +312,9 @@ class CaseEventServiceTest {
     var fileUploadForm = new FileUploadForm();
     fileUploadForm.setUploadedFileId(UUID.randomUUID());
 
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
@@ -267,6 +330,7 @@ class CaseEventServiceTest {
             CaseEvent::getComment,
             CaseEvent::getCreatedBy,
             CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
             CaseEvent::getNomination,
             CaseEvent::getNominationVersion
         ).containsExactly(
@@ -274,7 +338,8 @@ class CaseEventServiceTest {
             subject,
             caseNoteText,
             serviceUser.wuaId(),
-            clock.instant(),
+            createdInstant,
+            createdInstant,
             detail.getNomination(),
             nominationVersion
         );

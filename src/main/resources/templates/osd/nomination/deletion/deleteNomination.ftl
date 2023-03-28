@@ -7,8 +7,7 @@
     htmlTitle=pageTitle
     pageHeading=pageTitle
     pageSize=PageSize.TWO_THIRDS_COLUMN
-    backLinkUrl=springUrl(backLinkUrl!"")
-    breadcrumbsList=breadcrumbsList
+    backLinkUrl=springUrl(cancelUrl!"")
 >
 
     <@fdsDetails.summaryDetails summaryTitle="View the draft nomination to be deleted">

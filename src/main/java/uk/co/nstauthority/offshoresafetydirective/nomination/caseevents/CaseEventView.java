@@ -14,13 +14,16 @@ public class CaseEventView {
   private final String createdBy;
   private final String customCreatorPrompt;
   private final Instant createdInstant;
-  private final String formattedCreatedTime;
+  private final Instant eventInstant;
+  private final String formattedEventTime;
   private final String customDatePrompt;
   private final List<CaseEventFileView> fileViews;
   private final String customFilePrompt;
 
-  private CaseEventView(int nominationVersion, String customVersionPrompt, String title, String body, String customBodyPrompt,
-                        String createdBy, String customCreatorPrompt, Instant createdInstant, String formattedCreatedTime,
+  private CaseEventView(int nominationVersion, String customVersionPrompt, String title, String body,
+                        String customBodyPrompt,
+                        String createdBy, String customCreatorPrompt, Instant createdInstant,
+                        Instant eventInstant, String formattedEventTime,
                         String customDatePrompt, List<CaseEventFileView> fileViews, String customFilePrompt) {
     this.nominationVersion = nominationVersion;
     this.customVersionPrompt = customVersionPrompt;
@@ -30,7 +33,8 @@ public class CaseEventView {
     this.createdBy = createdBy;
     this.customCreatorPrompt = customCreatorPrompt;
     this.createdInstant = createdInstant;
-    this.formattedCreatedTime = formattedCreatedTime;
+    this.eventInstant = eventInstant;
+    this.formattedEventTime = formattedEventTime;
     this.customDatePrompt = customDatePrompt;
     this.fileViews = fileViews;
     this.customFilePrompt = customFilePrompt;
@@ -68,8 +72,12 @@ public class CaseEventView {
     return createdInstant;
   }
 
-  public String getFormattedCreatedTime() {
-    return formattedCreatedTime;
+  public Instant getEventInstant() {
+    return eventInstant;
+  }
+
+  public String getFormattedEventTime() {
+    return formattedEventTime;
   }
 
   public String getCustomDatePrompt() {
@@ -84,8 +92,9 @@ public class CaseEventView {
     return customFilePrompt;
   }
 
-  public static Builder builder(String title, int nominationVersion, Instant createdInstant, String createdBy) {
-    return new Builder(title, nominationVersion, createdInstant, createdBy);
+  public static Builder builder(String title, int nominationVersion, Instant createdInstant, Instant eventInstant,
+                                String createdBy) {
+    return new Builder(title, nominationVersion, createdInstant, eventInstant, createdBy);
   }
 
   public static class Builder {
@@ -97,17 +106,20 @@ public class CaseEventView {
     private String customBodyPrompt;
     private final String createdBy;
     private String customCreatorPrompt;
-    private Instant createdInstant;
-    private String formattedCreatedTime;
+    private Instant eventInstant;
+    private final Instant createdInstant;
+    private String formattedEventTime;
     private String customDatePrompt;
     private List<CaseEventFileView> fileViews;
     private String customFilePrompt;
 
-    private Builder(String title, int nominationVersion, Instant createdInstant, String createdBy) {
+    private Builder(String title, int nominationVersion, Instant createdInstant, Instant eventInstant,
+                    String createdBy) {
       this.title = title;
       this.nominationVersion = nominationVersion;
       this.createdInstant = createdInstant;
-      this.formattedCreatedTime = DateUtil.formatDateTime(createdInstant);
+      this.eventInstant = eventInstant;
+      this.formattedEventTime = DateUtil.formatLongDateTime(eventInstant);
       this.createdBy = createdBy;
     }
 
@@ -131,9 +143,9 @@ public class CaseEventView {
       return this;
     }
 
-    public Builder withCreatedInstant(Instant createdInstant, String formattedCreatedTime) {
-      this.createdInstant = createdInstant;
-      this.formattedCreatedTime = formattedCreatedTime;
+    public Builder withEventInstant(Instant eventInstant, String formattedEventTime) {
+      this.eventInstant = eventInstant;
+      this.formattedEventTime = formattedEventTime;
       return this;
     }
 
@@ -154,8 +166,8 @@ public class CaseEventView {
 
     public CaseEventView build() {
       return new CaseEventView(
-          nominationVersion, customVersionPrompt, title, body, customBodyPrompt, createdBy, customCreatorPrompt, createdInstant,
-          formattedCreatedTime, customDatePrompt, fileViews, customFilePrompt);
+          nominationVersion, customVersionPrompt, title, body, customBodyPrompt, createdBy, customCreatorPrompt,
+          createdInstant, eventInstant, formattedEventTime, customDatePrompt, fileViews, customFilePrompt);
     }
   }
 

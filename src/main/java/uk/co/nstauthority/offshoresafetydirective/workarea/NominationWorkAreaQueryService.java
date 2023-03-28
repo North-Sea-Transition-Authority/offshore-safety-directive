@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -30,8 +31,8 @@ class NominationWorkAreaQueryService {
 
   @Autowired
   NominationWorkAreaQueryService(DSLContext context,
-                       UserDetailService userDetailService,
-                       TeamMemberService teamMemberService) {
+                                 UserDetailService userDetailService,
+                                 TeamMemberService teamMemberService) {
     this.context = context;
     this.userDetailService = userDetailService;
     this.teamMemberService = teamMemberService;
@@ -63,8 +64,9 @@ class NominationWorkAreaQueryService {
         .leftJoin(table("well_selection_setup").as("was")).on(field("was.nomination_detail").eq(field("nd.id")))
         .leftJoin(table("installation_inclusion").as("ii")).on(field("ii.nomination_detail").eq(field("nd.id")))
         .leftJoin(
-            table("nomination_portal_references").as("nprp")).on(field("nprp.nomination_id").eq(field("nd.nomination_id"))
-            .and(field("nprp.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
+            table("nomination_portal_references").as("nprp")).on(
+            field("nprp.nomination_id").eq(field("nd.nomination_id"))
+                .and(field("nprp.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
         )
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
@@ -90,7 +92,12 @@ class NominationWorkAreaQueryService {
     if (roles.contains(RegulatorTeamRole.MANAGE_NOMINATION)) {
       return trueCondition();
     } else if (roles.contains(RegulatorTeamRole.VIEW_NOMINATION)) {
-      return field("nd.status").in(NominationStatus.SUBMITTED.name());
+      var postSubmissionStatusNames =
+          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+              .stream()
+              .map(Enum::name)
+              .toArray();
+      return field("nd.status").in(postSubmissionStatusNames);
     }
 
     return falseCondition();

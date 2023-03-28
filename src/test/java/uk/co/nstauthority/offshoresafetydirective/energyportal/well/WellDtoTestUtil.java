@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
-import java.util.ArrayList;
-import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
@@ -26,9 +24,13 @@ public class WellDtoTestUtil {
 
     private WellboreMechanicalStatus mechanicalStatus;
 
-    private List<LicenceDto> relatedLicences = new ArrayList<>();
+    private LicenceDto originLicenceDto = LicenceDtoTestUtil.builder()
+        .withLicenceReference("P101")
+        .build();
 
-    private boolean relatedLicencesAdded = false;
+    private LicenceDto totalDepthLicenceDto = LicenceDtoTestUtil.builder()
+        .withLicenceReference("P123")
+        .build();
 
     public Builder withWellboreId(Integer wellboreId) {
       this.wellboreId = new WellboreId(wellboreId);
@@ -45,29 +47,25 @@ public class WellDtoTestUtil {
       return this;
     }
 
-    public Builder withRelatedLicence(LicenceDto relatedLicence) {
-      this.relatedLicences.add(relatedLicence);
-      relatedLicencesAdded = true;
+    public Builder withOriginLicenceDto(
+        LicenceDto originLicenceDto) {
+      this.originLicenceDto = originLicenceDto;
       return this;
     }
 
-    public Builder withRelatedLicences(List<LicenceDto> relatedLicences) {
-      this.relatedLicences = relatedLicences;
-      relatedLicencesAdded = true;
+    public Builder withTotalDepthLicenceDto(LicenceDto totalDepthLicenceDto) {
+      this.totalDepthLicenceDto = totalDepthLicenceDto;
       return this;
     }
 
     public WellDto build() {
 
-      if (!relatedLicencesAdded) {
-        relatedLicences.add(LicenceDtoTestUtil.builder().build());
-      }
-
       return new WellDto(
           wellboreId,
           registrationNumber,
           mechanicalStatus,
-          relatedLicences
+          originLicenceDto,
+          totalDepthLicenceDto
       );
     }
   }

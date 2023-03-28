@@ -25,6 +25,14 @@
 <#-- @ftlvariable name="withdrawSubmitUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="caseProcessingAction_WITHDRAW" type="java.lang.String" -->
 <#-- @ftlvariable name="caseEvents" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView>" -->
+<#-- @ftlvariable name="nominationDecisionAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView" -->
+<#-- @ftlvariable name="confirmAppointmentAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView" -->
+<#-- @ftlvariable name="generalCaseNoteAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView" -->
+<#-- @ftlvariable name="pearsReferenceAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView" -->
+<#-- @ftlvariable name="wonsReferenceAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView" -->
+<#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
+<#-- @ftlvariable name="activePortalReferencesView" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.ActivePortalReferencesView" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -38,7 +46,7 @@
 <@defaultPage
     htmlTitle=pageTitle
     pageHeading=heading
-    pageSize=PageSize.FULL_WIDTH
+    pageSize=PageSize.FULL_COLUMN
     backLinkUrl=springUrl(backLinkUrl!"")
     breadcrumbsList=breadcrumbsList
     errorItems=[]

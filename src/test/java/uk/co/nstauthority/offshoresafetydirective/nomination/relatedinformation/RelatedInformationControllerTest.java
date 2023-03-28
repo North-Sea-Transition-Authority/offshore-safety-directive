@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Collections;
 import java.util.List;
@@ -135,10 +136,10 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderRelatedInformation_whenNotLoggedIn_thenUnauthorized() throws Exception {
+  void renderRelatedInformation_whenNotLoggedIn_thenRedirectionToLoginUrl() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(RelatedInformationController.class)
             .renderRelatedInformation(new NominationId(nominationDetail)))))
-        .andExpect(status().isUnauthorized());
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

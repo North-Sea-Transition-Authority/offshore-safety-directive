@@ -33,6 +33,8 @@ public class LicenceBlockSubareaDtoTestUtil {
 
     private String licenceReference = "licence reference";
 
+    private boolean isExtant = true;
+
     private Builder() {}
 
     public Builder withSubareaId(String subareaId) {
@@ -80,6 +82,11 @@ public class LicenceBlockSubareaDtoTestUtil {
       return this;
     }
 
+    public Builder isExtant(boolean isExtant) {
+      this.isExtant = isExtant;
+      return this;
+    }
+
     public LicenceBlockSubareaDto build() {
       return new LicenceBlockSubareaDto(
           new LicenceBlockSubareaId(subareaId),
@@ -94,7 +101,8 @@ public class LicenceBlockSubareaDtoTestUtil {
               new LicenceDto.LicenceType(licenceType),
               new LicenceDto.LicenceNumber(licenceNumber),
               new LicenceDto.LicenceReference(licenceReference)
-          )
+          ),
+          isExtant
       );
     }
   }

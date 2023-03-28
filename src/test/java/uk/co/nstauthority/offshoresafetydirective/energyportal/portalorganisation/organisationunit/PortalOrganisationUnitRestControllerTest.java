@@ -32,11 +32,11 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @SecurityTest
-  void searchPortalOrganisations_whenNotLoggedIn_thenUnauthorized() throws Exception {
+  void searchPortalOrganisations_whenNotLoggedIn_thenOk() throws Exception {
     mockMvc.perform(get(
         ReverseRouter.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations("searchTerm"))
     ))
-        .andExpect(status().isUnauthorized());
+        .andExpect(status().isOk());
   }
 
   @SecurityTest

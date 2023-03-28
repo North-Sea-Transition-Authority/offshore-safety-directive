@@ -40,7 +40,7 @@ public class FinaliseNominatedSubareaWellsService {
         && WellSelectionType.LICENCE_BLOCK_SUBAREA.equals(wellboreSelectionType.get())
     ) {
       Set<NominatedSubareaWellDto> nominatedSubareaWells =
-          nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail);
+          nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
 
       if (!CollectionUtils.isEmpty(nominatedSubareaWells)) {
         nominatedSubareaWellPersistenceService.materialiseNominatedSubareaWells(

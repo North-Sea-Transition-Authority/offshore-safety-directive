@@ -52,6 +52,10 @@ class EpaSubareaTestUtil {
       return this;
     }
 
+    Builder withSubareaId(LicenceBlockSubareaId subareaId) {
+      return withSubareaId(subareaId.id());
+    }
+
     Builder withName(String name) {
       this.name = name;
       return this;

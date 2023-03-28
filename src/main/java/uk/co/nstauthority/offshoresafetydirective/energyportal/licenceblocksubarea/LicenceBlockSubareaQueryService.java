@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
@@ -22,6 +24,7 @@ public class LicenceBlockSubareaQueryService {
         .suffix()
         .reference()
         .root()
+      .status().root()
       .licence()
         .licenceType()
         .licenceNo()
@@ -44,7 +47,8 @@ public class LicenceBlockSubareaQueryService {
               .licenceNo()
               .licenceRef()
               .parent()
-            .mechanicalStatus().root();
+            .mechanicalStatus().root()
+          .status().root();
 
   private final SubareaApi subareaApi;
 
@@ -107,7 +111,9 @@ public class LicenceBlockSubareaQueryService {
     }));
   }
 
-  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(List<LicenceBlockSubareaId> licenceBlockSubareaIds) {
+  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(
+      Collection<LicenceBlockSubareaId> licenceBlockSubareaIds
+  ) {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();
@@ -140,6 +146,12 @@ public class LicenceBlockSubareaQueryService {
           .map(LicenceBlockSubareaWellboreDto::fromPortalSubarea)
           .toList();
     }));
+  }
+
+  public Optional<LicenceBlockSubareaDto> getLicenceBlockSubarea(LicenceBlockSubareaId licenceBlockSubareaId) {
+    return getLicenceBlockSubareasByIds(List.of(licenceBlockSubareaId))
+        .stream()
+        .findFirst();
   }
 
   private List<LicenceBlockSubareaDto> convertToLicenceBlockSubareaDtoList(List<Subarea> subareas) {

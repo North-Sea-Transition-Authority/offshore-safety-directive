@@ -1,9 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.generated.client.FacilitiesByIdsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FacilitiesByNameAndTypesProjectionRoot;
@@ -73,6 +77,10 @@ public class InstallationQueryService {
 
   public List<InstallationDto> getInstallationsByIdIn(List<Integer> idList) {
 
+    if (CollectionUtils.isEmpty(idList)) {
+      return Collections.emptyList();
+    }
+
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
         facilityApi.searchFacilitiesByIds(
             idList,
@@ -88,6 +96,22 @@ public class InstallationQueryService {
 
   public static boolean isValidInstallation(InstallationDto installation) {
     return ALLOWED_INSTALLATION_TYPES.contains(installation.type()) && installation.isInUkcs();
+  }
+
+  public List<InstallationDto> getInstallationsByIds(Collection<InstallationId> installationIds) {
+
+    if (CollectionUtils.isEmpty(installationIds)) {
+      return Collections.emptyList();
+    }
+
+    var installationIdList = installationIds.stream().map(InstallationId::id).toList();
+    return getInstallationsByIdIn(installationIdList);
+  }
+
+  public Optional<InstallationDto> getInstallation(InstallationId installationId) {
+    return getInstallationsByIds(List.of(installationId))
+        .stream()
+        .findFirst();
   }
 
   private InstallationDto convertToInstallationDto(Facility facility) {

@@ -4,6 +4,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -14,10 +15,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -40,8 +45,10 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     RegulatorPermissionManagementHandlerInterceptor.class,
     NominationInterceptor.class,
     HasPermissionInterceptor.class,
-    PermissionService.class
+    PermissionService.class,
+    WebSecurityConfiguration.class
 })
+@EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
 
   @Autowired
@@ -58,6 +65,12 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected NominationDetailService nominationDetailService;
+
+  @MockBean
+  protected SamlResponseParser samlResponseParser;
+
+  @MockBean
+  protected ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
 
   @BeforeEach
   void setupAbstractControllerTest() {

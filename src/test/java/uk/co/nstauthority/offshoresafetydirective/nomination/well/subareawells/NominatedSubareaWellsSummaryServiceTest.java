@@ -39,7 +39,7 @@ class NominatedSubareaWellsSummaryServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    given(nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail))
+    given(nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail))
         .willReturn(nominatedSubareaWells);
 
     var resultingNominatedSubareaWellsView =
@@ -58,7 +58,7 @@ class NominatedSubareaWellsSummaryServiceTest {
 
     var expectedNominatedSubareaWell = new NominatedSubareaWellDto(new WellboreId(100));
 
-    given(nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail))
+    given(nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail))
         .willReturn(Set.of(expectedNominatedSubareaWell));
 
     var expectedWellDto = WellDtoTestUtil.builder()

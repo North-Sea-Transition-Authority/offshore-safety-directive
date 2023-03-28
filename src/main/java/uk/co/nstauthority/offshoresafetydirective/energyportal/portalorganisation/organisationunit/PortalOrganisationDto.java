@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 
 import java.util.Objects;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 
 public record PortalOrganisationDto(Integer id,
                                     String name,
@@ -17,6 +18,10 @@ public record PortalOrganisationDto(Integer id,
         // dealing with a possible null, assume active unless explicitly told by EPA
         Objects.requireNonNullElse(organisationUnit.getIsActive(), true)
     );
+  }
+
+  public String displayName() {
+    return OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(this);
   }
 
 }

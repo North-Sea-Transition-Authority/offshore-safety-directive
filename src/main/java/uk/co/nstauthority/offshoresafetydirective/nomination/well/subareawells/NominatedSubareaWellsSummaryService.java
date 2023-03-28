@@ -25,7 +25,7 @@ public class NominatedSubareaWellsSummaryService {
   public Optional<NominatedSubareaWellsView> getNominatedSubareaWellsView(NominationDetail nominationDetail) {
 
     var wellboreIdsIncludedInNomination =
-        Optional.ofNullable(nominatedSubareaWellsService.getNominatedSubareaWellbores(nominationDetail))
+        Optional.ofNullable(nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail))
         .orElse(Collections.emptySet())
         .stream()
         .map(NominatedSubareaWellDto::wellboreId)

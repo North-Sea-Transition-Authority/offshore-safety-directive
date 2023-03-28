@@ -16,7 +16,7 @@
                         <@fdsDataItems.dataItem dataItemListClasses="govuk-!-margin-top-2">
                             <@fdsDataItems.dataValues
                                 key=event.customDatePrompt!"Date added"
-                                value=event.formattedCreatedTime
+                                value=event.formattedEventTime
                             />
                             <@fdsDataItems.dataValues
                                 key=event.customCreatorPrompt!"Added by"
