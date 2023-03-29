@@ -9,7 +9,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Security
-public @interface RegulatorRolesAllowed {
-
-  RegulatorTeamRole[] roles();
+public @interface IsMemberOfTeamOrHasRegulatorRole {
+  RegulatorTeamRole[] value();
 }

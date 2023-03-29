@@ -7,9 +7,9 @@
 <#-- @ftlvariable name="canRemoveUsers" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="canEditUsers" type="java.lang.Boolean" -->
 <#-- @ftlvariable name="addTeamMemberUrl" type="java.lang.String" -->
-<#include '../../layout/layout.ftl'>
-<#import '../_teamMembers.ftl' as teamMembersMacro>
-<#import '../_roleDescriptions.ftl' as roleDescriptions>
+<#include '../layout/layout.ftl'>
+<#import '_teamMembers.ftl' as teamMembersMacro>
+<#import '_roleDescriptions.ftl' as roleDescriptions>
 
 <#assign pageTitle=teamName/>
 

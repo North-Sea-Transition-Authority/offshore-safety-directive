@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,8 +32,9 @@ class TeamMemberServiceTest {
 
   @Test
   void getAllTeamMembers_whenMembers_thenNotEmpty() {
-    var team = new Team();
-    team.setTeamType(TeamType.REGULATOR);
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
 
     var roleBuilder = TeamMemberRoleTestUtil.Builder()
         .withTeam(team)
@@ -41,18 +43,19 @@ class TeamMemberServiceTest {
     var teamMemberRoleAccessManager = roleBuilder.withRole(RegulatorTeamRole.ACCESS_MANAGER.name())
         .build();
 
-    var teamMemberRoleOrgAccessManager = roleBuilder.withRole(RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER.name())
+    var teamMemberRoleThirdPartyAccessManager = roleBuilder
+        .withRole(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER.name())
         .build();
 
     when(teamMemberRoleRepository.findAllByTeam(team)).thenReturn(
-        List.of(teamMemberRoleAccessManager, teamMemberRoleOrgAccessManager));
+        List.of(teamMemberRoleAccessManager, teamMemberRoleThirdPartyAccessManager));
 
     var result = teamMemberService.getTeamMembers(team);
 
-    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    var teamView = TeamTestUtil.createTeamView(team);
 
     var expectedTeamMember = new TeamMember(new WebUserAccountId(1L), teamView, Set.of(RegulatorTeamRole.ACCESS_MANAGER,
-        RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
+        RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER));
 
     assertThat(result).containsExactly(expectedTeamMember);
   }
@@ -110,7 +113,7 @@ class TeamMemberServiceTest {
     when(teamMemberRoleRepository.existsByWuaIdAndTeam_UuidAndRoleIn(user.wuaId(), teamId.uuid(), roles))
         .thenReturn(false);
 
-    var result = teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles);
+    teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles);
 
     assertFalse(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, roles));
   }
@@ -123,7 +126,7 @@ class TeamMemberServiceTest {
     var webUserAccountId = new WebUserAccountId(100);
 
     var firstRole = RegulatorTeamRole.ACCESS_MANAGER;
-    var secondRole = RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER;
+    var secondRole = RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER;
 
     team.setTeamType(TeamType.REGULATOR);
 
@@ -159,8 +162,9 @@ class TeamMemberServiceTest {
 
   @Test
   void getTeamMember_whenMemberIsInTeam_thenGetTeamMember() {
-    var team = new Team(UUID.randomUUID());
-    team.setTeamType(TeamType.REGULATOR);
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
 
     var wuaId = new WebUserAccountId(123);
     var role = TeamMemberRoleTestUtil.Builder()
@@ -168,7 +172,7 @@ class TeamMemberServiceTest {
         .withWebUserAccountId(wuaId.id())
         .build();
 
-    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    var teamView = TeamTestUtil.createTeamView(team);
 
     when(teamMemberRoleRepository.findAllByTeamAndWuaId(team, wuaId.id()))
         .thenReturn(List.of(role));
@@ -234,8 +238,41 @@ class TeamMemberServiceTest {
             Tuple.tuple(
                 new WebUserAccountId(user.wuaId()),
                 Set.of(RegulatorTeamRole.MANAGE_NOMINATION),
-                new TeamView(new TeamId(team.getUuid()), team.getTeamType())
+                TeamTestUtil.createTeamView(team)
             )
+        );
+  }
+
+  @Test
+  void getUserAsTeamMembers_verifyTeamMemberRoleMapping() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var regulatorTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+    var regulatorTeamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(regulatorTeam)
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+
+    var consulteeTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    var consulteeTeamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(consulteeTeam)
+        .withRole(ConsulteeTeamRole.ACCESS_MANAGER.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+
+    when(teamMemberRoleRepository.findAllByWuaId(user.wuaId()))
+        .thenReturn(List.of(regulatorTeamMemberRole, consulteeTeamMemberRole));
+
+    var result = teamMemberService.getUserAsTeamMembers(user);
+
+    assertThat(result).extracting(TeamMember::roles)
+        .containsExactlyInAnyOrder(
+            Set.of(RegulatorTeamRole.ACCESS_MANAGER),
+            Set.of(ConsulteeTeamRole.ACCESS_MANAGER)
         );
   }
 

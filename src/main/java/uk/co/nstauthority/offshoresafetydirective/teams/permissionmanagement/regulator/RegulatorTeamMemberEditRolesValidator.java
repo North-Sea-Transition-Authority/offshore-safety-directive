@@ -9,6 +9,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRemovalService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRolesForm;
 
 @Service
@@ -24,12 +25,11 @@ class RegulatorTeamMemberEditRolesValidator implements SmartValidator {
   public static final String ROLES_NO_ACCESS_MANAGER_ERROR_MESSAGE =
       "There must always be at least one access manager in the team";
 
-  private final RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService;
+  private final TeamMemberRemovalService teamMemberRemovalService;
 
   @Autowired
-  RegulatorTeamMemberEditRolesValidator(
-      RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService) {
-    this.regulatorTeamMemberRemovalService = regulatorTeamMemberRemovalService;
+  RegulatorTeamMemberEditRolesValidator(TeamMemberRemovalService teamMemberRemovalService) {
+    this.teamMemberRemovalService = teamMemberRemovalService;
   }
 
   @Override
@@ -71,9 +71,13 @@ class RegulatorTeamMemberEditRolesValidator implements SmartValidator {
 
   private boolean canUpdateTeamMemberWithNewRoles(Team team, TeamMember teamMember,
                                                   Collection<RegulatorTeamRole> newRoles) {
-    var isRemovingAccessManagerRole = Sets.difference(teamMember.roles(), Set.copyOf(newRoles))
-        .contains(RegulatorTeamRole.ACCESS_MANAGER);
 
-    return !isRemovingAccessManagerRole || regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember);
+    var accessManagerRole = RegulatorTeamRole.ACCESS_MANAGER;
+
+    var isRemovingAccessManagerRole = Sets.difference(teamMember.roles(), Set.copyOf(newRoles))
+        .contains(accessManagerRole);
+
+    return !isRemovingAccessManagerRole
+        || teamMemberRemovalService.canRemoveTeamMember(team, teamMember.wuaId(), accessManagerRole);
   }
 }

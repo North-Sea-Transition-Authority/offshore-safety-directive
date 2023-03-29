@@ -9,6 +9,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -32,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
@@ -44,6 +46,9 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   private RegulatorTeamService regulatorTeamService;
+
+  @MockBean
+  private TeamService teamService;
 
   @MockBean
   private TeamMemberViewService teamMemberViewService;
@@ -103,7 +108,7 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   void renderEditMember_whenAccessManager_andOk_thenAssertModelProperties() throws Exception {
 
     Set<TeamRole> userRoles = Set.of(RegulatorTeamRole.MANAGE_NOMINATION,
-        RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER, RegulatorTeamRole.ACCESS_MANAGER);
+        RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER, RegulatorTeamRole.ACCESS_MANAGER);
 
     var modelAndView = makeValidRenderEditMemberRequest(userRoles)
         .getModelAndView();
@@ -129,11 +134,9 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   private MvcResult makeValidRenderEditMemberRequest(Set<TeamRole> teamMemberRoles) throws Exception {
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamView.teamId(), accessManager,
-        Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()))
-    ).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamView.teamId())).thenReturn(Optional.of(regulatorTeam));
+    when(teamService.getTeam(teamView.teamId(), RegulatorAddMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(regulatorTeam));
 
     var teamMember = TeamMemberTestUtil.Builder()
         .withTeamType(TeamType.REGULATOR)
@@ -141,6 +144,9 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
         .withWebUserAccountId(accessManager.wuaId())
         .withRoles(teamMemberRoles)
         .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
 
     when(teamMemberService.getTeamMember(regulatorTeam, teamMember.wuaId()))
         .thenReturn(Optional.of(teamMember));

@@ -2,24 +2,19 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 public enum TeamType {
 
-  REGULATOR("Regulator", "Teams for managing regulator users", 10);
+  REGULATOR("Regulator", 10),
+  CONSULTEE("Consultee", 20);
 
   private final String displayText;
-  private final String hintText;
   private final int displayOrder;
 
-  TeamType(String displayText, String hintText, int displayOrder) {
+  TeamType(String displayText, int displayOrder) {
     this.displayText = displayText;
-    this.hintText = hintText;
     this.displayOrder = displayOrder;
   }
 
   public String getDisplayText() {
     return displayText;
-  }
-
-  public String getHintText() {
-    return hintText;
   }
 
   public int getDisplayOrder() {

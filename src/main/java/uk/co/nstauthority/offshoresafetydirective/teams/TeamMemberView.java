@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorRemoveMemberController;
 
@@ -28,12 +30,16 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
     return switch (teamView.teamType()) {
       case REGULATOR -> ReverseRouter.route(on(RegulatorRemoveMemberController.class)
           .renderRemoveMember(teamView.teamId(), wuaId));
+      case CONSULTEE -> ReverseRouter.route(on(ConsulteeRemoveMemberController.class)
+          .renderRemoveMember(teamView.teamId(), wuaId));
     };
   }
 
   public String editUrl() {
     return switch (teamView.teamType()) {
       case REGULATOR -> ReverseRouter.route(on(RegulatorEditMemberController.class)
+          .renderEditMember(teamView.teamId(), wuaId));
+      case CONSULTEE -> ReverseRouter.route(on(ConsulteeEditMemberController.class)
           .renderEditMember(teamView.teamId(), wuaId));
     };
   }

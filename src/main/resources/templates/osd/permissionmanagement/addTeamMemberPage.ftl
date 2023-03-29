@@ -1,5 +1,5 @@
-<#include '../../layout/layout.ftl'>
-<#import '../_addTeamMember.ftl' as teamMember>
+<#include '../layout/layout.ftl'>
+<#import '_addTeamMember.ftl' as teamMember>
 
 <#-- @ftlvariable name="htmlTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->

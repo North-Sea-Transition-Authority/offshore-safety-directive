@@ -1,5 +1,5 @@
-<#include '../../layout/layout.ftl'>
-<#import '../_teamMemberRoles.ftl' as teamMemberRoles>
+<#include '../layout/layout.ftl'>
+<#import '_teamMemberRoles.ftl' as teamMemberRoles>
 
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->

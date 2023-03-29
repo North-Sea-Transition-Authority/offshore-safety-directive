@@ -39,6 +39,8 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddTeamMemberValidator;
@@ -55,6 +57,9 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
+
+  @MockBean
+  private TeamService teamService;
 
   @Autowired
   AddTeamMemberValidator addTeamMemberValidator;
@@ -96,10 +101,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
@@ -114,10 +123,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(UUID.randomUUID());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.empty());
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
@@ -135,10 +148,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.empty());
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
@@ -157,10 +174,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var customerMnemonic = applicationContext.getBean(CustomerConfigurationProperties.class).mnemonic();
     var registrationUrl = applicationContext.getBean(EnergyPortalConfiguration.class).registrationUrl();
@@ -169,7 +190,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(RegulatorAddMemberController.class).renderAddTeamMember(teamId)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMember"))
+        .andExpect(view().name("osd/permissionmanagement/addTeamMemberPage"))
         .andExpect(model().attribute("htmlTitle", "Add user to %s".formatted(customerMnemonic)))
         .andExpect(model().attribute(
             "backLinkUrl",
@@ -192,10 +213,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.empty());
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
@@ -236,10 +261,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
@@ -260,10 +289,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
@@ -273,7 +306,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
                 .param("username", "")
         )
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMember"));
+        .andExpect(view().name("osd/permissionmanagement/addTeamMemberPage"));
   }
 
   @Test
@@ -286,10 +319,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var teamId = new TeamId(team.getUuid());
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var username = "username";
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
@@ -321,10 +358,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
@@ -370,10 +411,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.empty());
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorAddMemberController.class)
@@ -394,10 +439,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.empty());
@@ -422,10 +471,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(energyPortalUser));
@@ -451,10 +504,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var energyPortalUserToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(energyPortalUserToAdd));
@@ -464,7 +521,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
                 .renderAddTeamMemberRoles(teamId, webUserAccountIdToAdd)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMemberRoles"))
+        .andExpect(view().name("osd/permissionmanagement/addTeamMemberRolesPage"))
         .andExpect(model().attribute(
             "pageTitle",
             "What actions does %s perform?".formatted(energyPortalUserToAdd.displayName())
@@ -513,10 +570,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
@@ -542,10 +603,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.empty());
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
                 .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
@@ -567,10 +632,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.empty());
@@ -597,10 +666,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(energyPortalUser));
@@ -626,10 +699,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
@@ -642,7 +719,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
                 .param("roles", "")
         )
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorAddTeamMemberRoles"));
+        .andExpect(view().name("osd/permissionmanagement/addTeamMemberRolesPage"));
   }
 
   @Test
@@ -657,10 +734,14 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var webUserAccountIdToAdd = new WebUserAccountId(123);
 
-    when(teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(RegulatorTeamRole.ACCESS_MANAGER.name())))
-        .thenReturn(true);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
 
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));

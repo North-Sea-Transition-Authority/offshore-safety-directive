@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
-import java.util.Objects;
 import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,6 +26,8 @@ public class Team {
   @Enumerated(EnumType.STRING)
   private TeamType teamType;
 
+  private String displayName;
+
   public Team() {
   }
 
@@ -46,28 +47,25 @@ public class Team {
     this.teamType = teamType;
   }
 
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public TeamId toTeamId() {
+    return new TeamId(this.getUuid());
+  }
+
   @Override
   public String toString() {
     return "Team{" +
         "uuid=" + uuid +
         ", teamType=" + teamType +
+        ", displayName='" + displayName + '\'' +
         '}';
   }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof Team)) {
-      return false;
-    }
-    Team team = (Team) o;
-    return Objects.equals(getUuid(), team.getUuid()) && getTeamType() == team.getTeamType();
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getUuid(), getTeamType());
-  }
 }

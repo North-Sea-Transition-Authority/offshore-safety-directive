@@ -83,7 +83,12 @@ public class TeamMemberViewTestUtil {
     }
 
     public TeamMemberView build() {
-      return new TeamMemberView(wuaId, new TeamView(teamId, teamType), title, firstName, lastName, contactEmail,
+      var team = TeamTestUtil.Builder()
+          .withId(teamId.uuid())
+          .withTeamType(teamType)
+          .build();
+
+      return new TeamMemberView(wuaId, TeamTestUtil.createTeamView(team), title, firstName, lastName, contactEmail,
           contactNumber, roles);
     }
   }

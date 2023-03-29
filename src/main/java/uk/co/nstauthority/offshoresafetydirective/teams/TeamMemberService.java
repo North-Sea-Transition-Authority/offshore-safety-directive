@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
@@ -51,7 +52,7 @@ public class TeamMemberService {
   }
 
   private TeamView createTeamView(Team team) {
-    return new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    return new TeamView(new TeamId(team.getUuid()), team.getTeamType(), team.getDisplayName());
   }
 
   public boolean isMemberOfTeam(TeamId teamId, ServiceUserDetail user) {
@@ -81,6 +82,7 @@ public class TeamMemberService {
     return roles.stream()
         .map(teamMemberRole -> switch (team.getTeamType()) {
           case REGULATOR -> RegulatorTeamRole.valueOf(teamMemberRole.getRole());
+          case CONSULTEE -> ConsulteeTeamRole.valueOf(teamMemberRole.getRole());
         })
         .collect(Collectors.toSet());
   }

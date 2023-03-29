@@ -20,6 +20,7 @@ import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRemovalService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRolesForm;
 
@@ -27,7 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 class RegulatorTeamMemberEditRolesValidatorTest {
 
   @Mock
-  private RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService;
+  private TeamMemberRemovalService teamMemberRemovalService;
 
   @InjectMocks
   private RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator;
@@ -37,14 +38,15 @@ class RegulatorTeamMemberEditRolesValidatorTest {
     var form = new TeamMemberRolesForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    form.setRoles(Set.of(RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER.name()));
+    form.setRoles(Set.of(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER.name()));
 
     var team = new Team(UUID.randomUUID());
     var teamView = TeamTestUtil.createTeamView(team);
     var teamMember = new TeamMember(new WebUserAccountId(123L), teamView,
         Set.of(RegulatorTeamRole.ACCESS_MANAGER));
 
-    when(regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember)).thenReturn(true);
+    when(teamMemberRemovalService.canRemoveTeamMember(team, teamMember.wuaId(), RegulatorTeamRole.ACCESS_MANAGER))
+        .thenReturn(true);
 
     var dto = new RegulatorTeamMemberEditRolesValidatorDto(team, teamMember);
     regulatorTeamMemberEditRolesValidator.validate(form, bindingResult, dto);
@@ -84,14 +86,15 @@ class RegulatorTeamMemberEditRolesValidatorTest {
     var form = new TeamMemberRolesForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    form.setRoles(Set.of(RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER.name()));
+    form.setRoles(Set.of(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER.name()));
 
     var team = new Team(UUID.randomUUID());
     var teamView = TeamTestUtil.createTeamView(team);
     var teamMember = new TeamMember(new WebUserAccountId(123L), teamView,
         Set.of(RegulatorTeamRole.ACCESS_MANAGER));
 
-    when(regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember)).thenReturn(false);
+    when(teamMemberRemovalService.canRemoveTeamMember(team, teamMember.wuaId(), RegulatorTeamRole.ACCESS_MANAGER))
+        .thenReturn(false);
 
     var dto = new RegulatorTeamMemberEditRolesValidatorDto(team, teamMember);
     regulatorTeamMemberEditRolesValidator.validate(form, bindingResult, dto);

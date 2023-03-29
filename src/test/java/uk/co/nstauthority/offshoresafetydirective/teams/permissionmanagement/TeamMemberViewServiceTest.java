@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,13 +15,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.offshoresafetydirective.teams.Team;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,13 +36,13 @@ class TeamMemberViewServiceTest {
 
   @Test
   void getUserViewsForTeam() {
-    var team = new Team(UUID.randomUUID());
+    var team = TeamTestUtil.Builder().build();
     var wuaId = 100L;
 
-    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    var teamView = TeamTestUtil.createTeamView(team);
 
     var teamMember = new TeamMember(new WebUserAccountId(wuaId), teamView,
-        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER));
 
     when(teamMemberService.getTeamMembers(team))
         .thenReturn(List.of(teamMember));
@@ -82,7 +79,7 @@ class TeamMemberViewServiceTest {
             "Smith",
             "john.smith@test.org",
             "telephone",
-            Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER)
+            Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
         )
     );
 
@@ -90,13 +87,13 @@ class TeamMemberViewServiceTest {
 
   @Test
   void getUserViewForTeamMember() {
-    var team = new Team(UUID.randomUUID());
+    var team = TeamTestUtil.Builder().build();
     var wuaId = 100L;
 
-    var teamView = new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    var teamView = TeamTestUtil.createTeamView(team);
 
     var teamMember = new TeamMember(new WebUserAccountId(wuaId), teamView,
-        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER));
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER));
 
     var portalUser = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(wuaId)
@@ -130,7 +127,7 @@ class TeamMemberViewServiceTest {
         "Smith",
         "john.smith@test.org",
         "telephone",
-        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER)
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
     );
   }
 }

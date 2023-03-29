@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.RegulatorRolesAllowed;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -23,12 +23,18 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamRoleUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AbstractTeamController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRolesForm;
 
 @Controller
 @RequestMapping("/permission-management/regulator/{teamId}/edit")
-@RegulatorRolesAllowed(roles = {RegulatorTeamRole.ACCESS_MANAGER})
-public class RegulatorEditMemberController extends AbstractRegulatorPermissionManagement {
+@HasTeamPermission(anyTeamPermissionOf = RolePermission.GRANT_ROLES)
+public class RegulatorEditMemberController extends AbstractTeamController {
+
+  static final TeamType TEAM_TYPE = TeamType.REGULATOR;
   private final TeamMemberService teamMemberService;
   private final TeamMemberViewService teamMemberViewService;
   private final RegulatorTeamMemberEditService regulatorTeamMemberEditService;
@@ -37,13 +43,13 @@ public class RegulatorEditMemberController extends AbstractRegulatorPermissionMa
 
   @Autowired
   RegulatorEditMemberController(
-      RegulatorTeamService regulatorTeamService,
+      TeamService teamService,
       TeamMemberService teamMemberService,
       TeamMemberViewService teamMemberViewService,
       RegulatorTeamMemberEditService regulatorTeamMemberEditService,
       ControllerHelperService controllerHelperService,
       RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator) {
-    super(regulatorTeamService);
+    super(teamService);
     this.teamMemberService = teamMemberService;
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamMemberEditService = regulatorTeamMemberEditService;
@@ -57,7 +63,7 @@ public class RegulatorEditMemberController extends AbstractRegulatorPermissionMa
                                        @PathVariable("wuaId") WebUserAccountId wuaId) {
 
     var form = new TeamMemberRolesForm();
-    var team = getRegulatorTeam(teamId);
+    var team = getTeam(teamId, TEAM_TYPE);
 
     var teamMember = teamMemberService.getTeamMember(team, wuaId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -79,7 +85,7 @@ public class RegulatorEditMemberController extends AbstractRegulatorPermissionMa
                                  @ModelAttribute("form") TeamMemberRolesForm form,
                                  BindingResult bindingResult) {
 
-    var team = getRegulatorTeam(teamId);
+    var team = getTeam(teamId, TEAM_TYPE);
 
     var teamMember = teamMemberService.getTeamMember(team, wuaId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -104,7 +110,7 @@ public class RegulatorEditMemberController extends AbstractRegulatorPermissionMa
   }
 
   private ModelAndView getEditModelAndView(TeamId teamId, TeamMemberView userView, TeamMemberRolesForm form) {
-    return new ModelAndView("osd/permissionmanagement/regulator/regulatorAddTeamMemberRoles")
+    return new ModelAndView("osd/permissionmanagement/addTeamMemberRolesPage")
         .addObject("form", form)
         .addObject("pageTitle", "What actions does %s perform?".formatted(userView.getDisplayName()))
         .addObject("roles", DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(RegulatorTeamRole.class))

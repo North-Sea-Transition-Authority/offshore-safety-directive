@@ -6,7 +6,7 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 public class TeamTestUtil {
 
   public static TeamView createTeamView(Team team) {
-    return new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    return new TeamView(new TeamId(team.getUuid()), team.getTeamType(), team.getDisplayName());
   }
 
   private TeamTestUtil() {
@@ -21,6 +21,7 @@ public class TeamTestUtil {
 
     private UUID uuid = UUID.randomUUID();
     private TeamType teamType = TeamType.REGULATOR;
+    private String displayName = "team name";
 
     public TeamBuilder withId(UUID uuid) {
       this.uuid = uuid;
@@ -32,9 +33,15 @@ public class TeamTestUtil {
       return this;
     }
 
+    public TeamBuilder withDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
     public Team build() {
       var team = new Team(uuid);
       team.setTeamType(teamType);
+      team.setDisplayName(displayName);
       return team;
     }
   }
