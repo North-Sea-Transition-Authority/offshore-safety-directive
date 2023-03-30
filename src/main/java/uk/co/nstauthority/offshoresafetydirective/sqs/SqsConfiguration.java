@@ -1,19 +1,19 @@
-package uk.co.nstauthority.offshoresafetydirective.sns;
+package uk.co.nstauthority.offshoresafetydirective.sqs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sqs.SqsClient;
 import uk.co.nstauthority.offshoresafetydirective.snssqs.SnsSqsConfigurationProperties;
 
 @Configuration
-class SnsConfiguration {
+class SqsConfiguration {
 
   @Bean
-  SnsClient snsClient(SnsSqsConfigurationProperties snsSqsConfigurationProperties) {
-    return SnsClient.builder()
+  SqsClient sqsClient(SnsSqsConfigurationProperties snsSqsConfigurationProperties) {
+    return SqsClient.builder()
         .region(Region.of(snsSqsConfigurationProperties.regionId()))
         .credentialsProvider(
             StaticCredentialsProvider.create(

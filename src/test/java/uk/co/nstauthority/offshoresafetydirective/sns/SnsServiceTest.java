@@ -18,12 +18,17 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.CreateTopicResponse;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.SubscribeRequest;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.snssqs.SnsSqsConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.sqs.SqsQueueArn;
+import uk.co.nstauthority.offshoresafetydirective.sqs.SqsQueueUrl;
+import uk.co.nstauthority.offshoresafetydirective.sqs.SqsService;
 
 @ExtendWith(MockitoExtension.class)
 class SnsServiceTest {
 
-  private static final String TOPIC_SUFFIX = "-test";
+  private static final String ENVIRONMENT_SUFFIX = "-test";
 
   @Mock
   private SnsClient snsClient;
@@ -31,26 +36,30 @@ class SnsServiceTest {
   @Mock
   private ObjectMapper objectMapper;
 
+  @Mock
+  private SqsService sqsService;
+
   private SnsService snsService;
 
   @BeforeEach
   void setUp() {
     snsService = new SnsService(
         snsClient,
-        new SnsConfigurationProperties(null, null, null, TOPIC_SUFFIX),
-        objectMapper
+        new SnsSqsConfigurationProperties(null, null, null, ENVIRONMENT_SUFFIX),
+        objectMapper,
+        sqsService
     );
   }
 
   @Test
-  void createTopic() {
+  void getOrCreateTopic() {
     var topicBaseName = "test-topic";
     var topicArn = "test-topic-arn";
 
     when(
         snsClient.createTopic(
             CreateTopicRequest.builder()
-                .name(topicBaseName + TOPIC_SUFFIX + ".fifo")
+                .name(topicBaseName + ENVIRONMENT_SUFFIX + ".fifo")
                 .attributes(Map.of("FifoTopic", "true"))
                 .build()
         )
@@ -78,5 +87,24 @@ class SnsServiceTest {
             .messageGroupId(topicArn.arn())
             .build()
     );
+  }
+
+  @Test
+  void subscribeTopicToSqsQueue() {
+    var topicArn = new SnsTopicArn("test-topic-arn");
+    var queueUrl = new SqsQueueUrl("test-queue-url");
+    var queueArn = new SqsQueueArn("test-queue-arn");
+
+    when(sqsService.getQueueArnByUrl(queueUrl)).thenReturn(queueArn);
+
+    snsService.subscribeTopicToSqsQueue(topicArn, queueUrl);
+
+    verify(snsClient).subscribe(SubscribeRequest.builder()
+        .topicArn(topicArn.arn())
+        .protocol("sqs")
+        .endpoint(queueArn.arn())
+        .build());
+
+    verify(sqsService).grantSnsTopicAccessToQueue(queueUrl, queueArn, topicArn);
   }
 }

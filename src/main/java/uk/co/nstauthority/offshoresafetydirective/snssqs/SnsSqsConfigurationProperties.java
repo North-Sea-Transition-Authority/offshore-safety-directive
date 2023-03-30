@@ -1,15 +1,15 @@
-package uk.co.nstauthority.offshoresafetydirective.sns;
+package uk.co.nstauthority.offshoresafetydirective.snssqs;
 
 import javax.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "sns")
+@ConfigurationProperties(prefix = "sns-sqs")
 @Validated
-record SnsConfigurationProperties(
+public record SnsSqsConfigurationProperties(
     @NotNull String accessKeyId,
     @NotNull String secretAccessKey,
     @NotNull String regionId,
-    @NotNull String topicSuffix
+    @NotNull String environmentSuffix
 ) {
 }

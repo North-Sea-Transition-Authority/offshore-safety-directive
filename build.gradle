@@ -65,6 +65,7 @@ dependencies {
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 
 	implementation 'software.amazon.awssdk:sns:2.20.7'
+	implementation 'software.amazon.awssdk:sqs:2.20.7'
 
 	runtimeOnly 'org.postgresql:postgresql'
 

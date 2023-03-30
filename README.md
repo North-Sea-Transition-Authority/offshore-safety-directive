@@ -38,11 +38,11 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable                       | Description                                                                                   |
-|--------------------------------------------|-----------------------------------------------------------------------------------------------|
-| OSD_SNS_ACCESS_KEY_ID                      | SNS access key id                                                                             |
-| OSD_SNS_SECRET_ACCESS_KEY                  | SNS secret access key                                                                         |
-| OSD_SNS_TOPIC_SUFFIX                       | SNS topic suffix. This should be set to something unique per developer, such as your initials |
+| Environment Variable           | Description                                                                                             |
+|--------------------------------|---------------------------------------------------------------------------------------------------------|
+| OSD_SNS_SQS_ACCESS_KEY_ID      | SNS/SQS access key id                                                                                   |
+| OSD_SNS_SQS_SECRET_ACCESS_KEY  | SNS/SQS secret access key                                                                               |
+| OSD_SNS_SQS_ENVIRONMENT_SUFFIX | SNS/SQS environment suffix. This should be set to something unique per developer, such as your initials |
 
 ### Production
 
@@ -76,9 +76,9 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                         |
 | OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                               |
 | OSD_SESSION_TIMEOUT_MINUTES                | The time in minutes before a session timeouts. This should be the same as the Energy Portal, e.g 180 |
-| OSD_SNS_ACCESS_KEY_ID                      | SNS access key id                                                                                    |
-| OSD_SNS_SECRET_ACCESS_KEY                  | SNS secret access key                                                                                |
-| OSD_SNS_TOPIC_SUFFIX                       | SNS topic suffix. This should be set to the environment name, e.g. st or prod                        |
+| OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                |
+| OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
+| OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |
 
 ### 3. Initialise the Fivium Design System
 
