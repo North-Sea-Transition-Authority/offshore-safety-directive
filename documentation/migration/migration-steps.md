@@ -13,19 +13,22 @@ This migration guide will make use of both the Energy Portal Oracle database and
 Run the following patches to construct the required tables for the migration. Note, this will need to be in a schema
 such as `XVIEWMGR` which has permission to make tables in other schemas.
 
-- `/energyPortal/V01_create_migration_schema.sql`
-- `/energyPortal/V02_create_raw_mirgation_data_tables.sql`
+- `/energyportal/V01_create_migration_schema.sql`
+- `/energyportal/V02_create_raw_mirgation_data_tables.sql`
 
 ## 2. Write the raw appointment data to the Energy Portal database
 
 ### Wellbore appointments prerequisites
 - Remove columns C-L and columns S-U in the well migration template sheet
+- Add an ID column in column A with a series of unique integer IDs
 
 ### Installation appointments prerequisites
 - Remove columns I and J in the installation migration template sheet
+- Add an ID column in column A with a series of unique integer IDs
 
 ### Forward approval appointments prerequisites
 - Remove columns N in the forward approval migration template sheet
+- Add an ID column in column A with a series of unique integer IDs
 
 ### Migrate the raw data into the database
 - Export a CSV of the appointments. Note you will need to change the default comma delimiter as organisation names
@@ -63,3 +66,24 @@ BEGIN
   
 END;
 ```
+
+## 3. Cleanse the wellbore data
+
+Prior to cleansing the wellbore data the following two patches need to be run on the Energy Portal database:
+
+- `/energyportal/V03_create_wellbore_migration_table.sql`
+- `/energyportal/V04_create_wellbore_clense_package.sql`
+
+To cleanse the raw wellbore appointment data you can execute the following code:
+
+```oraclesqlplus
+EXEC wios_migration.wellbore_appointment_migration.cleanse_wellbore_appointments;
+```
+
+For each row in the `wios_migration.raw_wellbore_appointments_data` table, a cleansed row will be inserted into
+`wios_migration.wellbore_appointments` table.
+
+Any rows in the `wios_migration.raw_wellbore_appointments_data` which don't map to a valid WONS wellbore will be 
+written to `wios_migration.unmatched_wellbores` as well as an error row written to `wios_migration.wellbore_migration_errors`.
+
+Any errors in the migration process will be written to `wios_migration.wellbore_migration_errors`.
