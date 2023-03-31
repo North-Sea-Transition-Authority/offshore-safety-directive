@@ -408,6 +408,76 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
   END migrate_appointment_phases;
 
+  /**
+    Procedure to migrate the appointment source.
+    @param p_migratable_appointment_id The appointment ID we are working on
+    @param p_appointment_source The appointment source to migrate
+  */
+  PROCEDURE migrate_appointment_source(
+    p_migratable_appointment_id IN wios_migration.raw_installation_appointments_data.migratable_appointment_id%TYPE
+  , p_appointment_source IN wios_migration.raw_installation_appointments_data.appointment_source%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+    K_DEEMED_SOURCE CONSTANT wios_migration.raw_installation_appointments_data.appointment_source%TYPE := 'deemed';
+    K_NOMINATED_SOURCE CONSTANT wios_migration.raw_installation_appointments_data.appointment_source%TYPE := 'nominated';
+
+    l_appointment_source wios_migration.installation_appointments.appointment_source%TYPE;
+
+  BEGIN
+
+    SAVEPOINT sp_before_appointment_source_mapping;
+
+    IF LOWER(p_appointment_source) = K_DEEMED_SOURCE THEN
+
+      l_appointment_source := 'DEEMED';
+
+    ELSIF LOWER(p_appointment_source) = K_NOMINATED_SOURCE THEN
+
+      l_appointment_source := 'NOMINATED';
+
+    ELSE
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Unexpected installation appointment source: ' || p_appointment_source
+      );
+
+    END IF;
+
+    UPDATE wios_migration.installation_appointments ia
+    SET ia.appointment_source = l_appointment_source
+    WHERE ia.migratable_appointment_id = p_migratable_appointment_id;
+
+    IF SQL%ROWCOUNT != 1 THEN
+
+      raise_application_error(
+        -20990
+      , 'Failed to update wios_migration.installation_appointments phases for migratable_appointment_id '
+          || p_migratable_appointment_id || '. Expected to update 1 row but attempted to update ' || SQL%ROWCOUNT
+      );
+
+    END IF;
+
+    COMMIT;
+
+  EXCEPTION WHEN OTHERS THEN
+
+    ROLLBACK TO SAVEPOINT sp_before_appointment_source_mapping;
+
+    add_migration_error(
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_error_message => 'Unexpected error in migrate_appointment_source for migratable_appointment_id ' ||
+        p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+        CHR(10) || dbms_utility.format_error_backtrace()
+    );
+
+    COMMIT;
+
+  END migrate_appointment_source;
+
   PROCEDURE cleanse_installation_appointments
   IS
 
@@ -478,6 +548,11 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
           p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
         , p_is_development_phase => migratable_installation_appointment.is_development_phase
         , p_is_decommissioning_phase => migratable_installation_appointment.is_decommissioning_phase
+        );
+
+        migrate_appointment_source(
+          p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
+        , p_appointment_source => migratable_installation_appointment.appointment_source
         );
 
         logger.debug(
