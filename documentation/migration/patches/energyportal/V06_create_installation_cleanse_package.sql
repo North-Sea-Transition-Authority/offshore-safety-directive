@@ -311,6 +311,103 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
   END migrate_appointment_dates;
 
+  /**
+    Procedure to migrate the phases for an appointment.
+
+    @param p_migratable_appointment_id The ID of the appointment we are migrating
+    @param p_is_development_phase Indication of if the appointment is for development
+    @param p_is_decommissioning_phase Indication of if the appointment is for decommissioning
+
+  */
+  PROCEDURE migrate_appointment_phases(
+    p_migratable_appointment_id IN wios_migration.raw_installation_appointments_data.migratable_appointment_id%TYPE
+  , p_is_development_phase IN wios_migration.raw_installation_appointments_data.is_development_phase%TYPE
+  , p_is_decommissioning_phase IN wios_migration.raw_installation_appointments_data.is_decommissioning_phase%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+    l_is_development_phase wios_migration.installation_appointments.is_development_phase%TYPE;
+    l_is_decommissioning_phase wios_migration.installation_appointments.is_decommissioning_phase%TYPE;
+
+    FUNCTION is_for_phase(
+      p_is_for_phase_text IN VARCHAR2
+    ) RETURN NUMBER
+    IS
+
+      K_IS_PHASE_TEXT CONSTANT VARCHAR2(3) := 'yes';
+      K_NOT_PHASE_TEXT CONSTANT VARCHAR2(3) := 'no';
+
+    BEGIN
+
+      IF LOWER(p_is_for_phase_text) = K_IS_PHASE_TEXT THEN
+
+        RETURN 1;
+
+      ELSIF LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT THEN
+
+        RETURN 0;
+
+      ELSE
+
+        add_migration_error(
+          p_migratable_appointment_id => p_migratable_appointment_id
+        , p_error_message => 'Unexpected phase value "' || NVL(p_is_for_phase_text, 'NULL') ||  '" in migrate_appointment_phases for migratable_appointment_id '
+            || p_migratable_appointment_id
+        );
+
+        RETURN NULL;
+
+      END IF;
+
+    END is_for_phase;
+
+  BEGIN
+
+    SAVEPOINT sp_before_phase_mapping;
+
+    l_is_development_phase := is_for_phase(
+      p_is_for_phase_text => p_is_development_phase
+    );
+
+    l_is_decommissioning_phase := is_for_phase(
+      p_is_for_phase_text => p_is_decommissioning_phase
+    );
+
+    UPDATE wios_migration.installation_appointments ia
+    SET
+      ia.is_development_phase = l_is_development_phase
+    , ia.is_decommissioning_phase = l_is_decommissioning_phase
+    WHERE ia.migratable_appointment_id = p_migratable_appointment_id;
+
+    IF SQL%ROWCOUNT != 1 THEN
+
+      raise_application_error(
+        -20990
+      , 'Failed to update wios_migration.installation_appointments phases for migratable_appointment_id '
+          || p_migratable_appointment_id || '. Expected to update 1 row but attempted to update ' || SQL%ROWCOUNT
+      );
+
+    END IF;
+
+    COMMIT;
+
+  EXCEPTION WHEN OTHERS THEN
+
+    ROLLBACK TO SAVEPOINT sp_before_phase_mapping;
+
+    add_migration_error(
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_error_message => 'Unexpected error in migrate_appointment_phases for migratable_appointment_id ' ||
+        p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+        CHR(10) || dbms_utility.format_error_backtrace()
+    );
+
+    COMMIT;
+
+  END migrate_appointment_phases;
+
   PROCEDURE cleanse_installation_appointments
   IS
 
@@ -374,6 +471,13 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
           p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
         , p_appointment_from_date => migratable_installation_appointment.responsible_from_date
         , p_appointment_to_date => migratable_installation_appointment.responsible_to_date
+        );
+
+
+        migrate_appointment_phases(
+          p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
+        , p_is_development_phase => migratable_installation_appointment.is_development_phase
+        , p_is_decommissioning_phase => migratable_installation_appointment.is_decommissioning_phase
         );
 
         logger.debug(
