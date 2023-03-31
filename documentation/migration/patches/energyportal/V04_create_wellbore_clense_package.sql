@@ -489,6 +489,54 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
 
   END migrate_appointment_source;
 
+  /**
+    Procedure to migrate the legacy nomination references.
+    @param p_migratable_appointment_id The appointment ID we are working on
+    @param p_legacy_nomination_reference The legacy nomination reference
+  */
+  PROCEDURE migrate_legacy_nomination_reference(
+    p_migratable_appointment_id IN wios_migration.raw_wellbore_appointments_data.migratable_appointment_id%TYPE
+  , p_legacy_nomination_reference IN wios_migration.raw_wellbore_appointments_data.legacy_nomination_reference%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+  BEGIN
+
+    SAVEPOINT sp_before_nomination_mapping;
+
+    UPDATE wios_migration.wellbore_appointments wa
+    SET wa.legacy_nomination_reference = p_legacy_nomination_reference
+    WHERE wa.migratable_appointment_id = p_migratable_appointment_id;
+
+    IF SQL%ROWCOUNT != 1 THEN
+
+      raise_application_error(
+        -20990
+      , 'Failed to update wios_migration.wellbore_appointments nomination reference for migratable_appointment_id '
+          || p_migratable_appointment_id || '. Expected to update 1 row but attempted to update ' || SQL%ROWCOUNT
+      );
+
+    END IF;
+
+    COMMIT;
+
+  EXCEPTION WHEN OTHERS THEN
+
+    ROLLBACK TO SAVEPOINT sp_before_nomination_mapping;
+
+    add_migration_error(
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_error_message => 'Unexpected error in migrate_legacy_nomination_reference for migratable_appointment_id ' ||
+        p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+        CHR(10) || dbms_utility.format_error_backtrace()
+    );
+
+    COMMIT;
+
+  END migrate_legacy_nomination_reference;
+
   PROCEDURE cleanse_wellbore_appointments
   IS
 
@@ -567,6 +615,29 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
           p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
         , p_appointment_source => migratable_wellbore_appointment.appointment_source
         );
+
+        IF UPPER(migratable_wellbore_appointment.appointment_source) = 'NOMINATED' AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
+
+          migrate_legacy_nomination_reference(
+            p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
+          , p_legacy_nomination_reference => migratable_wellbore_appointment.legacy_nomination_reference
+          );
+
+        ELSIF UPPER(migratable_wellbore_appointment.appointment_source) = 'NOMINATED' AND migratable_wellbore_appointment.legacy_nomination_reference IS NULL THEN
+
+          add_migration_error(
+            p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
+          , p_error_message => 'Found nominated appointment source without legacy nomination reference for migratable_appointment_id ' || migratable_wellbore_appointment.migratable_appointment_id
+          );
+
+        ELSIF UPPER(migratable_wellbore_appointment.appointment_source) != 'NOMINATED' AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
+
+          add_migration_error(
+            p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
+          , p_error_message => 'Legacy nomination reference provided for non NOMINATED appointment for migratable_appointment_id ' || migratable_wellbore_appointment.migratable_appointment_id
+          );
+
+        END IF;
 
         logger.debug(
           K_LOG_PREFIX || 'Finished wellbore appointment migration for migratable_appointment_id ' ||
