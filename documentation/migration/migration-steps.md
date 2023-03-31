@@ -73,6 +73,8 @@ Prior to cleansing the wellbore data the following two patches need to be run on
 
 - `/energyportal/V03_create_wellbore_migration_table.sql`
 - `/energyportal/V04_create_wellbore_clense_package.sql`
+- `/energyportal/V07_create_operator_migration_table.sql`
+- `/energyportal/V08_create_operator_mapping_package.sql`
 
 To cleanse the raw wellbore appointment data you can execute the following code:
 
@@ -94,6 +96,8 @@ Prior to cleansing the installation data the following two patches need to be ru
 
 - `/energyportal/V05_create_installation_migration_table.sql`
 - `/energyportal/V06_create_installation_cleanse_package.sql`
+- `/energyportal/V07_create_operator_migration_table.sql`
+- `/energyportal/V08_create_operator_mapping_package.sql`
 
 To cleanse the raw installation appointment data you can execute the following code:
 

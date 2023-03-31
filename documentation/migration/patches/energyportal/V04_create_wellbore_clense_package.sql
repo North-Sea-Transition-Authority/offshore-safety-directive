@@ -150,10 +150,86 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
 
   END migrate_registration_number_to_wellbore;
 
+  /**
+    Utility procedure to map a possible operator names to an operators from portal.
+
+    If an exact match is found then the migratable appointment is updated to have the portal operator ID.
+
+    @param p_migratable_appointment_id The migratable appointment ID we are working on
+    @param p_operator_name The operator name to attempt to find a matching operator from
+    @param p_operator_lookup An associative array of all the known portal operator names to their
+                             associated operator ID.
+  */
+  PROCEDURE migrate_operator_name_to_operator(
+    p_migratable_appointment_id IN wios_migration.raw_wellbore_appointments_data.migratable_appointment_id%TYPE
+  , p_operator_name IN wios_migration.raw_wellbore_appointments_data.appointed_operator_name%TYPE
+  , p_operator_lookup IN wios_migration.operator_name_mapping.t_operator_lookup_type
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+    l_matched_operator_id NUMBER;
+
+  BEGIN
+
+    SAVEPOINT sp_before_operator_mapping;
+
+    l_matched_operator_id := wios_migration.operator_name_mapping.get_operator_from_name(
+      p_operator_name => p_operator_name
+    , p_operator_lookup_type => p_operator_lookup
+    );
+
+    IF l_matched_operator_id IS NOT NULL THEN
+
+      UPDATE wios_migration.wellbore_appointments ia
+      SET
+        ia.appointed_operator_id = l_matched_operator_id
+      , ia.appointed_operator_name = TO_CHAR(p_operator_name)
+      WHERE ia.migratable_appointment_id = p_migratable_appointment_id;
+
+      IF SQL%ROWCOUNT != 1 THEN
+
+        raise_application_error(
+          -20990
+        , 'Failed to update wios_migration.wellbore_appointments operator data for migratable_appointment_id '
+            || p_migratable_appointment_id || '. Expected to update 1 row but attempted to update ' || SQL%ROWCOUNT
+        );
+
+      END IF;
+
+    ELSE
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Could not find matching operator for operator name ' ||
+          p_operator_name ||  ' for migratable_appointment_id ' || p_migratable_appointment_id
+      );
+
+    END IF;
+
+    COMMIT;
+
+  EXCEPTION WHEN OTHERS THEN
+
+    ROLLBACK TO SAVEPOINT sp_before_operator_mapping;
+
+    add_migration_error(
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_error_message => 'Unexpected error in migrate_operator_name_to_operator for migratable_appointment_id ' ||
+        p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+        CHR(10) || dbms_utility.format_error_backtrace()
+    );
+
+    COMMIT;
+
+  END migrate_operator_name_to_operator;
+
   PROCEDURE cleanse_wellbore_appointments
   IS
 
     t_wellbore_lookup t_wellbore_lookup_type;
+    t_operator_lookup wios_migration.operator_name_mapping.t_operator_lookup_type;
 
   BEGIN
 
@@ -171,6 +247,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
       t_wellbore_lookup(wons_wellbore.well_registration_no) := wons_wellbore.id;
 
     END LOOP;
+
+    t_operator_lookup := wios_migration.operator_name_mapping.initialise_operator_lookup();
 
     FOR migratable_wellbore_appointment IN (
       SELECT
@@ -200,6 +278,12 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
           p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
         , p_wellbore_registration_number => migratable_wellbore_appointment.wellbore_registration_number
         , p_wellbore_lookup => t_wellbore_lookup
+        );
+
+        migrate_operator_name_to_operator(
+          p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
+        , p_operator_name => migratable_wellbore_appointment.appointed_operator_name
+        , p_operator_lookup => t_operator_lookup
         );
 
         logger.debug(
