@@ -222,6 +222,95 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
   END migrate_operator_name_to_operator;
 
+  /**
+    Procedure to migrate the appointment to and from dates for a wellbore
+
+    @param p_migratable_appointment_id The ID of the appointment we are working with
+    @param p_appointment_from_date The date the appointment is valid from
+    @param p_appointment_to_date The date the appointment is valid to
+  */
+  PROCEDURE migrate_appointment_dates(
+    p_migratable_appointment_id IN wios_migration.raw_installation_appointments_data.migratable_appointment_id%TYPE
+  , p_appointment_from_date IN wios_migration.raw_installation_appointments_data.responsible_from_date%TYPE
+  , p_appointment_to_date IN wios_migration.raw_installation_appointments_data.responsible_to_date%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+    l_appointment_from_date wios_migration.installation_appointments.responsible_from_date%TYPE;
+    l_appointment_to_date wios_migration.installation_appointments.responsible_to_date%TYPE;
+
+    FUNCTION convert_to_date(
+      p_date_as_string IN VARCHAR2
+    , p_migratable_appointment_id IN wios_migration.raw_installation_appointments_data.migratable_appointment_id%TYPE
+    ) RETURN DATE
+    IS
+
+     BEGIN
+
+      RETURN TO_DATE(p_date_as_string, 'DD/MM/YYYY');
+
+    EXCEPTION WHEN OTHERS THEN
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Unable to convert responsible date "' || p_date_as_string || '" to date for migratable_appointment_id ' ||
+          p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+          CHR(10) || dbms_utility.format_error_backtrace()
+      );
+
+      RETURN NULL;
+
+    END convert_to_date;
+
+  BEGIN
+
+    SAVEPOINT sp_before_date_mapping;
+
+    l_appointment_from_date := convert_to_date(
+      p_date_as_string => p_appointment_from_date
+    , p_migratable_appointment_id => p_migratable_appointment_id
+    );
+
+    l_appointment_to_date := convert_to_date(
+      p_date_as_string => p_appointment_to_date
+    , p_migratable_appointment_id => p_migratable_appointment_id
+    );
+
+    UPDATE wios_migration.installation_appointments ia
+    SET
+      ia.responsible_from_date = l_appointment_from_date
+    , ia.responsible_to_date = l_appointment_to_date
+    WHERE ia.migratable_appointment_id = p_migratable_appointment_id;
+
+    IF SQL%ROWCOUNT != 1 THEN
+
+      raise_application_error(
+        -20990
+      , 'Failed to update wios_migration.installation_appointments responsible dates for migratable_appointment_id '
+          || p_migratable_appointment_id || '. Expected to update 1 row but attempted to update ' || SQL%ROWCOUNT
+      );
+
+    END IF;
+
+    COMMIT;
+
+  EXCEPTION WHEN OTHERS THEN
+
+    ROLLBACK TO SAVEPOINT sp_before_date_mapping;
+
+    add_migration_error(
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_error_message => 'Unexpected error in migrate_appointment_dates for migratable_appointment_id ' ||
+        p_migratable_appointment_id || CHR(10) || CHR(10) || SQLERRM || CHR(10) ||
+        CHR(10) || dbms_utility.format_error_backtrace()
+    );
+
+    COMMIT;
+
+  END migrate_appointment_dates;
+
   PROCEDURE cleanse_installation_appointments
   IS
 
@@ -279,6 +368,12 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
           p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
         , p_operator_name => migratable_installation_appointment.appointed_operator_name
         , p_operator_lookup => t_operator_lookup
+        );
+
+        migrate_appointment_dates(
+          p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
+        , p_appointment_from_date => migratable_installation_appointment.responsible_from_date
+        , p_appointment_to_date => migratable_installation_appointment.responsible_to_date
         );
 
         logger.debug(
