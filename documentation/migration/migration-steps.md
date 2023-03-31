@@ -87,3 +87,25 @@ Any rows in the `wios_migration.raw_wellbore_appointments_data` which don't map 
 written to `wios_migration.unmatched_wellbores` as well as an error row written to `wios_migration.wellbore_migration_errors`.
 
 Any errors in the migration process will be written to `wios_migration.wellbore_migration_errors`.
+
+## 4. Cleanse the installation data
+
+Prior to cleansing the installation data the following two patches need to be run on the Energy Portal database:
+
+- `/energyportal/V05_create_installation_migration_table.sql`
+- `/energyportal/V06_create_installation_cleanse_package.sql`
+
+To cleanse the raw installation appointment data you can execute the following code:
+
+```oraclesqlplus
+EXEC wios_migration.installation_appointment_migration.cleanse_installation_appointments;
+```
+
+For each row in the `wios_migration.raw_installation_appointments_data` table, a cleansed row will be inserted into
+`wios_migration.installation_appointments` table.
+
+Any rows in the `wios_migration.raw_installation_appointments_data` which don't map to a valid DEVUK installation
+will be written to `wios_migration.unmatched_installations` as well as an error row written to 
+`wios_migration.installation_migration_errors`.
+
+Any errors in the migration process will be written to `wios_migration.installation_migration_errors`.
