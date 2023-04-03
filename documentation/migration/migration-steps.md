@@ -72,7 +72,7 @@ END;
 Prior to cleansing the wellbore data the following two patches need to be run on the Energy Portal database:
 
 - `/energyportal/V03_create_wellbore_migration_table.sql`
-- `/energyportal/V04_create_wellbore_clense_package.sql`
+- `/energyportal/V04_create_wellbore_cleanse_package.sql`
 - `/energyportal/V07_create_operator_migration_table.sql`
 - `/energyportal/V08_create_operator_mapping_package.sql`
 
