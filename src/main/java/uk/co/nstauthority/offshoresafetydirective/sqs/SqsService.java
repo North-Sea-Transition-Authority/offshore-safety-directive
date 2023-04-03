@@ -1,14 +1,22 @@
 package uk.co.nstauthority.offshoresafetydirective.sqs;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.snssqs.SnsSqsConfigurationProperties;
 
@@ -19,10 +27,17 @@ public class SqsService {
 
   private final SqsClient sqsClient;
   private final String environmentSuffix;
+  private final ObjectMapper objectMapper;
 
-  public SqsService(SqsClient sqsClient, SnsSqsConfigurationProperties snsSqsConfigurationProperties) {
+  @Autowired
+  public SqsService(
+      SqsClient sqsClient,
+      SnsSqsConfigurationProperties snsSqsConfigurationProperties,
+      ObjectMapper objectMapper
+  ) {
     this.sqsClient = sqsClient;
     environmentSuffix = snsSqsConfigurationProperties.environmentSuffix();
+    this.objectMapper = objectMapper;
   }
 
   public SqsQueueUrl getOrCreateQueue(String baseName) {
@@ -74,5 +89,56 @@ public class SqsService {
             .attributes(Map.of(QueueAttributeName.POLICY, policy))
             .build()
     );
+  }
+
+  public <T extends EpmqMessage> void receiveQueueMessages(
+      SqsQueueUrl queueUrl,
+      Class<T> messageClass,
+      Consumer<T> onMessage
+  ) {
+    var receiveMessagesResponse = sqsClient.receiveMessage(ReceiveMessageRequest.builder()
+        .queueUrl(queueUrl.url())
+        .maxNumberOfMessages(10)
+        .waitTimeSeconds(20)
+        .build());
+
+    receiveMessagesResponse.messages().forEach(sqsMessage -> {
+      T message;
+      try {
+        message = objectMapper.readValue(sqsMessage.body(), messageClass);
+      } catch (JsonProcessingException exception) {
+        LOGGER.error(
+            "Error deserializing SQS message {} to {}",
+            sqsMessage.messageId(),
+            messageClass.getSimpleName(),
+            exception
+        );
+        return;
+      }
+
+      try {
+        onMessage.accept(message);
+      } catch (Exception exception) {
+        LOGGER.error("Error handling {} (SQS message ID: {})", messageClass.getSimpleName(), sqsMessage.messageId());
+        return;
+      }
+
+      try {
+        sqsClient.deleteMessage(
+            DeleteMessageRequest.builder()
+                .queueUrl(queueUrl.url())
+                .receiptHandle(sqsMessage.receiptHandle())
+                .build()
+        );
+      } catch (SdkException exception) {
+        LOGGER.error(
+            "Error deleting SQS message {} by receipt handle {} from queue {}",
+            sqsMessage.messageId(),
+            sqsMessage.receiptHandle(),
+            queueUrl.url(),
+            exception
+        );
+      }
+    });
   }
 }

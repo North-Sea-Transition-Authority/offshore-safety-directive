@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.wons;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -8,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.sqs.SqsQueueUrl;
@@ -42,5 +45,13 @@ class WonsApplicationSqsServiceTest {
     wonsApplicationSqsService.subscribeSnsTopicToOsdQueue();
 
     verify(snsService).subscribeTopicToSqsQueue(applicationsSnsTopicArn, applicationsOsdQueueUrl);
+  }
+
+  @Test
+  void receiveMessages() {
+    wonsApplicationSqsService.receiveMessages();
+
+    verify(sqsService)
+        .receiveQueueMessages(eq(applicationsOsdQueueUrl), eq(WonsApplicationSubmittedEpmqMessage.class), any());
   }
 }

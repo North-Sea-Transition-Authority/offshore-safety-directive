@@ -103,6 +103,7 @@ class SnsServiceTest {
         .topicArn(topicArn.arn())
         .protocol("sqs")
         .endpoint(queueArn.arn())
+        .attributes(Map.of("RawMessageDelivery", "true"))
         .build());
 
     verify(sqsService).grantSnsTopicAccessToQueue(queueUrl, queueArn, topicArn);

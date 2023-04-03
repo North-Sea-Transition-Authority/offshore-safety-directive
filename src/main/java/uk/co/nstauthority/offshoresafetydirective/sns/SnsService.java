@@ -33,7 +33,8 @@ public class SnsService {
       SnsClient snsClient,
       SnsSqsConfigurationProperties snsSqsConfigurationProperties,
       ObjectMapper objectMapper,
-      SqsService sqsService) {
+      SqsService sqsService
+  ) {
     this.snsClient = snsClient;
     environmentSuffix = snsSqsConfigurationProperties.environmentSuffix();
     this.objectMapper = objectMapper;
@@ -56,7 +57,10 @@ public class SnsService {
     try {
       message = objectMapper.writeValueAsString(epmqMessage);
     } catch (JsonProcessingException exception) {
-      throw new RuntimeException(exception);
+      throw new RuntimeException(
+          "Error serializing %s to JSON".formatted(epmqMessage.getClass().getSimpleName()),
+          exception
+      );
     }
 
     try {
@@ -78,6 +82,7 @@ public class SnsService {
         .topicArn(topicArn.arn())
         .protocol("sqs")
         .endpoint(queueArn.arn())
+        .attributes(Map.of("RawMessageDelivery", "true"))
         .build());
     sqsService.grantSnsTopicAccessToQueue(queueUrl, queueArn, topicArn);
     LOGGER.info("Subscribed SQS queue {} to SNS topic {}", queueArn.arn(), topicArn.arn());

@@ -1,12 +1,21 @@
 package uk.co.nstauthority.offshoresafetydirective.sqs;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,10 +24,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.CreateQueueResponse;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesResponse;
+import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.snssqs.SnsSqsConfigurationProperties;
 
@@ -30,14 +44,20 @@ class SqsServiceTest {
   @Mock
   private SqsClient sqsClient;
 
+  @Mock
+  private ObjectMapper objectMapper;
+
   private SqsService sqsService;
 
   @BeforeEach
   void setUp() {
-    sqsService = spy(new SqsService(
-        sqsClient,
-        new SnsSqsConfigurationProperties(null, null, null, ENVIRONMENT_SUFFIX)
-    ));
+    sqsService = spy(
+        new SqsService(
+            sqsClient,
+            new SnsSqsConfigurationProperties(null, null, null, ENVIRONMENT_SUFFIX),
+            objectMapper
+        )
+    );
   }
 
   @Test
@@ -116,5 +136,113 @@ class SqsServiceTest {
             .attributes(Map.of(QueueAttributeName.POLICY, policy))
             .build()
     );
+  }
+
+  @Test
+  void receiveQueueMessages() throws JsonProcessingException {
+    var queueUrl = new SqsQueueUrl("test-queue-url");
+    var messageClass = TestEpmqMessage.class;
+    Consumer<TestEpmqMessage> onMessage = mock(Consumer.class);
+
+    var message1Body = "message-1-body";
+    var message2Body = "message-2-body";
+
+    var sqsMessages = List.of(
+        Message.builder()
+            .receiptHandle("test-receipt-handle-1")
+            .body(message1Body)
+            .build(),
+        Message.builder()
+            .receiptHandle("test-receipt-handle-2")
+            .body(message2Body)
+            .build()
+    );
+
+    when(
+        sqsClient.receiveMessage(ReceiveMessageRequest.builder()
+            .queueUrl(queueUrl.url())
+            .maxNumberOfMessages(10)
+            .waitTimeSeconds(20)
+            .build())
+    ).thenReturn(
+        ReceiveMessageResponse.builder()
+            .messages(sqsMessages)
+            .build()
+    );
+
+    var message1 = new TestEpmqMessage();
+    var message2 = new TestEpmqMessage();
+
+    when(objectMapper.readValue(message1Body, messageClass)).thenReturn(message1);
+    when(objectMapper.readValue(message2Body, messageClass)).thenReturn(message2);
+
+    sqsService.receiveQueueMessages(queueUrl, messageClass, onMessage);
+
+    verify(onMessage).accept(message1);
+    verify(onMessage).accept(message2);
+    verifyNoMoreInteractions(onMessage);
+
+    sqsMessages.forEach(message ->
+        verify(sqsClient)
+            .deleteMessage(DeleteMessageRequest.builder()
+                .queueUrl(queueUrl.url())
+                .receiptHandle(message.receiptHandle())
+                .build())
+    );
+  }
+
+  @Test
+  void receiveQueueMessages_sqsMessageNotDeletedAfterConsumerAcceptThrowsError() throws JsonProcessingException {
+    var queueUrl = new SqsQueueUrl("test-queue-url");
+    var messageClass = TestEpmqMessage.class;
+    Consumer<TestEpmqMessage> onMessage = mock(Consumer.class);
+
+    var messageBody = "message-body";
+
+    var sqsMessage = Message.builder()
+        .receiptHandle("test-receipt-handle")
+        .body(messageBody)
+        .build();
+
+    when(
+        sqsClient.receiveMessage(ReceiveMessageRequest.builder()
+            .queueUrl(queueUrl.url())
+            .maxNumberOfMessages(10)
+            .waitTimeSeconds(20)
+            .build())
+    ).thenReturn(
+        ReceiveMessageResponse.builder()
+            .messages(List.of(sqsMessage))
+            .build()
+    );
+
+    var message = new TestEpmqMessage();
+
+    when(objectMapper.readValue(messageBody, messageClass)).thenReturn(message);
+
+    doThrow(RuntimeException.class).when(onMessage).accept(message);
+
+    sqsService.receiveQueueMessages(queueUrl, messageClass, onMessage);
+
+    verify(onMessage).accept(message);
+
+    verify(sqsClient, never()).deleteMessage(any(DeleteMessageRequest.class));
+  }
+
+  private static class TestEpmqMessage extends EpmqMessage {
+
+    private String testField;
+
+    public TestEpmqMessage() {
+      super("TEST_SERVICE", "TEST_MESSAGE");
+    }
+
+    public String getTestField() {
+      return testField;
+    }
+
+    public void setTestField(String testField) {
+      this.testField = testField;
+    }
   }
 }

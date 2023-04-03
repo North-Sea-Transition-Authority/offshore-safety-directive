@@ -67,6 +67,8 @@ dependencies {
 	implementation 'software.amazon.awssdk:sns:2.20.7'
 	implementation 'software.amazon.awssdk:sqs:2.20.7'
 
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-42-create-message-client-jar-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+
 	runtimeOnly 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
@@ -79,6 +81,7 @@ dependencies {
 
 	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
 	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-42-create-message-client-jar-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 }
 
 tasks {
