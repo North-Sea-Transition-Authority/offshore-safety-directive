@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
+package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,22 +11,24 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/review")
-@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
+@RequestMapping("/nomination/{nominationId}/consultation")
+@HasPermission(permissions = {RolePermission.CONSULTEE_VIEW_NOMINATIONS})
 @HasNominationStatus(statuses = {
     NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
     NominationStatus.WITHDRAWN
 })
-public class NominationCaseProcessingController {
+class NominationConsulteeViewController {
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public NominationCaseProcessingController(
+  public NominationConsulteeViewController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       NominationDetailService nominationDetailService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
@@ -34,7 +36,7 @@ public class NominationCaseProcessingController {
   }
 
   @GetMapping
-  public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId) {
+  public ModelAndView renderNominationView(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
@@ -45,5 +47,4 @@ public class NominationCaseProcessingController {
     );
 
   }
-
 }

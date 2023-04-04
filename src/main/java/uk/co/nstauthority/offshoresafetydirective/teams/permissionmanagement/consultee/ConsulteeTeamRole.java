@@ -18,13 +18,13 @@ public enum ConsulteeTeamRole implements TeamRole {
       "Consultation coordinator",
       "Receives consultation requests and can view nomination forms",
       20,
-      EnumSet.of(RolePermission.VIEW_NOMINATIONS)
+      EnumSet.of(RolePermission.CONSULTEE_VIEW_NOMINATIONS)
   ),
   CONSULTEE(
       "Consultee",
       "Can view nomination forms",
       30,
-      EnumSet.of(RolePermission.VIEW_NOMINATIONS)
+      EnumSet.of(RolePermission.CONSULTEE_VIEW_NOMINATIONS)
   )
   ;
 
