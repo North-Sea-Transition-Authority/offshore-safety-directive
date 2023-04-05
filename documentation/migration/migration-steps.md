@@ -113,3 +113,93 @@ will be written to `wios_migration.unmatched_installations` as well as an error 
 `wios_migration.installation_migration_errors`.
 
 Any errors in the migration process will be written to `wios_migration.installation_migration_errors`.
+
+## 5. Cleanse the subarea forward approval data
+
+TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+
+## 6. Export the cleansed wellbore data
+
+On the Oracle database run the following SQL which will return all the wellbore appointments in the format that the
+WIOS migration table is expecting.
+
+```oraclesqlplus
+SELECT
+  wa.migratable_appointment_id
+, wa.wellbore_id
+, wa.wellbore_registration_number
+, wa.appointed_operator_id
+, wa.appointed_operator_name
+, TO_CHAR(wa.responsible_from_date, 'YYYY-MM-DD') responsible_from_date
+, TO_CHAR(wa.responsible_to_date, 'YYYY-MM-DD') responsible_to_date
+, wa.is_exploration_phase
+, wa.is_development_phase
+, wa.is_decommissioning_phase
+, wa.appointment_source
+, wa.legacy_nomination_reference
+FROM wios_migration.wellbore_appointments wa
+```
+Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
+
+## 7. Export the cleansed installation data
+
+On the Oracle database run the following SQL which will return all the installation appointments in the format that the
+WIOS migration table is expecting.
+
+```oraclesqlplus
+SELECT
+  ia.migratable_appointment_id
+, ia.installation_id
+, ia.installation_name
+, ia.appointed_operator_id
+, ia.appointed_operator_name
+, TO_CHAR(ia.responsible_from_date, 'YYYY-MM-DD') responsible_from_date
+, TO_CHAR(ia.responsible_to_date, 'YYYY-MM-DD') responsible_to_date
+, ia.is_development_phase
+, ia.is_decommissioning_phase
+, ia.appointment_source
+, ia.legacy_nomination_reference
+FROM wios_migration.installation_appointments ia
+```
+Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
+
+## 8. Export the cleansed subarea forward approval data
+
+TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+
+## 9. Load the appointment data into WIOS
+
+Once we have the cleansed appointment data in CSV format we need to load this data in the WIOS postgres database. 
+Before this can be done you need to execute the following script to create a migration schema and the required data 
+model tables:
+
+`energyportal/V09_create_wios_migration_tables.sql`
+
+Once the schema and migration tables have been created, the CSVs from steps 6, 7 and 8 can be loaded into these 
+tables using pgAdmin. The tables are as follows:
+
+- wellbores: osd_migration.migratable_wellbore_appointments
+- installations: osd_migration.migratable_installation_appointments
+- forward approvals: TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+
+## 10. Migrate the wellbore appointments
+
+Execute the anonymous block in `energyportal/V10_create_wellbore_appointments.sql` which will take all the data in the
+`osd_migration.migratable_wellbore_appointments` table and create rows in the following tables:
+
+- `osd.assets`
+- `osd.appointments`
+- `osd.asset_phases`
+
+## 11. Migrate the installation appointments
+
+Execute the anonymous block in `energyportal/V11_create_installation_appointments.sql` which will take all the data in 
+the `osd_migration.migratable_wellbore_appointments` table and create rows in the following tables:
+
+- `osd.assets`
+- `osd.appointments`
+- `osd.asset_phases`
+
+## 12. Migrate the subarea forward approval appointments
+
+TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
