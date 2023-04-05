@@ -241,6 +241,9 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
 
     PRAGMA AUTONOMOUS_TRANSACTION;
 
+    K_DEEMED_DATE CONSTANT DATE := TO_DATE('19/07/2015', 'DD/MM/YYYY');
+    K_CURRENT_DATE CONSTANT DATE := TRUNC(SYSDATE);
+
     l_appointment_from_date wios_migration.wellbore_appointments.responsible_from_date%TYPE;
     l_appointment_to_date wios_migration.wellbore_appointments.responsible_to_date%TYPE;
 
@@ -276,10 +279,46 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
     , p_migratable_appointment_id => p_migratable_appointment_id
     );
 
+    IF l_appointment_from_date IS NOT NULL AND l_appointment_from_date < K_DEEMED_DATE THEN
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Appointment from date, ' || l_appointment_from_date || ', is before the deemed date'
+      );
+
+    ELSIF l_appointment_from_date IS NOT NULL AND l_appointment_from_date > K_CURRENT_DATE THEN
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Appointment from date, ' || l_appointment_from_date || ', is in the future'
+      );
+
+    END IF;
+
     l_appointment_to_date := convert_to_date(
       p_date_as_string => p_appointment_to_date
     , p_migratable_appointment_id => p_migratable_appointment_id
     );
+
+    IF l_appointment_to_date IS NOT NULL AND l_appointment_to_date > K_CURRENT_DATE THEN
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Appointment to date, ' || l_appointment_to_date || ', is in the future'
+      );
+
+    ELSIF
+      l_appointment_to_date IS NOT NULL AND
+      l_appointment_from_date IS NOT NULL AND
+      l_appointment_to_date < l_appointment_from_date
+    THEN
+
+      add_migration_error(
+        p_migratable_appointment_id => p_migratable_appointment_id
+      , p_error_message => 'Appointment to date, ' || l_appointment_to_date || ', is before the appointment from date, ' || l_appointment_from_date
+      );
+
+    END IF;
 
     UPDATE wios_migration.wellbore_appointments wa
     SET
@@ -660,6 +699,68 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
         COMMIT;
 
       END;
+
+    END LOOP;
+
+    FOR appointment_with_inconsistent_date IN(
+      SELECT *
+      FROM (
+        SELECT
+          wa.migratable_appointment_id
+        , wa.responsible_from_date
+        , wa.responsible_to_date
+        , LEAD(wa.responsible_from_date) OVER(PARTITION BY wa.wellbore_id ORDER BY wa.responsible_from_date) next_responsible_from_date
+        FROM wios_migration.wellbore_appointments wa
+      ) t
+      WHERE t.responsible_to_date != t.next_responsible_from_date
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => appointment_with_inconsistent_date.migratable_appointment_id
+      , p_error_message => 'The next appointment for this asset does not start from the previous appointments to date.'
+      );
+
+    END LOOP;
+
+    FOR asset_with_more_than_one_deemed_appointment IN (
+      WITH appointments_by_source AS (
+        SELECT wa.wellbore_id, wa.appointment_source, COUNT(*) count
+        FROM wios_migration.wellbore_appointments wa
+        GROUP BY wa.wellbore_id, wa.appointment_source
+      )
+      SELECT wa.migratable_appointment_id
+      FROM wios_migration.wellbore_appointments wa
+      LEFT JOIN appointments_by_source abs ON abs.wellbore_id = wa.wellbore_id AND abs.appointment_source = 'DEEMED'
+      WHERE COALESCE(abs.count, 0) > 1
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => asset_with_more_than_one_deemed_appointment.migratable_appointment_id
+      , p_error_message => 'Asset has more than one deemed appointment'
+      );
+
+    END LOOP;
+
+    FOR asset_with_more_than_one_current_appointment IN(
+      SELECT wa.migratable_appointment_id
+      FROM wios_migration.wellbore_appointments wa
+      WHERE wa.wellbore_id IN (
+        SELECT current_appointment.wellbore_id
+        FROM wios_migration.wellbore_appointments current_appointment
+        WHERE current_appointment.responsible_to_date IS NULL
+        GROUP BY current_appointment.wellbore_id
+        HAVING COUNT(*) > 1
+      )
+      AND wa.responsible_to_date IS NULL
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => asset_with_more_than_one_current_appointment.migratable_appointment_id
+      , p_error_message => 'Asset has more than one active appointment'
+      );
 
     END LOOP;
 
