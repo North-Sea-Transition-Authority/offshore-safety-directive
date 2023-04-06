@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
-public class CaseProcessingAction {
+public record CaseProcessingAction(String value) {
 
   public static final String DECISION = "DECISION";
   public static final String QA = "QA";
@@ -9,8 +9,5 @@ public class CaseProcessingAction {
   public static final String GENERAL_NOTE = "GENERAL_CASE_NOTE";
   public static final String PEARS_REFERENCES = "PEARS_REFERENCES";
   public static final String WONS_REFERENCES = "WONS_REFERENCES";
-
-  private CaseProcessingAction() {
-  }
 
 }

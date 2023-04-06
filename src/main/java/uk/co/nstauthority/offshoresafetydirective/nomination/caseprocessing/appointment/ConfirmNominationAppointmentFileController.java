@@ -31,7 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @RequestMapping("/nomination/{nominationId}/confirm-appointment/file")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(statuses = NominationStatus.AWAITING_CONFIRMATION)
-class ConfirmNominationAppointmentFileController {
+public class ConfirmNominationAppointmentFileController {
 
   static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONFIRM_APPOINTMENTS;
   static final EnumSet<NominationStatus> ALLOWED_STATUSES = EnumSet.of(NominationStatus.AWAITING_CONFIRMATION);

@@ -1,13 +1,13 @@
 <#include "../../../fds/layout.ftl"/>
 
-<#macro decisionSlideout panelId headingText errorList nominationDecisionAttributes>
+<#macro decisionSlideout panelId headingText postUrl postParam fileUploadTemplate decisionOptions errorList uploadedFiles>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
         <#-- TODO OSDOP-343 - Change errorList attribute to be slideout specific -->
         <@fdsError.errorSummary errorItems=errorList![]/>
-        <@fdsForm.htmlForm actionUrl=springUrl(nominationDecisionAttributes.submitUrl())>
+        <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsRadio.radioGroup path="form.nominationDecision" labelText="What decision was made on this nomination?">
                 <#assign isFirstNominationDecision = true/>
-                <#list nominationDecisionAttributes.decisionOptions() as decision>
+                <#list decisionOptions as decision>
                     <@fdsRadio.radioItem path="form.nominationDecision" itemMap={decision: decision.displayText} isFirstItem=isFirstNominationDecision/>
                     <#assign isFirstNominationDecision = false/>
               </#list>
@@ -24,17 +24,17 @@
                 <@fdsFileUpload.fileUpload
                     id="decision-file-upload"
                     path="form.files"
-                    uploadUrl=nominationDecisionAttributes.fileUploadTemplate().uploadUrl()
-                    deleteUrl=nominationDecisionAttributes.fileUploadTemplate().deleteUrl()
-                    downloadUrl=nominationDecisionAttributes.fileUploadTemplate().downloadUrl()
-                    allowedExtensions=nominationDecisionAttributes.fileUploadTemplate().allowedExtensions()
-                    maxAllowedSize=nominationDecisionAttributes.fileUploadTemplate().maxAllowedSize()
+                    uploadUrl=fileUploadTemplate.uploadUrl()
+                    deleteUrl=fileUploadTemplate.deleteUrl()
+                    downloadUrl=fileUploadTemplate.downloadUrl()
+                    allowedExtensions=fileUploadTemplate.allowedExtensions()
+                    maxAllowedSize=fileUploadTemplate.maxAllowedSize()
                     showAllowedExtensions=true
-                    existingFiles=decisionFiles![]
+                    existingFiles=uploadedFiles
                     multiFile=false
                 />
             </@fdsFieldset.fieldset>
-            <@fdsAction.button buttonName=nominationDecisionAttributes.postParam() buttonText="Submit decision"/>
+            <@fdsAction.button buttonName=postParam buttonText="Submit decision"/>
         </@fdsForm.htmlForm>
     </@fdsSlideOutPanel.slideOutPanel>
 </#macro>

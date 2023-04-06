@@ -1,11 +1,14 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -15,21 +18,18 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementGroup;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractable;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractableService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceForm;
@@ -37,6 +37,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.port
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
+import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -47,25 +48,27 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final NominationSummaryService nominationSummaryService;
   private final PermissionService permissionService;
   private final UserDetailService userDetailService;
-  private final FileUploadConfig fileUploadConfig;
   private final CaseEventQueryService caseEventQueryService;
   private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
+  private final NominationManagementInteractableService nominationManagementInteractableService;
 
   @Autowired
-  public NominationCaseProcessingModelAndViewGenerator(NominationCaseProcessingService nominationCaseProcessingService,
-                                                       NominationSummaryService nominationSummaryService,
-                                                       PermissionService permissionService,
-                                                       UserDetailService userDetailService,
-                                                       FileUploadConfig fileUploadConfig,
-                                                       CaseEventQueryService caseEventQueryService,
-                                                       NominationPortalReferenceAccessService referenceAccessService) {
+  public NominationCaseProcessingModelAndViewGenerator(
+      NominationCaseProcessingService nominationCaseProcessingService,
+      NominationSummaryService nominationSummaryService,
+      PermissionService permissionService,
+      UserDetailService userDetailService,
+      CaseEventQueryService caseEventQueryService,
+      NominationPortalReferenceAccessService referenceAccessService,
+      NominationManagementInteractableService nominationManagementInteractableService
+  ) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
     this.userDetailService = userDetailService;
-    this.fileUploadConfig = fileUploadConfig;
     this.caseEventQueryService = caseEventQueryService;
     this.nominationPortalReferenceAccessService = referenceAccessService;
+    this.nominationManagementInteractableService = nominationManagementInteractableService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -105,10 +108,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
             SummaryValidationBehaviour.NOT_VALIDATED
         ))
         .addObject(NominationQaChecksController.FORM_NAME, modelAndViewDto.getNominationQaChecksForm())
-        .addObject("caseProcessingAction_QA", CaseProcessingAction.QA)
         .addObject(NominationDecisionController.FORM_NAME, modelAndViewDto.getNominationDecisionForm())
         .addObject(WithdrawNominationController.FORM_NAME, modelAndViewDto.getWithdrawNominationForm())
-        .addObject("caseProcessingAction_WITHDRAW", CaseProcessingAction.WITHDRAW)
         .addObject(ConfirmNominationAppointmentController.FORM_NAME,
             modelAndViewDto.getConfirmNominationAppointmentForm())
         .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
@@ -120,72 +121,64 @@ public class NominationCaseProcessingModelAndViewGenerator {
             nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination())
         );
 
-    addRelevantDropdownActions(modelAndView, nominationDetail);
+    addRelevantCaseProcessingActions(modelAndView, nominationDetail);
 
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
 
     return modelAndView;
   }
 
-  private void addRelevantDropdownActions(ModelAndView modelAndView, NominationDetail nominationDetail) {
-    var hasDropdownActions = false;
+  private void addRelevantCaseProcessingActions(
+      ModelAndView modelAndView,
+      NominationDetail nominationDetail) {
+
     var nominationId = new NominationId(nominationDetail.getNomination().getId());
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    var actions = new ArrayList<NominationManagementInteractable>();
 
     if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
-
-      var dropdownAttributeMap = new HashMap<String, Object>();
-
       if (canSubmitQaChecks(nominationDetailDto)) {
-        dropdownAttributeMap.put("qaChecksSubmitUrl",
-            ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingAction.QA, null, null,
-                    null)));
+        actions.add(nominationManagementInteractableService.createQaChecksInteractable(nominationId));
       }
 
       if (canWithdrawnNomination(nominationDetailDto)) {
-        dropdownAttributeMap.put("withdrawSubmitUrl",
-            ReverseRouter.route(
-                on(WithdrawNominationController.class).withdrawNomination(nominationId, true, null, null, null,
-                    null)));
+        actions.add(nominationManagementInteractableService.createWithdrawInteractable(nominationId));
       }
 
       if (canSubmitDecision(nominationDetailDto)) {
-        dropdownAttributeMap.put("nominationDecisionAttributes",
-            NominationDecisionAttributeView.createAttributeView(new NominationId(nominationDetail), fileUploadConfig));
+        actions.add(nominationManagementInteractableService.createNominationDecisionInteractable(nominationId));
       }
 
       if (canConfirmAppointments(nominationDetailDto)) {
-        dropdownAttributeMap.put("confirmAppointmentAttributes",
-            ConfirmNominationAppointmentAttributeView.createAttributeView(
-                new NominationId(nominationDetail),
-                fileUploadConfig
-            ));
+        actions.add(
+            nominationManagementInteractableService.createConfirmNominationAppointmentInteractable(nominationId));
       }
 
       if (canAddGeneralCaseNote(nominationDetailDto)) {
-        dropdownAttributeMap.put("generalCaseNoteAttributes",
-            GeneralCaseNoteAttributeView.createAttributeView(nominationId, fileUploadConfig));
+        actions.add(nominationManagementInteractableService.createGeneralCaseNoteInteractable(nominationId));
       }
 
       if (canUpdatePearsReferences(nominationDetailDto)) {
-        dropdownAttributeMap.put("pearsReferenceAttributes",
-            NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.PEARS));
+        actions.add(nominationManagementInteractableService.createPearsReferencesInteractable(nominationId));
       }
 
       if (canUpdateWonsReferences(nominationDetailDto)) {
-        dropdownAttributeMap.put("wonsReferenceAttributes",
-            NominationPortalReferenceAttributeView.createAttributeView(nominationId, PortalReferenceType.WONS));
+        actions.add(nominationManagementInteractableService.createWonsReferencesInteractable(nominationId));
       }
 
-      if (!dropdownAttributeMap.isEmpty()) {
-        hasDropdownActions = true;
-      }
+      Map<NominationManagementGroup, List<NominationManagementInteractable>> groupedNominationManagementActions = actions.stream()
+          .sorted(Comparator.comparing(interactable -> interactable.getItem().getDisplayOrder()))
+          .collect(
+              Collectors.groupingBy(NominationManagementInteractable::getGroup, LinkedHashMap::new,
+                  Collectors.toList()))
+          .entrySet()
+          .stream()
+          .sorted(Comparator.comparing(entry -> entry.getKey().getDisplayOrder()))
+          .collect(StreamUtil.toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue));
 
-      modelAndView.addAllObjects(dropdownAttributeMap);
+      modelAndView.addObject("managementActions", groupedNominationManagementActions);
+
     }
-
-    modelAndView.addObject("hasDropdownActions", hasDropdownActions);
   }
 
   private boolean canWithdrawnNomination(NominationDetailDto dto) {

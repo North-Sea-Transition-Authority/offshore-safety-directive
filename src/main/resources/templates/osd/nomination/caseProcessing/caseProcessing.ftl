@@ -16,153 +16,169 @@
 <#-- @ftlvariable name="pageTitle" type="java.lang.String" -->
 <#-- @ftlvariable name="backLinkUrl" type="java.lang.String" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
-<#-- @ftlvariable name="qaChecksSubmitUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="hasDropdownActions" type="java.lang.Boolean" -->
-<#-- @ftlvariable name="caseProcessingAction_QA" type="java.lang.String" -->
-<#-- @ftlvariable name="decisionSubmitUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="caseProcessingAction_DECISION" type="java.lang.String" -->
-<#-- @ftlvariable name="nominationDecisions" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision>" -->
-<#-- @ftlvariable name="withdrawSubmitUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="caseProcessingAction_WITHDRAW" type="java.lang.String" -->
 <#-- @ftlvariable name="caseEvents" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView>" -->
-<#-- @ftlvariable name="nominationDecisionAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionAttributeView" -->
-<#-- @ftlvariable name="confirmAppointmentAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentAttributeView" -->
-<#-- @ftlvariable name="generalCaseNoteAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteAttributeView" -->
-<#-- @ftlvariable name="pearsReferenceAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView" -->
-<#-- @ftlvariable name="wonsReferenceAttributes" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAttributeView" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
-<#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="activePortalReferencesView" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.ActivePortalReferencesView" -->
+<#-- @ftlvariable name="confirmNominationFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
+<#-- @ftlvariable name="decisionFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
+<#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
+<#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractable>>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
 <#assign heading>
-  ${pageTitle}
+    ${pageTitle}
   <span class="govuk-caption-xl">
       ${headerInformation.applicantOrganisationUnitView().name().name()}
   </span>
 </#assign>
 
+<#macro _slideoutButton slideoutPanelId buttonText isInDropdown>
+    <#if isInDropdown>
+        <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=buttonText slideOutPanelId=slideoutPanelId/>
+    <#else>
+        <@fdsSlideOutPanel.slideOutPanelButton buttonPanelId=slideoutPanelId buttonText=buttonText buttonClass="govuk-button govuk-button--secondary"/>
+    </#if>
+</#macro>
+
 <@defaultPage
-    htmlTitle=pageTitle
-    pageHeading=heading
-    pageSize=PageSize.FULL_COLUMN
-    backLinkUrl=springUrl(backLinkUrl!"")
-    breadcrumbsList=breadcrumbsList
-    errorItems=[]
+htmlTitle=pageTitle
+pageHeading=heading
+pageSize=PageSize.FULL_COLUMN
+backLinkUrl=springUrl(backLinkUrl!"")
+breadcrumbsList=breadcrumbsList
+errorItems=[]
 >
 
     <@_caseProcessingHeader.caseProcessingHeader headerInformation/>
 
     <#assign qaChecksSlideoutPanelId = "qa-checks"/>
-    <#assign qaChecksSlideoutText = "Complete QA checks"/>
-
     <#assign decisionSlideoutPanelId = "decision"/>
-    <#assign decisionSlideoutText = "Record decision"/>
-
     <#assign withdrawSlideoutPanelId = "withdraw"/>
-    <#assign withdrawSlideoutText = "Withdraw nomination"/>
-
     <#assign confirmAppointmentSlideoutPanelId = "confirm-appointment"/>
-    <#assign confirmAppointmentSlideoutText = "Confirm appointment"/>
-
     <#assign generalCaseNoteSlideoutPanelId = "case-note"/>
-    <#assign generalCaseNoteSlideoutText = "Add a case note"/>
-
     <#assign pearsSystemReferenceSlideoutPanelId = "pears-references"/>
-    <#assign pearsSystemReferenceSlideoutText = "Update related PEARS applications"/>
-
     <#assign wonsSystemReferenceSlideoutPanelId = "wons-references"/>
-    <#assign wonsSystemReferenceSlideoutText = "Update related WONS applications"/>
 
-    <#if hasDropdownActions>
+    <#macro _applyAction action isInDropdown>
+        <#local actionKeyValue = action.item/>
+        <#if actionKeyValue == "QA_CHECKS">
+            <@_slideoutButton slideoutPanelId=qaChecksSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign qaChecksAction = action/>
+        </#if>
+        <#if actionKeyValue == "NOMINATION_DECISION">
+            <@_slideoutButton slideoutPanelId=decisionSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign decisionAction = action/>
+        </#if>
+        <#if actionKeyValue == "WITHDRAW">
+            <@_slideoutButton slideoutPanelId=withdrawSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign withdrawAction = action/>
+        </#if>
+        <#if actionKeyValue == "CONFIRM_APPOINTMENT">
+            <@_slideoutButton slideoutPanelId=confirmAppointmentSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign confirmAppointmentAction = action/>
+        </#if>
+        <#if actionKeyValue == "GENERAL_CASE_NOTE">
+            <@_slideoutButton slideoutPanelId=generalCaseNoteSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign generalCaseNoteAction = action/>
+        </#if>
+        <#if actionKeyValue == "PEARS_REFERENCE">
+            <@_slideoutButton slideoutPanelId=pearsSystemReferenceSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign pearsReferenceAction = action/>
+        </#if>
+        <#if actionKeyValue == "WONS_REFERENCE">
+            <@_slideoutButton slideoutPanelId=wonsSystemReferenceSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign wonsReferenceAction = action/>
+        </#if>
+    </#macro>
+
+    <#if managementActions?has_content>
         <@fdsAction.buttonGroup>
-            <@fdsActionDropdown.actionDropdown dropdownButtonText="Update nomination">
-                <#if qaChecksSubmitUrl?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=qaChecksSlideoutText slideOutPanelId=qaChecksSlideoutPanelId/>
+            <#list managementActions as group, actions>
+                <#if actions?size gt 1>
+                    <@fdsActionDropdown.actionDropdown dropdownButtonText=group.displayText>
+                        <#list actions as action>
+                            <@_applyAction action=action isInDropdown=true/>
+                        </#list>
+                    </@fdsActionDropdown.actionDropdown>
+                <#else>
+                    <@_applyAction action=actions[0] isInDropdown=false/>
                 </#if>
-                <#if nominationDecisionAttributes?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=decisionSlideoutText slideOutPanelId=decisionSlideoutPanelId/>
-                </#if>
-                <#if withdrawSubmitUrl?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=withdrawSlideoutText slideOutPanelId=withdrawSlideoutPanelId/>
-                </#if>
-                <#if confirmAppointmentAttributes?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=confirmAppointmentSlideoutText slideOutPanelId=confirmAppointmentSlideoutPanelId/>
-                </#if>
-                <#if generalCaseNoteAttributes?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=generalCaseNoteSlideoutText slideOutPanelId=generalCaseNoteSlideoutPanelId/>
-                </#if>
-                <#if pearsReferenceAttributes?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=pearsSystemReferenceSlideoutText slideOutPanelId=pearsSystemReferenceSlideoutPanelId/>
-                </#if>
-                <#if wonsReferenceAttributes?has_content>
-                    <@slideOutActionDropdownItem.slideOutActionDropdownItem actionText=wonsSystemReferenceSlideoutText slideOutPanelId=wonsSystemReferenceSlideoutPanelId/>
-                </#if>
-            </@fdsActionDropdown.actionDropdown>
+            </#list>
         </@fdsAction.buttonGroup>
     </#if>
 
-    <#if qaChecksSubmitUrl?has_content>
+    <#if qaChecksAction?has_content>
         <@_qaChecksSlideout.qaChecksSlideout
             panelId=qaChecksSlideoutPanelId
-            headingText=qaChecksSlideoutText
-            postUrl=qaChecksSubmitUrl
-            postParam=caseProcessingAction_QA
+            headingText=qaChecksAction.item.actionText
+            postUrl=qaChecksAction.submitUrl
+            postParam=qaChecksAction.caseProcessingAction.value()
         />
     </#if>
 
-    <#if nominationDecisionAttributes?has_content>
+    <#if decisionAction?has_content>
         <@_decisionSlideout.decisionSlideout
             panelId=decisionSlideoutPanelId
-            headingText=decisionSlideoutText
+            headingText=decisionAction.item.actionText
+            postUrl=decisionAction.submitUrl
+            postParam=decisionAction.caseProcessingAction.value()
+            fileUploadTemplate=decisionAction.modelProperties["fileUploadTemplate"]
+            decisionOptions=decisionAction.modelProperties["decisionOptions"]
             errorList=errorList![]
-            nominationDecisionAttributes=nominationDecisionAttributes
+            uploadedFiles=decisionFiles![]
         />
     </#if>
 
-    <#if withdrawSubmitUrl?has_content>
+    <#if withdrawAction?has_content>
         <@_withdrawSlideout.withdrawSlideout
             panelId=withdrawSlideoutPanelId
-            headingText=withdrawSlideoutText
-            postUrl=withdrawSubmitUrl
+            headingText=withdrawAction.item.actionText
+            postUrl=withdrawAction.submitUrl
             errorList=errorList![]
-            postParam=caseProcessingAction_WITHDRAW
+            postParam=withdrawAction.caseProcessingAction.value()
         />
     </#if>
 
-    <#if confirmAppointmentAttributes?has_content>
+    <#if confirmAppointmentAction?has_content>
         <@_confirmAppointmentSlideout.confirmAppointmentSlideout
-        panelId=confirmAppointmentSlideoutPanelId
-        headingText=confirmAppointmentSlideoutText
-        errorList=errorList![]
-        attributes=confirmAppointmentAttributes
+            panelId=confirmAppointmentSlideoutPanelId
+            headingText=confirmAppointmentAction.item.actionText
+            postUrl=confirmAppointmentAction.submitUrl
+            postParam=confirmAppointmentAction.caseProcessingAction.value()
+            fileUploadTemplate=confirmAppointmentAction.modelProperties["fileUploadTemplate"]
+            errorList=errorList![]
+            uploadedFiles=confirmNominationFiles![]
         />
     </#if>
 
-    <#if generalCaseNoteAttributes?has_content>
+    <#if generalCaseNoteAction?has_content>
         <@_generalCaseNoteSlideout.generalCaseNoteSlideout
             panelId=generalCaseNoteSlideoutPanelId
-            headingText=generalCaseNoteSlideoutText
+            headingText=generalCaseNoteAction.item.actionText
+            postUrl=generalCaseNoteAction.submitUrl
+            postParam=generalCaseNoteAction.caseProcessingAction.value()
+            fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
             errorList=errorList![]
-            attributes=generalCaseNoteAttributes
             uploadedFiles=existingCaseNoteFiles![]
         />
     </#if>
 
-    <#if pearsReferenceAttributes?has_content>
-      <@_systemReferenceSlideout.pearsReferenceSlideout
-        panelId=pearsSystemReferenceSlideoutPanelId
-        headingText=pearsSystemReferenceSlideoutText
-        attributes=pearsReferenceAttributes
-      />
+    <#if pearsReferenceAction?has_content>
+        <@_systemReferenceSlideout.pearsReferenceSlideout
+            panelId=pearsSystemReferenceSlideoutPanelId
+            headingText=pearsReferenceAction.item.actionText
+            postUrl=pearsReferenceAction.submitUrl
+            postParam=pearsReferenceAction.caseProcessingAction.value()
+        />
     </#if>
 
-    <#if wonsReferenceAttributes?has_content>
+    <#if wonsReferenceAction?has_content>
         <@_systemReferenceSlideout.wonsReferenceSlideout
-        panelId=wonsSystemReferenceSlideoutPanelId
-        headingText=wonsSystemReferenceSlideoutText
-        attributes=wonsReferenceAttributes
+            panelId=wonsSystemReferenceSlideoutPanelId
+            headingText=wonsReferenceAction.item.actionText
+            postUrl=wonsReferenceAction.submitUrl
+            postParam=wonsReferenceAction.caseProcessingAction.value()
         />
     </#if>
 
@@ -173,7 +189,7 @@
         </@fdsTabs.tabList>
 
         <@fdsTabs.tabContent tabAnchor="nomination-form-tab">
-            <h2 class="govuk-heading-l">Nomination form</h2>
+          <h2 class="govuk-heading-l">Nomination form</h2>
             <@_activePortalReferences.activePortalReferences activePortalReferencesView/>
             <@nominationSummary.nominationSummary summaryView=summaryView/>
         </@fdsTabs.tabContent>
