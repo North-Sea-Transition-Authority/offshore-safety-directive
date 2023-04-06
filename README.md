@@ -69,6 +69,10 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                         |
 | OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                               |
 | OSD_SESSION_TIMEOUT_MINUTES                | The time in minutes before a session timeouts. This should be the same as the Energy Portal, e.g 180 |
+| OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)      |
+| OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                |
+| NOTIFY_API_KEY                             | The GOV.UK Notify key                                                                                |
+| NOTIFY_CALLBACK_TOKEN                      | The GOV.UK Notify callback token                                                                     |
 
 ### 3. Initialise the Fivium Design System
 

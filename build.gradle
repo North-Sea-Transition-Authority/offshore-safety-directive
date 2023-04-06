@@ -59,6 +59,9 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.307'
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 
+	implementation 'uk.co.fivium:fivium-notify-spring-boot-starter:3.17.2-4.1-SNAPSHOT'
+	implementation 'commons-validator:commons-validator:1.7'
+
 	runtimeOnly 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
