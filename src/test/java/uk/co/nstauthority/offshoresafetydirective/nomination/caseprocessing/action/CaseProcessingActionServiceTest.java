@@ -49,7 +49,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl,
             CaseProcessingAction::getModelProperties
         ).containsExactly(
@@ -72,7 +72,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl,
             CaseProcessingAction::getModelProperties
         ).containsExactly(
@@ -95,7 +95,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl
         ).containsExactly(
             CaseProcessingActionItem.NOMINATION_DECISION,
@@ -130,7 +130,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl
         ).containsExactly(
             CaseProcessingActionItem.CONFIRM_APPOINTMENT,
@@ -164,7 +164,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl
         ).containsExactly(
             CaseProcessingActionItem.GENERAL_CASE_NOTE,
@@ -198,7 +198,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl,
             CaseProcessingAction::getModelProperties
         ).containsExactly(
@@ -221,7 +221,7 @@ class CaseProcessingActionServiceTest {
         .extracting(
             CaseProcessingAction::getItem,
             CaseProcessingAction::getGroup,
-            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
             CaseProcessingAction::getSubmitUrl,
             CaseProcessingAction::getModelProperties
         ).containsExactly(

@@ -33,7 +33,7 @@ public class CaseProcessingAction {
     return submitUrl;
   }
 
-  public CaseProcessingActionIdentifier getCaseProcessingAction() {
+  public CaseProcessingActionIdentifier getCaseProcessingActionIdentifier() {
     return caseProcessingActionIdentifier;
   }
 
