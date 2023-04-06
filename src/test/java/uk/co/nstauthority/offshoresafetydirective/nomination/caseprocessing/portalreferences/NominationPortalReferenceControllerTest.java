@@ -31,7 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -79,12 +79,12 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updatePearsReferences(
-                NOMINATION_ID, true, CaseProcessingAction.PEARS_REFERENCES, null, null, null)),
+                NOMINATION_ID, true, CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
         .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateWonsReferences(
-                NOMINATION_ID, true, CaseProcessingAction.WONS_REFERENCES, null, null, null)),
+                NOMINATION_ID, true, CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -97,12 +97,12 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updatePearsReferences(
-                NOMINATION_ID, true, CaseProcessingAction.PEARS_REFERENCES, null, null, null)),
+                NOMINATION_ID, true, CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
         .withPostEndpoint(ReverseRouter.route(on(NominationPortalReferenceController.class).updateWonsReferences(
-                NOMINATION_ID, true, CaseProcessingAction.WONS_REFERENCES, null, null, null)),
+                NOMINATION_ID, true, CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -125,7 +125,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(NominationPortalReferenceController.class).updatePearsReferences(NOMINATION_ID, true,
-                CaseProcessingAction.PEARS_REFERENCES, null, null, null)))
+                CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("references.inputValue", newReferences))
@@ -151,7 +151,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(NominationPortalReferenceController.class).updatePearsReferences(NOMINATION_ID, true,
-                CaseProcessingAction.PEARS_REFERENCES, null, null, null)))
+                CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(redirectedUrl(
@@ -178,7 +178,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(NominationPortalReferenceController.class).updateWonsReferences(NOMINATION_ID, true,
-                CaseProcessingAction.WONS_REFERENCES, null, null, null)))
+                CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("references.inputValue", newReferences))
@@ -204,7 +204,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(NominationPortalReferenceController.class).updateWonsReferences(NOMINATION_ID, true,
-                CaseProcessingAction.WONS_REFERENCES, null, null, null)))
+                CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(redirectedUrl(

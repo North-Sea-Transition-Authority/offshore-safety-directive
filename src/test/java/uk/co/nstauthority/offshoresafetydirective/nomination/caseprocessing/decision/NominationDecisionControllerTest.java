@@ -45,7 +45,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
@@ -112,7 +112,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true,
-                CaseProcessingAction.DECISION, null, null, null)),
+                CaseProcessingActionIdentifier.DECISION, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -133,7 +133,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true,
-                CaseProcessingAction.DECISION, null, null, null)),
+                CaseProcessingActionIdentifier.DECISION, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -163,7 +163,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION,
+                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
                     null, null, null)))
             .with(user(NOMINATION_MANAGER_USER))
             .with(csrf())
@@ -203,7 +203,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION,
+                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
                     null, null, null)))
             .with(user(NOMINATION_MANAGER_USER))
             .with(csrf())

@@ -16,7 +16,6 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -29,86 +28,86 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qach
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @ExtendWith(MockitoExtension.class)
-class NominationManagementInteractableServiceTest {
+class CaseProcessingActionServiceTest {
 
   private final FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder()
       .withAllowedFileExtensions(List.of(".txt", ".pdf", ".png"))
       .build();
-  private NominationManagementInteractableService nominationManagementInteractableService;
+  private CaseProcessingActionService caseProcessingActionService;
 
   @BeforeEach
   void setUp() {
-    nominationManagementInteractableService = new NominationManagementInteractableService(fileUploadConfig);
+    caseProcessingActionService = new CaseProcessingActionService(fileUploadConfig);
   }
 
   @Test
-  void createQaChecksInteractable() {
+  void createQaChecksAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createQaChecksInteractable(nominationId);
+    var result = caseProcessingActionService.createQaChecksAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl,
-            NominationManagementInteractable::getModelProperties
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
         ).containsExactly(
-            NominationManagementItem.QA_CHECKS,
-            NominationManagementGroup.COMPLETE_QA_CHECKS,
-            new CaseProcessingAction(CaseProcessingAction.QA),
+            CaseProcessingActionItem.QA_CHECKS,
+            CaseProcessingActionGroup.COMPLETE_QA_CHECKS,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.QA),
             ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingAction.QA, null, null,
+                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingActionIdentifier.QA, null, null,
                     null)),
             Map.of()
         );
   }
 
   @Test
-  void createWithdrawInteractable() {
+  void createWithdrawAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createWithdrawInteractable(nominationId);
+    var result = caseProcessingActionService.createWithdrawAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl,
-            NominationManagementInteractable::getModelProperties
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
         ).containsExactly(
-            NominationManagementItem.WITHDRAW,
-            NominationManagementGroup.DECISION,
-            new CaseProcessingAction(CaseProcessingAction.WITHDRAW),
+            CaseProcessingActionItem.WITHDRAW,
+            CaseProcessingActionGroup.DECISION,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.WITHDRAW),
             ReverseRouter.route(
-                on(WithdrawNominationController.class).withdrawNomination(nominationId, true, CaseProcessingAction.WITHDRAW,
+                on(WithdrawNominationController.class).withdrawNomination(nominationId, true, CaseProcessingActionIdentifier.WITHDRAW,
                     null, null, null)),
             Map.of()
         );
   }
 
   @Test
-  void createNominationDecisionInteractable() {
+  void createNominationDecisionAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createNominationDecisionInteractable(nominationId);
+    var result = caseProcessingActionService.createNominationDecisionAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl
         ).containsExactly(
-            NominationManagementItem.NOMINATION_DECISION,
-            NominationManagementGroup.DECISION,
-            new CaseProcessingAction(CaseProcessingAction.DECISION),
+            CaseProcessingActionItem.NOMINATION_DECISION,
+            CaseProcessingActionGroup.DECISION,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.DECISION),
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(nominationId, true, CaseProcessingAction.DECISION,
+                on(NominationDecisionController.class).submitDecision(nominationId, true, CaseProcessingActionIdentifier.DECISION,
                     null, null, null))
         );
 
     assertThat(result)
-        .extracting(NominationManagementInteractable::getModelProperties)
+        .extracting(CaseProcessingAction::getModelProperties)
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
             Map.entry("decisionOptions", List.of(NominationDecision.NO_OBJECTION, NominationDecision.OBJECTION)),
@@ -123,27 +122,27 @@ class NominationManagementInteractableServiceTest {
   }
 
   @Test
-  void createConfirmNominationAppointmentInteractable() {
+  void createConfirmNominationAppointmentAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createConfirmNominationAppointmentInteractable(nominationId);
+    var result = caseProcessingActionService.createConfirmNominationAppointmentAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl
         ).containsExactly(
-            NominationManagementItem.CONFIRM_APPOINTMENT,
-            NominationManagementGroup.CONFIRM_APPOINTMENT,
-            new CaseProcessingAction(CaseProcessingAction.CONFIRM_APPOINTMENT),
+            CaseProcessingActionItem.CONFIRM_APPOINTMENT,
+            CaseProcessingActionGroup.CONFIRM_APPOINTMENT,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT),
             ReverseRouter.route(
                 on(ConfirmNominationAppointmentController.class).confirmAppointment(nominationId, true,
-                    CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null))
+                    CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null))
         );
 
     assertThat(result)
-        .extracting(NominationManagementInteractable::getModelProperties)
+        .extracting(CaseProcessingAction::getModelProperties)
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
             Map.entry("fileUploadTemplate", new FileUploadTemplate(
@@ -157,27 +156,27 @@ class NominationManagementInteractableServiceTest {
   }
 
   @Test
-  void createGeneralCaseNoteInteractable() {
+  void createGeneralCaseNoteAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createGeneralCaseNoteInteractable(nominationId);
+    var result = caseProcessingActionService.createGeneralCaseNoteAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl
         ).containsExactly(
-            NominationManagementItem.GENERAL_CASE_NOTE,
-            NominationManagementGroup.ADD_CASE_NOTE,
-            new CaseProcessingAction(CaseProcessingAction.GENERAL_NOTE),
+            CaseProcessingActionItem.GENERAL_CASE_NOTE,
+            CaseProcessingActionGroup.ADD_CASE_NOTE,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.GENERAL_NOTE),
             ReverseRouter.route(
                 on(GeneralCaseNoteController.class).submitGeneralCaseNote(nominationId, true,
-                    CaseProcessingAction.GENERAL_NOTE, null, null, null))
+                    CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null))
         );
 
     assertThat(result)
-        .extracting(NominationManagementInteractable::getModelProperties)
+        .extracting(CaseProcessingAction::getModelProperties)
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
             Map.entry("fileUploadTemplate", new FileUploadTemplate(
@@ -191,47 +190,47 @@ class NominationManagementInteractableServiceTest {
   }
 
   @Test
-  void createPearsReferencesInteractable() {
+  void createPearsReferencesAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createPearsReferencesInteractable(nominationId);
+    var result = caseProcessingActionService.createPearsReferencesAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl,
-            NominationManagementInteractable::getModelProperties
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
         ).containsExactly(
-            NominationManagementItem.PEARS_REFERENCE,
-            NominationManagementGroup.RELATED_APPLICATIONS,
-            new CaseProcessingAction(CaseProcessingAction.PEARS_REFERENCES),
+            CaseProcessingActionItem.PEARS_REFERENCE,
+            CaseProcessingActionGroup.RELATED_APPLICATIONS,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.PEARS_REFERENCES),
             ReverseRouter.route(
                 on(NominationPortalReferenceController.class).updatePearsReferences(nominationId, true,
-                    CaseProcessingAction.PEARS_REFERENCES, null, null, null)),
+                    CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)),
             Map.of()
         );
   }
 
   @Test
-  void createWonsReferencesInteractable() {
+  void createWonsReferencesAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
-    var result = nominationManagementInteractableService.createWonsReferencesInteractable(nominationId);
+    var result = caseProcessingActionService.createWonsReferencesAction(nominationId);
 
     assertThat(result)
         .extracting(
-            NominationManagementInteractable::getItem,
-            NominationManagementInteractable::getGroup,
-            NominationManagementInteractable::getCaseProcessingAction,
-            NominationManagementInteractable::getSubmitUrl,
-            NominationManagementInteractable::getModelProperties
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingAction,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
         ).containsExactly(
-            NominationManagementItem.WONS_REFERENCE,
-            NominationManagementGroup.RELATED_APPLICATIONS,
-            new CaseProcessingAction(CaseProcessingAction.WONS_REFERENCES),
+            CaseProcessingActionItem.WONS_REFERENCE,
+            CaseProcessingActionGroup.RELATED_APPLICATIONS,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.WONS_REFERENCES),
             ReverseRouter.route(
                 on(NominationPortalReferenceController.class).updateWonsReferences(nominationId, true,
-                    CaseProcessingAction.WONS_REFERENCES, null, null, null)),
+                    CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)),
             Map.of()
         );
   }

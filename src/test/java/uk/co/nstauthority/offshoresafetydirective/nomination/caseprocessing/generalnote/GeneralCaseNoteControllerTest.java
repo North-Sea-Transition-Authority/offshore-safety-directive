@@ -46,7 +46,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -112,7 +112,7 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
-                CaseProcessingAction.GENERAL_NOTE, null, null, null)),
+                CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -131,7 +131,7 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
-                CaseProcessingAction.GENERAL_NOTE, null, null, null)),
+                CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -155,7 +155,7 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
-                CaseProcessingAction.GENERAL_NOTE, null, null, null)))
+                CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(status().is3xxRedirection())
@@ -189,7 +189,7 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(ReverseRouter.route(
             on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
-                CaseProcessingAction.GENERAL_NOTE, null, null, null)))
+                CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("caseNoteFiles[0].uploadedFileId", uploadedFileId.uuid().toString()))

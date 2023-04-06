@@ -48,7 +48,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
@@ -111,7 +111,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(ConfirmNominationAppointmentController.class).confirmAppointment(NOMINATION_ID, true,
-                CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)),
+                CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -132,7 +132,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(ConfirmNominationAppointmentController.class).confirmAppointment(NOMINATION_ID, true,
-                CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)),
+                CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -167,7 +167,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
         .thenReturn(new ModelAndView("test"));
 
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
-            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))
@@ -221,7 +221,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
     var fileDescription = "description";
 
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
-            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))

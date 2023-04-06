@@ -1,6 +1,6 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
+package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action;
 
-public record CaseProcessingAction(String value) {
+public record CaseProcessingActionIdentifier(String value) {
 
   public static final String DECISION = "DECISION";
   public static final String QA = "QA";

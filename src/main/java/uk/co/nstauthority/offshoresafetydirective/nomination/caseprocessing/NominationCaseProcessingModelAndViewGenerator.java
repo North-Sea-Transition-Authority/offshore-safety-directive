@@ -23,9 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementGroup;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractable;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractableService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
@@ -50,7 +50,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final UserDetailService userDetailService;
   private final CaseEventQueryService caseEventQueryService;
   private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
-  private final NominationManagementInteractableService nominationManagementInteractableService;
+  private final CaseProcessingActionService caseProcessingActionService;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(
@@ -60,7 +60,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
       UserDetailService userDetailService,
       CaseEventQueryService caseEventQueryService,
       NominationPortalReferenceAccessService referenceAccessService,
-      NominationManagementInteractableService nominationManagementInteractableService
+      CaseProcessingActionService caseProcessingActionService
   ) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
@@ -68,7 +68,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
     this.userDetailService = userDetailService;
     this.caseEventQueryService = caseEventQueryService;
     this.nominationPortalReferenceAccessService = referenceAccessService;
-    this.nominationManagementInteractableService = nominationManagementInteractableService;
+    this.caseProcessingActionService = caseProcessingActionService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -134,42 +134,42 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
     var nominationId = new NominationId(nominationDetail.getNomination().getId());
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    var actions = new ArrayList<NominationManagementInteractable>();
+    var actions = new ArrayList<CaseProcessingAction>();
 
     if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
       if (canSubmitQaChecks(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createQaChecksInteractable(nominationId));
+        actions.add(caseProcessingActionService.createQaChecksAction(nominationId));
       }
 
       if (canWithdrawnNomination(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createWithdrawInteractable(nominationId));
+        actions.add(caseProcessingActionService.createWithdrawAction(nominationId));
       }
 
       if (canSubmitDecision(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createNominationDecisionInteractable(nominationId));
+        actions.add(caseProcessingActionService.createNominationDecisionAction(nominationId));
       }
 
       if (canConfirmAppointments(nominationDetailDto)) {
         actions.add(
-            nominationManagementInteractableService.createConfirmNominationAppointmentInteractable(nominationId));
+            caseProcessingActionService.createConfirmNominationAppointmentAction(nominationId));
       }
 
       if (canAddGeneralCaseNote(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createGeneralCaseNoteInteractable(nominationId));
+        actions.add(caseProcessingActionService.createGeneralCaseNoteAction(nominationId));
       }
 
       if (canUpdatePearsReferences(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createPearsReferencesInteractable(nominationId));
+        actions.add(caseProcessingActionService.createPearsReferencesAction(nominationId));
       }
 
       if (canUpdateWonsReferences(nominationDetailDto)) {
-        actions.add(nominationManagementInteractableService.createWonsReferencesInteractable(nominationId));
+        actions.add(caseProcessingActionService.createWonsReferencesAction(nominationId));
       }
 
-      Map<NominationManagementGroup, List<NominationManagementInteractable>> groupedNominationManagementActions = actions.stream()
-          .sorted(Comparator.comparing(interactable -> interactable.getItem().getDisplayOrder()))
+      Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
+          .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))
           .collect(
-              Collectors.groupingBy(NominationManagementInteractable::getGroup, LinkedHashMap::new,
+              Collectors.groupingBy(CaseProcessingAction::getGroup, LinkedHashMap::new,
                   Collectors.toList()))
           .entrySet()
           .stream()

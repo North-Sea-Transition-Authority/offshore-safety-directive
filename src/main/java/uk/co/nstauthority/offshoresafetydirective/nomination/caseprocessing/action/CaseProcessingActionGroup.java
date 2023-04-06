@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action;
 
-public enum NominationManagementGroup {
+public enum CaseProcessingActionGroup {
 
   ADD_CASE_NOTE("Add a case note", 10),
   COMPLETE_QA_CHECKS("Complete QA checks", 20),
@@ -14,7 +14,7 @@ public enum NominationManagementGroup {
   private final String displayText;
   private final int displayOrder;
 
-  NominationManagementGroup(String displayText, int displayOrder) {
+  CaseProcessingActionGroup(String displayText, int displayOrder) {
     this.displayText = displayText;
     this.displayOrder = displayOrder;
   }

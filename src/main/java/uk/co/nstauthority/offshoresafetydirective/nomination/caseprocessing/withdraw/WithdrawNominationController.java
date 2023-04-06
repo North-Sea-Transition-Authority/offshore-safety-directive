@@ -27,10 +27,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -60,10 +60,10 @@ public class WithdrawNominationController {
     this.withdrawNominationValidator = withdrawNominationValidator;
   }
 
-  @PostMapping(params = CaseProcessingAction.WITHDRAW)
+  @PostMapping(params = CaseProcessingActionIdentifier.WITHDRAW)
   public ModelAndView withdrawNomination(@PathVariable NominationId nominationId,
                                          @RequestParam("withdraw") Boolean slideoutOpen,
-                                         @Nullable @RequestParam(CaseProcessingAction.WITHDRAW) String postButtonName,
+                                         @Nullable @RequestParam(CaseProcessingActionIdentifier.WITHDRAW) String postButtonName,
                                          @Nullable @ModelAttribute(FORM_NAME) WithdrawNominationForm withdrawNominationForm,
                                          @Nullable BindingResult bindingResult,
                                          @Nullable RedirectAttributes redirectAttributes) {

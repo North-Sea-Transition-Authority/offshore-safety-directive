@@ -22,7 +22,7 @@
 <#-- @ftlvariable name="confirmNominationFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="decisionFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
-<#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractable>>" -->
+<#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction>>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -113,7 +113,7 @@ errorItems=[]
             panelId=qaChecksSlideoutPanelId
             headingText=qaChecksAction.item.actionText
             postUrl=qaChecksAction.submitUrl
-            postParam=qaChecksAction.caseProcessingAction.value()
+            postParam=qaChecksAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 
@@ -122,7 +122,7 @@ errorItems=[]
             panelId=decisionSlideoutPanelId
             headingText=decisionAction.item.actionText
             postUrl=decisionAction.submitUrl
-            postParam=decisionAction.caseProcessingAction.value()
+            postParam=decisionAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=decisionAction.modelProperties["fileUploadTemplate"]
             decisionOptions=decisionAction.modelProperties["decisionOptions"]
             errorList=errorList![]
@@ -136,7 +136,7 @@ errorItems=[]
             headingText=withdrawAction.item.actionText
             postUrl=withdrawAction.submitUrl
             errorList=errorList![]
-            postParam=withdrawAction.caseProcessingAction.value()
+            postParam=withdrawAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 
@@ -145,7 +145,7 @@ errorItems=[]
             panelId=confirmAppointmentSlideoutPanelId
             headingText=confirmAppointmentAction.item.actionText
             postUrl=confirmAppointmentAction.submitUrl
-            postParam=confirmAppointmentAction.caseProcessingAction.value()
+            postParam=confirmAppointmentAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=confirmAppointmentAction.modelProperties["fileUploadTemplate"]
             errorList=errorList![]
             uploadedFiles=confirmNominationFiles![]
@@ -157,7 +157,7 @@ errorItems=[]
             panelId=generalCaseNoteSlideoutPanelId
             headingText=generalCaseNoteAction.item.actionText
             postUrl=generalCaseNoteAction.submitUrl
-            postParam=generalCaseNoteAction.caseProcessingAction.value()
+            postParam=generalCaseNoteAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
             errorList=errorList![]
             uploadedFiles=existingCaseNoteFiles![]
@@ -169,7 +169,7 @@ errorItems=[]
             panelId=pearsSystemReferenceSlideoutPanelId
             headingText=pearsReferenceAction.item.actionText
             postUrl=pearsReferenceAction.submitUrl
-            postParam=pearsReferenceAction.caseProcessingAction.value()
+            postParam=pearsReferenceAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 
@@ -178,7 +178,7 @@ errorItems=[]
             panelId=wonsSystemReferenceSlideoutPanelId
             headingText=wonsReferenceAction.item.actionText
             postUrl=wonsReferenceAction.submitUrl
-            postParam=wonsReferenceAction.caseProcessingAction.value()
+            postParam=wonsReferenceAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 

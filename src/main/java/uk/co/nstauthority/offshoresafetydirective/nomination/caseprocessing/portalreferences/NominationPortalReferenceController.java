@@ -24,8 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -49,12 +49,12 @@ public class NominationPortalReferenceController {
     this.nominationDetailService = nominationDetailService;
   }
 
-  @PostMapping(params = CaseProcessingAction.PEARS_REFERENCES)
+  @PostMapping(params = CaseProcessingActionIdentifier.PEARS_REFERENCES)
   public ModelAndView updatePearsReferences(@PathVariable("nominationId") NominationId nominationId,
                                             @RequestParam("pears-references") Boolean slideoutOpen,
                                             // Used for ReverseRouter to call correct route
                                             @Nullable
-                                            @RequestParam(CaseProcessingAction.PEARS_REFERENCES) String postButtonName,
+                                            @RequestParam(CaseProcessingActionIdentifier.PEARS_REFERENCES) String postButtonName,
                                             @Nullable @ModelAttribute(PEARS_FORM_NAME) PearsPortalReferenceForm form,
                                             @Nullable BindingResult bindingResult,
                                             @Nullable RedirectAttributes redirectAttributes) {
@@ -62,12 +62,12 @@ public class NominationPortalReferenceController {
     return processAndReturn(PortalReferenceType.PEARS, nominationId, form, redirectAttributes);
   }
 
-  @PostMapping(params = CaseProcessingAction.WONS_REFERENCES)
+  @PostMapping(params = CaseProcessingActionIdentifier.WONS_REFERENCES)
   public ModelAndView updateWonsReferences(@PathVariable("nominationId") NominationId nominationId,
                                            @RequestParam("wons-references") Boolean slideoutOpen,
                                            // Used for ReverseRouter to call correct route
                                            @Nullable
-                                           @RequestParam(CaseProcessingAction.WONS_REFERENCES) String postButtonName,
+                                           @RequestParam(CaseProcessingActionIdentifier.WONS_REFERENCES) String postButtonName,
                                            @Nullable @ModelAttribute(WONS_FORM_NAME) WonsPortalReferenceForm form,
                                            @Nullable BindingResult bindingResult,
                                            @Nullable RedirectAttributes redirectAttributes) {

@@ -10,7 +10,6 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -23,26 +22,26 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qach
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @Service
-public class NominationManagementInteractableService {
+public class CaseProcessingActionService {
 
   public static final String ALLOWED_NOMINATION_DECISION_EXTENSIONS_CSV = ".pdf";
 
   private final FileUploadConfig fileUploadConfig;
 
   @Autowired
-  public NominationManagementInteractableService(FileUploadConfig fileUploadConfig) {
+  public CaseProcessingActionService(FileUploadConfig fileUploadConfig) {
     this.fileUploadConfig = fileUploadConfig;
   }
 
-  public NominationManagementInteractable createQaChecksInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.QA);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.QA_CHECKS,
-            NominationManagementGroup.COMPLETE_QA_CHECKS,
-            caseProcessingAction,
+  public CaseProcessingAction createQaChecksAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.QA_CHECKS;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.QA_CHECKS,
+            CaseProcessingActionGroup.COMPLETE_QA_CHECKS,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(
                 on(NominationQaChecksController.class).submitQa(nominationId, true,
-                    caseProcessingAction.value(),
+                    caseProcessingActionItem.getIdentifier().value(),
                     null,
                     null,
                     null))
@@ -50,34 +49,34 @@ public class NominationManagementInteractableService {
         .build();
   }
 
-  public NominationManagementInteractable createWithdrawInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.WITHDRAW);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.WITHDRAW,
-            NominationManagementGroup.DECISION,
-            caseProcessingAction,
+  public CaseProcessingAction createWithdrawAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.WITHDRAW;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.WITHDRAW,
+            CaseProcessingActionGroup.DECISION,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(
                 on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
-                    caseProcessingAction.value(), null, null,
+                    caseProcessingActionItem.getIdentifier().value(), null, null,
                     null))
         )
         .build();
   }
 
-  public NominationManagementInteractable createNominationDecisionInteractable(NominationId nominationId) {
+  public CaseProcessingAction createNominationDecisionAction(NominationId nominationId) {
 
     var decisions = Arrays.stream(NominationDecision.values())
         .sorted(Comparator.comparing(NominationDecision::getDisplayOrder))
         .toList();
 
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.DECISION);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.NOMINATION_DECISION,
-            NominationManagementGroup.DECISION,
-            caseProcessingAction,
+    var caseProcessingActionItem = CaseProcessingActionItem.NOMINATION_DECISION;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.NOMINATION_DECISION,
+            CaseProcessingActionGroup.DECISION,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(
                 on(NominationDecisionController.class).submitDecision(nominationId, true,
-                    caseProcessingAction.value(), null, null,
+                    caseProcessingActionItem.getIdentifier().value(), null, null,
                     null))
         )
         .withAdditionalProperty(
@@ -94,15 +93,15 @@ public class NominationManagementInteractableService {
         .build();
   }
 
-  public NominationManagementInteractable createConfirmNominationAppointmentInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.CONFIRM_APPOINTMENT);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.CONFIRM_APPOINTMENT,
-            NominationManagementGroup.CONFIRM_APPOINTMENT,
-            caseProcessingAction,
+  public CaseProcessingAction createConfirmNominationAppointmentAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.CONFIRM_APPOINTMENT;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.CONFIRM_APPOINTMENT,
+            CaseProcessingActionGroup.CONFIRM_APPOINTMENT,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(
                 on(ConfirmNominationAppointmentController.class).confirmAppointment(nominationId, true,
-                    caseProcessingAction.value(), null, null,
+                    caseProcessingActionItem.getIdentifier().value(), null, null,
                     null))
         )
         .withAdditionalProperty(
@@ -118,15 +117,15 @@ public class NominationManagementInteractableService {
         .build();
   }
 
-  public NominationManagementInteractable createGeneralCaseNoteInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.GENERAL_NOTE);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.GENERAL_CASE_NOTE,
-            NominationManagementGroup.ADD_CASE_NOTE,
-            caseProcessingAction,
+  public CaseProcessingAction createGeneralCaseNoteAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.GENERAL_CASE_NOTE;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.GENERAL_CASE_NOTE,
+            CaseProcessingActionGroup.ADD_CASE_NOTE,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(
                 on(GeneralCaseNoteController.class).submitGeneralCaseNote(nominationId, true,
-                    caseProcessingAction.value(), null, null,
+                    caseProcessingActionItem.getIdentifier().value(), null, null,
                     null))
         )
         .withAdditionalProperty(
@@ -142,26 +141,26 @@ public class NominationManagementInteractableService {
         .build();
   }
 
-  public NominationManagementInteractable createPearsReferencesInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.PEARS_REFERENCES);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.PEARS_REFERENCE,
-            NominationManagementGroup.RELATED_APPLICATIONS,
-            caseProcessingAction,
+  public CaseProcessingAction createPearsReferencesAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.PEARS_REFERENCE;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.PEARS_REFERENCE,
+            CaseProcessingActionGroup.RELATED_APPLICATIONS,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(on(NominationPortalReferenceController.class)
-                .updatePearsReferences(nominationId, true, caseProcessingAction.value(), null, null, null))
+                .updatePearsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null, null))
         )
         .build();
   }
 
-  public NominationManagementInteractable createWonsReferencesInteractable(NominationId nominationId) {
-    var caseProcessingAction = new CaseProcessingAction(CaseProcessingAction.WONS_REFERENCES);
-    return NominationManagementInteractable.builder(
-            NominationManagementItem.WONS_REFERENCE,
-            NominationManagementGroup.RELATED_APPLICATIONS,
-            caseProcessingAction,
+  public CaseProcessingAction createWonsReferencesAction(NominationId nominationId) {
+    var caseProcessingActionItem = CaseProcessingActionItem.WONS_REFERENCE;
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.WONS_REFERENCE,
+            CaseProcessingActionGroup.RELATED_APPLICATIONS,
+            caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(on(NominationPortalReferenceController.class)
-                .updateWonsReferences(nominationId, true, caseProcessingAction.value(), null, null, null))
+                .updateWonsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null, null))
         )
         .build();
   }

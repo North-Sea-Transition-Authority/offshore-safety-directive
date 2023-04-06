@@ -32,10 +32,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementGroup;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractable;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementInteractableService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.NominationManagementItem;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionItem;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteForm;
@@ -93,7 +93,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
-    var nominationManagementInteractableService = new NominationManagementInteractableService(fileUploadConfig);
+    var nominationManagementInteractableService = new CaseProcessingActionService(fileUploadConfig);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
         nominationSummaryService, permissionService, userDetailService, caseEventQueryService,
@@ -385,7 +385,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     @SuppressWarnings("unchecked")
     var managementActions =
-        (Map<NominationManagementGroup, List<NominationManagementInteractable>>)
+        (Map<CaseProcessingActionGroup, List<CaseProcessingAction>>)
             result.getModel().get("managementActions");
 
     var managementActionGroupItemMap = getManagementActionGroupItemMap(managementActions);
@@ -393,15 +393,15 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(managementActionGroupItemMap)
         .containsExactlyEntriesOf(
             ImmutableMap.of(
-                NominationManagementGroup.ADD_CASE_NOTE, List.of(NominationManagementItem.GENERAL_CASE_NOTE),
-                NominationManagementGroup.COMPLETE_QA_CHECKS, List.of(NominationManagementItem.QA_CHECKS),
-                NominationManagementGroup.DECISION, List.of(
-                    NominationManagementItem.NOMINATION_DECISION,
-                    NominationManagementItem.WITHDRAW
+                CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
+                CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
+                CaseProcessingActionGroup.DECISION, List.of(
+                    CaseProcessingActionItem.NOMINATION_DECISION,
+                    CaseProcessingActionItem.WITHDRAW
                 ),
-                NominationManagementGroup.RELATED_APPLICATIONS, List.of(
-                    NominationManagementItem.PEARS_REFERENCE,
-                    NominationManagementItem.WONS_REFERENCE
+                CaseProcessingActionGroup.RELATED_APPLICATIONS, List.of(
+                    CaseProcessingActionItem.PEARS_REFERENCE,
+                    CaseProcessingActionItem.WONS_REFERENCE
                 )
             )
         );
@@ -502,7 +502,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     @SuppressWarnings("unchecked")
     var managementActions =
-        (Map<NominationManagementGroup, List<NominationManagementInteractable>>)
+        (Map<CaseProcessingActionGroup, List<CaseProcessingAction>>)
             result.getModel().get("managementActions");
 
     var managementActionGroupItemMap = getManagementActionGroupItemMap(managementActions);
@@ -510,11 +510,11 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(managementActionGroupItemMap)
         .containsExactlyEntriesOf(
             ImmutableMap.of(
-                NominationManagementGroup.ADD_CASE_NOTE, List.of(NominationManagementItem.GENERAL_CASE_NOTE),
-                NominationManagementGroup.DECISION, List.of(
-                    NominationManagementItem.WITHDRAW
+                CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
+                CaseProcessingActionGroup.DECISION, List.of(
+                    CaseProcessingActionItem.WITHDRAW
                 ),
-                NominationManagementGroup.CONFIRM_APPOINTMENT, List.of(NominationManagementItem.CONFIRM_APPOINTMENT)
+                CaseProcessingActionGroup.CONFIRM_APPOINTMENT, List.of(CaseProcessingActionItem.CONFIRM_APPOINTMENT)
             )
         );
 
@@ -584,15 +584,15 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         );
   }
 
-  private Map<NominationManagementGroup, List<NominationManagementItem>> getManagementActionGroupItemMap(
-      Map<NominationManagementGroup, List<NominationManagementInteractable>> managementActions
+  private Map<CaseProcessingActionGroup, List<CaseProcessingActionItem>> getManagementActionGroupItemMap(
+      Map<CaseProcessingActionGroup, List<CaseProcessingAction>> managementActions
   ) {
     return managementActions.entrySet()
         .stream()
         .map(entry -> {
           var keys = entry.getValue()
               .stream()
-              .map(NominationManagementInteractable::getItem)
+              .map(CaseProcessingAction::getItem)
               .toList();
           return entry(entry.getKey(), keys);
         })
