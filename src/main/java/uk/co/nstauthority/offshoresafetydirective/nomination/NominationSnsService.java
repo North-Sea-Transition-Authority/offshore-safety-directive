@@ -7,6 +7,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 
@@ -17,12 +18,13 @@ class NominationSnsService {
 
   private final SnsService snsService;
   private final SnsTopicArn nominationsTopicArn;
+  private final ApplicantDetailAccessService applicantDetailAccessService;
 
   @Autowired
-  NominationSnsService(SnsService snsService) {
+  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService) {
     this.snsService = snsService;
-
     nominationsTopicArn = snsService.getOrCreateTopic(NOMINATIONS_TOPIC_NAME);
+    this.applicantDetailAccessService = applicantDetailAccessService;
   }
 
   @Async
@@ -32,9 +34,24 @@ class NominationSnsService {
   }
 
   void publishNominationSubmittedMessage(NominationDetail nominationDetail) {
-    var nominationId = nominationDetail.getNomination().getId();
+    var nomination = nominationDetail.getNomination();
+    var applicantOrganisationId = applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail)
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Unable to find ApplicantDetailDto for NominationDetail %s".formatted(nominationDetail.getId())
+            )
+        )
+        .applicantOrganisationId();
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
-    snsService.publishMessage(nominationsTopicArn, new NominationSubmittedOsdEpmqMessage(nominationId, correlationId));
+    snsService.publishMessage(
+        nominationsTopicArn,
+        new NominationSubmittedOsdEpmqMessage(
+            nomination.getId(),
+            nomination.getReference(),
+            applicantOrganisationId.id(),
+            correlationId
+        )
+    );
   }
 }

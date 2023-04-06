@@ -11,7 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
 @Table(name = "applicant_details")
-class ApplicantDetail {
+public class ApplicantDetail {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,7 +52,7 @@ class ApplicantDetail {
     this.nominationDetail = nominationDetail;
   }
 
-  Integer getPortalOrganisationId() {
+  public Integer getPortalOrganisationId() {
     return portalOrganisationId;
   }
 

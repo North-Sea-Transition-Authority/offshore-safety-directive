@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
@@ -66,18 +67,30 @@ class NominationSnsIntegrationTest {
         .withNominationDetail(nominationDetail)
         .build();
 
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withId(null)
+        .withNominationDetail(nominationDetail)
+        .build();
+
     transactionWrapper.runInNewTransaction(() -> {
       testEntityManager.persistAndFlush(nomination);
       testEntityManager.persistAndFlush(nominationDetail);
       testEntityManager.persistAndFlush(relatedInformation);
+      testEntityManager.persistAndFlush(applicantDetail);
     });
 
     nominationSubmissionService.submitNomination(nominationDetail);
 
     var nominationsTopicArn = snsService.getOrCreateTopic(NominationSnsService.NOMINATIONS_TOPIC_NAME);
 
-    var expectedMessage =
-        objectMapper.writeValueAsString(new NominationSubmittedOsdEpmqMessage(nomination.getId(), correlationId));
+    var expectedMessage = objectMapper.writeValueAsString(
+        new NominationSubmittedOsdEpmqMessage(
+            nomination.getId(),
+            nomination.getReference(),
+            applicantDetail.getPortalOrganisationId(),
+            correlationId
+        )
+    );
 
     verify(snsClient).publish(
         PublishRequest.builder()
@@ -90,7 +103,7 @@ class NominationSnsIntegrationTest {
   }
 
   @Test
-  void submittingNominationWhenTransactionRolledBackDoesNotPublishSnsMessage() throws JsonProcessingException {
+  void submittingNominationWhenTransactionRolledBackDoesNotPublishSnsMessage() {
     var correlationId = UUID.randomUUID().toString();
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
@@ -109,10 +122,16 @@ class NominationSnsIntegrationTest {
         .withNominationDetail(nominationDetail)
         .build();
 
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withId(null)
+        .withNominationDetail(nominationDetail)
+        .build();
+
     transactionWrapper.runInNewTransaction(() -> {
       testEntityManager.persistAndFlush(nomination);
       testEntityManager.persistAndFlush(nominationDetail);
       testEntityManager.persistAndFlush(relatedInformation);
+      testEntityManager.persistAndFlush(applicantDetail);
     });
 
     try {
