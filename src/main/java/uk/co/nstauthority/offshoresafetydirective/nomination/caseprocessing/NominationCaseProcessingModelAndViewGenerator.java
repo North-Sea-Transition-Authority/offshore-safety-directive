@@ -166,6 +166,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         actions.add(caseProcessingActionService.createWonsReferencesAction(nominationId));
       }
 
+      if (canSendNominationForConsultation(nominationDetailDto)) {
+        actions.add(caseProcessingActionService.createSendForConsultationAction(nominationId));
+      }
+
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
           .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))
           .collect(
@@ -208,6 +212,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canUpdateWonsReferences(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canSendNominationForConsultation(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 

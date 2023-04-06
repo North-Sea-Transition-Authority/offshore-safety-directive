@@ -12,6 +12,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -161,6 +162,18 @@ public class CaseProcessingActionService {
             caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(on(NominationPortalReferenceController.class)
                 .updateWonsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null, null))
+        )
+        .build();
+  }
+
+  public CaseProcessingAction createSendForConsultationAction(NominationId nominationId) {
+    var caseProcessingAction = new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION);
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.SEND_FOR_CONSULTATION,
+            CaseProcessingActionGroup.CONSULTATIONS,
+            caseProcessingAction,
+            ReverseRouter.route(on(NominationConsultationController.class)
+                .sendForConsultation(nominationId, true, caseProcessingAction.value(), null))
         )
         .build();
   }

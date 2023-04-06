@@ -132,6 +132,9 @@ public class CaseEventQueryService {
             .withCustomDatePrompt("Submitted on")
             .withCustomCreatorPrompt("Submitted by")
             .build();
+        case SENT_FOR_CONSULTATION -> caseEventBuilder
+            .withCustomDatePrompt("Event date")
+            .build();
       };
     };
   }

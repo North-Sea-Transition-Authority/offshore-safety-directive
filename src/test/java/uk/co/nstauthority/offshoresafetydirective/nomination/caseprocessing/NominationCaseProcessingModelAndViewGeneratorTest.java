@@ -395,6 +395,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             ImmutableMap.of(
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
+                CaseProcessingActionGroup.CONSULTATIONS, List.of(CaseProcessingActionItem.SEND_FOR_CONSULTATION),
                 CaseProcessingActionGroup.DECISION, List.of(
                     CaseProcessingActionItem.NOMINATION_DECISION,
                     CaseProcessingActionItem.WITHDRAW

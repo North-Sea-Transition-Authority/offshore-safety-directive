@@ -344,4 +344,44 @@ class CaseEventServiceTest {
             nominationVersion
         );
   }
+
+  @Test
+  void createSentForConsultationEvent() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createSentForConsultationEvent(detail);
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.SENT_FOR_CONSULTATION,
+            null,
+            null,
+            serviceUser.wuaId(),
+            createdInstant,
+            createdInstant,
+            detail.getNomination(),
+            nominationVersion
+        );
+  }
 }

@@ -18,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -233,5 +234,29 @@ class CaseProcessingActionServiceTest {
                     CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)),
             Map.of()
         );
+  }
+
+  @Test
+  void createSendForConsultationAction() {
+    var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+    var result = caseProcessingActionService.createSendForConsultationAction(nominationId);
+
+    assertThat(result)
+        .extracting(
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
+        ).containsExactly(
+            CaseProcessingActionItem.SEND_FOR_CONSULTATION,
+            CaseProcessingActionGroup.CONSULTATIONS,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION),
+            ReverseRouter.route(
+                on(NominationConsultationController.class).sendForConsultation(nominationId, true,
+                    CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
+            Map.of()
+        );
+
   }
 }

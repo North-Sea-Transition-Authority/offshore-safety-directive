@@ -396,6 +396,42 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
+  void getCaseEventViewsForNominationDetail_whenSentForConsultationEvent_thenVerifyResult() {
+    var caseEventType = CaseEventType.SENT_FOR_CONSULTATION;
+    var caseEvent = caseEventBuilder
+        .withCaseEventType(caseEventType)
+        .build();
+
+    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
+        NOMINATION_DETAIL_VERSION))
+        .thenReturn(List.of(caseEvent));
+
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+        .thenReturn(List.of(caseEventCreator));
+
+    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+
+    var caseEventAssertObject = assertThat(result)
+        .hasSize(1)
+        .first();
+
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Event date")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", null)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", null)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
   void getCaseEventViewsForNominationDetail_assertSort() {
     var caseEventType = CaseEventType.GENERAL_NOTE;
     var firstCaseEventByCreatedDate = caseEventBuilder

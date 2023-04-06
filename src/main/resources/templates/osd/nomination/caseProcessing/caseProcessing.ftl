@@ -10,6 +10,7 @@
 <#import '_portalReferenceSlideout.ftl' as _systemReferenceSlideout/>
 <#import '../events/eventList.ftl' as eventList/>
 <#import '_activePortalReferences.ftl' as _activePortalReferences>
+<#import '_sendForConsultationSlideout.ftl' as _sendForConsultationSlideout>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -59,6 +60,7 @@ errorItems=[]
     <#assign generalCaseNoteSlideoutPanelId = "case-note"/>
     <#assign pearsSystemReferenceSlideoutPanelId = "pears-references"/>
     <#assign wonsSystemReferenceSlideoutPanelId = "wons-references"/>
+    <#assign sendForConsultationSlideoutPanelId = "send-for-consultation"/>
 
     <#macro _applyAction action isInDropdown>
         <#local actionKeyValue = action.item/>
@@ -89,6 +91,10 @@ errorItems=[]
         <#if actionKeyValue == "WONS_REFERENCE">
             <@_slideoutButton slideoutPanelId=wonsSystemReferenceSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
             <#assign wonsReferenceAction = action/>
+        </#if>
+        <#if actionKeyValue == "SEND_FOR_CONSULTATION">
+            <@_slideoutButton slideoutPanelId=sendForConsultationSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign sendForConsultationAction = action/>
         </#if>
     </#macro>
 
@@ -179,6 +185,15 @@ errorItems=[]
             headingText=wonsReferenceAction.item.actionText
             postUrl=wonsReferenceAction.submitUrl
             postParam=wonsReferenceAction.caseProcessingActionIdentifier.value()
+        />
+    </#if>
+
+    <#if sendForConsultationAction?has_content>
+        <@_sendForConsultationSlideout.sendForConsultationSlideout
+            panelId=sendForConsultationSlideoutPanelId
+            headingText=sendForConsultationAction.item.actionText
+            postUrl=sendForConsultationAction.submitUrl
+            postParam=sendForConsultationAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 
