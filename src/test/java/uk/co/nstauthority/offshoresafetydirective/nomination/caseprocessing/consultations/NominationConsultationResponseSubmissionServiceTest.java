@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +25,9 @@ class NominationConsultationResponseSubmissionServiceTest {
   @Mock
   private NominationDetailFileService nominationDetailFileService;
 
+  @Mock
+  private CaseEventService caseEventService;
+
   @InjectMocks
   private NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
 
@@ -31,6 +35,8 @@ class NominationConsultationResponseSubmissionServiceTest {
   void submitConsultationResponse() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var form = new NominationConsultationResponseForm();
+    var formResponse = "response";
+    form.getResponse().setInputValue(formResponse);
     var uploadForm = new FileUploadForm();
     uploadForm.setUploadedFileId(UUID.randomUUID());
 
@@ -44,6 +50,7 @@ class NominationConsultationResponseSubmissionServiceTest {
         List.of(uploadForm),
         NominationConsultationResponseFileController.VIRTUAL_FOLDER
     );
-    verifyNoMoreInteractions(fileUploadService, nominationDetailFileService);
+    verify(caseEventService).createConsultationResponseEvent(nominationDetail, formResponse, List.of(uploadForm));
+    verifyNoMoreInteractions(fileUploadService, nominationDetailFileService, caseEventService);
   }
 }

@@ -384,4 +384,53 @@ class CaseEventServiceTest {
             nominationVersion
         );
   }
+
+  @Test
+  void createConsultationResponseEvent() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var createdInstant = Instant.now();
+    when(clock.instant()).thenReturn(createdInstant);
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    var responseText = "response";
+    var fileUploadForm = new FileUploadForm();
+    fileUploadForm.setUploadedFileId(UUID.randomUUID());
+
+    // Return same arg as passed in to call
+    when(caseEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    caseEventService.createConsultationResponseEvent(detail, responseText, List.of(fileUploadForm));
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.CONSULTATION_RESPONSE,
+            null,
+            responseText,
+            serviceUser.wuaId(),
+            createdInstant,
+            createdInstant,
+            detail.getNomination(),
+            nominationVersion
+        );
+
+    verify(caseEventFileService).finalizeFileUpload(captor.getValue(), List.of(fileUploadForm));
+  }
 }

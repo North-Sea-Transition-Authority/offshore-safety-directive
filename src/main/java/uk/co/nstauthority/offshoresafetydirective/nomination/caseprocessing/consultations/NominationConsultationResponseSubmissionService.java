@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
 
 @Service
@@ -13,11 +14,15 @@ class NominationConsultationResponseSubmissionService {
   private final FileUploadService fileUploadService;
   private final NominationDetailFileService nominationDetailFileService;
 
+  private final CaseEventService caseEventService;
+
   @Autowired
   NominationConsultationResponseSubmissionService(FileUploadService fileUploadService,
-                                                  NominationDetailFileService nominationDetailFileService) {
+                                                  NominationDetailFileService nominationDetailFileService,
+                                                  CaseEventService caseEventService) {
     this.fileUploadService = fileUploadService;
     this.nominationDetailFileService = nominationDetailFileService;
+    this.caseEventService = caseEventService;
   }
 
   @Transactional
@@ -26,6 +31,12 @@ class NominationConsultationResponseSubmissionService {
 
     nominationDetailFileService.submitAndCleanFiles(nominationDetail, form.getConsultationResponseFiles(),
         NominationConsultationResponseFileController.VIRTUAL_FOLDER);
+
+    caseEventService.createConsultationResponseEvent(
+        nominationDetail,
+        form.getResponse().getInputValue(),
+        form.getConsultationResponseFiles()
+    );
   }
 
 }
