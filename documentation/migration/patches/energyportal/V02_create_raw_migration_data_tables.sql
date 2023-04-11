@@ -34,6 +34,7 @@ CREATE TABLE wios_migration.raw_subarea_appointments_data (
 , licence_number CLOB
 , block_reference CLOB
 , subarea_name CLOB
+, appointed_operator_name CLOB
 , responsible_from_date CLOB
 , responsible_to_date CLOB
 , is_exploration_phase VARCHAR2(4000)

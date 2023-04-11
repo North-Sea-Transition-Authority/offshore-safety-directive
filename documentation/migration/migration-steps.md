@@ -116,7 +116,25 @@ Any errors in the migration process will be written to `wios_migration.installat
 
 ## 5. Cleanse the subarea forward approval data
 
-TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+Prior to cleansing the subarea data the following patches need to be run on the Energy Portal database:
+
+- `/energyportal/V07_create_operator_migration_table.sql`
+- `/energyportal/V08_create_operator_mapping_package.sql`
+- `/energyportal/V12_create_subarea_migration_table.sql`
+- `/energyportal/V13_create_subarea_cleanse_package.sql`
+
+To cleanse the raw subarea appointment data you can execute the following code:
+
+```oraclesqlplus
+EXEC wios_migration.subarea_appointment_migration.cleanse_subarea_appointments;
+```
+
+For each row in the `wios_migration.raw_subarea_appointments_data` table, a cleansed row will be inserted into
+`wios_migration.subarea_appointments` table.
+
+Any rows in the `wios_migration.raw_subarea_appointments_data` which don't map to a valid PEARS subarea
+will be written to `wios_migration.unmatched_subareas` as well as an error row written to
+`wios_migration.subarea_migration_errors`.
 
 ## 6. Export the cleansed wellbore data
 
@@ -165,7 +183,26 @@ Export the results the above SQL to a CSV. This will be the CSV that we migrate 
 
 ## 8. Export the cleansed subarea forward approval data
 
-TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+On the Oracle database run the following SQL which will return all the subarea appointments in the format that the
+WIOS migration table is expecting.
+
+```oraclesqlplus
+SELECT
+  sa.migratable_appointment_id
+, sa.subarea_id
+, sa.subarea_reference
+, sa.appointed_operator_id
+, sa.appointed_operator_name
+, TO_CHAR(sa.responsible_from_date, 'YYYY-MM-DD') responsible_from_date
+, TO_CHAR(sa.responsible_to_date, 'YYYY-MM-DD') responsible_to_date
+, sa.is_exploration_phase
+, sa.is_development_phase
+, sa.is_decommissioning_phase
+, sa.appointment_source
+, sa.legacy_nomination_reference
+FROM wios_migration.subarea_appointments sa
+```
+Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
 
 ## 9. Load the appointment data into WIOS
 
@@ -180,7 +217,7 @@ tables using pgAdmin. The tables are as follows:
 
 - wellbores: osd_migration.migratable_wellbore_appointments
 - installations: osd_migration.migratable_installation_appointments
-- forward approvals: TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+- forward approvals: osd_migration.migratable_subarea_appointments
 
 ## 10. Migrate the wellbore appointments
 
@@ -194,7 +231,7 @@ Execute the anonymous block in `energyportal/V10_create_wellbore_appointments.sq
 ## 11. Migrate the installation appointments
 
 Execute the anonymous block in `energyportal/V11_create_installation_appointments.sql` which will take all the data in 
-the `osd_migration.migratable_wellbore_appointments` table and create rows in the following tables:
+the `osd_migration.migratable_installation_appointments` table and create rows in the following tables:
 
 - `osd.assets`
 - `osd.appointments`
@@ -202,4 +239,9 @@ the `osd_migration.migratable_wellbore_appointments` table and create rows in th
 
 ## 12. Migrate the subarea forward approval appointments
 
-TODO [OSDOP-419](https://ogajira.atlassian.net/browse/OSDOP-419)
+Execute the anonymous block in `energyportal/V13_create_subarea_appointments.sql` which will take all the data in
+the `osd_migration.migratable_subarea_appointments` table and create rows in the following tables:
+
+- `osd.assets`
+- `osd.appointments`
+- `osd.asset_phases`
