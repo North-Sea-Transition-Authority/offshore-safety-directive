@@ -11,6 +11,7 @@
 <#import '../events/eventList.ftl' as eventList/>
 <#import '_activePortalReferences.ftl' as _activePortalReferences>
 <#import '_sendForConsultationSlideout.ftl' as _sendForConsultationSlideout>
+<#import '_consultationResponseSlideout.ftl' as _consultationResponseSlideout>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -61,6 +62,7 @@ errorItems=[]
     <#assign pearsSystemReferenceSlideoutPanelId = "pears-references"/>
     <#assign wonsSystemReferenceSlideoutPanelId = "wons-references"/>
     <#assign sendForConsultationSlideoutPanelId = "send-for-consultation"/>
+    <#assign consultationResponseSlideoutPanelId = "consultation-response"/>
 
     <#macro _applyAction action isInDropdown>
         <#local actionKeyValue = action.item/>
@@ -95,6 +97,10 @@ errorItems=[]
         <#if actionKeyValue == "SEND_FOR_CONSULTATION">
             <@_slideoutButton slideoutPanelId=sendForConsultationSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
             <#assign sendForConsultationAction = action/>
+        </#if>
+        <#if actionKeyValue == "CONSULTATION_RESPONSE">
+            <@_slideoutButton slideoutPanelId=consultationResponseSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign consultationResponseAction = action/>
         </#if>
     </#macro>
 
@@ -194,6 +200,16 @@ errorItems=[]
             headingText=sendForConsultationAction.item.actionText
             postUrl=sendForConsultationAction.submitUrl
             postParam=sendForConsultationAction.caseProcessingActionIdentifier.value()
+        />
+    </#if>
+
+    <#if consultationResponseAction?has_content>
+        <@_consultationResponseSlideout.consultationResponseSlideout
+            panelId=consultationResponseSlideoutPanelId
+            headingText=consultationResponseAction.item.actionText
+            postUrl=consultationResponseAction.submitUrl
+            postParam=consultationResponseAction.caseProcessingActionIdentifier.value()
+            errorList=errorList![]
         />
     </#if>
 

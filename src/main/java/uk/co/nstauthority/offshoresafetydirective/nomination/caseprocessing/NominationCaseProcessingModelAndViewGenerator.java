@@ -27,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceAccessService;
@@ -115,6 +116,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(GeneralCaseNoteController.FORM_NAME, modelAndViewDto.getGeneralCaseNoteForm())
         .addObject(NominationPortalReferenceController.PEARS_FORM_NAME, modelAndViewDto.getPearsPortalReferenceForm())
         .addObject(NominationPortalReferenceController.WONS_FORM_NAME, modelAndViewDto.getWonsPortalReferenceForm())
+        .addObject(
+            NominationConsultationResponseController.FORM_NAME,
+            modelAndViewDto.getNominationConsultationResponseForm()
+        )
         .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
         .addObject(
             "activePortalReferencesView",
@@ -170,6 +175,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         actions.add(caseProcessingActionService.createSendForConsultationAction(nominationId));
       }
 
+      if (canAddConsultationResponse(nominationDetailDto)) {
+        actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
+      }
+
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
           .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))
           .collect(
@@ -216,6 +225,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canSendNominationForConsultation(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canAddConsultationResponse(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 

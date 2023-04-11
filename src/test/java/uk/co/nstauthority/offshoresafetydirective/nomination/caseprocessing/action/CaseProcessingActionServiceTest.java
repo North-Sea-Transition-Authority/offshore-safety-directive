@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -58,7 +59,8 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionGroup.COMPLETE_QA_CHECKS,
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.QA),
             ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingActionIdentifier.QA, null, null,
+                on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingActionIdentifier.QA, null,
+                    null,
                     null)),
             Map.of()
         );
@@ -81,7 +83,8 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionGroup.DECISION,
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.WITHDRAW),
             ReverseRouter.route(
-                on(WithdrawNominationController.class).withdrawNomination(nominationId, true, CaseProcessingActionIdentifier.WITHDRAW,
+                on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
+                    CaseProcessingActionIdentifier.WITHDRAW,
                     null, null, null)),
             Map.of()
         );
@@ -103,7 +106,8 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionGroup.DECISION,
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.DECISION),
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(nominationId, true, CaseProcessingActionIdentifier.DECISION,
+                on(NominationDecisionController.class).submitDecision(nominationId, true,
+                    CaseProcessingActionIdentifier.DECISION,
                     null, null, null))
         );
 
@@ -257,6 +261,28 @@ class CaseProcessingActionServiceTest {
                     CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
             Map.of()
         );
+  }
 
+  @Test
+  void createConsultationResponseAction() {
+    var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+    var result = caseProcessingActionService.createConsultationResponseAction(nominationId);
+
+    assertThat(result)
+        .extracting(
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
+        ).containsExactly(
+            CaseProcessingActionItem.CONSULTATION_RESPONSE,
+            CaseProcessingActionGroup.CONSULTATIONS,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONSULTATION_RESPONSE),
+            ReverseRouter.route(
+                on(NominationConsultationResponseController.class).addConsultationResponse(nominationId, true,
+                    CaseProcessingActionIdentifier.CONSULTATION_RESPONSE, null, null, null)),
+            Map.of()
+        );
   }
 }
