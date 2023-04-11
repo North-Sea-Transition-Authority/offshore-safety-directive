@@ -23,7 +23,7 @@
             <@fdsFieldset.fieldset legendHeading="Decision document" legendHeadingClass="govuk-fieldset__legend--s" legendHeadingSize="h2">
                 <@fdsFileUpload.fileUpload
                     id="decision-file-upload"
-                    path="form.files"
+                    path="form.decisionFiles"
                     uploadUrl=fileUploadTemplate.uploadUrl()
                     deleteUrl=fileUploadTemplate.deleteUrl()
                     downloadUrl=fileUploadTemplate.downloadUrl()

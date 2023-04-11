@@ -212,9 +212,9 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             .param("decisionDate.yearInput.inputValue", String.valueOf(decisionDate.getYear()))
             .param("comments.inputValue", commentText)
             .param("nominationDecision", NominationDecision.OBJECTION.name())
-            .param("files[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
-            .param("files[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
-            .param("files[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
+            .param("decisionFiles[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
+            .param("decisionFiles[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
+            .param("decisionFiles[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
@@ -225,7 +225,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     verify(nominationDecisionSubmissionService).submitNominationDecision(eq(nominationDetail), captor.capture());
 
-    var files = captor.getValue().getFiles();
+    var files = captor.getValue().getDecisionFiles();
     assertThat(files)
         .extracting(
             FileUploadForm::getUploadedFileId,

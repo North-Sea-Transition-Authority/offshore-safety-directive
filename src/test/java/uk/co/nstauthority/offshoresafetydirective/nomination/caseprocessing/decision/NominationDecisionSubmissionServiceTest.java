@@ -43,7 +43,7 @@ class NominationDecisionSubmissionServiceTest {
     var form = new NominationDecisionForm();
     var fileUploadForm = new FileUploadForm();
     form.setNominationDecision(decision);
-    form.setFiles(List.of(fileUploadForm));
+    form.setDecisionFiles(List.of(fileUploadForm));
     form.getDecisionDate().setDate(date);
     form.getComments().setInputValue(comment);
 

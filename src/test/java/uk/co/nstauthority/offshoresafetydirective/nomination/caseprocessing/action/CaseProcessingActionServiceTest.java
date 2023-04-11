@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appo
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -60,8 +61,7 @@ class CaseProcessingActionServiceTest {
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.QA),
             ReverseRouter.route(
                 on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingActionIdentifier.QA, null,
-                    null,
-                    null)),
+                    null, null)),
             Map.of()
         );
   }
@@ -84,8 +84,7 @@ class CaseProcessingActionServiceTest {
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.WITHDRAW),
             ReverseRouter.route(
                 on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
-                    CaseProcessingActionIdentifier.WITHDRAW,
-                    null, null, null)),
+                    CaseProcessingActionIdentifier.WITHDRAW, null, null, null)),
             Map.of()
         );
   }
@@ -107,8 +106,7 @@ class CaseProcessingActionServiceTest {
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.DECISION),
             ReverseRouter.route(
                 on(NominationDecisionController.class).submitDecision(nominationId, true,
-                    CaseProcessingActionIdentifier.DECISION,
-                    null, null, null))
+                    CaseProcessingActionIdentifier.DECISION, null, null, null))
         );
 
     assertThat(result)
@@ -261,6 +259,7 @@ class CaseProcessingActionServiceTest {
                     CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
             Map.of()
         );
+
   }
 
   @Test
@@ -282,7 +281,13 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationConsultationResponseController.class).addConsultationResponse(nominationId, true,
                     CaseProcessingActionIdentifier.CONSULTATION_RESPONSE, null, null, null)),
-            Map.of()
+            Map.of("fileUploadTemplate", new FileUploadTemplate(
+                ReverseRouter.route(on(NominationConsultationResponseFileController.class).download(nominationId, null)),
+                ReverseRouter.route(on(NominationConsultationResponseFileController.class).upload(nominationId, null)),
+                ReverseRouter.route(on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
+                fileUploadConfig.getMaxFileUploadBytes().toString(),
+                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+            ))
         );
   }
 }

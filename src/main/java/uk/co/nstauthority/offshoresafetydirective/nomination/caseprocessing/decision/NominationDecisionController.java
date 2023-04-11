@@ -90,7 +90,7 @@ public class NominationDecisionController {
         new NominationDecisionValidatorHint(nominationDetail)
     );
 
-    var files = nominationDecisionForm.getFiles()
+    var files = nominationDecisionForm.getDecisionFiles()
         .stream()
         .map(FileUploadForm::getUploadedFileId)
         .map(UploadedFileId::new)

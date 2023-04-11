@@ -14,6 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appo
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -187,6 +188,19 @@ public class CaseProcessingActionService {
             caseProcessingAction,
             ReverseRouter.route(on(NominationConsultationResponseController.class)
                 .addConsultationResponse(nominationId, true, caseProcessingAction.value(), null, null, null))
+        )
+        .withAdditionalProperty(
+            "fileUploadTemplate",
+            new FileUploadTemplate(
+                ReverseRouter.route(
+                    on(NominationConsultationResponseFileController.class).download(nominationId, null)),
+                ReverseRouter.route(
+                    on(NominationConsultationResponseFileController.class).upload(nominationId, null)),
+                ReverseRouter.route(
+                    on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
+                fileUploadConfig.getMaxFileUploadBytes().toString(),
+                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+            )
         )
         .build();
   }

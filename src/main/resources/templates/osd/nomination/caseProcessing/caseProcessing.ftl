@@ -24,6 +24,7 @@
 <#-- @ftlvariable name="confirmNominationFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="decisionFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
+<#-- @ftlvariable name="existingConsultationResponseFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction>>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
@@ -209,7 +210,9 @@ errorItems=[]
             headingText=consultationResponseAction.item.actionText
             postUrl=consultationResponseAction.submitUrl
             postParam=consultationResponseAction.caseProcessingActionIdentifier.value()
+            fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
             errorList=errorList![]
+            uploadedFiles=existingConsultationResponseFiles![]
         />
     </#if>
 

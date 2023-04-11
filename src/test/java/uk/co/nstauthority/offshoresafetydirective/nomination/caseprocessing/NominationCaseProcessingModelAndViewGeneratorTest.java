@@ -409,8 +409,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
                 CaseProcessingActionGroup.CONSULTATIONS, List.of(
-                    CaseProcessingActionItem.CONSULTATION_RESPONSE,
-                    CaseProcessingActionItem.SEND_FOR_CONSULTATION
+                    CaseProcessingActionItem.SEND_FOR_CONSULTATION,
+                    CaseProcessingActionItem.CONSULTATION_RESPONSE
                 ),
                 CaseProcessingActionGroup.DECISION, List.of(
                     CaseProcessingActionItem.NOMINATION_DECISION,
