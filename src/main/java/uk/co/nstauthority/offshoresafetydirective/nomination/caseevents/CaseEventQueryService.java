@@ -133,7 +133,7 @@ public class CaseEventQueryService {
             .withCustomCreatorPrompt("Submitted by")
             .build();
         case SENT_FOR_CONSULTATION -> caseEventBuilder
-            .withCustomDatePrompt("Event date")
+            .withCustomDatePrompt("Date requested")
             .build();
         case CONSULTATION_RESPONSE -> caseEventBuilder
             .withCustomDatePrompt("Response date")

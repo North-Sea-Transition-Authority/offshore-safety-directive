@@ -418,7 +418,7 @@ class CaseEventQueryServiceTest {
     new PropertyObjectAssert(caseEventAssertObject)
         .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
         .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
-        .hasFieldOrPropertyWithValue("customDatePrompt", "Event date")
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Date requested")
         .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
         .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
         .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
