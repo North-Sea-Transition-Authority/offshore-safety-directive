@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.snssqs.SnsSqsConfigurationProperties;
 
@@ -116,28 +117,34 @@ public class SqsService {
         return;
       }
 
-      try {
-        onMessage.accept(message);
-      } catch (Exception exception) {
-        LOGGER.error("Error handling {} (SQS message ID: {})", messageClass.getSimpleName(), sqsMessage.messageId());
-        return;
-      }
+      CorrelationIdUtil.setCorrelationIdOnMdc(message.getCorrelationId());
 
       try {
-        sqsClient.deleteMessage(
-            DeleteMessageRequest.builder()
-                .queueUrl(queueUrl.url())
-                .receiptHandle(sqsMessage.receiptHandle())
-                .build()
-        );
-      } catch (SdkException exception) {
-        LOGGER.error(
-            "Error deleting SQS message {} by receipt handle {} from queue {}",
-            sqsMessage.messageId(),
-            sqsMessage.receiptHandle(),
-            queueUrl.url(),
-            exception
-        );
+        try {
+          onMessage.accept(message);
+        } catch (Exception exception) {
+          LOGGER.error("Error handling {} (SQS message ID: {})", messageClass.getSimpleName(), sqsMessage.messageId());
+          return;
+        }
+
+        try {
+          sqsClient.deleteMessage(
+              DeleteMessageRequest.builder()
+                  .queueUrl(queueUrl.url())
+                  .receiptHandle(sqsMessage.receiptHandle())
+                  .build()
+          );
+        } catch (SdkException exception) {
+          LOGGER.error(
+              "Error deleting SQS message {} by receipt handle {} from queue {}",
+              sqsMessage.messageId(),
+              sqsMessage.receiptHandle(),
+              queueUrl.url(),
+              exception
+          );
+        }
+      } finally {
+        CorrelationIdUtil.clearCorrelationIdOnMdc();
       }
     });
   }

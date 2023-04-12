@@ -2,13 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.epmqmessage;
 
 public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
+  private static final String TYPE = "NOMINATION_SUBMITTED";
+
   private int nominationId;
   private String nominationReference;
   private int applicantOrganisationUnitId;
-  private String correlationId;
 
   public NominationSubmittedOsdEpmqMessage() {
-    super("NOMINATION_SUBMITTED");
+    super(TYPE, null);
   }
 
   public NominationSubmittedOsdEpmqMessage(
@@ -17,11 +18,10 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
       int applicantOrganisationUnitId,
       String correlationId
   ) {
-    this();
+    super(TYPE, correlationId);
     this.nominationId = nominationId;
     this.nominationReference = nominationReference;
     this.applicantOrganisationUnitId = applicantOrganisationUnitId;
-    this.correlationId = correlationId;
   }
 
   public int getNominationId() {
@@ -46,13 +46,5 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
   public void setApplicantOrganisationUnitId(int applicantOrganisationUnitId) {
     this.applicantOrganisationUnitId = applicantOrganisationUnitId;
-  }
-
-  public String getCorrelationId() {
-    return correlationId;
-  }
-
-  public void setCorrelationId(String correlationId) {
-    this.correlationId = correlationId;
   }
 }

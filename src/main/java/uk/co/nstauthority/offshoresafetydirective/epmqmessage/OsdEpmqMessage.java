@@ -4,7 +4,7 @@ import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 
 public abstract class OsdEpmqMessage extends EpmqMessage {
 
-  OsdEpmqMessage(String type) {
-    super("OSD", type);
+  OsdEpmqMessage(String type, String correlationId) {
+    super("OSD", type, correlationId);
   }
 }

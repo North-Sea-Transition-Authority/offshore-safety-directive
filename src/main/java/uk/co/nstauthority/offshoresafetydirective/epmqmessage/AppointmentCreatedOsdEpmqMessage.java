@@ -5,15 +5,16 @@ import java.util.UUID;
 
 public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
 
+  private static final String TYPE = "APPOINTMENT_CREATED";
+
   private UUID appointmentId;
   private String portalAssetId;
   private String portalAssetType;
   private int appointedPortalOperatorId;
   private List<String> phases;
-  private String correlationId;
 
   public AppointmentCreatedOsdEpmqMessage() {
-    super("APPOINTMENT_CREATED");
+    super(TYPE, null);
   }
 
   public AppointmentCreatedOsdEpmqMessage(
@@ -24,13 +25,12 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
       List<String> phases,
       String correlationId
   ) {
-    this();
+    super(TYPE, correlationId);
     this.appointmentId = appointmentId;
     this.portalAssetId = portalAssetId;
     this.portalAssetType = portalAssetType;
     this.appointedPortalOperatorId = appointedPortalOperatorId;
     this.phases = phases;
-    this.correlationId = correlationId;
   }
 
   public UUID getAppointmentId() {
@@ -71,13 +71,5 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
 
   public void setPhases(List<String> phases) {
     this.phases = phases;
-  }
-
-  public String getCorrelationId() {
-    return correlationId;
-  }
-
-  public void setCorrelationId(String correlationId) {
-    this.correlationId = correlationId;
   }
 }

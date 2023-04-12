@@ -234,7 +234,7 @@ class SqsServiceTest {
     private String testField;
 
     public TestEpmqMessage() {
-      super("TEST_SERVICE", "TEST_MESSAGE");
+      super("TEST_SERVICE", "TEST_MESSAGE", null);
     }
 
     public String getTestField() {

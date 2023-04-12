@@ -26,7 +26,7 @@ public class CorrelationIdUtil {
     return MDC.get(MDC_CORRELATION_ID_ATTR);
   }
 
-  static void setCorrelationIdOnMdc(String value) {
+  public static void setCorrelationIdOnMdc(String value) {
     if (isCorrelationIdSetOnMdc()) {
       LOGGER.warn("Overwriting existing correlationId - {}", MDC.get(MDC_CORRELATION_ID_ATTR));
     }
@@ -34,7 +34,7 @@ public class CorrelationIdUtil {
     MDC.put(MDC_CORRELATION_ID_ATTR, value);
   }
 
-  static void clearCorrelationIdOnMdc() {
+  public static void clearCorrelationIdOnMdc() {
     MDC.remove(MDC_CORRELATION_ID_ATTR);
   }
 

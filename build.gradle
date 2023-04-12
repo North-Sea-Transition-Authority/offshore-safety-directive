@@ -67,7 +67,7 @@ dependencies {
 	implementation 'software.amazon.awssdk:sns:2.20.7'
 	implementation 'software.amazon.awssdk:sqs:2.20.7'
 
-	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-42-create-message-client-jar-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-31-include-correlation-id-in-all-epmq-messages-and-include-in-log-messages-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'
 
@@ -81,7 +81,7 @@ dependencies {
 
 	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
 	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
-	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-42-create-message-client-jar-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-31-include-correlation-id-in-all-epmq-messages-and-include-in-log-messages-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 }
 
 tasks {
