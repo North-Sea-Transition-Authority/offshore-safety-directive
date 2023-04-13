@@ -1,18 +1,19 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.DirtiesContext;
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sns.model.PublishRequest;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
@@ -20,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmitte
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
 @IntegrationTest
@@ -34,16 +34,10 @@ class NominationSnsIntegrationTest {
   private NominationSubmissionService nominationSubmissionService;
 
   @Autowired
-  private SnsService snsService;
-
-  @Autowired
-  private SnsClient snsClient;
-
-  @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
   private TransactionWrapper transactionWrapper;
+
+  @Autowired
+  private SnsService snsService;
 
   @Test
   void submittingNominationPublishesSnsMessage() throws JsonProcessingException {
@@ -83,23 +77,17 @@ class NominationSnsIntegrationTest {
 
     var nominationsTopicArn = snsService.getOrCreateTopic(NominationSnsService.NOMINATIONS_TOPIC_NAME);
 
-    var expectedMessage = objectMapper.writeValueAsString(
-        new NominationSubmittedOsdEpmqMessage(
-            nomination.getId(),
-            nomination.getReference(),
-            applicantDetail.getPortalOrganisationId(),
-            correlationId
-        )
-    );
+    var nominationSubmittedMessageArgumentCaptor = ArgumentCaptor.forClass(NominationSubmittedOsdEpmqMessage.class);
 
-    verify(snsClient).publish(
-        PublishRequest.builder()
-            .topicArn(nominationsTopicArn.arn())
-            .message(expectedMessage)
-            .messageDeduplicationId(any())
-            .messageGroupId(nominationsTopicArn.arn())
-            .build()
-    );
+    verify(snsService).publishMessage(eq(nominationsTopicArn), nominationSubmittedMessageArgumentCaptor.capture());
+
+    var publishedMessage = nominationSubmittedMessageArgumentCaptor.getValue();
+
+    assertThat(publishedMessage.getNominationId()).isEqualTo(nomination.getId());
+    assertThat(publishedMessage.getNominationReference()).isEqualTo(nomination.getReference());
+    assertThat(publishedMessage.getApplicantOrganisationUnitId())
+        .isEqualTo(applicantDetail.getPortalOrganisationId());
+    assertThat(publishedMessage.getCorrelationId()).isEqualTo(correlationId);
   }
 
   @Test
@@ -144,6 +132,6 @@ class NominationSnsIntegrationTest {
       // Ignore
     }
 
-    verify(snsClient, never()).publish(any(PublishRequest.class));
+    verify(snsService, never()).publishMessage(any(), any());
   }
 }

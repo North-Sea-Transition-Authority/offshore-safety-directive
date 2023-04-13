@@ -6,10 +6,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsLicenceProcessedEpmqMessage;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
-import uk.co.nstauthority.offshoresafetydirective.sqs.SqsQueueUrl;
-import uk.co.nstauthority.offshoresafetydirective.sqs.SqsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
+import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
+import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 
 @Service
 class PearsLicenceSqsService {

@@ -64,9 +64,7 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.307'
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 
-	implementation 'software.amazon.awssdk:sns:2.20.7'
-	implementation 'software.amazon.awssdk:sqs:2.20.7'
-
+	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-58-create-spring-boot-starter-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-31-include-correlation-id-in-all-epmq-messages-and-include-in-log-messages-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'

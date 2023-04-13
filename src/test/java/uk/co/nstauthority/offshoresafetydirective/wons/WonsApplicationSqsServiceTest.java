@@ -11,10 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
-import uk.co.nstauthority.offshoresafetydirective.sqs.SqsQueueUrl;
-import uk.co.nstauthority.offshoresafetydirective.sqs.SqsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
+import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
+import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 
 @ExtendWith(MockitoExtension.class)
 class WonsApplicationSqsServiceTest {

@@ -5,11 +5,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 
 @Service
 class NominationSnsService {

@@ -38,11 +38,11 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable           | Description                                                                                             |
-|--------------------------------|---------------------------------------------------------------------------------------------------------|
-| OSD_SNS_SQS_ACCESS_KEY_ID      | SNS/SQS access key id                                                                                   |
-| OSD_SNS_SQS_SECRET_ACCESS_KEY  | SNS/SQS secret access key                                                                               |
-| OSD_SNS_SQS_ENVIRONMENT_SUFFIX | SNS/SQS environment suffix. This should be set to something unique per developer, such as your initials |
+| Environment Variable                   | Description                                                                                          |
+|----------------------------------------|------------------------------------------------------------------------------------------------------|
+| OSD_EPMQ_SNS_SQS_AWS_ACCESS_KEY_ID     | EPMQ AWS access key id for SNS/SQS                                                                   |
+| OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | EPMQ AWS secret access key for SNS/SQS                                                               |
+| OSD_EPMQ_ENVIRONMENT_SUFFIX            | EPMQ environment suffix. This should be set to something unique per developer, such as your initials |
 
 ### Production
 
@@ -108,4 +108,3 @@ The application will be running on `localhost:8080/wios/<endpoint>`
 6. Check the "Active" box next to the new profile
 
 Note that Checkstyle rules are checked during the build process and any broken rules will fail the build.
-

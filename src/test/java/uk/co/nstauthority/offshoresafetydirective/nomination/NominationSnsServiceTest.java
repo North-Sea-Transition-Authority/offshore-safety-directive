@@ -18,12 +18,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
+import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.sns.SnsTopicArn;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSnsServiceTest {
