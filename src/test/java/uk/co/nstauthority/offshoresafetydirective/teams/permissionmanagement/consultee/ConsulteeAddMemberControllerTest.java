@@ -458,6 +458,9 @@ class ConsulteeAddMemberControllerTest extends AbstractControllerTest {
     when(energyPortalUserService.findUserByUsername(username))
         .thenReturn(List.of(userToAdd));
 
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    when(teamService.isMemberOfTeam(wuaId, teamId)).thenReturn(false);
+
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddMemberController.class)
                 .addMemberToTeamSubmission(teamId, null, null)))
@@ -466,7 +469,48 @@ class ConsulteeAddMemberControllerTest extends AbstractControllerTest {
                 .param("username", username)
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-            .renderAddTeamMemberRoles(teamId, new WebUserAccountId(userToAdd.webUserAccountId())))));
+        .andExpect(redirectedUrl(ReverseRouter.route(
+            on(ConsulteeAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId))));
+  }
+
+  @Test
+  void addMemberToTeamSubmission_whenValidForm_andAlreadyInTeam_thenUserTakenToEditRoles() throws Exception {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withTeamType(TeamType.CONSULTEE)
+        .withRole(ConsulteeTeamRole.ACCESS_MANAGER)
+        .build();
+
+    var teamId = team.toTeamId();
+
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
+    when(teamService.getTeam(teamId, ConsulteeAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
+
+    var username = "username";
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
+
+    when(energyPortalUserService.findUserByUsername(username))
+        .thenReturn(List.of(userToAdd));
+
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    when(teamService.isMemberOfTeam(wuaId, teamId)).thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(ConsulteeAddMemberController.class)
+                .addMemberToTeamSubmission(teamId, null, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("username", username)
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(
+            on(ConsulteeEditMemberController.class).renderEditMember(teamId, wuaId))));
   }
 }

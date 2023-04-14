@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -18,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
@@ -165,5 +168,23 @@ class TeamServiceTest {
 
     assertThat(result)
         .containsExactly(consulteeTeam, userOwnTeam);
+  }
+
+  @Test
+  void isMemberOfTeam_whenMember_thenTrue() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(true);
+    assertTrue(teamMemberService.isMemberOfTeam(teamId, wuaId));
+  }
+
+  @Test
+  void isMemberOfTeam_whenNotMember_thenFalse() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(false);
+    assertFalse(teamMemberService.isMemberOfTeam(teamId, wuaId));
   }
 }

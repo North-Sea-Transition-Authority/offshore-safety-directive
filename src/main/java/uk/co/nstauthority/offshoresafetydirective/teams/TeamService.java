@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Service
@@ -46,6 +47,10 @@ public class TeamService {
     addAccessibleTeams(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()), accessibleTeams);
 
     return accessibleTeams;
+  }
+
+  public boolean isMemberOfTeam(WebUserAccountId webUserAccountId, TeamId teamId) {
+    return teamMemberService.isMemberOfTeam(teamId, webUserAccountId);
   }
 
   private void addAccessibleTeams(Collection<Team> teamsToAdd, Collection<Team> accessibleTeams) {

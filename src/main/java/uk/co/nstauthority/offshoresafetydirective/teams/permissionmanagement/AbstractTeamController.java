@@ -10,7 +10,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 @Component
 public abstract class AbstractTeamController {
 
-  private final TeamService teamService;
+  protected final TeamService teamService;
 
   protected AbstractTeamController(TeamService teamService) {
     this.teamService = teamService;

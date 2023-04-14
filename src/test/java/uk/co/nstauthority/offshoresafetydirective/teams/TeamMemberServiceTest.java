@@ -93,6 +93,24 @@ class TeamMemberServiceTest {
   }
 
   @Test
+  void isMemberOfTeam_byWuaId_whenMember_thenTrue() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberRoleRepository.existsByWuaIdAndTeam_Uuid(wuaId.id(), teamId.uuid())).thenReturn(true);
+    assertTrue(teamMemberService.isMemberOfTeam(teamId, wuaId));
+  }
+
+  @Test
+  void isMemberOfTeam_byWuaId_whenNotMember_thenFalse() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberRoleRepository.existsByWuaIdAndTeam_Uuid(wuaId.id(), teamId.uuid())).thenReturn(false);
+    assertFalse(teamMemberService.isMemberOfTeam(teamId, wuaId));
+  }
+
+  @Test
   void isMemberOfTeamWithAnyRoleOf_whenMemberWithRole_thenTrue() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     var teamId = new TeamId(UUID.randomUUID());

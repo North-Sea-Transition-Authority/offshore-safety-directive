@@ -334,6 +334,9 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     when(energyPortalUserService.findUserByUsername(username))
         .thenReturn(List.of(userToAdd));
 
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    when(teamService.isMemberOfTeam(wuaId, teamId)).thenReturn(false);
+
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
                 .addMemberToTeamSubmission(teamId, null, null)))
@@ -344,6 +347,46 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(RegulatorAddMemberController.class)
             .renderAddTeamMemberRoles(teamId, new WebUserAccountId(userToAdd.webUserAccountId())))));
+  }
+
+  @Test
+  void addMemberToTeamSubmission_whenValidForm_andAlreadyInTeam_thenUserTakenToRolesSelection() throws Exception {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var team = TeamTestUtil.Builder()
+        .build();
+
+    var teamId = new TeamId(team.getUuid());
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .withTeamId(teamId)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
+
+    when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
+
+    var username = "username";
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
+
+    when(energyPortalUserService.findUserByUsername(username))
+        .thenReturn(List.of(userToAdd));
+
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    when(teamService.isMemberOfTeam(wuaId, teamId)).thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(RegulatorAddMemberController.class)
+                .addMemberToTeamSubmission(teamId, null, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("username", username)
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(RegulatorEditMemberController.class)
+            .renderEditMember(teamId, new WebUserAccountId(userToAdd.webUserAccountId())))));
   }
 
   @Test

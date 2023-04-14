@@ -74,8 +74,11 @@ class ConsulteeAddMemberController extends AbstractTeamController {
         form,
         () -> {
           var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
-          return ReverseRouter.redirect(on(ConsulteeAddRolesController.class)
-              .renderAddTeamMemberRoles(teamId, new WebUserAccountId(userToAdd.webUserAccountId())));
+          var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+          if (teamService.isMemberOfTeam(wuaId, teamId)) {
+            return ReverseRouter.redirect(on(ConsulteeEditMemberController.class).renderEditMember(teamId, wuaId));
+          }
+          return ReverseRouter.redirect(on(ConsulteeAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId));
         }
     );
   }
