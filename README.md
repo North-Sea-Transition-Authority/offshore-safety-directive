@@ -79,6 +79,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                |
 | OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
 | OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |
+| OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                 |
 
 ### 3. Initialise the Fivium Design System
 
