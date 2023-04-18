@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,5 +20,9 @@ public class AppointmentAccessService {
         .stream()
         .map(AppointmentDto::fromAppointment)
         .toList();
+  }
+
+  Optional<Appointment> getAppointment(AppointmentId appointmentId) {
+    return appointmentRepository.findById(appointmentId.id());
   }
 }

@@ -1,11 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,40 +89,64 @@ class AppointmentSnsServiceTest {
     when(assetPhaseRepository.findByAsset_IdIn(Set.of(appointment1Asset.getId(), appointment2Asset.getId())))
         .thenReturn(Stream.concat(appointment1AssetPhases.stream(), appointment2AssetPhases.stream()).toList());
 
+    doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessage(any(), any(), any());
+
     appointmentSnsService.publishAppointmentConfirmedSnsMessages(nominationId);
+
+    verify(appointmentSnsService)
+        .publishAppointmentConfirmedSnsMessage(appointment1, appointment1AssetPhases, correlationId);
+    verify(appointmentSnsService)
+        .publishAppointmentConfirmedSnsMessage(appointment2, appointment2AssetPhases, correlationId);
+  }
+
+  @Test
+  void publishAppointmentConfirmedSnsMessage_withoutAssetPhases() {
+    var correlationId = UUID.randomUUID().toString();
+
+    CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
+
+    var asset = AssetTestUtil.builder().withId(UUID.randomUUID()).build();
+
+    var appointment = AppointmentTestUtil.builder().withAsset(asset).build();
+
+    var assetPhases = List.of(
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_1").build()
+    );
+
+    when(assetPhaseRepository.findByAsset_Id(asset.getId())).thenReturn(assetPhases);
+
+    doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessage(any(), any(), any());
+
+    appointmentSnsService.publishAppointmentConfirmedSnsMessage(appointment);
+
+    verify(appointmentSnsService)
+        .publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
+  }
+
+  @Test
+  void publishAppointmentConfirmedSnsMessage_withAssetPhases() {
+    var asset = AssetTestUtil.builder().withId(UUID.randomUUID()).build();
+    var appointment = AppointmentTestUtil.builder().withAsset(asset).build();
+    var assetPhases = List.of(
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_1").build(),
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
+    );
+    var correlationId = UUID.randomUUID().toString();
+
+    appointmentSnsService.publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
 
     var epmqMessageArgumentCaptor = ArgumentCaptor.forClass(AppointmentCreatedOsdEpmqMessage.class);
 
-    verify(snsService, times(2)).publishMessage(eq(appointmentsTopicArn), epmqMessageArgumentCaptor.capture());
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), epmqMessageArgumentCaptor.capture());
 
-    var epmqMessages = epmqMessageArgumentCaptor.getAllValues();
+    var epmqMessage = epmqMessageArgumentCaptor.getValue();
 
-    assertThat(epmqMessages)
-        .extracting(
-            AppointmentCreatedOsdEpmqMessage::getAppointmentId,
-            AppointmentCreatedOsdEpmqMessage::getPortalAssetId,
-            AppointmentCreatedOsdEpmqMessage::getPortalAssetType,
-            AppointmentCreatedOsdEpmqMessage::getAppointedPortalOperatorId,
-            AppointmentCreatedOsdEpmqMessage::getPhases,
-            AppointmentCreatedOsdEpmqMessage::getCorrelationId
-        )
-        .containsExactly(
-            tuple(
-                appointment1.getId(),
-                appointment1Asset.getPortalAssetId(),
-                appointment1Asset.getPortalAssetType().name(),
-                appointment1.getAppointedPortalOperatorId(),
-                appointment1AssetPhases.stream().map(AssetPhase::getPhase).toList(),
-                correlationId
-            ),
-            tuple(
-                appointment2.getId(),
-                appointment2Asset.getPortalAssetId(),
-                appointment2Asset.getPortalAssetType().name(),
-                appointment2.getAppointedPortalOperatorId(),
-                appointment2AssetPhases.stream().map(AssetPhase::getPhase).toList(),
-                correlationId
-            )
-        );
+    assertThat(epmqMessage).isNotNull();
+    assertThat(epmqMessage.getAppointmentId()).isEqualTo(appointment.getId());
+    assertThat(epmqMessage.getPortalAssetId()).isEqualTo(asset.getPortalAssetId());
+    assertThat(epmqMessage.getPortalAssetType()).isEqualTo(asset.getPortalAssetType().name());
+    assertThat(epmqMessage.getAppointedPortalOperatorId()).isEqualTo(appointment.getAppointedPortalOperatorId());
+    assertThat(epmqMessage.getPhases()).isEqualTo(assetPhases.stream().map(AssetPhase::getPhase).toList());
+    assertThat(epmqMessage.getCorrelationId()).isEqualTo(correlationId);
   }
 }

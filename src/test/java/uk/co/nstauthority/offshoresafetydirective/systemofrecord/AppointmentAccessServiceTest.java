@@ -3,9 +3,11 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,4 +70,22 @@ class AppointmentAccessServiceTest {
         );
   }
 
+  @Test
+  void getAppointment_appointmentFound() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder().withId(appointmentId.id()).build();
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.of(appointment));
+
+    assertThat(appointmentAccessService.getAppointment(appointmentId)).contains(appointment);
+  }
+
+  @Test
+  void getAppointment_appointmentNotFound() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.empty());
+
+    assertThat(appointmentAccessService.getAppointment(appointmentId)).isEmpty();
+  }
 }

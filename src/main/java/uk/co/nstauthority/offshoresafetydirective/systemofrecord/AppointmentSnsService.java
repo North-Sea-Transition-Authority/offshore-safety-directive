@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -54,17 +55,34 @@ class AppointmentSnsService {
       var asset = appointment.getAsset();
       var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList());
 
-      snsService.publishMessage(
-          appointmentsTopicArn,
-          new AppointmentCreatedOsdEpmqMessage(
-              appointment.getId(),
-              asset.getPortalAssetId(),
-              asset.getPortalAssetType().name(),
-              appointment.getAppointedPortalOperatorId(),
-              assetPhases.stream().map(AssetPhase::getPhase).toList(),
-              correlationId
-          )
-      );
+      publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
     });
+  }
+
+  void publishAppointmentConfirmedSnsMessage(Appointment appointment) {
+    var assetPhases = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId());
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
+  }
+
+  void publishAppointmentConfirmedSnsMessage(
+      Appointment appointment,
+      List<AssetPhase> assetPhases,
+      String correlationId
+  ) {
+    var asset = appointment.getAsset();
+
+    snsService.publishMessage(
+        appointmentsTopicArn,
+        new AppointmentCreatedOsdEpmqMessage(
+            appointment.getId(),
+            asset.getPortalAssetId(),
+            asset.getPortalAssetType().name(),
+            appointment.getAppointedPortalOperatorId(),
+            assetPhases.stream().map(AssetPhase::getPhase).toList(),
+            correlationId
+        )
+    );
   }
 }
