@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.Arrays;
@@ -36,6 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -327,7 +330,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -358,7 +361,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user)))
         .andExpect(status().isOk());
   }
@@ -387,7 +390,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf()))
         .andExpect(status().isOk());
@@ -414,7 +417,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf()))
         .andExpect(status().isForbidden());
@@ -439,7 +442,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf()))
         .andExpect(status().isForbidden());
@@ -470,7 +473,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -503,7 +506,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -536,7 +539,7 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf())
                 .param("roles", "")
@@ -569,16 +572,23 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
     when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
         .thenReturn(Optional.of(energyPortalUser));
 
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Success")
+        .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+        .build();
+
     mockMvc.perform(
             post(ReverseRouter.route(on(ConsulteeAddRolesController.class)
-                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null)))
+                .saveAddTeamMemberRoles(teamId, teamMember.wuaId(), null, null, null)))
                 .with(user(user))
                 .with(csrf())
                 .param("roles", ConsulteeTeamRole.ACCESS_MANAGER.name())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(ConsulteeTeamManagementController.class)
-            .renderMemberList(teamId))));
+            .renderMemberList(teamId))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
   }
 
   private Map<String, String> getDisplayableConsulteeRoles() {

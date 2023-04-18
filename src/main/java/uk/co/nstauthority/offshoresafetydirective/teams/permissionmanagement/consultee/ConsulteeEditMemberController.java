@@ -2,6 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.co
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Objects;
+import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -13,10 +15,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
@@ -88,7 +94,8 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
   public ModelAndView editMember(@PathVariable("teamId") TeamId teamId,
                                  @PathVariable("wuaId") WebUserAccountId wuaId,
                                  @ModelAttribute("form") TeamMemberRolesForm form,
-                                 BindingResult bindingResult) {
+                                 BindingResult bindingResult,
+                                 @Nullable RedirectAttributes redirectAttributes) {
 
     var team = getTeam(teamId, TEAM_TYPE);
 
@@ -109,6 +116,18 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
         form,
         () -> {
           teamMemberRoleService.updateUserTeamRoles(team, teamMember.wuaId(), form.getRoles());
+
+          var notificationBanner = NotificationBanner.builder()
+              .withBannerType(NotificationBannerType.SUCCESS)
+              .withTitle("Success")
+              .withHeading("Changed roles for %s".formatted(userView.getDisplayName()))
+              .build();
+
+          NotificationBannerUtil.applyNotificationBanner(
+              Objects.requireNonNull(redirectAttributes),
+              notificationBanner
+          );
+
           return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
         });
 

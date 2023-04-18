@@ -1,12 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
@@ -27,6 +31,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
@@ -164,10 +170,66 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
         .andReturn();
   }
 
-  @Test
+  @SecurityTest
   void editMember_whenNotAuthorized_thenIsForbidden() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
-            .renderEditMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId())))))
+            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null))))
         .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void editMember_whenNotLoggedInAuthorized_thenRedirectedToLoginUrl() throws Exception {
+    mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
+            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null)))
+            .with(csrf()))
+        .andExpect(redirectionToLoginUrl());
+  }
+
+  @Test
+  void editMember_whenValid_verifyCalls() throws Exception {
+
+    Set<TeamRole> userRoles = Set.of(RegulatorTeamRole.MANAGE_NOMINATION,
+        RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER, RegulatorTeamRole.ACCESS_MANAGER);
+
+    when(teamService.getTeam(teamView.teamId(), RegulatorAddMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(regulatorTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(userRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(regulatorTeam, teamMember.wuaId()))
+        .thenReturn(Optional.of(teamMember));
+
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withRoles(userRoles)
+        .withWebUserAccountId(teamMember.wuaId())
+        .build();
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Success")
+        .withHeading("Changed roles for %s".formatted(teamMemberView.getDisplayName()))
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
+            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null)))
+            .with(csrf())
+            .with(user(accessManager))
+            .param("roles", RegulatorTeamRole.ACCESS_MANAGER.name()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamView.teamId()))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(regulatorTeamMemberEditService).updateRoles(regulatorTeam, teamMember,
+        Set.of(RegulatorTeamRole.ACCESS_MANAGER.name()));
   }
 }

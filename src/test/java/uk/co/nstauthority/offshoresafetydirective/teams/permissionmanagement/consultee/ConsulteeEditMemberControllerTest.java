@@ -1,13 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
 import java.util.List;
@@ -27,6 +30,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionServic
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
@@ -186,11 +191,62 @@ class ConsulteeEditMemberControllerTest extends AbstractControllerTest {
         );
   }
 
-  @Test
+  @SecurityTest
   void editMember_whenNotAuthorized_thenIsRedirectedToLoginUrl() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(ConsulteeEditMemberController.class)
-            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null)))
+            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null)))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
+
+  @Test
+  void editMember_whenValid_verifyCalls() throws Exception {
+
+    Set<TeamRole> userRoles = Set.of(
+        ConsulteeTeamRole.ACCESS_MANAGER,
+        ConsulteeTeamRole.CONSULTATION_COORDINATOR
+    );
+
+    when(teamService.getTeam(teamView.teamId(), ConsulteeEditMemberController.TEAM_TYPE))
+        .thenReturn(Optional.of(consulteeTeam));
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .withTeamId(teamView.teamId())
+        .withWebUserAccountId(accessManager.wuaId())
+        .withRoles(userRoles)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(accessManager)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamView.teamId(), accessManager)).thenReturn(true);
+
+    when(teamMemberService.getTeamMember(consulteeTeam, teamMember.wuaId()))
+        .thenReturn(Optional.of(teamMember));
+
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withRoles(userRoles)
+        .withWebUserAccountId(teamMember.wuaId())
+        .build();
+    when(teamMemberViewService.getTeamMemberView(teamMember)).thenReturn(Optional.of(teamMemberView));
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Success")
+        .withHeading("Changed roles for %s".formatted(teamMemberView.getDisplayName()))
+        .build();
+
+    mockMvc.perform(post(ReverseRouter.route(on(ConsulteeEditMemberController.class)
+            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null)))
+            .with(csrf())
+            .with(user(accessManager))
+            .param("roles", ConsulteeTeamRole.ACCESS_MANAGER.name()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(ConsulteeTeamManagementController.class).renderMemberList(teamView.teamId()))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(teamMemberRoleService).updateUserTeamRoles(consulteeTeam, teamMember.wuaId(),
+        Set.of(ConsulteeTeamRole.ACCESS_MANAGER.name()));
+  }
+
 }

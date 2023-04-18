@@ -5,36 +5,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorRemoveMemberController;
 
 class TeamMemberViewTest {
-
-  @Test
-  void getDisplayName_whenTitle_thenTitleIncludedInDisplayName() {
-
-    var teamMemberView = TeamMemberViewTestUtil.Builder()
-        .withTitle("Mr")
-        .withFirstName("Forename")
-        .withLastName("Surname")
-        .build();
-
-    assertThat(teamMemberView.getDisplayName()).isEqualTo("Mr Forename Surname");
-  }
-
-  @Test
-  void getDisplayName_whenNoTitle_thenTitleIncludedInDisplayName() {
-
-    var teamMemberView = TeamMemberViewTestUtil.Builder()
-        .withTitle(null)
-        .withFirstName("Forename")
-        .withLastName("Surname")
-        .build();
-
-    assertThat(teamMemberView.getDisplayName()).isEqualTo("Forename Surname");
-  }
 
   @Test
   void removeUrl_whenRegulatorTeam() {
@@ -94,5 +71,30 @@ class TeamMemberViewTest {
             team.toTeamId(),
             teamMemberView.wuaId()
         )));
+  }
+
+  @Test
+  void getDisplayName_whenTitle_thenTitleIncludedInDisplayName() {
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTitle("Mr")
+        .withFirstName("Forename")
+        .withLastName("Surname")
+        .build();
+
+    assertThat(teamMemberView.getDisplayName())
+        .isEqualTo(UserDisplayNameUtil.getUserDisplayName("Mr", "Forename", "Surname"));
+  }
+
+  @Test
+  void getDisplayName_whenNoTitle_thenTitleNotIncludedInDisplayName() {
+
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTitle(null)
+        .withFirstName("Forename")
+        .withLastName("Surname")
+        .build();
+
+    assertThat(teamMemberView.getDisplayName())
+        .isEqualTo(UserDisplayNameUtil.getUserDisplayName(null, "Forename", "Surname"));
   }
 }

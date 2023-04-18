@@ -2,9 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.co
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -16,12 +18,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
@@ -74,7 +80,8 @@ class ConsulteeAddRolesController extends AbstractTeamController {
   protected ModelAndView saveAddTeamMemberRoles(@PathVariable("teamId") TeamId teamId,
                                                 @PathVariable("wuaId") WebUserAccountId webUserAccountId,
                                                 @ModelAttribute("form") TeamMemberRolesForm form,
-                                                BindingResult bindingResult) {
+                                                BindingResult bindingResult,
+                                                @Nullable RedirectAttributes redirectAttributes) {
     var team = getTeam(teamId, TEAM_TYPE);
     var energyPortalUser = getEnergyPortalUser(webUserAccountId);
     consulteeTeamMemberRolesValidator.validate(form, bindingResult);
@@ -85,6 +92,17 @@ class ConsulteeAddRolesController extends AbstractTeamController {
         () -> {
           var regulatorRoles = getRolesToAdd(form.getRoles());
           consulteeTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
+
+          var notificationBanner = NotificationBanner.builder()
+              .withBannerType(NotificationBannerType.SUCCESS)
+              .withTitle("Success")
+              .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+              .build();
+
+          NotificationBannerUtil.applyNotificationBanner(
+              Objects.requireNonNull(redirectAttributes),
+              notificationBanner
+          );
 
           return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
         }

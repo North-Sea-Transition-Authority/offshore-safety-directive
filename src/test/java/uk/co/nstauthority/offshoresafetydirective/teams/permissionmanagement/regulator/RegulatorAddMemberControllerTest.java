@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -35,6 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -594,7 +597,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -627,7 +630,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -656,7 +659,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.empty());
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -689,7 +692,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -723,7 +726,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
         )
@@ -756,7 +759,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
                 .param("roles", "")
@@ -769,6 +772,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
   void saveAddTeamMemberRoles_whenValidTeamMemberRolesForm_thenRedirectionToMembersPage() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
+    var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
 
     var team = TeamTestUtil.Builder()
         .build();
@@ -787,18 +791,27 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
-        .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
+        .thenReturn(Optional.of(energyPortalUser));
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withTitle("Success")
+        .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+        .build();
+
+    var selectedRole = RegulatorTeamRole.ACCESS_MANAGER;
 
     mockMvc.perform(
             post(ReverseRouter.route(on(RegulatorAddMemberController.class)
-                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null)))
+                .saveAddTeamMemberRoles(teamId, webUserAccountIdToAdd, null, null, null)))
                 .with(user(user))
                 .with(csrf())
-                .param("roles", RegulatorTeamRole.ACCESS_MANAGER.name())
+                .param("roles", selectedRole.name())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(RegulatorTeamManagementController.class)
-            .renderMemberList(teamId))));
+            .renderMemberList(teamId))))
+        .andExpect(notificationBanner(expectedNotificationBanner));
   }
 
   private Map<String, String> getDisplayableRegulatorRoles() {
