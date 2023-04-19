@@ -39,13 +39,13 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
   static final FrontEndErrorMessage ALL_PHASES_REQUIRED_ERROR = new FrontEndErrorMessage(
       ALL_PHASES_FIELD_NAME,
       "%s.required".formatted(ALL_PHASES_FIELD_NAME),
-      "Select Yes if this nomination is for all installation phases"
+      "Select Yes if this nomination is for all installation activity phases"
   );
 
   static final FrontEndErrorMessage SPECIFIC_PHASES_REQUIRED_ERROR = new FrontEndErrorMessage(
       SPECIFIC_PHASES_FIELD_NAME,
       "%s.required".formatted(SPECIFIC_PHASES_FIELD_NAME),
-      "Select which installation phases this nomination is for"
+      "Select which installation activity phases this nomination is for"
   );
 
   private final InstallationQueryService installationQueryService;

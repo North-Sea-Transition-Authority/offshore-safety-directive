@@ -29,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
@@ -50,6 +52,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominatedWellDetailController.class)
+@IncludeAccidentRegulatorConfigurationProperties
 class NominatedWellDetailControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
@@ -140,9 +143,9 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     var form = new NominatedWellDetailForm();
     when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(form);
 
-    mockMvc.perform(
-            get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
-                .with(user(NOMINATION_CREATOR_USER))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+            .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/specificWells"))
@@ -167,7 +170,17 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "wellPhases",
             DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class)
-        ));
+        ))
+        .andExpect(model().attributeExists("accidentRegulatorBranding"))
+        .andExpect(model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding"))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    assertThat(
+        (AccidentRegulatorConfigurationProperties) modelAndView.getModel().get("accidentRegulatorBranding")
+    )
+        .hasNoNullFieldsOrProperties();
   }
 
   /**

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -20,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -29,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
@@ -48,7 +50,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
-@WebMvcTest
+@IncludeAccidentRegulatorConfigurationProperties
 @ContextConfiguration(classes = NominatedInstallationController.class)
 class NominatedInstallationControllerTest extends AbstractControllerTest {
 
@@ -163,9 +165,9 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     )
         .thenReturn(List.of(lastInstallationAlphabeticallyByName, firstInstallationAlphabeticallyByName));
 
-    mockMvc.perform(
-            get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+    var modelAndView = mockMvc.perform(
+        get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"))
@@ -194,7 +196,19 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
             "installationsRestUrl",
             RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
         ))
-        .andExpect(model().attribute("form", form));
+        .andExpect(model().attribute("form", form))
+        .andExpect(model().attributeExists("accidentRegulatorBranding"))
+        .andExpect(model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding"))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    assertThat(
+        (AccidentRegulatorConfigurationProperties) modelAndView.getModel().get("accidentRegulatorBranding")
+    )
+        .hasNoNullFieldsOrProperties();
+
+
   }
 
   @Test

@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#import '_wellActivityPhaseGuidance.ftl' as activityPhase>
 
 <#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
@@ -6,6 +7,7 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="alreadyAddedSubareas" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView>" -->
 <#-- @ftlvariable name="blockSubareaRestUrl" type="String" -->
+<#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
 
 <@defaultPage
 htmlTitle=pageTitle
@@ -36,22 +38,24 @@ backLinkUrl=springUrl(backLinkUrl)
     />
     <@fdsRadio.radioGroup
       path="form.validForFutureWellsInSubarea"
-      labelText="Is this nomination for future wells drilled in the selected subareas?"
+      labelText="
+        In addition to any existing well stock, would you like this nomination to cover future wells that may
+        be drilled in the selected subareas?
+      "
     >
       <@fdsRadio.radioYes path="form.validForFutureWellsInSubarea"/>
       <@fdsRadio.radioNo path="form.validForFutureWellsInSubarea"/>
     </@fdsRadio.radioGroup>
     <@fdsRadio.radioGroup
       path="form.forAllWellPhases"
-      labelText="Is this nomination for all well phases?"
-      hintText="Well phases include exploration & appraisal, development or decommissioning"
+      labelText="Is this nomination for all well activity phases?"
       hiddenContent=true
     >
       <@fdsRadio.radioYes path="form.forAllWellPhases"/>
       <@fdsRadio.radioNo path="form.forAllWellPhases">
         <@fdsCheckbox.checkboxGroup
           path="form.explorationAndAppraisalPhase"
-          fieldsetHeadingText="Which well phases is this nomination for?"
+          fieldsetHeadingText="Which well activity phases is this nomination for?"
           nestingPath="form.forAllWellPhases"
         >
           <@fdsCheckbox.checkboxItem
@@ -69,6 +73,7 @@ backLinkUrl=springUrl(backLinkUrl)
         </@fdsCheckbox.checkboxGroup>
       </@fdsRadio.radioNo>
     </@fdsRadio.radioGroup>
+    <@activityPhase.wellActivityPhaseGuidance accidentRegulatorBranding=accidentRegulatorBranding/>
     <@fdsAction.button buttonText="Save and continue"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

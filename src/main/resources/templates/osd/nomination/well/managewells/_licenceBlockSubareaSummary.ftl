@@ -16,18 +16,20 @@
           <p class="govuk-!-margin-top-0">${subarea.displayName()}</p>
         </#list>
       </@fdsSummaryList.summaryListRowNoAction>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for future wells drilled in the selected subareas?">
+      <@fdsSummaryList.summaryListRowNoAction
+        keyText="Will this nomination cover future wells that may be drilled in the selected subareas?"
+      >
         <#if nominatedBlockSubareaDetailView.validForFutureWellsInSubarea?has_content>
           ${nominatedBlockSubareaDetailView.validForFutureWellsInSubarea?then('Yes', 'No')}
         </#if>
       </@fdsSummaryList.summaryListRowNoAction>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well phases?">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well activity phases?">
         <#if nominatedBlockSubareaDetailView.forAllWellPhases?has_content>
           ${nominatedBlockSubareaDetailView.forAllWellPhases?then('Yes', 'No')}
         </#if>
       </@fdsSummaryList.summaryListRowNoAction>
       <#if nominatedBlockSubareaDetailView.forAllWellPhases?has_content && !nominatedBlockSubareaDetailView.forAllWellPhases>
-        <@fdsSummaryList.summaryListRowNoAction keyText="Which well phases is this nomination for?">
+        <@fdsSummaryList.summaryListRowNoAction keyText="Which well activity phases is this nomination for?">
           <#list nominatedBlockSubareaDetailView.wellPhases as phase>
             <div>${phase.screenDisplayText}</div>
           </#list>

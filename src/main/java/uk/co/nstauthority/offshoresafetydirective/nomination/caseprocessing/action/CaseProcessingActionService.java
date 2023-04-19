@@ -102,10 +102,16 @@ public class CaseProcessingActionService {
             CaseProcessingActionItem.CONFIRM_APPOINTMENT,
             CaseProcessingActionGroup.CONFIRM_APPOINTMENT,
             caseProcessingActionItem.getIdentifier(),
-            ReverseRouter.route(
-                on(ConfirmNominationAppointmentController.class).confirmAppointment(nominationId, true,
-                    caseProcessingActionItem.getIdentifier().value(), null, null,
-                    null))
+            ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
+                .confirmAppointment(
+                    nominationId,
+                    true,
+                    caseProcessingActionItem.getIdentifier().value(),
+                    null,
+                    ReverseRouter.emptyBindingResult(),
+                    null
+                )
+            )
         )
         .withAdditionalProperty(
             "fileUploadTemplate",

@@ -77,7 +77,7 @@ public class ConfirmNominationAppointmentController {
 
                                          @Nullable @ModelAttribute(FORM_NAME)
                                          ConfirmNominationAppointmentForm confirmNominationAppointmentForm,
-                                         @Nullable BindingResult bindingResult,
+                                         BindingResult bindingResult,
                                          @Nullable RedirectAttributes redirectAttributes) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -124,15 +124,13 @@ public class ConfirmNominationAppointmentController {
 
           if (redirectAttributes != null) {
 
-            var formattedDate = DateUtil.formatLongDate(appointmentDate);
-
             var notificationBanner = NotificationBanner.builder()
                 .withBannerType(NotificationBannerType.SUCCESS)
                 .withTitle("Appointment confirmed")
                 .withHeading(
-                    "Appointment confirmed for nomination %s on %s".formatted(
+                    "Appointment confirmed for nomination %s with effect from %s".formatted(
                         nominationDetail.getNomination().getReference(),
-                        formattedDate
+                        DateUtil.formatLongDate(appointmentDate)
                     ))
                 .build();
 
