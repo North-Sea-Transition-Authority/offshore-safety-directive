@@ -231,7 +231,6 @@ class ConsulteeEditMemberControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Changed roles for %s".formatted(teamMemberView.getDisplayName()))
         .build();
 

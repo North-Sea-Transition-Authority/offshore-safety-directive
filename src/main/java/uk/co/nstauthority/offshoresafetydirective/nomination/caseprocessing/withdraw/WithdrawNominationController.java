@@ -71,12 +71,12 @@ public class WithdrawNominationController {
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
-    ).orElseThrow(() -> {
-      throw new OsdEntityNotFoundException(String.format(
-          "Cannot find latest NominationDetail with ID: %s and status: %s",
-          nominationId.id(), NominationStatus.SUBMITTED.name()
-      ));
-    });
+    ).orElseThrow(() ->
+        new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s and status: %s",
+            nominationId.id(), NominationStatus.SUBMITTED.name()
+        ))
+    );
 
     withdrawNominationValidator.validate(
         Objects.requireNonNull(withdrawNominationForm),
@@ -100,7 +100,6 @@ public class WithdrawNominationController {
       if (redirectAttributes != null) {
         var notificationBanner = NotificationBanner.builder()
             .withBannerType(NotificationBannerType.SUCCESS)
-            .withTitle("Withdrawn nomination")
             .withHeading("Withdrawn nomination %s".formatted(nominationDetail.getNomination().getReference()))
             .build();
 

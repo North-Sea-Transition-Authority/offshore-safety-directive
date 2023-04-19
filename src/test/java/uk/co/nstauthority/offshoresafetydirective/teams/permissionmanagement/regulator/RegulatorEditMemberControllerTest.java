@@ -51,7 +51,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  RegulatorTeamService regulatorTeamService;
 
   @MockBean
   private TeamService teamService;
@@ -215,7 +215,6 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Changed roles for %s".formatted(teamMemberView.getDisplayName()))
         .build();
 

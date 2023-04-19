@@ -51,13 +51,13 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
   private TeamMemberRemovalService teamMemberRemovalService;
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  RegulatorTeamService regulatorTeamService;
 
   @MockBean
   private TeamService teamService;
 
   @Autowired
-  private ApplicationContext applicationContext;
+  ApplicationContext applicationContext;
 
   @Autowired
   private CustomerConfigurationProperties customerConfigurationProperties;
@@ -373,7 +373,6 @@ class RegulatorRemoveMemberControllerTest extends AbstractControllerTest {
         .thenReturn(canRemoveTeamMember);
 
     var expectedNotificationBanner = NotificationBanner.builder()
-        .withTitle("Removed member from team")
         .withBannerType(NotificationBannerType.SUCCESS)
         .withContent("%s has been removed from the team".formatted(teamMemberView.getDisplayName()))
         .build();

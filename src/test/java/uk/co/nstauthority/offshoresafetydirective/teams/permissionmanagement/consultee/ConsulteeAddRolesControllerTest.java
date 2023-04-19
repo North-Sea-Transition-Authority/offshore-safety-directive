@@ -57,7 +57,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private ConsulteeTeamService consulteeTeamService;
+  ConsulteeTeamService consulteeTeamService;
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
@@ -574,7 +574,6 @@ class ConsulteeAddRolesControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
         .build();
 

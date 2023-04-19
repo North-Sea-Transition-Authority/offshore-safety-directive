@@ -114,7 +114,6 @@ public class RegulatorEditMemberController extends AbstractTeamController {
 
           var notificationBanner = NotificationBanner.builder()
               .withBannerType(NotificationBannerType.SUCCESS)
-              .withTitle("Success")
               .withHeading("Changed roles for %s".formatted(userView.getDisplayName()))
               .build();
 

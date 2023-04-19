@@ -105,7 +105,6 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Consultation request sent")
         .build();
 

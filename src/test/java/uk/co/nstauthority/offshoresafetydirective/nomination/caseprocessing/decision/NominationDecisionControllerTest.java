@@ -45,9 +45,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -64,6 +64,8 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
+  private static final String VIEW_NAME = "test-view-name";
+
   @MockBean
   private NominationDecisionValidator nominationDecisionValidator;
 
@@ -71,7 +73,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   @MockBean
-  private FileUploadService fileUploadService;
+  FileUploadService fileUploadService;
 
   @MockBean
   private NominationDecisionSubmissionService nominationDecisionSubmissionService;
@@ -104,7 +106,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
@@ -126,7 +128,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
@@ -195,7 +197,6 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .thenReturn(new ModelAndView());
 
     var expectedNotificationBanner = NotificationBanner.builder()
-        .withTitle("Decision completed")
         .withHeading("Decision submitted for %s".formatted(
             nominationDetail.getNomination().getReference()))
         .withBannerType(NotificationBannerType.SUCCESS)

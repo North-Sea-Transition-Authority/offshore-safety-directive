@@ -152,7 +152,6 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Appointment confirmed")
         .withHeading(
             "Appointment confirmed for nomination %s with effect from %s".formatted(
                 nominationDetail.getNomination().getReference(),

@@ -88,7 +88,7 @@ public class GeneralCaseNoteController {
           .map(Enum::name)
           .collect(Collectors.joining(","));
 
-      throw new OsdEntityNotFoundException(String.format(
+      return new OsdEntityNotFoundException(String.format(
           "Cannot find latest NominationDetail with ID: %s in a status of: %s",
           nominationId.id(), statusNames
       ));
@@ -124,7 +124,6 @@ public class GeneralCaseNoteController {
 
             var notificationBanner = NotificationBanner.builder()
                 .withBannerType(NotificationBannerType.SUCCESS)
-                .withTitle("Added case note")
                 .withHeading("A case note has been added to nomination %s".formatted(
                     nominationDetail.getNomination().getReference()
                 ))

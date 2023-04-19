@@ -68,7 +68,6 @@ public class NominationConsultationController {
 
     var notificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Consultation request sent")
         .build();
 

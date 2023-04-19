@@ -56,7 +56,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Add
 class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
-  private RegulatorTeamService regulatorTeamService;
+  RegulatorTeamService regulatorTeamService;
 
   @MockBean
   private EnergyPortalUserService energyPortalUserService;
@@ -795,7 +795,6 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Success")
         .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
         .build();
 

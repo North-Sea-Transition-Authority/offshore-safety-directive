@@ -95,7 +95,6 @@ class ConsulteeAddRolesController extends AbstractTeamController {
 
           var notificationBanner = NotificationBanner.builder()
               .withBannerType(NotificationBannerType.SUCCESS)
-              .withTitle("Success")
               .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
               .build();
 

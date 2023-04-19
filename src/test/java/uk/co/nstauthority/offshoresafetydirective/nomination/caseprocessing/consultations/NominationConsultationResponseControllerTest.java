@@ -57,6 +57,8 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
+  private static final String VIEW_NAME = "test-view-name";
+
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
@@ -64,10 +66,10 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
   private NominationConsultationResponseValidator nominationConsultationResponseValidator;
 
   @MockBean
-  private NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
+  NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
 
   @MockBean
-  private FileUploadService fileUploadService;
+  FileUploadService fileUploadService;
 
   private NominationDetail nominationDetail;
 
@@ -96,7 +98,7 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
   @SecurityTest
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
 
-    var modelAndView = new ModelAndView("test_view");
+    var modelAndView = new ModelAndView(VIEW_NAME);
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(modelAndView);
 
@@ -118,7 +120,7 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
   @SecurityTest
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
-    var modelAndView = new ModelAndView("test_view");
+    var modelAndView = new ModelAndView(VIEW_NAME);
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(modelAndView);
 
@@ -151,7 +153,7 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
         NominationStatus.SUBMITTED
     ))).thenReturn(Optional.of(nominationDetail));
 
-    var modelAndView = new ModelAndView("test_view");
+    var modelAndView = new ModelAndView(VIEW_NAME);
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(modelAndView);
 
@@ -161,7 +163,7 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(status().isOk())
-        .andExpect(view().name("test_view"));
+        .andExpect(view().name(VIEW_NAME));
   }
 
   @Test
@@ -171,12 +173,11 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
         NominationStatus.SUBMITTED
     ))).thenReturn(Optional.of(nominationDetail));
 
-    var modelAndView = new ModelAndView("test_view");
+    var modelAndView = new ModelAndView(VIEW_NAME);
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
         .thenReturn(modelAndView);
 
     var expectedNotificationBanner = NotificationBanner.builder()
-        .withTitle("Success")
         .withBannerType(NotificationBannerType.SUCCESS)
         .withHeading("The consultation response has been added")
         .build();

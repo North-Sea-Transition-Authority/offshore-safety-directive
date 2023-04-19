@@ -83,12 +83,12 @@ public class NominationConsultationResponseController {
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         EnumSet.of(NominationStatus.SUBMITTED)
-    ).orElseThrow(() -> {
-      throw new OsdEntityNotFoundException(String.format(
-          "Cannot find latest NominationDetail with ID: %d and status: %s",
-          nominationId.id(), NominationStatus.SUBMITTED.name()
-      ));
-    });
+    ).orElseThrow(() ->
+        new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %d and status: %s",
+            nominationId.id(), NominationStatus.SUBMITTED.name()
+        ))
+    );
 
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
@@ -113,7 +113,6 @@ public class NominationConsultationResponseController {
           nominationConsultationResponseSubmissionService.submitConsultationResponse(nominationDetail, form);
 
           var notificationBanner = NotificationBanner.builder()
-              .withTitle("Success")
               .withBannerType(NotificationBannerType.SUCCESS)
               .withHeading("The consultation response has been added")
               .build();

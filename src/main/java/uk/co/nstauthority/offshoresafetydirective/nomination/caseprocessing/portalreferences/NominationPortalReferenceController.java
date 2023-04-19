@@ -94,7 +94,6 @@ public class NominationPortalReferenceController {
     if (redirectAttributes != null) {
       var notificationBanner = NotificationBanner.builder()
           .withBannerType(NotificationBannerType.SUCCESS)
-          .withTitle("Updated references")
           .withHeading(
               "%s references for %s have been updated"
                   .formatted(portalReferenceType.name(), nominationDetail.getNomination().getReference())

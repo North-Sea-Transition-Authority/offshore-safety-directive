@@ -77,12 +77,12 @@ public class NominationDecisionController {
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         EnumSet.of(NominationStatus.SUBMITTED)
-    ).orElseThrow(() -> {
-      throw new OsdEntityNotFoundException(String.format(
-          "Cannot find latest NominationDetail with ID: %s and status: %s",
-          nominationId.id(), NominationStatus.SUBMITTED.name()
-      ));
-    });
+    ).orElseThrow(() ->
+        new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s and status: %s",
+            nominationId.id(), NominationStatus.SUBMITTED.name()
+        ))
+    );
 
     nominationDecisionValidator.validate(
         Objects.requireNonNull(nominationDecisionForm),
@@ -112,7 +112,6 @@ public class NominationDecisionController {
 
           if (redirectAttributes != null) {
             var notificationBanner = NotificationBanner.builder()
-                .withTitle("Decision completed")
                 .withHeading("Decision submitted for %s".formatted(
                     nominationDetail.getNomination().getReference()))
                 .withBannerType(NotificationBannerType.SUCCESS)

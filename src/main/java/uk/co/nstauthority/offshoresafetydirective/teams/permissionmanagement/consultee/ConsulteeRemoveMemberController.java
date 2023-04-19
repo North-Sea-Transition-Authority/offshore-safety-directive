@@ -106,7 +106,6 @@ public class ConsulteeRemoveMemberController extends AbstractTeamController {
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
     var banner = NotificationBanner.builder()
-        .withTitle("Removed member from team")
         .withBannerType(NotificationBannerType.SUCCESS)
         .withContent("%s has been removed from the team".formatted(userView.getDisplayName()))
         .build();

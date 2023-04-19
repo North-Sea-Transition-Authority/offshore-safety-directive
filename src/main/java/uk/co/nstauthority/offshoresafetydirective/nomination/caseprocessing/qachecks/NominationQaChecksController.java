@@ -26,7 +26,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -71,12 +70,12 @@ public class NominationQaChecksController {
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         EnumSet.of(NominationStatus.SUBMITTED)
-    ).orElseThrow(() -> {
-      throw new OsdEntityNotFoundException(String.format(
-          "Cannot find latest NominationDetail with ID: %s and status: %s",
-          nominationId.id(), NominationStatus.SUBMITTED.name()
-      ));
-    });
+    ).orElseThrow(() ->
+        new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s and status: %s",
+            nominationId.id(), NominationStatus.SUBMITTED.name()
+        ))
+    );
 
     nominationQaChecksValidator.validate(
         Objects.requireNonNull(nominationQaChecksForm),
@@ -100,7 +99,6 @@ public class NominationQaChecksController {
 
       if (redirectAttributes != null) {
         var notificationBanner = NotificationBanner.builder()
-            .withTitle(CaseEventType.QA_CHECKS.getScreenDisplayText())
             .withHeading("Successfully completed QA checks")
             .withBannerType(NotificationBannerType.SUCCESS)
             .build();
