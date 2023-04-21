@@ -9,12 +9,11 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 
 @Service
 class NominationSnsService {
-
-  static final String NOMINATIONS_TOPIC_NAME = "osd-nominations";
 
   private final SnsService snsService;
   private final SnsTopicArn nominationsTopicArn;
@@ -23,7 +22,7 @@ class NominationSnsService {
   @Autowired
   NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService) {
     this.snsService = snsService;
-    nominationsTopicArn = snsService.getOrCreateTopic(NOMINATIONS_TOPIC_NAME);
+    nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
     this.applicantDetailAccessService = applicantDetailAccessService;
   }
 

@@ -22,6 +22,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 
@@ -43,7 +44,7 @@ class AppointmentSnsServiceTest {
 
   @BeforeEach
   public void setUp() {
-    when(snsService.getOrCreateTopic(AppointmentSnsService.APPOINTMENTS_TOPIC_NAME)).thenReturn(appointmentsTopicArn);
+    when(snsService.getOrCreateTopic(OsdEpmqTopics.APPOINTMENTS.getName())).thenReturn(appointmentsTopicArn);
 
     appointmentSnsService = spy(new AppointmentSnsService(snsService, appointmentRepository, assetPhaseRepository));
   }

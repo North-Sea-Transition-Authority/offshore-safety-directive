@@ -18,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
@@ -75,7 +76,7 @@ class NominationSnsIntegrationTest {
 
     nominationSubmissionService.submitNomination(nominationDetail);
 
-    var nominationsTopicArn = snsService.getOrCreateTopic(NominationSnsService.NOMINATIONS_TOPIC_NAME);
+    var nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
 
     var nominationSubmittedMessageArgumentCaptor = ArgumentCaptor.forClass(NominationSubmittedOsdEpmqMessage.class);
 

@@ -2,10 +2,11 @@ package uk.co.fivium.offshoresafetydirective.sns.message;
 
 import org.junit.jupiter.api.Test;
 
-class OsdEpmqMessagesTest {
+class OsdEpmqMessagesJarTest {
 
   @Test
-  void messageClassesExist() throws ClassNotFoundException {
+  void classesExist() throws ClassNotFoundException {
+    Class.forName("uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics");
     Class.forName("uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqMessage");
     Class.forName("uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage");
   }

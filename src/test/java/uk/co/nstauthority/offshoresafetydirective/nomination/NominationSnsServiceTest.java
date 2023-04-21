@@ -22,6 +22,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailDtoTestUtil;
 
@@ -40,7 +41,7 @@ class NominationSnsServiceTest {
 
   @BeforeEach
   void setUp() {
-    when(snsService.getOrCreateTopic(NominationSnsService.NOMINATIONS_TOPIC_NAME)).thenReturn(nominationsTopicArn);
+    when(snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName())).thenReturn(nominationsTopicArn);
 
     nominationSnsService = spy(new NominationSnsService(snsService, applicantDetailAccessService));
   }

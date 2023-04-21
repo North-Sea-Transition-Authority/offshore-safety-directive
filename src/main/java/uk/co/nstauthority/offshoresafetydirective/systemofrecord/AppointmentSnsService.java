@@ -12,13 +12,12 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 
 @Service
 class AppointmentSnsService {
-
-  static final String APPOINTMENTS_TOPIC_NAME = "osd-appointments";
 
   private final SnsService snsService;
   private final SnsTopicArn appointmentsTopicArn;
@@ -32,7 +31,7 @@ class AppointmentSnsService {
       AssetPhaseRepository assetPhaseRepository
   ) {
     this.snsService = snsService;
-    appointmentsTopicArn = snsService.getOrCreateTopic(APPOINTMENTS_TOPIC_NAME);
+    appointmentsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.APPOINTMENTS.getName());
     this.appointmentRepository = appointmentRepository;
     this.assetPhaseRepository = assetPhaseRepository;
   }
