@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
@@ -32,7 +33,7 @@ class WonsApplicationSqsServiceTest {
 
   @BeforeEach
   void setUp() {
-    when(snsService.getOrCreateTopic(WonsApplicationSqsService.APPLICATIONS_SNS_TOPIC_NAME))
+    when(snsService.getOrCreateTopic(EpmqTopics.WONS_APPLICATIONS.getName()))
         .thenReturn(applicationsSnsTopicArn);
     when(sqsService.getOrCreateQueue(WonsApplicationSqsService.APPLICATIONS_OSD_QUEUE_NAME))
         .thenReturn(applicationsOsdQueueUrl);

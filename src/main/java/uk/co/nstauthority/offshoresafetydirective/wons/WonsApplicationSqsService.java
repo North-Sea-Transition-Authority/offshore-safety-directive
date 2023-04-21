@@ -5,6 +5,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
@@ -14,7 +15,6 @@ import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 @Service
 class WonsApplicationSqsService {
 
-  static final String APPLICATIONS_SNS_TOPIC_NAME = "wons-applications";
   static final String APPLICATIONS_OSD_QUEUE_NAME = "wons-applications-osd";
 
   private final SqsService sqsService;
@@ -27,7 +27,7 @@ class WonsApplicationSqsService {
     this.sqsService = sqsService;
     this.snsService = snsService;
 
-    applicationsSnsTopicArn = snsService.getOrCreateTopic(APPLICATIONS_SNS_TOPIC_NAME);
+    applicationsSnsTopicArn = snsService.getOrCreateTopic(EpmqTopics.WONS_APPLICATIONS.getName());
     applicationsOsdQueueUrl = sqsService.getOrCreateQueue(APPLICATIONS_OSD_QUEUE_NAME);
   }
 

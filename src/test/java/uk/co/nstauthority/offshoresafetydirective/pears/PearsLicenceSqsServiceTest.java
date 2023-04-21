@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsLicenceProcessedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
@@ -32,7 +33,7 @@ class PearsLicenceSqsServiceTest {
 
   @BeforeEach
   void setUp() {
-    when(snsService.getOrCreateTopic(PearsLicenceSqsService.LICENCES_SNS_TOPIC_NAME))
+    when(snsService.getOrCreateTopic(EpmqTopics.PEARS_LICENCES.getName()))
         .thenReturn(licencesSnsTopicArn);
     when(sqsService.getOrCreateQueue(PearsLicenceSqsService.LICENCES_OSD_QUEUE_NAME))
         .thenReturn(licencesOsdQueueUrl);

@@ -65,7 +65,7 @@ dependencies {
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-58-create-spring-boot-starter-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
-	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-31-include-correlation-id-in-all-epmq-messages-and-include-in-log-messages-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-64-add-topics-enum-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'
 
@@ -79,7 +79,8 @@ dependencies {
 
 	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
 	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
-	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-31-include-correlation-id-in-all-epmq-messages-and-include-in-log-messages-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-58-create-spring-boot-starter-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-64-add-topics-enum-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 }
 
 tasks {
