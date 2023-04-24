@@ -16,14 +16,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class PortalOrganisationUnitQueryServiceTest {
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
-      "name",
-      "mnemonic"
-  );
+  private static final ServiceConfigurationProperties serviceConfigurationProperties
+      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static OrganisationApi organisationApi;
 

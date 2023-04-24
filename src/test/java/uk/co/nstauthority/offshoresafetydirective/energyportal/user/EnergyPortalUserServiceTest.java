@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
@@ -27,10 +28,8 @@ class EnergyPortalUserServiceTest {
 
   private static EnergyPortalUserService energyPortalUserService;
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
-      "name",
-      "mnemonic"
-  );
+  private static final ServiceConfigurationProperties serviceConfigurationProperties
+      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   @BeforeAll
   static void setup() {
