@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundExc
 
 @Component
 @RestControllerEndpoint(id = "appointments")
+@Profile("!disable-epmq")
 class AppointmentActuatorController {
 
   private final AppointmentAccessService appointmentAccessService;

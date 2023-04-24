@@ -44,6 +44,8 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | EPMQ AWS secret access key for SNS/SQS                                                               |
 | OSD_EPMQ_ENVIRONMENT_SUFFIX            | EPMQ environment suffix. This should be set to something unique per developer, such as your initials |
 
+- Optionally, the EPMQ integration can be disabled by running with the `disable-epmq` profile. In this case the `OSD_EPMQ_*` environment variables do not need to be set.
+
 ### Production
 
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
