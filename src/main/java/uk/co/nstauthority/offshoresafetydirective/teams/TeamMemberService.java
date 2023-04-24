@@ -25,18 +25,12 @@ public class TeamMemberService {
   }
 
   public List<TeamMember> getTeamMembers(Team team) {
+    return convertToTeamMembers(teamMemberRoleRepository.findAllByTeam(team));
+  }
 
-    // Group all roles based on the web user account id
-    Map<WebUserAccountId, List<TeamMemberRole>> wuaIdToRolesMap = teamMemberRoleRepository.findAllByTeam(team)
-        .stream()
-        .collect(Collectors.groupingBy(teamMemberRole -> new WebUserAccountId(teamMemberRole.getWuaId())));
-
-    // Convert to a list of TeamMember objects.
-    return wuaIdToRolesMap.entrySet()
-        .stream()
-        .map(entry -> new TeamMember(entry.getKey(), createTeamView(team),
-            mapMemberRolesToTeamRoles(entry.getValue(), team)))
-        .toList();
+  public List<TeamMember> getTeamMembersInRoles(Collection<String> roles, TeamType teamType) {
+    List<TeamMemberRole> teamMemberRoles = teamMemberRoleRepository.findAllByTeam_TeamTypeAndRoleIn(teamType, roles);
+    return convertToTeamMembers(teamMemberRoles);
   }
 
   public Optional<TeamMember> getTeamMember(Team team, WebUserAccountId wuaId) {
@@ -89,6 +83,27 @@ public class TeamMemberService {
           case CONSULTEE -> ConsulteeTeamRole.valueOf(teamMemberRole.getRole());
         })
         .collect(Collectors.toSet());
+  }
+
+  private List<TeamMember> convertToTeamMembers(List<TeamMemberRole> teamMemberRoles) {
+
+    // Group all roles based on the web user account id
+    Map<WebUserAccountId, List<TeamMemberRole>> wuaIdToRolesMap = teamMemberRoles
+        .stream()
+        .collect(Collectors.groupingBy(teamMemberRole -> new WebUserAccountId(teamMemberRole.getWuaId())));
+
+    // Convert to a list of TeamMember objects.
+    return wuaIdToRolesMap.entrySet()
+        .stream()
+        .map(entry -> {
+          var team = entry.getValue().get(0).getTeam();
+          return new TeamMember(
+              entry.getKey(),
+              createTeamView(team),
+              mapMemberRolesToTeamRoles(entry.getValue(), team)
+          );
+        })
+        .toList();
   }
 
 }

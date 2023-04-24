@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -291,6 +292,50 @@ class TeamMemberServiceTest {
         .containsExactlyInAnyOrder(
             Set.of(RegulatorTeamRole.ACCESS_MANAGER),
             Set.of(ConsulteeTeamRole.ACCESS_MANAGER)
+        );
+  }
+
+  @Test
+  void getTeamMembersInRoles_whenNoResults_thenEmptyListReturned() {
+
+    var roleName = "ROLE_NAME";
+    var teamType = TeamType.REGULATOR;
+
+    when(teamMemberRoleRepository.findAllByTeam_TeamTypeAndRoleIn(teamType, Set.of(roleName)))
+        .thenReturn(Collections.emptyList());
+
+    var resultingTeamMembers = teamMemberService.getTeamMembersInRoles(Set.of(roleName), teamType);
+
+    assertThat(resultingTeamMembers).isEmpty();
+  }
+
+  @Test
+  void getTeamMembersInRoles_whenResults_thenPopulatedListReturned() {
+
+    var expectedRole = RegulatorTeamRole.ACCESS_MANAGER;
+    var teamType = TeamType.REGULATOR;
+
+    var expectedTeamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withRole(expectedRole.name())
+        .build();
+
+    when(teamMemberRoleRepository.findAllByTeam_TeamTypeAndRoleIn(teamType, Set.of(expectedRole.name())))
+        .thenReturn(List.of(expectedTeamMemberRole));
+
+    var resultingTeamMembers = teamMemberService.getTeamMembersInRoles(Set.of(expectedRole.name()), teamType);
+
+    assertThat(resultingTeamMembers)
+        .extracting(
+            teamMember -> teamMember.wuaId().id(),
+            teamMember -> teamMember.teamView().teamId(),
+            TeamMember::roles
+        )
+        .containsExactly(
+            tuple(
+                expectedTeamMemberRole.getWuaId(),
+                expectedTeamMemberRole.getTeam().toTeamId(),
+                Set.of(expectedRole)
+            )
         );
   }
 

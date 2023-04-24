@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,5 +63,36 @@ class NominationServiceTest {
             NominationStatus.DRAFT,
             instant
         );
+  }
+
+  @Test
+  void getNomination_whenNotFound_thenEmptyOptional() {
+
+    var nominationId = new NominationId(123);
+
+    when(nominationRepository.findById(nominationId.id())).thenReturn(Optional.empty());
+
+    var resultingNomination = nominationService.getNomination(nominationId);
+
+    assertThat(resultingNomination).isEmpty();
+  }
+
+  @Test
+  void getNomination_whenFound_thenPopulatedOptional() {
+
+    var nominationId = new NominationId(123);
+
+    var expectedNomination = NominationTestUtil.builder()
+        .withId(nominationId.id())
+        .build();
+
+    when(nominationRepository.findById(nominationId.id())).thenReturn(Optional.of(expectedNomination));
+
+    var resultingNomination = nominationService.getNomination(nominationId);
+
+    assertThat(resultingNomination).isPresent();
+    assertThat(resultingNomination.get())
+        .extracting(nominationDto -> nominationDto.nominationId().id())
+        .isEqualTo(expectedNomination.getId());
   }
 }

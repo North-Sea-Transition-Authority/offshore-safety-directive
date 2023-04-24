@@ -37,6 +37,11 @@ public class TeamMemberViewTestUtil {
       return this;
     }
 
+    public Builder withWebUserAccountId(long wuaId) {
+      this.wuaId = new WebUserAccountId(wuaId);
+      return this;
+    }
+
     public Builder withTeamId(TeamId teamId) {
       this.teamId = teamId;
       return this;

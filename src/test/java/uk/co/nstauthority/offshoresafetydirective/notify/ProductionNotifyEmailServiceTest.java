@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.UUID;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,19 +75,13 @@ class ProductionNotifyEmailServiceTest {
 
     productionNotifyEmailService.sendEmail(notifyEmail, toEmailAddress, reference, emailReplyToId);
 
+    var defaultEmailProperties = NotifyEmailTestUtil.getDefaultEmailProperties(
+        NotifyEmailTestUtil.serviceBrandingConfigurationProperties
+    );
+
     assertThat(notifyEmail.getPersonalisations())
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, String.class))
-        .containsExactly(
-            Map.entry(
-                "SERVICE_NAME",
-                NotifyEmailTestUtil.serviceBrandingConfigurationProperties.getServiceConfigurationProperties().name()
-            ),
-            Map.entry("SUBJECT_PREFIX", ""),
-            Map.entry(
-                "IS_TEST_EMAIL",
-                "no"
-            )
-        );
+        .containsAllEntriesOf(defaultEmailProperties);
 
     verify(fiviumNotificationClientApi).sendEmail(
         notifyEmail.getTemplate().getTemplateName(),

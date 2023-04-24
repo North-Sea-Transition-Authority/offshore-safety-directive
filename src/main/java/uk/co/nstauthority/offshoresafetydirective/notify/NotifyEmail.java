@@ -7,6 +7,8 @@ import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfig
 
 public class NotifyEmail {
 
+  public static final String RECIPIENT_NAME_PERSONALISATION_KEY = "RECIPIENT_IDENTIFIER";
+
   private final NotifyTemplate template;
   private final Map<String, String> personalisations;
 
@@ -33,14 +35,22 @@ public class NotifyEmail {
 
   public static Builder builder(NotifyTemplate template,
                                 ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
+
+    var serviceBranding = serviceBrandingConfigurationProperties.getServiceConfigurationProperties();
+    var customerBranding = serviceBrandingConfigurationProperties.getCustomerConfigurationProperties();
+
     return new Builder(template)
         // Set TEST_EMAIL to "no" by default
         .addPersonalisation("IS_TEST_EMAIL", "no")
         .addPersonalisation("SUBJECT_PREFIX", "")
-        .addPersonalisation(
-            "SERVICE_NAME",
-            serviceBrandingConfigurationProperties.getServiceConfigurationProperties().name()
-        );
+        .addPersonalisation("SERVICE_FULL_NAME", serviceBranding.name())
+        .addPersonalisation("SERVICE_MNEMONIC", serviceBranding.mnemonic())
+        .addPersonalisation("REGULATION_NAME_SHORT", serviceBranding.regulationNameShort())
+        .addPersonalisation("REGULATION_NAME_LONG", serviceBranding.regulationNameLong())
+        .addPersonalisation("REGULATOR_BUSINESS_EMAIL_ADDRESS", customerBranding.businessEmailAddress())
+        .addPersonalisation("SALUTATION", "Dear")
+        .addPersonalisation("VALEDICTION", "Kind regards")
+        .addPersonalisation(RECIPIENT_NAME_PERSONALISATION_KEY, "%s user".formatted(serviceBranding.mnemonic()));
   }
 
   public static class Builder {
@@ -54,6 +64,11 @@ public class NotifyEmail {
 
     public Builder addPersonalisation(String personalisationKey, String value) {
       personalisations.put(personalisationKey, value);
+      return this;
+    }
+
+    public Builder addRecipientIdentifier(String recipientIdentifier) {
+      personalisations.put(RECIPIENT_NAME_PERSONALISATION_KEY, recipientIdentifier);
       return this;
     }
 

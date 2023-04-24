@@ -38,6 +38,11 @@ public class TeamMemberViewService {
         .findFirst();
   }
 
+  public List<TeamMemberView> getTeamMembersWithRoles(Collection<String> roles, TeamType teamType) {
+    var teamMemberRoles = teamMemberService.getTeamMembersInRoles(roles, teamType);
+    return createUserViewsFromTeamMembers(teamMemberRoles);
+  }
+
   private List<TeamMemberView> createUserViewsFromTeamMembers(Collection<TeamMember> teamMembers) {
 
     // extract list of WUA to lookup
