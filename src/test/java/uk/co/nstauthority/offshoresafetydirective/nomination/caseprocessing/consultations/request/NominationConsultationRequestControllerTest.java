@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations;
+package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,7 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
@@ -39,8 +38,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
-@ContextConfiguration(classes = NominationConsultationController.class)
-class NominationConsultationControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = NominationConsultationRequestController.class)
+class NominationConsultationRequestControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
 
@@ -51,7 +50,7 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private CaseEventService caseEventService;
+  private ConsultationRequestService consultationRequestService;
 
   private NominationDetail nominationDetail;
 
@@ -79,7 +78,7 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(ReverseRouter.route(on(NominationConsultationController.class).sendForConsultation(
+        .withPostEndpoint(ReverseRouter.route(on(NominationConsultationRequestController.class).requestConsultation(
                 NOMINATION_ID, true, CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
             status().is3xxRedirection(),
             status().isForbidden()
@@ -92,7 +91,7 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
-        .withPostEndpoint(ReverseRouter.route(on(NominationConsultationController.class).sendForConsultation(
+        .withPostEndpoint(ReverseRouter.route(on(NominationConsultationRequestController.class).requestConsultation(
                 NOMINATION_ID, true, CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
             status().is3xxRedirection(),
             status().isForbidden()
@@ -101,7 +100,7 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void sendForConsultation_verifyCalls() throws Exception {
+  void requestConsultation_verifyCalls() throws Exception {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -109,7 +108,7 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationConsultationController.class).sendForConsultation(NOMINATION_ID, true,
+            on(NominationConsultationRequestController.class).requestConsultation(NOMINATION_ID, true,
                 CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
@@ -118,6 +117,6 @@ class NominationConsultationControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
-    verify(caseEventService).createSentForConsultationEvent(nominationDetail);
+    verify(consultationRequestService).requestConsultation(nominationDetail);
   }
 }

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations;
+package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -23,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -32,20 +31,20 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @RequestMapping("/nomination/{nominationId}/manage")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-public class NominationConsultationController {
+public class NominationConsultationRequestController {
 
   private final NominationDetailService nominationDetailService;
-  private final CaseEventService caseEventService;
+  private final ConsultationRequestService consultationRequestService;
 
   @Autowired
-  public NominationConsultationController(NominationDetailService nominationDetailService,
-                                          CaseEventService caseEventService) {
+  public NominationConsultationRequestController(NominationDetailService nominationDetailService,
+                                                 ConsultationRequestService consultationRequestService) {
     this.nominationDetailService = nominationDetailService;
-    this.caseEventService = caseEventService;
+    this.consultationRequestService = consultationRequestService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION)
-  public ModelAndView sendForConsultation(@PathVariable("nominationId") NominationId nominationId,
+  public ModelAndView requestConsultation(@PathVariable("nominationId") NominationId nominationId,
                                           @RequestParam("send-for-consultation") Boolean slideoutOpen,
                                           // Used for ReverseRouter to call correct route
                                           @Nullable
@@ -64,7 +63,7 @@ public class NominationConsultationController {
             )
         ));
 
-    caseEventService.createSentForConsultationEvent(nominationDetail);
+    consultationRequestService.requestConsultation(nominationDetail);
 
     var notificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)

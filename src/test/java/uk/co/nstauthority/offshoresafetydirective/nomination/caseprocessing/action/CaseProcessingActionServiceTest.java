@@ -18,9 +18,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseFileController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
@@ -255,7 +255,7 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionGroup.CONSULTATIONS,
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION),
             ReverseRouter.route(
-                on(NominationConsultationController.class).sendForConsultation(nominationId, true,
+                on(NominationConsultationRequestController.class).requestConsultation(nominationId, true,
                     CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
             Map.of()
         );
