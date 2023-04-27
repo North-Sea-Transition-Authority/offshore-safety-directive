@@ -4,19 +4,19 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
-class RelatedInformationTestUtil {
+public class RelatedInformationTestUtil {
 
   RelatedInformationTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
-    private int id = 150;
+    private Integer id = 150;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean relatedToAnyFields = null;
 
@@ -31,42 +31,42 @@ class RelatedInformationTestUtil {
     private Builder() {
     }
 
-    Builder withId(int id) {
+    public Builder withId(Integer id) {
       this.id = id;
       return this;
     }
 
-    Builder withNominationDetail(NominationDetail nominationDetail) {
+    public Builder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
       return this;
     }
 
-    Builder withRelationToAnyField(Boolean related) {
+    public Builder withRelationToAnyField(Boolean related) {
       this.relatedToAnyFields = related;
       return this;
     }
 
-    Builder withRelatedToLicenceApplications(Boolean relatedToLicenceApplications) {
+    public Builder withRelatedToLicenceApplications(Boolean relatedToLicenceApplications) {
       this.relatedToLicenceApplications = relatedToLicenceApplications;
       return this;
     }
 
-    Builder withRelatedLicenceApplications(String relatedLicenceApplications) {
+    public Builder withRelatedLicenceApplications(String relatedLicenceApplications) {
       this.relatedLicenceApplications = relatedLicenceApplications;
       return this;
     }
 
-    Builder withRelatedToWellApplications(Boolean relatedToWellApplications) {
+    public Builder withRelatedToWellApplications(Boolean relatedToWellApplications) {
       this.relatedToWellApplications = relatedToWellApplications;
       return this;
     }
 
-    Builder withRelatedWellApplications(String relatedWellApplications) {
+    public Builder withRelatedWellApplications(String relatedWellApplications) {
       this.relatedWellApplications = relatedWellApplications;
       return this;
     }
 
-    RelatedInformation build() {
+    public RelatedInformation build() {
       var relatedInformation = new RelatedInformation();
       relatedInformation.setId(id);
       relatedInformation.setNominationDetail(nominationDetail);

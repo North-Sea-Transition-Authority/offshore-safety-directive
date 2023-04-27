@@ -36,6 +36,15 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 ### Development
 
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
+- The following environment variables are required when using this profile:
+
+| Environment Variable                   | Description                                                                                          |
+|----------------------------------------|------------------------------------------------------------------------------------------------------|
+| OSD_EPMQ_SNS_SQS_AWS_ACCESS_KEY_ID     | EPMQ AWS access key id for SNS/SQS                                                                   |
+| OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | EPMQ AWS secret access key for SNS/SQS                                                               |
+| OSD_EPMQ_ENVIRONMENT_SUFFIX            | EPMQ environment suffix. This should be set to something unique per developer, such as your initials |
+
+- Optionally, the EPMQ integration can be disabled by running with the `disable-epmq` profile. In this case the `OSD_EPMQ_*` environment variables do not need to be set.
 
 ### Production
 
@@ -73,6 +82,10 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                |
 | NOTIFY_API_KEY                             | The GOV.UK Notify key                                                                                |
 | NOTIFY_CALLBACK_TOKEN                      | The GOV.UK Notify callback token                                                                     |
+| OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                |
+| OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
+| OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |
+| OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                 |
 
 ### 3. Initialise the Fivium Design System
 
@@ -102,4 +115,3 @@ The application will be running on `localhost:8080/wios/<endpoint>`
 6. Check the "Active" box next to the new profile
 
 Note that Checkstyle rules are checked during the build process and any broken rules will fail the build.
-

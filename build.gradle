@@ -5,6 +5,7 @@ plugins {
 	id "org.sonarqube" version "3.3"
 	id 'checkstyle'
 	id 'jacoco'
+	id 'maven-publish'
 }
 
 group = 'uk.co.nstauthority'
@@ -12,6 +13,7 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 repositories {
+	mavenLocal()
 	mavenCentral()
 	maven {
 		// Required for opensaml deps
@@ -23,6 +25,10 @@ repositories {
 	maven {
 		url "https://nexus.fivium.co.uk/repository/maven-snapshots/"
 	}
+}
+
+sourceSets {
+	epmqMessagesJarIntegrationTest {}
 }
 
 dependencies {
@@ -50,7 +56,6 @@ dependencies {
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.flywaydb:flyway-core:8.5.13'
-	implementation 'org.apache.commons:commons-lang3:3.12.0'
 
 	implementation 'uk.co.fivium.energyportalapi:client:v5.0.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
@@ -62,6 +67,9 @@ dependencies {
 	implementation 'uk.co.fivium:fivium-notify-spring-boot-starter:3.17.2-4.1-SNAPSHOT'
 	implementation 'commons-validator:commons-validator:1.7'
 
+	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+
 	runtimeOnly 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
@@ -72,6 +80,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 
+	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 }
 
 tasks {
@@ -120,4 +132,66 @@ jacocoTestReport {
 	reports {
 		xml.required = true
 	}
+}
+
+tasks.register('epmqMessagesJar', Jar) {
+	from sourceSets.main.output
+	include 'uk/co/nstauthority/offshoresafetydirective/epmqmessage/**'
+	archiveBaseName = 'offshore-safety-directive-epmq-messages'
+}
+
+publishing {
+	publications {
+		epmqMessages(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = System.getenv("EPMQ_MESSAGES_JAR_VERSION") ?: version
+
+			artifact(epmqMessagesJar)
+		}
+		epmqMessagesIntegrationTest(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = 'integration-test'
+
+			artifact(epmqMessagesJar)
+		}
+	}
+	repositories {
+		maven {
+			name = 'snapshots'
+			url = 'https://nexus.fivium.co.uk/repository/maven-snapshots'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+
+		maven {
+			name = 'releases'
+			url = 'https://nexus.fivium.co.uk/repository/maven-releases'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+	}
+}
+
+tasks.register('epmqMessagesJarIntegrationTest', Test) {
+	useJUnitPlatform()
+	group 'verification'
+	//Need to explicitly override the default classesDirs and classpath for a test task
+	testClassesDirs = sourceSets.epmqMessagesJarIntegrationTest.output.classesDirs
+	classpath = sourceSets.epmqMessagesJarIntegrationTest.runtimeClasspath
+
+	mustRunAfter(publishEpmqMessagesIntegrationTestPublicationToMavenLocal)
+}
+
+tasks.register('epmqMessagesJarIntegrationTestReport', TestReport) {
+	destinationDir = file("$buildDir/reports/epmqMessagesJarIntegrationTests")
+	//Specify test result directory rather than task names so this task runs even if the tests fail
+	testResultDirs = [epmqMessagesJarIntegrationTest.binResultsDir]
+
+	mustRunAfter(epmqMessagesJarIntegrationTest)
 }

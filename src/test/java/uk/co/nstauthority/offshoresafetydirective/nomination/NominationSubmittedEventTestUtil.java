@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class NominationSubmittedEventTestUtil {

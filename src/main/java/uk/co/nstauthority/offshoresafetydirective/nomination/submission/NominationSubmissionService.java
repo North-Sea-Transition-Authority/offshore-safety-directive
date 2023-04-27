@@ -7,7 +7,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 
 @Service
-class NominationSubmissionService {
+public class NominationSubmissionService {
 
   private final List<NominationSectionSubmissionService> nominationSectionSubmissionServices;
   private final NominationDetailService nominationDetailService;
@@ -26,7 +26,7 @@ class NominationSubmissionService {
         );
   }
 
-  void submitNomination(NominationDetail nominationDetail) {
+  public void submitNomination(NominationDetail nominationDetail) {
     onSubmission(nominationDetail);
     nominationDetailService.submitNomination(nominationDetail);
   }
