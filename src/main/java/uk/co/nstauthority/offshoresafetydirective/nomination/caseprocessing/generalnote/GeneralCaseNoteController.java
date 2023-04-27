@@ -30,10 +30,10 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -68,11 +68,13 @@ public class GeneralCaseNoteController {
     this.fileUploadService = fileUploadService;
   }
 
-  @PostMapping(params = CaseProcessingAction.GENERAL_NOTE)
+  @PostMapping(params = CaseProcessingActionIdentifier.GENERAL_NOTE)
   public ModelAndView submitGeneralCaseNote(@PathVariable("nominationId") NominationId nominationId,
                                             @RequestParam("case-note") Boolean slideoutOpen,
                                             // Used for ReverseRouter to call correct route
-                                            @Nullable @RequestParam(CaseProcessingAction.GENERAL_NOTE) String postButtonName,
+                                            @Nullable
+                                            @RequestParam(CaseProcessingActionIdentifier.GENERAL_NOTE) String postButtonName,
+
                                             @Nullable @ModelAttribute(FORM_NAME) GeneralCaseNoteForm generalCaseNoteForm,
                                             @Nullable BindingResult bindingResult,
                                             @Nullable RedirectAttributes redirectAttributes) {
@@ -86,7 +88,7 @@ public class GeneralCaseNoteController {
           .map(Enum::name)
           .collect(Collectors.joining(","));
 
-      throw new OsdEntityNotFoundException(String.format(
+      return new OsdEntityNotFoundException(String.format(
           "Cannot find latest NominationDetail with ID: %s in a status of: %s",
           nominationId.id(), statusNames
       ));
@@ -122,7 +124,6 @@ public class GeneralCaseNoteController {
 
             var notificationBanner = NotificationBanner.builder()
                 .withBannerType(NotificationBannerType.SUCCESS)
-                .withTitle("Added case note")
                 .withHeading("A case note has been added to nomination %s".formatted(
                     nominationDetail.getNomination().getReference()
                 ))

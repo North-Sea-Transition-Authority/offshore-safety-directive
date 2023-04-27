@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner;
 
-// TODO OSDOP-290 - Enforce that title and heading fields are provided
+import org.apache.commons.lang3.StringUtils;
+
 public class NotificationBanner {
 
   private final String title;
@@ -45,7 +46,7 @@ public class NotificationBanner {
     private Builder() {
     }
 
-    public Builder withTitle(String title) {
+    public Builder withCustomTitle(String title) {
       this.title = title;
       return this;
     }
@@ -66,7 +67,24 @@ public class NotificationBanner {
     }
 
     public NotificationBanner build() {
-      return new NotificationBanner(title, heading, content, notificationBannerType);
+      return new NotificationBanner(
+          getBannerTitle(),
+          heading,
+          content,
+          notificationBannerType
+      );
+    }
+
+    private String getBannerTitle() {
+      if (StringUtils.isNotBlank(title)) {
+        return title;
+      } else if (NotificationBannerType.SUCCESS.equals(notificationBannerType) && StringUtils.isBlank(title)) {
+        return "Success";
+      } else if (NotificationBannerType.INFO.equals(notificationBannerType) && StringUtils.isBlank(title)) {
+        return "Information";
+      } else {
+        return "";
+      }
     }
   }
 }

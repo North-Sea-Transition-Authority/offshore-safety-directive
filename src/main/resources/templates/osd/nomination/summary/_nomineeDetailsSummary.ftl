@@ -7,7 +7,7 @@
     summaryListErrorMessage=(nomineeDetailSummaryView.summarySectionError().errorMessage())!""
   >
 
-      <@fdsSummaryList.summaryListRowNoAction keyText="Nominated organisation">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Nominated operator">
           ${(nomineeDetailSummaryView.nominatedOrganisationUnitView().displayName())!""}
       </@fdsSummaryList.summaryListRowNoAction>
 

@@ -47,12 +47,16 @@ public class WebSecurityConfiguration {
     authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
 
     httpSecurity
+        .csrf()
+          .ignoringAntMatchers("/notify/callback")
+        .and()
         .authorizeHttpRequests()
         .mvcMatchers(
             "/assets/**",
             "/system-of-record/**",
             "/api/portal-organisations/**",
-            "/api/well/**"
+            "/api/well/**",
+            "/notify/callback"
         )
           .permitAll()
         .mvcMatchers("/*")

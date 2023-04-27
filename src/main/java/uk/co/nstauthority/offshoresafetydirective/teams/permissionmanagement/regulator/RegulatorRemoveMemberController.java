@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.RegulatorRolesAllowed;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -20,39 +20,46 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRemovalService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AbstractTeamController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/permission-management/regulator/{teamId}/remove")
-@RegulatorRolesAllowed(roles = {RegulatorTeamRole.ACCESS_MANAGER})
-public class RegulatorRemoveMemberController extends AbstractRegulatorPermissionManagement {
+@HasTeamPermission(anyTeamPermissionOf = RolePermission.GRANT_ROLES)
+public class RegulatorRemoveMemberController extends AbstractTeamController {
+
+  static final TeamType TEAM_TYPE = TeamType.REGULATOR;
 
   private final TeamMemberService teamMemberService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
   private final TeamMemberViewService teamMemberViewService;
-  private final RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService;
+  private final TeamMemberRemovalService teamMemberRemovalService;
 
   @Autowired
   public RegulatorRemoveMemberController(
-      RegulatorTeamService regulatorTeamService,
+      TeamService teamService,
       TeamMemberService teamMemberService,
       CustomerConfigurationProperties customerConfigurationProperties,
       TeamMemberViewService teamMemberViewService,
-      RegulatorTeamMemberRemovalService regulatorTeamMemberRemovalService) {
-    super(regulatorTeamService);
+      TeamMemberRemovalService teamMemberRemovalService) {
+    super(teamService);
     this.teamMemberService = teamMemberService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.teamMemberViewService = teamMemberViewService;
-    this.regulatorTeamMemberRemovalService = regulatorTeamMemberRemovalService;
+    this.teamMemberRemovalService = teamMemberRemovalService;
   }
 
   @GetMapping("/{wuaId}")
   public ModelAndView renderRemoveMember(@PathVariable("teamId") TeamId teamId,
                                          @PathVariable("wuaId") WebUserAccountId wuaId) {
 
-    var team = getRegulatorTeam(teamId);
+    var team = getTeam(teamId, TEAM_TYPE);
 
     var teamMemberOptional = teamMemberService.getTeamMember(team, wuaId);
 
@@ -68,9 +75,10 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
 
     var teamName = customerConfigurationProperties.mnemonic();
 
-    var canRemoveTeamMember = regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember);
+    var canRemoveTeamMember = teamMemberRemovalService.canRemoveTeamMember(team, wuaId,
+        RegulatorTeamRole.ACCESS_MANAGER);
 
-    return new ModelAndView("osd/permissionmanagement/regulator/regulatorRemoveTeamMember")
+    return new ModelAndView("osd/permissionmanagement/removeTeamMemberPage")
         .addObject("pageTitle", getPageTitle(canRemoveTeamMember, teamMemberView, teamName))
         .addObject("teamName", teamName)
         .addObject("teamMember", teamMemberView)
@@ -90,17 +98,19 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
                                    @PathVariable("wuaId") WebUserAccountId wuaId,
                                    RedirectAttributes redirectAttributes) {
 
-    var team = getRegulatorTeam(teamId);
+    var team = getTeam(teamId, TEAM_TYPE);
 
     var teamMember = teamMemberService.getTeamMember(team, wuaId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No user [%s] in team [%s]".formatted(wuaId, teamId)));
 
-    if (regulatorTeamMemberRemovalService.canRemoveTeamMember(team, teamMember)) {
-      regulatorTeamMemberRemovalService.removeTeamMember(team, teamMember);
+    var accessManagerRole = RegulatorTeamRole.ACCESS_MANAGER;
+
+    if (teamMemberRemovalService.canRemoveTeamMember(team, wuaId, accessManagerRole)) {
+      teamMemberRemovalService.removeTeamMember(team, teamMember, accessManagerRole);
     } else {
       return renderRemoveMember(teamId, wuaId)
-          .addObject("singleErrorMessage", RegulatorTeamMemberRemovalService.LAST_ACCESS_MANAGER_ERROR_MESSAGE);
+          .addObject("singleErrorMessage", TeamMemberRemovalService.LAST_ACCESS_MANAGER_ERROR_MESSAGE);
     }
 
     var userView = teamMemberViewService.getTeamMemberView(teamMember)
@@ -108,7 +118,6 @@ public class RegulatorRemoveMemberController extends AbstractRegulatorPermission
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
     var banner = NotificationBanner.builder()
-        .withTitle("Removed member from team")
         .withBannerType(NotificationBannerType.SUCCESS)
         .withContent("%s has been removed from the team".formatted(userView.getDisplayName()))
         .build();

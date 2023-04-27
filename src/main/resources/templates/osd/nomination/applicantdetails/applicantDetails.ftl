@@ -6,6 +6,8 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="preselectedItems" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
+<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
+<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 
 <#assign pageTitle = "Applicant details" />
 
@@ -29,7 +31,17 @@
     />
     <@fdsDetails.summaryDetails summaryTitle="The organisation making the nomination is not listed">
       <p class="govuk-body">
-        If the organisation making the nomination is not shown in the list then you must contact them to provide you with access to make nominations on their behalf.
+        If the organisation making the nomination is not shown in the list then you must contact the organisation's
+        access manager on ${serviceBranding.mnemonic()} to provide you with access to make nominations on their behalf.
+      </p>
+      <p class="govuk-body">
+        If the organisation is not yet registered on ${serviceBranding.mnemonic()} a representative from the
+        organisation will need to email
+        <@mailTo.mailToLink
+          linkText=customerBranding.businessEmailAddress()
+          mailToEmailAddress=customerBranding.businessEmailAddress()
+        />
+        to gain access to the service.
       </p>
     </@fdsDetails.summaryDetails>
     <@fdsTextInput.textInput

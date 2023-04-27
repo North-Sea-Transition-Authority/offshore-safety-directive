@@ -8,14 +8,13 @@ import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 
 class EnergyPortalApiWrapperTest {
 
-  private final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
-      "name",
-      "mnemonic"
-  );
+  private static final ServiceConfigurationProperties serviceConfigurationProperties
+      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private final EnergyPortalApiWrapper energyPortalApiWrapper = new EnergyPortalApiWrapper(
       serviceConfigurationProperties

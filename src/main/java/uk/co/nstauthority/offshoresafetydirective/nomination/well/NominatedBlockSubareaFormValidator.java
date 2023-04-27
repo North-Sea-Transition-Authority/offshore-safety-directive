@@ -1,25 +1,21 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
-import org.springframework.validation.SmartValidator;
+import org.springframework.validation.Validator;
 
 @Service
-class NominatedBlockSubareaFormValidator implements SmartValidator {
+class NominatedBlockSubareaFormValidator implements Validator {
 
   @Override
-  public boolean supports(Class<?> clazz) {
+  public boolean supports(@NonNull Class<?> clazz) {
     return NominatedBlockSubareaForm.class.equals(clazz);
   }
 
   @Override
-  public void validate(Object target, Errors errors) {
-    validate(target, errors, (Object) null);
-  }
-
-  @Override
-  public void validate(Object target, Errors errors, Object... validationHints) {
+  public void validate(@NonNull Object target, @NonNull Errors errors) {
     var form = (NominatedBlockSubareaForm) target;
     if (form.getSubareas() == null || form.getSubareas().isEmpty()) {
       errors.rejectValue(
@@ -32,20 +28,20 @@ class NominatedBlockSubareaFormValidator implements SmartValidator {
       errors.rejectValue(
           "validForFutureWellsInSubarea",
           "validForFutureWellsInSubarea.required",
-          "Select if this nomination is for future wells drilled in the selected subareas"
+          "Select Yes if this nomination should cover future wells that may be drilled in the selected subareas"
       );
     }
     if (form.getForAllWellPhases() == null) {
       errors.rejectValue(
           "forAllWellPhases",
           "forAllWellPhases.required",
-          "Select if this nomination is for all well phases"
+          "Select Yes if this nomination is for all well activity phases"
       );
     } else if (BooleanUtils.isFalse(form.getForAllWellPhases()) && !anyNominationPhaseSelected(form)) {
       errors.rejectValue(
           "explorationAndAppraisalPhase",
           "explorationAndAppraisalPhase.required",
-          "Select which well phases this nomination is for"
+          "Select which well activity phases this nomination is for"
       );
     }
 

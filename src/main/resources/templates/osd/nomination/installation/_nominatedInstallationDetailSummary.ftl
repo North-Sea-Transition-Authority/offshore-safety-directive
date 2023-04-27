@@ -15,13 +15,16 @@
           <div>${installation.name()}</div>
         </#list>
       </@fdsSummaryList.summaryListRowNoAction>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all installation phases?">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all installation activity phases?">
         <#if nominatedInstallationDetailView.forAllInstallationPhases?has_content>
           ${nominatedInstallationDetailView.forAllInstallationPhases?then('Yes', 'No')}
         </#if>
       </@fdsSummaryList.summaryListRowNoAction>
-      <#if nominatedInstallationDetailView.forAllInstallationPhases?has_content && !nominatedInstallationDetailView.forAllInstallationPhases>
-        <@fdsSummaryList.summaryListRowNoAction keyText="Which installations phases is this nomination for?">
+      <#if
+        nominatedInstallationDetailView.forAllInstallationPhases?has_content &&
+        !nominatedInstallationDetailView.forAllInstallationPhases
+      >
+        <@fdsSummaryList.summaryListRowNoAction keyText="Which installation activity phases is this nomination for?">
           <#list nominatedInstallationDetailView.installationPhases as phase>
             <div>${phase.screenDisplayText}</div>
           </#list>

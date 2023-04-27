@@ -14,11 +14,11 @@ public enum RegulatorTeamRole implements TeamRole {
       10,
       EnumSet.of(RolePermission.GRANT_ROLES)
   ),
-  ORGANISATION_ACCESS_MANAGER(
-      "Organisation access manager",
-      "Can manage organisation access to this service",
+  THIRD_PARTY_ACCESS_MANAGER(
+      "Third party access manager",
+      "Can manage organisation and consultee access to this service",
       20,
-      EnumSet.of(RolePermission.MANAGE_ORGANISATIONS)
+      EnumSet.of(RolePermission.MANAGE_CONSULTEE_TEAMS)
   ),
   MANAGE_NOMINATION(
       "Manage nominations",

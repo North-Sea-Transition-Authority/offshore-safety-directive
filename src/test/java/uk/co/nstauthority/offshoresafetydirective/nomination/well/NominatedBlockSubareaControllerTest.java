@@ -32,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -52,6 +53,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominatedBlockSubareaController.class)
+@IncludeAccidentRegulatorConfigurationProperties
 class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(42);
@@ -228,7 +230,9 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         model().attribute(
             "backLinkUrl",
             ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
-        )
+        ),
+        model().attributeHasNoErrors("accidentRegulatorBranding"),
+        model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding")
     );
   }
 

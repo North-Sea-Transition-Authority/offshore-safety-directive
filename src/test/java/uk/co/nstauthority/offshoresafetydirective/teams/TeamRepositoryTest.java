@@ -5,11 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @IntegrationTest
 @Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class TeamRepositoryTest {
 
   @Autowired
@@ -172,6 +177,74 @@ class TeamRepositoryTest {
 
     // THEN only one team is returned regardless how many roles exist
     assertThat(result).containsExactly(team);
+  }
+
+  @Test
+  void findAllTeamsThatUserIsMemberOf_whenUserNotInAnyTeam() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var result = teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId());
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void findAllTeamsThatUserIsMemberOf_whenUserInMultipleTeams() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var regulatorTeam = TeamTestUtil.Builder()
+        .withId(null)
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+
+    var consulteeTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .withId(null)
+        .build();
+
+    teamRepository.saveAll(List.of(regulatorTeam, consulteeTeam));
+
+    var regulatorTeamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(regulatorTeam)
+        .withRole(RegulatorTeamRole.VIEW_NOMINATION.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+    var consulteeTeamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(consulteeTeam)
+        .withRole(ConsulteeTeamRole.CONSULTEE.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+
+    teamMemberRoleRepository.saveAll(List.of(regulatorTeamMemberRole, consulteeTeamMemberRole));
+
+    var result = teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId());
+    assertThat(result).containsExactlyInAnyOrder(regulatorTeam, consulteeTeam);
+  }
+
+  @Test
+  void findAllTeamsThatUserIsMemberOf_whenUserHasMultipleRolesInTeam_thenOnlyOneInstanceOfTeamReturned() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var regulatorTeam = TeamTestUtil.Builder()
+        .withId(null)
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+
+    teamRepository.save(regulatorTeam);
+
+    var viewNominationRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(regulatorTeam)
+        .withRole(RegulatorTeamRole.VIEW_NOMINATION.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+    var accessManagerRole = TeamMemberRoleTestUtil.Builder()
+        .withTeam(regulatorTeam)
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER.name())
+        .withWebUserAccountId(user.wuaId())
+        .build();
+
+    teamMemberRoleRepository.saveAll(List.of(viewNominationRole, accessManagerRole));
+
+    var result = teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId());
+    assertThat(result).containsExactly(regulatorTeam);
   }
 
 }

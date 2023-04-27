@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Clock;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +43,13 @@ public class NominationService {
 
   public Nomination getNominationByIdOrError(NominationId nominationId) {
     return nominationRepository.findById(nominationId.id())
-        .orElseThrow(() -> {
-          throw new OsdEntityNotFoundException(String.format("Cannot find Nomination with ID: %s", nominationId));
-        });
+        .orElseThrow(() -> new OsdEntityNotFoundException(
+            String.format("Cannot find Nomination with ID: %s", nominationId)
+        ));
+  }
+
+  public Optional<NominationDto> getNomination(NominationId nominationId) {
+    return nominationRepository.findById(nominationId.id())
+        .map(NominationDto::fromNomination);
   }
 }

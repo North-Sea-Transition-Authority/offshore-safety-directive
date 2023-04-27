@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Controller;
@@ -17,9 +18,13 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeam;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamOrHasRegulatorRole;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = PermissionManagementHandlerInterceptorTest.TestController.class)
 class PermissionManagementHandlerInterceptorTest extends AbstractControllerTest {
@@ -64,26 +69,92 @@ class PermissionManagementHandlerInterceptorTest extends AbstractControllerTest 
         .andExpect(status().isForbidden());
   }
 
+  @Test
+  void preHandle_whenMethodHasIsMemberOfTeamOrHasRegulatorRoleAndNoTeamIdParam_thenBadRequestResponse() throws Exception {
+    mockMvc.perform(get(ReverseRouter.route(
+            on(TestController.class).isMemberOfTeamOrHasRegulatorRoleAnnotationWithNoTeamIdInPath()))
+            .with(user(USER)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void preHandle_whenMethodHasIsMemberOfTeamOrHasRegulatorRoleAndUserIsMember_thenOkRequestResponse() throws Exception {
+
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, USER)).thenReturn(true);
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(TestController.class).isMemberOfTeamOrHasRegulatorRoleAnnotationWithTeamIdInPath(teamId)))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodHasIsMemberOfTeamOrHasRegulatorRoleAndUserIsNotMember_andIsNotRegulatorAccessManager_thenForbiddenRequestResponse() throws Exception {
+
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, USER)).thenReturn(false);
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of());
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(TestController.class).isMemberOfTeamOrHasRegulatorRoleAnnotationWithTeamIdInPath(teamId)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodHasIsMemberOfTeamOrHasRegulatorRoleAndUserIsNotMember_andIsRegulatorAccessManager_thenOkRequestResponse() throws Exception {
+
+    var teamId = new TeamId(UUID.randomUUID());
+    var regulatorTeamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .build();
+
+    when(teamMemberService.isMemberOfTeam(teamId, USER)).thenReturn(false);
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(regulatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(TestController.class).isMemberOfTeamOrHasRegulatorRoleAnnotationWithTeamIdInPath(teamId)))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
   @Controller
   @RequestMapping("/permission-management")
   static class TestController {
 
     private static final String VIEW_NAME = "test-view";
 
-    @GetMapping("/no-security-annotation")
+    @GetMapping("isMemberOfTeam/no-security-annotation")
     ModelAndView noSupportedSecurityAnnotations() {
       return new ModelAndView(VIEW_NAME);
     }
 
-    @GetMapping("/no-team-id-in-path")
+    @GetMapping("isMemberOfTeam/no-team-id-in-path")
     @IsMemberOfTeam
     ModelAndView isMemberOfTeamAnnotationWithNoTeamIdInPath() {
       return new ModelAndView(VIEW_NAME);
     }
 
-    @GetMapping("/{teamId}")
+    @GetMapping("isMemberOfTeam/{teamId}")
     @IsMemberOfTeam
     ModelAndView isMemberOfTeamAnnotationWithTeamIdInPath(@PathVariable("teamId") TeamId teamId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("teamId", teamId);
+    }
+
+    @GetMapping("isMemberOfTeamOrHasRegulatorRole/no-team-id-in-path")
+    @IsMemberOfTeamOrHasRegulatorRole(value = RegulatorTeamRole.ACCESS_MANAGER)
+    ModelAndView isMemberOfTeamOrHasRegulatorRoleAnnotationWithNoTeamIdInPath() {
+      return new ModelAndView(VIEW_NAME);
+    }
+
+    @GetMapping("isMemberOfTeamOrHasRegulatorRole/{teamId}")
+    @IsMemberOfTeamOrHasRegulatorRole(value = RegulatorTeamRole.ACCESS_MANAGER)
+    ModelAndView isMemberOfTeamOrHasRegulatorRoleAnnotationWithTeamIdInPath(@PathVariable("teamId") TeamId teamId) {
       return new ModelAndView(VIEW_NAME)
           .addObject("teamId", teamId);
     }

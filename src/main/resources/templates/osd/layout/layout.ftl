@@ -119,7 +119,6 @@
     backLinkUrl=backLinkUrl
     breadcrumbs=useBreadCrumbs
     breadcrumbsList=breadcrumbsList
-    singleErrorMessage=singleErrorMessage
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader

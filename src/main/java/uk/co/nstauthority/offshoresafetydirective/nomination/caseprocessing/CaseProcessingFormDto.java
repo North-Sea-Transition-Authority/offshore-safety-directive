@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsPortalReferenceForm;
@@ -18,6 +19,7 @@ public class CaseProcessingFormDto {
   private final GeneralCaseNoteForm generalCaseNoteForm;
   private final PearsPortalReferenceForm pearsPortalReferenceForm;
   private final WonsPortalReferenceForm wonsPortalReferenceForm;
+  private final NominationConsultationResponseForm nominationConsultationResponseForm;
 
   private CaseProcessingFormDto(NominationQaChecksForm nominationQaChecksForm,
                                 NominationDecisionForm nominationDecisionForm,
@@ -25,7 +27,8 @@ public class CaseProcessingFormDto {
                                 ConfirmNominationAppointmentForm confirmNominationAppointmentForm,
                                 GeneralCaseNoteForm generalCaseNoteForm,
                                 PearsPortalReferenceForm pearsPortalReferenceForm,
-                                WonsPortalReferenceForm wonsPortalReferenceForm) {
+                                WonsPortalReferenceForm wonsPortalReferenceForm,
+                                NominationConsultationResponseForm nominationConsultationResponseForm) {
 
     this.nominationQaChecksForm = nominationQaChecksForm;
     this.nominationDecisionForm = nominationDecisionForm;
@@ -34,6 +37,7 @@ public class CaseProcessingFormDto {
     this.generalCaseNoteForm = generalCaseNoteForm;
     this.pearsPortalReferenceForm = pearsPortalReferenceForm;
     this.wonsPortalReferenceForm = wonsPortalReferenceForm;
+    this.nominationConsultationResponseForm = nominationConsultationResponseForm;
   }
 
   public NominationQaChecksForm getNominationQaChecksForm() {
@@ -64,6 +68,10 @@ public class CaseProcessingFormDto {
     return wonsPortalReferenceForm;
   }
 
+  public NominationConsultationResponseForm getNominationConsultationResponseForm() {
+    return nominationConsultationResponseForm;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -77,6 +85,7 @@ public class CaseProcessingFormDto {
     private GeneralCaseNoteForm generalCaseNoteForm = new GeneralCaseNoteForm();
     private PearsPortalReferenceForm pearsPortalReferenceForm = new PearsPortalReferenceForm();
     private WonsPortalReferenceForm wonsPortalReferenceForm = new WonsPortalReferenceForm();
+    private NominationConsultationResponseForm nominationConsultationResponseForm = new NominationConsultationResponseForm();
 
     private Builder() {
     }
@@ -117,9 +126,17 @@ public class CaseProcessingFormDto {
       return this;
     }
 
+    public Builder withNominationConsultationResponseForm(
+        NominationConsultationResponseForm nominationConsultationResponseForm
+    ) {
+      this.nominationConsultationResponseForm = nominationConsultationResponseForm;
+      return this;
+    }
+
     public CaseProcessingFormDto build() {
       return new CaseProcessingFormDto(nominationQaChecksForm, nominationDecisionForm, withdrawNominationForm,
-          confirmNominationAppointmentForm, generalCaseNoteForm, pearsPortalReferenceForm, wonsPortalReferenceForm);
+          confirmNominationAppointmentForm, generalCaseNoteForm, pearsPortalReferenceForm, wonsPortalReferenceForm,
+          nominationConsultationResponseForm);
     }
   }
 

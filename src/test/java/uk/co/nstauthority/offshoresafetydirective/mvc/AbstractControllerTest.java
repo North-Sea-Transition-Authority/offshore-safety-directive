@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponsePar
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
@@ -29,7 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
 @ActiveProfiles("test")
@@ -42,7 +42,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     AbstractControllerTest.TestConfig.class,
     WebMvcConfiguration.class,
     PermissionManagementHandlerInterceptor.class,
-    RegulatorPermissionManagementHandlerInterceptor.class,
+    HasTeamPermissionInterceptor.class,
     NominationInterceptor.class,
     HasPermissionInterceptor.class,
     PermissionService.class,

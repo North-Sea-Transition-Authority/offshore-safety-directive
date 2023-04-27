@@ -14,7 +14,7 @@ public class NominationDecisionForm {
 
   private StringInput comments = new StringInput("comments", "Decision comments");
 
-  private List<FileUploadForm> files = new ArrayList<>();
+  private List<FileUploadForm> decisionFiles = new ArrayList<>();
 
   public StringInput getComments() {
     return comments;
@@ -44,11 +44,11 @@ public class NominationDecisionForm {
     this.nominationDecision = nominationDecision.name();
   }
 
-  public List<FileUploadForm> getFiles() {
-    return files;
+  public List<FileUploadForm> getDecisionFiles() {
+    return decisionFiles;
   }
 
-  public void setFiles(List<FileUploadForm> files) {
-    this.files = files;
+  public void setDecisionFiles(List<FileUploadForm> decisionFiles) {
+    this.decisionFiles = decisionFiles;
   }
 }

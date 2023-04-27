@@ -12,9 +12,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorPermissionManagementHandlerInterceptor;
 
 @Configuration
 class WebMvcConfiguration implements WebMvcConfigurer {
@@ -27,21 +27,21 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   );
 
   private final PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor;
-  private final RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor;
 
   private final NominationInterceptor nominationInterceptor;
 
   private final HasPermissionInterceptor hasPermissionInterceptor;
+  private final HasTeamPermissionInterceptor hasTeamPermissionInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
-                      RegulatorPermissionManagementHandlerInterceptor regulatorPermissionManagementHandlerInterceptor,
                       NominationInterceptor nominationInterceptor,
-                      HasPermissionInterceptor hasPermissionInterceptor) {
+                      HasPermissionInterceptor hasPermissionInterceptor,
+                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
-    this.regulatorPermissionManagementHandlerInterceptor = regulatorPermissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
+    this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
   }
 
   @Override
@@ -59,8 +59,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .excludePathPatterns(ASSETS_PATH);
     registry.addInterceptor(permissionManagementHandlerInterceptor)
         .addPathPatterns("/permission-management/**");
-    registry.addInterceptor(regulatorPermissionManagementHandlerInterceptor)
-        .addPathPatterns("/permission-management/regulator/**");
+    registry.addInterceptor(hasTeamPermissionInterceptor)
+        .addPathPatterns("/permission-management/**");
     registry.addInterceptor(nominationInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(hasPermissionInterceptor)

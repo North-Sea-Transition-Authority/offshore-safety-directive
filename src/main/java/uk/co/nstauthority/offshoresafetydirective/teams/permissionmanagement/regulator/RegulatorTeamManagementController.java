@@ -4,25 +4,27 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeam;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AbstractTeamController;
 
 @Controller
 @RequestMapping("/permission-management/regulator")
-public class RegulatorTeamManagementController extends AbstractRegulatorPermissionManagement {
+public class RegulatorTeamManagementController extends AbstractTeamController {
+
+  static final TeamType TEAM_TYPE = TeamType.REGULATOR;
 
   private final TeamMemberViewService teamMemberViewService;
   private final RegulatorTeamService regulatorTeamService;
@@ -35,8 +37,9 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
                                     RegulatorTeamService regulatorTeamService,
                                     UserDetailService userDetailService,
                                     CustomerConfigurationProperties customerConfigurationProperties,
-                                    TeamMemberService teamMemberService) {
-    super(regulatorTeamService);
+                                    TeamMemberService teamMemberService,
+                                    TeamService teamService) {
+    super(teamService);
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamService = regulatorTeamService;
     this.userDetailService = userDetailService;
@@ -44,29 +47,15 @@ public class RegulatorTeamManagementController extends AbstractRegulatorPermissi
     this.teamMemberService = teamMemberService;
   }
 
-  @GetMapping
-  @AccessibleByServiceUsers
-  public ModelAndView renderMemberListRedirect() {
-
-    var team = regulatorTeamService.getRegulatorTeamForUser(userDetailService.getUserDetail())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
-            "User with ID %s is not a member of regulator team".formatted(userDetailService.getUserDetail())
-        ));
-
-    return ReverseRouter.redirect(on(RegulatorTeamManagementController.class)
-        .renderMemberList(new TeamId(team.getUuid())));
-  }
-
   @GetMapping("/{teamId}")
   @IsMemberOfTeam
   public ModelAndView renderMemberList(@PathVariable("teamId") TeamId teamId) {
 
-    var team = getRegulatorTeam(teamId);
+    var team = getTeam(teamId, TEAM_TYPE);
 
     var user = userDetailService.getUserDetail();
 
-    var modelAndView = new ModelAndView("osd/permissionmanagement/regulator/regulatorTeamMembers")
+    var modelAndView = new ModelAndView("osd/permissionmanagement/teamMembersPage")
         .addObject("pageTitle", "Manage %s".formatted(customerConfigurationProperties.mnemonic()))
         .addObject("teamName", customerConfigurationProperties.mnemonic())
         .addObject("teamRoles", RegulatorTeamRole.values())

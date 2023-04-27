@@ -48,9 +48,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -67,6 +67,8 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
+  private static final String VIEW_NAME = "test-view-name";
+
   @MockBean
   private ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
 
@@ -77,7 +79,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   private ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
 
   @MockBean
-  private FileUploadService fileUploadService;
+  protected FileUploadService fileUploadService;
 
   private NominationDetail nominationDetail;
 
@@ -103,7 +105,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   void smokeTestNominationStatuses_assertPermitted() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -111,7 +113,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(ConfirmNominationAppointmentController.class).confirmAppointment(NOMINATION_ID, true,
-                CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)),
+                CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -125,14 +127,14 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   void smokeTestPermissions_assertAllowedPermissions() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(ConfirmNominationAppointmentController.class).confirmAppointment(NOMINATION_ID, true,
-                CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)),
+                CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -146,16 +148,14 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
   void confirmAppointment_whenFormValid_thenVerifyRedirect() throws Exception {
 
     var appointmentDate = LocalDate.now();
-    var formattedDate = DateUtil.formatLongDate(appointmentDate);
     var comment = "comment text";
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withTitle("Appointment confirmed")
         .withHeading(
-            "Appointment confirmed for nomination %s on %s".formatted(
+            "Appointment confirmed for nomination %s with effect from %s".formatted(
                 nominationDetail.getNomination().getReference(),
-                formattedDate
+                DateUtil.formatLongDate(appointmentDate)
             ))
         .build();
 
@@ -164,10 +164,10 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
     var fileDescription = "description";
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
-            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))
@@ -221,7 +221,7 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
     var fileDescription = "description";
 
     mockMvc.perform(post(ReverseRouter.route(on(ConfirmNominationAppointmentController.class)
-            .confirmAppointment(NOMINATION_ID, true, CaseProcessingAction.CONFIRM_APPOINTMENT, null, null, null)))
+            .confirmAppointment(NOMINATION_ID, true, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT, null, null, null)))
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER))
             .param("appointmentDate.dayInput.inputValue", String.valueOf(appointmentDate.getDayOfMonth()))

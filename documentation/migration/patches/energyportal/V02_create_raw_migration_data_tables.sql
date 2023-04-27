@@ -4,7 +4,8 @@ CREATE TABLE wios_migration.migration_csv_files (
 ) TABLESPACE tbsdata;
 
 CREATE TABLE wios_migration.raw_wellbore_appointments_data (
-  wellbore_registration_number CLOB
+  migratable_appointment_id NUMBER UNIQUE
+, wellbore_registration_number CLOB
 , appointed_operator_name CLOB
 , responsible_from_date CLOB
 , responsible_to_date CLOB
@@ -16,7 +17,8 @@ CREATE TABLE wios_migration.raw_wellbore_appointments_data (
 ) TABLESPACE tbsdata;
 
 CREATE TABLE wios_migration.raw_installation_appointments_data (
-  installation_name CLOB
+  migratable_appointment_id NUMBER UNIQUE
+, installation_name CLOB
 , appointed_operator_name CLOB
 , responsible_from_date CLOB
 , responsible_to_date CLOB
@@ -27,10 +29,12 @@ CREATE TABLE wios_migration.raw_installation_appointments_data (
 ) TABLESPACE tbsdata;
 
 CREATE TABLE wios_migration.raw_subarea_appointments_data (
-  licence_type CLOB
+  migratable_appointment_id NUMBER UNIQUE
+, licence_type CLOB
 , licence_number CLOB
 , block_reference CLOB
 , subarea_name CLOB
+, appointed_operator_name CLOB
 , responsible_from_date CLOB
 , responsible_to_date CLOB
 , is_exploration_phase VARCHAR2(4000)

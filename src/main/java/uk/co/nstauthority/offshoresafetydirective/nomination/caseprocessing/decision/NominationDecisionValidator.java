@@ -24,7 +24,7 @@ class NominationDecisionValidator implements SmartValidator {
       NOMINATION_DECISION_FIELD_NAME);
   public static final String NOMINATION_DECISION_BLANK_ERROR_MESSAGE = "Select a nomination decision";
 
-  private static final String FILES_FIELD_NAME = "files";
+  private static final String FILES_FIELD_NAME = "decisionFiles";
   private static final String FILES_EMPTY_ERROR_MESSAGE = "Upload a decision document";
   private static final String FILES_TOO_MANY_ERROR_MESSAGE = "Only one decision document can be uploaded";
 
@@ -67,7 +67,7 @@ class NominationDecisionValidator implements SmartValidator {
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, FILES_EMPTY_ERROR_MESSAGE)
         .withMaximumNumberOfFiles(1, FILES_TOO_MANY_ERROR_MESSAGE)
-        .validate(errors, form.getFiles(), FILES_FIELD_NAME);
+        .validate(errors, form.getDecisionFiles(), FILES_FIELD_NAME);
 
   }
 

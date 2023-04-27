@@ -54,7 +54,13 @@ public class TeamMemberTestUtil {
       if (teamRoles.isEmpty()) {
         teamRoles.add(RegulatorTeamRole.ACCESS_MANAGER);
       }
-      return new TeamMember(webUserAccountId, new TeamView(teamId, teamType), teamRoles);
+
+      var team = TeamTestUtil.Builder()
+          .withId(teamId.uuid())
+          .withTeamType(teamType)
+          .build();
+
+      return new TeamMember(webUserAccountId, TeamTestUtil.createTeamView(team), teamRoles);
     }
 
   }

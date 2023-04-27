@@ -1,10 +1,10 @@
 <#include "../../../fds/layout.ftl"/>
 
-<#macro confirmAppointmentSlideout panelId headingText errorList attributes>
+<#macro confirmAppointmentSlideout panelId headingText postUrl postParam fileUploadTemplate errorList uploadedFiles>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
         <#-- TODO OSDOP-343 - Change errorList attribute to be slideout specific -->
         <@fdsError.errorSummary errorItems=errorList![]/>
-        <@fdsForm.htmlForm actionUrl=springUrl(attributes.submitUrl())>
+        <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsDateInput.dateInput
                 formId="confirmAppointmentForm.appointmentDate"
                 dayPath="confirmAppointmentForm.appointmentDate.dayInput.inputValue"
@@ -27,16 +27,16 @@
                 <@fdsFileUpload.fileUpload
                     id="confirm-appointment-files"
                     path="confirmAppointmentForm.files"
-                    uploadUrl=attributes.fileUploadTemplate().uploadUrl()
-                    deleteUrl=attributes.fileUploadTemplate().deleteUrl()
-                    downloadUrl=attributes.fileUploadTemplate().downloadUrl()
-                    maxAllowedSize=attributes.fileUploadTemplate().maxAllowedSize()
-                    allowedExtensions=attributes.fileUploadTemplate().allowedExtensions()
+                    uploadUrl=fileUploadTemplate.uploadUrl()
+                    deleteUrl=fileUploadTemplate.deleteUrl()
+                    downloadUrl=fileUploadTemplate.downloadUrl()
+                    maxAllowedSize=fileUploadTemplate.maxAllowedSize()
+                    allowedExtensions=fileUploadTemplate.allowedExtensions()
                     formName="confirmAppointmentForm"
-                    existingFiles=confirmNominationFiles![]
+                    existingFiles=uploadedFiles
                 />
             </@fdsFieldset.fieldset>
-            <@fdsAction.button buttonName=attributes.postParam() buttonText="Confirm appointment"/>
+            <@fdsAction.button buttonName=postParam buttonText="Confirm appointment"/>
         </@fdsForm.htmlForm>
     </@fdsSlideOutPanel.slideOutPanel>
 </#macro>

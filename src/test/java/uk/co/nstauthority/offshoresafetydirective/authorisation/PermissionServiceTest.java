@@ -16,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
@@ -64,6 +65,58 @@ class PermissionServiceTest {
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
     assertTrue(permissionService.hasPermission(USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void hasTeamPermission_whenTeamMemberNull_thenFalse() {
+    var team = TeamTestUtil.Builder().build();
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(null);
+    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void hasTeamPermission_whenTeamMemberEmpty_thenFalse() {
+    var team = TeamTestUtil.Builder().build();
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
+    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void hasTeamPermission_whenTeamMemberWithNoMatchingPermission_thenFalse() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(TestTeamRole.NON_CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+
+    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void hasTeamPermission_whenTeamMemberWithMatchingPermission_thenTrue() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withRole(TestTeamRole.CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+
+    assertTrue(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void hasTeamPermission_whenTeamMemberWithMatchingPermission_butInDifferentTeam_thenFalse() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(TestTeamRole.CREATE_NOMINATION_ROLE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
+
+    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
   }
 
   enum TestTeamRole implements TeamRole {

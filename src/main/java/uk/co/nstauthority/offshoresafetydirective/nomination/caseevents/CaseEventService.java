@@ -84,11 +84,22 @@ public class CaseEventService {
     caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
   }
 
+  @Transactional
+  public void createSentForConsultationEvent(NominationDetail nominationDetail) {
+    createEvent(CaseEventType.SENT_FOR_CONSULTATION, null, clock.instant(), nominationDetail);
+  }
+
+  @Transactional
+  public void createConsultationResponseEvent(NominationDetail nominationDetail, String responseText,
+                                              List<FileUploadForm> fileUploadForms) {
+    var caseEvent = createEvent(CaseEventType.CONSULTATION_RESPONSE, responseText, clock.instant(), nominationDetail);
+    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
+  }
+
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant eventInstant,
                                 NominationDetail nominationDetail) {
     return createEvent(caseEventType, null, comment, eventInstant, nominationDetail);
   }
-
 
   private CaseEvent createEvent(CaseEventType caseEventType, @Nullable String overrideTitle, String comment,
                                 Instant eventInstant, NominationDetail nominationDetail) {

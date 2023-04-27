@@ -40,10 +40,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -61,7 +60,6 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
       .build();
 
   private static final NotificationBanner QA_CHECK_NOTIFICATION_BANNER = NotificationBanner.builder()
-      .withTitle(CaseEventType.QA_CHECKS.getScreenDisplayText())
       .withHeading("Successfully completed QA checks")
       .withBannerType(NotificationBannerType.SUCCESS)
       .build();
@@ -106,7 +104,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(ReverseRouter.route(on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true,
-                CaseProcessingAction.QA, null, null, null)),
+                CaseProcessingActionIdentifier.QA, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -123,7 +121,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingAction.QA, null, null,
+                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingActionIdentifier.QA, null, null,
                     null)),
             status().is3xxRedirection(),
             status().isForbidden()
@@ -137,7 +135,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingAction.QA, null, null,
+                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingActionIdentifier.QA, null, null,
                     null)))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))
@@ -166,7 +164,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
             post(ReverseRouter.route(
-                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingAction.QA, null, null,
+                on(NominationQaChecksController.class).submitQa(NOMINATION_ID, true, CaseProcessingActionIdentifier.QA, null, null,
                     null)))
                 .with(csrf())
                 .with(user(NOMINATION_MANAGER_USER))

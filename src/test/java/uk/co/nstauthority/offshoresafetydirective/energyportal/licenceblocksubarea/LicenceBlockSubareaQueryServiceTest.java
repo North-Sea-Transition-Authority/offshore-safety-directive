@@ -18,15 +18,14 @@ import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaShoreLocation;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreTestUtil;
 
 class LicenceBlockSubareaQueryServiceTest {
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties = new ServiceConfigurationProperties(
-      "name",
-      "mnemonic"
-  );
+  private static final ServiceConfigurationProperties serviceConfigurationProperties
+      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static SubareaApi subareaApi;
 

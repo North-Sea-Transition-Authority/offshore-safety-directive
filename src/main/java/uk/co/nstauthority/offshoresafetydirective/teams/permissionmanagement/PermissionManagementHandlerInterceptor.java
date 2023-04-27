@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -15,16 +16,19 @@ import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeam;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamOrHasRegulatorRole;
 import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Component
 public class PermissionManagementHandlerInterceptor extends AbstractHandlerInterceptor {
 
   private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(
-      IsMemberOfTeam.class
+      IsMemberOfTeam.class,
+      IsMemberOfTeamOrHasRegulatorRole.class
   );
 
   private final TeamMemberService teamMemberService;
@@ -52,12 +56,50 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
       var user = userDetailService.getUserDetail();
 
       if (hasAnnotation(handlerMethod, IsMemberOfTeam.class)) {
-        checkIsMemberOfTeam(teamId, user);
+        var isMemberOfTeam = teamMemberService.isMemberOfTeam(teamId, user);
+        if (!isMemberOfTeam) {
+          var errorMessage = "User with ID %s is not a member of team with ID %s".formatted(user.wuaId(),
+              teamId.uuid());
+          LoggerUtil.warn(errorMessage);
+          throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
+        }
+      }
+
+      if (hasAnnotation(handlerMethod, IsMemberOfTeamOrHasRegulatorRole.class)) {
+        var isMemberOfTeam = teamMemberService.isMemberOfTeam(teamId, user);
+        if (!isMemberOfTeam) {
+
+          var isMemberOrRoleAnnotation =
+              (IsMemberOfTeamOrHasRegulatorRole) getAnnotation(handlerMethod, IsMemberOfTeamOrHasRegulatorRole.class);
+
+          var canAccessTeam = canAccessTeamAsRegulator(isMemberOrRoleAnnotation, user);
+
+          if (!canAccessTeam) {
+            var errorMessage = "User [%s] is neither a member of team [%s] and has no regulator role of [%s]".formatted(
+                user.wuaId(),
+                teamId.uuid(),
+                isMemberOrRoleAnnotation.value()
+            );
+            LoggerUtil.warn(errorMessage);
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
+          }
+        }
       }
 
     }
 
     return true;
+  }
+
+  private boolean canAccessTeamAsRegulator(Annotation isMemberOrRoleAnnotation, ServiceUserDetail user) {
+    var annotation = (IsMemberOfTeamOrHasRegulatorRole) isMemberOrRoleAnnotation;
+    return teamMemberService.getUserAsTeamMembers(user)
+        .stream()
+        .anyMatch(teamMember ->
+            teamMember.teamView().teamType().equals(TeamType.REGULATOR)
+                && teamMember.roles().stream().anyMatch(teamRole ->
+                Arrays.asList(annotation.value()).contains(teamRole))
+        );
   }
 
   public static TeamId extractTeamIdFromRequest(HttpServletRequest httpServletRequest, HandlerMethod handlerMethod) {
@@ -75,13 +117,5 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
         .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 
     return TeamId.valueOf(pathVariables.get(teamIdParameter.get().getName()));
-  }
-
-  private void checkIsMemberOfTeam(TeamId teamId, ServiceUserDetail user) {
-    if (!teamMemberService.isMemberOfTeam(teamId, user)) {
-      var errorMessage = "User with ID %s is not a member of team with ID %s".formatted(user.wuaId(), teamId.uuid());
-      LoggerUtil.warn(errorMessage);
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
-    }
   }
 }

@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.re
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -27,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
@@ -39,50 +39,13 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
   @MockBean
   private RegulatorTeamService regulatorTeamService;
 
+  @MockBean
+  private TeamService teamService;
+
   @Autowired
   private ApplicationContext applicationContext;
 
   @SecurityTest
-  void renderMemberListRedirect_whenNotAuthenticated_thenRedirectionToLoginUrl() throws Exception {
-    mockMvc.perform(
-            get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect())))
-        .andExpect(redirectionToLoginUrl());
-  }
-
-  @SecurityTest
-  void renderMemberListRedirect_whenNoAccessToRegulatorTeam_thenForbidden() throws Exception {
-
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    when(regulatorTeamService.getRegulatorTeamForUser(user)).thenReturn(Optional.empty());
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect()))
-                .with(user(user)))
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
-  void renderMemberListRedirect_whenAccessToRegulatorTeam_thenRedirectionToTeamIdEndpoint() throws Exception {
-
-    var user = ServiceUserDetailTestUtil.Builder().build();
-
-    var team = TeamTestUtil.Builder()
-        .withId(UUID.randomUUID())
-        .build();
-
-    when(regulatorTeamService.getRegulatorTeamForUser(user)).thenReturn(Optional.of(team));
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberListRedirect()))
-                .with(user(user)))
-        .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(RegulatorTeamManagementController.class)
-            .renderMemberList(new TeamId(team.getUuid()))
-        )));
-  }
-
-  @Test
   void renderMemberList_whenNotAuthenticated_thenRedirectionToLoginUrl() throws Exception {
     var teamId = new TeamId(UUID.randomUUID());
     mockMvc.perform(
@@ -90,7 +53,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
-  @Test
+  @SecurityTest
   void renderMemberList_whenNotMemberOfTeam_thenForbidden() throws Exception {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
@@ -117,7 +80,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     var teamId = new TeamId(team.getUuid());
 
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorTeamManagementController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
@@ -153,7 +116,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     var teamId = new TeamId(team.getUuid());
 
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorTeamManagementController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var teamMemberView = TeamMemberViewTestUtil.Builder()
         .withRole(RegulatorTeamRole.ACCESS_MANAGER)
@@ -167,7 +130,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorTeamMembers"))
+        .andExpect(view().name("osd/permissionmanagement/teamMembersPage"))
         .andExpect(model().attribute("pageTitle", "Manage %s".formatted(mnemonic)))
         .andExpect(model().attribute("teamName", mnemonic))
         .andExpect(model().attribute("teamRoles", RegulatorTeamRole.values()))
@@ -188,7 +151,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
     when(regulatorTeamService.isAccessManager(teamId, user)).thenReturn(true);
 
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
-    when(regulatorTeamService.getTeam(teamId)).thenReturn(Optional.of(team));
+    when(teamService.getTeam(teamId, RegulatorTeamManagementController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var teamMemberView = TeamMemberViewTestUtil.Builder()
         .withRoles(Set.of(RegulatorTeamRole.ACCESS_MANAGER))
@@ -205,7 +168,7 @@ class RegulatorTeamManagementControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId)))
                 .with(user(user)))
         .andExpect(status().isOk())
-        .andExpect(view().name("osd/permissionmanagement/regulator/regulatorTeamMembers"))
+        .andExpect(view().name("osd/permissionmanagement/teamMembersPage"))
         .andExpect(model().attribute("pageTitle", "Manage %s".formatted(mnemonic)))
         .andExpect(model().attribute("teamName", mnemonic))
         .andExpect(model().attribute("teamRoles", RegulatorTeamRole.values()))

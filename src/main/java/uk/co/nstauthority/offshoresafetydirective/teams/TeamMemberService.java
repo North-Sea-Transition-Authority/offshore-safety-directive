@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
@@ -24,18 +25,12 @@ public class TeamMemberService {
   }
 
   public List<TeamMember> getTeamMembers(Team team) {
+    return convertToTeamMembers(teamMemberRoleRepository.findAllByTeam(team));
+  }
 
-    // Group all roles based on the web user account id
-    Map<WebUserAccountId, List<TeamMemberRole>> wuaIdToRolesMap = teamMemberRoleRepository.findAllByTeam(team)
-        .stream()
-        .collect(Collectors.groupingBy(teamMemberRole -> new WebUserAccountId(teamMemberRole.getWuaId())));
-
-    // Convert to a list of TeamMember objects.
-    return wuaIdToRolesMap.entrySet()
-        .stream()
-        .map(entry -> new TeamMember(entry.getKey(), createTeamView(team),
-            mapMemberRolesToTeamRoles(entry.getValue(), team)))
-        .toList();
+  public List<TeamMember> getTeamMembersInRoles(Collection<String> roles, TeamType teamType) {
+    List<TeamMemberRole> teamMemberRoles = teamMemberRoleRepository.findAllByTeam_TeamTypeAndRoleIn(teamType, roles);
+    return convertToTeamMembers(teamMemberRoles);
   }
 
   public Optional<TeamMember> getTeamMember(Team team, WebUserAccountId wuaId) {
@@ -51,11 +46,15 @@ public class TeamMemberService {
   }
 
   private TeamView createTeamView(Team team) {
-    return new TeamView(new TeamId(team.getUuid()), team.getTeamType());
+    return new TeamView(new TeamId(team.getUuid()), team.getTeamType(), team.getDisplayName());
   }
 
   public boolean isMemberOfTeam(TeamId teamId, ServiceUserDetail user) {
     return teamMemberRoleRepository.existsByWuaIdAndTeam_Uuid(user.wuaId(), teamId.uuid());
+  }
+
+  public boolean isMemberOfTeam(TeamId teamId, WebUserAccountId webUserAccountId) {
+    return teamMemberRoleRepository.existsByWuaIdAndTeam_Uuid(webUserAccountId.id(), teamId.uuid());
   }
 
   public boolean isMemberOfTeamWithAnyRoleOf(TeamId teamId, ServiceUserDetail user, Set<String> roles) {
@@ -81,8 +80,30 @@ public class TeamMemberService {
     return roles.stream()
         .map(teamMemberRole -> switch (team.getTeamType()) {
           case REGULATOR -> RegulatorTeamRole.valueOf(teamMemberRole.getRole());
+          case CONSULTEE -> ConsulteeTeamRole.valueOf(teamMemberRole.getRole());
         })
         .collect(Collectors.toSet());
+  }
+
+  private List<TeamMember> convertToTeamMembers(List<TeamMemberRole> teamMemberRoles) {
+
+    // Group all roles based on the web user account id
+    Map<WebUserAccountId, List<TeamMemberRole>> wuaIdToRolesMap = teamMemberRoles
+        .stream()
+        .collect(Collectors.groupingBy(teamMemberRole -> new WebUserAccountId(teamMemberRole.getWuaId())));
+
+    // Convert to a list of TeamMember objects.
+    return wuaIdToRolesMap.entrySet()
+        .stream()
+        .map(entry -> {
+          var team = entry.getValue().get(0).getTeam();
+          return new TeamMember(
+              entry.getKey(),
+              createTeamView(team),
+              mapMemberRolesToTeamRoles(entry.getValue(), team)
+          );
+        })
+        .toList();
   }
 
 }

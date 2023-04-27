@@ -39,13 +39,13 @@
         </ol>
       </#if>
     </@fdsSummaryList.summaryListRowNoAction>
-    <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well phases?">
+    <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well activity phases?">
       <#if specificWellSummaryView.isNominationForAllWellPhases?has_content>
         ${specificWellSummaryView.isNominationForAllWellPhases?then('Yes', 'No')}
       </#if>
     </@fdsSummaryList.summaryListRowNoAction>
     <#if specificWellSummaryView.isNominationForAllWellPhases?has_content && !specificWellSummaryView.isNominationForAllWellPhases>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Which well phases is this nomination for?">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Which well activity phases is this nomination for?">
         <#if specificWellSummaryView.wellPhases?has_content>
           <ol class="govuk-list">
             <#list specificWellSummaryView.wellPhases as phase>
@@ -75,18 +75,20 @@
         </ol>
       </#if>
     </@fdsSummaryList.summaryListRowNoAction>
-    <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for future wells drilled in the selected subareas?">
+    <@fdsSummaryList.summaryListRowNoAction
+      keyText="Will this nomination cover future wells that may be drilled in the selected subareas?"
+    >
       <#if subareaWellSummaryView.validForFutureWellsInSubarea?has_content>
         ${subareaWellSummaryView.validForFutureWellsInSubarea?then('Yes', 'No')}
       </#if>
     </@fdsSummaryList.summaryListRowNoAction>
-    <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well phases?">
+    <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well activity phases?">
       <#if subareaWellSummaryView.forAllWellPhases?has_content>
         ${subareaWellSummaryView.forAllWellPhases?then('Yes', 'No')}
       </#if>
     </@fdsSummaryList.summaryListRowNoAction>
     <#if subareaWellSummaryView.forAllWellPhases?has_content && !subareaWellSummaryView.forAllWellPhases>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Which well phases is this nomination for?">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Which well activity phases is this nomination for?">
         <#if subareaWellSummaryView.wellPhases?has_content>
           <ol class="govuk-list">
             <#list subareaWellSummaryView.wellPhases as phase>

@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#import '_wellActivityPhaseGuidance.ftl' as activityPhase>
 
 <#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
@@ -7,6 +8,7 @@
 <#-- @ftlvariable name="alreadyAddedWells" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView>" -->
 <#-- @ftlvariable name="wellsRestUrl" type="String" -->
 <#-- @ftlvariable name="wellPhases" type="java.util.Map<String, String>" -->
+<#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -33,15 +35,14 @@
     />
     <@fdsRadio.radioGroup
       path="form.forAllWellPhases"
-      labelText="Is this nomination for all well phases?"
-      hintText="Well phases include exploration & appraisal, development or decommissioning"
+      labelText="Is this nomination for all well activity phases?"
       hiddenContent=true
     >
       <@fdsRadio.radioYes path="form.forAllWellPhases"/>
       <@fdsRadio.radioNo path="form.forAllWellPhases">
         <@fdsCheckbox.checkboxGroup
           path="form.explorationAndAppraisalPhase"
-          fieldsetHeadingText="Which well phases is this nomination for?"
+          fieldsetHeadingText="Which well activity phases is this nomination for?"
           nestingPath="form.forAllWellPhases"
         >
           <@fdsCheckbox.checkboxItem
@@ -59,6 +60,7 @@
         </@fdsCheckbox.checkboxGroup>
       </@fdsRadio.radioNo>
     </@fdsRadio.radioGroup>
+    <@activityPhase.wellActivityPhaseGuidance accidentRegulatorBranding=accidentRegulatorBranding/>
     <@fdsAction.button buttonText="Save and continue"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

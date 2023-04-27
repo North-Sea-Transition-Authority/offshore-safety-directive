@@ -16,13 +16,13 @@
           <div>${well.name()}</div>
         </#list>
       </@fdsSummaryList.summaryListRowNoAction>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well phases?">
+      <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well activity phases?">
         <#if nominatedWellDetailView.isNominationForAllWellPhases?has_content>
           ${nominatedWellDetailView.isNominationForAllWellPhases?then('Yes', 'No')}
         </#if>
       </@fdsSummaryList.summaryListRowNoAction>
       <#if nominatedWellDetailView.isNominationForAllWellPhases?has_content && !nominatedWellDetailView.isNominationForAllWellPhases>
-        <@fdsSummaryList.summaryListRowNoAction keyText="Which well phases is this nomination for?">
+        <@fdsSummaryList.summaryListRowNoAction keyText="Which well activity phases is this nomination for?">
           <#list nominatedWellDetailView.wellPhases as phase>
             <div>${phase.screenDisplayText}</div>
           </#list>

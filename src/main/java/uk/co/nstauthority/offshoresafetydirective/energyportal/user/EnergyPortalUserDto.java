@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
+import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
+
 public record EnergyPortalUserDto(
     long webUserAccountId,
     String title,
@@ -12,6 +14,6 @@ public record EnergyPortalUserDto(
 ) {
 
   public String displayName() {
-    return "%s %s".formatted(forename, surname);
+    return UserDisplayNameUtil.getUserDisplayName(title, forename, surname);
   }
 }
