@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.epmqmessage;
 
+import java.time.Instant;
+
 public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
   private static final String TYPE = "NOMINATION_SUBMITTED";
@@ -9,16 +11,17 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
   private int applicantOrganisationUnitId;
 
   public NominationSubmittedOsdEpmqMessage() {
-    super(TYPE, null);
+    super(TYPE, null, null);
   }
 
   public NominationSubmittedOsdEpmqMessage(
       int nominationId,
       String nominationReference,
       int applicantOrganisationUnitId,
-      String correlationId
+      String correlationId,
+      Instant createdInstant
   ) {
-    super(TYPE, correlationId);
+    super(TYPE, correlationId, createdInstant);
     this.nominationId = nominationId;
     this.nominationReference = nominationReference;
     this.applicantOrganisationUnitId = applicantOrganisationUnitId;

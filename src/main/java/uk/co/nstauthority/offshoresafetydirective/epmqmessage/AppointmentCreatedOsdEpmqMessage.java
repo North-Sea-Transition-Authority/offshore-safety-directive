@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.epmqmessage;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
   private List<String> phases;
 
   public AppointmentCreatedOsdEpmqMessage() {
-    super(TYPE, null);
+    super(TYPE, null, null);
   }
 
   public AppointmentCreatedOsdEpmqMessage(
@@ -23,9 +24,10 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
       String portalAssetType,
       int appointedPortalOperatorId,
       List<String> phases,
-      String correlationId
+      String correlationId,
+      Instant createdInstant
   ) {
-    super(TYPE, correlationId);
+    super(TYPE, correlationId, createdInstant);
     this.appointmentId = appointmentId;
     this.portalAssetId = portalAssetId;
     this.portalAssetType = portalAssetType;

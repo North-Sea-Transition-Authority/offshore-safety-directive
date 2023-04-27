@@ -8,6 +8,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -40,13 +43,22 @@ class AppointmentSnsServiceTest {
 
   private final SnsTopicArn appointmentsTopicArn = new SnsTopicArn("test-appointments-topic-arn");
 
+  private final Instant instant = Instant.now();
+
   private AppointmentSnsService appointmentSnsService;
 
   @BeforeEach
   public void setUp() {
     when(snsService.getOrCreateTopic(OsdEpmqTopics.APPOINTMENTS.getName())).thenReturn(appointmentsTopicArn);
 
-    appointmentSnsService = spy(new AppointmentSnsService(snsService, appointmentRepository, assetPhaseRepository));
+    appointmentSnsService = spy(
+        new AppointmentSnsService(
+            snsService,
+            appointmentRepository,
+            assetPhaseRepository,
+            Clock.fixed(instant, ZoneId.systemDefault())
+        )
+    );
   }
 
   @Test
@@ -149,5 +161,6 @@ class AppointmentSnsServiceTest {
     assertThat(epmqMessage.getAppointedPortalOperatorId()).isEqualTo(appointment.getAppointedPortalOperatorId());
     assertThat(epmqMessage.getPhases()).isEqualTo(assetPhases.stream().map(AssetPhase::getPhase).toList());
     assertThat(epmqMessage.getCorrelationId()).isEqualTo(correlationId);
+    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(instant);
   }
 }

@@ -10,6 +10,9 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,13 +40,21 @@ class NominationSnsServiceTest {
 
   private final SnsTopicArn nominationsTopicArn = new SnsTopicArn("test-nominations-topic-arn");
 
+  private final Instant instant = Instant.now();
+
   private NominationSnsService nominationSnsService;
 
   @BeforeEach
   void setUp() {
     when(snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName())).thenReturn(nominationsTopicArn);
 
-    nominationSnsService = spy(new NominationSnsService(snsService, applicantDetailAccessService));
+    nominationSnsService = spy(
+        new NominationSnsService(
+            snsService,
+            applicantDetailAccessService,
+            Clock.fixed(instant, ZoneId.systemDefault())
+        )
+    );
   }
 
   @Test
@@ -84,6 +95,7 @@ class NominationSnsServiceTest {
     assertThat(epmqMessage.getNominationReference()).isEqualTo(nomination.getReference());
     assertThat(epmqMessage.getApplicantOrganisationUnitId()).isEqualTo(applicantDetailDto.applicantOrganisationId().id());
     assertThat(epmqMessage.getCorrelationId()).isEqualTo(correlationId);
+    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(instant);
   }
 
   @Test

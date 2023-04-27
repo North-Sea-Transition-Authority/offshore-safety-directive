@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,17 +26,20 @@ class AppointmentSnsService {
   private final SnsTopicArn appointmentsTopicArn;
   private final AppointmentRepository appointmentRepository;
   private final AssetPhaseRepository assetPhaseRepository;
+  private final Clock clock;
 
   @Autowired
   AppointmentSnsService(
       SnsService snsService,
       AppointmentRepository appointmentRepository,
-      AssetPhaseRepository assetPhaseRepository
+      AssetPhaseRepository assetPhaseRepository,
+      Clock clock
   ) {
     this.snsService = snsService;
     appointmentsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.APPOINTMENTS.getName());
     this.appointmentRepository = appointmentRepository;
     this.assetPhaseRepository = assetPhaseRepository;
+    this.clock = clock;
   }
 
   @Async
@@ -82,7 +86,8 @@ class AppointmentSnsService {
             asset.getPortalAssetType().name(),
             appointment.getAppointedPortalOperatorId(),
             assetPhases.stream().map(AssetPhase::getPhase).toList(),
-            correlationId
+            correlationId,
+            clock.instant()
         )
     );
   }

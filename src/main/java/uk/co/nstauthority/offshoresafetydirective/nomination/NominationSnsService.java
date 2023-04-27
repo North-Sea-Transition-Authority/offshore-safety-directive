@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.time.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Async;
@@ -20,12 +21,14 @@ class NominationSnsService {
   private final SnsService snsService;
   private final SnsTopicArn nominationsTopicArn;
   private final ApplicantDetailAccessService applicantDetailAccessService;
+  private final Clock clock;
 
   @Autowired
-  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService) {
+  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService, Clock clock) {
     this.snsService = snsService;
     nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
     this.applicantDetailAccessService = applicantDetailAccessService;
+    this.clock = clock;
   }
 
   @Async
@@ -51,7 +54,8 @@ class NominationSnsService {
             nomination.getId(),
             nomination.getReference(),
             applicantOrganisationId.id(),
-            correlationId
+            correlationId,
+            clock.instant()
         )
     );
   }
