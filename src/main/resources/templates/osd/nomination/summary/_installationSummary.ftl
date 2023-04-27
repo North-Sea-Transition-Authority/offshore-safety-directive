@@ -26,19 +26,19 @@
       </#if>
 
       <#if relatedToInstallation && installationSummaryView.installationRelatedToNomination().related()>
-        <@fdsSummaryList.summaryListRowNoAction keyText="Nomination for all installation phases">
-            <#if installationPhaseContent>
-                ${installationSummaryView.installationForAllPhases().forAllPhases()?then("Yes", "No")}
-            </#if>
+        <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all installation activity phases?">
+          <#if installationPhaseContent>
+            ${installationSummaryView.installationForAllPhases().forAllPhases()?then("Yes", "No")}
+          </#if>
         </@fdsSummaryList.summaryListRowNoAction>
         <#if installationPhaseContent && !installationSummaryView.installationForAllPhases().forAllPhases()>
-            <@fdsSummaryList.summaryListRowNoAction keyText="Nominated installation phases">
-                <ol class="govuk-list">
-                  <#list installationSummaryView.installationForAllPhases().phases() as installationPhase>
-                    <li>${installationPhase}</li>
-                  </#list>
-                </ol>
-            </@fdsSummaryList.summaryListRowNoAction>
+          <@fdsSummaryList.summaryListRowNoAction keyText="Which installation activity phases is this nomination for?">
+            <ol class="govuk-list">
+              <#list installationSummaryView.installationForAllPhases().phases() as installationPhase>
+                <li>${installationPhase}</li>
+              </#list>
+            </ol>
+          </@fdsSummaryList.summaryListRowNoAction>
         </#if>
       </#if>
 

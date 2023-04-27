@@ -121,7 +121,7 @@ class RegulatorTeamServiceTest {
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
     var regulatorRoles = Set.of(
         RegulatorTeamRole.ACCESS_MANAGER,
-        RegulatorTeamRole.ORGANISATION_ACCESS_MANAGER
+        RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER
     );
 
     regulatorTeamService.addUserTeamRoles(team, userToAdd, regulatorRoles);

@@ -67,7 +67,6 @@ public class DeleteNominationController {
     if (redirectAttributes != null) {
       var notificationBanner = NotificationBanner.builder()
           .withBannerType(NotificationBannerType.SUCCESS)
-          .withTitle("Successfully deleted draft nomination")
           .withHeading("Deleted draft nomination created on %s"
               .formatted(DateUtil.formatLongDateTime(nominationDetail.getCreatedInstant()))
           )

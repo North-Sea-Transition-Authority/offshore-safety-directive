@@ -25,15 +25,24 @@
       selectorMinInputLength=2
       restUrl=springUrl(portalOrganisationsRestUrl)
     />
-    <@fdsDetails.summaryDetails summaryTitle="The well or installation operator I want to nominate is not shown in the list">
+    <@fdsDetails.summaryDetails
+      summaryTitle="The well or installation operator I want to nominate is not shown in the list"
+    >
       <p class="govuk-body">
-        If the organisation you want to nominate is not shown in the list then you must contact the
-        <@mailTo.mailToLink linkText=customerBranding.mnemonic() mailToEmailAddress=customerBranding.businessEmailAddress()/>.
+        If the operator you want to nominate is not shown in the list then you must contact
+        <@mailTo.mailToLink
+          linkText=customerBranding.businessEmailAddress()
+          mailToEmailAddress=customerBranding.businessEmailAddress()
+        />
       </p>
     </@fdsDetails.summaryDetails>
     <@fdsTextarea.textarea
       path="form.reasonForNomination"
-      labelText="Reason for the nomination"
+      labelText="Why do you want to appoint this operator?"
+      hintText="
+        Specify the particular offshore oil and gas operations, activities, duties and responsibilities the
+        proposed operator is being nominated for
+      "
     />
     <@fdsDateInput.dateInput
       dayPath="form.plannedStartDay"
@@ -41,27 +50,47 @@
       yearPath="form.plannedStartYear"
       labelText="On what date is the appointment planned to take effect?"
       defaultHint=false
-      hintText="If you are not sure of the planned date, provide an estimated date"
+      hintText="
+        If you are not sure of the planned date, provide an estimated date. The date should not be less than 3 months
+        in the future. Where in exceptional circumstances a date earlier than this is proposed, you will need to
+        provide a robust justification later in this process and prior to submission.
+      "
       formId="planned-start-date"
     />
 
-<#--Check which is the first checkbox that is not selected and pass that as the path to the checkBoxGroupComponent to properly bind the error-->
-    <#assign checkboxGroupPath=checkBoxValidationUtil.getFirstFormFieldWithError(["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"])/>
+    <#--
+      Check which is the first checkbox that is not selected and pass that as the path to the
+      checkBoxGroupComponent to properly bind the error
+    -->
+    <#assign checkboxGroupPath =
+      checkBoxValidationUtil.getFirstFormFieldWithError(
+        ["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"]
+      )
+    />
     <@fdsCheckbox.checkboxGroup
       path=checkboxGroupPath
-      fieldsetHeadingText="Nominee declarations"
+      fieldsetHeadingText="Licensee declarations"
     >
       <@fdsCheckbox.checkboxItem
         path="form.operatorHasAuthority"
-        labelText="The licensee(s) will provide the proposed operator with the necessary authority to deliver their safety and environmental duties and responsibilities"
+        labelText="
+          The licensee(s) will provide the proposed operator with the necessary authority to deliver their
+          safety and environmental duties and responsibilities
+        "
       />
       <@fdsCheckbox.checkboxItem
         path="form.licenseeAcknowledgeOperatorRequirements"
-        labelText="The licensee(s) will take all reasonable steps to ensure that the appointed operator meets those requirements, by implementing arrangements for the monitoring, audit and review of the proposed operator’s performance"
+        labelText="
+          The licensee(s) will take all reasonable steps to ensure that the appointed operator meets those
+          requirements, by implementing arrangements for the monitoring, audit and review of the proposed
+          operator's performance
+        "
       />
       <@fdsCheckbox.checkboxItem
         path="form.operatorHasCapacity"
-        labelText="The proposed operator has the capacity to meet the requirements relevant to those duties and responsibilities"
+        labelText="
+          The proposed operator has the capacity to meet the requirements relevant to those duties and responsibilities
+        "
       />
     </@fdsCheckbox.checkboxGroup>
     <@fdsAction.button buttonText="Save and continue"/>

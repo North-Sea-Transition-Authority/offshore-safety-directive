@@ -7,6 +7,7 @@
 <#-- @ftlvariable name="installationPhases" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="alreadyAddedInstallations" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView>" -->
 <#-- @ftlvariable name="installationsRestUrl" type="String" -->
+<#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -33,15 +34,14 @@
     />
     <@fdsRadio.radioGroup
       path="form.forAllInstallationPhases"
-      labelText="Is this nomination for all installation phases?"
-      hintText="Installation phases include development or decommissioning"
+      labelText="Is this nomination for all installation activity phases?"
       hiddenContent=true
     >
       <@fdsRadio.radioYes path="form.forAllInstallationPhases"/>
       <@fdsRadio.radioNo path="form.forAllInstallationPhases">
         <@fdsCheckbox.checkboxGroup
           path="form.developmentDesignPhase"
-          fieldsetHeadingText="Which installations phases is this nomination for?"
+          fieldsetHeadingText="Which installation activity phases is this nomination for?"
           nestingPath="form.forAllInstallationPhases"
         >
           <@fdsCheckbox.checkboxItem
@@ -71,6 +71,16 @@
         </@fdsCheckbox.checkboxGroup>
       </@fdsRadio.radioNo>
     </@fdsRadio.radioGroup>
+    <@fdsDetails.summaryDetails summaryTitle="What are the installation activity phases?">
+      <p class="govuk-body">
+        Installation activity phases include development and decommissioning, as defined in the
+        <@fdsAction.link
+          linkText="${accidentRegulatorBranding.name()}'s Appendix C guidance"
+          linkUrl=accidentRegulatorBranding.consultationGuidanceUrl()
+          openInNewTab=true
+        />
+      </p>
+    </@fdsDetails.summaryDetails>
     <@fdsAction.button buttonText="Save and continue"/>
   </@fdsForm.htmlForm>
 </@defaultPage>

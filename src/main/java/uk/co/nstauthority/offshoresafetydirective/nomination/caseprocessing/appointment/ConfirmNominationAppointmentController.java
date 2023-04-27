@@ -31,10 +31,10 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -68,14 +68,16 @@ public class ConfirmNominationAppointmentController {
     this.confirmNominationAppointmentSubmissionService = confirmNominationAppointmentSubmissionService;
   }
 
-  @PostMapping(params = CaseProcessingAction.CONFIRM_APPOINTMENT)
+  @PostMapping(params = CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT)
   public ModelAndView confirmAppointment(@PathVariable("nominationId") NominationId nominationId,
                                          @RequestParam("confirm-appointment") Boolean slideoutOpen,
                                          // Used for ReverseRouter to call correct route
-                                         @Nullable @RequestParam(CaseProcessingAction.CONFIRM_APPOINTMENT) String postButtonName,
+                                         @Nullable
+                                         @RequestParam(CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT) String postButtonName,
+
                                          @Nullable @ModelAttribute(FORM_NAME)
-                                             ConfirmNominationAppointmentForm confirmNominationAppointmentForm,
-                                         @Nullable BindingResult bindingResult,
+                                         ConfirmNominationAppointmentForm confirmNominationAppointmentForm,
+                                         BindingResult bindingResult,
                                          @Nullable RedirectAttributes redirectAttributes) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -122,15 +124,12 @@ public class ConfirmNominationAppointmentController {
 
           if (redirectAttributes != null) {
 
-            var formattedDate = DateUtil.formatLongDate(appointmentDate);
-
             var notificationBanner = NotificationBanner.builder()
                 .withBannerType(NotificationBannerType.SUCCESS)
-                .withTitle("Appointment confirmed")
                 .withHeading(
-                    "Appointment confirmed for nomination %s on %s".formatted(
+                    "Appointment confirmed for nomination %s with effect from %s".formatted(
                         nominationDetail.getNomination().getReference(),
-                        formattedDate
+                        DateUtil.formatLongDate(appointmentDate)
                     ))
                 .build();
 

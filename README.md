@@ -58,7 +58,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_SAML_ENTITY_ID                         | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                             |
 | OSD_SAML_CERTIFICATE                       | The x509 certificate string                                                                          |
 | OSD_SAML_LOGIN_URL                         | The URL to hit the `login` entry theme of the SAML login module                                      |
-| OSD_SAML_BASE_URL                          | The URL prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local)   |
+| OSD_SERVICE_BASE_URL                       | The URL prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local)   |
 | OSD_ENABLE_FLYWAY_OUT_OF_ORDER             | Set to `true` to allow flyway to run out of order, defaults to `false`                               | 
 | OSD_ENERGY_PORTAL_API_URL                  | The URL to the Energy Portal API (ending in `/graphql`)                                              |
 | OSD_ENERGY_PORTAL_API_TOKEN                | The pre-shared key to authenticate with the Energy Portal API                                        |
@@ -78,6 +78,10 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                         |
 | OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                               |
 | OSD_SESSION_TIMEOUT_MINUTES                | The time in minutes before a session timeouts. This should be the same as the Energy Portal, e.g 180 |
+| OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)      |
+| OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                |
+| NOTIFY_API_KEY                             | The GOV.UK Notify key                                                                                |
+| NOTIFY_CALLBACK_TOKEN                      | The GOV.UK Notify callback token                                                                     |
 | OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                |
 | OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
 | OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |

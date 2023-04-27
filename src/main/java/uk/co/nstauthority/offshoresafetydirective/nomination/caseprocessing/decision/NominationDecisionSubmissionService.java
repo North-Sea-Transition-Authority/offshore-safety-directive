@@ -42,12 +42,12 @@ class NominationDecisionSubmissionService {
             .orElseThrow(() -> new IllegalStateException("Decision date is null and passed validation")),
         nominationDecisionForm.getComments().getInputValue(),
         EnumUtils.getEnum(NominationDecision.class, nominationDecisionForm.getNominationDecision()),
-        nominationDecisionForm.getFiles()
+        nominationDecisionForm.getDecisionFiles()
     );
 
-    fileUploadService.updateFileUploadDescriptions(nominationDecisionForm.getFiles());
+    fileUploadService.updateFileUploadDescriptions(nominationDecisionForm.getDecisionFiles());
 
-    nominationDetailFileService.submitAndCleanFiles(nominationDetail, nominationDecisionForm.getFiles(),
+    nominationDetailFileService.submitAndCleanFiles(nominationDetail, nominationDecisionForm.getDecisionFiles(),
         VIRTUAL_FOLDER);
 
     nominationDetailService.updateNominationDetailStatusByDecision(

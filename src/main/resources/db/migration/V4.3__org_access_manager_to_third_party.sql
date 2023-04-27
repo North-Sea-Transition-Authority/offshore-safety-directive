@@ -1,0 +1,3 @@
+UPDATE osd.team_member_roles tmr
+SET role = 'THIRD_PARTY_ACCESS_MANAGER'
+WHERE tmr.role = 'ORGANISATION_ACCESS_MANAGER';

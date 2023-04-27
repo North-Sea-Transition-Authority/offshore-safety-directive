@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
@@ -42,18 +43,21 @@ public class NominatedWellDetailController {
   private final NominationDetailService nominationDetailService;
   private final WellQueryService wellQueryService;
   private final NominatedWellDetailFormService nominatedWellDetailFormService;
+  private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
   public NominatedWellDetailController(ControllerHelperService controllerHelperService,
                                        NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
                                        NominationDetailService nominationDetailService,
                                        WellQueryService wellQueryService,
-                                       NominatedWellDetailFormService nominatedWellDetailFormService) {
+                                       NominatedWellDetailFormService nominatedWellDetailFormService,
+                                       AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.controllerHelperService = controllerHelperService;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.wellQueryService = wellQueryService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
+    this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
 
   @GetMapping
@@ -93,7 +97,8 @@ public class NominatedWellDetailController {
         )
         .addObject("wellsRestUrl", getWellsSearchUrl())
         .addObject("alreadyAddedWells", getWellViews(form))
-        .addObject("wellPhases", DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class));
+        .addObject("wellPhases", DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class))
+        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }
 
   private String getWellsSearchUrl() {

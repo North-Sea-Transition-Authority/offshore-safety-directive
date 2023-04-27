@@ -1,12 +1,17 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -15,12 +20,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class TeamServiceTest {
 
   @Mock
   private TeamRepository teamRepository;
+
+  @Mock
+  private TeamMemberService teamMemberService;
 
   @InjectMocks
   private TeamService teamService;
@@ -73,5 +83,108 @@ class TeamServiceTest {
 
     assertThat(result).containsExactly(team);
     verify(teamRepository, times(1)).findAllTeamsOfTypeThatUserIsMemberOf(user.wuaId(), teamType);
+  }
+
+  @Test
+  void getUserAccessibleTeams_whenCanManageConsulteeTeams_thenConsulteeTeamsReturned() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var consulteeTeamManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
+        .build();
+
+    var userOwnTeam = TeamTestUtil.Builder().build();
+    var consulteeTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(consulteeTeamManager));
+
+    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE)))
+        .thenReturn(List.of(consulteeTeam));
+
+    when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))
+        .thenReturn(List.of(userOwnTeam));
+
+    var result = teamService.getUserAccessibleTeams(user);
+
+    assertThat(result)
+        .containsExactly(consulteeTeam, userOwnTeam);
+  }
+
+  @Test
+  void getUserAccessibleTeams_whenOnlyHasAccessToViewOwnTeams_thenOnlyPersonalTeams() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var consulteeTeamManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.ACCESS_MANAGER)
+        .build();
+
+    var userOwnTeam = TeamTestUtil.Builder().build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(consulteeTeamManager));
+
+    when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))
+        .thenReturn(List.of(userOwnTeam));
+
+    var result = teamService.getUserAccessibleTeams(user);
+
+    assertThat(result)
+        .containsExactly(userOwnTeam);
+
+    verify(teamRepository, never()).findAllByTeamTypeIn(any());
+  }
+
+  @Test
+  void getUserAccessibleTeams_whenHasAccessToViewConsulteeTeams_andIsInConsulteeTeam_thenVerifyDistinct() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var consulteeTeamManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
+        .build();
+
+    var userOwnTeam = TeamTestUtil.Builder().build();
+    var consulteeTeamUuid = UUID.randomUUID();
+    var consulteeTeam = TeamTestUtil.Builder()
+        .withId(consulteeTeamUuid)
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    var duplicateConsulteeTeam = TeamTestUtil.Builder()
+        .withId(consulteeTeamUuid)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(consulteeTeamManager));
+
+    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE)))
+        .thenReturn(List.of(consulteeTeam));
+
+    when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))
+        .thenReturn(List.of(userOwnTeam, duplicateConsulteeTeam));
+
+    var result = teamService.getUserAccessibleTeams(user);
+
+    assertThat(result)
+        .containsExactly(consulteeTeam, userOwnTeam);
+  }
+
+  @Test
+  void isMemberOfTeam_whenMember_thenTrue() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(true);
+    assertTrue(teamMemberService.isMemberOfTeam(teamId, wuaId));
+  }
+
+  @Test
+  void isMemberOfTeam_whenNotMember_thenFalse() {
+    var wuaId = new WebUserAccountId(1);
+    var teamId = new TeamId(UUID.randomUUID());
+
+    when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(false);
+    assertFalse(teamMemberService.isMemberOfTeam(teamId, wuaId));
   }
 }

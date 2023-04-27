@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
@@ -42,6 +43,7 @@ public class NominatedInstallationController {
   private final NominationDetailService nominationDetailService;
   private final InstallationQueryService installationQueryService;
   private final NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
+  private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
   public NominatedInstallationController(ControllerHelperService controllerHelperService,
@@ -50,12 +52,14 @@ public class NominatedInstallationController {
                                          NominationDetailService nominationDetailService,
                                          InstallationQueryService installationQueryService,
                                          NominatedInstallationDetailFormService
-                                             nominatedInstallationDetailFormService) {
+                                             nominatedInstallationDetailFormService,
+                                         AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.controllerHelperService = controllerHelperService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.installationQueryService = installationQueryService;
     this.nominatedInstallationDetailFormService = nominatedInstallationDetailFormService;
+    this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
 
   @GetMapping
@@ -99,7 +103,8 @@ public class NominatedInstallationController {
         .addObject(
             "installationsRestUrl",
             RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
-        );
+        )
+        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }
 
   private List<InstallationAddToListView> getInstallationViews(NominatedInstallationDetailForm form) {

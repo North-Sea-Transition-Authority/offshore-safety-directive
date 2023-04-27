@@ -11,7 +11,7 @@ public class ServiceBrandingConfigurationProperties {
   private final ServiceConfigurationProperties serviceConfigurationProperties;
 
   @Autowired
-  ServiceBrandingConfigurationProperties(
+  public ServiceBrandingConfigurationProperties(
       CustomerConfigurationProperties customerConfigurationProperties,
       ServiceConfigurationProperties serviceConfigurationProperties
   ) {

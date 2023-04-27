@@ -64,6 +64,9 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.307'
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 
+	implementation 'uk.co.fivium:fivium-notify-spring-boot-starter:3.17.2-4.1-SNAPSHOT'
+	implementation 'commons-validator:commons-validator:1.7'
+
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 

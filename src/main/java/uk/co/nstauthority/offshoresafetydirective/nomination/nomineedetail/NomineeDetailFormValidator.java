@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.validationutil.DateValidationU
 @Service
 class NomineeDetailFormValidator implements SmartValidator {
 
-  private static final String NOMINEE_DECLARATIONS_ERROR_MESSAGE = "You must agree to all the nominee declarations";
+  private static final String NOMINEE_DECLARATIONS_ERROR_MESSAGE = "You must agree to all the licensee declarations";
 
   static final String NOMINEE_FIELD_NAME = "nominatedOrganisationId";
 
@@ -74,12 +74,12 @@ class NomineeDetailFormValidator implements SmartValidator {
         errors,
         "reasonForNomination",
         "reasonForNomination.required",
-        "Enter the reason for the nomination"
+        "Enter why you want to appoint this operator"
     );
 
     DateValidationUtil.validateDateIsInTheFuture(
         "plannedStart",
-        "planned start date",
+        "date the appointment is planned to take effect",
         form.getPlannedStartDay(),
         form.getPlannedStartMonth(),
         form.getPlannedStartYear(),

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
@@ -43,6 +44,7 @@ public class NominatedBlockSubareaController {
   private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
   private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+  private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
   public NominatedBlockSubareaController(ControllerHelperService controllerHelperService,
@@ -50,13 +52,15 @@ public class NominatedBlockSubareaController {
                                          NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService,
                                          NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                                          NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
-                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                                         AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
+    this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
 
   @GetMapping
@@ -93,7 +97,8 @@ public class NominatedBlockSubareaController {
             ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId))
         )
         .addObject("alreadyAddedSubareas", getLicenceBlockSubareaViews(form))
-        .addObject("blockSubareaRestUrl", getLicenceBlockSubareaSearchUrl());
+        .addObject("blockSubareaRestUrl", getLicenceBlockSubareaSearchUrl())
+        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }
 
   private String getLicenceBlockSubareaSearchUrl() {

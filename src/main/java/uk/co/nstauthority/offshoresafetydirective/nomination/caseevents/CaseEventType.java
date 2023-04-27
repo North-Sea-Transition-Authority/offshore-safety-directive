@@ -8,7 +8,10 @@ public enum CaseEventType {
   WITHDRAWN("Withdrawn"),
   CONFIRM_APPOINTMENT("Confirm appointment"),
   GENERAL_NOTE("General note"),
-  NOMINATION_SUBMITTED("Nomination submitted");
+  NOMINATION_SUBMITTED("Nomination submitted"),
+  SENT_FOR_CONSULTATION("Sent for consultation"),
+  CONSULTATION_RESPONSE("Consultation response")
+  ;
 
   private final String screenDisplayText;
 

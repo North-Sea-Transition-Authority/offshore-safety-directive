@@ -29,10 +29,10 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -65,11 +65,11 @@ public class NominationDecisionController {
     this.nominationDecisionSubmissionService = nominationDecisionSubmissionService;
   }
 
-  @PostMapping(params = CaseProcessingAction.DECISION)
+  @PostMapping(params = CaseProcessingActionIdentifier.DECISION)
   public ModelAndView submitDecision(@PathVariable("nominationId") NominationId nominationId,
                                      @RequestParam("decision") Boolean slideoutOpen,
                                      // Used for ReverseRouter to call correct route
-                                     @Nullable @RequestParam(CaseProcessingAction.DECISION) String postButtonName,
+                                     @Nullable @RequestParam(CaseProcessingActionIdentifier.DECISION) String postButtonName,
                                      @Nullable @ModelAttribute(FORM_NAME) NominationDecisionForm nominationDecisionForm,
                                      @Nullable BindingResult bindingResult,
                                      @Nullable RedirectAttributes redirectAttributes) {
@@ -77,12 +77,12 @@ public class NominationDecisionController {
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         EnumSet.of(NominationStatus.SUBMITTED)
-    ).orElseThrow(() -> {
-      throw new OsdEntityNotFoundException(String.format(
-          "Cannot find latest NominationDetail with ID: %s and status: %s",
-          nominationId.id(), NominationStatus.SUBMITTED.name()
-      ));
-    });
+    ).orElseThrow(() ->
+        new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s and status: %s",
+            nominationId.id(), NominationStatus.SUBMITTED.name()
+        ))
+    );
 
     nominationDecisionValidator.validate(
         Objects.requireNonNull(nominationDecisionForm),
@@ -90,7 +90,7 @@ public class NominationDecisionController {
         new NominationDecisionValidatorHint(nominationDetail)
     );
 
-    var files = nominationDecisionForm.getFiles()
+    var files = nominationDecisionForm.getDecisionFiles()
         .stream()
         .map(FileUploadForm::getUploadedFileId)
         .map(UploadedFileId::new)
@@ -112,7 +112,6 @@ public class NominationDecisionController {
 
           if (redirectAttributes != null) {
             var notificationBanner = NotificationBanner.builder()
-                .withTitle("Decision completed")
                 .withHeading("Decision submitted for %s".formatted(
                     nominationDetail.getNomination().getReference()))
                 .withBannerType(NotificationBannerType.SUCCESS)

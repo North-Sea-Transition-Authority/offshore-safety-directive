@@ -46,7 +46,15 @@
     </@fdsRadio.radioGroup>
 
     <@fdsDetails.summaryDetails summaryTitle="What wells are part of this nomination?">
-        <@_listWellbores.listWellbores wellbores/>
+      <p class="govuk-body">
+        A well is included in the list below if its origin or total depth (TD) location is within the spatial
+        area for a subarea on the nomination.
+      </p>
+      <p class="govuk-body">
+        Examples of where you may choose to exclude a well include those
+        with Abandoned Phase 3 mechanical status or those drilled under a previous licence according to WONS.
+      </p>
+      <@_listWellbores.listWellbores wellbores/>
     </@fdsDetails.summaryDetails>
 
     <@fdsAction.button buttonText="Save and continue"/>

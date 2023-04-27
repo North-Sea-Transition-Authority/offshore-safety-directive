@@ -1,6 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-public record NominationId(int id) {
+import java.io.Serial;
+import java.io.Serializable;
+
+public record NominationId(int id) implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1694635038292197507L;
 
   public NominationId(NominationDetail nominationDetail) {
     this(nominationDetail.getNomination().getId());

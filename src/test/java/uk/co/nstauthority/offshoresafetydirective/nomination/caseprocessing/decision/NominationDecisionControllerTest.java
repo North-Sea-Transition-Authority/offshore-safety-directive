@@ -45,9 +45,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -64,6 +64,8 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
+  private static final String VIEW_NAME = "test-view-name";
+
   @MockBean
   private NominationDecisionValidator nominationDecisionValidator;
 
@@ -71,7 +73,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   @MockBean
-  private FileUploadService fileUploadService;
+  FileUploadService fileUploadService;
 
   @MockBean
   private NominationDecisionSubmissionService nominationDecisionSubmissionService;
@@ -104,7 +106,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
@@ -112,7 +114,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true,
-                CaseProcessingAction.DECISION, null, null, null)),
+                CaseProcessingActionIdentifier.DECISION, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -126,14 +128,14 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
   void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
-        .thenReturn(new ModelAndView("test"));
+        .thenReturn(new ModelAndView(VIEW_NAME));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
         .withUser(NOMINATION_MANAGER_USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true,
-                CaseProcessingAction.DECISION, null, null, null)),
+                CaseProcessingActionIdentifier.DECISION, null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -163,7 +165,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION,
+                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
                     null, null, null)))
             .with(user(NOMINATION_MANAGER_USER))
             .with(csrf())
@@ -195,7 +197,6 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .thenReturn(new ModelAndView());
 
     var expectedNotificationBanner = NotificationBanner.builder()
-        .withTitle("Decision completed")
         .withHeading("Decision submitted for %s".formatted(
             nominationDetail.getNomination().getReference()))
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -203,7 +204,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(post(
             ReverseRouter.route(
-                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingAction.DECISION,
+                on(NominationDecisionController.class).submitDecision(NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
                     null, null, null)))
             .with(user(NOMINATION_MANAGER_USER))
             .with(csrf())
@@ -212,9 +213,9 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             .param("decisionDate.yearInput.inputValue", String.valueOf(decisionDate.getYear()))
             .param("comments.inputValue", commentText)
             .param("nominationDecision", NominationDecision.OBJECTION.name())
-            .param("files[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
-            .param("files[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
-            .param("files[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
+            .param("decisionFiles[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
+            .param("decisionFiles[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
+            .param("decisionFiles[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
@@ -225,7 +226,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     verify(nominationDecisionSubmissionService).submitNominationDecision(eq(nominationDetail), captor.capture());
 
-    var files = captor.getValue().getFiles();
+    var files = captor.getValue().getDecisionFiles();
     assertThat(files)
         .extracting(
             FileUploadForm::getUploadedFileId,

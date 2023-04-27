@@ -132,6 +132,16 @@ public class CaseEventQueryService {
             .withCustomDatePrompt("Submitted on")
             .withCustomCreatorPrompt("Submitted by")
             .build();
+        case SENT_FOR_CONSULTATION -> caseEventBuilder
+            .withCustomDatePrompt("Date requested")
+            .build();
+        case CONSULTATION_RESPONSE -> caseEventBuilder
+            .withCustomDatePrompt("Response date")
+            .withBody(caseEvent.getComment())
+            .withCustomBodyPrompt("Consultation response")
+            .withFileViews(uploadedFileViews)
+            .withCustomFilePrompt("Consultation response documents")
+            .build();
       };
     };
   }
