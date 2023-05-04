@@ -29,8 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -48,7 +48,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @BeforeEach
   void setUp() {
@@ -72,8 +72,8 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -112,8 +112,8 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -157,8 +157,8 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -197,7 +197,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
-    verifyNoInteractions(fileEndpointService);
+    verifyNoInteractions(fileControllerHelperService);
   }
 
 }

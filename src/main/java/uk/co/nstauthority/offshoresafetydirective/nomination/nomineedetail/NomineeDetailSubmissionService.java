@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSectionSubmissionService;
 
@@ -14,15 +14,15 @@ class NomineeDetailSubmissionService implements NominationSectionSubmissionServi
 
   private final NomineeDetailFormService nomineeDetailFormService;
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
 
   @Autowired
   NomineeDetailSubmissionService(NomineeDetailFormService nomineeDetailFormService,
                                  NomineeDetailPersistenceService nomineeDetailPersistenceService,
-                                 UploadedFileDetailService uploadedFileDetailService) {
+                                 FileAssociationService fileAssociationService) {
     this.nomineeDetailFormService = nomineeDetailFormService;
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
   }
 
   @Override
@@ -36,6 +36,6 @@ class NomineeDetailSubmissionService implements NominationSectionSubmissionServi
   @Transactional
   public void submit(NominationDetail nominationDetail, NomineeDetailForm form) {
     nomineeDetailPersistenceService.createOrUpdateNomineeDetail(nominationDetail, form);
-    uploadedFileDetailService.submitFiles(form.getAppendixDocuments());
+    fileAssociationService.submitFiles(form.getAppendixDocuments());
   }
 }

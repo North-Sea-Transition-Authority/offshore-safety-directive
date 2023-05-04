@@ -16,8 +16,8 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadResult;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
@@ -39,13 +39,13 @@ public class NominationDecisionFileController {
   public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.NOMINATION_DECISION;
 
   private final NominationDetailService nominationDetailService;
-  private final FileEndpointService fileEndpointService;
+  private final FileControllerHelperService fileControllerHelperService;
 
   @Autowired
   public NominationDecisionFileController(NominationDetailService nominationDetailService,
-                                          FileEndpointService fileEndpointService) {
+                                          FileControllerHelperService fileControllerHelperService) {
     this.nominationDetailService = nominationDetailService;
-    this.fileEndpointService = fileEndpointService;
+    this.fileControllerHelperService = fileControllerHelperService;
   }
 
   @ResponseBody
@@ -54,7 +54,7 @@ public class NominationDecisionFileController {
                                  @RequestParam("file") MultipartFile multipartFile) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return fileEndpointService.processFileUpload(
+    return fileControllerHelperService.processFileUpload(
         new NominationDetailFileReference(nominationDetail),
         PURPOSE,
         VIRTUAL_FOLDER,
@@ -69,7 +69,7 @@ public class NominationDecisionFileController {
                                  @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return fileEndpointService.deleteFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
+    return fileControllerHelperService.deleteFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
   @ResponseBody
@@ -78,7 +78,7 @@ public class NominationDecisionFileController {
                                                       @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return fileEndpointService.handleDownload(new NominationDetailFileReference(nominationDetail), uploadedFileId);
+    return fileControllerHelperService.downloadFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
   private NominationDetail getLatestSubmittedNominationDetail(NominationId nominationId) {

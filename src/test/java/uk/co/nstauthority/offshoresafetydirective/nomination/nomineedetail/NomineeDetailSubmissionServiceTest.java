@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -31,7 +31,7 @@ class NomineeDetailSubmissionServiceTest {
   private NomineeDetailPersistenceService nomineeDetailPersistenceService;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @InjectMocks
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
@@ -88,7 +88,7 @@ class NomineeDetailSubmissionServiceTest {
     nomineeDetailSubmissionService.submit(detail, form);
 
     verify(nomineeDetailPersistenceService).createOrUpdateNomineeDetail(detail, form);
-    verify(uploadedFileDetailService).submitFiles(List.of(fileUploadForm));
+    verify(fileAssociationService).submitFiles(List.of(fileUploadForm));
   }
 
 }

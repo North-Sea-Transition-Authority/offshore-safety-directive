@@ -29,8 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -56,7 +56,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @BeforeEach
   void setUp() {
@@ -148,7 +148,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
-    verify(fileEndpointService).processFileUpload(
+    verify(fileControllerHelperService).processFileUpload(
         fileReferenceCaptor.capture(),
         eq(NominationDecisionFileController.PURPOSE),
         eq(VirtualFolder.NOMINATION_DECISION),
@@ -162,7 +162,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
             NominationDetailFileReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             String.valueOf(nominationDetailId.id())
         );
   }
@@ -250,7 +250,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
-    verify(fileEndpointService).deleteFile(
+    verify(fileControllerHelperService).deleteFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     );
@@ -261,7 +261,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
             NominationDetailFileReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             String.valueOf(nominationDetailId.id())
         );
   }
@@ -346,7 +346,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
-    when(fileEndpointService.handleDownload(
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -367,7 +367,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
             NominationDetailFileReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             String.valueOf(nominationDetailId.id())
         );
   }

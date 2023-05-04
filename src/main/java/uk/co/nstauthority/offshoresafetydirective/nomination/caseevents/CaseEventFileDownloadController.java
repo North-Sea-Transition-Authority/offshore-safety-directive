@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -41,15 +41,15 @@ public class CaseEventFileDownloadController {
       .map(Enum::name)
       .collect(Collectors.joining(","));
 
-  private final FileEndpointService fileEndpointService;
+  private final FileControllerHelperService fileControllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final CaseEventQueryService caseEventQueryService;
 
   @Autowired
-  public CaseEventFileDownloadController(FileEndpointService fileEndpointService,
+  public CaseEventFileDownloadController(FileControllerHelperService fileControllerHelperService,
                                          NominationDetailService nominationDetailService,
                                          CaseEventQueryService caseEventQueryService) {
-    this.fileEndpointService = fileEndpointService;
+    this.fileControllerHelperService = fileControllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.caseEventQueryService = caseEventQueryService;
   }
@@ -77,7 +77,7 @@ public class CaseEventFileDownloadController {
                 dto.nominationDetailId()
             )
         ));
-    return fileEndpointService.handleDownload(new CaseEventFileReference(caseEvent), uploadedFileId);
+    return fileControllerHelperService.downloadFile(new CaseEventFileReference(caseEvent), uploadedFileId);
   }
 
 }

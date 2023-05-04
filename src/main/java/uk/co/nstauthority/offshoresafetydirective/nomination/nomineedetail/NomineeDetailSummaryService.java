@@ -11,9 +11,9 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -30,17 +30,17 @@ public class NomineeDetailSummaryService {
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
 
   @Autowired
   public NomineeDetailSummaryService(NomineeDetailSubmissionService nomineeDetailSubmissionService,
                                      NomineeDetailPersistenceService nomineeDetailPersistenceService,
                                      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                     UploadedFileDetailService uploadedFileDetailService) {
+                                     FileAssociationService fileAssociationService) {
     this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
   }
 
   public NomineeDetailSummaryView getNomineeDetailSummaryView(NominationDetail nominationDetail,
@@ -65,7 +65,7 @@ public class NomineeDetailSummaryService {
 
           var conditionsAccepted = getConditionsAccepted(nomineeDetail);
 
-          var purposeAndFileViewMap = uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+          var purposeAndFileViewMap = fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
               new NominationDetailFileReference(nominationDetail),
               List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
           );

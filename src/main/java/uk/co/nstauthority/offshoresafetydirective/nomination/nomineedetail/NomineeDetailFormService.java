@@ -5,9 +5,9 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
@@ -17,16 +17,16 @@ class NomineeDetailFormService {
 
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
   private final NomineeDetailFormValidator nomineeDetailFormValidator;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
   private final FileUploadService fileUploadService;
 
   @Autowired
   NomineeDetailFormService(NomineeDetailPersistenceService nomineeDetailPersistenceService,
                            NomineeDetailFormValidator nomineeDetailFormValidator,
-                           UploadedFileDetailService uploadedFileDetailService, FileUploadService fileUploadService) {
+                           FileAssociationService fileAssociationService, FileUploadService fileUploadService) {
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
     this.nomineeDetailFormValidator = nomineeDetailFormValidator;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
   }
 
@@ -53,7 +53,7 @@ class NomineeDetailFormService {
     form.setLicenseeAcknowledgeOperatorRequirements(entity.getLicenseeAcknowledgeOperatorRequirements());
 
     Map<FilePurpose, List<UploadedFileView>> viewMap =
-        uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
             new NominationDetailFileReference(entity.getNominationDetail()),
             List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
         );

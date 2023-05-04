@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 
 @ExtendWith(MockitoExtension.class)
 class NominationConsultationResponseSubmissionServiceTest {
@@ -23,7 +23,7 @@ class NominationConsultationResponseSubmissionServiceTest {
   private FileUploadService fileUploadService;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @Mock
   private CaseEventService caseEventService;
@@ -45,8 +45,8 @@ class NominationConsultationResponseSubmissionServiceTest {
     nominationConsultationResponseSubmissionService.submitConsultationResponse(nominationDetail, form);
 
     verify(fileUploadService).updateFileUploadDescriptions(List.of(uploadForm));
-    verify(uploadedFileDetailService).submitFiles(List.of(uploadForm));
+    verify(fileAssociationService).submitFiles(List.of(uploadForm));
     verify(caseEventService).createConsultationResponseEvent(nominationDetail, formResponse, List.of(uploadForm));
-    verifyNoMoreInteractions(fileUploadService, uploadedFileDetailService, caseEventService);
+    verifyNoMoreInteractions(fileUploadService, fileAssociationService, caseEventService);
   }
 }

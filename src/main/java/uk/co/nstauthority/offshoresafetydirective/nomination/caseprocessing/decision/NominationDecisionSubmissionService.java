@@ -4,9 +4,8 @@ import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
@@ -16,19 +15,17 @@ class NominationDecisionSubmissionService {
 
   private final CaseEventService caseEventService;
   private final FileUploadService fileUploadService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
   private final NominationDetailService nominationDetailService;
-
-  public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.NOMINATION_DECISION;
 
   @Autowired
   NominationDecisionSubmissionService(CaseEventService caseEventService,
                                       FileUploadService fileUploadService,
-                                      UploadedFileDetailService uploadedFileDetailService,
+                                      FileAssociationService fileAssociationService,
                                       NominationDetailService nominationDetailService) {
     this.caseEventService = caseEventService;
     this.fileUploadService = fileUploadService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.nominationDetailService = nominationDetailService;
   }
 
@@ -47,7 +44,7 @@ class NominationDecisionSubmissionService {
 
     fileUploadService.updateFileUploadDescriptions(nominationDecisionForm.getDecisionFiles());
 
-    uploadedFileDetailService.submitFiles(nominationDecisionForm.getDecisionFiles());
+    fileAssociationService.submitFiles(nominationDecisionForm.getDecisionFiles());
 
     nominationDetailService.updateNominationDetailStatusByDecision(
         nominationDetail,

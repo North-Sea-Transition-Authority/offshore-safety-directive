@@ -40,9 +40,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -60,7 +60,7 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
       .build();
 
   @MockBean
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @Autowired
   private FileUploadConfig fileUploadConfig;
@@ -152,8 +152,8 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
             .with(csrf()))
         .andExpect(status().isOk());
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    verify(fileEndpointService).processFileUpload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    verify(fileControllerHelperService).processFileUpload(
         fileReferenceCaptor.capture(),
         eq(NominationConsultationResponseFileController.PURPOSE),
         eq(VirtualFolder.CONSULTATIONS),
@@ -163,11 +163,11 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }
@@ -254,19 +254,19 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
             .with(csrf()))
         .andExpect(status().isOk());
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    verify(fileEndpointService).deleteFile(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    verify(fileControllerHelperService).deleteFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     );
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }
@@ -350,8 +350,8 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid)))
     ).thenReturn(ResponseEntity.ok(inputStreamResource));
@@ -368,11 +368,11 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }

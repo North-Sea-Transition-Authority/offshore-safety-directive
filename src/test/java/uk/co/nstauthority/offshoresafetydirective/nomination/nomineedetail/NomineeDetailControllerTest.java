@@ -50,7 +50,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -84,7 +84,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   @MockBean
   private FileUploadService fileUploadService;
   @MockBean
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
   @MockBean
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
@@ -168,7 +168,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     var uploadedFile = UploadedFileTestUtil.builder().build();
     var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
 
-    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         fileReferenceCaptor.capture(),
         eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
     ))

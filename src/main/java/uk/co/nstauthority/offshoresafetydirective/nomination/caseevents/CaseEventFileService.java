@@ -13,11 +13,11 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailView;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -28,13 +28,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 @Service
 public class CaseEventFileService {
 
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
   private final FileUploadService fileUploadService;
 
   @Autowired
-  public CaseEventFileService(UploadedFileDetailService uploadedFileDetailService,
+  public CaseEventFileService(FileAssociationService fileAssociationService,
                               FileUploadService fileUploadService) {
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
   }
 
@@ -74,12 +74,12 @@ public class CaseEventFileService {
           ));
     }
 
-    var submittedDecisionFiles = uploadedFileDetailService.getAllByFileReferenceAndUploadedFileIds(
+    var submittedDecisionFiles = fileAssociationService.getAllByFileReferenceAndUploadedFileIds(
         new NominationDetailFileReference(nominationDetail),
         fileIds
     );
 
-    uploadedFileDetailService.updateFileReferences(submittedDecisionFiles, new CaseEventFileReference(caseEvent));
+    fileAssociationService.updateFileReferences(submittedDecisionFiles, new CaseEventFileReference(caseEvent));
   }
 
   public Map<CaseEvent, List<CaseEventFileView>> getFileViewMapFromCaseEvents(Collection<CaseEvent> caseEvents) {
@@ -89,17 +89,17 @@ public class CaseEventFileService {
             Function.identity()
         ));
 
-    List<UploadedFileDetailView> linkedFileDetails = uploadedFileDetailService
-        .getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
-            FileReferenceType.CASE_EVENT,
+    List<FileAssociationDto> linkedFileAssociationDtos =
+        fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
+            FileAssociationType.CASE_EVENT,
             caseEventIdMap.keySet()
         );
 
-    Map<String, List<UploadedFileDetailView>> caseEventReferenceAndLinkedFileMap = linkedFileDetails.stream()
-        .collect(Collectors.groupingBy(UploadedFileDetailView::referenceId));
+    Map<String, List<FileAssociationDto>> caseEventReferenceAndLinkedFileMap = linkedFileAssociationDtos.stream()
+        .collect(Collectors.groupingBy(FileAssociationDto::referenceId));
 
-    var uploadedFileIds = linkedFileDetails.stream()
-        .map(UploadedFileDetailView::uploadedFileId)
+    var uploadedFileIds = linkedFileAssociationDtos.stream()
+        .map(FileAssociationDto::uploadedFileId)
         .toList();
 
     var uploadedFileViews = fileUploadService.getUploadedFileViewList(uploadedFileIds);
@@ -126,17 +126,17 @@ public class CaseEventFileService {
 
   private List<CaseEventFileView> getCaseEventFileViewsLinkedToCaseEvent(
       CaseEvent caseEvent,
-      Collection<UploadedFileDetailView> uploadedFileDetailViews,
+      Collection<FileAssociationDto> fileAssociationDtos,
       Collection<UploadedFileView> uploadedFileViews
   ) {
     var caseEventReference = new CaseEventFileReference(caseEvent);
-    var filteredFileDetailViews = uploadedFileDetailViews.stream()
+    var filteredFileAssociationDtos = fileAssociationDtos.stream()
         .filter(view -> view.referenceId().equals(caseEventReference.getReferenceId()))
         .toList();
 
     var relevantUploadedFileViews = uploadedFileViews.stream()
         .filter(
-            fileView -> filteredFileDetailViews.stream()
+            fileView -> filteredFileAssociationDtos.stream()
                 .anyMatch(view -> UUID.fromString(fileView.fileId()).equals(view.uploadedFileId().uuid())))
         .toList();
 

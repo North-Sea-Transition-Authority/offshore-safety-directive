@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -27,13 +27,13 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 })
 public class NominationFileDownloadController {
 
-  private final FileEndpointService fileEndpointService;
+  private final FileControllerHelperService fileControllerHelperService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public NominationFileDownloadController(FileEndpointService fileEndpointService,
+  public NominationFileDownloadController(FileControllerHelperService fileControllerHelperService,
                                           NominationDetailService nominationDetailService) {
-    this.fileEndpointService = fileEndpointService;
+    this.fileControllerHelperService = fileControllerHelperService;
     this.nominationDetailService = nominationDetailService;
   }
 
@@ -48,7 +48,7 @@ public class NominationFileDownloadController {
                 nominationId.id()
             )
         ));
-    return fileEndpointService.handleDownload(new NominationDetailFileReference(nominationDetail), uploadedFileId);
+    return fileControllerHelperService.downloadFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
 }

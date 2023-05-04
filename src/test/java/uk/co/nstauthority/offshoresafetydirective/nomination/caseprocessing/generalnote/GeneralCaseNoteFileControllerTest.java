@@ -41,9 +41,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -61,7 +61,7 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @SpyBean
   private FileUploadConfig fileUploadConfig;
@@ -154,9 +154,9 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isOk());
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
     var extensionList = List.copyOf(fileUploadConfig.getAllowedFileExtensions());
-    verify(fileEndpointService).processFileUpload(
+    verify(fileControllerHelperService).processFileUpload(
         fileReferenceCaptor.capture(),
         eq(GeneralCaseNoteFileController.PURPOSE),
         eq(VirtualFolder.CASE_NOTES),
@@ -166,11 +166,11 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }
@@ -256,16 +256,16 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isOk());
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    verify(fileEndpointService).deleteFile(fileReferenceCaptor.capture(), eq(new UploadedFileId(fileUuid)));
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    verify(fileControllerHelperService).deleteFile(fileReferenceCaptor.capture(), eq(new UploadedFileId(fileUuid)));
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }
@@ -348,8 +348,8 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(fileReferenceCaptor.capture(), eq(new UploadedFileId(fileUuid))))
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(fileReferenceCaptor.capture(), eq(new UploadedFileId(fileUuid))))
         .thenReturn(ResponseEntity.ok(inputStreamResource));
 
     var result = mockMvc.perform(get(ReverseRouter.route(
@@ -364,11 +364,11 @@ class GeneralCaseNoteFileControllerTest extends AbstractControllerTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
   }

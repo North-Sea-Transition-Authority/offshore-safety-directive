@@ -24,8 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailFormServiceTest {
@@ -39,7 +39,7 @@ class NomineeDetailFormServiceTest {
   private NomineeDetailFormValidator nomineeDetailFormValidator;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @Mock
   private FileUploadService fileUploadService;
@@ -119,8 +119,8 @@ class NomineeDetailFormServiceTest {
 
     var uploadedFile = UploadedFileTestUtil.builder().build();
     var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         fileReferenceCaptor.capture(),
         eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
     )).thenReturn(Map.of(

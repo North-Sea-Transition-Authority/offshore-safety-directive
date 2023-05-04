@@ -1,8 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
-public interface FileReference {
+public interface FileAssociationReference {
 
-  FileReferenceType getFileReferenceType();
+  FileAssociationType getFileReferenceType();
 
   String getReferenceId();
 

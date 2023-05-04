@@ -3,15 +3,10 @@ package uk.co.nstauthority.offshoresafetydirective.file;
 import java.time.Instant;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileStatus;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetail;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 
-public class UploadedFileDetailTestUtil {
+public class FileAssociationTestUtil {
 
-  private UploadedFileDetailTestUtil() {
+  private FileAssociationTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
@@ -24,7 +19,7 @@ public class UploadedFileDetailTestUtil {
     private UUID uuid = UUID.randomUUID();
     private UploadedFile uploadedFile = UploadedFileTestUtil.builder().build();
     private FileStatus fileStatus = FileStatus.DRAFT;
-    private FileReferenceType referenceType = FileReferenceType.NOMINATION_DETAIL;
+    private FileAssociationType referenceType = FileAssociationType.NOMINATION_DETAIL;
     private String referenceId = "reference id";
     private String purpose = "purpose";
     private Instant uploadedInstant = Instant.now();
@@ -49,7 +44,7 @@ public class UploadedFileDetailTestUtil {
     }
 
     public Builder withReferenceType(
-        FileReferenceType referenceType) {
+        FileAssociationType referenceType) {
       this.referenceType = referenceType;
       return this;
     }
@@ -69,15 +64,15 @@ public class UploadedFileDetailTestUtil {
       return this;
     }
 
-    public UploadedFileDetail build() {
-      var fileDetail = new UploadedFileDetail(uuid);
-      fileDetail.setUploadedFile(uploadedFile);
-      fileDetail.setFileStatus(fileStatus);
-      fileDetail.setReferenceType(referenceType);
-      fileDetail.setReferenceId(referenceId);
-      fileDetail.setPurpose(purpose);
-      fileDetail.setUploadedInstant(uploadedInstant);
-      return fileDetail;
+    public FileAssociation build() {
+      var fileAssociation = new FileAssociation(uuid);
+      fileAssociation.setUploadedFile(uploadedFile);
+      fileAssociation.setFileStatus(fileStatus);
+      fileAssociation.setReferenceType(referenceType);
+      fileAssociation.setReferenceId(referenceId);
+      fileAssociation.setPurpose(purpose);
+      fileAssociation.setUploadedInstant(uploadedInstant);
+      return fileAssociation;
     }
   }
 }

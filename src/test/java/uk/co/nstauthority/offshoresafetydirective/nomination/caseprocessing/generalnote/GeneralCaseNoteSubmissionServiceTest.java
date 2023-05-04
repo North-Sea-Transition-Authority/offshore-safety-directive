@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralCaseNoteSubmissionServiceTest {
@@ -26,7 +26,7 @@ class GeneralCaseNoteSubmissionServiceTest {
   private FileUploadService fileUploadService;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @InjectMocks
   private GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
@@ -48,11 +48,11 @@ class GeneralCaseNoteSubmissionServiceTest {
 
     verify(caseEventService).createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(fileUploadForm));
     verify(fileUploadService).updateFileUploadDescriptions(List.of(fileUploadForm));
-    verify(uploadedFileDetailService).submitFiles(List.of(fileUploadForm));
+    verify(fileAssociationService).submitFiles(List.of(fileUploadForm));
 
     verifyNoMoreInteractions(caseEventService);
     verifyNoMoreInteractions(fileUploadService);
-    verifyNoMoreInteractions(uploadedFileDetailService);
+    verifyNoMoreInteractions(fileAssociationService);
 
   }
 }

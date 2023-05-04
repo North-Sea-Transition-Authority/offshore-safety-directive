@@ -1,9 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 
-public class NominationDetailFileReference implements FileReference {
+public class NominationDetailFileReference implements FileAssociationReference {
   private final NominationDetailId nominationDetailId;
 
   public NominationDetailFileReference(NominationDetail nominationDetail) {
@@ -11,8 +11,8 @@ public class NominationDetailFileReference implements FileReference {
   }
 
   @Override
-  public FileReferenceType getFileReferenceType() {
-    return FileReferenceType.NOMINATION_DETAIL;
+  public FileAssociationType getFileReferenceType() {
+    return FileAssociationType.NOMINATION_DETAIL;
   }
 
   @Override

@@ -13,24 +13,24 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 
 @Service
-public class FileEndpointService {
+public class FileControllerHelperService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(FileEndpointService.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(FileControllerHelperService.class);
   private final FileUploadService fileUploadService;
   private final FileUploadValidationService fileUploadValidationService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
 
   @Autowired
-  public FileEndpointService(FileUploadService fileUploadService,
-                               FileUploadValidationService fileUploadValidationService,
-                               UploadedFileDetailService uploadedFileDetailService) {
+  public FileControllerHelperService(FileUploadService fileUploadService,
+                                     FileUploadValidationService fileUploadValidationService,
+                                     FileAssociationService fileAssociationService) {
     this.fileUploadService = fileUploadService;
     this.fileUploadValidationService = fileUploadValidationService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
   }
 
   @Transactional
-  public FileUploadResult processFileUpload(FileReference fileReference, String purpose, VirtualFolder virtualFolder,
+  public FileUploadResult processFileUpload(FileAssociationReference fileReference, String purpose, VirtualFolder virtualFolder,
                                             MultipartFile multipartFile, Collection<String> allowedExtensions) {
 
     var fileSize = multipartFile.getSize();
@@ -56,7 +56,7 @@ public class FileEndpointService {
     var uploadedFile = fileUploadService.createUploadedFile(
         virtualFolder, fileSize, filename, contentType);
 
-    uploadedFileDetailService.createDraftDetail(uploadedFile, fileReference, purpose);
+    fileAssociationService.createDraftAssociation(uploadedFile, fileReference, purpose);
 
     fileUploadService.uploadFile(multipartFile, uploadedFile);
 
@@ -64,9 +64,9 @@ public class FileEndpointService {
   }
 
   @Transactional
-  public FileDeleteResult deleteFile(FileReference fileReference, UploadedFileId uploadedFileId) {
-    var optionalFileDetail = uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId);
-    if (optionalFileDetail.isEmpty()) {
+  public FileDeleteResult deleteFile(FileAssociationReference fileReference, UploadedFileId uploadedFileId) {
+    var optionalFileAssociation = fileAssociationService.findFileAssociation(fileReference, uploadedFileId);
+    if (optionalFileAssociation.isEmpty()) {
       LOGGER.error(
           "Unable to delete file [{}] of linked to type [{}] with id [{}]",
           uploadedFileId.uuid(),
@@ -75,25 +75,26 @@ public class FileEndpointService {
       );
       return FileDeleteResult.error(uploadedFileId.uuid().toString());
     } else {
-      uploadedFileDetailService.deleteDetail(optionalFileDetail.get());
+      fileAssociationService.deleteFileAssociation(optionalFileAssociation.get());
       return FileDeleteResult.success(uploadedFileId.uuid().toString());
     }
   }
 
-  public ResponseEntity<InputStreamResource> handleDownload(FileReference fileReference,
-                                                            UploadedFileId uploadedFileId) {
+  public ResponseEntity<InputStreamResource> downloadFile(
+      FileAssociationReference fileAssociationReference,
+      UploadedFileId uploadedFileId) {
     var uploadedFile = fileUploadService.findUploadedFile(uploadedFileId)
         .orElseThrow(() -> new IllegalStateException(
             "No uploaded file found with UUID [%s]".formatted(uploadedFileId.uuid())));
 
     // Verify file reference is valid
-    var optionalFileDetail = uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId);
+    var optionalFileAssociation = fileAssociationService.findFileAssociation(fileAssociationReference, uploadedFileId);
 
-    if (optionalFileDetail.isEmpty()) {
+    if (optionalFileAssociation.isEmpty()) {
       throw new OsdEntityNotFoundException(
           "No files with reference type [%s] and reference id [%s] and file id [%s]".formatted(
-              fileReference.getFileReferenceType(),
-              fileReference.getReferenceId(),
+              fileAssociationReference.getFileReferenceType(),
+              fileAssociationReference.getReferenceId(),
               uploadedFileId.uuid()
           ));
     }

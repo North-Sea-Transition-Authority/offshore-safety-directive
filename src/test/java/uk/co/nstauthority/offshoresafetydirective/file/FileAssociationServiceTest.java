@@ -25,12 +25,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 
 @ExtendWith(MockitoExtension.class)
-class UploadedFileDetailServiceTest {
+class FileAssociationServiceTest {
 
   private static final String PURPOSE = "purpose";
 
   @Mock
-  private UploadedFileDetailRepository uploadedFileDetailRepository;
+  private FileAssociationRepository fileAssociationRepository;
 
   @Mock
   private FileUploadService fileUploadService;
@@ -39,7 +39,7 @@ class UploadedFileDetailServiceTest {
   private Clock clock;
 
   @InjectMocks
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @Test
   void createDraftDetail() {
@@ -52,28 +52,28 @@ class UploadedFileDetailServiceTest {
     var uploadedInstant = Instant.now();
     when(clock.instant()).thenReturn(uploadedInstant);
 
-    uploadedFileDetailService.createDraftDetail(
+    fileAssociationService.createDraftAssociation(
         uploadedFile,
-        new TestFileReference(nominationDetail),
+        new TestFileAssociationReference(nominationDetail),
         NominationDecisionFileController.PURPOSE
     );
 
-    var captor = ArgumentCaptor.forClass(UploadedFileDetail.class);
+    var captor = ArgumentCaptor.forClass(FileAssociation.class);
 
-    verify(uploadedFileDetailRepository).save(captor.capture());
+    verify(fileAssociationRepository).save(captor.capture());
 
     assertThat(captor.getValue())
         .hasOnlyFields("uuid", "referenceType", "referenceId", "purpose", "fileStatus", "uploadedInstant",
             "uploadedFile")
         .extracting(
-            UploadedFileDetail::getReferenceType,
-            UploadedFileDetail::getReferenceId,
-            UploadedFileDetail::getPurpose,
-            UploadedFileDetail::getFileStatus,
-            UploadedFileDetail::getUploadedInstant,
-            UploadedFileDetail::getUploadedFile
+            FileAssociation::getReferenceType,
+            FileAssociation::getReferenceId,
+            FileAssociation::getPurpose,
+            FileAssociation::getFileStatus,
+            FileAssociation::getUploadedInstant,
+            FileAssociation::getUploadedFile
         ).containsExactly(
-            FileReferenceType.NOMINATION_DETAIL,
+            FileAssociationType.NOMINATION_DETAIL,
             String.valueOf(nominationDetailId),
             NominationDecisionFileController.PURPOSE,
             FileStatus.DRAFT,
@@ -83,67 +83,67 @@ class UploadedFileDetailServiceTest {
   }
 
   @Test
-  void findUploadedFileDetail() {
+  void findFileAssociation() {
     var nominationDetailId = 123;
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
     var uploadedFile = UploadedFileTestUtil.builder().build();
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
+    var fileAssociation = FileAssociationTestUtil.builder().build();
 
-    when(uploadedFileDetailRepository.findByReferenceTypeAndReferenceIdAndUploadedFile_Id(
-        FileReferenceType.NOMINATION_DETAIL,
+    when(fileAssociationRepository.findByReferenceTypeAndReferenceIdAndUploadedFile_Id(
+        FileAssociationType.NOMINATION_DETAIL,
         String.valueOf(nominationDetailId),
         uploadedFile.getId()
     ))
-        .thenReturn(Optional.of(uploadedFileDetail));
+        .thenReturn(Optional.of(fileAssociation));
 
-    var result = uploadedFileDetailService.findUploadedFileDetail(
-        new TestFileReference(nominationDetail),
+    var result = fileAssociationService.findFileAssociation(
+        new TestFileAssociationReference(nominationDetail),
         new UploadedFileId(uploadedFile.getId())
     );
 
-    assertThat(result).contains(uploadedFileDetail);
+    assertThat(result).contains(fileAssociation);
   }
 
   @Test
-  void getUploadedFileDetailsByFileReference() {
+  void getFileAssociationsByFileAssociationReference() {
     var nominationDetailId = 123;
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
+    var fileAssociation = FileAssociationTestUtil.builder().build();
 
     var nominationDetailIdAsString = String.valueOf(nominationDetailId);
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
-        FileReferenceType.NOMINATION_DETAIL,
+    when(fileAssociationRepository.findAllByReferenceTypeAndReferenceIdIn(
+        FileAssociationType.NOMINATION_DETAIL,
         List.of(nominationDetailIdAsString)
     ))
-        .thenReturn(List.of(uploadedFileDetail));
+        .thenReturn(List.of(fileAssociation));
 
-    var result = uploadedFileDetailService.getUploadedFileDetailsByFileReference(
-        new TestFileReference(nominationDetail)
+    var result = fileAssociationService.getFileAssociationByFileAssociationReference(
+        new TestFileAssociationReference(nominationDetail)
     );
 
-    assertThat(result).containsExactly(uploadedFileDetail);
+    assertThat(result).containsExactly(fileAssociation);
   }
 
   @Test
-  void getUploadedFileDetailsByFileReference_whenNoMatch_thenEmptyList() {
+  void getFileAssociationsByFileReference_whenNoMatch_thenEmptyList() {
     var nominationDetailId = 123;
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
 
     var nominationDetailIdString = String.valueOf(nominationDetailId);
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
-        FileReferenceType.NOMINATION_DETAIL,
+    when(fileAssociationRepository.findAllByReferenceTypeAndReferenceIdIn(
+        FileAssociationType.NOMINATION_DETAIL,
         List.of(nominationDetailIdString)
     ))
         .thenReturn(List.of());
 
-    var result = uploadedFileDetailService.getUploadedFileDetailsByFileReference(
-        new TestFileReference(nominationDetail)
+    var result = fileAssociationService.getFileAssociationByFileAssociationReference(
+        new TestFileAssociationReference(nominationDetail)
     );
 
     assertThat(result).isEmpty();
@@ -151,15 +151,15 @@ class UploadedFileDetailServiceTest {
 
   @Test
   void deleteDetail() {
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
-    uploadedFileDetailService.deleteDetail(uploadedFileDetail);
-    verify(uploadedFileDetailRepository).delete(uploadedFileDetail);
+    var fileAssociation = FileAssociationTestUtil.builder().build();
+    fileAssociationService.deleteFileAssociation(fileAssociation);
+    verify(fileAssociationRepository).delete(fileAssociation);
   }
 
   @Test
   void submitFiles_whenNoFilesToSubmit_verifyNoInteractions() {
-    uploadedFileDetailService.submitFiles(List.of());
-    verifyNoInteractions(fileUploadService, uploadedFileDetailRepository);
+    fileAssociationService.submitFiles(List.of());
+    verifyNoInteractions(fileUploadService, fileAssociationRepository);
   }
 
   @Test
@@ -171,106 +171,106 @@ class UploadedFileDetailServiceTest {
     var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .build();
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder()
+    var fileAssociation = FileAssociationTestUtil.builder()
         .withUploadedFile(uploadedFile)
         .build();
 
-    when(uploadedFileDetailRepository.findAllByUploadedFile_IdIn(List.of(fileUuid)))
-        .thenReturn(List.of(uploadedFileDetail));
+    when(fileAssociationRepository.findAllByUploadedFile_IdIn(List.of(fileUuid)))
+        .thenReturn(List.of(fileAssociation));
 
-    uploadedFileDetailService.submitFiles(List.of(fileUploadForm));
+    fileAssociationService.submitFiles(List.of(fileUploadForm));
 
     verify(fileUploadService).updateFileUploadDescriptions(List.of(fileUploadForm));
-    verify(uploadedFileDetailRepository).saveAll(List.of(uploadedFileDetail));
-    assertThat(uploadedFileDetail.getFileStatus()).isEqualTo(FileStatus.SUBMITTED);
+    verify(fileAssociationRepository).saveAll(List.of(fileAssociation));
+    assertThat(fileAssociation.getFileStatus()).isEqualTo(FileStatus.SUBMITTED);
   }
 
   @Test
-  void getUploadedFileDetailViewsByReferenceTypeAndReferenceIds() {
+  void getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds() {
     var nominationDetailId = 123;
 
     var firstUploadedFileByName = UploadedFileTestUtil.builder()
         .withFilename("file_a")
         .build();
-    var firstUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+    var firstFileAssociationByName = FileAssociationTestUtil.builder()
         .withUploadedFile(firstUploadedFileByName)
         .build();
 
     var secondUploadedFileByName = UploadedFileTestUtil.builder()
         .withFilename("file_B") // Ensure sort is not case-sensitive
         .build();
-    var secondUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+    var secondFileAssociationByName = FileAssociationTestUtil.builder()
         .withUploadedFile(secondUploadedFileByName)
         .build();
 
     var thirdUploadedFileByName = UploadedFileTestUtil.builder()
         .withFilename("file_c")
         .build();
-    var thirdUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+    var thirdFileAssociationByName = FileAssociationTestUtil.builder()
         .withUploadedFile(thirdUploadedFileByName)
         .build();
 
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
-        FileReferenceType.NOMINATION_DETAIL,
+    when(fileAssociationRepository.findAllByReferenceTypeAndReferenceIdIn(
+        FileAssociationType.NOMINATION_DETAIL,
         List.of(String.valueOf(nominationDetailId))
     )).thenReturn(
-        List.of(secondUploadedFileDetailByName, thirdUploadedFileDetailByName, firstUploadedFileDetailByName)
+        List.of(secondFileAssociationByName, thirdFileAssociationByName, firstFileAssociationByName)
     );
 
-    var result = uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
-        FileReferenceType.NOMINATION_DETAIL,
+    var result = fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
+        FileAssociationType.NOMINATION_DETAIL,
         List.of(String.valueOf(nominationDetailId))
     );
 
     assertThat(result)
         .containsExactly(
-            UploadedFileDetailView.from(firstUploadedFileDetailByName),
-            UploadedFileDetailView.from(secondUploadedFileDetailByName),
-            UploadedFileDetailView.from(thirdUploadedFileDetailByName)
+            FileAssociationDto.from(firstFileAssociationByName),
+            FileAssociationDto.from(secondFileAssociationByName),
+            FileAssociationDto.from(thirdFileAssociationByName)
         );
   }
 
   @Test
   void getAllByFileReferenceAndUploadedFileIds() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var nominationDetailReference = new TestFileReference(nominationDetail);
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
-    var uploadedFileId = new UploadedFileId(uploadedFileDetail.getUploadedFile().getId());
+    var nominationDetailReference = new TestFileAssociationReference(nominationDetail);
+    var fileAssociation = FileAssociationTestUtil.builder().build();
+    var uploadedFileId = new UploadedFileId(fileAssociation.getUploadedFile().getId());
 
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdAndUploadedFile_IdIn(
-        FileReferenceType.NOMINATION_DETAIL,
+    when(fileAssociationRepository.findAllByReferenceTypeAndReferenceIdAndUploadedFile_IdIn(
+        FileAssociationType.NOMINATION_DETAIL,
         nominationDetailReference.getReferenceId(),
         List.of(uploadedFileId.uuid())
-    )).thenReturn(List.of(uploadedFileDetail));
+    )).thenReturn(List.of(fileAssociation));
 
-    var result = uploadedFileDetailService.getAllByFileReferenceAndUploadedFileIds(
+    var result = fileAssociationService.getAllByFileReferenceAndUploadedFileIds(
         nominationDetailReference,
         List.of(uploadedFileId)
     );
 
     assertThat(result)
-        .containsExactly(uploadedFileDetail);
+        .containsExactly(fileAssociation);
   }
 
   @Test
   void updateFileReferences() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder()
-        .withReferenceType(FileReferenceType.CASE_EVENT)
+    var fileReference = new TestFileAssociationReference(nominationDetail);
+    var fileAssociation = FileAssociationTestUtil.builder()
+        .withReferenceType(FileAssociationType.CASE_EVENT)
         .withReferenceId(UUID.randomUUID().toString())
         .build();
-    uploadedFileDetailService.updateFileReferences(List.of(uploadedFileDetail), fileReference);
+    fileAssociationService.updateFileReferences(List.of(fileAssociation), fileReference);
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<UploadedFileDetail>> detailListCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<List<FileAssociation>> detailListCaptor = ArgumentCaptor.forClass(List.class);
 
-    verify(uploadedFileDetailRepository).saveAll(detailListCaptor.capture());
+    verify(fileAssociationRepository).saveAll(detailListCaptor.capture());
 
     assertThat(detailListCaptor.getValue())
         .extracting(
-            UploadedFileDetail::getReferenceId,
-            UploadedFileDetail::getReferenceType
+            FileAssociation::getReferenceId,
+            FileAssociation::getReferenceType
         ).containsExactly(
             Tuple.tuple(fileReference.getReferenceId(), fileReference.getFileReferenceType())
         );
@@ -279,14 +279,14 @@ class UploadedFileDetailServiceTest {
   @Test
   void getSubmittedUploadedFileViewsForReferenceAndPurposes() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
+    var fileReference = new TestFileAssociationReference(nominationDetail);
     var decisionFilePurpose = new FilePurpose("decision_purpose");
     var appendixFilePurpose = new FilePurpose("appendix_purpose");
 
     var decisionFile = UploadedFileTestUtil.builder().build();
     var decisionFileView = UploadedFileViewTestUtil.fromUploadedFile(decisionFile);
-    var uploadedFileDetailForDecision = UploadedFileDetailTestUtil.builder()
-        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+    var fileAssociationForDecision = FileAssociationTestUtil.builder()
+        .withReferenceType(FileAssociationType.NOMINATION_DETAIL)
         .withPurpose(decisionFilePurpose)
         .withFileStatus(FileStatus.SUBMITTED)
         .withUploadedFile(decisionFile)
@@ -294,29 +294,29 @@ class UploadedFileDetailServiceTest {
 
     var appendixFile = UploadedFileTestUtil.builder().build();
     var appendixFileView = UploadedFileViewTestUtil.fromUploadedFile(appendixFile);
-    var uploadedFileDetailForAppendixDocument = UploadedFileDetailTestUtil.builder()
-        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+    var fileAssociationForAppendixDocument = FileAssociationTestUtil.builder()
+        .withReferenceType(FileAssociationType.NOMINATION_DETAIL)
         .withPurpose(appendixFilePurpose)
         .withFileStatus(FileStatus.SUBMITTED)
         .withUploadedFile(appendixFile)
         .build();
 
     var draftFile = UploadedFileTestUtil.builder().build();
-    var uploadedFileDetailForDraftFile = UploadedFileDetailTestUtil.builder()
-        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+    var fileAssociationForDraftFile = FileAssociationTestUtil.builder()
+        .withReferenceType(FileAssociationType.NOMINATION_DETAIL)
         .withPurpose(appendixFilePurpose)
         .withFileStatus(FileStatus.DRAFT)
         .withUploadedFile(draftFile)
         .build();
 
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdInAndPurposeIn(
+    when(fileAssociationRepository.findAllByReferenceTypeAndReferenceIdInAndPurposeIn(
         fileReference.getFileReferenceType(),
         List.of(fileReference.getReferenceId()),
         List.of(PURPOSE)
     )).thenReturn(List.of(
-        uploadedFileDetailForDecision,
-        uploadedFileDetailForAppendixDocument,
-        uploadedFileDetailForDraftFile
+        fileAssociationForDecision,
+        fileAssociationForAppendixDocument,
+        fileAssociationForDraftFile
     ));
 
     when(fileUploadService.getUploadedFileViewList(List.of(
@@ -324,7 +324,7 @@ class UploadedFileDetailServiceTest {
         new UploadedFileId(appendixFile.getId())
     ))).thenReturn(List.of(decisionFileView, appendixFileView));
 
-    var purposeAndFileViewMap = uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    var purposeAndFileViewMap = fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         fileReference,
         List.of(PURPOSE)
     );
@@ -335,17 +335,17 @@ class UploadedFileDetailServiceTest {
     ));
   }
 
-  static class TestFileReference implements FileReference {
+  static class TestFileAssociationReference implements FileAssociationReference {
 
     private final NominationDetailId nominationDetailId;
 
-    public TestFileReference(NominationDetail nominationDetail) {
+    public TestFileAssociationReference(NominationDetail nominationDetail) {
       this.nominationDetailId = NominationDetailDto.fromNominationDetail(nominationDetail).nominationDetailId();
     }
 
     @Override
-    public FileReferenceType getFileReferenceType() {
-      return FileReferenceType.NOMINATION_DETAIL;
+    public FileAssociationType getFileReferenceType() {
+      return FileAssociationType.NOMINATION_DETAIL;
     }
 
     @Override

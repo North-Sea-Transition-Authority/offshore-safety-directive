@@ -3,8 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.con
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 
@@ -12,16 +12,16 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEven
 class NominationConsultationResponseSubmissionService {
 
   private final FileUploadService fileUploadService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
 
   private final CaseEventService caseEventService;
 
   @Autowired
   NominationConsultationResponseSubmissionService(FileUploadService fileUploadService,
-                                                  UploadedFileDetailService uploadedFileDetailService,
+                                                  FileAssociationService fileAssociationService,
                                                   CaseEventService caseEventService) {
     this.fileUploadService = fileUploadService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.caseEventService = caseEventService;
   }
 
@@ -29,7 +29,7 @@ class NominationConsultationResponseSubmissionService {
   public void submitConsultationResponse(NominationDetail nominationDetail, NominationConsultationResponseForm form) {
     fileUploadService.updateFileUploadDescriptions(form.getConsultationResponseFiles());
 
-    uploadedFileDetailService.submitFiles(form.getConsultationResponseFiles());
+    fileAssociationService.submitFiles(form.getConsultationResponseFiles());
 
     caseEventService.createConsultationResponseEvent(
         nominationDetail,

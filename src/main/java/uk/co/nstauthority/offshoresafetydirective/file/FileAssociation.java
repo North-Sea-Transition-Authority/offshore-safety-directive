@@ -15,8 +15,8 @@ import javax.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
-@Table(name = "uploaded_file_details")
-class UploadedFileDetail {
+@Table(name = "file_associations")
+class FileAssociation {
 
   @Id
   @GeneratedValue(generator = "uuid")
@@ -34,7 +34,7 @@ class UploadedFileDetail {
   private FileStatus fileStatus;
 
   @Enumerated(EnumType.STRING)
-  private FileReferenceType referenceType;
+  private FileAssociationType referenceType;
 
   private String referenceId;
 
@@ -43,11 +43,11 @@ class UploadedFileDetail {
   @Column(name = "uploaded_timestamp")
   private Instant uploadedInstant;
 
-  public UploadedFileDetail() {
+  public FileAssociation() {
   }
 
   @VisibleForTesting
-  UploadedFileDetail(UUID uuid) {
+  FileAssociation(UUID uuid) {
     this.uuid = uuid;
   }
 
@@ -71,11 +71,11 @@ class UploadedFileDetail {
     this.fileStatus = fileStatus;
   }
 
-  public FileReferenceType getReferenceType() {
+  public FileAssociationType getReferenceType() {
     return referenceType;
   }
 
-  public void setReferenceType(FileReferenceType referenceType) {
+  public void setReferenceType(FileAssociationType referenceType) {
     this.referenceType = referenceType;
   }
 

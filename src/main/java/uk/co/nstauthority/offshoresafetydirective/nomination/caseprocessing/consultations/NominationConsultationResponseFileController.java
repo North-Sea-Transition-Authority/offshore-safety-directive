@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadResult;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
@@ -38,15 +38,15 @@ public class NominationConsultationResponseFileController {
   static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONSULTATIONS;
 
   private final NominationDetailService nominationDetailService;
-  private final FileEndpointService fileEndpointService;
+  private final FileControllerHelperService fileControllerHelperService;
   private final FileUploadConfig fileUploadConfig;
 
   @Autowired
   public NominationConsultationResponseFileController(NominationDetailService nominationDetailService,
-                                                      FileEndpointService fileEndpointService,
+                                                      FileControllerHelperService fileControllerHelperService,
                                                       FileUploadConfig fileUploadConfig) {
     this.nominationDetailService = nominationDetailService;
-    this.fileEndpointService = fileEndpointService;
+    this.fileControllerHelperService = fileControllerHelperService;
     this.fileUploadConfig = fileUploadConfig;
   }
 
@@ -57,7 +57,7 @@ public class NominationConsultationResponseFileController {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
+    return fileControllerHelperService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
         fileUploadConfig.getAllowedFileExtensions());
   }
 
@@ -68,7 +68,7 @@ public class NominationConsultationResponseFileController {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.deleteFile(fileReference, uploadedFileId);
+    return fileControllerHelperService.deleteFile(fileReference, uploadedFileId);
   }
 
   @ResponseBody
@@ -78,7 +78,7 @@ public class NominationConsultationResponseFileController {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.handleDownload(fileReference, uploadedFileId);
+    return fileControllerHelperService.downloadFile(fileReference, uploadedFileId);
   }
 
   private NominationDetail getLatestSubmittedNominationDetail(NominationId nominationId) {

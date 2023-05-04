@@ -3,8 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gen
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 
@@ -13,15 +13,15 @@ class GeneralCaseNoteSubmissionService {
 
   private final CaseEventService caseEventService;
   private final FileUploadService fileUploadService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
 
   @Autowired
   GeneralCaseNoteSubmissionService(CaseEventService caseEventService,
                                    FileUploadService fileUploadService,
-                                   UploadedFileDetailService uploadedFileDetailService) {
+                                   FileAssociationService fileAssociationService) {
     this.caseEventService = caseEventService;
     this.fileUploadService = fileUploadService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
   }
 
   @Transactional
@@ -34,7 +34,7 @@ class GeneralCaseNoteSubmissionService {
     );
 
     fileUploadService.updateFileUploadDescriptions(form.getCaseNoteFiles());
-    uploadedFileDetailService.submitFiles(form.getCaseNoteFiles());
+    fileAssociationService.submitFiles(form.getCaseNoteFiles());
   }
 
 }

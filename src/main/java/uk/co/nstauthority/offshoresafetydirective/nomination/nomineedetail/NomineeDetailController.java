@@ -22,10 +22,10 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrum
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -54,7 +54,7 @@ public class NomineeDetailController {
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final FileUploadConfig fileUploadConfig;
   private final FileUploadService fileUploadService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
   @Autowired
@@ -64,7 +64,7 @@ public class NomineeDetailController {
       NomineeDetailFormService nomineeDetailFormService,
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
       FileUploadConfig fileUploadConfig, FileUploadService fileUploadService,
-      UploadedFileDetailService uploadedFileDetailService,
+      FileAssociationService fileAssociationService,
       NomineeDetailSubmissionService nomineeDetailSubmissionService) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
@@ -72,14 +72,14 @@ public class NomineeDetailController {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.fileUploadConfig = fileUploadConfig;
     this.fileUploadService = fileUploadService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
   }
 
   @GetMapping
   public ModelAndView getNomineeDetail(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-    var previouslySubmittedFiles = uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    var previouslySubmittedFiles = fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         new NominationDetailFileReference(detail),
         List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
     );

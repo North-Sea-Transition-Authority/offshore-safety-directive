@@ -23,9 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -48,7 +48,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @MockBean
   private CaseEventQueryService caseEventQueryService;
@@ -77,8 +77,8 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         CaseEventFileDownloadController.ALLOWED_STATUSES
     )).thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -106,11 +106,11 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.CASE_EVENT,
+            FileAssociationType.CASE_EVENT,
             caseEventUuid.toString()
         );
   }
@@ -137,8 +137,8 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         CaseEventFileDownloadController.ALLOWED_STATUSES
     )).thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -165,11 +165,11 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.CASE_EVENT,
+            FileAssociationType.CASE_EVENT,
             caseEventUuid.toString()
         );
   }
@@ -207,8 +207,8 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(fileEndpointService.handleDownload(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileControllerHelperService.downloadFile(
         fileReferenceCaptor.capture(),
         eq(new UploadedFileId(fileUuid))
     ))
@@ -226,11 +226,11 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         )
         .containsExactly(
-            FileReferenceType.CASE_EVENT,
+            FileAssociationType.CASE_EVENT,
             caseEventUuid.toString()
         );
   }

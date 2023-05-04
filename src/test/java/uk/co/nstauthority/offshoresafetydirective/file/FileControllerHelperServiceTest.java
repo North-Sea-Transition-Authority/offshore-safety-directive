@@ -28,7 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
-class FileEndpointServiceTest {
+class FileControllerHelperServiceTest {
 
   private static final String FILENAME = FileTestUtil.VALID_FILENAME;
   private static final long FILE_SIZE = FileTestUtil.VALID_FILE_SIZE;
@@ -44,10 +44,10 @@ class FileEndpointServiceTest {
   private FileUploadValidationService fileUploadValidationService;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @InjectMocks
-  private FileEndpointService fileEndpointService;
+  private FileControllerHelperService fileControllerHelperService;
 
   @ParameterizedTest
   @EnumSource(UploadErrorType.class)
@@ -62,8 +62,8 @@ class FileEndpointServiceTest {
     when(fileUploadValidationService.validateFileUpload(multipartFile, FILE_SIZE, FILENAME, ALLOWED_EXTENSIONS))
         .thenReturn(Optional.of(uploadErrorType));
 
-    var fileUploadResult = fileEndpointService.processFileUpload(
-        new TestFileReference(nominationDetail),
+    var fileUploadResult = fileControllerHelperService.processFileUpload(
+        new TestFileAssociationReference(nominationDetail),
         PURPOSE,
         VIRTUAL_FOLDER,
         multipartFile,
@@ -90,8 +90,8 @@ class FileEndpointServiceTest {
     when(fileUploadService.createUploadedFile(VIRTUAL_FOLDER, FILE_SIZE, FILENAME, CONTENT_TYPE))
         .thenReturn(uploadedFile);
 
-    var fileUploadResult = fileEndpointService.processFileUpload(
-        new TestFileReference(nominationDetail),
+    var fileUploadResult = fileControllerHelperService.processFileUpload(
+        new TestFileAssociationReference(nominationDetail),
         PURPOSE,
         VIRTUAL_FOLDER,
         multipartFile,
@@ -102,38 +102,38 @@ class FileEndpointServiceTest {
   }
 
   @Test
-  void deleteFile_whenHasUploadedFileDetail_verifyValid() {
+  void deleteFile_whenHasFileAssociation_verifyValid() {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
+    var fileReference = new TestFileAssociationReference(nominationDetail);
+    var fileAssociation = FileAssociationTestUtil.builder().build();
 
-    when(uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId))
-        .thenReturn(Optional.of(uploadedFileDetail));
-    var fileDeleteResult = fileEndpointService.deleteFile(fileReference, uploadedFileId);
+    when(fileAssociationService.findFileAssociation(fileReference, uploadedFileId))
+        .thenReturn(Optional.of(fileAssociation));
+    var fileDeleteResult = fileControllerHelperService.deleteFile(fileReference, uploadedFileId);
 
-    verify(uploadedFileDetailService).deleteDetail(uploadedFileDetail);
+    verify(fileAssociationService).deleteFileAssociation(fileAssociation);
     assertTrue(fileDeleteResult.isValid());
   }
 
   @Test
-  void deleteFile_whenNoUploadedFileDetail_verifyInvalid() {
+  void deleteFile_whenNoFileAssociation_verifyInvalid() {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
+    var fileReference = new TestFileAssociationReference(nominationDetail);
 
-    when(uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId))
+    when(fileAssociationService.findFileAssociation(fileReference, uploadedFileId))
         .thenReturn(Optional.empty());
-    var fileDeleteResult = fileEndpointService.deleteFile(fileReference, uploadedFileId);
+    var fileDeleteResult = fileControllerHelperService.deleteFile(fileReference, uploadedFileId);
 
-    verify(uploadedFileDetailService, never()).deleteDetail(any());
+    verify(fileAssociationService, never()).deleteFileAssociation(any());
     assertFalse(fileDeleteResult.isValid());
   }
 
   @Test
-  void handleDownload_validDownload() {
+  void downloadFile_validDownload() {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
     var nominationDetail = NominationDetailTestUtil.builder().build();
@@ -142,56 +142,56 @@ class FileEndpointServiceTest {
         .build();
 
     var inputStream = InputStream.nullInputStream();
-    var detailFile = UploadedFileDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
+    var detailFile = FileAssociationTestUtil.builder().build();
+    var fileReference = new TestFileAssociationReference(nominationDetail);
 
     when(fileUploadService.findUploadedFile(uploadedFileId))
         .thenReturn(Optional.of(uploadedFile));
 
-    when(uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId))
+    when(fileAssociationService.findFileAssociation(fileReference, uploadedFileId))
         .thenReturn(Optional.of(detailFile));
 
     when(fileUploadService.downloadFile(uploadedFile))
         .thenReturn(inputStream);
 
-    var result = fileEndpointService.handleDownload(fileReference, new UploadedFileId(fileUuid));
+    var result = fileControllerHelperService.downloadFile(fileReference, new UploadedFileId(fileUuid));
 
     assertThat(result).isEqualTo(
         FileUploadUtils.getFileResourceResponseEntity(uploadedFile, new InputStreamResource(inputStream)));
   }
 
   @Test
-  void handleDownload_whenUploadedFileIdDoesNotExist_thenVerifyError() {
+  void downloadFile_whenUploadedFileIdDoesNotExist_thenVerifyError() {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
     var nominationDetail = NominationDetailTestUtil.builder().build();
-    var fileReference = new TestFileReference(nominationDetail);
+    var fileReference = new TestFileAssociationReference(nominationDetail);
 
     when(fileUploadService.findUploadedFile(uploadedFileId))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> fileEndpointService.handleDownload(fileReference, uploadedFileId))
+    assertThatThrownBy(() -> fileControllerHelperService.downloadFile(fileReference, uploadedFileId))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("No uploaded file found with UUID [%s]".formatted(uploadedFileId.uuid()));
   }
 
   @Test
-  void handleDownload_whenFileReferenceIsInvalid_thenVerifyError() {
+  void downloadFile_whenFileReferenceIsInvalid_thenVerifyError() {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .build();
-    var fileReference = new TestFileReference(nominationDetail);
+    var fileReference = new TestFileAssociationReference(nominationDetail);
 
     when(fileUploadService.findUploadedFile(uploadedFileId))
         .thenReturn(Optional.of(uploadedFile));
 
-    when(uploadedFileDetailService.findUploadedFileDetail(fileReference, uploadedFileId))
+    when(fileAssociationService.findFileAssociation(fileReference, uploadedFileId))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> fileEndpointService.handleDownload(fileReference, uploadedFileId))
+    assertThatThrownBy(() -> fileControllerHelperService.downloadFile(fileReference, uploadedFileId))
         .isInstanceOf(OsdEntityNotFoundException.class)
         .hasMessage("No files with reference type [%s] and reference id [%s] and file id [%s]".formatted(
             fileReference.getFileReferenceType(),
@@ -200,17 +200,17 @@ class FileEndpointServiceTest {
         ));
   }
 
-  static class TestFileReference implements FileReference {
+  static class TestFileAssociationReference implements FileAssociationReference {
 
     private final NominationDetailId nominationDetailId;
 
-    public TestFileReference(NominationDetail nominationDetail) {
+    public TestFileAssociationReference(NominationDetail nominationDetail) {
       this.nominationDetailId = NominationDetailDto.fromNominationDetail(nominationDetail).nominationDetailId();
     }
 
     @Override
-    public FileReferenceType getFileReferenceType() {
-      return FileReferenceType.NOMINATION_DETAIL;
+    public FileAssociationType getFileReferenceType() {
+      return FileAssociationType.NOMINATION_DETAIL;
     }
 
     @Override

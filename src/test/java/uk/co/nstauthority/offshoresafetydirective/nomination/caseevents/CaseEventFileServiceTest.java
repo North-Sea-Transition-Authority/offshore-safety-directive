@@ -26,17 +26,17 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailView;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {
 
   @Mock
-  UploadedFileDetailService uploadedFileDetailService;
+  FileAssociationService fileAssociationService;
 
   @Mock
   FileUploadService fileUploadService;
@@ -87,7 +87,7 @@ class CaseEventFileServiceTest {
     fileUploadForm.setUploadedFileId(fileUuid);
 
     var uploadedFile = new UploadedFile();
-    var uploadedFileDetail = UploadedFileDetailTestUtil.builder()
+    var fileAssociation = FileAssociationTestUtil.builder()
         .withUploadedFile(uploadedFile)
         .build();
 
@@ -95,16 +95,16 @@ class CaseEventFileServiceTest {
         .thenReturn(List.of(uploadedFile));
 
     var nominationDetailFileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
-    when(uploadedFileDetailService.getAllByFileReferenceAndUploadedFileIds(
+    when(fileAssociationService.getAllByFileReferenceAndUploadedFileIds(
         nominationDetailFileReferenceCaptor.capture(),
         eq(List.of(uploadedFileId))
-    )).thenReturn(List.of(uploadedFileDetail));
+    )).thenReturn(List.of(fileAssociation));
 
     caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, List.of(fileUploadForm));
 
     var caseEventFileReferenceCaptor = ArgumentCaptor.forClass(CaseEventFileReference.class);
-    verify(uploadedFileDetailService).updateFileReferences(
-        eq(List.of(uploadedFileDetail)),
+    verify(fileAssociationService).updateFileReferences(
+        eq(List.of(fileAssociation)),
         caseEventFileReferenceCaptor.capture()
     );
 
@@ -133,25 +133,26 @@ class CaseEventFileServiceTest {
     var thirdUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(thirdFile);
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    var firstFileDetailViewByFileName = new UploadedFileDetailView(
+    var firstFileAssociationDtoByFileName = new FileAssociationDto(
         new UploadedFileId(firstFile.getId()),
         caseEvent.getUuid().toString()
     );
-    var secondFileDetailViewByFileName = new UploadedFileDetailView(
+    var secondFileAssociationDtoByFileName = new FileAssociationDto(
         new UploadedFileId(secondFile.getId()),
         caseEvent.getUuid().toString()
     );
-    var thirdFileDetailViewByFileName = new UploadedFileDetailView(
+    var thirdFileAssociationDtoByFileName = new FileAssociationDto(
         new UploadedFileId(thirdFile.getId()),
         caseEvent.getUuid().toString()
     );
 
-    when(uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
-        FileReferenceType.CASE_EVENT,
+    when(fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
+        FileAssociationType.CASE_EVENT,
         Set.of(caseEvent.getUuid().toString())
     ))
         .thenReturn(
-            List.of(secondFileDetailViewByFileName, thirdFileDetailViewByFileName, firstFileDetailViewByFileName)
+            List.of(secondFileAssociationDtoByFileName, thirdFileAssociationDtoByFileName,
+                firstFileAssociationDtoByFileName)
         );
 
     when(fileUploadService.getUploadedFileViewList(List.of(
@@ -206,8 +207,8 @@ class CaseEventFileServiceTest {
   void getFileViewMapFromCaseEvents_whenNoLinkedFiles_thenAssertResult() {
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    when(uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
-        FileReferenceType.CASE_EVENT,
+    when(fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
+        FileAssociationType.CASE_EVENT,
         Set.of(caseEvent.getUuid().toString())
     ))
         .thenReturn(List.of());

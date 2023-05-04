@@ -3,7 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.app
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
@@ -12,17 +12,17 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEven
 class ConfirmNominationAppointmentSubmissionService {
 
   private final CaseEventService caseEventService;
-  private final UploadedFileDetailService uploadedFileDetailService;
+  private final FileAssociationService fileAssociationService;
   private final NominationDetailStatusService nominationDetailStatusService;
   private final AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher;
 
   @Autowired
   ConfirmNominationAppointmentSubmissionService(CaseEventService caseEventService,
-                                                UploadedFileDetailService uploadedFileDetailService,
+                                                FileAssociationService fileAssociationService,
                                                 NominationDetailStatusService nominationDetailStatusService,
                                                 AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher) {
     this.caseEventService = caseEventService;
-    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.fileAssociationService = fileAssociationService;
     this.nominationDetailStatusService = nominationDetailStatusService;
     this.appointmentConfirmedEventPublisher = appointmentConfirmedEventPublisher;
   }
@@ -44,7 +44,7 @@ class ConfirmNominationAppointmentSubmissionService {
         confirmNominationAppointmentForm.getFiles()
     );
 
-    uploadedFileDetailService.submitFiles(confirmNominationAppointmentForm.getFiles());
+    fileAssociationService.submitFiles(confirmNominationAppointmentForm.getFiles());
     nominationDetailStatusService.confirmAppointment(nominationDetail);
     appointmentConfirmedEventPublisher.publish(nominationDetail);
   }

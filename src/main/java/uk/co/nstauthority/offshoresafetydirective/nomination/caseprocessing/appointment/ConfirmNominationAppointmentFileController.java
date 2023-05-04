@@ -15,8 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadResult;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
@@ -37,15 +37,15 @@ public class ConfirmNominationAppointmentFileController {
   public static final String PURPOSE = "APPOINTMENT_CONFIRMATION_DOCUMENT";
   static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONFIRM_APPOINTMENTS;
 
-  private final FileEndpointService fileEndpointService;
+  private final FileControllerHelperService fileControllerHelperService;
   private final FileUploadConfig fileUploadConfig;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public ConfirmNominationAppointmentFileController(FileEndpointService fileEndpointService,
+  public ConfirmNominationAppointmentFileController(FileControllerHelperService fileControllerHelperService,
                                                     FileUploadConfig fileUploadConfig,
                                                     NominationDetailService nominationDetailService) {
-    this.fileEndpointService = fileEndpointService;
+    this.fileControllerHelperService = fileControllerHelperService;
     this.fileUploadConfig = fileUploadConfig;
     this.nominationDetailService = nominationDetailService;
   }
@@ -56,7 +56,7 @@ public class ConfirmNominationAppointmentFileController {
                                  @RequestParam("file") MultipartFile multipartFile) {
     var nominationDetail = getNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
+    return fileControllerHelperService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
         fileUploadConfig.getAllowedFileExtensions());
   }
 
@@ -66,7 +66,7 @@ public class ConfirmNominationAppointmentFileController {
                                  @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
     var nominationDetail = getNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.deleteFile(fileReference, uploadedFileId);
+    return fileControllerHelperService.deleteFile(fileReference, uploadedFileId);
   }
 
   @ResponseBody
@@ -75,7 +75,7 @@ public class ConfirmNominationAppointmentFileController {
                                                       @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
     var nominationDetail = getNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
-    return fileEndpointService.handleDownload(fileReference, uploadedFileId);
+    return fileControllerHelperService.downloadFile(fileReference, uploadedFileId);
   }
 
   private NominationDetail getNominationDetail(NominationId nominationId) {

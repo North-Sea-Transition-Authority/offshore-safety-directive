@@ -37,8 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
@@ -58,7 +58,7 @@ class NomineeDetailSummaryServiceTest {
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
   @Mock
-  private UploadedFileDetailService uploadedFileDetailService;
+  private FileAssociationService fileAssociationService;
 
   @InjectMocks
   private NomineeDetailSummaryService nomineeDetailSummaryService;
@@ -108,8 +108,8 @@ class NomineeDetailSummaryServiceTest {
         .build();
     var thirdUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(thirdUploadedFile);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         fileReferenceCaptor.capture(),
         eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
     )).thenReturn(
@@ -181,8 +181,8 @@ class NomineeDetailSummaryServiceTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         ).containsExactly(
             new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
             new NominationDetailFileReference(nominationDetail).getReferenceId()
@@ -326,8 +326,8 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
-    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
         fileReferenceCaptor.capture(),
         eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
     )).thenReturn(Map.of());
@@ -340,8 +340,8 @@ class NomineeDetailSummaryServiceTest {
 
     assertThat(fileReferenceCaptor.getValue())
         .extracting(
-            FileReference::getFileReferenceType,
-            FileReference::getReferenceId
+            FileAssociationReference::getFileReferenceType,
+            FileAssociationReference::getReferenceId
         ).containsExactly(
             new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
             new NominationDetailFileReference(nominationDetail).getReferenceId()
