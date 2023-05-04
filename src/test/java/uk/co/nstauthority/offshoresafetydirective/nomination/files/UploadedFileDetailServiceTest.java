@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -115,9 +116,10 @@ class UploadedFileDetailServiceTest {
         .build();
     var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
 
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceId(
+    var nominationDetailIdAsString = String.valueOf(nominationDetailId);
+    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
         FileReferenceType.NOMINATION_DETAIL,
-        String.valueOf(nominationDetailId)
+        List.of(nominationDetailIdAsString)
     ))
         .thenReturn(List.of(uploadedFileDetail));
 
@@ -135,9 +137,10 @@ class UploadedFileDetailServiceTest {
         .withId(nominationDetailId)
         .build();
 
-    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceId(
+    var nominationDetailIdString = String.valueOf(nominationDetailId);
+    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
         FileReferenceType.NOMINATION_DETAIL,
-        String.valueOf(nominationDetailId)
+        List.of(nominationDetailIdString)
     ))
         .thenReturn(List.of());
 
@@ -182,6 +185,97 @@ class UploadedFileDetailServiceTest {
     verify(fileUploadService).updateFileUploadDescriptions(List.of(fileUploadForm));
     verify(uploadedFileDetailRepository).saveAll(List.of(uploadedFileDetail));
     assertThat(uploadedFileDetail.getFileStatus()).isEqualTo(FileStatus.SUBMITTED);
+  }
+
+  @Test
+  void getUploadedFileDetailViewsByReferenceTypeAndReferenceIds() {
+    var nominationDetailId = 123;
+
+    var firstUploadedFileByName = UploadedFileTestUtil.builder()
+        .withFilename("file_a")
+        .build();
+    var firstUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+        .withUploadedFile(firstUploadedFileByName)
+        .build();
+
+    var secondUploadedFileByName = UploadedFileTestUtil.builder()
+        .withFilename("file_B") // Ensure sort is not case-sensitive
+        .build();
+    var secondUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+        .withUploadedFile(secondUploadedFileByName)
+        .build();
+
+    var thirdUploadedFileByName = UploadedFileTestUtil.builder()
+        .withFilename("file_c")
+        .build();
+    var thirdUploadedFileDetailByName = UploadedFileDetailTestUtil.builder()
+        .withUploadedFile(thirdUploadedFileByName)
+        .build();
+
+    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
+        FileReferenceType.NOMINATION_DETAIL,
+        List.of(String.valueOf(nominationDetailId))
+    )).thenReturn(
+        List.of(secondUploadedFileDetailByName, thirdUploadedFileDetailByName, firstUploadedFileDetailByName)
+    );
+
+    var result = uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
+        FileReferenceType.NOMINATION_DETAIL,
+        List.of(String.valueOf(nominationDetailId))
+    );
+
+    assertThat(result)
+        .containsExactly(
+            UploadedFileDetailView.from(firstUploadedFileDetailByName),
+            UploadedFileDetailView.from(secondUploadedFileDetailByName),
+            UploadedFileDetailView.from(thirdUploadedFileDetailByName)
+        );
+  }
+
+  @Test
+  void getAllByFileReferenceAndUploadedFileIds() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationDetailReference = new TestFileReference(nominationDetail);
+    var uploadedFileDetail = UploadedFileDetailTestUtil.builder().build();
+    var uploadedFileId = new UploadedFileId(uploadedFileDetail.getUploadedFile().getId());
+
+    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdAndUploadedFile_IdIn(
+        FileReferenceType.NOMINATION_DETAIL,
+        nominationDetailReference.getReferenceId(),
+        List.of(uploadedFileId.uuid())
+    )).thenReturn(List.of(uploadedFileDetail));
+
+    var result = uploadedFileDetailService.getAllByFileReferenceAndUploadedFileIds(
+        nominationDetailReference,
+        List.of(uploadedFileId)
+    );
+
+    assertThat(result)
+        .containsExactly(uploadedFileDetail);
+  }
+
+  @Test
+  void updateFileReferences() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var fileReference = new TestFileReference(nominationDetail);
+    var uploadedFileDetail = UploadedFileDetailTestUtil.builder()
+        .withReferenceType(FileReferenceType.CASE_EVENT)
+        .withReferenceId(UUID.randomUUID().toString())
+        .build();
+    uploadedFileDetailService.updateFileReferences(List.of(uploadedFileDetail), fileReference);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<UploadedFileDetail>> detailListCaptor = ArgumentCaptor.forClass(List.class);
+
+    verify(uploadedFileDetailRepository).saveAll(detailListCaptor.capture());
+
+    assertThat(detailListCaptor.getValue())
+        .extracting(
+            UploadedFileDetail::getReferenceId,
+            UploadedFileDetail::getReferenceType
+        ).containsExactly(
+            Tuple.tuple(fileReference.getReferenceId(), fileReference.getFileReferenceType())
+        );
   }
 
   static class TestFileReference implements FileReference {

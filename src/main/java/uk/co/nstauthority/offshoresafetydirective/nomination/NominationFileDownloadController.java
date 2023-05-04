@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.Nomi
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/file")
+@RequestMapping("/nomination/{nominationId}/file/old")
 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
 @HasNominationStatus(statuses = {
     NominationStatus.SUBMITTED,

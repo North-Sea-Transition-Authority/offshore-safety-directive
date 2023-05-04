@@ -80,6 +80,16 @@ public class CaseEventQueryService {
         .toList();
   }
 
+  public Optional<CaseEvent> getCaseEventForNominationDetail(CaseEventId caseEventId,
+                                                             NominationDetail nominationDetail) {
+    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    return caseEventRepository.findByUuidAndNominationAndNominationVersion(
+        caseEventId.uuid(),
+        nominationDetail.getNomination(),
+        dto.version()
+    );
+  }
+
   private Function<CaseEvent, CaseEventView> buildCaseEventView(Map<Integer, EnergyPortalUserDto> userIdAndNameMap,
                                                                 List<CaseEventFileView> uploadedFileViews) {
     return caseEvent -> {

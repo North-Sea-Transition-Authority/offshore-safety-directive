@@ -1,0 +1,297 @@
+package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+
+import com.amazonaws.util.StringInputStream;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
+
+@ContextConfiguration(classes = CaseEventFileDownloadController.class)
+class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
+
+  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final TeamMember NOMINATION_MANAGER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
+
+  @MockBean
+  private FileEndpointService fileEndpointService;
+
+  @MockBean
+  private CaseEventQueryService caseEventQueryService;
+
+  @SecurityTest
+  void download_assertStatusesPermitted() {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+    var caseEvent = CaseEventTestUtil.builder()
+        .withUuid(caseEventUuid)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        CaseEventFileDownloadController.ALLOWED_STATUSES
+    )).thenReturn(Optional.of(nominationDetail));
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(fileEndpointService.handleDownload(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    ))
+        .thenAnswer(invocation -> {
+          var streamContent = "abc";
+          var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+          return ResponseEntity.ok(inputStreamResource);
+        });
+
+    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+        .thenReturn(Optional.of(caseEvent));
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatuses(CaseEventFileDownloadController.ALLOWED_STATUSES)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(
+                on(CaseEventFileDownloadController.class)
+                    .download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))),
+            status().isOk(),
+            status().isForbidden()
+        )
+        .test();
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.CASE_EVENT,
+            caseEventUuid.toString()
+        );
+  }
+
+  @SecurityTest
+  void download_assertPermissionsPermitted() {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+    var caseEvent = CaseEventTestUtil.builder()
+        .withUuid(caseEventUuid)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        CaseEventFileDownloadController.ALLOWED_STATUSES
+    )).thenReturn(Optional.of(nominationDetail));
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(fileEndpointService.handleDownload(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    ))
+        .thenAnswer(invocation -> {
+          var streamContent = "abc";
+          var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+          return ResponseEntity.ok(inputStreamResource);
+        });
+
+    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+        .thenReturn(Optional.of(caseEvent));
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(
+                on(CaseEventFileDownloadController.class)
+                    .download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))),
+            status().isOk(),
+            status().isForbidden()
+        )
+        .test();
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.CASE_EVENT,
+            caseEventUuid.toString()
+        );
+  }
+
+  @Test
+  void download_verifyCalls() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    var caseEvent = CaseEventTestUtil.builder()
+        .withUuid(caseEventUuid)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        CaseEventFileDownloadController.ALLOWED_STATUSES
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+        .thenReturn(Optional.of(caseEvent));
+
+    var streamContent = "abc";
+    var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+    var response = ResponseEntity.ok(inputStreamResource);
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(fileEndpointService.handleDownload(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    ))
+        .thenReturn(response);
+
+    var result = mockMvc.perform(get(ReverseRouter.route(
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    assertThat(result).isEqualTo(streamContent);
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.CASE_EVENT,
+            caseEventUuid.toString()
+        );
+  }
+
+  @Test
+  void download_whenNoNominationDetailFound_thenNotFound() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        CaseEventFileDownloadController.ALLOWED_STATUSES
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void download_whenNoCaseEvent_thenNotFound() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        CaseEventFileDownloadController.ALLOWED_STATUSES
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
+  }
+
+}

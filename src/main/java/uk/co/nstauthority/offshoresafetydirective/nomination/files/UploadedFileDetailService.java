@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.files;
 
 import java.time.Clock;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +50,47 @@ public class UploadedFileDetailService {
     );
   }
 
+  public List<UploadedFileDetailView> getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
+      FileReferenceType referenceType,
+      Collection<String> referenceIds
+  ) {
+    return uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(referenceType, referenceIds)
+        .stream()
+        .sorted(Comparator.comparing(
+            uploadedFileDetail -> uploadedFileDetail.getUploadedFile().getFilename(),
+            String::compareToIgnoreCase
+        ))
+        .map(UploadedFileDetailView::from)
+        .toList();
+  }
+
   public List<UploadedFileDetail> getUploadedFileDetailsByFileReference(FileReference fileReference) {
-    return uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceId(
+    return uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdIn(
         fileReference.getFileReferenceType(),
-        fileReference.getReferenceId()
+        List.of(fileReference.getReferenceId())
     );
+  }
+
+  public List<UploadedFileDetail> getAllByFileReferenceAndUploadedFileIds(FileReference fileReference,
+                                                                          Collection<UploadedFileId> uploadedFileIds) {
+    var fileIds = uploadedFileIds.stream()
+        .map(UploadedFileId::uuid)
+        .toList();
+
+    return uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdAndUploadedFile_IdIn(
+        fileReference.getFileReferenceType(),
+        fileReference.getReferenceId(),
+        fileIds
+    );
+  }
+
+  @Transactional
+  public void updateFileReferences(Collection<UploadedFileDetail> uploadedFileDetails, FileReference newReference) {
+    uploadedFileDetails.forEach(uploadedFileDetail -> {
+      uploadedFileDetail.setReferenceId(newReference.getReferenceId());
+      uploadedFileDetail.setReferenceType(newReference.getFileReferenceType());
+    });
+    uploadedFileDetailRepository.saveAll(uploadedFileDetails);
   }
 
   void deleteDetail(UploadedFileDetail uploadedFileDetail) {

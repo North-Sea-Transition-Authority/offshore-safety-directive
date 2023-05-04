@@ -3,13 +3,14 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -24,14 +25,18 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {
 
   @Mock
-  CaseEventFileRepository caseEventFileRepository;
+  UploadedFileDetailService uploadedFileDetailService;
 
   @Mock
   FileUploadService fileUploadService;
@@ -41,7 +46,7 @@ class CaseEventFileServiceTest {
 
   @Test
   void finalizeFileUpload_whenFilesNotFound_thenError() {
-
+    var nominationDetail = NominationDetailTestUtil.builder().build();
     var caseEventUuid = UUID.randomUUID();
     var caseEvent = new CaseEvent();
     caseEvent.setUuid(caseEventUuid);
@@ -54,7 +59,8 @@ class CaseEventFileServiceTest {
     when(fileUploadService.getUploadedFiles(List.of(uploadedFileId)))
         .thenReturn(List.of());
 
-    assertThatThrownBy(() -> caseEventFileService.finalizeFileUpload(caseEvent, List.of(fileUploadForm)))
+    assertThatThrownBy(
+        () -> caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, List.of(fileUploadForm)))
         .hasMessage(
             "Unable to find all uploaded files. Expected IDs [%s] got [] for CaseEvent [%s]".formatted(
                 fileUuid,
@@ -63,7 +69,7 @@ class CaseEventFileServiceTest {
   }
 
   @Test
-  void finalizeFileUpload_verifyFinalized() {
+  void finalizeFileUpload_verifyFileReferencesUpdated() {
 
     var nominationDetailVersion = 2;
     var nominationDetail = NominationDetailTestUtil.builder()
@@ -73,7 +79,7 @@ class CaseEventFileServiceTest {
     var fileUuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(fileUuid);
 
-    var caseEvent = new CaseEvent();
+    var caseEvent = CaseEventTestUtil.builder().build();
     caseEvent.setNomination(nominationDetail.getNomination());
     caseEvent.setNominationVersion(nominationDetailVersion);
 
@@ -81,26 +87,34 @@ class CaseEventFileServiceTest {
     fileUploadForm.setUploadedFileId(fileUuid);
 
     var uploadedFile = new UploadedFile();
+    var uploadedFileDetail = UploadedFileDetailTestUtil.builder()
+        .withUploadedFile(uploadedFile)
+        .build();
 
     when(fileUploadService.getUploadedFiles(List.of(uploadedFileId)))
         .thenReturn(List.of(uploadedFile));
 
-    caseEventFileService.finalizeFileUpload(caseEvent, List.of(fileUploadForm));
+    var nominationDetailFileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
+    when(uploadedFileDetailService.getAllByFileReferenceAndUploadedFileIds(
+        nominationDetailFileReferenceCaptor.capture(),
+        eq(List.of(uploadedFileId))
+    )).thenReturn(List.of(uploadedFileDetail));
 
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<CaseEventFile>> caseEventFileCaptor = ArgumentCaptor.forClass(List.class);
-    verify(caseEventFileRepository).saveAll(caseEventFileCaptor.capture());
+    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, List.of(fileUploadForm));
 
-    var caseEventFiles = caseEventFileCaptor.getValue();
-    assertThat(caseEventFiles)
-        .extracting(
-            CaseEventFile::getCaseEvent,
-            CaseEventFile::getUploadedFile
-        )
-        .containsExactly(
-            Tuple.tuple(caseEvent, uploadedFile)
-        );
+    var caseEventFileReferenceCaptor = ArgumentCaptor.forClass(CaseEventFileReference.class);
+    verify(uploadedFileDetailService).updateFileReferences(
+        eq(List.of(uploadedFileDetail)),
+        caseEventFileReferenceCaptor.capture()
+    );
 
+    assertThat(nominationDetailFileReferenceCaptor.getValue())
+        .extracting(NominationDetailFileReference::getReferenceId)
+        .isEqualTo(new NominationDetailFileReference(nominationDetail).getReferenceId());
+
+    assertThat(caseEventFileReferenceCaptor.getValue())
+        .extracting(CaseEventFileReference::getReferenceId)
+        .isEqualTo(new CaseEventFileReference(caseEvent).getReferenceId());
   }
 
   @Test
@@ -114,16 +128,22 @@ class CaseEventFileServiceTest {
     var firstUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(firstFile);
     var secondUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(secondFile);
     var caseEvent = CaseEventTestUtil.builder().build();
-    var firstCaseEventFileByFileName = new CaseEventFile();
-    firstCaseEventFileByFileName.setCaseEvent(caseEvent);
-    firstCaseEventFileByFileName.setUploadedFile(firstFile);
 
-    var secondCaseEventFileByFileName = new CaseEventFile();
-    secondCaseEventFileByFileName.setCaseEvent(caseEvent);
-    secondCaseEventFileByFileName.setUploadedFile(secondFile);
+    var firstFileDetailViewByFileName = new UploadedFileDetailView(
+        new UploadedFileId(firstFile.getId()),
+        caseEvent.getUuid().toString()
+    );
 
-    when(caseEventFileRepository.findAllByCaseEventIn(List.of(caseEvent)))
-        .thenReturn(List.of(secondCaseEventFileByFileName, firstCaseEventFileByFileName));
+    var secondFileDetailViewByFileName = new UploadedFileDetailView(
+        new UploadedFileId(secondFile.getId()),
+        caseEvent.getUuid().toString()
+    );
+
+    when(uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
+        FileReferenceType.CASE_EVENT,
+        Set.of(caseEvent.getUuid().toString())
+    ))
+        .thenReturn(List.of(secondFileDetailViewByFileName, firstFileDetailViewByFileName));
 
     when(fileUploadService.getUploadedFileViewList(List.of(
         new UploadedFileId(secondFile.getId()),
@@ -135,18 +155,20 @@ class CaseEventFileServiceTest {
 
     var expectedFirstFileView = new CaseEventFileView(
         firstUploadedFileView,
-        ReverseRouter.route(on(NominationFileDownloadController.class)
+        ReverseRouter.route(on(CaseEventFileDownloadController.class)
             .download(
                 new NominationId(caseEvent.getNomination().getId()),
+                new CaseEventId(caseEvent.getUuid()),
                 new UploadedFileId(UUID.fromString(firstUploadedFileView.fileId()))
             ))
     );
 
     var expectedSecondFileView = new CaseEventFileView(
         secondUploadedFileView,
-        ReverseRouter.route(on(NominationFileDownloadController.class)
+        ReverseRouter.route(on(CaseEventFileDownloadController.class)
             .download(
                 new NominationId(caseEvent.getNomination().getId()),
+                new CaseEventId(caseEvent.getUuid()),
                 new UploadedFileId(UUID.fromString(secondUploadedFileView.fileId()))
             ))
     );
@@ -165,7 +187,10 @@ class CaseEventFileServiceTest {
   void getFileViewMapFromCaseEvents_whenNoLinkedFiles_thenAssertResult() {
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    when(caseEventFileRepository.findAllByCaseEventIn(List.of(caseEvent)))
+    when(uploadedFileDetailService.getUploadedFileDetailViewsByReferenceTypeAndReferenceIds(
+        FileReferenceType.CASE_EVENT,
+        Set.of(caseEvent.getUuid().toString())
+    ))
         .thenReturn(List.of());
 
     when(fileUploadService.getUploadedFileViewList(List.of()))

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,6 +30,11 @@ public class NominationStatusSecurityTestUtil {
 
     public SmokeTester withPermittedNominationStatus(NominationStatus nominationStatus) {
       permittedNominationStatuses.add(nominationStatus);
+      return this;
+    }
+
+    public SmokeTester withPermittedNominationStatuses(Collection<NominationStatus> nominationStatuses) {
+      permittedNominationStatuses.addAll(nominationStatuses);
       return this;
     }
 

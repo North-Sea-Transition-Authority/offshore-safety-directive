@@ -58,7 +58,11 @@ public class CaseEventService {
     var caseEvent = createEvent(eventType, decisionComment,
         decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
 
-    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
+    caseEventFileService.finalizeFileUpload(
+        nominationDetail,
+        caseEvent,
+        fileUploadForms
+    );
   }
 
   @Transactional

@@ -504,4 +504,46 @@ class CaseEventQueryServiceTest {
             secondCaseEventByCreatedDate.getEventInstant()
         );
   }
+
+  @Test
+  void getCaseEventForNominationDetail_whenFound_thenAssert() {
+    var nominationDetailVersion = 2;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationDetailVersion)
+        .build();
+    var caseEvent = CaseEventTestUtil.builder().build();
+
+    when(caseEventRepository.findByUuidAndNominationAndNominationVersion(
+        caseEvent.getUuid(),
+        nominationDetail.getNomination(),
+        nominationDetailVersion
+    )).thenReturn(Optional.of(caseEvent));
+
+    var result = caseEventQueryService.getCaseEventForNominationDetail(
+        new CaseEventId(caseEvent.getUuid()),
+        nominationDetail
+    );
+    assertThat(result).contains(caseEvent);
+  }
+
+  @Test
+  void getCaseEventForNominationDetail_whenNotFound_thenAssertEmpty() {
+    var nominationDetailVersion = 2;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationDetailVersion)
+        .build();
+    var caseEvent = CaseEventTestUtil.builder().build();
+
+    when(caseEventRepository.findByUuidAndNominationAndNominationVersion(
+        caseEvent.getUuid(),
+        nominationDetail.getNomination(),
+        nominationDetailVersion
+    )).thenReturn(Optional.empty());
+
+    var result = caseEventQueryService.getCaseEventForNominationDetail(
+        new CaseEventId(caseEvent.getUuid()),
+        nominationDetail
+    );
+    assertThat(result).isEmpty();
+  }
 }
