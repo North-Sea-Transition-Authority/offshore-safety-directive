@@ -1,9 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import com.google.common.collect.Sets;
 import java.time.LocalDate;
@@ -11,6 +13,7 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -20,12 +23,23 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -42,6 +56,9 @@ class NomineeDetailSummaryServiceTest {
 
   @Mock
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
+
+  @Mock
+  private UploadedFileDetailService uploadedFileDetailService;
 
   @InjectMocks
   private NomineeDetailSummaryService nomineeDetailSummaryService;
@@ -78,6 +95,29 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
+    var firstUploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_a")
+        .build();
+    var firstUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(firstUploadedFile);
+    var secondUploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_B")
+        .build();
+    var secondUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(secondUploadedFile);
+    var thirdUploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_c")
+        .build();
+    var thirdUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(thirdUploadedFile);
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(
+        Map.of(
+            NomineeDetailAppendixFileController.PURPOSE,
+            List.of(secondUploadedFileViewByName, thirdUploadedFileViewByName, firstUploadedFileViewByName)
+        ));
+
     var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
@@ -109,7 +149,44 @@ class NomineeDetailSummaryServiceTest {
         .extracting(NomineeDetailConditionsAccepted::accepted)
         .isEqualTo(true);
 
+    assertThat(result)
+        .extracting(NomineeDetailSummaryView::appendixDocuments)
+        .extracting(AppendixDocuments::documents)
+        .asList()
+        .containsExactly(
+            new FileSummaryView(
+                firstUploadedFileViewByName,
+                ReverseRouter.route(on(NominationFileDownloadController.class).download(
+                    new NominationId(nominationDetail.getNomination().getId()),
+                    UploadedFileId.valueOf(firstUploadedFileViewByName.fileId())
+                ))
+            ),
+            new FileSummaryView(
+                secondUploadedFileViewByName,
+                ReverseRouter.route(on(NominationFileDownloadController.class).download(
+                    new NominationId(nominationDetail.getNomination().getId()),
+                    UploadedFileId.valueOf(secondUploadedFileViewByName.fileId())
+                ))
+            ),
+            new FileSummaryView(
+                thirdUploadedFileViewByName,
+                ReverseRouter.route(on(NominationFileDownloadController.class).download(
+                    new NominationId(nominationDetail.getNomination().getId()),
+                    UploadedFileId.valueOf(thirdUploadedFileViewByName.fileId())
+                ))
+            )
+        );
+
     assertThat(result).hasNoNullFieldsOrPropertiesExcept("summarySectionError");
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        ).containsExactly(
+            new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
+            new NominationDetailFileReference(nominationDetail).getReferenceId()
+        );
   }
 
   @Test
@@ -206,7 +283,7 @@ class NomineeDetailSummaryServiceTest {
     var metadataFields = List.of("summarySectionError", "summarySectionDetails");
     var fields = List.of(
         "appointmentPlannedStartDate", "nomineeDetailConditionsAccepted", "nominationReason",
-        "nominatedOrganisationUnitView"
+        "nominatedOrganisationUnitView", "appendixDocuments"
     );
 
     var allFields = new ArrayList<>(metadataFields);
@@ -218,7 +295,8 @@ class NomineeDetailSummaryServiceTest {
             null,
             null,
             null,
-            new NominatedOrganisationUnitView()
+            new NominatedOrganisationUnitView(),
+            null
         );
   }
 
@@ -235,6 +313,39 @@ class NomineeDetailSummaryServiceTest {
     assertThat(result)
         .extracting(NomineeDetailSummaryView::summarySectionError)
         .isEqualTo(SummarySectionError.createWithDefaultMessage("nominee details"));
+  }
+
+  @Test
+  void getNomineeDetailSummaryView_whenEmptyMapFileMap_thenNoAppendixDocuments() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.of(nomineeDetail));
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(Map.of());
+
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
+
+    assertThat(result)
+        .extracting(NomineeDetailSummaryView::appendixDocuments)
+        .isNull();
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        ).containsExactly(
+            new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
+            new NominationDetailFileReference(nominationDetail).getReferenceId()
+        );
   }
 
   @Test

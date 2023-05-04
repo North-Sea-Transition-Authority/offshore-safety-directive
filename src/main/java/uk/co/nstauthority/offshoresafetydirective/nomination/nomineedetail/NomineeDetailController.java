@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,10 +22,19 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrum
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -42,8 +52,10 @@ public class NomineeDetailController {
   private final NominationDetailService nominationDetailService;
   private final NomineeDetailFormService nomineeDetailFormService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-
-  private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
+  private final FileUploadConfig fileUploadConfig;
+  private final FileUploadService fileUploadService;
+  private final UploadedFileDetailService uploadedFileDetailService;
+  private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
   @Autowired
   public NomineeDetailController(
@@ -51,38 +63,60 @@ public class NomineeDetailController {
       NominationDetailService nominationDetailService,
       NomineeDetailFormService nomineeDetailFormService,
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-      NomineeDetailPersistenceService nomineeDetailPersistenceService) {
+      FileUploadConfig fileUploadConfig, FileUploadService fileUploadService,
+      UploadedFileDetailService uploadedFileDetailService,
+      NomineeDetailSubmissionService nomineeDetailSubmissionService) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nomineeDetailFormService = nomineeDetailFormService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
-    this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
+    this.fileUploadConfig = fileUploadConfig;
+    this.fileUploadService = fileUploadService;
+    this.uploadedFileDetailService = uploadedFileDetailService;
+    this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
   }
 
   @GetMapping
   public ModelAndView getNomineeDetail(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nomineeDetailFormService.getForm(detail), nominationId);
+    var previouslySubmittedFiles = uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        new NominationDetailFileReference(detail),
+        List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
+    );
+    return getModelAndView(nomineeDetailFormService.getForm(detail), nominationId, detail)
+        .addObject(
+            "uploadedFiles",
+            previouslySubmittedFiles.getOrDefault(NomineeDetailAppendixFileController.PURPOSE, List.of())
+        );
   }
 
   @PostMapping
   public ModelAndView saveNomineeDetail(@PathVariable("nominationId") NominationId nominationId,
                                         @ModelAttribute("form") NomineeDetailForm form,
                                         BindingResult bindingResult) {
+    var detail = nominationDetailService.getLatestNominationDetail(nominationId);
+    var modelAndView = getModelAndView(form, nominationId, detail);
+    List<UploadedFileView> uploadedFiles = List.of();
+    if (!form.getAppendixDocuments().isEmpty()) {
+      uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getAppendixDocuments());
+    }
+    modelAndView.addObject("uploadedFiles", uploadedFiles);
     return controllerHelperService.checkErrorsAndRedirect(
         nomineeDetailFormService.validate(form, bindingResult),
-        getModelAndView(form, nominationId),
+        modelAndView,
         form,
         () -> {
-          var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nomineeDetailPersistenceService.createOrUpdateNomineeDetail(detail, form);
+          nomineeDetailSubmissionService.submit(detail, form);
           return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
         }
     );
   }
 
   private ModelAndView getModelAndView(NomineeDetailForm form,
-                                       NominationId nominationId) {
+                                       NominationId nominationId,
+                                       NominationDetail nominationDetail) {
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    var nominationDetailId = nominationDetailDto.nominationDetailId();
     var modelAndView = new ModelAndView("osd/nomination/nomineeDetails/nomineeDetail")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_NAME)
@@ -91,6 +125,10 @@ public class NomineeDetailController {
         .addObject(
             "actionUrl",
             ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null))
+        )
+        .addObject(
+            "appendixDocumentFileUploadTemplate",
+            buildAppendixFileUploadTemplate(nominationId, nominationDetailId)
         );
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_NAME)
         .addWorkAreaBreadcrumb()
@@ -98,6 +136,20 @@ public class NomineeDetailController {
         .build();
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
     return modelAndView;
+  }
+
+  private FileUploadTemplate buildAppendixFileUploadTemplate(NominationId nominationId,
+                                                             NominationDetailId nominationDetailId) {
+    return new FileUploadTemplate(
+        ReverseRouter.route(
+            on(NomineeDetailAppendixFileController.class).download(nominationId, nominationDetailId, null)),
+        ReverseRouter.route(
+            on(NomineeDetailAppendixFileController.class).upload(nominationId, nominationDetailId, null)),
+        ReverseRouter.route(
+            on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
+        fileUploadConfig.getMaxFileUploadBytes().toString(),
+        String.join(",", fileUploadConfig.getAllowedFileExtensions())
+    );
   }
 
   private Map<String, String> getPreselectedPortalOrganisation(NomineeDetailForm form) {

@@ -1,6 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
 
 public class NomineeDetailFormTestingUtil {
 
@@ -22,6 +28,8 @@ public class NomineeDetailFormTestingUtil {
     private Boolean operatorHasAuthority = true;
     private Boolean operatorHasCapacity = true;
     private Boolean licenseeAcknowledgeOperatorRequirements = true;
+    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
+    private List<FileUploadForm> appendixDocuments = Arrays.asList(FileUploadFormTestUtil.builder().build());
 
     private Builder() {
     }
@@ -73,6 +81,16 @@ public class NomineeDetailFormTestingUtil {
       return this;
     }
 
+    public Builder withAppendixDocuments(Collection<FileUploadForm> fileUploadForms) {
+      this.appendixDocuments = new ArrayList<>(fileUploadForms);
+      return this;
+    }
+
+    public Builder addAppendixDocument(FileUploadForm fileUploadForm) {
+      this.appendixDocuments.add(fileUploadForm);
+      return this;
+    }
+
     public NomineeDetailForm build() {
     var form = new NomineeDetailForm();
     form.setNominatedOrganisationId(nominatedOrganisationId);
@@ -83,6 +101,7 @@ public class NomineeDetailFormTestingUtil {
     form.setOperatorHasAuthority(operatorHasAuthority);
     form.setOperatorHasCapacity(operatorHasCapacity);
     form.setLicenseeAcknowledgeOperatorRequirements(licenseeAcknowledgeOperatorRequirements);
+    form.setAppendixDocuments(appendixDocuments);
     return form;
     }
   }

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -207,5 +208,43 @@ class FileUploadServiceTest {
 
     verify(fileUploadServiceSpy).getUploadedFileViewList(List.of(uploadedFileId));
     assertThat(result).isEqualTo(fileUploadService.getUploadedFileViewList(List.of(uploadedFileId)));
+  }
+
+  @Test
+  void getFileUploadFormsFromUploadedFileViews_verifyFormsAndSortOrder() {
+    var firstFileUuid = UUID.randomUUID();
+    var firstFileDescription = "first description";
+    var firstFileInstant = Instant.now().minus(Period.ofDays(1));
+    var firstUploadedFile = UploadedFileTestUtil.builder()
+        .withId(firstFileUuid)
+        .withUploadedTimeStamp(firstFileInstant)
+        .withDescription(firstFileDescription)
+        .build();
+    var firstUploadedFileViewByDate = UploadedFileViewTestUtil.fromUploadedFile(firstUploadedFile);
+
+    var secondFileUuid = UUID.randomUUID();
+    var secondFileDescription = "second description";
+    var secondFileInstant = Instant.now();
+    var secondUploadedFile = UploadedFileTestUtil.builder()
+        .withId(secondFileUuid)
+        .withUploadedTimeStamp(secondFileInstant)
+        .withDescription(secondFileDescription)
+        .build();
+    var secondUploadedFileViewByDate = UploadedFileViewTestUtil.fromUploadedFile(secondUploadedFile);
+
+    var result = fileUploadService.getFileUploadFormsFromUploadedFileViews(
+        List.of(secondUploadedFileViewByDate, firstUploadedFileViewByDate)
+    );
+
+    assertThat(result)
+        .extracting(
+            FileUploadForm::getUploadedFileId,
+            FileUploadForm::getUploadedFileDescription,
+            FileUploadForm::getUploadedFileInstant
+        )
+        .containsExactly(
+            tuple(firstFileUuid, firstFileDescription, firstFileInstant),
+            tuple(secondFileUuid, secondFileDescription, secondFileInstant)
+        );
   }
 }

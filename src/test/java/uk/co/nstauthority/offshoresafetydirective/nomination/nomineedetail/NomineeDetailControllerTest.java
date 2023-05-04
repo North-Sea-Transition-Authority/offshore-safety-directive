@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -16,10 +17,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -31,13 +35,23 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
@@ -66,7 +80,13 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @MockBean
-  private NomineeDetailPersistenceService nomineeDetailPersistenceService;
+  private FileUploadConfig fileUploadConfig;
+  @MockBean
+  private FileUploadService fileUploadService;
+  @MockBean
+  private UploadedFileDetailService uploadedFileDetailService;
+  @MockBean
+  private NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
   @BeforeEach
   void setup() {
@@ -133,6 +153,8 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     form.setNominatedOrganisationId(100);
 
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    var nominationDetailId = nominationDetailDto.nominationDetailId();
     var portalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
         .withId(20)
         .withName("name")
@@ -141,6 +163,20 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
         .thenReturn(Optional.of(portalOrganisationUnit));
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
+    var uploadedFile = UploadedFileTestUtil.builder().build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    ))
+        .thenReturn(
+            Map.of(
+                NomineeDetailAppendixFileController.PURPOSE,
+                List.of(uploadedFileView)
+            ));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(nominationId)))
@@ -173,6 +209,18 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
                 ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)),
                 NominationTaskListController.PAGE_NAME
             )
+        ))
+        .andExpect(model().attribute("uploadedFiles", List.of(uploadedFileView)))
+        .andExpect(model().attribute("appendixDocumentFileUploadTemplate", new FileUploadTemplate(
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).download(nominationId, nominationDetailId, null)),
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).upload(nominationId, nominationDetailId, null)),
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
+                fileUploadConfig.getMaxFileUploadBytes().toString(),
+                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+            )
         ));
   }
 
@@ -190,7 +238,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     verify(nomineeDetailFormService, times(1)).validate(any(), any());
     verify(nominationDetailService, times(2)).getLatestNominationDetail(nominationId);
-    verify(nomineeDetailPersistenceService, times(1)).createOrUpdateNomineeDetail(eq(nominationDetail), any());
+    verify(nomineeDetailSubmissionService, times(1)).submit(eq(nominationDetail), any());
   }
 
   @Test
@@ -199,14 +247,42 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     when(nomineeDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
 
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    var nominationDetailId = nominationDetailDto.nominationDetailId();
+    var uploadedFileId = new UploadedFileId(UUID.randomUUID());
+    var uploadedFile = UploadedFileTestUtil.builder().build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<FileUploadForm>> fileUploadFormListCaptor = ArgumentCaptor.forClass(List.class);
+    when(fileUploadService.getUploadedFileViewListFromForms(fileUploadFormListCaptor.capture()))
+        .thenReturn(List.of(uploadedFileView));
+
     mockMvc.perform(
             post(ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null)))
                 .with(csrf())
                 .with(user(NOMINATION_CREATOR_USER))
+                .param("appendixDocuments[0].uploadedFileId", uploadedFileId.uuid().toString())
         )
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("appendixDocumentFileUploadTemplate", new FileUploadTemplate(
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).download(nominationId, nominationDetailId, null)),
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).upload(nominationId, nominationDetailId, null)),
+                ReverseRouter.route(
+                    on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
+                fileUploadConfig.getMaxFileUploadBytes().toString(),
+                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+            )
+        ))
+        .andExpect(model().attribute("uploadedFiles", List.of(uploadedFileView)));
+
+    assertThat(fileUploadFormListCaptor.getValue())
+        .extracting(FileUploadForm::getUploadedFileId)
+        .containsExactly(uploadedFileId.uuid());
 
     verify(nomineeDetailFormService, times(1)).validate(any(), any());
-    verify(nomineeDetailPersistenceService, never()).createOrUpdateNomineeDetail(any(), any());
+    verify(nomineeDetailSubmissionService, never()).submit(any(), any());
   }
 }

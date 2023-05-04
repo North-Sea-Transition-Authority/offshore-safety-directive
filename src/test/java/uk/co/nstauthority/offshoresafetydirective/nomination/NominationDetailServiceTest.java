@@ -333,4 +333,15 @@ class NominationDetailServiceTest {
     assertThat(resultingNominationDetail).contains(expectedNominationDetail);
   }
 
+  @Test
+  void getNominationDetail() {
+    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(nominationDetailRepository.findById(nominationDetailId.id()))
+        .thenReturn(Optional.of(nominationDetail));
+
+    assertThat(nominationDetailService.getNominationDetail(nominationDetailId))
+        .contains(nominationDetail);
+  }
+
 }

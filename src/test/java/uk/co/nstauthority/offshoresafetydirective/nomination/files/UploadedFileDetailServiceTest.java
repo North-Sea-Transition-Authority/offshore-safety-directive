@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.assertj.core.groups.Tuple;
@@ -21,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
@@ -30,6 +32,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.Fil
 
 @ExtendWith(MockitoExtension.class)
 class UploadedFileDetailServiceTest {
+
+  private static final String PURPOSE = "purpose";
 
   @Mock
   private UploadedFileDetailRepository uploadedFileDetailRepository;
@@ -276,6 +280,65 @@ class UploadedFileDetailServiceTest {
         ).containsExactly(
             Tuple.tuple(fileReference.getReferenceId(), fileReference.getFileReferenceType())
         );
+  }
+
+  @Test
+  void getSubmittedUploadedFileViewsForReferenceAndPurposes() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var fileReference = new TestFileReference(nominationDetail);
+    var decisionFilePurpose = new FilePurpose("decision_purpose");
+    var appendixFilePurpose = new FilePurpose("appendix_purpose");
+
+    var decisionFile = UploadedFileTestUtil.builder().build();
+    var decisionFileView = UploadedFileViewTestUtil.fromUploadedFile(decisionFile);
+    var uploadedFileDetailForDecision = UploadedFileDetailTestUtil.builder()
+        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+        .withPurpose(decisionFilePurpose)
+        .withFileStatus(FileStatus.SUBMITTED)
+        .withUploadedFile(decisionFile)
+        .build();
+
+    var appendixFile = UploadedFileTestUtil.builder().build();
+    var appendixFileView = UploadedFileViewTestUtil.fromUploadedFile(appendixFile);
+    var uploadedFileDetailForAppendixDocument = UploadedFileDetailTestUtil.builder()
+        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+        .withPurpose(appendixFilePurpose)
+        .withFileStatus(FileStatus.SUBMITTED)
+        .withUploadedFile(appendixFile)
+        .build();
+
+    var draftFile = UploadedFileTestUtil.builder().build();
+    var uploadedFileDetailForDraftFile = UploadedFileDetailTestUtil.builder()
+        .withReferenceType(FileReferenceType.NOMINATION_DETAIL)
+        .withPurpose(appendixFilePurpose)
+        .withFileStatus(FileStatus.DRAFT)
+        .withUploadedFile(draftFile)
+        .build();
+
+    when(uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdInAndPurposeIn(
+        fileReference.getFileReferenceType(),
+        List.of(fileReference.getReferenceId()),
+        List.of(PURPOSE)
+    )).thenReturn(List.of(
+        uploadedFileDetailForDecision,
+        uploadedFileDetailForAppendixDocument,
+        uploadedFileDetailForDraftFile
+    ));
+
+    when(fileUploadService.getUploadedFileViewList(List.of(
+        new UploadedFileId(decisionFile.getId()),
+        new UploadedFileId(appendixFile.getId())
+    ))).thenReturn(List.of(decisionFileView, appendixFileView));
+
+    var purposeAndFileViewMap = uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReference,
+        List.of(PURPOSE)
+    );
+
+    assertThat(purposeAndFileViewMap).containsExactlyInAnyOrderEntriesOf(Map.of(
+        decisionFilePurpose, List.of(decisionFileView),
+        appendixFilePurpose, List.of(appendixFileView)
+    ));
   }
 
   static class TestFileReference implements FileReference {

@@ -7,6 +7,8 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<k.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="breadcrumbsList" type="java.util.Map<String, String>" -->
+<#-- @ftlvariable name="appendixDocumentFileUploadTemplate" type="uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate" -->
+<#-- @ftlvariable name="uploadedFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -58,15 +60,27 @@
       formId="planned-start-date"
     />
 
-    <#--
-      Check which is the first checkbox that is not selected and pass that as the path to the
-      checkBoxGroupComponent to properly bind the error
-    -->
-    <#assign checkboxGroupPath =
-      checkBoxValidationUtil.getFirstFormFieldWithError(
-        ["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"]
-      )
-    />
+      <@fdsFieldset.fieldset
+        legendHeading="Provide the Appendix C and any associated documents"
+        legendHeadingClass="govuk-fieldset__legend--s"
+        legendHeadingSize="h2"
+      >
+          <@fdsFileUpload.fileUpload
+            id="appendix-c-documents"
+            path="form.appendixDocuments"
+            uploadUrl=appendixDocumentFileUploadTemplate.uploadUrl()
+            deleteUrl=appendixDocumentFileUploadTemplate.deleteUrl()
+            downloadUrl=appendixDocumentFileUploadTemplate.downloadUrl()
+            maxAllowedSize=appendixDocumentFileUploadTemplate.maxAllowedSize()
+            allowedExtensions=appendixDocumentFileUploadTemplate.allowedExtensions()
+            existingFiles=uploadedFiles
+          />
+      </@fdsFieldset.fieldset>
+
+      <!-- TODO OSDOP-184 - Add appendix C file guidance -->
+
+<#--Check which is the first checkbox that is not selected and pass that as the path to the checkBoxGroupComponent to properly bind the error-->
+    <#assign checkboxGroupPath=checkBoxValidationUtil.getFirstFormFieldWithError(["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"])/>
     <@fdsCheckbox.checkboxGroup
       path=checkboxGroupPath
       fieldsetHeadingText="Licensee declarations"

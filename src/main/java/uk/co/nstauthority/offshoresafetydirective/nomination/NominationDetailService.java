@@ -78,6 +78,10 @@ public class NominationDetailService {
     );
   }
 
+  public Optional<NominationDetail> getNominationDetail(NominationDetailId nominationDetailId) {
+    return nominationDetailRepository.findById(nominationDetailId.id());
+  }
+
   @Transactional
   public void deleteNominationDetail(NominationDetail nominationDetail) {
     if (nominationDetail.getStatus() == NominationStatus.DRAFT) {

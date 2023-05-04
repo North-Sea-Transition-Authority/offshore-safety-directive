@@ -1,5 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
+import java.util.ArrayList;
+import java.util.List;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+
 class NomineeDetailForm {
 
   private Integer nominatedOrganisationId;
@@ -9,6 +13,7 @@ class NomineeDetailForm {
   private String plannedStartYear;
   private Boolean operatorHasCapacity;
   private Boolean operatorHasAuthority;
+  private List<FileUploadForm> appendixDocuments = new ArrayList<>();
   private Boolean licenseeAcknowledgeOperatorRequirements;
 
   public Integer getNominatedOrganisationId() {
@@ -65,6 +70,15 @@ class NomineeDetailForm {
 
   public void setOperatorHasCapacity(Boolean operatorHasCapacity) {
     this.operatorHasCapacity = operatorHasCapacity;
+  }
+
+  public List<FileUploadForm> getAppendixDocuments() {
+    return appendixDocuments;
+  }
+
+  public void setAppendixDocuments(
+      List<FileUploadForm> appendixDocuments) {
+    this.appendixDocuments = appendixDocuments;
   }
 
   public Boolean getLicenseeAcknowledgeOperatorRequirements() {

@@ -1,4 +1,5 @@
 <#import "../../../fds/components/summaryList/summaryList.ftl" as fdsSummaryList/>
+<#import '../files/fileSummary.ftl' as fileSummary>
 
 <#macro nomineeDetailsSummary nomineeDetailSummaryView>
   <@fdsSummaryList.summaryListCard
@@ -21,6 +22,12 @@
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Accepted all declarations">
           ${((nomineeDetailSummaryView.nomineeDetailConditionsAccepted().accepted())!false)?then("Yes", "")}
+      </@fdsSummaryList.summaryListRowNoAction>
+
+      <@fdsSummaryList.summaryListRowNoAction keyText="Appendix C and associated documents">
+          <#if nomineeDetailSummaryView.appendixDocuments()?has_content>
+              <@fileSummary.fileSummary nomineeDetailSummaryView.appendixDocuments().documents()/>
+          </#if>
       </@fdsSummaryList.summaryListRowNoAction>
 
   </@fdsSummaryList.summaryListCard>

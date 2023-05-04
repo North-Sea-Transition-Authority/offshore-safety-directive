@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -20,8 +21,10 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @ExtendWith(SpringExtension.class)
 class NomineeDetailFormValidatorTest {
@@ -44,7 +47,8 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenValidForm_thenNoErrors() {
-    var validForm = NomineeDetailFormTestingUtil.builder().build();
+    var validForm = NomineeDetailFormTestingUtil.builder()
+        .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(validForm.getNominatedOrganisationId()))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -66,6 +70,7 @@ class NomineeDetailFormValidatorTest {
         entry("plannedStartDay", Set.of("plannedStartDay.required")),
         entry("plannedStartMonth", Set.of("plannedStartMonth.required")),
         entry("plannedStartYear", Set.of("plannedStartYear.required")),
+        entry("appendixDocuments", Set.of(FileValidationUtil.FILES_EMPTY_ERROR_CODE.formatted("appendixDocuments"))),
         entry("operatorHasAuthority", Set.of("operatorHasAuthority.required"))
     );
   }
@@ -207,7 +212,8 @@ class NomineeDetailFormValidatorTest {
   @Test
   void validate_whenNominatedOrganisationNotFound_thenValidationErrors() {
 
-    var form = NomineeDetailFormTestingUtil.builder().build();
+    var form = NomineeDetailFormTestingUtil.builder()
+        .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
         .thenReturn(Optional.empty());
@@ -232,7 +238,8 @@ class NomineeDetailFormValidatorTest {
   @Test
   void validate_whenNominatedOrganisationNotValid_thenValidationErrors() {
 
-    var form = NomineeDetailFormTestingUtil.builder().build();
+    var form = NomineeDetailFormTestingUtil.builder()
+        .build();
 
     var inactiveOrganisation = PortalOrganisationDtoTestUtil.builder()
         .isActive(false)
@@ -260,6 +267,26 @@ class NomineeDetailFormValidatorTest {
 
     assertThat(errorMessages).containsExactly(
         entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.message()))
+    );
+  }
+
+  @Test
+  void validate_whenNoFileDescription_thenValidationErrors() {
+    var fileUploadForm = FileUploadFormTestUtil.builder()
+        .withUploadedFileDescription(null)
+        .build();
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withAppendixDocuments(List.of(fileUploadForm))
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
+    var bindingResult = validateNomineeDetailsForm(form);
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    assertThat(extractedErrors).containsExactly(
+        entry("appendixDocuments[0].uploadedFileDescription", Set.of("appendixDocuments[0].uploadedFileDescription.required"))
     );
   }
 

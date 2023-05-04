@@ -17,17 +17,17 @@
     </p>
 </#macro>
 
-<#macro fileSummary caseEventFileViews>
-    <#if caseEventFileViews?size gt 1>
+<#macro fileSummary fileSummaryViews>
+    <#if fileSummaryViews?size gt 1>
       <ul class="govuk-list">
-          <#list caseEventFileViews as file>
+          <#list fileSummaryViews as file>
             <li class="govuk-!-margin-top-2">
                 <@_fileDisplay file/>
             </li>
           </#list>
       </ul>
     <#else>
-        <#list caseEventFileViews as file>
+        <#list fileSummaryViews as file>
           <div class="govuk-body">
               <@_fileDisplay file/>
           </div>

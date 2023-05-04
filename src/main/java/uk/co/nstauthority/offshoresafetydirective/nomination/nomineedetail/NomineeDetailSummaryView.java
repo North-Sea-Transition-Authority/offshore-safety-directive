@@ -10,6 +10,7 @@ public record NomineeDetailSummaryView(
     NominationReason nominationReason,
     AppointmentPlannedStartDate appointmentPlannedStartDate,
     NomineeDetailConditionsAccepted nomineeDetailConditionsAccepted,
+    AppendixDocuments appendixDocuments,
     SummarySectionError summarySectionError,
     SummarySectionDetails summarySectionDetails
 ) {
@@ -21,16 +22,17 @@ public record NomineeDetailSummaryView(
                                   NominationReason nominationReason,
                                   AppointmentPlannedStartDate appointmentPlannedStartDate,
                                   NomineeDetailConditionsAccepted nomineeDetailConditionsAccepted,
+                                  AppendixDocuments appendixDocuments,
                                   SummarySectionError summarySectionError) {
     this(
         applicantOrganisationUnitView, nominationReason, appointmentPlannedStartDate, nomineeDetailConditionsAccepted,
-        summarySectionError,
+        appendixDocuments, summarySectionError,
         new SummarySectionDetails(new SummarySectionId(SUMMARY_ID), new SummarySectionName(SUMMARY_NAME))
     );
   }
 
   public NomineeDetailSummaryView(SummarySectionError summarySectionError) {
-    this(new NominatedOrganisationUnitView(), null, null, null, summarySectionError);
+    this(new NominatedOrganisationUnitView(), null, null, null, null, summarySectionError);
   }
 
 }

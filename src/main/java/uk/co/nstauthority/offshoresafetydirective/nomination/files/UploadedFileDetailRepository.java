@@ -15,6 +15,10 @@ interface UploadedFileDetailRepository extends CrudRepository<UploadedFileDetail
   List<UploadedFileDetail> findAllByReferenceTypeAndReferenceIdIn(FileReferenceType fileReferenceType,
                                                                   Collection<String> referenceIds);
 
+  List<UploadedFileDetail> findAllByReferenceTypeAndReferenceIdInAndPurposeIn(FileReferenceType fileReferenceType,
+                                                                              Collection<String> referenceIds,
+                                                                              Collection<String> purposes);
+
   List<UploadedFileDetail> findAllByReferenceTypeAndReferenceIdAndUploadedFile_IdIn(FileReferenceType referenceType,
                                                                                     String referenceId,
                                                                                     Collection<UUID> fileIds);

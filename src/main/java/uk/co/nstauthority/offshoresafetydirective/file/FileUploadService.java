@@ -1,8 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,7 +54,7 @@ public class FileUploadService {
     return uploadedFilePersistenceService.getUploadedFilesByIdList(uploadedFileIds);
   }
 
-  public List<UploadedFileView> getUploadedFileViewList(List<UploadedFileId> fileUploadIdList) {
+  public List<UploadedFileView> getUploadedFileViewList(Collection<UploadedFileId> fileUploadIdList) {
     return uploadedFilePersistenceService.getUploadedFilesByIdList(fileUploadIdList).stream()
         .map(this::createUploadedFileView)
         .toList();
@@ -63,6 +66,19 @@ public class FileUploadService {
         .map(UploadedFileId::new)
         .toList();
     return getUploadedFileViewList(fileIds);
+  }
+
+  public List<FileUploadForm> getFileUploadFormsFromUploadedFileViews(Collection<UploadedFileView> views) {
+    return views.stream()
+        .map(fileView -> {
+          var form = new FileUploadForm();
+          form.setUploadedFileId(UUID.fromString(fileView.getFileId()));
+          form.setUploadedFileInstant(fileView.getFileUploadedTime());
+          form.setUploadedFileDescription(fileView.fileDescription());
+          return form;
+        })
+        .sorted(Comparator.comparing(FileUploadForm::getUploadedFileInstant))
+        .toList();
   }
 
   @Transactional

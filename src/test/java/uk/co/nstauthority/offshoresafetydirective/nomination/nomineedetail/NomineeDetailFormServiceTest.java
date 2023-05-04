@@ -1,20 +1,31 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.time.Month;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailFormServiceTest {
@@ -26,6 +37,12 @@ class NomineeDetailFormServiceTest {
 
   @Mock
   private NomineeDetailFormValidator nomineeDetailFormValidator;
+
+  @Mock
+  private UploadedFileDetailService uploadedFileDetailService;
+
+  @Mock
+  private FileUploadService fileUploadService;
 
   @InjectMocks
   private NomineeDetailFormService nomineeDetailFormService;
@@ -59,7 +76,12 @@ class NomineeDetailFormServiceTest {
   @Test
   void getForm_whenNoPreviousNomineeDetail_thenEmptyForm() {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail)).thenReturn(Optional.empty());
-    assertThat(nomineeDetailFormService.getForm(nominationDetail)).hasAllNullFieldsOrProperties();
+
+    assertThat(nomineeDetailFormService.getForm(nominationDetail))
+        .hasAllNullFieldsOrPropertiesExcept(
+            "appendixDocuments"
+        )
+        .hasFieldOrPropertyWithValue("appendixDocuments", List.of());
   }
 
   @Test
@@ -70,6 +92,69 @@ class NomineeDetailFormServiceTest {
     nomineeDetailFormService.validate(form, bindingResult);
 
     verify(nomineeDetailFormValidator, times(1)).validate(form, bindingResult);
+  }
+
+  @Test
+  void nomineeDetailEntityToForm() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    var nominatedOrganisationId = 123;
+    var reasonForNomination = "reason";
+    var plannedStartDate = LocalDate.of(2023, Month.APRIL, 1);
+    var operatorHasCapacity = true;
+    var operatorHasAuthority = true;
+    var licenseeAcknowledgeOperatorRequirements = true;
+
+    var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominatedOrganisationId(nominatedOrganisationId)
+        .withReasonForNomination(reasonForNomination)
+        .withPlannedStartDate(plannedStartDate)
+        .withOperatorHasCapacity(operatorHasCapacity)
+        .withOperatorHasAuthority(operatorHasAuthority)
+        .withLicenseeAcknowledgeOperatorRequirements(licenseeAcknowledgeOperatorRequirements)
+        .build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.of(nomineeDetail));
+
+    var uploadedFile = UploadedFileTestUtil.builder().build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(uploadedFileDetailService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(Map.of(
+        NomineeDetailAppendixFileController.PURPOSE, List.of(uploadedFileView)
+    ));
+
+    var fileUploadForm = new FileUploadForm();
+    when(fileUploadService.getFileUploadFormsFromUploadedFileViews(List.of(uploadedFileView)))
+        .thenReturn(List.of(fileUploadForm));
+
+    var form = nomineeDetailFormService.getForm(nominationDetail);
+    assertThat(form)
+        .extracting(
+            NomineeDetailForm::getNominatedOrganisationId,
+            NomineeDetailForm::getReasonForNomination,
+            NomineeDetailForm::getPlannedStartDay,
+            NomineeDetailForm::getPlannedStartMonth,
+            NomineeDetailForm::getPlannedStartYear,
+            NomineeDetailForm::getOperatorHasCapacity,
+            NomineeDetailForm::getOperatorHasAuthority,
+            NomineeDetailForm::getLicenseeAcknowledgeOperatorRequirements,
+            NomineeDetailForm::getAppendixDocuments
+        )
+        .containsExactly(
+            nominatedOrganisationId,
+            reasonForNomination,
+            String.valueOf(plannedStartDate.getDayOfMonth()),
+            String.valueOf(plannedStartDate.getMonthValue()),
+            String.valueOf(plannedStartDate.getYear()),
+            operatorHasCapacity,
+            operatorHasAuthority,
+            licenseeAcknowledgeOperatorRequirements,
+            List.of(fileUploadForm)
+        );
   }
 
   private NomineeDetail getNomineeDetail() {

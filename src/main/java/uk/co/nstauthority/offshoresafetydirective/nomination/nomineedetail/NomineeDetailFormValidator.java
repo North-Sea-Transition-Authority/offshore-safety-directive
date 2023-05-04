@@ -10,11 +10,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.DateValidationUtil;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
 class NomineeDetailFormValidator implements SmartValidator {
 
   private static final String NOMINEE_DECLARATIONS_ERROR_MESSAGE = "You must agree to all the licensee declarations";
+  private static final String NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE = "Upload a document";
 
   static final String NOMINEE_FIELD_NAME = "nominatedOrganisationId";
 
@@ -85,6 +87,10 @@ class NomineeDetailFormValidator implements SmartValidator {
         form.getPlannedStartYear(),
         errors
     );
+
+    FileValidationUtil.validator()
+        .withMinimumNumberOfFiles(1, NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE)
+        .validate(errors, form.getAppendixDocuments(), "appendixDocuments");
 
     //Need to individually check which checkboxes have not been ticked and assign an error to that specific field
     //This will make sure the error link points to the right unchecked checkbox

@@ -56,8 +56,8 @@ public class UploadedFileDetailTestUtil {
       return this;
     }
 
-    public Builder withPurpose(String purpose) {
-      this.purpose = purpose;
+    public Builder withPurpose(FilePurpose purpose) {
+      this.purpose = purpose.purpose();
       return this;
     }
 

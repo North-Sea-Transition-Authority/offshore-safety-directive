@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -15,7 +13,8 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationFileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -24,36 +23,33 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNominationStatus(statuses = {
     NominationStatus.SUBMITTED,
     NominationStatus.AWAITING_CONFIRMATION,
-    NominationStatus.CLOSED,
-    NominationStatus.WITHDRAWN
+    NominationStatus.WITHDRAWN,
+    NominationStatus.CLOSED
 })
 public class NominationFileDownloadController {
 
-  static final Set<NominationStatus> ALLOWED_STATUSES =
-      NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);
-
-  static final String ALLOWED_STATUSES_STRING = ALLOWED_STATUSES.stream()
-      .map(Enum::name)
-      .collect(Collectors.joining(","));
-
-  private final NominationFileEndpointService nominationFileEndpointService;
+  private final FileEndpointService fileEndpointService;
+  private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public NominationFileDownloadController(NominationFileEndpointService nominationFileEndpointService) {
-    this.nominationFileEndpointService = nominationFileEndpointService;
+  public NominationFileDownloadController(FileEndpointService fileEndpointService,
+                                          NominationDetailService nominationDetailService) {
+    this.fileEndpointService = fileEndpointService;
+    this.nominationDetailService = nominationDetailService;
   }
 
   @ResponseBody
   @GetMapping("/download/{uploadedFileId}")
   public ResponseEntity<InputStreamResource> download(@PathVariable("nominationId") NominationId nominationId,
                                                       @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
-    return nominationFileEndpointService.handleDownload(nominationId, uploadedFileId, ALLOWED_STATUSES)
-        .orElseThrow(() -> {
-          throw new ResponseStatusException(HttpStatus.NOT_FOUND, String.format(
-              "Cannot find latest UploadedFile with ID [%s] for NominationId [%s] with any status of [%s]",
-              uploadedFileId.uuid(), nominationId.id(), ALLOWED_STATUSES_STRING
-          ));
-        });
+    var nominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "No latest NominationDetail for Nomination [%s]".formatted(
+                nominationId.id()
+            )
+        ));
+    return fileEndpointService.handleDownload(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
 }

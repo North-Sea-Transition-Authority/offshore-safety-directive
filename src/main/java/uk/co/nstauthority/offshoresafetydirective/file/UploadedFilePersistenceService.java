@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.time.Clock;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,7 +52,7 @@ class UploadedFilePersistenceService {
     uploadedFileRepository.deleteById(uploadedFile.getId());
   }
 
-  public List<UploadedFile> getUploadedFilesByIdList(List<UploadedFileId> uploadedFileIdList) {
+  public List<UploadedFile> getUploadedFilesByIdList(Collection<UploadedFileId> uploadedFileIdList) {
     var fileIds = uploadedFileIdList.stream()
         .map(UploadedFileId::uuid)
         .toList();

@@ -4,7 +4,9 @@ import java.time.Clock;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @Service
@@ -109,6 +112,37 @@ public class UploadedFileDetailService {
 
     fileUploadService.updateFileUploadDescriptions(fileUploadForms);
     this.updateFileStatuses(fileIds, FileStatus.SUBMITTED);
+  }
+
+  public Map<FilePurpose, List<UploadedFileView>> getSubmittedUploadedFileViewsForReferenceAndPurposes(
+      FileReference fileReference,
+      Collection<String> purposes
+  ) {
+    var submittedFileDetails = uploadedFileDetailRepository.findAllByReferenceTypeAndReferenceIdInAndPurposeIn(
+        fileReference.getFileReferenceType(),
+        List.of(fileReference.getReferenceId()),
+        purposes
+    )
+        .stream()
+        .filter(uploadedFileDetail -> uploadedFileDetail.getFileStatus().equals(FileStatus.SUBMITTED))
+        .toList();
+
+    var fileIds = submittedFileDetails.stream()
+        .map(uploadedFileDetail -> new UploadedFileId(uploadedFileDetail.getUploadedFile().getId()))
+        .toList();
+    Map<UploadedFileId, UploadedFileView> fileIdAndViewMap = fileUploadService.getUploadedFileViewList(fileIds)
+        .stream()
+        .collect(Collectors.toMap(
+            fileView -> UploadedFileId.valueOf(fileView.getFileId()),
+            fileView -> fileView
+        ));
+
+    return submittedFileDetails.stream()
+        .collect(Collectors.groupingBy(
+            detail -> new FilePurpose(detail.getPurpose()),
+            Collectors.mapping(uploadedFileDetail -> fileIdAndViewMap.get(
+                new UploadedFileId(uploadedFileDetail.getUploadedFile().getId())), Collectors.toList())
+        ));
   }
 
   private void updateFileStatuses(Collection<UploadedFileId> uploadedFileIds,

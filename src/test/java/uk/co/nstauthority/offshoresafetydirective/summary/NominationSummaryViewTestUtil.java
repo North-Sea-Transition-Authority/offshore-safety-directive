@@ -11,6 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.App
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationForAllPhases;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationRelatedToNomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.AppendixDocuments;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.AppointmentPlannedStartDate;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationName;
@@ -57,6 +58,7 @@ public class NominationSummaryViewTestUtil {
         new NominationReason("Nomination reason"),
         AppointmentPlannedStartDate.fromDate(LocalDate.now().plusMonths(2)),
         new NomineeDetailConditionsAccepted(true),
+        new AppendixDocuments(List.of()),
         null
     );
 

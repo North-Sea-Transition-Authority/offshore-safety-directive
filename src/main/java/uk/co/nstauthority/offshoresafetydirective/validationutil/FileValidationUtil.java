@@ -10,7 +10,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadValidationUtils
 
 public class FileValidationUtil {
 
-  private static final String FILES_EMPTY_ERROR_CODE = "%s.belowThreshold";
+  public static final String FILES_EMPTY_ERROR_CODE = "%s.belowThreshold";
   public static final String FILES_TOO_MANY_ERROR_CODE = "%s.limitExceeded";
 
   private FileValidationUtil() {
