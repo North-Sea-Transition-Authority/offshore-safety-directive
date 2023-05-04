@@ -172,11 +172,13 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
         );
   }
 
-  @Test
-  void submitRelatedInformation_whenNotLoggedIn_thenForbidden() throws Exception {
+  @SecurityTest
+  void editMember_whenNotAuthorized_thenRedirectToLoginPage() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(RelatedInformationController.class)
-            .renderRelatedInformation(new NominationId(nominationDetail)))))
-        .andExpect(status().isForbidden());
+            .submitRelatedInformation(new NominationId(nominationDetail), null, null)))
+            .with(csrf())
+        )
+        .andExpect(redirectionToLoginUrl());
   }
 
   @Test

@@ -15,19 +15,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.mvc.error.DefaultClientErrorController;
 
 @AutoConfigureMockMvc
-@TestPropertySource(properties = "energy-portal.logout-url=https://portal-logout-url.co.uk")
 @IntegrationTest
 class WebSecurityConfigurationTest {
 
+  private static final String CONTEXT_PATH = "/test";
+
   @Autowired
   private MockMvc mockMvc;
+
+  @DynamicPropertySource
+  static void dynamicProperties(DynamicPropertyRegistry registry) {
+    registry.add("server.servlet.context-path", () -> CONTEXT_PATH);
+    registry.add("energy-portal.logout-url", () -> "https://portal-logout-url.co.uk");
+  }
 
   @Test
   void security_whenUserHasAccessAuthority_thenOk() throws Exception {
@@ -51,8 +60,11 @@ class WebSecurityConfigurationTest {
 
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class).testEndpoint()))
             .with(user(user, emptyGrantedAuthorityCollection))
-        )
-        .andExpect(status().isForbidden());
+      )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            CONTEXT_PATH + ReverseRouter.route(on(DefaultClientErrorController.class).getUnauthorisedErrorPage())
+        ));
   }
 
   @Test

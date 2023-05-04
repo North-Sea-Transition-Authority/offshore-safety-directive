@@ -154,6 +154,18 @@
   </@fdsLeftSubNavPageTemplate>
 </#macro>
 
+<#macro defaultErrorPage pageHeading>
+  <@defaultPage
+    pageHeading=pageHeading
+    phaseBanner=false
+    showNavigationItems=false
+    allowSearchEngineIndexing=false
+    pageSize=PageSize.TWO_THIRDS_COLUMN
+  >
+    <#nested/>
+  </@defaultPage>
+</#macro>
+
 <#macro _serviceHeader pageSize>
   <@pageHeader.header
     serviceName=SERVICE_NAME

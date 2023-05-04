@@ -171,14 +171,7 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void editMember_whenNotAuthorized_thenIsForbidden() throws Exception {
-    mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
-            .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null))))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void editMember_whenNotLoggedInAuthorized_thenRedirectedToLoginUrl() throws Exception {
+  void editMember_whenNotAuthorized_thenRedirectToLoginPage() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)
             .editMember(teamView.teamId(), new WebUserAccountId(accessManager.wuaId()), null, null, null)))
             .with(csrf()))
