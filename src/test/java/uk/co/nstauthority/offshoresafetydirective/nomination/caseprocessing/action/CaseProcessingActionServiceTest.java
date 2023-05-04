@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gene
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @ExtendWith(MockitoExtension.class)
@@ -288,6 +289,29 @@ class CaseProcessingActionServiceTest {
                 fileUploadConfig.getMaxFileUploadBytes().toString(),
                 String.join(",", fileUploadConfig.getAllowedFileExtensions())
             ))
+        );
+  }
+
+  @Test
+  void createRequestNominationUpdateAction() {
+    var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+    var result = caseProcessingActionService.createRequestNominationUpdateAction(nominationId);
+
+    assertThat(result)
+        .extracting(
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
+        ).containsExactly(
+            CaseProcessingActionItem.REQUEST_UPDATE,
+            CaseProcessingActionGroup.REQUEST_UPDATE,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.REQUEST_UPDATE),
+            ReverseRouter.route(
+                on(NominationRequestUpdateController.class).requestUpdate(nominationId, true,
+                    CaseProcessingActionIdentifier.REQUEST_UPDATE, null, null, null)),
+            Map.of()
         );
   }
 }

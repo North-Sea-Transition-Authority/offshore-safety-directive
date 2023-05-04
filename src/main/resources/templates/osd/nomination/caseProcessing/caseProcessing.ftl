@@ -12,6 +12,7 @@
 <#import '_activePortalReferences.ftl' as _activePortalReferences>
 <#import '_sendForConsultationSlideout.ftl' as _sendForConsultationSlideout>
 <#import '_consultationResponseSlideout.ftl' as _consultationResponseSlideout>
+<#import '_requestUpdateSlideout.ftl' as _requestUpdateSlideout>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -64,6 +65,7 @@ errorItems=[]
     <#assign wonsSystemReferenceSlideoutPanelId = "wons-references"/>
     <#assign sendForConsultationSlideoutPanelId = "send-for-consultation"/>
     <#assign consultationResponseSlideoutPanelId = "consultation-response"/>
+    <#assign requestUpdateSlideoutPanelId = "request-update"/>
 
     <#macro _applyAction action isInDropdown>
         <#local actionKeyValue = action.item/>
@@ -102,6 +104,10 @@ errorItems=[]
         <#if actionKeyValue == "CONSULTATION_RESPONSE">
             <@_slideoutButton slideoutPanelId=consultationResponseSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
             <#assign consultationResponseAction = action/>
+        </#if>
+        <#if actionKeyValue == "REQUEST_UPDATE">
+            <@_slideoutButton slideoutPanelId=requestUpdateSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
+            <#assign requestUpdateAction = action/>
         </#if>
     </#macro>
 
@@ -213,6 +219,15 @@ errorItems=[]
             fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
             errorList=errorList![]
             uploadedFiles=existingConsultationResponseFiles![]
+        />
+    </#if>
+
+    <#if requestUpdateAction?has_content>
+        <@_requestUpdateSlideout.requestUpdateSlideout
+            panelId=requestUpdateSlideoutPanelId
+            headingText=requestUpdateAction.item.actionText
+            postUrl=requestUpdateAction.submitUrl
+            postParam=requestUpdateAction.caseProcessingActionIdentifier.value()
         />
     </#if>
 

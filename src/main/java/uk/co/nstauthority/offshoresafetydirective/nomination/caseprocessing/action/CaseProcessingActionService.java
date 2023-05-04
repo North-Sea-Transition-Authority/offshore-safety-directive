@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gene
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @Service
@@ -207,6 +208,18 @@ public class CaseProcessingActionService {
                 fileUploadConfig.getMaxFileUploadBytes().toString(),
                 String.join(",", fileUploadConfig.getAllowedFileExtensions())
             )
+        )
+        .build();
+  }
+
+  public CaseProcessingAction createRequestNominationUpdateAction(NominationId nominationId) {
+    var caseProcessingAction = new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.REQUEST_UPDATE);
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.REQUEST_UPDATE,
+            CaseProcessingActionGroup.REQUEST_UPDATE,
+            caseProcessingAction,
+            ReverseRouter.route(on(NominationRequestUpdateController.class)
+                .requestUpdate(nominationId, true, caseProcessingAction.value(), null, null, null))
         )
         .build();
   }

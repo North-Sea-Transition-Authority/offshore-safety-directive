@@ -8,7 +8,7 @@ public enum CaseProcessingActionGroup {
   CONSULTATIONS("Consultations", 40),
   DECISION("Decision", 50),
   RELATED_APPLICATIONS("Related applications", 60),
-  CONFIRM_APPOINTMENT("Confirm appointment", 70),
+  CONFIRM_APPOINTMENT("Confirm appointment", 70)
   ;
 
   private final String displayText;

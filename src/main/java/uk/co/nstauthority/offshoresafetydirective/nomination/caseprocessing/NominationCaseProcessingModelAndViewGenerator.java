@@ -36,6 +36,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.port
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -120,6 +121,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
             NominationConsultationResponseController.FORM_NAME,
             modelAndViewDto.getNominationConsultationResponseForm()
         )
+        .addObject(NominationRequestUpdateController.FORM_NAME, modelAndViewDto.getNominationRequestUpdateForm())
         .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
         .addObject(
             "activePortalReferencesView",
@@ -179,6 +181,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
         actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
       }
 
+      if (canRequestNominationUpdate(nominationDetailDto)) {
+        actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+      }
+
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
           .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))
           .collect(
@@ -229,6 +235,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canAddConsultationResponse(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canRequestNominationUpdate(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 

@@ -32,10 +32,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionItem;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionForm;
@@ -48,6 +48,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.port
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.WonsPortalReferenceForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksForm;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -139,6 +140,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var pearsPortalReferenceForm = new PearsPortalReferenceForm();
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -149,6 +151,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -167,7 +170,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "wonsPortalReferenceForm",
         "caseEvents",
         "activePortalReferencesView",
-        "nominationConsultationResponseForm"
+        "nominationConsultationResponseForm",
+        "nominationRequestUpdateForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
@@ -190,7 +194,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             wonsPortalReferenceForm,
             List.of(caseEventView),
             activePortalReferencesView,
-            nominationConsultationResponseForm
+            nominationConsultationResponseForm,
+            nominationRequestUpdateForm
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -243,6 +248,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var pearsPortalReferenceForm = new PearsPortalReferenceForm();
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -253,6 +259,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -272,7 +279,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "wonsPortalReferenceForm",
         "caseEvents",
         "activePortalReferencesView",
-        "nominationConsultationResponseForm"
+        "nominationConsultationResponseForm",
+        "nominationRequestUpdateForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
@@ -295,7 +303,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             wonsPortalReferenceForm,
             List.of(caseEventView),
             activePortalReferencesView,
-            nominationConsultationResponseForm
+            nominationConsultationResponseForm,
+            nominationRequestUpdateForm
         );
 
     assertBreadcrumbs(result, nominationDetail);
@@ -341,6 +350,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var pearsPortalReferenceForm = new PearsPortalReferenceForm();
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -351,6 +361,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -370,7 +381,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "caseEvents",
         "activePortalReferencesView",
         "managementActions",
-        "nominationConsultationResponseForm"
+        "nominationConsultationResponseForm",
+        "nominationRequestUpdateForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
@@ -393,7 +405,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             wonsPortalReferenceForm,
             List.of(caseEventView),
             activePortalReferencesView,
-            nominationConsultationResponseForm
+            nominationConsultationResponseForm,
+            nominationRequestUpdateForm
         );
 
     @SuppressWarnings("unchecked")
@@ -408,6 +421,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             ImmutableMap.of(
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
+                CaseProcessingActionGroup.REQUEST_UPDATE, List.of(CaseProcessingActionItem.REQUEST_UPDATE),
                 CaseProcessingActionGroup.CONSULTATIONS, List.of(
                     CaseProcessingActionItem.SEND_FOR_CONSULTATION,
                     CaseProcessingActionItem.CONSULTATION_RESPONSE
@@ -466,6 +480,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var pearsPortalReferenceForm = new PearsPortalReferenceForm();
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -476,6 +491,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withPearsPortalReferenceForm(pearsPortalReferenceForm)
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -495,7 +511,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         "wonsPortalReferenceForm",
         "caseEvents",
         "activePortalReferencesView",
-        "nominationConsultationResponseForm"
+        "nominationConsultationResponseForm",
+        "nominationRequestUpdateForm"
     );
 
     var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
@@ -518,7 +535,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             wonsPortalReferenceForm,
             List.of(caseEventView),
             activePortalReferencesView,
-            nominationConsultationResponseForm
+            nominationConsultationResponseForm,
+            nominationRequestUpdateForm
         );
 
     @SuppressWarnings("unchecked")
