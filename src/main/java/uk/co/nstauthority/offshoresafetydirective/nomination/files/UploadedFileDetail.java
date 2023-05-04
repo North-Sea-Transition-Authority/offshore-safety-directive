@@ -1,0 +1,106 @@
+package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+
+import com.google.common.annotations.VisibleForTesting;
+import java.time.Instant;
+import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import org.hibernate.annotations.GenericGenerator;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
+
+@Entity
+@Table(name = "uploaded_file_details")
+class UploadedFileDetail {
+
+  @Id
+  @GeneratedValue(generator = "uuid")
+  @GenericGenerator(name = "uuid", strategy = "uuid2")
+  // Required for JPA to resolve UUIDs on H2 databases
+  // TODO OSDOP-204 - Replace H2 with Postgres TestContainer to avoid UUID H2/JPA mapping quirk
+  @Column(columnDefinition = "uuid")
+  private UUID uuid;
+
+  @ManyToOne
+  @JoinColumn(name = "file_uuid")
+  private UploadedFile uploadedFile;
+
+  @Enumerated(EnumType.STRING)
+  private FileStatus fileStatus;
+
+  @Enumerated(EnumType.STRING)
+  private FileReferenceType referenceType;
+
+  private String referenceId;
+
+  private String purpose;
+
+  @Column(name = "uploaded_timestamp")
+  private Instant uploadedInstant;
+
+  public UploadedFileDetail() {
+  }
+
+  @VisibleForTesting
+  UploadedFileDetail(UUID uuid) {
+    this.uuid = uuid;
+  }
+
+  public UUID getUuid() {
+    return uuid;
+  }
+
+  public UploadedFile getUploadedFile() {
+    return uploadedFile;
+  }
+
+  public void setUploadedFile(UploadedFile uploadedFile) {
+    this.uploadedFile = uploadedFile;
+  }
+
+  public FileStatus getFileStatus() {
+    return fileStatus;
+  }
+
+  public void setFileStatus(FileStatus fileStatus) {
+    this.fileStatus = fileStatus;
+  }
+
+  public FileReferenceType getReferenceType() {
+    return referenceType;
+  }
+
+  public void setReferenceType(FileReferenceType referenceType) {
+    this.referenceType = referenceType;
+  }
+
+  public String getReferenceId() {
+    return referenceId;
+  }
+
+  public void setReferenceId(String referenceId) {
+    this.referenceId = referenceId;
+  }
+
+  public String getPurpose() {
+    return purpose;
+  }
+
+  public void setPurpose(String purpose) {
+    this.purpose = purpose;
+  }
+
+  public Instant getUploadedInstant() {
+    return uploadedInstant;
+  }
+
+  public void setUploadedInstant(Instant uploadedInstant) {
+    this.uploadedInstant = uploadedInstant;
+  }
+}

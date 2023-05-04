@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -31,11 +33,14 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -51,7 +56,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private NominationFileService nominationFileService;
+  private FileEndpointService fileEndpointService;
 
   @BeforeEach
   void setUp() {
@@ -119,7 +124,9 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void upload_verifyCalls() throws Exception {
+    var nominationDetailId = new NominationDetailId(123);
     var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)
         .withNominationId(NOMINATION_ID)
         .build();
@@ -140,8 +147,24 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isOk());
 
-    verify(nominationFileService).processFileUpload(nominationDetail, VirtualFolder.NOMINATION_DECISION,
-        mockMultipartFile, NominationDecisionFileController.ALLOWED_EXTENSIONS);
+    var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
+    verify(fileEndpointService).processFileUpload(
+        fileReferenceCaptor.capture(),
+        eq(NominationDecisionFileController.PURPOSE),
+        eq(VirtualFolder.NOMINATION_DECISION),
+        eq(mockMultipartFile),
+        eq(NominationDecisionFileController.ALLOWED_EXTENSIONS)
+    );
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            NominationDetailFileReference::getFileReferenceType,
+            NominationDetailFileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.NOMINATION_DETAIL,
+            String.valueOf(nominationDetailId.id())
+        );
   }
 
   @SecurityTest
@@ -204,7 +227,9 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_verifyCalls() throws Exception {
+    var nominationDetailId = new NominationDetailId(123);
     var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)
         .withNominationId(NOMINATION_ID)
         .build();
@@ -224,7 +249,21 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().isOk());
 
-    verify(nominationFileService).deleteFile(nominationDetail, new UploadedFileId(fileUuid));
+    var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
+    verify(fileEndpointService).deleteFile(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    );
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            NominationDetailFileReference::getFileReferenceType,
+            NominationDetailFileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.NOMINATION_DETAIL,
+            String.valueOf(nominationDetailId.id())
+        );
   }
 
   @SecurityTest
@@ -287,7 +326,9 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_verifyCalls() throws Exception {
+    var nominationDetailId = new NominationDetailId(123);
     var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)
         .withNominationId(NOMINATION_ID)
         .build();
@@ -304,7 +345,11 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
 
-    when(nominationFileService.handleDownload(nominationDetail, new UploadedFileId(fileUuid)))
+    var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
+    when(fileEndpointService.handleDownload(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    ))
         .thenReturn(ResponseEntity.ok(inputStreamResource));
 
     var result = mockMvc.perform(get(ReverseRouter.route(
@@ -316,5 +361,14 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            NominationDetailFileReference::getFileReferenceType,
+            NominationDetailFileReference::getReferenceId
+        )
+        .containsExactly(
+            FileReferenceType.NOMINATION_DETAIL,
+            String.valueOf(nominationDetailId.id())
+        );
   }
 }

@@ -9,14 +9,14 @@ import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @Service
 class NominationDecisionSubmissionService {
 
   private final CaseEventService caseEventService;
   private final FileUploadService fileUploadService;
-  private final NominationDetailFileService nominationDetailFileService;
+  private final UploadedFileDetailService uploadedFileDetailService;
   private final NominationDetailService nominationDetailService;
 
   public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.NOMINATION_DECISION;
@@ -24,11 +24,11 @@ class NominationDecisionSubmissionService {
   @Autowired
   NominationDecisionSubmissionService(CaseEventService caseEventService,
                                       FileUploadService fileUploadService,
-                                      NominationDetailFileService nominationDetailFileService,
+                                      UploadedFileDetailService uploadedFileDetailService,
                                       NominationDetailService nominationDetailService) {
     this.caseEventService = caseEventService;
     this.fileUploadService = fileUploadService;
-    this.nominationDetailFileService = nominationDetailFileService;
+    this.uploadedFileDetailService = uploadedFileDetailService;
     this.nominationDetailService = nominationDetailService;
   }
 
@@ -47,8 +47,7 @@ class NominationDecisionSubmissionService {
 
     fileUploadService.updateFileUploadDescriptions(nominationDecisionForm.getDecisionFiles());
 
-    nominationDetailFileService.submitAndCleanFiles(nominationDetail, nominationDecisionForm.getDecisionFiles(),
-        VIRTUAL_FOLDER);
+    uploadedFileDetailService.submitFiles(nominationDecisionForm.getDecisionFiles());
 
     nominationDetailService.updateNominationDetailStatusByDecision(
         nominationDetail,

@@ -24,7 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -34,15 +35,17 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominationDecisionFileController {
 
   public static final Set<String> ALLOWED_EXTENSIONS = Set.of(".pdf");
+  public static final String PURPOSE = "DECISION_DOCUMENT";
+  public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.NOMINATION_DECISION;
 
   private final NominationDetailService nominationDetailService;
-  private final NominationFileService nominationFileService;
+  private final FileEndpointService fileEndpointService;
 
   @Autowired
   public NominationDecisionFileController(NominationDetailService nominationDetailService,
-                                          NominationFileService nominationFileService) {
+                                          FileEndpointService fileEndpointService) {
     this.nominationDetailService = nominationDetailService;
-    this.nominationFileService = nominationFileService;
+    this.fileEndpointService = fileEndpointService;
   }
 
   @ResponseBody
@@ -51,8 +54,13 @@ public class NominationDecisionFileController {
                                  @RequestParam("file") MultipartFile multipartFile) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.processFileUpload(nominationDetail, VirtualFolder.NOMINATION_DECISION,
-        multipartFile, ALLOWED_EXTENSIONS);
+    return fileEndpointService.processFileUpload(
+        new NominationDetailFileReference(nominationDetail),
+        PURPOSE,
+        VIRTUAL_FOLDER,
+        multipartFile,
+        ALLOWED_EXTENSIONS
+    );
   }
 
   @ResponseBody
@@ -61,7 +69,7 @@ public class NominationDecisionFileController {
                                  @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.deleteFile(nominationDetail, uploadedFileId);
+    return fileEndpointService.deleteFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
   @ResponseBody
@@ -70,7 +78,7 @@ public class NominationDecisionFileController {
                                                       @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.handleDownload(nominationDetail, uploadedFileId);
+    return fileEndpointService.handleDownload(new NominationDetailFileReference(nominationDetail), uploadedFileId);
   }
 
   private NominationDetail getLatestSubmittedNominationDetail(NominationId nominationId) {
