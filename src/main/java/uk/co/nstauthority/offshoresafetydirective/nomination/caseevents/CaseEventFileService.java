@@ -13,17 +13,17 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailView;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 
 @Service
 public class CaseEventFileService {

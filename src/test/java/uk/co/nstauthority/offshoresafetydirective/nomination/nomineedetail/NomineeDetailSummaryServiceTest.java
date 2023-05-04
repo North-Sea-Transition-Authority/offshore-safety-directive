@@ -37,9 +37,9 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 

@@ -26,11 +26,11 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {

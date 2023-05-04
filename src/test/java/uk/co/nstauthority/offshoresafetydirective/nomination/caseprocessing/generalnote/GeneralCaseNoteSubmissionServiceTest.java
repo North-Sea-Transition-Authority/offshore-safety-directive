@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralCaseNoteSubmissionServiceTest {

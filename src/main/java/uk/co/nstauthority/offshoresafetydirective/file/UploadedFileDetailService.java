@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.time.Clock;
 import java.util.Collection;
@@ -10,12 +10,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @Service
 public class UploadedFileDetailService {

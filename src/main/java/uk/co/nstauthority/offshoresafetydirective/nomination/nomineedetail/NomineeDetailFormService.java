@@ -5,12 +5,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FilePurpose;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 
 @Service
 class NomineeDetailFormService {

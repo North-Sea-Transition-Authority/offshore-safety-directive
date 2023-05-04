@@ -5,11 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @Service
 class NominationDecisionSubmissionService {

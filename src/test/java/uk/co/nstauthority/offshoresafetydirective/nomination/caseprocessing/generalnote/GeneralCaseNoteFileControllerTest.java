@@ -41,10 +41,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;

@@ -1,9 +1,7 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files.reference;
+package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
 
 public class NominationDetailFileReference implements FileReference {
   private final NominationDetailId nominationDetailId;

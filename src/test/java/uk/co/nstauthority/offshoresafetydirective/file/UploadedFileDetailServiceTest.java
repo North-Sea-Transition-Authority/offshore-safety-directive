@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
@@ -18,17 +18,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @ExtendWith(MockitoExtension.class)
 class UploadedFileDetailServiceTest {

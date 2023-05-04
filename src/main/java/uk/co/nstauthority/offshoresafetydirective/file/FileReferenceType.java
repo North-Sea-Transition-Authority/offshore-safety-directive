@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 public enum FileReferenceType {
 

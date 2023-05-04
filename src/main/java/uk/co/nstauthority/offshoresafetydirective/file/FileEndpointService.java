@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -11,14 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
-import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadUtils;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadValidationService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @Service
 public class FileEndpointService {

@@ -1,6 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
-
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 public record UploadedFileDetailView(
     UploadedFileId uploadedFileId,

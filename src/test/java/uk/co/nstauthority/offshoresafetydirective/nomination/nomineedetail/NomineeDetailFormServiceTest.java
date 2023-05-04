@@ -24,8 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailFormServiceTest {

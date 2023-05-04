@@ -5,8 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSectionSubmissionService;
 
 @Service

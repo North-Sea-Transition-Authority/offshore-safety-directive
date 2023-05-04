@@ -1,9 +1,12 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.time.Instant;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileStatus;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileDetail;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 
 public class UploadedFileDetailTestUtil {

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,19 +22,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.InputStreamResource;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
-import uk.co.nstauthority.offshoresafetydirective.file.FileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadUtils;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadValidationService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadErrorType;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
 
 @ExtendWith(MockitoExtension.class)
 class FileEndpointServiceTest {

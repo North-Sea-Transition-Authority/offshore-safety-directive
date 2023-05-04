@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.files;
+package uk.co.nstauthority.offshoresafetydirective.file;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.time.Instant;
@@ -13,7 +13,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
 
 @Entity
 @Table(name = "uploaded_file_details")

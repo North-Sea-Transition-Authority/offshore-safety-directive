@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileReferenceType;
 
 public class CaseEventFileReference implements FileReference {
 
