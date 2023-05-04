@@ -100,6 +100,11 @@ public class CaseEventService {
     caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
   }
 
+  @Transactional
+  public void createUpdateRequestEvent(NominationDetail nominationDetail, String reason) {
+    createEvent(CaseEventType.UPDATE_REQUESTED, reason, clock.instant(), nominationDetail);
+  }
+
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant eventInstant,
                                 NominationDetail nominationDetail) {
     return createEvent(caseEventType, null, comment, eventInstant, nominationDetail);

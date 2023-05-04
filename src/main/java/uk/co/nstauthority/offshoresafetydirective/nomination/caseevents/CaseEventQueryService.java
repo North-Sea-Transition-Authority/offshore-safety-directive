@@ -152,6 +152,12 @@ public class CaseEventQueryService {
             .withFileViews(uploadedFileViews)
             .withCustomFilePrompt("Consultation response documents")
             .build();
+        case UPDATE_REQUESTED -> caseEventBuilder
+            .withCustomBodyPrompt("Reason for update")
+            .withBody(caseEvent.getComment())
+            .withCustomDatePrompt("Date requested")
+            .withCustomCreatorPrompt("Requested by")
+            .build();
       };
     };
   }

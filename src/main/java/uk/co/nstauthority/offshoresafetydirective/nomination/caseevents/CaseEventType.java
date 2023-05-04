@@ -10,7 +10,8 @@ public enum CaseEventType {
   GENERAL_NOTE("General note"),
   NOMINATION_SUBMITTED("Nomination submitted"),
   SENT_FOR_CONSULTATION("Sent for consultation"),
-  CONSULTATION_RESPONSE("Consultation response")
+  CONSULTATION_RESPONSE("Consultation response"),
+  UPDATE_REQUESTED("Update requested"),
   ;
 
   private final String screenDisplayText;

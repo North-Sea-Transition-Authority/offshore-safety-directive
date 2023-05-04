@@ -43,16 +43,22 @@ public class NominationRequestUpdateController {
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
+  private final NominationRequestUpdateValidator nominationRequestUpdateValidator;
+  private final NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
+
 
   @Autowired
   public NominationRequestUpdateController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       ControllerHelperService controllerHelperService,
-      NominationDetailService nominationDetailService
-  ) {
+      NominationDetailService nominationDetailService,
+      NominationRequestUpdateValidator nominationRequestUpdateValidator,
+      NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
+    this.nominationRequestUpdateValidator = nominationRequestUpdateValidator;
+    this.nominationRequestUpdateSubmissionService = nominationRequestUpdateSubmissionService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.REQUEST_UPDATE)
@@ -74,6 +80,8 @@ public class NominationRequestUpdateController {
             nominationId.id(), NominationStatus.SUBMITTED.name()
         ))
     );
+
+    nominationRequestUpdateValidator.validate(form, bindingResult);
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationRequestUpdateForm(form)
@@ -97,6 +105,8 @@ public class NominationRequestUpdateController {
               Objects.requireNonNull(redirectAttributes),
               notificationBanner
           );
+
+          nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
 
           return ReverseRouter.redirect(
               on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId));

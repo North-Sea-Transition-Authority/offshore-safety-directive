@@ -472,6 +472,46 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
+  void getCaseEventViewsForNominationDetail_whenNominationUpdateRequestedEvent_thenVerifyResult() {
+    var caseEventType = CaseEventType.UPDATE_REQUESTED;
+    var caseEvent = caseEventBuilder
+        .withCaseEventType(caseEventType)
+        .withComment("response")
+        .build();
+
+    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
+        NOMINATION_DETAIL_VERSION))
+        .thenReturn(List.of(caseEvent));
+
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+        .thenReturn(List.of(caseEventCreator));
+
+    when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
+        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+
+    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+
+    var caseEventAssertObject = assertThat(result)
+        .hasSize(1)
+        .first();
+
+    new PropertyObjectAssert(caseEventAssertObject)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Date requested")
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("createdBy", caseEventCreator.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Requested by")
+        .hasFieldOrPropertyWithValue("nominationVersion", NOMINATION_DETAIL_VERSION)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Reason for update")
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
   void getCaseEventViewsForNominationDetail_assertSort() {
     var caseEventType = CaseEventType.GENERAL_NOTE;
     var firstCaseEventByCreatedDate = caseEventBuilder

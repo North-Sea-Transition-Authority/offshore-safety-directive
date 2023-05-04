@@ -1,22 +1,32 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -51,6 +61,12 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
+
+  @MockBean
+  private NominationRequestUpdateValidator nominationRequestUpdateValidator;
+
+  @MockBean
+  private NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
 
   private NominationDetail nominationDetail;
 
@@ -116,7 +132,33 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void requestUpdate_verifyCalls() throws Exception {
+  void requestUpdate_whenInvalidForm_verifyCalls() throws Exception {
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new ObjectError("error", "error"));
+      return invocation;
+    }).when(nominationRequestUpdateValidator).validate(any(), any());
+
+    var modelAndView = new ModelAndView("test_view");
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
+        .thenReturn(modelAndView);
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationRequestUpdateController.class).requestUpdate(NOMINATION_ID, true,
+                CaseProcessingActionIdentifier.REQUEST_UPDATE, null, null, null)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf())
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name(Objects.requireNonNull(modelAndView.getViewName())));
+
+    verifyNoInteractions(nominationRequestUpdateSubmissionService);
+  }
+
+  @Test
+  void requestUpdate_whenValidForm_verifyCalls() throws Exception {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
@@ -135,5 +177,10 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
         .andExpect(notificationBanner(expectedNotificationBanner));
+
+    verify(nominationRequestUpdateSubmissionService).submit(
+        eq(nominationDetail),
+        any(NominationRequestUpdateForm.class)
+    );
   }
 }
