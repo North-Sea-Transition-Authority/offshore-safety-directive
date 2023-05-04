@@ -24,7 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -33,18 +34,19 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
 public class NominationConsultationResponseFileController {
 
+  public static final String PURPOSE = "CONSULTATION_RESPONSE_DOCUMENT";
   static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONSULTATIONS;
 
   private final NominationDetailService nominationDetailService;
-  private final NominationFileService nominationFileService;
+  private final FileEndpointService fileEndpointService;
   private final FileUploadConfig fileUploadConfig;
 
   @Autowired
   public NominationConsultationResponseFileController(NominationDetailService nominationDetailService,
-                                                      NominationFileService nominationFileService,
+                                                      FileEndpointService fileEndpointService,
                                                       FileUploadConfig fileUploadConfig) {
     this.nominationDetailService = nominationDetailService;
-    this.nominationFileService = nominationFileService;
+    this.fileEndpointService = fileEndpointService;
     this.fileUploadConfig = fileUploadConfig;
   }
 
@@ -54,8 +56,9 @@ public class NominationConsultationResponseFileController {
                                  @RequestParam("file") MultipartFile multipartFile) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.processFileUpload(nominationDetail, VIRTUAL_FOLDER,
-        multipartFile, fileUploadConfig.getAllowedFileExtensions());
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    return fileEndpointService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
+        fileUploadConfig.getAllowedFileExtensions());
   }
 
   @ResponseBody
@@ -64,7 +67,8 @@ public class NominationConsultationResponseFileController {
                                  @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.deleteFile(nominationDetail, uploadedFileId);
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    return fileEndpointService.deleteFile(fileReference, uploadedFileId);
   }
 
   @ResponseBody
@@ -73,7 +77,8 @@ public class NominationConsultationResponseFileController {
                                                       @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
 
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
-    return nominationFileService.handleDownload(nominationDetail, uploadedFileId);
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    return fileEndpointService.handleDownload(fileReference, uploadedFileId);
   }
 
   private NominationDetail getLatestSubmittedNominationDetail(NominationId nominationId) {

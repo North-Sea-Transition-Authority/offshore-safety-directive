@@ -11,11 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @ExtendWith(MockitoExtension.class)
 class ConfirmNominationAppointmentSubmissionServiceTest {
@@ -24,7 +23,7 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
   private CaseEventService caseEventService;
 
   @Mock
-  private NominationDetailFileService nominationDetailFileService;
+  private UploadedFileDetailService uploadedFileDetailService;
 
   @Mock
   private NominationDetailStatusService nominationDetailStatusService;
@@ -53,8 +52,7 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
     verify(caseEventService).createAppointmentConfirmationEvent(nominationDetail, date, comment,
         List.of(fileUploadForm));
 
-    verify(nominationDetailFileService).submitAndCleanFiles(nominationDetail, List.of(fileUploadForm),
-        VirtualFolder.CONFIRM_APPOINTMENTS);
+    verify(uploadedFileDetailService).submitFiles(List.of(fileUploadForm));
 
     verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
     verify(appointmentConfirmedEventPublisher).publish(nominationDetail);

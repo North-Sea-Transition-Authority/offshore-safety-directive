@@ -4,25 +4,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @Service
 class GeneralCaseNoteSubmissionService {
 
   private final CaseEventService caseEventService;
   private final FileUploadService fileUploadService;
-  private final NominationDetailFileService nominationDetailFileService;
+  private final UploadedFileDetailService uploadedFileDetailService;
 
   @Autowired
   GeneralCaseNoteSubmissionService(CaseEventService caseEventService,
                                    FileUploadService fileUploadService,
-                                   NominationDetailFileService nominationDetailFileService) {
+                                   UploadedFileDetailService uploadedFileDetailService) {
     this.caseEventService = caseEventService;
     this.fileUploadService = fileUploadService;
-    this.nominationDetailFileService = nominationDetailFileService;
+    this.uploadedFileDetailService = uploadedFileDetailService;
   }
 
   @Transactional
@@ -35,8 +34,7 @@ class GeneralCaseNoteSubmissionService {
     );
 
     fileUploadService.updateFileUploadDescriptions(form.getCaseNoteFiles());
-
-    nominationDetailFileService.submitAndCleanFiles(nominationDetail, form.getCaseNoteFiles(), VirtualFolder.CASE_NOTES);
+    uploadedFileDetailService.submitFiles(form.getCaseNoteFiles());
   }
 
 }

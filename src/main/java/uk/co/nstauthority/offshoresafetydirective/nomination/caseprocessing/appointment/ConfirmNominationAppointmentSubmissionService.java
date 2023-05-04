@@ -3,29 +3,26 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.app
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @Service
 class ConfirmNominationAppointmentSubmissionService {
 
   private final CaseEventService caseEventService;
-  private final NominationDetailFileService nominationDetailFileService;
+  private final UploadedFileDetailService uploadedFileDetailService;
   private final NominationDetailStatusService nominationDetailStatusService;
   private final AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher;
 
-  public static final VirtualFolder VIRTUAL_FOLDER = VirtualFolder.CONFIRM_APPOINTMENTS;
-
   @Autowired
   ConfirmNominationAppointmentSubmissionService(CaseEventService caseEventService,
-                                                NominationDetailFileService nominationDetailFileService,
+                                                UploadedFileDetailService uploadedFileDetailService,
                                                 NominationDetailStatusService nominationDetailStatusService,
                                                 AppointmentConfirmedEventPublisher appointmentConfirmedEventPublisher) {
     this.caseEventService = caseEventService;
-    this.nominationDetailFileService = nominationDetailFileService;
+    this.uploadedFileDetailService = uploadedFileDetailService;
     this.nominationDetailStatusService = nominationDetailStatusService;
     this.appointmentConfirmedEventPublisher = appointmentConfirmedEventPublisher;
   }
@@ -47,14 +44,8 @@ class ConfirmNominationAppointmentSubmissionService {
         confirmNominationAppointmentForm.getFiles()
     );
 
-    nominationDetailFileService.submitAndCleanFiles(
-        nominationDetail,
-        confirmNominationAppointmentForm.getFiles(),
-        VIRTUAL_FOLDER
-    );
-
+    uploadedFileDetailService.submitFiles(confirmNominationAppointmentForm.getFiles());
     nominationDetailStatusService.confirmAppointment(nominationDetail);
-
     appointmentConfirmedEventPublisher.publish(nominationDetail);
   }
 

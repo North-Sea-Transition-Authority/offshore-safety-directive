@@ -118,24 +118,31 @@ class CaseEventFileServiceTest {
   }
 
   @Test
-  void getFileViewMapFromCaseEvents_whenTwoLinkedFiles_thenAssertResult() {
+  void getFileViewMapFromCaseEvents_whenMultipleLinkedFiles_thenAssertResult() {
     var firstFile = UploadedFileTestUtil.builder()
-        .withFilename("File A")
+        .withFilename("File a")
         .build();
     var secondFile = UploadedFileTestUtil.builder()
-        .withFilename("File B")
+        .withFilename("File B") // Ensure sort is not case-sensitive
+        .build();
+    var thirdFile = UploadedFileTestUtil.builder()
+        .withFilename("File c")
         .build();
     var firstUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(firstFile);
     var secondUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(secondFile);
+    var thirdUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(thirdFile);
     var caseEvent = CaseEventTestUtil.builder().build();
 
     var firstFileDetailViewByFileName = new UploadedFileDetailView(
         new UploadedFileId(firstFile.getId()),
         caseEvent.getUuid().toString()
     );
-
     var secondFileDetailViewByFileName = new UploadedFileDetailView(
         new UploadedFileId(secondFile.getId()),
+        caseEvent.getUuid().toString()
+    );
+    var thirdFileDetailViewByFileName = new UploadedFileDetailView(
+        new UploadedFileId(thirdFile.getId()),
         caseEvent.getUuid().toString()
     );
 
@@ -143,13 +150,16 @@ class CaseEventFileServiceTest {
         FileReferenceType.CASE_EVENT,
         Set.of(caseEvent.getUuid().toString())
     ))
-        .thenReturn(List.of(secondFileDetailViewByFileName, firstFileDetailViewByFileName));
+        .thenReturn(
+            List.of(secondFileDetailViewByFileName, thirdFileDetailViewByFileName, firstFileDetailViewByFileName)
+        );
 
     when(fileUploadService.getUploadedFileViewList(List.of(
         new UploadedFileId(secondFile.getId()),
+        new UploadedFileId(thirdFile.getId()),
         new UploadedFileId(firstFile.getId())
     )))
-        .thenReturn(List.of(firstUploadedFileView, secondUploadedFileView));
+        .thenReturn(List.of(secondUploadedFileView, thirdUploadedFileView, firstUploadedFileView));
 
     var result = caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent));
 
@@ -162,7 +172,6 @@ class CaseEventFileServiceTest {
                 new UploadedFileId(UUID.fromString(firstUploadedFileView.fileId()))
             ))
     );
-
     var expectedSecondFileView = new CaseEventFileView(
         secondUploadedFileView,
         ReverseRouter.route(on(CaseEventFileDownloadController.class)
@@ -172,6 +181,15 @@ class CaseEventFileServiceTest {
                 new UploadedFileId(UUID.fromString(secondUploadedFileView.fileId()))
             ))
     );
+    var expectedThirdFileView = new CaseEventFileView(
+        thirdUploadedFileView,
+        ReverseRouter.route(on(CaseEventFileDownloadController.class)
+            .download(
+                new NominationId(caseEvent.getNomination().getId()),
+                new CaseEventId(caseEvent.getUuid()),
+                new UploadedFileId(UUID.fromString(thirdUploadedFileView.fileId()))
+            ))
+    );
 
     assertThat(result)
         .containsOnlyKeys(caseEvent)
@@ -179,7 +197,8 @@ class CaseEventFileServiceTest {
         .asList()
         .containsExactly(
             expectedFirstFileView,
-            expectedSecondFileView
+            expectedSecondFileView,
+            expectedThirdFileView
         );
   }
 

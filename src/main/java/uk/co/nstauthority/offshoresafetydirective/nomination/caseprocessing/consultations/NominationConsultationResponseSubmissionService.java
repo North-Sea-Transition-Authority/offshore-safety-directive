@@ -6,22 +6,22 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.files.NominationDetailFileService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.UploadedFileDetailService;
 
 @Service
 class NominationConsultationResponseSubmissionService {
 
   private final FileUploadService fileUploadService;
-  private final NominationDetailFileService nominationDetailFileService;
+  private final UploadedFileDetailService uploadedFileDetailService;
 
   private final CaseEventService caseEventService;
 
   @Autowired
   NominationConsultationResponseSubmissionService(FileUploadService fileUploadService,
-                                                  NominationDetailFileService nominationDetailFileService,
+                                                  UploadedFileDetailService uploadedFileDetailService,
                                                   CaseEventService caseEventService) {
     this.fileUploadService = fileUploadService;
-    this.nominationDetailFileService = nominationDetailFileService;
+    this.uploadedFileDetailService = uploadedFileDetailService;
     this.caseEventService = caseEventService;
   }
 
@@ -29,8 +29,7 @@ class NominationConsultationResponseSubmissionService {
   public void submitConsultationResponse(NominationDetail nominationDetail, NominationConsultationResponseForm form) {
     fileUploadService.updateFileUploadDescriptions(form.getConsultationResponseFiles());
 
-    nominationDetailFileService.submitAndCleanFiles(nominationDetail, form.getConsultationResponseFiles(),
-        NominationConsultationResponseFileController.VIRTUAL_FOLDER);
+    uploadedFileDetailService.submitFiles(form.getConsultationResponseFiles());
 
     caseEventService.createConsultationResponseEvent(
         nominationDetail,

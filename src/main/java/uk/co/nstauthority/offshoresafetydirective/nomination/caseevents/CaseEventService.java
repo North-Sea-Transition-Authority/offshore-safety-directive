@@ -78,14 +78,14 @@ public class CaseEventService {
     var caseEvent = createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
         appointmentEffectiveDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
 
-    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
+    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
   }
 
   @Transactional
   public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body,
                                          List<FileUploadForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
-    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
+    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
   }
 
   @Transactional
@@ -97,7 +97,7 @@ public class CaseEventService {
   public void createConsultationResponseEvent(NominationDetail nominationDetail, String responseText,
                                               List<FileUploadForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.CONSULTATION_RESPONSE, responseText, clock.instant(), nominationDetail);
-    caseEventFileService.finalizeFileUpload(caseEvent, fileUploadForms);
+    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
   }
 
   private CaseEvent createEvent(CaseEventType caseEventType, String comment, Instant eventInstant,

@@ -431,6 +431,6 @@ class CaseEventServiceTest {
             nominationVersion
         );
 
-    verify(caseEventFileService).finalizeFileUpload(captor.getValue(), List.of(fileUploadForm));
+    verify(caseEventFileService).finalizeFileUpload(detail, captor.getValue(), List.of(fileUploadForm));
   }
 }

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -16,9 +17,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +41,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationFileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.FileEndpointService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.FileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.files.reference.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -54,7 +59,7 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
       .build();
 
   @MockBean
-  private NominationFileEndpointService nominationFileEndpointService;
+  private FileEndpointService fileEndpointService;
 
   @MockBean
   private FileUploadConfig fileUploadConfig;
@@ -77,15 +82,22 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
     var validUploadResult = FileUploadResult.valid(fileId.toString(), fileName, mockMultipartFile);
 
-    when(nominationFileEndpointService.handleUpload(NOMINATION_ID, mockMultipartFile,
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.processFileUpload(
+        fileReference,
+        ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES,
+        mockMultipartFile,
         fileUploadConfig.getAllowedFileExtensions()
-    ))
-        .thenReturn(Optional.of(validUploadResult));
+    )).thenReturn(validUploadResult);
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -113,15 +125,22 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
     var validUploadResult = FileUploadResult.valid(fileId.toString(), fileName, mockMultipartFile);
 
-    when(nominationFileEndpointService.handleUpload(NOMINATION_ID, mockMultipartFile,
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.processFileUpload(
+        fileReference,
+        ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES,
+        mockMultipartFile,
         fileUploadConfig.getAllowedFileExtensions()
-    ))
-        .thenReturn(Optional.of(validUploadResult));
+    )).thenReturn(validUploadResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS))
@@ -149,16 +168,20 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
     )).thenReturn(Optional.of(nominationDetail));
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
     var validUploadResult = FileUploadResult.valid(fileId.toString(), fileName, mockMultipartFile);
 
-    when(nominationFileEndpointService.handleUpload(NOMINATION_ID, mockMultipartFile,
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.processFileUpload(
+        fileReference,
+        ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES, fileUploadConfig.getAllowedFileExtensions()))
-        .thenReturn(Optional.of(validUploadResult));
+        mockMultipartFile,
+        fileUploadConfig.getAllowedFileExtensions()
+    )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(
             on(ConfirmNominationAppointmentFileController.class).upload(NOMINATION_ID, null)))
@@ -178,11 +201,17 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
     var fileUuid = UUID.randomUUID();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     var fileDeleteResult = FileDeleteResult.success(fileUuid.toString());
 
-    when(nominationFileEndpointService.handleDelete(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(fileDeleteResult));
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.deleteFile(fileReference, new UploadedFileId(fileUuid)))
+        .thenReturn(fileDeleteResult);
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -209,11 +238,17 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
     var fileUuid = UUID.randomUUID();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     var fileDeleteResult = FileDeleteResult.success(fileUuid.toString());
 
-    when(nominationFileEndpointService.handleDelete(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(fileDeleteResult));
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.deleteFile(fileReference, new UploadedFileId(fileUuid)))
+        .thenReturn(fileDeleteResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS))
@@ -241,12 +276,12 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
     )).thenReturn(Optional.of(nominationDetail));
 
-    when(nominationFileEndpointService.handleDelete(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(FileDeleteResult.success(fileUuid.toString())));
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.deleteFile(fileReference, new UploadedFileId(fileUuid)))
+        .thenReturn(FileDeleteResult.success(fileUuid.toString()));
 
     mockMvc.perform(post(ReverseRouter.route(
             on(ConfirmNominationAppointmentFileController.class).delete(NOMINATION_ID, new UploadedFileId(fileUuid))))
@@ -268,12 +303,12 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        EnumSet.of(NominationStatus.AWAITING_CONFIRMATION)
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
     )).thenReturn(Optional.of(nominationDetail));
 
-    when(nominationFileEndpointService.handleDownload(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(ResponseEntity.ok(new InputStreamResource(InputStream.nullInputStream()))));
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.handleDownload(fileReference, new UploadedFileId(fileUuid)))
+        .thenReturn(ResponseEntity.ok(new InputStreamResource(InputStream.nullInputStream())));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -301,13 +336,18 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    when(nominationFileEndpointService.handleDownload(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(response));
+    var fileReference = new NominationDetailFileReference(nominationDetail);
+    when(fileEndpointService.handleDownload(fileReference, new UploadedFileId(fileUuid)))
+        .thenReturn(response);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS))
@@ -333,13 +373,21 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        Set.of(NominationStatus.AWAITING_CONFIRMATION)
+    )).thenReturn(Optional.of(nominationDetail));
+
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    when(nominationFileEndpointService.handleDownload(NOMINATION_ID, new UploadedFileId(fileUuid),
-        ConfirmNominationAppointmentFileController.ALLOWED_STATUSES))
-        .thenReturn(Optional.of(response));
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileReference.class);
+    when(fileEndpointService.handleDownload(
+        fileReferenceCaptor.capture(),
+        eq(new UploadedFileId(fileUuid))
+    ))
+        .thenReturn(response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
             on(ConfirmNominationAppointmentFileController.class).download(NOMINATION_ID, new UploadedFileId(fileUuid))))
@@ -350,6 +398,16 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
+
+    assertThat(fileReferenceCaptor.getValue())
+        .extracting(
+            FileReference::getFileReferenceType,
+            FileReference::getReferenceId
+        )
+        .containsExactly(
+            new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
+            new NominationDetailFileReference(nominationDetail).getReferenceId()
+        );
   }
 
 }
