@@ -1,8 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -29,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -47,6 +53,9 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
 
   @MockBean
   private CaseEventQueryService caseEventQueryService;
+
+  @MockBean
+  private NominationUpdateService nominationUpdateService;
 
   private NominationDetail nominationDetail;
 
@@ -84,7 +93,7 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID)),
-            status().isOk(),
+            status().is3xxRedirection(),
             status().isForbidden()
         )
         .test();
@@ -105,7 +114,7 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID)),
-            status().isOk(),
+            status().is3xxRedirection(),
             status().isForbidden()
         )
         .test();
@@ -151,6 +160,52 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
             on(NominationStartUpdateController.class).renderStartUpdate(NOMINATION_ID)))
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void startUpdate_whenNoNominationDetailFound_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf()))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void startUpdate_verifyCallsAndRedirect() throws Exception {
+
+    var reasonForUpdate = "reason";
+    when(caseEventQueryService.getLatestReasonForUpdate(nominationDetail)).thenReturn(Optional.of(reasonForUpdate));
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf()))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(
+            redirectedUrl(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))));
+
+    verify(nominationUpdateService).createDraftUpdate(nominationDetail);
+  }
+
+  @Test
+  void startUpdate_whenNoReasonForUpdate_verifyForbidden() throws Exception {
+
+    when(caseEventQueryService.getLatestReasonForUpdate(nominationDetail)).thenReturn(Optional.empty());
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+
+    verifyNoInteractions(nominationUpdateService);
   }
 
 }

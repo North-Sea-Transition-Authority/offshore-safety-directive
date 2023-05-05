@@ -2,16 +2,19 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -22,12 +25,12 @@ class NominationServiceTest {
 
   private static final Instant instant = Instant.parse("2021-03-16T10:15:30Z");
 
-  private static NominationRepository nominationRepository;
-  private static NominationDetailRepository nominationDetailRepository;
-  private static NominationService nominationService;
+  private NominationRepository nominationRepository;
+  private NominationDetailRepository nominationDetailRepository;
+  private NominationService nominationService;
 
-  @BeforeAll
-  static void setup() {
+  @BeforeEach
+  void setup() {
     nominationRepository = mock(NominationRepository.class);
     nominationDetailRepository = mock(NominationDetailRepository.class);
     Clock clock = Clock.fixed(Instant.from(instant), ZoneId.systemDefault());
@@ -94,5 +97,56 @@ class NominationServiceTest {
     assertThat(resultingNomination.get())
         .extracting(nominationDto -> nominationDto.nominationId().id())
         .isEqualTo(expectedNomination.getId());
+  }
+
+  @Test
+  void startNominationUpdate() {
+    var detailVersion = 2;
+    var nomination = NominationTestUtil.builder().build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .withVersion(detailVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+    nominationService.startNominationUpdate(nominationDetail);
+
+    var nominationDetailCaptor = ArgumentCaptor.forClass(NominationDetail.class);
+
+    verify(nominationDetailRepository).save(nominationDetailCaptor.capture());
+
+    assertThat(nominationDetailCaptor.getValue())
+        .extracting(
+            NominationDetail::getNomination,
+            NominationDetail::getVersion,
+            NominationDetail::getStatus,
+            NominationDetail::getCreatedInstant
+        )
+        .containsExactly(
+            nomination,
+            detailVersion + 1,
+            NominationStatus.DRAFT,
+            instant
+        );
+
+    verifyNoMoreInteractions(nominationDetailRepository);
+  }
+
+  @Test
+  void startNominationUpdate_whenNominationDetailStatusIsDraft_thenVerifyError() {
+    var detailVersion = 2;
+    var nomination = NominationTestUtil.builder().build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .withVersion(detailVersion)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    assertThatThrownBy(() -> nominationService.startNominationUpdate(nominationDetail))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Cannot start an update on a draft nomination [%d]".formatted(
+            nominationDetail.getNomination().getId()
+        ));
+
+    verifyNoInteractions(nominationDetailRepository);
   }
 }

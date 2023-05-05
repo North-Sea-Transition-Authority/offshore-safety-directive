@@ -41,6 +41,24 @@ public class NominationService {
     return nominationDetailRepository.save(nominationDetail);
   }
 
+  @Transactional
+  public void startNominationUpdate(NominationDetail nominationDetail) {
+    if (NominationStatus.DRAFT.equals(nominationDetail.getStatus())) {
+      throw new IllegalStateException(
+          "Cannot start an update on a draft nomination [%d]".formatted(
+              nominationDetail.getNomination().getId()
+          ));
+    }
+    var currentNominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    var nomination = nominationDetail.getNomination();
+    var detailUpdate = new NominationDetail();
+    detailUpdate.setNomination(nomination);
+    detailUpdate.setCreatedInstant(clock.instant());
+    detailUpdate.setVersion(currentNominationDetailDto.version() + 1);
+    detailUpdate.setStatus(NominationStatus.DRAFT);
+    nominationDetailRepository.save(detailUpdate);
+  }
+
   public Nomination getNominationByIdOrError(NominationId nominationId) {
     return nominationRepository.findById(nominationId.id())
         .orElseThrow(() -> new OsdEntityNotFoundException(
