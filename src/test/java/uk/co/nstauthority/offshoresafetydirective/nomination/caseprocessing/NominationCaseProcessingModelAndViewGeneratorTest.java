@@ -419,6 +419,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(managementActionGroupItemMap)
         .containsExactlyEntriesOf(
             ImmutableMap.of(
+                CaseProcessingActionGroup.UPDATE_NOMINATION, List.of(CaseProcessingActionItem.UPDATE_NOMINATION),
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
                 CaseProcessingActionGroup.REQUEST_UPDATE, List.of(CaseProcessingActionItem.REQUEST_UPDATE),

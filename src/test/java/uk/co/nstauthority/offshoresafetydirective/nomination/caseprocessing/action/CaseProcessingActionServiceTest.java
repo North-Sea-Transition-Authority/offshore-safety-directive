@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.act
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -29,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gene
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationStartUpdateController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +65,7 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationQaChecksController.class).submitQa(nominationId, true, CaseProcessingActionIdentifier.QA, null,
                     null, null)),
-            Map.of()
+            Collections.emptyMap()
         );
   }
 
@@ -86,7 +88,7 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(WithdrawNominationController.class).withdrawNomination(nominationId, true,
                     CaseProcessingActionIdentifier.WITHDRAW, null, null, null)),
-            Map.of()
+            Collections.emptyMap()
         );
   }
 
@@ -212,7 +214,7 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationPortalReferenceController.class).updatePearsReferences(nominationId, true,
                     CaseProcessingActionIdentifier.PEARS_REFERENCES, null, null, null)),
-            Map.of()
+            Collections.emptyMap()
         );
   }
 
@@ -235,7 +237,7 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationPortalReferenceController.class).updateWonsReferences(nominationId, true,
                     CaseProcessingActionIdentifier.WONS_REFERENCES, null, null, null)),
-            Map.of()
+            Collections.emptyMap()
         );
   }
 
@@ -258,7 +260,7 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationConsultationRequestController.class).requestConsultation(nominationId, true,
                     CaseProcessingActionIdentifier.SEND_FOR_CONSULTATION, null)),
-            Map.of()
+            Collections.emptyMap()
         );
 
   }
@@ -311,7 +313,29 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationRequestUpdateController.class).requestUpdate(nominationId, true,
                     CaseProcessingActionIdentifier.REQUEST_UPDATE, null, null, null)),
-            Map.of()
+            Collections.emptyMap()
+        );
+  }
+
+  @Test
+  void createUpdateNominationAction() {
+    var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+    var result = caseProcessingActionService.createUpdateNominationAction(nominationId);
+
+    assertThat(result)
+        .extracting(
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
+        ).containsExactly(
+            CaseProcessingActionItem.UPDATE_NOMINATION,
+            CaseProcessingActionGroup.UPDATE_NOMINATION,
+            null,
+            ReverseRouter.route(
+                on(NominationStartUpdateController.class).renderStartUpdate(nominationId)),
+            Collections.emptyMap()
         );
   }
 }

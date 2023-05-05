@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.act
 
 public enum CaseProcessingActionItem {
 
+  UPDATE_NOMINATION("Update nomination", 5, CaseProcessingActionIdentifier.REQUEST_UPDATE),
   GENERAL_CASE_NOTE("Add a case note", 10, CaseProcessingActionIdentifier.GENERAL_NOTE),
   QA_CHECKS("Complete QA checks", 20, CaseProcessingActionIdentifier.QA),
   REQUEST_UPDATE("Request update", 30, CaseProcessingActionIdentifier.REQUEST_UPDATE),
@@ -11,8 +12,7 @@ public enum CaseProcessingActionItem {
   WITHDRAW("Withdraw nomination", 70, CaseProcessingActionIdentifier.WITHDRAW),
   CONFIRM_APPOINTMENT("Confirm appointment", 80, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT),
   PEARS_REFERENCE("Update related PEARS applications", 90, CaseProcessingActionIdentifier.PEARS_REFERENCES),
-  WONS_REFERENCE("Update related WONS applications", 100, CaseProcessingActionIdentifier.WONS_REFERENCES)
-  ;
+  WONS_REFERENCE("Update related WONS applications", 100, CaseProcessingActionIdentifier.WONS_REFERENCES);
 
   private final String actionText;
   private final int displayOrder;

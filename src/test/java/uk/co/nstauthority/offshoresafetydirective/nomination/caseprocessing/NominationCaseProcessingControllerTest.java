@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,6 +11,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
@@ -74,6 +77,11 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGE_USER))
         .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
@@ -126,6 +134,22 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk())
         .andExpect(view().name(viewName));
+  }
+
+  @Test
+  void renderCaseProcessing_whenNoSubmittedNomination_thenNotFound() throws Exception {
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
+                .with(user(NOMINATION_MANAGE_USER))
+        )
+        .andExpect(status().isNotFound());
+
+    verifyNoInteractions(nominationCaseProcessingModelAndViewGenerator);
   }
 
 }

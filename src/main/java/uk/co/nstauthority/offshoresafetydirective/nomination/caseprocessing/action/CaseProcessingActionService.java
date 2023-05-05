@@ -23,6 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gene
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationStartUpdateController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.withdraw.WithdrawNominationController;
 
 @Service
@@ -220,6 +221,16 @@ public class CaseProcessingActionService {
             caseProcessingAction,
             ReverseRouter.route(on(NominationRequestUpdateController.class)
                 .requestUpdate(nominationId, true, caseProcessingAction.value(), null, null, null))
+        )
+        .build();
+  }
+
+  public CaseProcessingAction createUpdateNominationAction(NominationId nominationId) {
+    return CaseProcessingAction.builder(
+            CaseProcessingActionItem.UPDATE_NOMINATION,
+            CaseProcessingActionGroup.UPDATE_NOMINATION,
+            null,
+            ReverseRouter.route(on(NominationStartUpdateController.class).renderStartUpdate(nominationId))
         )
         .build();
   }

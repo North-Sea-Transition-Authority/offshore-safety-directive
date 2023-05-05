@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.act
 
 public enum CaseProcessingActionGroup {
 
+  UPDATE_NOMINATION("Update nomination", 5),
   ADD_CASE_NOTE("Add a case note", 10),
   COMPLETE_QA_CHECKS("Complete QA checks", 20),
   REQUEST_UPDATE("Request update", 30),

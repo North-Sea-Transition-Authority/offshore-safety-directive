@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -36,7 +38,14 @@ public class NominationCaseProcessingController {
   @GetMapping
   public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId) {
 
-    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ).orElseThrow(() -> new OsdEntityNotFoundException(
+        "No NominationDetail found with Nomination ID [%d] in a post submission status".formatted(
+            nominationId.id()
+        )
+    ));
 
     var modelAndViewDto = CaseProcessingFormDto.builder().build();
     return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(

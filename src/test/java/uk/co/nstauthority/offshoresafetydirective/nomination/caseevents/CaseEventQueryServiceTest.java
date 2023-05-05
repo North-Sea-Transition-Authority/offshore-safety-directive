@@ -586,4 +586,49 @@ class CaseEventQueryServiceTest {
     );
     assertThat(result).isEmpty();
   }
+
+  @Test
+  void getLatestReasonForUpdate_whenCaseEventFound_thenAssertUpdateReason() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    var reason = "reason";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.NO_OBJECTION_DECISION)
+        .withNominationVersion(nominationVersion)
+        .withComment(reason)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.of(caseEvent));
+
+    var result = caseEventQueryService.getLatestReasonForUpdate(detail);
+
+    assertThat(result).contains(reason);
+  }
+
+  @Test
+  void getLatestReasonForUpdate_whenCaseEventNotFound_thenEmptyOptional() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        detail.getNomination(),
+        nominationVersion
+    )).thenReturn(Optional.empty());
+
+    var result = caseEventQueryService.getLatestReasonForUpdate(detail);
+
+    assertThat(result).isEmpty();
+  }
 }

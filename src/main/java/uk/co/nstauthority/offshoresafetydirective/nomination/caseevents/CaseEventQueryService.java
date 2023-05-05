@@ -52,6 +52,16 @@ public class CaseEventQueryService {
         .map(caseEvent -> LocalDate.ofInstant(caseEvent.getEventInstant(), ZoneId.systemDefault()));
   }
 
+  public Optional<String> getLatestReasonForUpdate(NominationDetail nominationDetail) {
+    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    return caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetail.getNomination(),
+        dto.version()
+    )
+        .map(CaseEvent::getComment);
+  }
+
   public List<CaseEventView> getCaseEventViewsForNominationDetail(NominationDetail nominationDetail) {
     var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
     var events = caseEventRepository.findAllByNominationAndNominationVersion(

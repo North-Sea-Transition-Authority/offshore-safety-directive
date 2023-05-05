@@ -182,7 +182,13 @@ public class NominationCaseProcessingModelAndViewGenerator {
       }
 
       if (canRequestNominationUpdate(nominationDetailDto)) {
+        // TODO OSDOP-251 - Hide this action once an update has been requested
         actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+      }
+
+      if (canUpdateNomination(nominationDetailDto)) {
+        // TODO OSDOP-251 - Make this action visible only when an update has been requested
+        actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
       }
 
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
@@ -239,6 +245,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canRequestNominationUpdate(NominationDetailDto dto) {
+    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+  }
+
+  private boolean canUpdateNomination(NominationDetailDto dto) {
     return dto.nominationStatus() == NominationStatus.SUBMITTED;
   }
 
