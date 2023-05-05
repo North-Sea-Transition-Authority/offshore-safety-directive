@@ -24,6 +24,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -32,6 +33,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -61,6 +64,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = NomineeDetailController.class)
+@IncludeAccidentRegulatorConfigurationProperties
 class NomineeDetailControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
@@ -87,6 +91,9 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   private FileAssociationService fileAssociationService;
   @MockBean
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
+
+  @Autowired
+  private AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @BeforeEach
   void setup() {
@@ -186,6 +193,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .andExpect(view().name("osd/nomination/nomineeDetails/nomineeDetail"))
         .andExpect(model().attribute("form", form))
         .andExpect(model().attribute("pageTitle", NomineeDetailController.PAGE_NAME))
+        .andExpect(model().attribute("accidentRegulatorBranding", accidentRegulatorConfigurationProperties))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))

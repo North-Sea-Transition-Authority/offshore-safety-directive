@@ -77,7 +77,10 @@
           />
       </@fdsFieldset.fieldset>
 
-      <!-- TODO OSDOP-184 - Add appendix C file guidance -->
+      <@fdsDetails.summaryDetails summaryTitle="What do I need to provide in the Appendix C document?">
+          Guidance on what should be provided in the Appendix C is defined in the
+          <@fdsAction.link linkText="${accidentRegulatorBranding.name()}'s Appendix C guidance" linkUrl=accidentRegulatorBranding.consultationGuidanceUrl() openInNewTab=true/>
+      </@fdsDetails.summaryDetails>
 
 <#--Check which is the first checkbox that is not selected and pass that as the path to the checkBoxGroupComponent to properly bind the error-->
     <#assign checkboxGroupPath=checkBoxValidationUtil.getFirstFormFieldWithError(["form.operatorHasAuthority", "form.licenseeAcknowledgeOperatorRequirements", "form.operatorHasCapacity"])/>

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
@@ -56,6 +57,7 @@ public class NomineeDetailController {
   private final FileUploadService fileUploadService;
   private final FileAssociationService fileAssociationService;
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
+  private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
   public NomineeDetailController(
@@ -65,7 +67,8 @@ public class NomineeDetailController {
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
       FileUploadConfig fileUploadConfig, FileUploadService fileUploadService,
       FileAssociationService fileAssociationService,
-      NomineeDetailSubmissionService nomineeDetailSubmissionService) {
+      NomineeDetailSubmissionService nomineeDetailSubmissionService,
+      AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nomineeDetailFormService = nomineeDetailFormService;
@@ -74,6 +77,7 @@ public class NomineeDetailController {
     this.fileUploadService = fileUploadService;
     this.fileAssociationService = fileAssociationService;
     this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
+    this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
 
   @GetMapping
@@ -122,6 +126,7 @@ public class NomineeDetailController {
         .addObject("pageTitle", PAGE_NAME)
         .addObject("portalOrganisationsRestUrl", getPortalOrganisationSearchUrl())
         .addObject("preselectedItems", getPreselectedPortalOrganisation(form))
+        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties)
         .addObject(
             "actionUrl",
             ReverseRouter.route(on(NomineeDetailController.class).saveNomineeDetail(nominationId, form, null))
