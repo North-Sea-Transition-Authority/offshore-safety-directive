@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.configuration;
+package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -11,7 +11,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.DefaultClientErrorController;
 
-class ServiceAccessDeniedHandler implements AccessDeniedHandler {
+public class ServiceAccessDeniedHandler implements AccessDeniedHandler {
 
   @Override
   public void handle(HttpServletRequest request,

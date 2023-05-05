@@ -173,7 +173,7 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void editMember_whenNotAuthorized_thenRedirectToLoginPage() throws Exception {
+  void submitRelatedInformation_whenNotLoggedIn_thenRedirectedToLoginPage() throws Exception {
     mockMvc.perform(post(ReverseRouter.route(on(RelatedInformationController.class)
             .submitRelatedInformation(new NominationId(nominationDetail), null, null)))
             .with(csrf())

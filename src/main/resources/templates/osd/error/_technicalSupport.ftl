@@ -2,10 +2,13 @@
 
 <#-- @ftlvariable name="technicalSupport" type="uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties" -->
 
-<#macro technicalSupportContactDetails technicalSupportProperties>
+<#macro technicalSupportContactDetails technicalSupportProperties technicalSupportEmailSubject="">
   <p class="govuk-body">
     Email address:<br/>
-    <@mailTo.mailToLink mailToEmailAddress=technicalSupport.emailAddress() />
+    <@mailTo.mailToLink
+      mailToEmailAddress=technicalSupport.emailAddress()
+      subjectText=technicalSupportEmailSubject
+    />
   </p>
   <p class="govuk-body">
     Telephone:<br/>

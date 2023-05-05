@@ -21,6 +21,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.ServiceAccessDeniedHandler;
 
 @Configuration
 public class WebSecurityConfiguration {

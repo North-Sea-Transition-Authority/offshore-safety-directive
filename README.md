@@ -86,6 +86,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
 | OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |
 | OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                 |
+| OSD_CAN_SHOW_STACK_TRACE                   | Boolean flag to control if the stack trace shows up when a 500 response is received (Optional)       |
 
 ### 3. Initialise the Fivium Design System
 

@@ -9,6 +9,7 @@ import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationSer
 
 @ContextConfiguration(classes = {
     DefaultPageControllerAdvice.class,
+    DefaultModelAttributeService.class,
     TopNavigationService.class,
     UserDetailService.class
 })
