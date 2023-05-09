@@ -18,9 +18,10 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -70,8 +71,10 @@ public class NomineeDetailSummaryService {
               List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
           );
 
-          var nominationId = new NominationId(nominationDetail.getNomination().getId());
-          var appendixDocuments = convertFileViewsToAppendixDocuments(nominationId, purposeAndFileViewMap);
+          var appendixDocuments = convertFileViewsToAppendixDocuments(
+              NominationDetailDto.fromNominationDetail(nominationDetail),
+              purposeAndFileViewMap
+          );
 
           return new NomineeDetailSummaryView(
               organisationUnitView,
@@ -102,7 +105,7 @@ public class NomineeDetailSummaryService {
         .orElseGet(NominatedOrganisationUnitView::new);
   }
 
-  private AppendixDocuments convertFileViewsToAppendixDocuments(NominationId nominationId,
+  private AppendixDocuments convertFileViewsToAppendixDocuments(NominationDetailDto nominationDetailDto,
                                                                 Map<FilePurpose, List<UploadedFileView>> purposeAndFileListMap) {
     var files = purposeAndFileListMap.getOrDefault(NomineeDetailAppendixFileController.PURPOSE, List.of());
     if (files.isEmpty()) {
@@ -112,13 +115,33 @@ public class NomineeDetailSummaryService {
     return files.stream()
         .map(uploadedFileView -> new FileSummaryView(
             uploadedFileView,
-            ReverseRouter.route(on(NominationFileDownloadController.class).download(
-                nominationId,
-                UploadedFileId.valueOf(uploadedFileView.getFileId())
-            ))
+            getFileDownloadUrl(nominationDetailDto, UploadedFileId.valueOf(uploadedFileView.getFileId()))
         ))
         .sorted(Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
         .collect(Collectors.collectingAndThen(Collectors.toList(), AppendixDocuments::new));
+  }
+
+  private String getFileDownloadUrl(NominationDetailDto nominationDetailDto, UploadedFileId uploadedFileId) {
+
+    var nominationId = nominationDetailDto.nominationId();
+
+    return switch (nominationDetailDto.nominationStatus()) {
+      case DRAFT -> ReverseRouter.route(
+          on(NomineeDetailAppendixFileController.class).download(
+              nominationId,
+              nominationDetailDto.nominationDetailId(),
+              uploadedFileId
+          ));
+      case SUBMITTED, AWAITING_CONFIRMATION, CLOSED, WITHDRAWN -> ReverseRouter.route(
+          on(NominationFileDownloadController.class).download(
+              nominationId,
+              uploadedFileId
+          ));
+      case DELETED -> throw new IllegalStateException(
+          "Attempted to download uploaded file with ID %s on nomination with ID %s and status %s"
+              .formatted(uploadedFileId.uuid(), nominationId.id(), NominationStatus.DELETED)
+      );
+    };
   }
 
   private Optional<SummarySectionError> getSummarySectionError(NominationDetail nominationDetail) {

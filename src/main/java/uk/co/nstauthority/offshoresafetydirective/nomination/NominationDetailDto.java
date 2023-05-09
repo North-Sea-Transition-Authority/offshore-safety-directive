@@ -3,14 +3,16 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 public record NominationDetailDto(
     NominationDetailId nominationDetailId,
     Integer version,
-    NominationStatus nominationStatus
+    NominationStatus nominationStatus,
+    NominationId nominationId
 ) {
 
   public static NominationDetailDto fromNominationDetail(NominationDetail nominationDetail) {
     return new NominationDetailDto(
         NominationDetailId.fromNominationDetail(nominationDetail),
         nominationDetail.getVersion(),
-        nominationDetail.getStatus()
+        nominationDetail.getStatus(),
+        new NominationId(nominationDetail.getNomination().getId())
     );
   }
 

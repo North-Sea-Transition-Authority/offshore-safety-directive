@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -29,17 +30,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -77,7 +80,9 @@ class NomineeDetailSummaryServiceTest {
     var plannedStartDate = LocalDate.now();
     var reasonForNomination = "Reason for nomination";
 
-    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
     var nomineeDetail = NomineeDetailTestingUtil.builder()
         .withNominationDetail(nominationDetail)
         .withNominatedOrganisationId(portalOrgId)
@@ -187,6 +192,199 @@ class NomineeDetailSummaryServiceTest {
             new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
             new NominationDetailFileReference(nominationDetail).getReferenceId()
         );
+  }
+
+  @Test
+  void getNomineeDetailSummaryView_whenNominationStatusIsDraft_andHasFile_thenAssertUrl() {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    Integer portalOrgId = 190;
+    var portalOrgName = "Portal org";
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
+
+    var plannedStartDate = LocalDate.now();
+    var reasonForNomination = "Reason for nomination";
+
+    var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .withNominatedOrganisationId(portalOrgId)
+        .withPlannedStartDate(plannedStartDate)
+        .withReasonForNomination(reasonForNomination)
+        .withOperatorHasAuthority(true)
+        .withOperatorHasCapacity(true)
+        .withLicenseeAcknowledgeOperatorRequirements(true)
+        .build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.of(nomineeDetail));
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+
+    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+
+    var uploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_a")
+        .build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(
+        Map.of(
+            NomineeDetailAppendixFileController.PURPOSE,
+            List.of(uploadedFileView)
+        ));
+
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
+
+    assertThat(result)
+        .extracting(NomineeDetailSummaryView::appendixDocuments)
+        .extracting(AppendixDocuments::documents)
+        .asList()
+        .containsExactly(
+            new FileSummaryView(
+                uploadedFileView,
+                ReverseRouter.route(on(NomineeDetailAppendixFileController.class).download(
+                    new NominationId(nominationDetail.getNomination().getId()),
+                    NominationDetailId.fromNominationDetail(nominationDetail),
+                    UploadedFileId.valueOf(uploadedFileView.fileId())
+                ))
+            )
+        );
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = {"DELETED", "DRAFT"})
+  void getNomineeDetailSummaryView_whenNominationStatusIsPostSubmission_andHasFile_thenAssertUrl(NominationStatus nominationStatus) {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(nominationStatus)
+        .build();
+
+    Integer portalOrgId = 190;
+    var portalOrgName = "Portal org";
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
+
+    var plannedStartDate = LocalDate.now();
+    var reasonForNomination = "Reason for nomination";
+
+    var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .withNominatedOrganisationId(portalOrgId)
+        .withPlannedStartDate(plannedStartDate)
+        .withReasonForNomination(reasonForNomination)
+        .withOperatorHasAuthority(true)
+        .withOperatorHasCapacity(true)
+        .withLicenseeAcknowledgeOperatorRequirements(true)
+        .build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.of(nomineeDetail));
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+
+    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+
+    var uploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_a")
+        .build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(
+        Map.of(
+            NomineeDetailAppendixFileController.PURPOSE,
+            List.of(uploadedFileView)
+        ));
+
+    var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
+
+    assertThat(result)
+        .extracting(NomineeDetailSummaryView::appendixDocuments)
+        .extracting(AppendixDocuments::documents)
+        .asList()
+        .containsExactly(
+            new FileSummaryView(
+                uploadedFileView,
+                ReverseRouter.route(on(NominationFileDownloadController.class).download(
+                    new NominationId(nominationDetail.getNomination().getId()),
+                    UploadedFileId.valueOf(uploadedFileView.fileId())
+                ))
+            )
+        );
+  }
+
+  @Test
+  void getNomineeDetailSummaryView_whenNominationStatusIsDeleted_thenException() {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DELETED)
+        .build();
+
+    Integer portalOrgId = 190;
+    var portalOrgName = "Portal org";
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .withName(portalOrgName)
+        .build();
+
+    var plannedStartDate = LocalDate.now();
+    var reasonForNomination = "Reason for nomination";
+
+    var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .withNominatedOrganisationId(portalOrgId)
+        .withPlannedStartDate(plannedStartDate)
+        .withReasonForNomination(reasonForNomination)
+        .withOperatorHasAuthority(true)
+        .withOperatorHasCapacity(true)
+        .withLicenseeAcknowledgeOperatorRequirements(true)
+        .build();
+
+    when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
+        .thenReturn(Optional.of(nomineeDetail));
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+
+    when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
+
+    var uploadedFile = UploadedFileTestUtil.builder()
+        .withFilename("file_a")
+        .build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
+
+    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
+        fileReferenceCaptor.capture(),
+        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
+    )).thenReturn(
+        Map.of(
+            NomineeDetailAppendixFileController.PURPOSE,
+            List.of(uploadedFileView)
+        ));
+
+    assertThrowsExactly(IllegalStateException.class,
+        () -> nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR));
   }
 
   @Test

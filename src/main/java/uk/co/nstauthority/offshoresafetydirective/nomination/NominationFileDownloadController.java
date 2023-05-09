@@ -17,8 +17,12 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/file/old")
-@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
+@RequestMapping("/nomination/{nominationId}/file")
+@HasPermission(permissions = {
+    RolePermission.MANAGE_NOMINATIONS,
+    RolePermission.VIEW_NOMINATIONS,
+    RolePermission.CONSULTEE_VIEW_NOMINATIONS
+})
 @HasNominationStatus(statuses = {
     NominationStatus.SUBMITTED,
     NominationStatus.AWAITING_CONFIRMATION,
@@ -48,7 +52,8 @@ public class NominationFileDownloadController {
                 nominationId.id()
             )
         ));
-    return fileControllerHelperService.downloadFile(new NominationDetailFileReference(nominationDetail), uploadedFileId);
+    return fileControllerHelperService.downloadFile(new NominationDetailFileReference(nominationDetail),
+        uploadedFileId);
   }
 
 }
