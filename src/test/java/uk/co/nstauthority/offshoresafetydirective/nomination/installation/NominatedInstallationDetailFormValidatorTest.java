@@ -224,7 +224,7 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenInvalidInstallationIdsInForm_thenError(InstallationDto invalidInstallation) {
 
     var installationWithValidType = InstallationDtoTestUtil.builder()
-        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
+        .withType(NominatedInstallationController.PERMITTED_INSTALLATION_TYPES.get(0))
         .build();
 
     var form = NominatedInstallationDetailFormTestUtil.builder()
@@ -256,7 +256,7 @@ class NominatedInstallationDetailFormValidatorTest {
   private static Stream<Arguments> getInvalidInstallationArguments() {
 
     var invalidInstallationType = Arrays.stream(FacilityType.values())
-        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
+        .filter(type -> !NominatedInstallationController.PERMITTED_INSTALLATION_TYPES.contains(type))
         .findFirst()
         .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
 

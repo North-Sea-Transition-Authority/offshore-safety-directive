@@ -32,7 +32,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
@@ -194,7 +193,8 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "installationsRestUrl",
-            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+            RestApiUtil.route(on(InstallationRestController.class)
+                .searchInstallationsByNameAndType(null, NominatedInstallationController.PERMITTED_INSTALLATION_TYPES))
         ))
         .andExpect(model().attribute("form", form))
         .andExpect(model().attributeExists("accidentRegulatorBranding"))

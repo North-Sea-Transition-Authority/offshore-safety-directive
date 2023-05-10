@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
@@ -241,7 +242,8 @@ public class SystemOfRecordSearchController {
         .addObject("filteredInstallation", filteredInstallation)
         .addObject(
             "installationRestUrl",
-            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+            RestApiUtil.route(on(InstallationRestController.class)
+                .searchInstallationsByNameAndType(null, List.of(FacilityType.values())))
         );
   }
 }

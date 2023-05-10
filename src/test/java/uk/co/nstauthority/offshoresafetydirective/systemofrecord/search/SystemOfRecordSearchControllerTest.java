@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
@@ -256,7 +257,8 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("filteredInstallation", expectedFilteredInstallation))
         .andExpect(model().attribute(
             "installationRestUrl",
-            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+            RestApiUtil.route(on(InstallationRestController.class)
+                .searchInstallationsByNameAndType(null, List.of(FacilityType.values())))
         ));
   }
 
@@ -280,7 +282,8 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("filteredInstallation", (InstallationDto) null))
         .andExpect(model().attribute(
             "installationRestUrl",
-            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+            RestApiUtil.route(on(InstallationRestController.class)
+                .searchInstallationsByNameAndType(null, List.of(FacilityType.values())))
         ));
 
     then(appointmentSearchService)

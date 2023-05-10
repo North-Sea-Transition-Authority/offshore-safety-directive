@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 
@@ -76,7 +77,7 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
 
         var invalidInstallationsSelected = installations
             .stream()
-            .anyMatch(installation -> !InstallationQueryService.isValidInstallation(installation));
+            .anyMatch(installation -> !isValidInstallation(installation));
 
         if (invalidInstallationsSelected) {
           rejectValue(errors, INSTALLATION_NOT_VALID_ERROR);
@@ -123,5 +124,10 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
         frontEndErrorMessage.code(),
         frontEndErrorMessage.message()
     );
+  }
+
+  static boolean isValidInstallation(InstallationDto installation) {
+    return InstallationQueryService.isInUkcs(installation)
+        && NominatedInstallationController.PERMITTED_INSTALLATION_TYPES.contains(installation.type());
   }
 }

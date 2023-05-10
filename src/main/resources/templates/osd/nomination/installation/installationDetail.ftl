@@ -5,7 +5,7 @@
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="installationPhases" type="java.util.Map<String, String>" -->
-<#-- @ftlvariable name="alreadyAddedInstallations" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView>" -->
+<#-- @ftlvariable name="alreadyAddedInstallations" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationAddToListView>" -->
 <#-- @ftlvariable name="installationsRestUrl" type="String" -->
 <#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
 

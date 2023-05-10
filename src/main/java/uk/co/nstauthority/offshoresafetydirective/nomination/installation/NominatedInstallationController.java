@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -35,6 +35,22 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class NominatedInstallationController {
+
+  static final List<FacilityType> PERMITTED_INSTALLATION_TYPES = List.of(
+      FacilityType.FLOATING_SEMI_SUBMERSIBLE_PROCESSING_UNIT,
+      FacilityType.FLOATING_PROCESS_STORAGE_OFFLOADING_UNIT,
+      FacilityType.FLOATING_STORAGE_UNIT,
+      FacilityType.FLOATING_SINGLE_WELL_OPERATION_PRODUCTION_SYSTEM,
+      FacilityType.CONCRETE_GRAVITY_BASED_PLATFORM,
+      FacilityType.PLATFORM_JACKET,
+      FacilityType.JACKUP_WITH_CONCRETE_BASE_PLATFORM,
+      FacilityType.JACKUP_PLATFORM,
+      FacilityType.LARGE_STEEL_PLATFORM,
+      FacilityType.SMALL_STEEL_PLATFORM,
+      FacilityType.TENSION_LEG_PLATFORM,
+      FacilityType.UNKNOWN_TO_BE_UPDATED,
+      FacilityType.SUBSEA_WELLHEAD_PROTECTION_STRUCTURE
+  );
 
   static final String PAGE_TITLE = "Installation nominations";
 
@@ -102,7 +118,8 @@ public class NominatedInstallationController {
         .addObject("alreadyAddedInstallations", getInstallationViews(form))
         .addObject(
             "installationsRestUrl",
-            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+            RestApiUtil.route(on(InstallationRestController.class)
+                .searchInstallationsByNameAndType(null, PERMITTED_INSTALLATION_TYPES))
         )
         .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }

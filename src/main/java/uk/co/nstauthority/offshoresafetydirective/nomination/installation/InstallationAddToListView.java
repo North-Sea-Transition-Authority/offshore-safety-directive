@@ -1,5 +1,6 @@
-package uk.co.nstauthority.offshoresafetydirective.energyportal.installation;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;
 
 public record InstallationAddToListView(InstallationDto installation) implements AddToListItem {
@@ -16,6 +17,6 @@ public record InstallationAddToListView(InstallationDto installation) implements
 
   @Override
   public boolean isValid() {
-    return InstallationQueryService.isValidInstallation(installation);
+    return NominatedInstallationDetailFormValidator.isValidInstallation(installation);
   }
 }

@@ -12,7 +12,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,34 +48,36 @@ class InstallationQueryServiceTest {
   void queryInstallationsByName_whenNoResults_thenEmptyList() {
 
     var searchTerm = "installation";
+    var facilityTypes = List.of(FacilityType.MOBILE_DRILLING_OTHER_TYPE);
 
     when(facilityApi.searchFacilitiesByNameAndTypeIn(
         eq(searchTerm),
-        eq(InstallationQueryService.ALLOWED_INSTALLATION_TYPES),
+        eq(facilityTypes),
         eq(InstallationQueryService.FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT),
         any(),
         any()
     )).thenReturn(Collections.emptyList());
 
-    assertThat(installationQueryService.queryInstallationsByName(searchTerm)).isEmpty();
+    assertThat(installationQueryService.queryInstallationsByName(searchTerm, facilityTypes)).isEmpty();
   }
 
   @Test
   void queryInstallationsByName_whenResults_thenMappedCorrectly() {
 
     var searchTerm = "installation";
+    var facilityTypes = List.of(FacilityType.MOBILE_DRILLING_OTHER_TYPE);
 
     var expectedFacility = EpaFacilityTestUtil.builder().build();
 
     when(facilityApi.searchFacilitiesByNameAndTypeIn(
         eq(searchTerm),
-        eq(InstallationQueryService.ALLOWED_INSTALLATION_TYPES),
+        eq(facilityTypes),
         eq(InstallationQueryService.FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT),
         any(),
         any()
     )).thenReturn(List.of(expectedFacility));
 
-    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm);
+    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes);
 
     assertThat(resultingFacilities)
         .extracting(
@@ -95,6 +96,7 @@ class InstallationQueryServiceTest {
   void queryInstallationsByName_whenResults_thenOnlyThoseInUkcsReturned() {
 
     var searchTerm = "installation";
+    var facilityTypes = List.of(FacilityType.MOBILE_DRILLING_OTHER_TYPE);
 
     var facilityInUkcs = EpaFacilityTestUtil.builder()
         .withInUkcs(true)
@@ -113,13 +115,13 @@ class InstallationQueryServiceTest {
 
     when(facilityApi.searchFacilitiesByNameAndTypeIn(
         eq(searchTerm),
-        eq(InstallationQueryService.ALLOWED_INSTALLATION_TYPES),
+        eq(facilityTypes),
         eq(InstallationQueryService.FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT),
         any(),
         any()
     )).thenReturn(List.of(facilityInUkcs, facilityNotInUkcs, facilityWithInUkcsNull));
 
-    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm);
+    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes);
 
     assertThat(resultingFacilities)
         .extracting(InstallationDto::id)
@@ -174,67 +176,13 @@ class InstallationQueryServiceTest {
   }
 
   @Test
-  void isValidInstallations_whenValidTypeAndInUkcs_thenTrue() {
-
-    var validInstallation = InstallationDtoTestUtil.builder()
-        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
-        .isInUkcs(true)
-        .build();
-
-    assertTrue(InstallationQueryService.isValidInstallation(validInstallation));
-  }
-
-  @Test
-  void isValidInstallations_whenInvalidTypeAndInUkcs_thenFalse() {
-
-    var invalidInstallationType = Arrays.stream(FacilityType.values())
-        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
-
-    var invalidInstallation = InstallationDtoTestUtil.builder()
-        .withType(invalidInstallationType)
-        .isInUkcs(true)
-        .build();
-
-    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
-  }
-
-  @Test
-  void isValidInstallations_whenInvalidTypeAndNotInUkcs_thenFalse() {
-
-    var invalidInstallationType = Arrays.stream(FacilityType.values())
-        .filter(type -> !InstallationQueryService.ALLOWED_INSTALLATION_TYPES.contains(type))
-        .findFirst()
-        .orElseThrow(() -> new AssertionError("Could not find installation type to use"));
-
-    var invalidInstallation = InstallationDtoTestUtil.builder()
-        .withType(invalidInstallationType)
-        .isInUkcs(false)
-        .build();
-
-    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
-  }
-
-  @Test
-  void isValidInstallations_whenValidTypeAndNotInUkcs_thenFalse() {
-
-    var invalidInstallation = InstallationDtoTestUtil.builder()
-        .withType(InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0))
-        .isInUkcs(false)
-        .build();
-
-    assertFalse(InstallationQueryService.isValidInstallation(invalidInstallation));
-  }
-
-  @Test
   void isInUkcs_whenTrue_thenTrue() {
 
     var invalidInstallation = EpaFacilityTestUtil.builder()
         .withInUkcs(true)
         .build();
 
-    assertTrue(installationQueryService.isInUkcs(invalidInstallation));
+    assertTrue(InstallationQueryService.isInUkcs(invalidInstallation));
   }
 
   @Test
@@ -244,7 +192,7 @@ class InstallationQueryServiceTest {
         .withInUkcs(null)
         .build();
 
-    assertTrue(installationQueryService.isInUkcs(invalidInstallation));
+    assertTrue(InstallationQueryService.isInUkcs(invalidInstallation));
   }
 
   @Test
@@ -254,7 +202,7 @@ class InstallationQueryServiceTest {
         .withInUkcs(false)
         .build();
 
-    assertFalse(installationQueryService.isInUkcs(invalidInstallation));
+    assertFalse(InstallationQueryService.isInUkcs(invalidInstallation));
   }
 
   @Test

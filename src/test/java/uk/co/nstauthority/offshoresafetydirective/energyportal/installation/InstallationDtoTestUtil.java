@@ -19,7 +19,7 @@ public class InstallationDtoTestUtil {
 
     private String name = "Facility name";
 
-    private FacilityType type = InstallationQueryService.ALLOWED_INSTALLATION_TYPES.get(0);
+    private FacilityType type = FacilityType.FLOATING_SEMI_SUBMERSIBLE_PROCESSING_UNIT;
 
     private boolean isInUkcs = true;
 

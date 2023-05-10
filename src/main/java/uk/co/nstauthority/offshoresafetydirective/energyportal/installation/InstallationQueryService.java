@@ -18,22 +18,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 @Service
 public class InstallationQueryService {
 
-  public static final List<FacilityType> ALLOWED_INSTALLATION_TYPES = List.of(
-      FacilityType.FLOATING_SEMI_SUBMERSIBLE_PROCESSING_UNIT,
-      FacilityType.FLOATING_PROCESS_STORAGE_OFFLOADING_UNIT,
-      FacilityType.FLOATING_STORAGE_UNIT,
-      FacilityType.FLOATING_SINGLE_WELL_OPERATION_PRODUCTION_SYSTEM,
-      FacilityType.CONCRETE_GRAVITY_BASED_PLATFORM,
-      FacilityType.PLATFORM_JACKET,
-      FacilityType.JACKUP_WITH_CONCRETE_BASE_PLATFORM,
-      FacilityType.JACKUP_PLATFORM,
-      FacilityType.LARGE_STEEL_PLATFORM,
-      FacilityType.SMALL_STEEL_PLATFORM,
-      FacilityType.TENSION_LEG_PLATFORM,
-      FacilityType.UNKNOWN_TO_BE_UPDATED,
-      FacilityType.SUBSEA_WELLHEAD_PROTECTION_STRUCTURE
-  );
-
   static final FacilitiesByNameAndTypesProjectionRoot FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT =
       new FacilitiesByNameAndTypesProjectionRoot()
           .id()
@@ -58,18 +42,18 @@ public class InstallationQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<InstallationDto> queryInstallationsByName(String facilityName) {
+  List<InstallationDto> queryInstallationsByName(String facilityName, List<FacilityType> facilityTypes) {
 
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
         facilityApi.searchFacilitiesByNameAndTypeIn(
             facilityName,
-            ALLOWED_INSTALLATION_TYPES,
+            facilityTypes,
             FACILITIES_BY_NAME_AND_TYPES_PROJECTION_ROOT,
             requestPurpose,
             logCorrelationId
         )
             .stream()
-            .filter(this::isInUkcs)
+            .filter(InstallationQueryService::isInUkcs)
             .map(this::convertToInstallationDto)
             .toList()
     ));
@@ -92,10 +76,6 @@ public class InstallationQueryService {
             .map(this::convertToInstallationDto)
             .toList()
     ));
-  }
-
-  public static boolean isValidInstallation(InstallationDto installation) {
-    return ALLOWED_INSTALLATION_TYPES.contains(installation.type()) && installation.isInUkcs();
   }
 
   public List<InstallationDto> getInstallationsByIds(Collection<InstallationId> installationIds) {
@@ -123,9 +103,17 @@ public class InstallationQueryService {
     );
   }
 
-  boolean isInUkcs(Facility facility) {
+  static boolean isInUkcs(Facility facility) {
+    return isInUkcs(facility.getIsInUkcs());
+  }
+
+  public static boolean isInUkcs(InstallationDto installation) {
+    return isInUkcs(installation.isInUkcs());
+  }
+
+  private static boolean isInUkcs(Boolean isInUkcs) {
     // UKCS question is sparsely populated in source dataset so
     // agreed with client that null means yes
-    return BooleanUtils.isNotFalse(facility.getIsInUkcs());
+    return BooleanUtils.isNotFalse(isInUkcs);
   }
 }
