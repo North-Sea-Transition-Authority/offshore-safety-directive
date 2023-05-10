@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
@@ -91,6 +93,84 @@ class NominationInterceptorTest extends AbstractControllerTest {
         .andExpect(status().isBadRequest());
   }
 
+  @Test
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andCorrectStatus_thenOkRequest() throws Exception {
+
+    var nominationId = new NominationId(123);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withLatestAndSubmittedStatus(nominationId)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
+
+    var nominationId = new NominationId(123);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withLatestAndSubmittedStatus(nominationId)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andSubmitted_thenOkRequest() throws Exception {
+
+    var nominationId = new NominationId(123);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withLatestPostSubmissionAndSubmittedStatus(nominationId)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
+
+    var nominationId = new NominationId(123);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withLatestPostSubmissionAndSubmittedStatus(nominationId)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
   @Controller
   @RequestMapping("/nomination")
   static class TestController {
@@ -111,6 +191,26 @@ class NominationInterceptorTest extends AbstractControllerTest {
     @GetMapping("/with-nomination-status/{nominationId}")
     @HasNominationStatus(statuses = NominationStatus.DRAFT)
     ModelAndView withDraftNominationStatus(@PathVariable("nominationId") NominationId nominationId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("nominationId", nominationId);
+    }
+
+    @GetMapping("/with-latest-and-submitted/{nominationId}")
+    @HasNominationStatus(
+        fetchType = NominationDetailFetchType.LATEST,
+        statuses = NominationStatus.SUBMITTED
+    )
+    ModelAndView withLatestAndSubmittedStatus(@PathVariable("nominationId") NominationId nominationId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("nominationId", nominationId);
+    }
+
+    @GetMapping("/with-latest-post-and-submitted/{nominationId}")
+    @HasNominationStatus(
+        fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION,
+        statuses = NominationStatus.SUBMITTED
+    )
+    ModelAndView withLatestPostSubmissionAndSubmittedStatus(@PathVariable("nominationId") NominationId nominationId) {
       return new ModelAndView(VIEW_NAME)
           .addObject("nominationId", nominationId);
     }

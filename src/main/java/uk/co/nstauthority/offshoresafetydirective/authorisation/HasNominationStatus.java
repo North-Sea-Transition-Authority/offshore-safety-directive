@@ -10,5 +10,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Security
 public @interface HasNominationStatus {
+
+  NominationDetailFetchType fetchType() default NominationDetailFetchType.LATEST;
   NominationStatus[] statuses() default {};
 }

@@ -76,8 +76,6 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
@@ -137,7 +135,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderCaseProcessing_whenNoSubmittedNomination_thenNotFound() throws Exception {
+  void renderCaseProcessing_whenNoSubmittedNomination_thenIsBadRequest() throws Exception {
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
@@ -147,7 +145,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
             get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
                 .with(user(NOMINATION_MANAGE_USER))
         )
-        .andExpect(status().isNotFound());
+        .andExpect(status().isBadRequest());
 
     verifyNoInteractions(nominationCaseProcessingModelAndViewGenerator);
   }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -18,10 +19,13 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
-@HasNominationStatus(statuses = {
-    NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
-    NominationStatus.WITHDRAWN
-})
+@HasNominationStatus(
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION,
+    statuses = {
+        NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
+        NominationStatus.WITHDRAWN
+    }
+)
 public class NominationCaseProcessingController {
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;

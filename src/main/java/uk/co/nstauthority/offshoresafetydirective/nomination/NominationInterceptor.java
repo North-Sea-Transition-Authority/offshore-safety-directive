@@ -41,7 +41,17 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
         && hasAnnotations(handlerMethod, SUPPORTED_SECURITY_ANNOTATIONS)
     ) {
       var nominationId = extractNominationIdFromRequest(request, handlerMethod);
-      var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+
+      NominationDetail nominationDetail;
+      var annotation = (HasNominationStatus) getAnnotation(handlerMethod, HasNominationStatus.class);
+
+      nominationDetail = switch (annotation.fetchType()) {
+        case LATEST -> nominationDetailService.getLatestNominationDetail(nominationId);
+        case LATEST_POST_SUBMISSION -> nominationDetailService.getLatestNominationDetailWithStatuses(
+            nominationId,
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        ).orElse(null);
+      };
 
       if (nominationDetail == null) {
         throw new ResponseStatusException(
@@ -84,7 +94,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
   }
 
   private static NominationId extractNominationIdFromRequest(HttpServletRequest httpServletRequest,
-                                                            HandlerMethod handlerMethod) {
+                                                             HandlerMethod handlerMethod) {
 
     var nominationIdParameter = getPathVariableByClass(handlerMethod, NominationId.class);
 
