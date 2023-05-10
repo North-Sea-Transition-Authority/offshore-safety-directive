@@ -42,7 +42,7 @@ class SystemOfRecordSearchUrlParamsTest {
 
   @Test
   void getUrlQueryParams_whenAllNullInputs_thenEmptyMap() {
-    var searchUrlParams = new SystemOfRecordSearchUrlParams(null, null);
+    var searchUrlParams = SystemOfRecordSearchUrlParams.empty();
     assertThat(searchUrlParams.getUrlQueryParams()).isEmpty();
   }
 
@@ -83,6 +83,11 @@ class SystemOfRecordSearchUrlParamsTest {
             "123",
             "456"
         );
+  }
+
+  @Test
+  void empty_verifyAllNullFields() {
+    assertThat(SystemOfRecordSearchUrlParams.empty()).hasAllNullFieldsOrProperties();
   }
 
 }

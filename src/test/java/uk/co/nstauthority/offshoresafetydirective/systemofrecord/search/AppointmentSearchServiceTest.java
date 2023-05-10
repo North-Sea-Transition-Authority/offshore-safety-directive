@@ -1511,4 +1511,111 @@ class AppointmentSearchServiceTest {
         .should(never())
         .getWell(appointedWellboreId);
   }
+
+  @Test
+  void searchInstallationAppointments_whenOnlySearchingForInstallationsAndNoAppointmentsFound_thenNoOperatorAppointmentReturned() {
+
+    // given a search form with an installation ID
+    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(100)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationId))
+        .willReturn(Collections.emptyList());
+
+    var expectedInstallation = InstallationDtoTestUtil.builder()
+        .withId(searchFormWithInstallationId.getInstallationId())
+        .build();
+
+    // and the installation is a valid installation
+    given(installationQueryService.getInstallation(new InstallationId(searchFormWithInstallationId.getInstallationId())))
+        .willReturn(Optional.of(expectedInstallation));
+
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationId);
+
+    // then a no operator appointment is returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::appointmentType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(searchFormWithInstallationId.getInstallationId()),
+                expectedInstallation.name(),
+                "No installation operator",
+                null,
+                null
+            )
+        );
+  }
+
+  @Test
+  void searchInstallationAppointments_whenNotOnlySearchingForInstallationAndNoAppointmentsFound_thenEmptyListReturned() {
+
+    // given a search form with an installation ID and another property
+    var searchFormWithInstallationIdAndOtherProperty = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(100)
+        .withAppointedOperatorId(200)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationIdAndOtherProperty))
+        .willReturn(Collections.emptyList());
+
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationIdAndOtherProperty);
+
+    assertThat(resultingAppointments).isEmpty();
+
+    then(wellQueryService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void searchInstallationAppointments_whenEmptySearchFormAndNoAppointmentsFound_thenEmptyListReturned() {
+
+    // given an empty search form
+    var emptySearchForm = new SystemOfRecordSearchForm();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), emptySearchForm))
+        .willReturn(Collections.emptyList());
+
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(emptySearchForm);
+
+    assertThat(resultingAppointments).isEmpty();
+
+    then(wellQueryService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void searchInstallationAppointments_whenSearchByOnlyInstallationIdAndNoAppointmentAndInstallationDoesNotExist_thenEmptyList() {
+
+    // given a search form with an installation ID that doesn't exist
+    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(-1)
+        .build();
+
+    // and no appointments match the search
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationId))
+        .willReturn(Collections.emptyList());
+
+    // and the installation doesn't exist
+    given(installationQueryService.getInstallation(new InstallationId(searchFormWithInstallationId.getInstallationId())))
+        .willReturn(Optional.empty());
+
+    var resultingAppointments =
+        appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationId);
+
+    // then no results returned
+    assertThat(resultingAppointments).isEmpty();
+  }
 }

@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 
 @RestController
-@RequestMapping("/api/well")
+@RequestMapping("/api/public/well")
 @Unauthenticated
 public class WellRestController {
 

@@ -6,7 +6,15 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.LinkedMultiValueMap;
 
-record SystemOfRecordSearchUrlParams(String appointedOperator, String wellbore) {
+record SystemOfRecordSearchUrlParams(
+    String appointedOperator,
+    String wellbore,
+    String installation
+) {
+
+  static SystemOfRecordSearchUrlParams empty() {
+    return new SystemOfRecordSearchUrlParams(null, null, null);
+  }
 
   @SuppressWarnings("unchecked")
   LinkedMultiValueMap<String, String> getUrlQueryParams() {
@@ -33,6 +41,8 @@ record SystemOfRecordSearchUrlParams(String appointedOperator, String wellbore) 
 
     private String wellbore = "";
 
+    private String installation = "";
+
     Builder withAppointedOperatorId(Integer appointedOperatorId) {
       this.appointedOperator = (appointedOperatorId != null) ? String.valueOf(appointedOperatorId) : "";
       return this;
@@ -43,8 +53,17 @@ record SystemOfRecordSearchUrlParams(String appointedOperator, String wellbore) 
       return this;
     }
 
+    Builder withInstallationId(Integer installationId) {
+      this.installation = (installationId != null) ? String.valueOf(installationId) : "";
+      return this;
+    }
+
     SystemOfRecordSearchUrlParams build() {
-      return new SystemOfRecordSearchUrlParams(appointedOperator, wellbore);
+      return new SystemOfRecordSearchUrlParams(
+          appointedOperator,
+          wellbore,
+          installation
+      );
     }
   }
 }

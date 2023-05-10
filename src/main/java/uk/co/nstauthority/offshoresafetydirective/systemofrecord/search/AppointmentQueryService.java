@@ -67,16 +67,18 @@ class AppointmentQueryService {
       portalAssetTypeRestrictions = Set.of(PortalAssetType.WELLBORE);
     }
 
+    // if installation ID filter provided then filter by installation ID and installation type
+    if (searchForm.getInstallationId() != null) {
+      predicateList.add(
+          field("assets.portal_asset_id").eq(String.valueOf(searchForm.getInstallationId()))
+      );
+      // as different portal assets could have the same ID ensure the restriction list is only installation
+      portalAssetTypeRestrictions = Set.of(PortalAssetType.INSTALLATION);
+    }
+
     // filter only asset types which match the required types
     predicateList.add(field("assets.portal_asset_type")
         .in(portalAssetTypeRestrictions.stream().map(PortalAssetType::name).toList()));
-
-    // if operator ID filter provided then filter by appointed operator
-    if (searchForm.getAppointedOperatorId() != null) {
-      predicateList.add(
-          field("appointments.appointed_portal_operator_id").eq(String.valueOf(searchForm.getAppointedOperatorId()))
-      );
-    }
 
     return predicateList;
   }

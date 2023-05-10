@@ -474,4 +474,194 @@ class AppointmentQueryServiceTest {
             )
         );
   }
+
+  @Test
+  void search_whenInstallationIdFilterAndNoMatchingAppointments_thenEmptyListReturned() {
+
+    // given a search form with an installation ID provided
+    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(100)
+        .build();
+
+    // and an asset with a different installation ID exists
+    var unmatchedInstallationAsset = AssetTestUtil.builder()
+        .withPortalAssetId("200")
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(unmatchedInstallationAsset);
+
+    // and an appointment exists for the installation not matching the filter
+    var unmatchedInstallationAppointment = AppointmentTestUtil.builder()
+        .withAsset(unmatchedInstallationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(unmatchedInstallationAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        searchFormWithInstallationId
+    );
+
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void search_whenInstallationIdFilterAndMatchingAppointments_thenPopulatedListReturned() {
+
+    var filteredInstallationId = 100;
+
+    // given a search form with an installation ID provided
+    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(filteredInstallationId)
+        .build();
+
+    // and an asset with that installation ID exists
+    var matchedInstallationAsset = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedInstallationAsset);
+
+    // and an appointment exists for the installation matching the filter
+    var matchedInstallationAppointment = AppointmentTestUtil.builder()
+        .withAsset(matchedInstallationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedInstallationAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        searchFormWithInstallationId
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(filteredInstallationId),
+                PortalAssetType.INSTALLATION
+            )
+        );
+  }
+
+  @Test
+  void search_whenInstallationIdFilterAndNoInstallationAssetTypeRestriction_thenVerifyOnlyInstallationsReturned() {
+
+    var filteredInstallationId = 100;
+
+    // given a search form with an installation ID provided
+    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(filteredInstallationId)
+        .build();
+
+    // and an asset with that wellbore ID exists
+    var matchedInstallationAsset = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedInstallationAsset);
+
+    // and an appointment exists for the wellbore matching the filter
+    var matchedInstallationAppointment = AppointmentTestUtil.builder()
+        .withAsset(matchedInstallationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(matchedInstallationAppointment);
+
+    // and a non installation asset exists with the same ID as a installation asset
+    var installationAssetWithSameIdAsWellbore = AssetTestUtil.builder()
+        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAssetWithSameIdAsWellbore);
+
+    // and an appointment exists for the wellbore with the matching installation ID
+    var wellboreAppointment = AppointmentTestUtil.builder()
+        .withAsset(installationAssetWithSameIdAsWellbore)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(wellboreAppointment);
+
+    // and the restrictions provided by the consumer includes other asset types that are not installations
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.WELLBORE, PortalAssetType.INSTALLATION),
+        searchFormWithInstallationId
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(filteredInstallationId),
+                PortalAssetType.INSTALLATION
+            )
+        );
+  }
+
+  @Test
+  void search_whenNoInstallationIdFilter_thenResultsReturned() {
+
+    // given a search form without an installation ID provided
+    var searchFormWithoutInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+        .withInstallationId(null)
+        .build();
+
+    // and an installation asset exists
+    var installationAsset = AssetTestUtil.builder()
+        .withPortalAssetId("200")
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAsset);
+
+    // and an appointment exists for the installation
+    var installationAppointment = AppointmentTestUtil.builder()
+        .withAsset(installationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    entityManager.persistAndFlush(installationAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        searchFormWithoutInstallationId
+    );
+
+    // then search items are still returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                "200",
+                PortalAssetType.INSTALLATION
+            )
+        );
+  }
 }

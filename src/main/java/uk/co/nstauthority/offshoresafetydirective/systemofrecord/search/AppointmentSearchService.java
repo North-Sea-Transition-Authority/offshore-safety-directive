@@ -66,7 +66,29 @@ class AppointmentSearchService {
   }
 
   List<AppointmentSearchItemDto> searchInstallationAppointments(SystemOfRecordSearchForm searchForm) {
-    return search(Set.of(PortalAssetType.INSTALLATION), searchForm);
+
+    var resultingAppointments = search(Set.of(PortalAssetType.INSTALLATION), searchForm);
+
+    // if we have no results, and have only searched for an installation then add the installation
+    // to the result list to show as a no operator appointment
+    if (
+        CollectionUtils.isEmpty(resultingAppointments)
+            && searchForm.getInstallationId() != null
+            && searchForm.isEmptyExcept("installationId")
+    ) {
+      installationQueryService.getInstallation(new InstallationId(searchForm.getInstallationId()))
+          .ifPresent(installation ->
+              resultingAppointments.add(
+                  createNoAppointedOperatorItem(
+                      new AppointedPortalAssetId(String.valueOf(installation.id())),
+                      PortalAssetType.INSTALLATION,
+                      new AssetName(installation.name())
+                  )
+              )
+          );
+    }
+
+    return resultingAppointments;
   }
 
   List<AppointmentSearchItemDto> searchWellboreAppointments(SystemOfRecordSearchForm searchForm) {

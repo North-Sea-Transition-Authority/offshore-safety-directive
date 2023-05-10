@@ -56,8 +56,7 @@ public class WebSecurityConfiguration {
         .mvcMatchers(
             "/assets/**",
             "/system-of-record/**",
-            "/api/portal-organisations/**",
-            "/api/well/**",
+            "/api/public/**",
             "/notify/callback"
         )
           .permitAll()

@@ -27,7 +27,7 @@ public class SystemOfRecordLandingPageController {
         )
         .addObject(
             "installationSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null))
         )
         .addObject(
             "wellSearchUrl",

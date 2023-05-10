@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -97,14 +100,38 @@ public class SystemOfRecordSearchController {
   }
 
   @GetMapping("/installations")
-  public ModelAndView renderInstallationSearch() {
-    var searchForm = new SystemOfRecordSearchForm();
-    return getBaseSearchModelAndView(INSTALLATIONS_MODEL_AND_VIEW_NAME, searchForm)
-        .addObject(
-            APPOINTMENTS_MODEL_ATTRIBUTE_NAME,
-            appointmentSearchService.searchInstallationAppointments(searchForm)
-        )
-        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, true);
+  public ModelAndView renderInstallationSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
+
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withInstallation(systemOfRecordSearchUrlParams.installation())
+          .build();
+    } else {
+      searchForm = new SystemOfRecordSearchForm();
+    }
+
+    List<AppointmentSearchItemDto> appointments = (searchForm.isEmpty())
+        ? Collections.emptyList()
+        : appointmentSearchService.searchInstallationAppointments(searchForm);
+
+    return getInstallationSearchModelAndView(searchForm, appointments);
+  }
+
+  @PostMapping("/installations")
+  public ModelAndView searchInstallationAppointments(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withInstallationId(searchForm.getInstallationId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderInstallationSearch(null),
+        searchParams.getUrlQueryParams()
+    );
   }
 
   @GetMapping("/wells")
@@ -124,21 +151,7 @@ public class SystemOfRecordSearchController {
         ? Collections.emptyList()
         : appointmentSearchService.searchWellboreAppointments(searchForm);
 
-    WellDto filteredWellbore = null;
-
-    if (searchForm.getWellboreId() != null) {
-      filteredWellbore = portalAssetRetrievalService
-          .getWellbore(new WellboreId(searchForm.getWellboreId()))
-          .orElse(null);
-    }
-
-    return getBaseSearchModelAndView(WELLBORES_MODEL_AND_VIEW_NAME, searchForm)
-        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
-        .addObject("filteredWellbore", filteredWellbore)
-        .addObject(
-            "wellboreRestUrl",
-            RestApiUtil.route(on(WellRestController.class).searchWells(null))
-        );
+    return getWellboreSearchModelAndView(searchForm, appointments);
   }
 
   @PostMapping("/wells")
@@ -189,6 +202,46 @@ public class SystemOfRecordSearchController {
         .addObject(
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+        );
+  }
+
+  private ModelAndView getWellboreSearchModelAndView(SystemOfRecordSearchForm searchForm,
+                                                     List<AppointmentSearchItemDto> appointments) {
+
+    WellDto filteredWellbore = null;
+
+    if (searchForm.getWellboreId() != null) {
+      filteredWellbore = portalAssetRetrievalService
+          .getWellbore(new WellboreId(searchForm.getWellboreId()))
+          .orElse(null);
+    }
+
+    return getBaseSearchModelAndView(WELLBORES_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
+        .addObject("filteredWellbore", filteredWellbore)
+        .addObject(
+            "wellboreRestUrl",
+            RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        );
+  }
+
+  private ModelAndView getInstallationSearchModelAndView(SystemOfRecordSearchForm searchForm,
+                                                         List<AppointmentSearchItemDto> appointments) {
+
+    InstallationDto filteredInstallation = null;
+
+    if (searchForm.getInstallationId() != null) {
+      filteredInstallation = portalAssetRetrievalService
+          .getInstallation(new InstallationId(searchForm.getInstallationId()))
+          .orElse(null);
+    }
+
+    return getBaseSearchModelAndView(INSTALLATIONS_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
+        .addObject("filteredInstallation", filteredInstallation)
+        .addObject(
+            "installationRestUrl",
+            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
         );
   }
 }

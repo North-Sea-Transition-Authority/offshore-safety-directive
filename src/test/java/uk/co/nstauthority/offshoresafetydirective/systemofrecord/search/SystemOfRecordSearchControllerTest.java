@@ -21,6 +21,10 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -213,19 +217,27 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderInstallationSearch_verifyUnauthenticatedAccess() throws Exception {
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())))
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null))))
         .andExpect(status().isOk());
   }
 
   @Test
-  void renderInstallationSearch_verifyModelProperties() throws Exception {
+  void renderInstallationSearch_whenSearchFormFiltersAdded_thenVerifyModelProperties() throws Exception {
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
 
     given(appointmentSearchService.searchInstallationAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
-    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())))
+    var expectedFilteredInstallation = InstallationDtoTestUtil.builder().build();
+
+    given(portalAssetRetrievalService.getInstallation(new InstallationId(10)))
+        .willReturn(Optional.of(expectedFilteredInstallation));
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null)))
+            .param("installation", "10")
+    )
         .andExpect(view().name(
             "osd/systemofrecord/search/installation/searchInstallationAppointments"
         ))
@@ -240,7 +252,126 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
         .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
-        .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
+        .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
+        .andExpect(model().attribute("filteredInstallation", expectedFilteredInstallation))
+        .andExpect(model().attribute(
+            "installationRestUrl",
+            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+        ));
+  }
+
+  @Test
+  void renderInstallationSearch_whenEmptySearchForm_thenVerifyNoSearchInteraction() throws Exception {
+
+    mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null))))
+        .andExpect(view().name("osd/systemofrecord/search/installation/searchInstallationAppointments"))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
+        )
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", false))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+        )
+        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("appointments", Collections.emptyList()))
+        .andExpect(model().attribute("filteredInstallation", (InstallationDto) null))
+        .andExpect(model().attribute(
+            "installationRestUrl",
+            RestApiUtil.route(on(InstallationRestController.class).searchInstallationsByName(null))
+        ));
+
+    then(appointmentSearchService)
+        .shouldHaveNoInteractions();
+
+    then(portalAssetRetrievalService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void renderInstallationSearch_whenQueryParamAddedThatIsNotAScreenFilter_thenParamIsIgnored() throws Exception {
+
+    mockMvc.perform(get(
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null)))
+            // a query param which for a filter on screen
+            .param("installation", "123")
+            // a query param which doesn't have a filter on screen
+            .param("wellbore", "456")
+        )
+        .andExpect(status().isOk());
+
+    var systemOfRecordSearchFormCaptor = ArgumentCaptor.forClass(SystemOfRecordSearchForm.class);
+
+    then(appointmentSearchService).should().searchInstallationAppointments(systemOfRecordSearchFormCaptor.capture());
+
+    assertThat(systemOfRecordSearchFormCaptor.getValue())
+        .extracting(
+            SystemOfRecordSearchForm::getInstallationId,
+            SystemOfRecordSearchForm::getWellboreId
+        )
+        .containsExactly(
+            123,
+            null // the wellbore id param is not passed to the form
+        );
+  }
+
+  @SecurityTest
+  void searchInstallationAppointments_verifyUnauthenticatedAccess() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(SystemOfRecordSearchController.class).searchInstallationAppointments(searchForm)))
+            .with(csrf())
+    )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null))
+        ));
+  }
+
+  @Test
+  void searchInstallationAppointments_whenSearchInputProvided_verifyRedirectionWithQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
+        .withInstallationId(123)
+        .build();
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(SystemOfRecordSearchController.class).searchInstallationAppointments(searchForm)))
+            .with(csrf())
+            .param("installationId", searchUrlParams.installation())
+    )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderInstallationSearch(null),
+                Collections.emptyMap(),
+                true,
+                searchUrlParams.getUrlQueryParams()
+            )
+        ));
+  }
+
+  @Test
+  void searchInstallationAppointments_whenNoSearchInputProvided_verifyRedirectionWithoutQueryParams() throws Exception {
+
+    var searchForm = new SystemOfRecordSearchForm();
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(SystemOfRecordSearchController.class).searchInstallationAppointments(searchForm)))
+            .with(csrf())
+    )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(
+                on(SystemOfRecordSearchController.class).renderInstallationSearch(null)
+            )
+        ));
   }
 
   @SecurityTest

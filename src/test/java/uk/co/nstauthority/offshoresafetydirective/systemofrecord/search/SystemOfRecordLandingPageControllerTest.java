@@ -51,7 +51,7 @@ class SystemOfRecordLandingPageControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "installationSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderInstallationSearch(null))
         ))
         .andExpect(model().attribute(
             "wellSearchUrl",
