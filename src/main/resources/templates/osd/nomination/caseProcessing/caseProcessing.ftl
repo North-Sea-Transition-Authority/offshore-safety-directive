@@ -109,10 +109,6 @@ errorItems=[]
             <@_slideoutButton slideoutPanelId=requestUpdateSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
             <#assign requestUpdateAction = action/>
         </#if>
-        <#if actionKeyValue == "REQUEST_UPDATE">
-            <@_slideoutButton slideoutPanelId=requestUpdateSlideoutPanelId buttonText=actionKeyValue.actionText isInDropdown=isInDropdown/>
-            <#assign requestUpdateAction = action/>
-        </#if>
         <#if actionKeyValue == "UPDATE_NOMINATION">
             <@fdsAction.link linkText=actionKeyValue.actionText linkUrl=springUrl(action.submitUrl) linkClass="govuk-button"/>
         </#if>

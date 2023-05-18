@@ -28,15 +28,20 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/start-update")
+@RequestMapping("/nomination/{nominationId}/update")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.SUBMITTED)
 public class NominationStartUpdateController {
 
-  private static final Set<NominationStatus> ALLOWED_STATUSES = EnumSet.of(NominationStatus.SUBMITTED);
+  private static final Set<NominationStatus> ALLOWED_STATUSES = EnumSet.of(
+      NominationStatus.DRAFT,
+      NominationStatus.SUBMITTED
+  );
   private static final String ALLOWED_STATUS_NAMES = ALLOWED_STATUSES.stream()
       .map(Enum::name)
       .collect(Collectors.joining(","));
+
+  private static final String DETAIL_OPTIONAL_NOT_FOUND_ERROR_MESSAGE =
+      "No NominationDetail found in status [%s] for Nomination [%d]";
 
   private final CaseEventQueryService caseEventQueryService;
   private final NominationDetailService nominationDetailService;
@@ -52,21 +57,60 @@ public class NominationStartUpdateController {
   }
 
   @GetMapping
-  public ModelAndView renderStartUpdate(@PathVariable("nominationId") NominationId nominationId) {
+  @HasNominationStatus(statuses = {NominationStatus.DRAFT, NominationStatus.SUBMITTED})
+  public ModelAndView startUpdateEntryPoint(@PathVariable("nominationId") NominationId nominationId) {
+
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
-        ALLOWED_STATUSES
-    ).orElseThrow(() -> new OsdEntityNotFoundException(
-        "No NominationDetail found in status [%s] for Nomination [%d]".formatted(
-            ALLOWED_STATUS_NAMES,
-            nominationId.id()
-        )));
+        EnumSet.of(NominationStatus.DRAFT, NominationStatus.SUBMITTED)
+    )
+        .orElseThrow(() -> new OsdEntityNotFoundException(
+            DETAIL_OPTIONAL_NOT_FOUND_ERROR_MESSAGE.formatted(
+                ALLOWED_STATUS_NAMES,
+                nominationId.id()
+            )
+        ));
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    if (NominationStatus.DRAFT.equals(nominationDetailDto.nominationStatus()) && nominationDetailDto.version() > 1) {
+      return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+    } else if (NominationStatus.SUBMITTED.equals(nominationDetailDto.nominationStatus())) {
+      return ReverseRouter.redirect(on(NominationStartUpdateController.class).renderStartUpdate(nominationId));
+    } else {
+      throw new ResponseStatusException(HttpStatus.FORBIDDEN, """
+          NominationDetail [%d] with status [%s] and version [%d] expected conditions with one of the following:
+          1. Status is draft and nomination version is greater than [1]
+          2. Status is submitted""".formatted(
+          nominationDetailDto.nominationDetailId().id(),
+          nominationDetailDto.nominationStatus().name(),
+          nominationDetailDto.version()
+      ));
+    }
+  }
+
+  @GetMapping("/start")
+  @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+  public ModelAndView renderStartUpdate(@PathVariable("nominationId") NominationId nominationId) {
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        Set.of(NominationStatus.SUBMITTED)
+    )
+        .orElseThrow(() -> new OsdEntityNotFoundException(
+            DETAIL_OPTIONAL_NOT_FOUND_ERROR_MESSAGE.formatted(
+                NominationStatus.SUBMITTED,
+                nominationId.id()
+            )
+        ));
+
     var updateReason = caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.FORBIDDEN,
             "No update reason found for NominationDetail [%d]".formatted(
                 NominationDetailDto.fromNominationDetail(nominationDetail).nominationDetailId().id()
             )));
+
     return new ModelAndView("osd/nomination/update/startNominationUpdate")
         .addObject("startActionUrl",
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdate(nominationId)))
@@ -75,25 +119,34 @@ public class NominationStartUpdateController {
         .addObject("reasonForUpdate", updateReason);
   }
 
-  @PostMapping
+  @PostMapping("/start")
+  @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
   public ModelAndView startUpdate(@PathVariable("nominationId") NominationId nominationId) {
+
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
-        ALLOWED_STATUSES
-    ).orElseThrow(() -> new OsdEntityNotFoundException(
-        "No NominationDetail found in status [%s] for Nomination [%d]".formatted(
-            ALLOWED_STATUS_NAMES,
-            nominationId.id()
-        )));
-    var updateReason = caseEventQueryService.getLatestReasonForUpdate(nominationDetail);
-    if (updateReason.isEmpty()) {
+        Set.of(NominationStatus.SUBMITTED)
+    )
+        .orElseThrow(() -> new OsdEntityNotFoundException(
+            DETAIL_OPTIONAL_NOT_FOUND_ERROR_MESSAGE.formatted(
+                NominationStatus.SUBMITTED,
+                nominationId.id()
+            )
+        ));
+
+    var reasonForUpdate = caseEventQueryService.getLatestReasonForUpdate(nominationDetail);
+
+    if (reasonForUpdate.isEmpty()) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
           "No update reason found for NominationDetail [%d]".formatted(
               NominationDetailDto.fromNominationDetail(nominationDetail).nominationDetailId().id()
-          ));
+          )
+      );
     }
+
     nominationUpdateService.createDraftUpdate(nominationDetail);
+
     return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
   }
 

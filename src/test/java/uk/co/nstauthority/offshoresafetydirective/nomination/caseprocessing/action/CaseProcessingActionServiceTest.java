@@ -334,7 +334,7 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionGroup.UPDATE_NOMINATION,
             null,
             ReverseRouter.route(
-                on(NominationStartUpdateController.class).renderStartUpdate(nominationId)),
+                on(NominationStartUpdateController.class).startUpdateEntryPoint(nominationId)),
             Collections.emptyMap()
         );
   }

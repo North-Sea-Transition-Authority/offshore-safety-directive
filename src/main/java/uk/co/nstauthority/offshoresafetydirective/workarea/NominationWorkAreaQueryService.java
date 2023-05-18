@@ -4,6 +4,9 @@ import static org.jooq.impl.DSL.coalesce;
 import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.or;
+import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.val;
@@ -44,29 +47,34 @@ class NominationWorkAreaQueryService {
     // TODO OSDOP-301 - Use JOOQ generated types
     return context
         .select(
-            field("n.id"),
-            field("ad.portal_organisation_id").as("applicant_organisation_id"),
-            field("n.reference"),
-            field("ad.applicant_reference"),
-            field("nominee.nominated_organisation_id"),
-            field("was.selection_type"),
-            coalesce(field("ii.include_installations_in_nomination"), val(false)),
-            field("nd.status"),
-            field("nd.created_datetime"),
-            field("nd.submitted_datetime"),
-            field("nd.version"),
-            field("nprp.portal_references").as("pears_references")
+            field("nominations.id"),
+            field("applicant_details.portal_organisation_id").as("applicant_organisation_id"),
+            field("nominations.reference"),
+            field("applicant_details.applicant_reference"),
+            field("nominee_details.nominated_organisation_id"),
+            field("well_selection_setup.selection_type"),
+            coalesce(field("installation_inclusion.include_installations_in_nomination"), val(false)),
+            field("nomination_details.status"),
+            field("nomination_details.created_datetime"),
+            field("nomination_details.submitted_datetime"),
+            field("nomination_details.version"),
+            field("nomination_portal_references.portal_references").as("pears_references")
         )
-        .from(table("nominations").as("n"))
-        .join(table("nomination_details").as("nd")).on(field("nd.nomination_id").eq(field("n.id")))
-        .join(table("applicant_details").as("ad")).on(field("AD.nomination_detail").eq(field("nd.ID")))
-        .leftJoin(table("nominee_details").as("nominee")).on(field("nominee.nomination_detail").eq(field("nd.id")))
-        .leftJoin(table("well_selection_setup").as("was")).on(field("was.nomination_detail").eq(field("nd.id")))
-        .leftJoin(table("installation_inclusion").as("ii")).on(field("ii.nomination_detail").eq(field("nd.id")))
+        .from(table("nominations"))
+        .join(table("nomination_details"))
+          .on(field("nomination_details.nomination_id").eq(field("nominations.id")))
+        .join(table("applicant_details"))
+          .on(field("applicant_details.nomination_detail").eq(field("nomination_details.id")))
+        .leftJoin(table("nominee_details"))
+          .on(field("nominee_details.nomination_detail").eq(field("nomination_details.id")))
+        .leftJoin(table("well_selection_setup"))
+          .on(field("well_selection_setup.nomination_detail").eq(field("nomination_details.id")))
+        .leftJoin(table("installation_inclusion"))
+          .on(field("installation_inclusion.nomination_detail").eq(field("nomination_details.id")))
         .leftJoin(
-            table("nomination_portal_references").as("nprp")).on(
-            field("nprp.nomination_id").eq(field("nd.nomination_id"))
-                .and(field("nprp.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
+            table("nomination_portal_references")).on(
+            field("nomination_portal_references.nomination_id").eq(field("nominations.id"))
+                .and(field("nomination_portal_references.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
         )
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
@@ -77,7 +85,28 @@ class NominationWorkAreaQueryService {
     var nominationStatusCondition =
         getNominationsForRegulatorRole();
 
-    return List.of(nominationStatusCondition, excludeDeletedNominations());
+    return List.of(nominationStatusCondition, excludeDeletedNominations(), excludeDraftUpdates());
+  }
+
+  private Condition excludeDraftUpdates() {
+
+    var postSubmissionStatusNames =
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+            .stream()
+            .map(Enum::name)
+            .toList();
+
+    var filter = select(max(field("post_submission_nomination_details.version")))
+        .from(table("nomination_details").as("post_submission_nomination_details"))
+        .where(field("post_submission_nomination_details.nomination_id").eq(field("nomination_details.nomination_id")))
+        .and(
+            or(
+                field("post_submission_nomination_details.version").eq(val(1)),
+                field("post_submission_nomination_details.status").in(postSubmissionStatusNames)
+            )
+        );
+
+    return field("nomination_details.version").eq(filter);
   }
 
   private Condition getNominationsForRegulatorRole() {
@@ -97,14 +126,14 @@ class NominationWorkAreaQueryService {
               .stream()
               .map(Enum::name)
               .toArray();
-      return field("nd.status").in(postSubmissionStatusNames);
+      return field("nomination_details.status").in(postSubmissionStatusNames);
     }
 
     return falseCondition();
   }
 
   private Condition excludeDeletedNominations() {
-    return condition("nd.status != 'DELETED'");
+    return condition("nomination_details.status != 'DELETED'");
   }
 }
 

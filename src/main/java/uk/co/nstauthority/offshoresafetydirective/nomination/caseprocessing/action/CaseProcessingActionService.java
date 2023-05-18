@@ -230,7 +230,7 @@ public class CaseProcessingActionService {
             CaseProcessingActionItem.UPDATE_NOMINATION,
             CaseProcessingActionGroup.UPDATE_NOMINATION,
             null,
-            ReverseRouter.route(on(NominationStartUpdateController.class).renderStartUpdate(nominationId))
+            ReverseRouter.route(on(NominationStartUpdateController.class).startUpdateEntryPoint(nominationId))
         )
         .build();
   }
