@@ -16,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.EmailUrlGenerationService;
@@ -61,12 +62,9 @@ class ConsulteeNotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void notifyConsulteeCoordinatorOfConsultation(ConsultationRequestedEvent consultationRequestedEvent) {
 
-    LOGGER.info(
-        "Handling ConsultationRequestedEvent for nomination with ID {}",
-        consultationRequestedEvent.getNominationId().id()
-    );
+    NominationId nominationId = consultationRequestedEvent.getNominationId();
 
-    var nominationId = consultationRequestedEvent.getNominationId();
+    LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
     NominationDto nomination = getNomination(nominationId);
 
@@ -88,12 +86,9 @@ class ConsulteeNotificationEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void notifyConsultationCoordinatorsOfDecision(NominationDecisionDeterminedEvent decisionDeterminedEvent) {
 
-    LOGGER.info(
-        "Handling NominationDecisionDeterminedEvent for nomination with ID {}",
-        decisionDeterminedEvent.getNominationId().id()
-    );
+    NominationId nominationId = decisionDeterminedEvent.getNominationId();
 
-    var nominationId = decisionDeterminedEvent.getNominationId();
+    LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
 
     NominationDto nomination = getNomination(nominationId);
 
@@ -103,6 +98,30 @@ class ConsulteeNotificationEventListener {
 
     NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
             NotifyTemplate.NOMINATION_DECISION_DETERMINED,
+            serviceBrandingConfigurationProperties
+        )
+        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
+        .addPersonalisation("NOMINATION_LINK", nominationUrl);
+
+    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void notifyConsultationCoordinatorsOfAppointment(AppointmentConfirmedEvent appointmentConfirmedEvent) {
+
+    NominationId nominationId = appointmentConfirmedEvent.getNominationId();
+
+    LOGGER.info("Handling AppointmentConfirmedEvent for nomination with ID {}", nominationId.id());
+
+    NominationDto nomination = getNomination(nominationId);
+
+    var nominationUrl = emailUrlGenerationService.generateEmailUrl(
+        ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+    );
+
+    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
+            NotifyTemplate.NOMINATION_APPOINTMENT_CONFIRMED,
             serviceBrandingConfigurationProperties
         )
         .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())

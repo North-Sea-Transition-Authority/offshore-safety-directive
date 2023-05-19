@@ -27,7 +27,7 @@ class AppointmentConfirmedEventPublisherTest {
   void publish() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var expectedResult = new NominationId(nominationDetail.getNomination().getId());
-    appointmentConfirmedEventPublisher.publish(nominationDetail);
+    appointmentConfirmedEventPublisher.publish(new NominationId(nominationDetail.getNomination().getId()));
 
     var captor = ArgumentCaptor.forClass(AppointmentConfirmedEvent.class);
     verify(applicationEventPublisher).publishEvent(captor.capture());

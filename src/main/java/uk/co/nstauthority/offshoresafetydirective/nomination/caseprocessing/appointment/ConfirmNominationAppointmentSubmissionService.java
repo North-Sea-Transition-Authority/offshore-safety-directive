@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 
 @Service
@@ -31,11 +32,14 @@ class ConfirmNominationAppointmentSubmissionService {
   public void submitAppointmentConfirmation(NominationDetail nominationDetail,
                                             ConfirmNominationAppointmentForm confirmNominationAppointmentForm) {
 
+    var nominationId = new NominationId(nominationDetail.getNomination().getId());
+
     var appointmentConfirmationDate = confirmNominationAppointmentForm.getAppointmentDate().getAsLocalDate()
         .orElseThrow(
-            () -> new IllegalStateException("Appointment date is invalid in form for nomination [%s]".formatted(
-              nominationDetail.getNomination().getId()
-            )));
+            () -> new IllegalStateException(
+                "Appointment date is invalid in form for nomination [%s]".formatted(nominationId.id())
+            )
+        );
 
     caseEventService.createAppointmentConfirmationEvent(
         nominationDetail,
@@ -46,7 +50,7 @@ class ConfirmNominationAppointmentSubmissionService {
 
     fileAssociationService.submitFiles(confirmNominationAppointmentForm.getFiles());
     nominationDetailStatusService.confirmAppointment(nominationDetail);
-    appointmentConfirmedEventPublisher.publish(nominationDetail);
+    appointmentConfirmedEventPublisher.publish(new NominationId(nominationDetail));
   }
 
 }

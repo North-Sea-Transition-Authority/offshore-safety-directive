@@ -10,11 +10,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 
 @ExtendWith(MockitoExtension.class)
 class ConfirmNominationAppointmentSubmissionServiceTest {
@@ -55,7 +56,7 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
     verify(fileAssociationService).submitFiles(List.of(fileUploadForm));
 
     verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
-    verify(appointmentConfirmedEventPublisher).publish(nominationDetail);
+    verify(appointmentConfirmedEventPublisher).publish(new NominationId(nominationDetail));
   }
 
   @Test
