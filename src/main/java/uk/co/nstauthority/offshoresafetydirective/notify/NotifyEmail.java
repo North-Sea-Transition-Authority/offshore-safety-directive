@@ -73,7 +73,7 @@ public class NotifyEmail {
     }
 
     public NotifyEmail build() {
-      return new NotifyEmail(template, personalisations);
+      return new NotifyEmail(template, new HashMap<>(personalisations));
     }
   }
 }

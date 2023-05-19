@@ -34,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUt
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.EmailUrlGenerationService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
@@ -198,12 +199,140 @@ class ConsulteeNotificationEventListenerTest {
     assertThat(resultingNotifyEmails.get(0).getPersonalisations())
         .contains(
             entry("NOMINATION_REFERENCE", nomination.nominationReference()),
+            entry("NOMINATION_LINK", "consultation-view-url"),
             entry(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY, firstConsultationCoordinatorTeamMember.firstName())
         );
 
     assertThat(resultingNotifyEmails.get(1).getPersonalisations())
         .contains(
             entry("NOMINATION_REFERENCE", nomination.nominationReference()),
+            entry("NOMINATION_LINK", "consultation-view-url"),
+            entry(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY, secondConsultationCoordinatorTeamMember.firstName())
+        );
+  }
+
+  @ArchTest
+  final ArchRule notifyConsultationCoordinatorsOfDecision_isAsync = methods()
+      .that()
+      .areDeclaredIn(ConsulteeNotificationEventListener.class)
+      .and().haveName("notifyConsultationCoordinatorsOfDecision")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule notifyConsultationCoordinatorsOfDecision_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(ConsulteeNotificationEventListener.class)
+      .and().haveName("notifyConsultationCoordinatorsOfDecision")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void notifyConsultationCoordinatorsOfDecision_whenInvalidNominationId_thenException() {
+
+    var nominationId = new NominationId(100);
+    var event = new NominationDecisionDeterminedEvent(nominationId);
+
+    given(nominationService.getNomination(nominationId))
+        .willReturn(Optional.empty());
+
+    assertThatExceptionOfType(IllegalStateException.class)
+        .isThrownBy(() -> consulteeNotificationEventListener.notifyConsultationCoordinatorsOfDecision(event));
+  }
+
+  @Test
+  void notifyConsultationCoordinatorsOfDecision_whenNoConsulteeCoordinators_thenNoEmailSent() {
+
+    var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
+
+    var nominationId = new NominationId(100);
+    var nomination = NominationDtoTestUtil.builder().build();
+
+    var event = new NominationDecisionDeterminedEvent(nominationId);
+
+    given(nominationService.getNomination(nominationId))
+        .willReturn(Optional.of(nomination));
+
+    given(teamMemberViewService.getTeamMembersWithRoles(
+        Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
+    )
+        .willReturn(Collections.emptyList());
+
+    consulteeNotificationEventListener.notifyConsultationCoordinatorsOfDecision(event);
+
+    then(notifyEmailService)
+        .shouldHaveNoInteractions();
+  }
+
+  @Test
+  void notifyConsultationCoordinatorsOfDecision_whenConsulteeCoordinators_thenEmailSent() {
+
+    var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
+
+    var nominationId = new NominationId(100);
+    var nomination = NominationDtoTestUtil.builder().build();
+
+    var event = new NominationDecisionDeterminedEvent(nominationId);
+
+    // GIVEN a valid nomination
+    given(nominationService.getNomination(nominationId))
+        .willReturn(Optional.of(nomination));
+
+    // AND two consultee coordinator users
+    var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
+        .withFirstName("first")
+        .withContactEmail("first@wios.co.uk")
+        .withWebUserAccountId(10)
+        .build();
+
+    var secondConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
+        .withFirstName("second")
+        .withContactEmail("second@wios.co.uk")
+        .withWebUserAccountId(20)
+        .build();
+
+    given(teamMemberViewService.getTeamMembersWithRoles(
+        Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
+    )
+        .willReturn(List.of(firstConsultationCoordinatorTeamMember, secondConsultationCoordinatorTeamMember));
+
+    var consultationViewUrl = ReverseRouter.route(on(NominationConsulteeViewController.class)
+        .renderNominationView(nominationId));
+
+    given(emailUrlGenerationService.generateEmailUrl(consultationViewUrl))
+        .willReturn("consultation-view-url");
+
+    // WHEN the event listener is invoked
+    consulteeNotificationEventListener.notifyConsultationCoordinatorsOfDecision(event);
+
+    // THEN each consultee coordinator gets an email addressed to them
+    then(notifyEmailService)
+        .should(onlyOnce())
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(firstConsultationCoordinatorTeamMember.contactEmail()));
+
+    then(notifyEmailService)
+        .should(onlyOnce())
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(secondConsultationCoordinatorTeamMember.contactEmail()));
+
+    then(notifyEmailService)
+        .shouldHaveNoMoreInteractions();
+
+    List<NotifyEmail> resultingNotifyEmails = notifyEmailArgumentCaptor.getAllValues();
+
+    assertThat(resultingNotifyEmails)
+        .extracting(NotifyEmail::getTemplate)
+        .containsOnly(NotifyTemplate.NOMINATION_DECISION_DETERMINED);
+
+    assertThat(resultingNotifyEmails.get(0).getPersonalisations())
+        .contains(
+            entry("NOMINATION_REFERENCE", nomination.nominationReference()),
+            entry("NOMINATION_LINK", "consultation-view-url"),
+            entry(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY, firstConsultationCoordinatorTeamMember.firstName())
+        );
+
+    assertThat(resultingNotifyEmails.get(1).getPersonalisations())
+        .contains(
+            entry("NOMINATION_REFERENCE", nomination.nominationReference()),
+            entry("NOMINATION_LINK", "consultation-view-url"),
             entry(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY, secondConsultationCoordinatorTeamMember.firstName())
         );
   }

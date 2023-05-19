@@ -8,6 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 
 @Service
@@ -17,16 +18,19 @@ class NominationDecisionSubmissionService {
   private final FileUploadService fileUploadService;
   private final FileAssociationService fileAssociationService;
   private final NominationDetailService nominationDetailService;
+  private final NominationDecisionDeterminedEventPublisher nominationDecisionDeterminedEventPublisher;
 
   @Autowired
   NominationDecisionSubmissionService(CaseEventService caseEventService,
                                       FileUploadService fileUploadService,
                                       FileAssociationService fileAssociationService,
-                                      NominationDetailService nominationDetailService) {
+                                      NominationDetailService nominationDetailService,
+                                      NominationDecisionDeterminedEventPublisher nominationDecisionDeterminedEventPublisher) {
     this.caseEventService = caseEventService;
     this.fileUploadService = fileUploadService;
     this.fileAssociationService = fileAssociationService;
     this.nominationDetailService = nominationDetailService;
+    this.nominationDecisionDeterminedEventPublisher = nominationDecisionDeterminedEventPublisher;
   }
 
   @Transactional
@@ -50,6 +54,8 @@ class NominationDecisionSubmissionService {
         nominationDetail,
         EnumUtils.getEnum(NominationDecision.class, nominationDecisionForm.getNominationDecision())
     );
+
+    nominationDecisionDeterminedEventPublisher.publish(new NominationId(nominationDetail));
   }
 
 }

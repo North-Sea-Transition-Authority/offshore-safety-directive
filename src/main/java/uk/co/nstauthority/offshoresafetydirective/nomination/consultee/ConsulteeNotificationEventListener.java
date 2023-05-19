@@ -13,9 +13,11 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.EmailUrlGenerationService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
@@ -64,16 +66,52 @@ class ConsulteeNotificationEventListener {
         consultationRequestedEvent.getNominationId().id()
     );
 
-    emailConsulteeCoordinators(consultationRequestedEvent.getNominationId());
+    var nominationId = consultationRequestedEvent.getNominationId();
+
+    NominationDto nomination = getNomination(nominationId);
+
+    var nominationUrl = emailUrlGenerationService.generateEmailUrl(
+        ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+    );
+
+    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
+        NotifyTemplate.CONSULTATION_REQUESTED,
+        serviceBrandingConfigurationProperties
+    )
+        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
+        .addPersonalisation("NOMINATION_LINK", nominationUrl);
+
+    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
   }
 
-  private void emailConsulteeCoordinators(NominationId nominationId) {
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void notifyConsultationCoordinatorsOfDecision(NominationDecisionDeterminedEvent decisionDeterminedEvent) {
 
-    var nomination = nominationService.getNomination(nominationId)
-        .orElseThrow(() -> new IllegalStateException(
-            "Unable to find nomination with ID %s, consultation request emails have not been sent"
-                .formatted(nominationId)
-        ));
+    LOGGER.info(
+        "Handling NominationDecisionDeterminedEvent for nomination with ID {}",
+        decisionDeterminedEvent.getNominationId().id()
+    );
+
+    var nominationId = decisionDeterminedEvent.getNominationId();
+
+    NominationDto nomination = getNomination(nominationId);
+
+    var nominationUrl = emailUrlGenerationService.generateEmailUrl(
+        ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+    );
+
+    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
+            NotifyTemplate.NOMINATION_DECISION_DETERMINED,
+            serviceBrandingConfigurationProperties
+        )
+        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
+        .addPersonalisation("NOMINATION_LINK", nominationUrl);
+
+    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
+  }
+
+  private void emailConsulteeCoordinators(NotifyEmail.Builder notifyEmailBuilder) {
 
     List<TeamMemberView> consulteeCoordinators = teamMemberViewService.getTeamMembersWithRoles(
         Set.of(CONSULTATION_COORDINATOR_ROLE),
@@ -82,23 +120,22 @@ class ConsulteeNotificationEventListener {
 
     if (!consulteeCoordinators.isEmpty()) {
 
-      var nominationUrl = emailUrlGenerationService.generateEmailUrl(
-          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
-      );
-
       consulteeCoordinators.forEach(consulteeCoordinator -> {
 
-        NotifyEmail consultationRequestedEmail = NotifyEmail.builder(
-            NotifyTemplate.CONSULTATION_REQUESTED,
-            serviceBrandingConfigurationProperties
-        )
-            .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
-            .addPersonalisation("NOMINATION_LINK", nominationUrl)
+        NotifyEmail notifyEmail = notifyEmailBuilder
             .addRecipientIdentifier(consulteeCoordinator.firstName())
             .build();
 
-        notifyEmailService.sendEmail(consultationRequestedEmail, consulteeCoordinator.contactEmail());
+        notifyEmailService.sendEmail(notifyEmail, consulteeCoordinator.contactEmail());
       });
     }
+  }
+
+  private NominationDto getNomination(NominationId nominationId) {
+    return nominationService.getNomination(nominationId)
+        .orElseThrow(() -> new IllegalStateException(
+            "Unable to find nomination with ID %s, consultation request emails have not been sent"
+                .formatted(nominationId)
+        ));
   }
 }
