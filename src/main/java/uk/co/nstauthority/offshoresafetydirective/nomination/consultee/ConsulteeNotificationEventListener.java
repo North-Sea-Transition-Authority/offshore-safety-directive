@@ -2,7 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +13,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -21,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.cons
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.EmailUrlGenerationService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
+import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyTemplate;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
@@ -39,7 +41,7 @@ class ConsulteeNotificationEventListener {
 
   private final NotifyEmailService notifyEmailService;
 
-  private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
+  private final NotifyEmailBuilderService notifyEmailBuilderService;
 
   private final NominationService nominationService;
 
@@ -48,12 +50,12 @@ class ConsulteeNotificationEventListener {
   @Autowired
   ConsulteeNotificationEventListener(TeamMemberViewService teamMemberViewService,
                                      NotifyEmailService notifyEmailService,
-                                     ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+                                     NotifyEmailBuilderService notifyEmailBuilderService,
                                      NominationService nominationService,
                                      EmailUrlGenerationService emailUrlGenerationService) {
     this.teamMemberViewService = teamMemberViewService;
     this.notifyEmailService = notifyEmailService;
-    this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.notifyEmailBuilderService = notifyEmailBuilderService;
     this.nominationService = nominationService;
     this.emailUrlGenerationService = emailUrlGenerationService;
   }
@@ -66,20 +68,9 @@ class ConsulteeNotificationEventListener {
 
     LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
-    NominationDto nomination = getNomination(nominationId);
+    Map<String, String> personalisations = constructPersonalisations(nominationId);
 
-    var nominationUrl = emailUrlGenerationService.generateEmailUrl(
-        ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
-    );
-
-    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
-        NotifyTemplate.CONSULTATION_REQUESTED,
-        serviceBrandingConfigurationProperties
-    )
-        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
-        .addPersonalisation("NOMINATION_LINK", nominationUrl);
-
-    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
+    emailConsulteeCoordinators(NotifyTemplate.CONSULTATION_REQUESTED, personalisations);
   }
 
   @Async
@@ -90,20 +81,9 @@ class ConsulteeNotificationEventListener {
 
     LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
 
-    NominationDto nomination = getNomination(nominationId);
+    Map<String, String> personalisations = constructPersonalisations(nominationId);
 
-    var nominationUrl = emailUrlGenerationService.generateEmailUrl(
-        ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
-    );
-
-    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
-            NotifyTemplate.NOMINATION_DECISION_DETERMINED,
-            serviceBrandingConfigurationProperties
-        )
-        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
-        .addPersonalisation("NOMINATION_LINK", nominationUrl);
-
-    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
+    emailConsulteeCoordinators(NotifyTemplate.NOMINATION_DECISION_DETERMINED, personalisations);
   }
 
   @Async
@@ -114,23 +94,27 @@ class ConsulteeNotificationEventListener {
 
     LOGGER.info("Handling AppointmentConfirmedEvent for nomination with ID {}", nominationId.id());
 
+    Map<String, String> personalisations = constructPersonalisations(nominationId);
+
+    emailConsulteeCoordinators(NotifyTemplate.NOMINATION_APPOINTMENT_CONFIRMED, personalisations);
+  }
+
+  private Map<String, String> constructPersonalisations(NominationId nominationId) {
+
     NominationDto nomination = getNomination(nominationId);
 
     var nominationUrl = emailUrlGenerationService.generateEmailUrl(
         ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
     );
 
-    NotifyEmail.Builder consultationRequestedEmailBuilder = NotifyEmail.builder(
-            NotifyTemplate.NOMINATION_APPOINTMENT_CONFIRMED,
-            serviceBrandingConfigurationProperties
-        )
-        .addPersonalisation("NOMINATION_REFERENCE", nomination.nominationReference())
-        .addPersonalisation("NOMINATION_LINK", nominationUrl);
+    Map<String, String> personalisations = new HashMap<>();
+    personalisations.put("NOMINATION_REFERENCE", nomination.nominationReference());
+    personalisations.put("NOMINATION_LINK", nominationUrl);
 
-    emailConsulteeCoordinators(consultationRequestedEmailBuilder);
+    return personalisations;
   }
 
-  private void emailConsulteeCoordinators(NotifyEmail.Builder notifyEmailBuilder) {
+  private void emailConsulteeCoordinators(NotifyTemplate notifyTemplate, Map<String, String> personalisations) {
 
     List<TeamMemberView> consulteeCoordinators = teamMemberViewService.getTeamMembersWithRoles(
         Set.of(CONSULTATION_COORDINATOR_ROLE),
@@ -141,7 +125,9 @@ class ConsulteeNotificationEventListener {
 
       consulteeCoordinators.forEach(consulteeCoordinator -> {
 
-        NotifyEmail notifyEmail = notifyEmailBuilder
+        NotifyEmail notifyEmail = notifyEmailBuilderService
+            .builder(notifyTemplate)
+            .addPersonalisations(personalisations)
             .addRecipientIdentifier(consulteeCoordinator.firstName())
             .build();
 

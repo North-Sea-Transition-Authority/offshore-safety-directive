@@ -62,6 +62,11 @@ public class NotifyEmail {
       this.template = template;
     }
 
+    public Builder addPersonalisations(Map<String, String> personalisations) {
+      this.personalisations.putAll(personalisations);
+      return this;
+    }
+
     public Builder addPersonalisation(String personalisationKey, String value) {
       personalisations.put(personalisationKey, value);
       return this;

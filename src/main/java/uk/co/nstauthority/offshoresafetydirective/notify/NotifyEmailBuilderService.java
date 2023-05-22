@@ -10,7 +10,7 @@ public class NotifyEmailBuilderService {
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
 
   @Autowired
-  NotifyEmailBuilderService(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
+  public NotifyEmailBuilderService(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
   }
 

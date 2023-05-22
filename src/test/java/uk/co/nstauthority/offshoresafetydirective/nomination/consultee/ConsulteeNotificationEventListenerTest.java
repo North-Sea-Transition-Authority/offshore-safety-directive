@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.cons
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.EmailUrlGenerationService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
+import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyTemplate;
@@ -77,10 +78,14 @@ class ConsulteeNotificationEventListenerTest {
     nominationService = mock(NominationService.class);
     emailUrlGenerationService = mock(EmailUrlGenerationService.class);
 
+    var notifyEmailBuilderService = new NotifyEmailBuilderService(
+        serviceBrandingConfigurationProperties
+    );
+
     consulteeNotificationEventListener = new ConsulteeNotificationEventListener(
         teamMemberViewService,
         notifyEmailService,
-        serviceBrandingConfigurationProperties,
+        notifyEmailBuilderService,
         nominationService,
         emailUrlGenerationService
     );
