@@ -42,7 +42,7 @@ public class NominationService {
   }
 
   @Transactional
-  public void startNominationUpdate(NominationDetail nominationDetail) {
+  public NominationDetail startNominationUpdate(NominationDetail nominationDetail) {
     if (NominationStatus.DRAFT.equals(nominationDetail.getStatus())) {
       throw new IllegalStateException(
           "Cannot start an update on a draft nomination [%d]".formatted(
@@ -56,7 +56,7 @@ public class NominationService {
     detailUpdate.setCreatedInstant(clock.instant());
     detailUpdate.setVersion(currentNominationDetailDto.version() + 1);
     detailUpdate.setStatus(NominationStatus.DRAFT);
-    nominationDetailRepository.save(detailUpdate);
+    return nominationDetailRepository.save(detailUpdate);
   }
 
   public Nomination getNominationByIdOrError(NominationId nominationId) {

@@ -32,6 +32,10 @@ public class PropertyObjectAssert {
     this.objectAssert = objectAssert;
   }
 
+  public static PropertyObjectAssert thenAssertThat(Object o) {
+    return new PropertyObjectAssert(new ObjectAssert<>(o));
+  }
+
   /**
    * Asserts that an object contains the field/property with a given value.
    *

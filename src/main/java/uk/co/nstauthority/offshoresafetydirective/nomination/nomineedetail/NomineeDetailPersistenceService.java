@@ -22,6 +22,11 @@ class NomineeDetailPersistenceService {
   }
 
   @Transactional
+  public NomineeDetail saveNomineeDetail(NomineeDetail nomineeDetail) {
+    return nomineeDetailRepository.save(nomineeDetail);
+  }
+
+  @Transactional
   public void createOrUpdateNomineeDetail(NominationDetail nominationDetail, NomineeDetailForm form) {
     var nomineeDetailOptional = nomineeDetailRepository.findByNominationDetail(nominationDetail);
     NomineeDetail nomineeDetail;
