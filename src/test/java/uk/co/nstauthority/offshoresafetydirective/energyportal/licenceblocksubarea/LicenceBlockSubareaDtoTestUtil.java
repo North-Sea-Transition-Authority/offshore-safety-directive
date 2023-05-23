@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class LicenceBlockSubareaDtoTestUtil {
@@ -26,6 +27,8 @@ public class LicenceBlockSubareaDtoTestUtil {
     private String blockSuffix = "block suffix";
 
     private String blockReference = "block reference";
+
+    private Integer licenceId = 100;
 
     private String licenceType = "licence type";
 
@@ -67,6 +70,11 @@ public class LicenceBlockSubareaDtoTestUtil {
       return this;
     }
 
+    public Builder withLicenceId(Integer licenceId) {
+      this.licenceId = licenceId;
+      return this;
+    }
+
     public Builder withLicenceType(String licenceType) {
       this.licenceType = licenceType;
       return this;
@@ -98,6 +106,7 @@ public class LicenceBlockSubareaDtoTestUtil {
               new LicenceBlock.BlockReference(blockReference)
           ),
           new LicenceDto(
+              new LicenceId(licenceId),
               new LicenceDto.LicenceType(licenceType),
               new LicenceDto.LicenceNumber(licenceNumber),
               new LicenceDto.LicenceReference(licenceReference)

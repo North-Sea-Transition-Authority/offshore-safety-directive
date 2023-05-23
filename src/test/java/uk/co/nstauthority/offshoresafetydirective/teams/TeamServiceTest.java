@@ -176,7 +176,7 @@ class TeamServiceTest {
     var teamId = new TeamId(UUID.randomUUID());
 
     when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(true);
-    assertTrue(teamMemberService.isMemberOfTeam(teamId, wuaId));
+    assertTrue(teamService.isMemberOfTeam(wuaId, teamId));
   }
 
   @Test
@@ -185,6 +185,6 @@ class TeamServiceTest {
     var teamId = new TeamId(UUID.randomUUID());
 
     when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(false);
-    assertFalse(teamMemberService.isMemberOfTeam(teamId, wuaId));
+    assertFalse(teamService.isMemberOfTeam(wuaId, teamId));
   }
 }

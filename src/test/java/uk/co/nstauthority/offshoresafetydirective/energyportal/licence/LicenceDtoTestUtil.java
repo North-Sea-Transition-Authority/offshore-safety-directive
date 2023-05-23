@@ -14,6 +14,8 @@ public class LicenceDtoTestUtil {
 
   public static class Builder {
 
+    private Integer licenceId = 100;
+
     private String licenceType = "licence type";
 
     private Integer licenceNumber = 20;
@@ -21,6 +23,11 @@ public class LicenceDtoTestUtil {
     private String licenceReference = "licence reference";
 
     private Builder() {}
+
+    public Builder withLicenceId(Integer licenceId) {
+      this.licenceId = licenceId;
+      return this;
+    }
 
     public Builder withLicenceType(String licenceType) {
       this.licenceType = licenceType;
@@ -39,6 +46,7 @@ public class LicenceDtoTestUtil {
 
     public LicenceDto build() {
       return new LicenceDto(
+          new LicenceId(licenceId),
           new LicenceDto.LicenceType(licenceType),
           new LicenceDto.LicenceNumber(licenceNumber),
           new LicenceDto.LicenceReference(licenceReference)

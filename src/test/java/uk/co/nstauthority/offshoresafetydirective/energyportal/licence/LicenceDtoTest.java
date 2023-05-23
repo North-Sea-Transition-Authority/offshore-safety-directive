@@ -12,6 +12,7 @@ class LicenceDtoTest {
   void fromPortalLicence_whenAllValuesNotNull_verifyPropertyMappings() {
 
     var portalLicence = EpaLicenceTestUtil.builder()
+        .withId(2)
         .withLicenceType("licence type")
         .withLicenceNumber(100)
         .withLicenceReference("licence reference")
@@ -21,11 +22,13 @@ class LicenceDtoTest {
 
     assertThat(resultingLicenceDto)
         .extracting(
+            licenceDto -> licenceDto.licenceId().id(),
             licenceDto -> licenceDto.licenceType().value(),
             licenceDto -> licenceDto.licenceNumber().value(),
             licenceDto -> licenceDto.licenceReference().value()
         )
         .containsExactly(
+            portalLicence.getId(),
             portalLicence.getLicenceType(),
             portalLicence.getLicenceNo(),
             portalLicence.getLicenceRef()
@@ -46,11 +49,13 @@ class LicenceDtoTest {
 
     assertThat(resultingLicenceDto)
         .extracting(
+            licenceDto -> licenceDto.licenceId().id(),
             licenceDto -> licenceDto.licenceType().value(),
             licenceDto -> licenceDto.licenceNumber().value(),
             licenceDto -> licenceDto.licenceReference().value()
         )
         .containsExactly(
+            portalLicence.getId(),
             portalLicence.getLicenceType(),
             portalLicence.getLicenceNo(),
             portalLicence.getLicenceRef()

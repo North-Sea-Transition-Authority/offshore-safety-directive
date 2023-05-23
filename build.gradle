@@ -57,7 +57,7 @@ dependencies {
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
 	implementation 'org.flywaydb:flyway-core:8.5.13'
 
-	implementation 'uk.co.fivium.energyportalapi:client:v5.0.0'
+	implementation 'uk.co.fivium.energyportalapi:client:v6.0.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
 
