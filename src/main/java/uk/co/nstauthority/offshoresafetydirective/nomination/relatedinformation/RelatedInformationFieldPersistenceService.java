@@ -27,6 +27,11 @@ class RelatedInformationFieldPersistenceService {
   }
 
   @Transactional
+  public void saveAllRelatedInformationFields(Collection<RelatedInformationField> relatedInformationFields) {
+    relatedInformationFieldRepository.saveAll(relatedInformationFields);
+  }
+
+  @Transactional
   public void updateLinkedFields(RelatedInformation relatedInformation, Collection<Integer> fieldIds) {
 
     removeExistingLinkedFields(relatedInformation);

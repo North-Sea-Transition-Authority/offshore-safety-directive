@@ -26,6 +26,11 @@ class RelatedInformationPersistenceService {
   }
 
   @Transactional
+  public void saveRelatedInformation(RelatedInformation relatedInformation) {
+    relatedInformationRepository.save(relatedInformation);
+  }
+
+  @Transactional
   public void createOrUpdateRelatedInformation(NominationDetail nominationDetail,
                                                RelatedInformationForm relatedInformationForm) {
 
