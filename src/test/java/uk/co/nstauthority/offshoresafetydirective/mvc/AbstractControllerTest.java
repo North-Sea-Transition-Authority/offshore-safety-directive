@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
@@ -28,6 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHel
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
@@ -45,8 +47,9 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     HasTeamPermissionInterceptor.class,
     NominationInterceptor.class,
     HasPermissionInterceptor.class,
+    UpdateRequestInterceptor.class,
     PermissionService.class,
-    WebSecurityConfiguration.class
+    WebSecurityConfiguration.class,
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -71,6 +74,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
+
+  @MockBean
+  protected CaseEventQueryService caseEventQueryService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

@@ -181,14 +181,14 @@ public class NominationCaseProcessingModelAndViewGenerator {
         actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
       }
 
-      if (canRequestNominationUpdate(nominationDetailDto)) {
-        // TODO OSDOP-251 - Hide this action once an update has been requested
-        actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
-      }
-
-      if (canUpdateNomination(nominationDetailDto)) {
-        // TODO OSDOP-251 - Make this action visible only when an update has been requested
-        actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
+      if (caseEventQueryService.hasUpdateRequest(nominationDetail)) {
+        if (canUpdateNomination(nominationDetailDto)) {
+          actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
+        }
+      } else {
+        if (canRequestNominationUpdate(nominationDetailDto)) {
+          actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+        }
       }
 
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()

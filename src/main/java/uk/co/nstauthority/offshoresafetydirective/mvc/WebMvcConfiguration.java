@@ -13,6 +13,7 @@ import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 
@@ -32,16 +33,19 @@ class WebMvcConfiguration implements WebMvcConfigurer {
 
   private final HasPermissionInterceptor hasPermissionInterceptor;
   private final HasTeamPermissionInterceptor hasTeamPermissionInterceptor;
+  private final UpdateRequestInterceptor updateRequestInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
                       NominationInterceptor nominationInterceptor,
                       HasPermissionInterceptor hasPermissionInterceptor,
-                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor) {
+                      HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
+                      UpdateRequestInterceptor updateRequestInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
     this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
+    this.updateRequestInterceptor = updateRequestInterceptor;
   }
 
   @Override
@@ -62,6 +66,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(hasTeamPermissionInterceptor)
         .addPathPatterns("/permission-management/**");
     registry.addInterceptor(nominationInterceptor)
+        .addPathPatterns("/nomination/**");
+    registry.addInterceptor(updateRequestInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);

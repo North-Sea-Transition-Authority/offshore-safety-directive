@@ -40,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
@@ -86,6 +87,13 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
         .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    when(caseEventQueryService.getLatestReasonForUpdate(nominationDetail)).thenReturn(Optional.empty());
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
   }
 
   @SecurityTest
@@ -115,6 +123,48 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
         .test();
   }
 
+  @SecurityTest
+  void requestUpdate_whenUpdateAlreadyRequested_thenForbidden() throws Exception {
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail)).thenReturn(true);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationRequestUpdateController.class).requestUpdate(NOMINATION_ID, true,
+                CaseProcessingActionIdentifier.REQUEST_UPDATE, null, null, null)))
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf())
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void requestUpdate_whenNoUpdatedRequested_thenOk() throws Exception {
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail)).thenReturn(false);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(post(ReverseRouter.route(
+        on(NominationRequestUpdateController.class).requestUpdate(NOMINATION_ID, true,
+            CaseProcessingActionIdentifier.REQUEST_UPDATE, null, null, null)))
+        .with(user(NOMINATION_MANAGER_USER))
+        .with(csrf())
+    )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
+          )
+        );
+  }
+
   @Test
   void requestUpdate_whenNoNominationDetailFound_thenNotFound() throws Exception {
 
@@ -140,7 +190,9 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
       return invocation;
     }).when(nominationRequestUpdateValidator).validate(any(), any());
 
-    var modelAndView = new ModelAndView("test_view");
+    var modelAndViewName = "test_view";
+
+    var modelAndView = new ModelAndView(modelAndViewName);
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(any(), any()))
         .thenReturn(modelAndView);

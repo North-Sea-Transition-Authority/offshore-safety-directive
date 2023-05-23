@@ -419,10 +419,141 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(managementActionGroupItemMap)
         .containsExactlyEntriesOf(
             ImmutableMap.of(
-                CaseProcessingActionGroup.UPDATE_NOMINATION, List.of(CaseProcessingActionItem.UPDATE_NOMINATION),
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
                 CaseProcessingActionGroup.REQUEST_UPDATE, List.of(CaseProcessingActionItem.REQUEST_UPDATE),
+                CaseProcessingActionGroup.CONSULTATIONS, List.of(
+                    CaseProcessingActionItem.SEND_FOR_CONSULTATION,
+                    CaseProcessingActionItem.CONSULTATION_RESPONSE
+                ),
+                CaseProcessingActionGroup.DECISION, List.of(
+                    CaseProcessingActionItem.NOMINATION_DECISION,
+                    CaseProcessingActionItem.WITHDRAW
+                ),
+                CaseProcessingActionGroup.RELATED_APPLICATIONS, List.of(
+                    CaseProcessingActionItem.PEARS_REFERENCE,
+                    CaseProcessingActionItem.WONS_REFERENCE
+                )
+            )
+        );
+
+    assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_andUpdateRequested() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName()).build();
+
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+        .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .thenReturn(List.of(caseEventView));
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
+
+    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+        .thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail)).thenReturn(true);
+
+    var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
+    var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
+    var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
+        .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
+        .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    var persistentAttributes = List.of(
+        "breadcrumbsList",
+        "currentPage",
+        "headerInformation",
+        "summaryView",
+        "qaChecksForm",
+        "form",
+        "withdrawNominationForm",
+        "confirmAppointmentForm",
+        "generalCaseNoteForm",
+        "pearsPortalReferenceForm",
+        "wonsPortalReferenceForm",
+        "caseEvents",
+        "activePortalReferencesView",
+        "managementActions",
+        "nominationConsultationResponseForm",
+        "nominationRequestUpdateForm"
+    );
+
+    var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
+    var assertionAttributes = persistentAttributes.stream()
+        .filter(s -> !ignoredAttributes.contains(s))
+        .toList();
+
+    assertThat(result.getModel())
+        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
+        .extracting(assertionAttributes.toArray(String[]::new))
+        .containsExactly(
+            header,
+            nominationSummaryView,
+            qaChecksForm,
+            decisionForm,
+            withdrawForm,
+            confirmAppointmentForm,
+            generalCaseNoteForm,
+            pearsPortalReferenceForm,
+            wonsPortalReferenceForm,
+            List.of(caseEventView),
+            activePortalReferencesView,
+            nominationConsultationResponseForm,
+            nominationRequestUpdateForm
+        );
+
+    @SuppressWarnings("unchecked")
+    var managementActions =
+        (Map<CaseProcessingActionGroup, List<CaseProcessingAction>>)
+            result.getModel().get("managementActions");
+
+    var managementActionGroupItemMap = getManagementActionGroupItemMap(managementActions);
+
+    assertThat(managementActionGroupItemMap)
+        .containsExactlyEntriesOf(
+            ImmutableMap.of(
+                CaseProcessingActionGroup.UPDATE_NOMINATION, List.of(CaseProcessingActionItem.UPDATE_NOMINATION),
+                CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
+                CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
                 CaseProcessingActionGroup.CONSULTATIONS, List.of(
                     CaseProcessingActionItem.SEND_FOR_CONSULTATION,
                     CaseProcessingActionItem.CONSULTATION_RESPONSE

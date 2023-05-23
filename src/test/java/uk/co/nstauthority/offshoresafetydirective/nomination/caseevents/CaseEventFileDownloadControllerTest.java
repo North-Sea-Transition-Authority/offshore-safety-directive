@@ -50,9 +50,6 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
   @MockBean
   private FileControllerHelperService fileControllerHelperService;
 
-  @MockBean
-  private CaseEventQueryService caseEventQueryService;
-
   @SecurityTest
   void download_assertStatusesPermitted() {
 

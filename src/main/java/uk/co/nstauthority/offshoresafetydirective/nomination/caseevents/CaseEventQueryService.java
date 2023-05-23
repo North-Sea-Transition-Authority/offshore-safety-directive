@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortal
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 
 @Service
 public class CaseEventQueryService {
@@ -60,6 +61,19 @@ public class CaseEventQueryService {
         dto.version()
     )
         .map(CaseEvent::getComment);
+  }
+
+  public boolean hasUpdateRequest(NominationDetail nominationDetail) {
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    Optional<CaseEvent> updateRequestEvent = caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetail.getNomination(),
+        nominationDetailDto.version()
+    );
+
+    return updateRequestEvent.isPresent() && nominationDetailDto.nominationStatus() != NominationStatus.WITHDRAWN;
   }
 
   public List<CaseEventView> getCaseEventViewsForNominationDetail(NominationDetail nominationDetail) {

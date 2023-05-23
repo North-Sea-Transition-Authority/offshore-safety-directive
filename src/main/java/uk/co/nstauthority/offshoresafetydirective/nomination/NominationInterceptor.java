@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,8 +12,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 
@@ -40,7 +39,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
     if (handler instanceof HandlerMethod handlerMethod
         && hasAnnotations(handlerMethod, SUPPORTED_SECURITY_ANNOTATIONS)
     ) {
-      var nominationId = extractNominationIdFromRequest(request, handlerMethod);
+      var nominationId = NominationInterceptorUtil.extractNominationIdFromRequest(request, handlerMethod);
 
       NominationDetail nominationDetail;
       var annotation = (HasNominationStatus) getAnnotation(handlerMethod, HasNominationStatus.class);
@@ -93,21 +92,4 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
     }
   }
 
-  private static NominationId extractNominationIdFromRequest(HttpServletRequest httpServletRequest,
-                                                             HandlerMethod handlerMethod) {
-
-    var nominationIdParameter = getPathVariableByClass(handlerMethod, NominationId.class);
-
-    if (nominationIdParameter.isEmpty()) {
-      var errorMessage = "No path variable of type NominationId found in request";
-      LoggerUtil.warn(errorMessage);
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage);
-    }
-
-    @SuppressWarnings("unchecked")
-    var pathVariables = (Map<String, String>) httpServletRequest
-        .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
-
-    return NominationId.valueOf(pathVariables.get(nominationIdParameter.get().getName()));
-  }
 }
