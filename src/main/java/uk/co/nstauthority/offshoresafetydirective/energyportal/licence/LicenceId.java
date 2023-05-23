@@ -1,4 +1,4 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
-public record LicenceId(int id) {
+public record LicenceId(Integer id) {
 }
