@@ -21,6 +21,11 @@ class ApplicantDetailPersistenceService {
   }
 
   @Transactional
+  public void saveApplicantDetail(ApplicantDetail applicantDetail) {
+    applicationDetailRepository.save(applicantDetail);
+  }
+
+  @Transactional
   public ApplicantDetail createOrUpdateApplicantDetail(ApplicantDetailForm form, NominationDetail nominationDetail) {
     ApplicantDetail applicantDetail = applicationDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateApplicantDetail(nominationDetail, entity, form))
