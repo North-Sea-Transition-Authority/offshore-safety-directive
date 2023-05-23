@@ -16,6 +16,7 @@ class NominatedInstallationDetailTestUtil {
   
   public static class NominatedInstallationDetailBuilder {
 
+    private Integer id = 851;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
@@ -24,6 +25,11 @@ class NominatedInstallationDetailTestUtil {
     private Boolean developmentCommissioningPhase;
     private Boolean developmentProductionPhase;
     private Boolean decommissioningPhase;
+
+    public NominatedInstallationDetailBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
 
     public NominatedInstallationDetailBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
@@ -66,15 +72,16 @@ class NominatedInstallationDetailTestUtil {
     }
 
     public NominatedInstallationDetail build() {
-      return new NominatedInstallationDetail()
-          .setNominationDetail(nominationDetail)
-          .setForAllInstallationPhases(forAllInstallationPhases)
-          .setDevelopmentDesignPhase(developmentDesignPhase)
-          .setDevelopmentConstructionPhase(developmentConstructionPhase)
-          .setDevelopmentInstallationPhase(developmentInstallationPhase)
-          .setDevelopmentCommissioningPhase(developmentCommissioningPhase)
-          .setDevelopmentProductionPhase(developmentProductionPhase)
-          .setDecommissioningPhase(decommissioningPhase);
+      var nominatedInstallationDetail = new NominatedInstallationDetail(id);
+      nominatedInstallationDetail.setNominationDetail(nominationDetail);
+      nominatedInstallationDetail.setForAllInstallationPhases(forAllInstallationPhases);
+      nominatedInstallationDetail.setDevelopmentDesignPhase(developmentDesignPhase);
+      nominatedInstallationDetail.setDevelopmentConstructionPhase(developmentConstructionPhase);
+      nominatedInstallationDetail.setDevelopmentInstallationPhase(developmentInstallationPhase);
+      nominatedInstallationDetail.setDevelopmentCommissioningPhase(developmentCommissioningPhase);
+      nominatedInstallationDetail.setDevelopmentProductionPhase(developmentProductionPhase);
+      nominatedInstallationDetail.setDecommissioningPhase(decommissioningPhase);
+      return nominatedInstallationDetail;
     }
   }
 }

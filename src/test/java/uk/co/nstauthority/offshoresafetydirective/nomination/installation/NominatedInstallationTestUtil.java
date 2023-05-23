@@ -15,8 +15,15 @@ public class NominatedInstallationTestUtil {
   }
 
   public static class NominatedInstallationBuilder {
+
+    private Integer id = 925;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Integer installationId = 1;
+
+    public NominatedInstallationBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
 
     public NominatedInstallationBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
@@ -29,9 +36,10 @@ public class NominatedInstallationTestUtil {
     }
 
     public NominatedInstallation build() {
-      return new NominatedInstallation()
-          .setNominationDetail(nominationDetail)
-          .setInstallationId(installationId);
+      var nominatedInstallation = new NominatedInstallation(id);
+      nominatedInstallation.setNominationDetail(nominationDetail);
+      nominatedInstallation.setInstallationId(installationId);
+      return nominatedInstallation;
     }
   }
 }

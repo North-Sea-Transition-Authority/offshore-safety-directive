@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,11 @@ class NominatedInstallationPersistenceService {
                                           InstallationQueryService installationQueryService) {
     this.nominatedInstallationRepository = nominatedInstallationRepository;
     this.installationQueryService = installationQueryService;
+  }
+
+  @Transactional
+  public void saveAllNominatedInstallations(Collection<NominatedInstallation> nominatedInstallations) {
+    nominatedInstallationRepository.saveAll(nominatedInstallations);
   }
 
   @Transactional

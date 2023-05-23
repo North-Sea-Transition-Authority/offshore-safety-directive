@@ -14,6 +14,7 @@ public class InstallationInclusionTestUtil {
   }
 
   public static class InstallationInclusionBuilder {
+    private Integer id = 1201;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean includeInstallationsInNomination = true;
 
@@ -27,10 +28,16 @@ public class InstallationInclusionTestUtil {
       return this;
     }
 
+    public InstallationInclusionBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
+
     public InstallationInclusion build() {
-      return new InstallationInclusion()
-          .setNominationDetail(nominationDetail)
-          .setIncludeInstallationsInNomination(includeInstallationsInNomination);
+      var installationInclusion = new InstallationInclusion(id);
+      installationInclusion.setNominationDetail(nominationDetail);
+      installationInclusion.setIncludeInstallationsInNomination(includeInstallationsInNomination);
+      return installationInclusion;
     }
   }
 }

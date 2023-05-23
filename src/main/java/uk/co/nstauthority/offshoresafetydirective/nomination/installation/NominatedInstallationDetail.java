@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,6 +35,14 @@ class NominatedInstallationDetail {
   private Boolean developmentProductionPhase;
 
   private Boolean decommissioningPhase;
+
+  public NominatedInstallationDetail() {
+  }
+
+  @VisibleForTesting
+  NominatedInstallationDetail(Integer id) {
+    this.id = id;
+  }
 
   Integer getId() {
     return id;

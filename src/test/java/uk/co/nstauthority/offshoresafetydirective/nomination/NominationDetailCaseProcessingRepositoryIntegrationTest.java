@@ -77,6 +77,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
     testEntityManager.persistAndFlush(wellSelectionSetup);
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
+        .withId(null)
         .withNominationDetail(nominationDetail)
         .includeInstallationsInNomination(isInstallationIncluded)
         .build();

@@ -21,6 +21,11 @@ class NominatedInstallationDetailPersistenceService {
   }
 
   @Transactional
+  public void saveNominatedInstallationDetail(NominatedInstallationDetail nominatedInstallationDetail) {
+    nominatedInstallationDetailRepository.save(nominatedInstallationDetail);
+  }
+
+  @Transactional
   public void createOrUpdateNominatedInstallationDetail(NominationDetail nominationDetail,
                                                         NominatedInstallationDetailForm form) {
     var nominatedInstallationDetail = nominatedInstallationDetailRepository.findByNominationDetail(nominationDetail)

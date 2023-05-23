@@ -32,32 +32,32 @@ class RelatedInformationDuplicationServiceTest {
 
   @Test
   void duplicate_whenNoRelatedInformation() {
-    var oldNominationDetail = NominationDetailTestUtil.builder()
+    var sourceNominationDetail = NominationDetailTestUtil.builder()
         .withId(100)
         .build();
-    var newNominationDetail = NominationDetailTestUtil.builder()
+    var targetNominationDetail = NominationDetailTestUtil.builder()
         .withId(200)
         .build();
 
-    when(relatedInformationPersistenceService.getRelatedInformation(oldNominationDetail))
+    when(relatedInformationPersistenceService.getRelatedInformation(sourceNominationDetail))
         .thenReturn(Optional.empty());
 
-    relatedInformationDuplicationService.duplicate(oldNominationDetail, newNominationDetail);
+    relatedInformationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
 
     verifyNoInteractions(relatedInformationFieldPersistenceService);
   }
 
   @Test
   void duplicate() {
-    var oldNominationDetail = NominationDetailTestUtil.builder()
+    var sourceNominationDetail = NominationDetailTestUtil.builder()
         .withId(100)
         .build();
-    var newNominationDetail = NominationDetailTestUtil.builder()
+    var targetNominationDetail = NominationDetailTestUtil.builder()
         .withId(200)
         .build();
 
     var oldRelatedInformation = RelatedInformationTestUtil.builder()
-        .withNominationDetail(oldNominationDetail)
+        .withNominationDetail(sourceNominationDetail)
         .withRelationToAnyField(true)
         .withRelatedToLicenceApplications(true)
         .withRelatedLicenceApplications("PEARS/1")
@@ -65,7 +65,7 @@ class RelatedInformationDuplicationServiceTest {
         .withRelatedWellApplications("WONS/1")
         .build();
 
-    when(relatedInformationPersistenceService.getRelatedInformation(oldNominationDetail))
+    when(relatedInformationPersistenceService.getRelatedInformation(sourceNominationDetail))
         .thenReturn(Optional.of(oldRelatedInformation));
 
     var oldRelatedField = RelatedInformationFieldTestUtil.builder()
@@ -77,13 +77,13 @@ class RelatedInformationDuplicationServiceTest {
     when(relatedInformationFieldPersistenceService.getRelatedInformationFields(oldRelatedInformation))
         .thenReturn(List.of(oldRelatedField));
 
-    relatedInformationDuplicationService.duplicate(oldNominationDetail, newNominationDetail);
+    relatedInformationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
 
     var relatedInformationCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
     verify(relatedInformationPersistenceService).saveRelatedInformation(relatedInformationCaptor.capture());
 
     PropertyObjectAssert.thenAssertThat(relatedInformationCaptor.getValue())
-        .hasFieldOrPropertyWithValue("nominationDetail", newNominationDetail)
+        .hasFieldOrPropertyWithValue("nominationDetail", targetNominationDetail)
         .hasFieldOrPropertyWithValue("relatedToFields", oldRelatedInformation.getRelatedToFields())
         .hasFieldOrPropertyWithValue(
             "relatedToLicenceApplications",
@@ -121,15 +121,15 @@ class RelatedInformationDuplicationServiceTest {
 
   @Test
   void duplicate_whenNoRelatedInformationFields_thenVerifyNoFieldRepositoryInteractions() {
-    var oldNominationDetail = NominationDetailTestUtil.builder()
+    var sourceNominationDetail = NominationDetailTestUtil.builder()
         .withId(100)
         .build();
-    var newNominationDetail = NominationDetailTestUtil.builder()
+    var targetNominationDetail = NominationDetailTestUtil.builder()
         .withId(200)
         .build();
 
     var oldRelatedInformation = RelatedInformationTestUtil.builder()
-        .withNominationDetail(oldNominationDetail)
+        .withNominationDetail(sourceNominationDetail)
         .withRelationToAnyField(true)
         .withRelatedToLicenceApplications(true)
         .withRelatedLicenceApplications("PEARS/1")
@@ -137,19 +137,19 @@ class RelatedInformationDuplicationServiceTest {
         .withRelatedWellApplications("WONS/1")
         .build();
 
-    when(relatedInformationPersistenceService.getRelatedInformation(oldNominationDetail))
+    when(relatedInformationPersistenceService.getRelatedInformation(sourceNominationDetail))
         .thenReturn(Optional.of(oldRelatedInformation));
 
     when(relatedInformationFieldPersistenceService.getRelatedInformationFields(oldRelatedInformation))
         .thenReturn(List.of());
 
-    relatedInformationDuplicationService.duplicate(oldNominationDetail, newNominationDetail);
+    relatedInformationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
 
     var relatedInformationCaptor = ArgumentCaptor.forClass(RelatedInformation.class);
     verify(relatedInformationPersistenceService).saveRelatedInformation(relatedInformationCaptor.capture());
 
     PropertyObjectAssert.thenAssertThat(relatedInformationCaptor.getValue())
-        .hasFieldOrPropertyWithValue("nominationDetail", newNominationDetail)
+        .hasFieldOrPropertyWithValue("nominationDetail", targetNominationDetail)
         .hasFieldOrPropertyWithValue("relatedToFields", oldRelatedInformation.getRelatedToFields())
         .hasFieldOrPropertyWithValue(
             "relatedToLicenceApplications",

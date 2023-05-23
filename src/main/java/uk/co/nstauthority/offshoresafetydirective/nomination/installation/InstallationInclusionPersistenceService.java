@@ -17,6 +17,11 @@ class InstallationInclusionPersistenceService {
   }
 
   @Transactional
+  public void saveInstallationInclusion(InstallationInclusion installationInclusion) {
+    installationInclusionRepository.save(installationInclusion);
+  }
+
+  @Transactional
   public void createOrUpdateInstallationInclusion(NominationDetail nominationDetail, InstallationInclusionForm form) {
     var installationAdvice = installationInclusionRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateInstallationInclusionEntityFromForm(nominationDetail, entity, form))
