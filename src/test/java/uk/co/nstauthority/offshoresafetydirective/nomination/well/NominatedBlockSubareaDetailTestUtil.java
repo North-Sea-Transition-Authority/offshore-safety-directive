@@ -14,12 +14,18 @@ class NominatedBlockSubareaDetailTestUtil {
   }
 
   static class NominatedBlockSubareaDetailBuilder {
+    private Integer id = 864;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean validForFutureWellsInSubarea = true;
     private Boolean forAllWellPhases = false;
     private Boolean explorationAndAppraisalPhase = true;
     private Boolean developmentPhase = true;
     private Boolean decommissioningPhase = true;
+
+    NominatedBlockSubareaDetailBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
 
     NominatedBlockSubareaDetailBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
@@ -52,13 +58,14 @@ class NominatedBlockSubareaDetailTestUtil {
     }
 
     NominatedBlockSubareaDetail build() {
-      return new NominatedBlockSubareaDetail()
-          .setNominationDetail(nominationDetail)
-          .setValidForFutureWellsInSubarea(validForFutureWellsInSubarea)
-          .setForAllWellPhases(forAllWellPhases)
-          .setExplorationAndAppraisalPhase(explorationAndAppraisalPhase)
-          .setDevelopmentPhase(developmentPhase)
-          .setDecommissioningPhase(decommissioningPhase);
+      var subareaDetail = new NominatedBlockSubareaDetail(id);
+      subareaDetail.setNominationDetail(nominationDetail);
+      subareaDetail.setValidForFutureWellsInSubarea(validForFutureWellsInSubarea);
+      subareaDetail.setForAllWellPhases(forAllWellPhases);
+      subareaDetail.setExplorationAndAppraisalPhase(explorationAndAppraisalPhase);
+      subareaDetail.setDevelopmentPhase(developmentPhase);
+      subareaDetail.setDecommissioningPhase(decommissioningPhase);
+      return subareaDetail;
     }
   }
 }

@@ -21,6 +21,11 @@ class NominatedWellDetailPersistenceService {
   }
 
   @Transactional
+  public void saveNominatedWellDetail(NominatedWellDetail nominatedWellDetail) {
+    nominatedWellDetailRepository.save(nominatedWellDetail);
+  }
+
+  @Transactional
   public void createOrUpdateNominatedWellDetail(NominationDetail nominationDetail, NominatedWellDetailForm form) {
     NominatedWellDetail wellNomination = nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> updateNominatedWellDetailFromForm(nominationDetail, entity, form))

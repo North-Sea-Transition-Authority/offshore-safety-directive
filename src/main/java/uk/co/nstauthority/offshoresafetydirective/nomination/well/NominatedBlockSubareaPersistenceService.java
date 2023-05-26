@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,11 @@ class NominatedBlockSubareaPersistenceService {
                                           LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.nominatedBlockSubareaRepository = nominatedBlockSubareaRepository;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
+  }
+
+  @Transactional
+  public void saveAllNominatedLicenceBlockSubareas(Collection<NominatedBlockSubarea> subareas) {
+    nominatedBlockSubareaRepository.saveAll(subareas);
   }
 
   @Transactional

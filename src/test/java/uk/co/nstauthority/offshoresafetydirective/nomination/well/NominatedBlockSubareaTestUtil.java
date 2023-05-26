@@ -14,10 +14,16 @@ class NominatedBlockSubareaTestUtil {
   }
 
   static class NominatedBlockSubareaBuilder {
+    private Integer id = 123;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private String blockSubareaId = "subarea-id";
 
     private NominatedBlockSubareaBuilder() {}
+
+    NominatedBlockSubareaBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
 
     public NominatedBlockSubareaBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
@@ -30,7 +36,7 @@ class NominatedBlockSubareaTestUtil {
     }
 
     public NominatedBlockSubarea build() {
-      var nominatedBlockSubarea = new NominatedBlockSubarea();
+      var nominatedBlockSubarea = new NominatedBlockSubarea(id);
       nominatedBlockSubarea.setNominationDetail(nominationDetail);
       nominatedBlockSubarea.setBlockSubareaId(blockSubareaId);
       return nominatedBlockSubarea;

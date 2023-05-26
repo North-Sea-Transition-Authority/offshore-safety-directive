@@ -11,10 +11,14 @@ class WellSelectionSetupPersistenceService {
 
   private final WellSelectionSetupRepository wellSelectionSetupRepository;
 
-
   @Autowired
   WellSelectionSetupPersistenceService(WellSelectionSetupRepository wellSelectionSetupRepository) {
     this.wellSelectionSetupRepository = wellSelectionSetupRepository;
+  }
+
+  @Transactional
+  public void saveWellSelectionSetup(WellSelectionSetup wellSelectionSetup) {
+    wellSelectionSetupRepository.save(wellSelectionSetup);
   }
 
   @Transactional

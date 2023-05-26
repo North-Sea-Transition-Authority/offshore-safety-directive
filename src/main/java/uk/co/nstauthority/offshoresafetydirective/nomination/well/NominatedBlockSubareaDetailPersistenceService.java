@@ -18,6 +18,11 @@ class NominatedBlockSubareaDetailPersistenceService {
   }
 
   @Transactional
+  public void saveNominatedBlockSubareaDetail(NominatedBlockSubareaDetail nominatedBlockSubareaDetail) {
+    nominatedBlockSubareaDetailRepository.save(nominatedBlockSubareaDetail);
+  }
+
+  @Transactional
   public void createOrUpdateNominatedBlockSubareaDetail(NominationDetail nominationDetail, NominatedBlockSubareaForm form) {
     NominatedBlockSubareaDetail blockSubareaDetail =
         nominatedBlockSubareaDetailRepository.findByNominationDetail(nominationDetail)

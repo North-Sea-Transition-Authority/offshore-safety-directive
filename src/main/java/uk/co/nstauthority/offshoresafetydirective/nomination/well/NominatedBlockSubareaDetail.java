@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -34,15 +35,9 @@ class NominatedBlockSubareaDetail {
   protected NominatedBlockSubareaDetail() {
   }
 
-  NominatedBlockSubareaDetail(NominationDetail nominationDetail, Boolean validForFutureWellsInSubarea,
-                              Boolean forAllWellPhases, Boolean explorationAndAppraisalPhase,
-                              Boolean developmentPhase, Boolean decommissioningPhase) {
-    this.nominationDetail = nominationDetail;
-    this.validForFutureWellsInSubarea = validForFutureWellsInSubarea;
-    this.forAllWellPhases = forAllWellPhases;
-    this.explorationAndAppraisalPhase = explorationAndAppraisalPhase;
-    this.developmentPhase = developmentPhase;
-    this.decommissioningPhase = decommissioningPhase;
+  @VisibleForTesting
+  NominatedBlockSubareaDetail(Integer id) {
+    this.id = id;
   }
 
   public Integer getId() {

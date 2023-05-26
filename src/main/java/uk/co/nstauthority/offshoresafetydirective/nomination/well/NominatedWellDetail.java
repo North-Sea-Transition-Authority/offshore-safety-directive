@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -30,6 +31,11 @@ class NominatedWellDetail {
   private Boolean decommissioningPhase;
 
   protected NominatedWellDetail() {
+  }
+
+  @VisibleForTesting
+  NominatedWellDetail(Integer id) {
+    this.id = id;
   }
 
   NominatedWellDetail(NominationDetail nominationDetail,

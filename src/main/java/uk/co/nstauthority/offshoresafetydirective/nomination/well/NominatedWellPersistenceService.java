@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,11 @@ class NominatedWellPersistenceService {
   NominatedWellPersistenceService(NominatedWellRepository nominatedWellRepository, WellQueryService wellQueryService) {
     this.nominatedWellRepository = nominatedWellRepository;
     this.wellQueryService = wellQueryService;
+  }
+
+  @Transactional
+  public void saveAllNominatedWells(Collection<NominatedWell> nominatedWells) {
+    nominatedWellRepository.saveAll(nominatedWells);
   }
 
   @Transactional

@@ -14,11 +14,17 @@ public class NominatedWellDetailTestUtil {
   }
 
   static class NominatedWellDetailBuilder {
+    private Integer id = 168;
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllWellPhases = true;
     private Boolean explorationAndAppraisalPhase;
     private Boolean developmentPhase;
     private Boolean decommissioningPhase;
+
+    NominatedWellDetailBuilder withId(Integer id) {
+      this.id = id;
+      return this;
+    }
 
     NominatedWellDetailBuilder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
@@ -46,12 +52,13 @@ public class NominatedWellDetailTestUtil {
     }
 
     NominatedWellDetail build() {
-      return new NominatedWellDetail()
-          .setNominationDetail(nominationDetail)
-          .setForAllWellPhases(forAllWellPhases)
-          .setExplorationAndAppraisalPhase(explorationAndAppraisalPhase)
-          .setDevelopmentPhase(developmentPhase)
-          .setDecommissioningPhase(decommissioningPhase);
+      var wellDetail = new NominatedWellDetail(id);
+      wellDetail.setNominationDetail(nominationDetail);
+      wellDetail.setForAllWellPhases(forAllWellPhases);
+      wellDetail.setExplorationAndAppraisalPhase(explorationAndAppraisalPhase);
+      wellDetail.setDevelopmentPhase(developmentPhase);
+      wellDetail.setDecommissioningPhase(decommissioningPhase);
+      return wellDetail;
     }
   }
 }

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -22,6 +23,14 @@ class NominatedBlockSubarea {
   private NominationDetail nominationDetail;
 
   private String blockSubareaId;
+
+  NominatedBlockSubarea() {
+  }
+
+  @VisibleForTesting
+  NominatedBlockSubarea(Integer id) {
+    this.id = id;
+  }
 
   Integer getId() {
     return id;
