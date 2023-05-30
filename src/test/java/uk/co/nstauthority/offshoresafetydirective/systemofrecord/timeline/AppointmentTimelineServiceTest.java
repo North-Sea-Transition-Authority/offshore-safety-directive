@@ -45,6 +45,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmen
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
@@ -967,5 +968,139 @@ class AppointmentTimelineServiceTest {
             ReverseRouter.route(on(NominationCaseProcessingController.class)
                 .renderCaseProcessing(appointmentDto.nominationId()))
         );
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndHasPermissionToManageAppointments_thenCanManageAppointment() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(true);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+    )
+        .willReturn(true);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.MANAGE_APPOINTMENTS)
+    ))
+        .willReturn(true);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::updateUrl)
+        .isEqualTo(ReverseRouter.route(
+            on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId())));
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndDoesNotHavePermissionToManageAppointments_thenCannotManageAppointment() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(true);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+    )
+        .willReturn(true);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.MANAGE_APPOINTMENTS)
+    ))
+        .willReturn(false);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::updateUrl)
+        .isNull();
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUnauthenticated_thenCannotManageAppointment() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    given(userDetailService.getUserDetail())
+        .willReturn(null);
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(false);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
+        .extracting(AppointmentView::updateUrl)
+        .isNull();
   }
 }

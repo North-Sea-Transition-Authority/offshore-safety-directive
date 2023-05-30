@@ -15,6 +15,7 @@ public record AppointmentView(
     AppointmentToDate appointmentToDate,
     List<AssetAppointmentPhase> phases,
     String createdByReference,
-    String nominationUrl
+    String nominationUrl,
+    String updateUrl
 ) {
 }

@@ -24,6 +24,7 @@
           <@fdsTimeline.timelineTimeStamp
             timeStampHeading=appointment.appointedOperatorName()
             nodeNumber=""
+            timelineActionContent=_timelineActions(appointment)
           >
             <@fdsTimeline.timelineEvent>
               <@fdsDataItems.dataItem>
@@ -62,7 +63,7 @@
 <#function _appointmentPhases appointment>
   <#assign appointmentPhases>
     <#if appointment.phases()?has_content && appointment.phases()?size != 1>
-      <ol class="govuk-list">
+      <ol class="govuk-list govuk-!-margin-bottom-0">
         <#list appointment.phases() as phase>
           <li class="govuk-list__item">${phase.value()}</li>
         </#list>
@@ -90,4 +91,13 @@
     </#if>
   </#assign>
   <#return createdByReference/>
+</#function>
+
+<#function _timelineActions appointment>
+  <#assign display>
+    <#if appointment.updateUrl()?has_content>
+      <@fdsAction.link linkText="Update appointment" linkUrl=springUrl(appointment.updateUrl())/>
+    </#if>
+  </#assign>
+  <#return display/>
 </#function>

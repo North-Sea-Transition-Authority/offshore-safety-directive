@@ -44,6 +44,8 @@ class AppointmentViewTestUtil {
 
     private String nominationUrl = "/nomination-url";
 
+    private String updateAppointmentUrl = "/appointment-url";
+
     Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
       return this;
@@ -97,6 +99,11 @@ class AppointmentViewTestUtil {
       return this;
     }
 
+    Builder withUpdateAppointmentUrl(String updateAppointmentUrl) {
+      this.updateAppointmentUrl = updateAppointmentUrl;
+      return this;
+    }
+
     AppointmentView build() {
       return new AppointmentView(
           appointmentId,
@@ -106,7 +113,8 @@ class AppointmentViewTestUtil {
           appointmentToDate,
           phases,
           createdByReference,
-          nominationUrl
+          nominationUrl,
+          updateAppointmentUrl
       );
     }
 

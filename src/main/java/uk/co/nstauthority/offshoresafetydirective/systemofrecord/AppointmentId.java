@@ -8,4 +8,9 @@ public record AppointmentId(UUID id) {
   public static AppointmentId valueOf(String value) {
     return new AppointmentId(UUID.fromString(value));
   }
+
+  @Override
+  public String toString() {
+    return id.toString();
+  }
 }

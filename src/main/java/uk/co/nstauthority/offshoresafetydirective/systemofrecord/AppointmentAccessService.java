@@ -22,6 +22,11 @@ public class AppointmentAccessService {
         .toList();
   }
 
+  public Optional<AppointmentDto> findAppointmentDtoById(AppointmentId appointmentId) {
+    return appointmentRepository.findById(appointmentId.id())
+        .map(AppointmentDto::fromAppointment);
+  }
+
   Optional<Appointment> getAppointment(AppointmentId appointmentId) {
     return appointmentRepository.findById(appointmentId.id());
   }

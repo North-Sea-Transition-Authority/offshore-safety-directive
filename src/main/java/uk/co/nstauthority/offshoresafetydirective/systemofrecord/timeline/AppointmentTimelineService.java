@@ -39,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Service
@@ -117,7 +118,8 @@ class AppointmentTimelineService {
 
     Set<PortalOrganisationUnitId> appointedOrganisationUnitIds = appointments
         .stream()
-        .map(appointmentDto -> new PortalOrganisationUnitId(Integer.parseInt(appointmentDto.appointedOperatorId().id())))
+        .map(
+            appointmentDto -> new PortalOrganisationUnitId(Integer.parseInt(appointmentDto.appointedOperatorId().id())))
         .collect(Collectors.toSet());
 
     return organisationUnitQueryService
@@ -138,6 +140,12 @@ class AppointmentTimelineService {
     Map<AppointmentId, List<AssetAppointmentPhase>> appointmentPhases = assetAppointmentPhaseAccessService
         .getAppointmentPhases(assetDto);
 
+    var canUpdateAppointments = userDetailService.isUserLoggedIn()
+        && permissionService.hasPermission(
+        userDetailService.getUserDetail(),
+        Set.of(RolePermission.MANAGE_APPOINTMENTS)
+    );
+
     appointments
         .stream()
         .sorted(Comparator.comparing(AppointmentDto::appointmentCreatedDate).reversed())
@@ -151,7 +159,7 @@ class AppointmentTimelineService {
               .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
               .orElse(Collections.emptyList());
 
-          var appointmentView = convertToAppointmentView(appointment, operatorName, phases);
+          var appointmentView = convertToAppointmentView(appointment, operatorName, phases, canUpdateAppointments);
 
           appointmentViews.add(appointmentView);
         });
@@ -161,7 +169,14 @@ class AppointmentTimelineService {
 
   private AppointmentView convertToAppointmentView(AppointmentDto appointmentDto,
                                                    String operatorName,
-                                                   List<AssetAppointmentPhase> phases) {
+                                                   List<AssetAppointmentPhase> phases,
+                                                   boolean canUpdateAppointment) {
+
+    var correctionUpdateRoute = canUpdateAppointment
+        ? ReverseRouter.route(
+            on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
+        : null;
+
     return new AppointmentView(
         appointmentDto.appointmentId(),
         appointmentDto.portalAssetId(),
@@ -170,7 +185,8 @@ class AppointmentTimelineService {
         appointmentDto.appointmentToDate(),
         phases,
         getCreatedByReference(appointmentDto),
-        getNominationUrl(appointmentDto)
+        getNominationUrl(appointmentDto),
+        correctionUpdateRoute
     );
   }
 
@@ -231,8 +247,8 @@ class AppointmentTimelineService {
           Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
       );
       return canAccessNomination
-          ? ReverseRouter.route(on(NominationCaseProcessingController.class)
-              .renderCaseProcessing(appointmentDto.nominationId()))
+          ? ReverseRouter.route(
+              on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId()))
           : null;
     } catch (InvalidAuthenticationException exception) {
       // catches when no user is logged in

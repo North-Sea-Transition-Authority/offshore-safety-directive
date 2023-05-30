@@ -1,21 +1,31 @@
 package uk.co.nstauthority.offshoresafetydirective.authentication;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.test.annotation.DirtiesContext;
 
+@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
 class UserDetailServiceTest {
 
   private static UserDetailService userDetailService;
 
   @BeforeAll
-  static void setUp() {
+  static void beforeAll() {
     userDetailService = new UserDetailService();
+  }
+
+  @BeforeEach
+  void setUp() {
+    SecurityContextHolder.setContext(SecurityContextHolder.createEmptyContext());
   }
 
   @Test
@@ -47,5 +57,29 @@ class UserDetailServiceTest {
   void getUserDetail_whenNoAuthenticationInContext_thenException() {
     assertThrowsExactly(InvalidAuthenticationException.class, () -> userDetailService.getUserDetail(),
         "ServiceSaml2Authentication not found in authentication context");
+  }
+
+  @Test
+  void isUserLoggedIn_whenUserInContext_thenExpectTrue() {
+
+    var user = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(100L)
+        .build();
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(user)
+        .setSecurityContext();
+
+    assertTrue(userDetailService.isUserLoggedIn());
+  }
+
+  @Test
+  void isUserLoggedIn_whenNoPrincipal_thenException() {
+    assertFalse(userDetailService.isUserLoggedIn());
+  }
+
+  @Test
+  void isUserLoggedIn_whenNoAuthenticationInContext_thenException() {
+    assertFalse(userDetailService.isUserLoggedIn());
   }
 }

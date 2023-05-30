@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentAccessServiceTest {
@@ -88,4 +92,67 @@ class AppointmentAccessServiceTest {
 
     assertThat(appointmentAccessService.getAppointment(appointmentId)).isEmpty();
   }
+
+  @Test
+  void findAppointmentDtoById_appointmentFound() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var asset = AssetTestUtil.builder().build();
+
+    var appointedOperatorId = 100;
+    var fromDate = LocalDate.now();
+    var toDate = LocalDate.now();
+    var appointmentType = AppointmentType.NOMINATED;
+    var nominationId = 200;
+    var createdDatetime = Instant.now();
+    var legacyReference = "legacy reference";
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .withAsset(asset)
+        .withAppointedPortalOperatorId(appointedOperatorId)
+        .withResponsibleFromDate(fromDate)
+        .withResponsibleToDate(toDate)
+        .withAppointmentType(appointmentType)
+        .withCreatedByNominationId(nominationId)
+        .withCreatedByLegacyNominationReference(legacyReference)
+        .withCreatedByAppointmentId(appointmentId.id())
+        .withCreatedDatetime(createdDatetime)
+        .build();
+
+    when(appointmentRepository.findById(appointmentId.id()))
+        .thenReturn(Optional.of(appointment));
+
+    var result = appointmentAccessService.findAppointmentDtoById(appointmentId);
+
+    assertThat(result).isNotEmpty();
+
+    PropertyObjectAssert.thenAssertThat(result.get())
+        .hasFieldOrPropertyWithValue("appointmentId", appointmentId)
+        .hasFieldOrPropertyWithValue("portalAssetId", new AppointedPortalAssetId(asset.getPortalAssetId()))
+        .hasFieldOrPropertyWithValue(
+            "appointedOperatorId",
+            new AppointedOperatorId(String.valueOf(appointedOperatorId))
+        )
+        .hasFieldOrPropertyWithValue("appointmentFromDate", new AppointmentFromDate(fromDate))
+        .hasFieldOrPropertyWithValue("appointmentToDate", new AppointmentToDate(toDate))
+        .hasFieldOrPropertyWithValue("appointmentCreatedDate", createdDatetime)
+        .hasFieldOrPropertyWithValue("appointmentType", appointmentType)
+        .hasFieldOrPropertyWithValue("legacyNominationReference", legacyReference)
+        .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
+        .hasAssertedAllProperties();
+  }
+
+  @Test
+  void findAppointmentDtoById_appointmentNotFound() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(appointmentRepository.findById(appointmentId.id()))
+        .thenReturn(Optional.empty());
+
+    var result = appointmentAccessService.findAppointmentDtoById(appointmentId);
+
+    assertThat(result).isEmpty();
+  }
+
 }

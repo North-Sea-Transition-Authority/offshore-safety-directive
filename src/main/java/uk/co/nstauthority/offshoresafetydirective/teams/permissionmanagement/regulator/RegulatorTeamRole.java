@@ -32,17 +32,11 @@ public enum RegulatorTeamRole implements TeamRole {
       40,
       Set.of(RolePermission.VIEW_NOMINATIONS)
   ),
-  MANAGE_ASSET_OPERATORS(
-      "Manage well and installation operators",
-      "Can carry out updates to the system of record including data checks and terminations",
+  MANAGE_ASSET_APPOINTMENTS(
+      "Manage well and installation appointments",
+      "Can carry out updates to the system of record including corrections and terminations",
       50,
-      Set.of()
-  ),
-  VIEW_ASSET_OPERATORS(
-      "View well and installation operators",
-      "Can view system of record data",
-      60,
-      Set.of()
+      Set.of(RolePermission.MANAGE_APPOINTMENTS)
   );
 
   private final String screenDisplayText;

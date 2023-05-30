@@ -12,7 +12,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetr
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 @Service
-class PortalAssetNameService {
+public class PortalAssetNameService {
 
   private final PortalAssetRetrievalService portalAssetRetrievalService;
 
@@ -21,7 +21,7 @@ class PortalAssetNameService {
     this.portalAssetRetrievalService = portalAssetRetrievalService;
   }
 
-  Optional<AssetName> getAssetName(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+  public Optional<AssetName> getAssetName(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
     return switch (portalAssetType) {
       case INSTALLATION -> portalAssetRetrievalService
           .getInstallation(new InstallationId(Integer.parseInt(portalAssetId.id())))

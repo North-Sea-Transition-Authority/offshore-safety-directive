@@ -18,4 +18,11 @@ public class UserDetailService {
     }
   }
 
+  public boolean isUserLoggedIn() {
+    if (SecurityContextHolder.getContext().getAuthentication() instanceof ServiceSaml2Authentication authentication) {
+      return authentication.getPrincipal() instanceof ServiceUserDetail;
+    }
+    return false;
+  }
+
 }
