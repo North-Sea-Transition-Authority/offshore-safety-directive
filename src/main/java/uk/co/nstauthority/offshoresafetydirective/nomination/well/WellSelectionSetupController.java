@@ -23,7 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("nomination/{nominationId}/wells")
+@RequestMapping("nomination/{nominationId}/wells/setup")
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class WellSelectionSetupController {

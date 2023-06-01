@@ -31,7 +31,7 @@ class WellTaskListItem implements NominationTaskListItem {
 
   @Override
   public String getActionUrl(NominationTaskListItemType target) {
-    return ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(target.nominationId()));
+    return ReverseRouter.route(on(WellJourneyManagerController.class).wellJourneyManager(target.nominationId()));
   }
 
   @Override

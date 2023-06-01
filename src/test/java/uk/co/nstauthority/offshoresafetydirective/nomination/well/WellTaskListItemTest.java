@@ -45,7 +45,7 @@ class WellTaskListItemTest {
 
     assertEquals(
         wellTaskListItem.getActionUrl(new NominationTaskListItemType(nominationDetail)),
-        ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
+        ReverseRouter.route(on(WellJourneyManagerController.class).wellJourneyManager(NOMINATION_ID))
     );
   }
 
