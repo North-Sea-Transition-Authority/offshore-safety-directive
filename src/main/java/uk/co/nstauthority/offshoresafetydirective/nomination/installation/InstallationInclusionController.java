@@ -22,7 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("nomination/{nominationId}/installations")
+@RequestMapping("nomination/{nominationId}/installations/setup")
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class InstallationInclusionController {

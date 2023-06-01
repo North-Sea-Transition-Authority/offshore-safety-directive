@@ -45,7 +45,7 @@ class InstallationTaskListItemTest {
 
     assertEquals(
         installationTaskListItem.getActionUrl(new NominationTaskListItemType(nominationDetail)),
-        ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(NOMINATION_ID))
+        ReverseRouter.route(on(InstallationJourneyManagerController.class).installationJourneyManager(NOMINATION_ID))
     );
   }
 

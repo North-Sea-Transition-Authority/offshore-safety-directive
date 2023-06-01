@@ -31,7 +31,8 @@ class InstallationTaskListItem implements NominationTaskListItem {
 
   @Override
   public String getActionUrl(NominationTaskListItemType target) {
-    return ReverseRouter.route(on(InstallationInclusionController.class).getInstallationInclusion(target.nominationId()));
+    return ReverseRouter.route(on(InstallationJourneyManagerController.class)
+        .installationJourneyManager(target.nominationId()));
   }
 
   @Override
