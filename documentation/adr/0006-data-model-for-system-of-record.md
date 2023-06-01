@@ -1,7 +1,7 @@
 ## OSDOP-254: Data model for phase 1 system of record
 
-* Status: DRAFT
-* Approved by:
+* Status: APPROVED
+* Approved by: Danny Betts, Cade Ayres
 
 ### Problem statement
 

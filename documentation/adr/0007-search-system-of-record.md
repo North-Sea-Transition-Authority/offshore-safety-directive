@@ -1,7 +1,7 @@
 ## OSDOP-254: Searching the system of record
 
-* Status: DRAFT
-* Approved by:
+* Status: APPROVED
+* Approved by: Danny Betts, Cade Ayres
 
 ### Problem statement
 
