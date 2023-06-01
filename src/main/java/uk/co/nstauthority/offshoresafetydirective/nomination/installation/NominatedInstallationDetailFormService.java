@@ -10,16 +10,16 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedInstallationDetailFormService {
 
   private final NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
-  private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private final NominatedInstallationAccessService nominatedInstallationAccessService;
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
 
   @Autowired
   NominatedInstallationDetailFormService(
       NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator,
-      NominatedInstallationPersistenceService nominatedInstallationPersistenceService,
+      NominatedInstallationAccessService nominatedInstallationAccessService,
       NominatedInstallationDetailRepository nominatedInstallationDetailRepository) {
     this.nominatedInstallationDetailFormValidator = nominatedInstallationDetailFormValidator;
-    this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
+    this.nominatedInstallationAccessService = nominatedInstallationAccessService;
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
   }
 
@@ -44,7 +44,7 @@ class NominatedInstallationDetailFormService {
         .setDevelopmentProductionPhase(installationDetail.getDevelopmentProductionPhase())
         .setDecommissioningPhase(installationDetail.getDecommissioningPhase());
     List<Integer> installationIds =
-        nominatedInstallationPersistenceService.findAllByNominationDetail(installationDetail.getNominationDetail())
+        nominatedInstallationAccessService.getNominatedInstallations(installationDetail.getNominationDetail())
             .stream()
             .map(NominatedInstallation::getInstallationId)
             .toList();

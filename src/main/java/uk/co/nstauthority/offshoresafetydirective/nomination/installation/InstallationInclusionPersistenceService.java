@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +26,6 @@ class InstallationInclusionPersistenceService {
         .map(entity -> updateInstallationInclusionEntityFromForm(nominationDetail, entity, form))
         .orElseGet(() -> newInstallationInclusionEntityFromForm(nominationDetail, form));
     installationInclusionRepository.save(installationAdvice);
-  }
-
-  Optional<InstallationInclusion> findByNominationDetail(NominationDetail nominationDetail) {
-    return installationInclusionRepository.findByNominationDetail(nominationDetail);
   }
 
   private InstallationInclusion newInstallationInclusionEntityFromForm(NominationDetail nominationDetail,

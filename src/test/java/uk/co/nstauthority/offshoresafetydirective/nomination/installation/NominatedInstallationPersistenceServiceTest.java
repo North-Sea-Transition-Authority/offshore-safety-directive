@@ -67,13 +67,6 @@ class NominatedInstallationPersistenceServiceTest {
   }
 
   @Test
-  void findAllByNominationDetail_verifyMethodCall() {
-    nominatedInstallationPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL);
-
-    verify(nominatedInstallationRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
-  }
-
-  @Test
   void deleteByNominationDetail_verifyRepoCall() {
     nominatedInstallationPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
 

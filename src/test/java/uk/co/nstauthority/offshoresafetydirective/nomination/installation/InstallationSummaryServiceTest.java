@@ -30,13 +30,13 @@ class InstallationSummaryServiceTest {
   private static final SummaryValidationBehaviour VALIDATION_BEHAVIOUR = SummaryValidationBehaviour.VALIDATED;
 
   @Mock
-  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private NominatedInstallationAccessService nominatedInstallationAccessService;
 
   @Mock
   private InstallationSubmissionService installationSubmissionService;
 
   @Mock
-  private InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private InstallationInclusionAccessService installationInclusionAccessService;
 
   @Mock
   private InstallationQueryService installationQueryService;
@@ -69,7 +69,7 @@ class InstallationSummaryServiceTest {
         .withDevelopmentInstallationPhase(true)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
@@ -108,7 +108,7 @@ class InstallationSummaryServiceTest {
         .withForAllInstallationPhases(true)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
@@ -153,14 +153,14 @@ class InstallationSummaryServiceTest {
         .withName("Installation B")
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
     when(nominatedInstallationDetailPersistenceService.findNominatedInstallationDetail(nominationDetail))
         .thenReturn(Optional.empty());
 
-    when(nominatedInstallationPersistenceService.findAllByNominationDetail(nominationDetail))
+    when(nominatedInstallationAccessService.getNominatedInstallations(nominationDetail))
         .thenReturn(List.of(nominatedInstallationB, nominatedInstallationA));
 
     when(installationQueryService.getInstallationsByIdIn(List.of(2, 1)))
@@ -185,7 +185,7 @@ class InstallationSummaryServiceTest {
         .includeInstallationsInNomination(true)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
@@ -212,7 +212,7 @@ class InstallationSummaryServiceTest {
         .includeInstallationsInNomination(false)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
@@ -231,7 +231,7 @@ class InstallationSummaryServiceTest {
 
   @Test
   void getInstallationSummaryView_whenNoAnswer_andSectionSubmittable_thenAssertFields() {
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.empty());
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
@@ -243,7 +243,7 @@ class InstallationSummaryServiceTest {
 
   @Test
   void getInstallationSummaryView_whenNoAnswer_andSectionIsNotSubmittable_thenAssertFields() {
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.empty());
 
     when(installationSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(false);
@@ -259,7 +259,7 @@ class InstallationSummaryServiceTest {
   void getInstallationSummaryView_verifyValidationBehaviourInteractions(
       SummaryValidationBehaviour validationBehaviour
   ) {
-    when(installationInclusionPersistenceService.findByNominationDetail(nominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.empty());
 
     installationSummaryService.getInstallationSummaryView(nominationDetail, validationBehaviour);

@@ -28,6 +28,12 @@ class InstallationDuplicationServiceTest {
 
   @Mock
   private InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  
+  @Mock
+  private InstallationInclusionAccessService installationInclusionAccessService;
+
+  @Mock
+  private NominatedInstallationAccessService nominatedInstallationAccessService;
 
   @InjectMocks
   private InstallationDuplicationService installationDuplicationService;
@@ -41,7 +47,7 @@ class InstallationDuplicationServiceTest {
         .withId(200)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(sourceNominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(sourceNominationDetail))
         .thenReturn(Optional.empty());
 
     installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
@@ -49,7 +55,7 @@ class InstallationDuplicationServiceTest {
     verify(installationInclusionPersistenceService, never()).saveInstallationInclusion(any());
 
     // Verify duplication of other areas continues as expected
-    verify(nominatedInstallationPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
   }
 
@@ -68,7 +74,7 @@ class InstallationDuplicationServiceTest {
         .includeInstallationsInNomination(true)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(sourceNominationDetail))
+    when(installationInclusionAccessService.getInstallationInclusion(sourceNominationDetail))
         .thenReturn(Optional.of(installationInclusion));
 
     installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
@@ -88,7 +94,7 @@ class InstallationDuplicationServiceTest {
         .extracting(InstallationInclusion::getId)
         .isNotEqualTo(installationInclusion.getId());
 
-    verify(nominatedInstallationPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
   }
 
@@ -102,7 +108,7 @@ class InstallationDuplicationServiceTest {
         .withId(200)
         .build();
 
-    when(nominatedInstallationPersistenceService.findAllByNominationDetail(sourceNominationDetail))
+    when(nominatedInstallationAccessService.getNominatedInstallations(sourceNominationDetail))
         .thenReturn(List.of());
 
     installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
@@ -110,7 +116,7 @@ class InstallationDuplicationServiceTest {
     verify(nominatedInstallationPersistenceService, never()).saveAllNominatedInstallations(any());
 
     // Verify duplication of other areas continues as expected
-    verify(installationInclusionPersistenceService).findByNominationDetail(sourceNominationDetail);
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
   }
 
@@ -129,7 +135,7 @@ class InstallationDuplicationServiceTest {
         .withNominationDetail(sourceNominationDetail)
         .build();
 
-    when(nominatedInstallationPersistenceService.findAllByNominationDetail(sourceNominationDetail))
+    when(nominatedInstallationAccessService.getNominatedInstallations(sourceNominationDetail))
         .thenReturn(List.of(nominatedInstallation));
 
     installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
@@ -152,7 +158,7 @@ class InstallationDuplicationServiceTest {
         .isNotEqualTo(nominatedInstallation.getId());
 
     // Verify duplication of other areas continues as expected
-    verify(installationInclusionPersistenceService).findByNominationDetail(sourceNominationDetail);
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
   }
 
@@ -173,8 +179,8 @@ class InstallationDuplicationServiceTest {
     verify(nominatedInstallationDetailPersistenceService, never()).saveNominatedInstallationDetail(any());
 
     // Verify duplication of other areas continues as expected
-    verify(installationInclusionPersistenceService).findByNominationDetail(sourceNominationDetail);
-    verify(nominatedInstallationPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
   }
 
   @Test
@@ -234,7 +240,7 @@ class InstallationDuplicationServiceTest {
         .isNotEqualTo(installationDetail.getId());
 
     // Verify duplication of other areas continues as expected
-    verify(installationInclusionPersistenceService).findByNominationDetail(sourceNominationDetail);
-    verify(nominatedInstallationPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
   }
 }

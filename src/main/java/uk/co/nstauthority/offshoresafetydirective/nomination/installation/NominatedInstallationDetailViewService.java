@@ -13,22 +13,22 @@ public class NominatedInstallationDetailViewService {
 
   private final InstallationQueryService installationQueryService;
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
-  private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private final NominatedInstallationAccessService nominatedInstallationAccessService;
 
   @Autowired
   public NominatedInstallationDetailViewService(InstallationQueryService installationQueryService,
                                                 NominatedInstallationDetailRepository nominatedInstallationDetailRepository,
-                                                NominatedInstallationPersistenceService nominatedInstallationPersistenceService) {
+                                                NominatedInstallationAccessService nominatedInstallationAccessService) {
     this.installationQueryService = installationQueryService;
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
-    this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
+    this.nominatedInstallationAccessService = nominatedInstallationAccessService;
   }
 
   public Optional<NominatedInstallationDetailView> getNominatedInstallationDetailView(NominationDetail nominationDetail) {
     return nominatedInstallationDetailRepository.findByNominationDetail(nominationDetail)
         .map(nominatedInstallationDetail -> {
           List<Integer> nominatedInstallationIds =
-              nominatedInstallationPersistenceService.findAllByNominationDetail(nominationDetail)
+              nominatedInstallationAccessService.getNominatedInstallations(nominationDetail)
                   .stream()
                   .map(NominatedInstallation::getInstallationId)
                   .toList();

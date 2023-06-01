@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,25 +48,5 @@ class InstallationInclusionPersistenceServiceTest {
             NOMINATION_DETAIL,
             form.getIncludeInstallationsInNomination()
         );
-  }
-
-  @Test
-  void findByNominationDetail_whenExist_returnOptional() {
-    var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder().build();
-    when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL))
-        .thenReturn(Optional.of(installationInclusion));
-
-    assertEquals(
-        Optional.of(installationInclusion),
-        installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL)
-    );
-  }
-
-  @Test
-  void findByNominationDetail_whenDoesNotExist_returnEmptyOptional() {
-    when(installationInclusionRepository.findByNominationDetail(NOMINATION_DETAIL))
-        .thenReturn(Optional.empty());
-
-    assertThat(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).isEmpty();
   }
 }

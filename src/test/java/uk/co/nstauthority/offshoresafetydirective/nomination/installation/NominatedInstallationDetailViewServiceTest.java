@@ -26,7 +26,7 @@ class NominatedInstallationDetailViewServiceTest {
   private NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
 
   @Mock
-  private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private NominatedInstallationAccessService nominatedInstallationAccessService;
 
   @Mock
   private InstallationQueryService installationQueryService;
@@ -63,7 +63,7 @@ class NominatedInstallationDetailViewServiceTest {
 
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedInstallationDetail));
-    when(nominatedInstallationPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+    when(nominatedInstallationAccessService.getNominatedInstallations(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedInstallation1, nominatedInstallation2));
     when(installationQueryService.getInstallationsByIdIn(
         List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId())

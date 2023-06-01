@@ -8,11 +8,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Service
 public class InstallationInclusionFormService {
 
-  private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private final InstallationInclusionAccessService installationInclusionAccessService;
 
   @Autowired
-  InstallationInclusionFormService(InstallationInclusionPersistenceService installationInclusionPersistenceService) {
-    this.installationInclusionPersistenceService = installationInclusionPersistenceService;
+  InstallationInclusionFormService(InstallationInclusionAccessService installationInclusionAccessService) {
+    this.installationInclusionAccessService = installationInclusionAccessService;
   }
 
   public boolean isNotRelatedToInstallationOperatorship(NominationDetail nominationDetail) {
@@ -20,7 +20,7 @@ public class InstallationInclusionFormService {
   }
 
   InstallationInclusionForm getForm(NominationDetail nominationDetail) {
-    return installationInclusionPersistenceService.findByNominationDetail(nominationDetail)
+    return installationInclusionAccessService.getInstallationInclusion(nominationDetail)
         .map(this::installationInclusionFormFromEntity)
         .orElse(new InstallationInclusionForm());
   }

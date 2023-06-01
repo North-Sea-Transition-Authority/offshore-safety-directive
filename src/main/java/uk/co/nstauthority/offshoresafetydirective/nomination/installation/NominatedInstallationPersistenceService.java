@@ -47,8 +47,4 @@ class NominatedInstallationPersistenceService {
   public void deleteByNominationDetail(NominationDetail nominationDetail) {
     nominatedInstallationRepository.deleteAllByNominationDetail(nominationDetail);
   }
-
-  List<NominatedInstallation> findAllByNominationDetail(NominationDetail nominationDetail) {
-    return nominatedInstallationRepository.findAllByNominationDetail(nominationDetail);
-  }
 }

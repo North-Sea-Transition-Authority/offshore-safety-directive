@@ -16,22 +16,22 @@ import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehav
 @Service
 public class InstallationSummaryService {
 
-  private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private final NominatedInstallationAccessService nominatedInstallationAccessService;
   private final InstallationSubmissionService installationSubmissionService;
-  private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private final InstallationInclusionAccessService installationInclusionAccessService;
   private final InstallationQueryService installationQueryService;
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
 
   @Autowired
   public InstallationSummaryService(
-      NominatedInstallationPersistenceService nominatedInstallationPersistenceService,
+      NominatedInstallationAccessService nominatedInstallationAccessService,
       InstallationSubmissionService installationSubmissionService,
-      InstallationInclusionPersistenceService installationInclusionPersistenceService,
+      InstallationInclusionAccessService installationInclusionAccessService,
       InstallationQueryService installationQueryService,
       NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService) {
-    this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
+    this.nominatedInstallationAccessService = nominatedInstallationAccessService;
     this.installationSubmissionService = installationSubmissionService;
-    this.installationInclusionPersistenceService = installationInclusionPersistenceService;
+    this.installationInclusionAccessService = installationInclusionAccessService;
     this.installationQueryService = installationQueryService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
   }
@@ -45,7 +45,7 @@ public class InstallationSummaryService {
 
     final var summarySectionError = optionalSummarySectionError.orElse(null);
 
-    return installationInclusionPersistenceService.findByNominationDetail(nominationDetail)
+    return installationInclusionAccessService.getInstallationInclusion(nominationDetail)
         .map(relatedInformation -> {
           var installationRelatedToNomination = getInstallationRelatedToNomination(relatedInformation);
           var relatedToPearsApplications = getInstallationForAllPhases(relatedInformation);
@@ -67,8 +67,8 @@ public class InstallationSummaryService {
     if (BooleanUtils.isFalse(installationInclusion.getIncludeInstallationsInNomination())) {
       return new InstallationRelatedToNomination(false, List.of());
     }
-    var nominatedInstallations = nominatedInstallationPersistenceService
-        .findAllByNominationDetail(installationInclusion.getNominationDetail());
+    var nominatedInstallations = nominatedInstallationAccessService
+        .getNominatedInstallations(installationInclusion.getNominationDetail());
 
     var installationIds = nominatedInstallations.stream()
         .map(NominatedInstallation::getInstallationId)

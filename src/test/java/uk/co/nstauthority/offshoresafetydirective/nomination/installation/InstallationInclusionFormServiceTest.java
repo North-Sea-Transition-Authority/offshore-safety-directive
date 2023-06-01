@@ -21,10 +21,7 @@ class InstallationInclusionFormServiceTest {
       .build();
 
   @Mock
-  private InstallationInclusionFormValidator installationInclusionFormValidator;
-
-  @Mock
-  private InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private InstallationInclusionAccessService installationInclusionAccessService;
 
   @InjectMocks
   private InstallationInclusionFormService installationInclusionFormService;
@@ -34,7 +31,7 @@ class InstallationInclusionFormServiceTest {
     var installationInclusion = new InstallationInclusionTestUtil.InstallationInclusionBuilder()
         .withNominationDetail(NOMINATION_DETAIL)
         .build();
-    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+    when(installationInclusionAccessService.getInstallationInclusion(NOMINATION_DETAIL))
         .thenReturn(Optional.of(installationInclusion));
 
     var form = installationInclusionFormService.getForm(NOMINATION_DETAIL);
@@ -46,7 +43,8 @@ class InstallationInclusionFormServiceTest {
 
   @Test
   void getForm_whenNoEntityExist_assertFormIsEmpty() {
-    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
+    when(installationInclusionAccessService.getInstallationInclusion(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
 
     var form = installationInclusionFormService.getForm(NOMINATION_DETAIL);
 
@@ -57,7 +55,7 @@ class InstallationInclusionFormServiceTest {
 
   @Test
   void isNotRelatedToInstallationOperatorship_whenFormNotYetAnswered_thenFalse() {
-    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+    when(installationInclusionAccessService.getInstallationInclusion(NOMINATION_DETAIL))
         .thenReturn(Optional.empty());
 
     assertFalse(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));
@@ -69,7 +67,7 @@ class InstallationInclusionFormServiceTest {
         .includeInstallationsInNomination(false)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+    when(installationInclusionAccessService.getInstallationInclusion(NOMINATION_DETAIL))
         .thenReturn(Optional.of(installationInclusion));
 
     assertTrue(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));
@@ -81,7 +79,7 @@ class InstallationInclusionFormServiceTest {
         .includeInstallationsInNomination(true)
         .build();
 
-    when(installationInclusionPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+    when(installationInclusionAccessService.getInstallationInclusion(NOMINATION_DETAIL))
         .thenReturn(Optional.of(installationInclusion));
 
     assertFalse(installationInclusionFormService.isNotRelatedToInstallationOperatorship(NOMINATION_DETAIL));

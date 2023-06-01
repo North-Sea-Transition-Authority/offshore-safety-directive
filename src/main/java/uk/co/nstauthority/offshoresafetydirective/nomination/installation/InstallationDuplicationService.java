@@ -14,23 +14,28 @@ class InstallationDuplicationService implements DuplicatableNominationService {
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
   private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
+  private final InstallationInclusionAccessService installationInclusionAccessService;
+  private final NominatedInstallationAccessService nominatedInstallationAccessService;
 
   @Autowired
   InstallationDuplicationService(
       NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService,
       NominatedInstallationPersistenceService nominatedInstallationPersistenceService,
-      InstallationInclusionPersistenceService installationInclusionPersistenceService
-  ) {
+      InstallationInclusionPersistenceService installationInclusionPersistenceService,
+      InstallationInclusionAccessService installationInclusionAccessService,
+      NominatedInstallationAccessService nominatedInstallationAccessService) {
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
     this.installationInclusionPersistenceService = installationInclusionPersistenceService;
+    this.installationInclusionAccessService = installationInclusionAccessService;
+    this.nominatedInstallationAccessService = nominatedInstallationAccessService;
   }
 
   @Override
   @Transactional
   public void duplicate(NominationDetail oldNominationDetail, NominationDetail newNominationDetail) {
 
-    installationInclusionPersistenceService.findByNominationDetail(oldNominationDetail)
+    installationInclusionAccessService.getInstallationInclusion(oldNominationDetail)
         .ifPresent(installationInclusion -> {
           var newInclusion = DuplicationUtil.instantiateBlankInstance(InstallationInclusion.class);
           DuplicationUtil.copyProperties(installationInclusion, newInclusion, "id");
@@ -39,7 +44,7 @@ class InstallationDuplicationService implements DuplicatableNominationService {
         });
 
     var installationsToSave = new ArrayList<NominatedInstallation>();
-    nominatedInstallationPersistenceService.findAllByNominationDetail(oldNominationDetail)
+    nominatedInstallationAccessService.getNominatedInstallations(oldNominationDetail)
         .forEach(nominatedInstallation -> {
           var newInstallation = DuplicationUtil.instantiateBlankInstance(NominatedInstallation.class);
           DuplicationUtil.copyProperties(nominatedInstallation, newInstallation, "id");
