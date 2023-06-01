@@ -106,22 +106,6 @@ class NominatedWellDetailPersistenceServiceTest {
   }
 
   @Test
-  void findByNominationDetail_whenEntityExists_assertEntity() {
-    var nominatedWellDetail = NominatedWellDetailTestUtil.builder().build();
-
-    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.of(nominatedWellDetail));
-
-    assertThat(nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).contains(nominatedWellDetail);
-  }
-
-  @Test
-  void findByNominationDetail_whenEntityDoesNotExist_assertEmptyOptional() {
-    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL)).thenReturn(Optional.empty());
-
-    assertThat(nominatedWellDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL)).isEmpty();
-  }
-
-  @Test
   void deleteByNominationDetail_verifyRepositoryInteraction() {
     nominatedWellDetailPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
     verify(nominatedWellDetailRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);

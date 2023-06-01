@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
-import java.util.Optional;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,10 +36,6 @@ class NominatedWellDetailPersistenceService {
   @Transactional
   public void deleteByNominationDetail(NominationDetail nominationDetail) {
     nominatedWellDetailRepository.deleteAllByNominationDetail(nominationDetail);
-  }
-
-  Optional<NominatedWellDetail> findByNominationDetail(NominationDetail nominationDetail) {
-    return nominatedWellDetailRepository.findByNominationDetail(nominationDetail);
   }
 
   private NominatedWellDetail createNominatedWellDetailFromForm(NominationDetail nominationDetail,

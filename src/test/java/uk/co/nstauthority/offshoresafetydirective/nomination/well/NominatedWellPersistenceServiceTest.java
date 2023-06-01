@@ -75,11 +75,4 @@ class NominatedWellPersistenceServiceTest {
         tuple(secondWellDto.wellboreId().id(), NOMINATION_DETAIL)
     );
   }
-
-  @Test
-  void findAllByNominationDetail_verifyMethodCall() {
-    nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL);
-
-    verify(nominatedWellRepository, times(1)).findAllByNominationDetail(NOMINATION_DETAIL);
-  }
 }

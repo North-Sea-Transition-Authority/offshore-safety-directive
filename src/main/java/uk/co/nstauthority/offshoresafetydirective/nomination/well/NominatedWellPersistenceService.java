@@ -45,10 +45,6 @@ class NominatedWellPersistenceService {
     nominatedWellRepository.saveAll(nominatedWells);
   }
 
-  List<NominatedWell> findAllByNominationDetail(NominationDetail nominationDetail) {
-    return nominatedWellRepository.findAllByNominationDetail(nominationDetail);
-  }
-
   @Transactional
   public void deleteByNominationDetail(NominationDetail nominationDetail) {
     nominatedWellRepository.deleteAllByNominationDetail(nominationDetail);

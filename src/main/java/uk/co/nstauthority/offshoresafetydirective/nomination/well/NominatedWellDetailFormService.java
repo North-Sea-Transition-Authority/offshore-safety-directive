@@ -10,20 +10,20 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedWellDetailFormService {
 
   private final NominatedWellDetailFormValidator nominatedWellDetailFormValidator;
-  private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
-  private final NominatedWellPersistenceService nominatedWellPersistenceService;
+  private final NominatedWellDetailAccessService nominatedWellDetailAccessService;
+  private final NominatedWellAccessService nominatedWellAccessService;
 
   @Autowired
   NominatedWellDetailFormService(NominatedWellDetailFormValidator nominatedWellDetailFormValidator,
-                                        NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
-                                        NominatedWellPersistenceService nominatedWellPersistenceService) {
+                                 NominatedWellDetailAccessService nominatedWellDetailAccessService,
+                                 NominatedWellAccessService nominatedWellAccessService) {
     this.nominatedWellDetailFormValidator = nominatedWellDetailFormValidator;
-    this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
-    this.nominatedWellPersistenceService = nominatedWellPersistenceService;
+    this.nominatedWellDetailAccessService = nominatedWellDetailAccessService;
+    this.nominatedWellAccessService = nominatedWellAccessService;
   }
 
   NominatedWellDetailForm getForm(NominationDetail nominationDetail) {
-    return nominatedWellDetailPersistenceService.findByNominationDetail(nominationDetail)
+    return nominatedWellDetailAccessService.getNominatedWellDetails(nominationDetail)
         .map(this::nominatedWellDetailEntityToForm)
         .orElseGet(NominatedWellDetailForm::new);
   }
@@ -39,7 +39,7 @@ class NominatedWellDetailFormService {
     form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
     form.setDevelopmentPhase(entity.getDevelopmentPhase());
     form.setDecommissioningPhase(entity.getDecommissioningPhase());
-    List<Integer> wellIds = nominatedWellPersistenceService.findAllByNominationDetail(entity.getNominationDetail())
+    List<Integer> wellIds = nominatedWellAccessService.getNominatedWells(entity.getNominationDetail())
         .stream()
         .map(NominatedWell::getWellId)
         .toList();

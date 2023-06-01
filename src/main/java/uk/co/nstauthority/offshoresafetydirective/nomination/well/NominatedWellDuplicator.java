@@ -13,17 +13,25 @@ class NominatedWellDuplicator {
   private final NominatedWellPersistenceService nominatedWellPersistenceService;
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
+  private final NominatedWellAccessService nominatedWellAccessService;
+
+  private final NominatedWellDetailAccessService nominatedWellDetailAccessService;
+
   @Autowired
   NominatedWellDuplicator(NominatedWellPersistenceService nominatedWellPersistenceService,
-                          NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService) {
+                          NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
+                          NominatedWellAccessService nominatedWellAccessService,
+                          NominatedWellDetailAccessService nominatedWellDetailAccessService) {
     this.nominatedWellPersistenceService = nominatedWellPersistenceService;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
+    this.nominatedWellAccessService = nominatedWellAccessService;
+    this.nominatedWellDetailAccessService = nominatedWellDetailAccessService;
   }
 
   @Transactional
   public void duplicate(NominationDetail sourceNominationDetail, NominationDetail targetNominationDetail) {
 
-    var wells = nominatedWellPersistenceService.findAllByNominationDetail(sourceNominationDetail);
+    var wells = nominatedWellAccessService.getNominatedWells(sourceNominationDetail);
     if (!wells.isEmpty()) {
       var wellsToSave = new ArrayList<NominatedWell>();
       wells.forEach(sourceWell -> {
@@ -35,7 +43,7 @@ class NominatedWellDuplicator {
       nominatedWellPersistenceService.saveAllNominatedWells(wellsToSave);
     }
 
-    nominatedWellDetailPersistenceService.findByNominationDetail(sourceNominationDetail)
+    nominatedWellDetailAccessService.getNominatedWellDetails(sourceNominationDetail)
         .ifPresent(sourceWellDetail -> {
           var targetWellDetail = DuplicationUtil.instantiateBlankInstance(NominatedWellDetail.class);
           DuplicationUtil.copyProperties(sourceWellDetail, targetWellDetail, "id");

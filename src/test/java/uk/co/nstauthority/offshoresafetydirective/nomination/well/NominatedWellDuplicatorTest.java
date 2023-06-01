@@ -26,6 +26,12 @@ class NominatedWellDuplicatorTest {
   @Mock
   private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
+  @Mock
+  private NominatedWellAccessService nominatedWellAccessService;
+
+  @Mock
+  private NominatedWellDetailAccessService nominatedWellDetailAccessService;
+
   @InjectMocks
   private NominatedWellDuplicator nominatedWellDuplicator;
 
@@ -38,13 +44,13 @@ class NominatedWellDuplicatorTest {
         .withId(200)
         .build();
 
-    when(nominatedWellPersistenceService.findAllByNominationDetail(sourceNominationDetail))
+    when(nominatedWellAccessService.getNominatedWells(sourceNominationDetail))
         .thenReturn(List.of());
 
     nominatedWellDuplicator.duplicate(sourceNominationDetail, targetNominationDetail);
 
     verify(nominatedWellPersistenceService, never()).saveAllNominatedWells(any());
-    verify(nominatedWellDetailPersistenceService).findByNominationDetail(sourceNominationDetail);
+    verify(nominatedWellDetailAccessService).getNominatedWellDetails(sourceNominationDetail);
   }
 
   @Test
@@ -62,7 +68,7 @@ class NominatedWellDuplicatorTest {
         .withWellboreId(456)
         .build();
 
-    when(nominatedWellPersistenceService.findAllByNominationDetail(sourceNominationDetail))
+    when(nominatedWellAccessService.getNominatedWells(sourceNominationDetail))
         .thenReturn(List.of(existingWell));
 
     nominatedWellDuplicator.duplicate(sourceNominationDetail, targetNominationDetail);
@@ -84,7 +90,7 @@ class NominatedWellDuplicatorTest {
         .extracting(NominatedWell::getId)
         .isNotEqualTo(existingWell.getWellId());
 
-    verify(nominatedWellDetailPersistenceService).findByNominationDetail(sourceNominationDetail);
+    verify(nominatedWellDetailAccessService).getNominatedWellDetails(sourceNominationDetail);
   }
 
   @Test
@@ -96,12 +102,12 @@ class NominatedWellDuplicatorTest {
         .withId(200)
         .build();
 
-    when(nominatedWellDetailPersistenceService.findByNominationDetail(sourceNominationDetail))
+    when(nominatedWellDetailAccessService.getNominatedWellDetails(sourceNominationDetail))
         .thenReturn(Optional.empty());
 
     nominatedWellDuplicator.duplicate(sourceNominationDetail, targetNominationDetail);
 
-    verify(nominatedWellPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(nominatedWellAccessService).getNominatedWells(sourceNominationDetail);
     verify(nominatedWellDetailPersistenceService, never()).saveNominatedWellDetail(any());
   }
 
@@ -122,12 +128,12 @@ class NominatedWellDuplicatorTest {
         .withExplorationAndAppraisalPhase(true)
         .build();
 
-    when(nominatedWellDetailPersistenceService.findByNominationDetail(sourceNominationDetail))
+    when(nominatedWellDetailAccessService.getNominatedWellDetails(sourceNominationDetail))
         .thenReturn(Optional.of(existingWellDetail));
 
     nominatedWellDuplicator.duplicate(sourceNominationDetail, targetNominationDetail);
 
-    verify(nominatedWellPersistenceService).findAllByNominationDetail(sourceNominationDetail);
+    verify(nominatedWellAccessService).getNominatedWells(sourceNominationDetail);
 
     var captor = ArgumentCaptor.forClass(NominatedWellDetail.class);
     verify(nominatedWellDetailPersistenceService).saveNominatedWellDetail(captor.capture());

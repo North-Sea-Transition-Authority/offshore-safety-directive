@@ -28,7 +28,7 @@ class NominatedWellDetailViewServiceTest {
   private NominatedWellDetailRepository nominatedWellDetailRepository;
 
   @Mock
-  private NominatedWellPersistenceService nominatedWellPersistenceService;
+  private NominatedWellAccessService nominatedWellAccessService;
 
   @Mock
   private WellQueryService wellQueryService;
@@ -60,7 +60,7 @@ class NominatedWellDetailViewServiceTest {
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedWellDetail));
 
-    when(nominatedWellPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+    when(nominatedWellAccessService.getNominatedWells(NOMINATION_DETAIL))
         .thenReturn(List.of(firstNominatedWell, secondNominatedWell));
 
     when(wellQueryService.getWellsByIds(

@@ -12,15 +12,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 public class NominatedWellDetailViewService {
 
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
-  private final NominatedWellPersistenceService nominatedWellPersistenceService;
+  private final NominatedWellAccessService nominatedWellAccessService;
   private final WellQueryService wellQueryService;
 
   @Autowired
   public NominatedWellDetailViewService(NominatedWellDetailRepository nominatedWellDetailRepository,
-                                        NominatedWellPersistenceService nominatedWellPersistenceService,
+                                        NominatedWellAccessService nominatedWellAccessService,
                                         WellQueryService wellQueryService) {
     this.nominatedWellDetailRepository = nominatedWellDetailRepository;
-    this.nominatedWellPersistenceService = nominatedWellPersistenceService;
+    this.nominatedWellAccessService = nominatedWellAccessService;
     this.wellQueryService = wellQueryService;
   }
 
@@ -28,7 +28,7 @@ public class NominatedWellDetailViewService {
     return nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> {
 
-          var nominatedWellIds = nominatedWellPersistenceService.findAllByNominationDetail(nominationDetail)
+          var nominatedWellIds = nominatedWellAccessService.getNominatedWells(nominationDetail)
               .stream()
               .map(nominatedWell -> new WellboreId(nominatedWell.getWellId()))
               .toList();
