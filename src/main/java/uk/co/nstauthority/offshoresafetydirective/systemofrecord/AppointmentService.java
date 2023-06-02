@@ -17,7 +17,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 class AppointmentService {
 
   private final AppointmentRepository appointmentRepository;
-
   private final NomineeDetailAccessService nomineeDetailAccessService;
 
   private final Clock clock;

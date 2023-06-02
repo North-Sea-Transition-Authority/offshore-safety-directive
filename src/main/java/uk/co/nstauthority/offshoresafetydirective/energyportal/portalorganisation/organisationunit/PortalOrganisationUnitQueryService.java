@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
@@ -90,7 +90,6 @@ public class PortalOrganisationUnitQueryService {
         )
     ))
         .stream()
-        .filter(organisationUnit -> organisationUnit.getIsActive() == null || organisationUnit.getIsActive())
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }
@@ -107,7 +106,6 @@ public class PortalOrganisationUnitQueryService {
             )
         ))
         .stream()
-        .filter(organisationUnit -> organisationUnit.getIsActive() == null || organisationUnit.getIsActive())
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }

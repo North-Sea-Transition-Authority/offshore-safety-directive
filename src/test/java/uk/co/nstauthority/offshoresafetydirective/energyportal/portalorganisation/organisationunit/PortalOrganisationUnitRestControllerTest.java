@@ -33,16 +33,22 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void searchPortalOrganisations_whenNotLoggedIn_thenOk() throws Exception {
-    mockMvc.perform(get(
-        ReverseRouter.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations("searchTerm"))
-    ))
+    mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchPortalOrganisations("searchTerm"))
+        )
+    )
         .andExpect(status().isOk());
   }
 
   @SecurityTest
   void searchPortalOrganisations_whenLoggedIn_thenOk() throws Exception {
-    mockMvc.perform(get(
-        ReverseRouter.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations("searchTerm")))
+    mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchPortalOrganisations("searchTerm"))
+        )
             .with(user(USER))
     )
         .andExpect(status().isOk());
@@ -59,38 +65,13 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
     when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
         .thenReturn(Collections.emptyList());
 
-    var result = mockMvc.perform(get(
-        ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-            .searchPortalOrganisations(searchTerm))
+    var result = mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchPortalOrganisations(searchTerm))
         )
             .with(user(USER))
     )
-        .andExpect(status().isOk())
-        .andReturn();
-
-    var encodedResponse = result.getResponse().getContentAsString();
-    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
-
-    assertThat(searchResult.getResults()).isEmpty();
-  }
-
-  @Test
-  void searchPortalOrganisations_whenNoNameOrNumberMatchesAndNullResponseFromService_thenEmptyList() throws Exception {
-
-    var searchTerm = "no match search term";
-
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
-        .thenReturn(null);
-
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
-        .thenReturn(null);
-
-    var result = mockMvc.perform(get(
-                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                    .searchPortalOrganisations(searchTerm))
-            )
-                .with(user(USER))
-        )
         .andExpect(status().isOk())
         .andReturn();
 
@@ -113,11 +94,12 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
     when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
         .thenReturn(Collections.emptyList());
 
-    var result = mockMvc.perform(get(
-                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                    .searchPortalOrganisations(searchTerm))
-            )
-                .with(user(USER))
+    var result = mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchPortalOrganisations(searchTerm))
+        )
+            .with(user(USER))
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -299,7 +281,7 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void searchPortalOrganisations_whenSameOrganisationsMatchesNameAndNumber_thenNoDuplicates() throws Exception {
+  void searchPortalOrganisations_whenSameOrganisationsMatchesNameAndNumber_thenDistinct() throws Exception {
 
     var searchTerm = "match name and number";
 
@@ -328,5 +310,394 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .containsExactly(
             String.valueOf(portalOrganisationDto.id())
         );
+  }
+
+  @Test
+  void searchPortalOrganisations_whenOrgIsActive_thenVerifyReturned() throws Exception {
+
+    var searchTerm = "match name";
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .isActive(true)
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of());
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(
+            String.valueOf(portalOrganisationDto.id())
+        );
+  }
+
+  @Test
+  void searchPortalOrganisations_whenOrgIsNotActive_thenVerifyNotReturned() throws Exception {
+
+    var searchTerm = "match name";
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .isActive(false)
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of());
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults()).isEmpty();
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenNoNameOrNumberMatchesAndEmptyResponseFromService_thenEmptyList() throws Exception {
+
+    var searchTerm = "no match search term";
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(Collections.emptyList());
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(Collections.emptyList());
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults()).isEmpty();
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenNameOnlyMatches_thenPopulatedList() throws Exception {
+
+    var searchTerm = "match name only";
+
+    var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of(expectedOrganisationUnit));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(Collections.emptyList());
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(String.valueOf(expectedOrganisationUnit.id()));
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenNumberOnlyMatches_thenPopulatedList() throws Exception {
+
+    var searchTerm = "match number only";
+
+    var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(expectedOrganisationUnit));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(Collections.emptyList());
+
+    var result = mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(searchTerm))
+        )
+            .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(String.valueOf(expectedOrganisationUnit.id()));
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenNameAndNumberMatches_thenPopulatedList() throws Exception {
+
+    var searchTerm = "match name and number";
+
+    var expectedNameMatchOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("a company")
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(expectedNameMatchOrganisationUnit));
+
+    var expectedNumberMatchOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withId(2)
+        .withName("b company")
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of(expectedNumberMatchOrganisationUnit));
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(
+            String.valueOf(expectedNameMatchOrganisationUnit.id()),
+            String.valueOf(expectedNumberMatchOrganisationUnit.id())
+        );
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenMultipleOrganisationsReturned_thenSortedByName() throws Exception {
+
+    var searchTerm = "match name and number";
+
+    var firstOrganisationAlphabetically = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("A company")
+        .build();
+
+    var thirdOrganisationAlphabetically = PortalOrganisationDtoTestUtil.builder()
+        .withId(3)
+        .withName("c company")
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(thirdOrganisationAlphabetically, firstOrganisationAlphabetically));
+
+    var secondOrganisationAlphabetically = PortalOrganisationDtoTestUtil.builder()
+        .withId(2)
+        .withName("b company")
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of(secondOrganisationAlphabetically));
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(
+            String.valueOf(firstOrganisationAlphabetically.id()),
+            String.valueOf(secondOrganisationAlphabetically.id()),
+            String.valueOf(thirdOrganisationAlphabetically.id())
+        );
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenResults_thenVerifyNameFormat() throws Exception {
+
+    var searchTerm = "match name and number";
+
+    var organisationWithoutNumberString = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("a company")
+        .withRegisteredNumber((String) null)
+        .build();
+
+    var organisationWithoutNumberObject = PortalOrganisationDtoTestUtil.builder()
+        .withId(2)
+        .withName("b company")
+        .withRegisteredNumber((OrganisationRegisteredNumber) null)
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(organisationWithoutNumberString, organisationWithoutNumberObject));
+
+    var organisationWithNumber = PortalOrganisationDtoTestUtil.builder()
+        .withId(3)
+        .withName("c company")
+        .withRegisteredNumber("registered number")
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of(organisationWithNumber));
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::text)
+        .containsExactly(
+            organisationWithoutNumberString.name(),
+            organisationWithoutNumberObject.name(),
+            "%s (%s)".formatted(organisationWithNumber.name(), organisationWithNumber.registeredNumber().value())
+        );
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenSameOrganisationsMatchesNameAndNumber_thenDistinct() throws Exception {
+
+    var searchTerm = "match name and number";
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    var result = mockMvc.perform(get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(
+            String.valueOf(portalOrganisationDto.id())
+        );
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenOrgIsNotDuplicate_thenVerifyReturned() throws Exception {
+
+    var searchTerm = "match name";
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .isActive(false)
+        .isDuplicate(false)
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of());
+
+    var result = mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(searchTerm))
+        )
+            .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::id)
+        .containsExactly(
+            String.valueOf(portalOrganisationDto.id())
+        );
+  }
+
+  @Test
+  void searchAllPortalOrganisations_whenOrgIsDuplicate_thenVerifyNotReturned() throws Exception {
+
+    var searchTerm = "match name";
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .isActive(false)
+        .isDuplicate(true)
+        .build();
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+        .thenReturn(List.of(portalOrganisationDto));
+
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+        .thenReturn(List.of());
+
+    var result = mockMvc.perform(
+        get(
+            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(searchTerm))
+        )
+            .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults()).isEmpty();
   }
 }

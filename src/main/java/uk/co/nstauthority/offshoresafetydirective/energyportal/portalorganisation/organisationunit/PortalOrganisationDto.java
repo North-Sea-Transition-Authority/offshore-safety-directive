@@ -7,7 +7,8 @@ import uk.co.nstauthority.offshoresafetydirective.organisation.unit.Organisation
 public record PortalOrganisationDto(Integer id,
                                     String name,
                                     OrganisationRegisteredNumber registeredNumber,
-                                    boolean isActive) {
+                                    boolean isActive,
+                                    boolean isDuplicate) {
 
   static PortalOrganisationDto fromOrganisationUnit(OrganisationUnit organisationUnit) {
     return new PortalOrganisationDto(
@@ -16,7 +17,8 @@ public record PortalOrganisationDto(Integer id,
         new OrganisationRegisteredNumber(organisationUnit.getRegisteredNumber()),
         // OrganisationUnit from Energy Portal API provides Boolean type so to avoid
         // dealing with a possible null, assume active unless explicitly told by EPA
-        Objects.requireNonNullElse(organisationUnit.getIsActive(), true)
+        Objects.requireNonNullElse(organisationUnit.getIsActive(), true),
+        Objects.requireNonNullElse(organisationUnit.getIsDuplicate(), false)
     );
   }
 

@@ -80,6 +80,7 @@ class UserDetailServiceTest {
 
   @Test
   void isUserLoggedIn_whenNoAuthenticationInContext_thenException() {
+    SecurityContextHolder.setContext(new SecurityContextImpl(new ServiceSaml2Authentication(null, Set.of())));
     assertFalse(userDetailService.isUserLoggedIn());
   }
 }

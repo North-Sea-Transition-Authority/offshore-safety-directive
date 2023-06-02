@@ -112,20 +112,23 @@ class PortalOrganisationUnitQueryServiceTest {
   }
 
   @Test
-  void queryOrganisationByName_whenNonActiveOrganisations_thenOnlyActiveReturned() {
+  void queryOrganisationByName_whenNonActiveOrganisations_thenAllReturned() {
 
     var nameToSearchFor = "name with matches";
 
     var activeOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(true)
+        .withId(10)
         .build();
 
     var inactiveOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(false)
+        .withId(20)
         .build();
 
     var unknownActiveStateOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(null)
+        .withId(30)
         .build();
 
     when(organisationApi.searchOrganisationUnits(
@@ -138,7 +141,13 @@ class PortalOrganisationUnitQueryServiceTest {
 
     var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor);
 
-    assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(activeOrganisationUnit));
+    assertThat(result)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(
+            activeOrganisationUnit.getOrganisationUnitId(),
+            inactiveOrganisationUnit.getOrganisationUnitId(),
+            unknownActiveStateOrganisationUnit.getOrganisationUnitId()
+    );
   }
 
 
@@ -180,20 +189,23 @@ class PortalOrganisationUnitQueryServiceTest {
   }
 
   @Test
-  void queryOrganisationByRegisteredNumber_whenNonActiveOrganisations_thenOnlyActiveReturned() {
+  void queryOrganisationByRegisteredNumber_whenNonActiveOrganisations_thenAllReturned() {
 
     var numberToSearchFor = "number with matches";
 
     var activeOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(true)
+        .withId(10)
         .build();
 
     var inactiveOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(false)
+        .withId(20)
         .build();
 
     var unknownActiveStateOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
         .isActive(null)
+        .withId(30)
         .build();
 
     when(organisationApi.searchOrganisationUnits(
@@ -206,7 +218,13 @@ class PortalOrganisationUnitQueryServiceTest {
 
     var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(numberToSearchFor);
 
-    assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(activeOrganisationUnit));
+    assertThat(result)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(
+            activeOrganisationUnit.getOrganisationUnitId(),
+            inactiveOrganisationUnit.getOrganisationUnitId(),
+            unknownActiveStateOrganisationUnit.getOrganisationUnitId()
+        );
   }
 
   @ParameterizedTest

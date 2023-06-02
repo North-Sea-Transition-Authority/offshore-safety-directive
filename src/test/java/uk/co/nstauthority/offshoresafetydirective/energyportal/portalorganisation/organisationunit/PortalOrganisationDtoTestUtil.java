@@ -15,12 +15,10 @@ public class PortalOrganisationDtoTestUtil {
   public static class Builder {
 
     private Integer id = 100;
-
     private String name = "Name";
-
     private OrganisationRegisteredNumber registeredNumber = new OrganisationRegisteredNumber("registered number");
-
-    private boolean isActive = true;
+    private Boolean isActive = true;
+    private Boolean isDuplicate = false;
 
     public Builder withId(Integer id) {
       this.id = id;
@@ -41,8 +39,13 @@ public class PortalOrganisationDtoTestUtil {
       return this;
     }
 
-    public Builder isActive(boolean isActive) {
+    public Builder isActive(Boolean isActive) {
       this.isActive = isActive;
+      return this;
+    }
+
+    public Builder isDuplicate(Boolean duplicate) {
+      isDuplicate = duplicate;
       return this;
     }
 
@@ -51,7 +54,8 @@ public class PortalOrganisationDtoTestUtil {
           id,
           name,
           registeredNumber,
-          isActive
+          isActive,
+          isDuplicate
       );
     }
 

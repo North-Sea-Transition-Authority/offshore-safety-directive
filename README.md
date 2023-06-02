@@ -47,6 +47,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_NOTIFY_API_KEY                     | The GOV.UK Notify key                                                                                |
 
 - Optionally, the EPMQ integration can be disabled by running with the `disable-epmq` profile. In this case the `OSD_EPMQ_*` environment variables do not need to be set.
+- If you receive a `publishEpmqMessagesIntegrationTestPublicationToSnapshotsRepository` error when hot reloading then run the `publishing > publishEpmqMessagesIntegrationTestPublicationToMavenLocal` gradle task.
 
 ### Production
 

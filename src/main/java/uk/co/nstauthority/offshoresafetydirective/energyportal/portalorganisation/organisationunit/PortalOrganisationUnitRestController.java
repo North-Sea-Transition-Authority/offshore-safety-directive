@@ -1,9 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.lang3.StringUtils;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
+import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 
 @RestController
 @RequestMapping("/api/public/organisations")
@@ -27,24 +28,40 @@ public class PortalOrganisationUnitRestController {
   }
 
   @GetMapping
-  public RestSearchResult searchPortalOrganisations(@RequestParam("term") String searchTerm) {
-
-    List<PortalOrganisationDto> matchedOrganisationUnits = new ArrayList<>();
+  public RestSearchResult searchAllPortalOrganisations(@RequestParam("term") String searchTerm) {
 
     var matchedOrganisationsByName = portalOrganisationUnitQueryService
         .queryOrganisationByName(searchTerm);
 
-    if (matchedOrganisationsByName != null && !matchedOrganisationsByName.isEmpty()) {
-      matchedOrganisationUnits.addAll(matchedOrganisationsByName);
-    }
+    var matchedOrganisationsByNumber = portalOrganisationUnitQueryService
+        .queryOrganisationByRegisteredNumber(searchTerm);
+
+    List<PortalOrganisationDto> matchedOrganisationUnits = Stream.of(matchedOrganisationsByName, matchedOrganisationsByNumber)
+        .flatMap(Collection::stream)
+        .filter(dto -> !dto.isDuplicate())
+        .toList();
+
+    return convertOrgUnitsToSearchResult(matchedOrganisationUnits);
+  }
+
+  @GetMapping("/active")
+  public RestSearchResult searchPortalOrganisations(@RequestParam("term") String searchTerm) {
+
+    var matchedOrganisationsByName = portalOrganisationUnitQueryService
+        .queryOrganisationByName(searchTerm);
 
     var matchedOrganisationsByNumber = portalOrganisationUnitQueryService
         .queryOrganisationByRegisteredNumber(searchTerm);
 
-    if (matchedOrganisationsByNumber != null && !matchedOrganisationsByNumber.isEmpty()) {
-      matchedOrganisationUnits.addAll(matchedOrganisationsByNumber);
-    }
+    List<PortalOrganisationDto> matchedOrganisationUnits = Stream.of(matchedOrganisationsByName, matchedOrganisationsByNumber)
+        .flatMap(Collection::stream)
+        .filter(PortalOrganisationDto::isActive)
+        .toList();
 
+    return convertOrgUnitsToSearchResult(matchedOrganisationUnits);
+  }
+
+  private RestSearchResult convertOrgUnitsToSearchResult(List<PortalOrganisationDto> matchedOrganisationUnits) {
     List<RestSearchItem> resultingSearchItems = matchedOrganisationUnits
         .stream()
         .distinct()
@@ -57,12 +74,10 @@ public class PortalOrganisationUnitRestController {
 
   private RestSearchItem convertToRestSearchItem(PortalOrganisationDto portalOrganisationDto) {
 
-    var displayName = (
-        portalOrganisationDto.registeredNumber() != null
-            && StringUtils.isNotBlank(portalOrganisationDto.registeredNumber().value())
-    )
-        ? "%s (%s)".formatted(portalOrganisationDto.name(), portalOrganisationDto.registeredNumber().value())
-        : portalOrganisationDto.name();
+    var displayName = OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(
+        portalOrganisationDto.name(),
+        (portalOrganisationDto.registeredNumber() != null) ? portalOrganisationDto.registeredNumber().value() : null
+    );
 
     return new RestSearchItem(String.valueOf(portalOrganisationDto.id()), displayName);
   }

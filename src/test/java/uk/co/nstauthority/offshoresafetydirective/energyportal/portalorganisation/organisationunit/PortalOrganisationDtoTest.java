@@ -72,4 +72,43 @@ class PortalOrganisationDtoTest {
 
     assertThat(result).isEmpty();
   }
+
+  @Test
+  void fromOrganisationUnit_verifyMappings() {
+
+    var portalOrganisationUnit = EpaOrganisationUnitTestUtil.builder().build();
+
+    var resultingOrganisationDto = PortalOrganisationDto.fromOrganisationUnit(portalOrganisationUnit);
+
+    assertThat(resultingOrganisationDto)
+        .extracting(
+            PortalOrganisationDto::id,
+            PortalOrganisationDto::name,
+            PortalOrganisationDto::registeredNumber,
+            PortalOrganisationDto::isActive,
+            PortalOrganisationDto::isDuplicate
+        )
+        .containsExactly(
+            portalOrganisationUnit.getOrganisationUnitId(),
+            portalOrganisationUnit.getName(),
+            new OrganisationRegisteredNumber(portalOrganisationUnit.getRegisteredNumber()),
+            portalOrganisationUnit.getIsActive(),
+            portalOrganisationUnit.getIsDuplicate()
+        );
+  }
+
+  @Test
+  void fromOrganisationUnit_whenPossibleNullValuesFromEnergyPortal_thenVerifyDefaultValues() {
+
+    var portalOrganisationUnit = EpaOrganisationUnitTestUtil.builder()
+        .isActive(null)
+        .isDuplicate(null)
+        .build();
+
+    var resultingOrganisationDto = PortalOrganisationDto.fromOrganisationUnit(portalOrganisationUnit);
+
+    assertThat(resultingOrganisationDto)
+        .extracting(PortalOrganisationDto::isActive, PortalOrganisationDto::isDuplicate)
+        .containsExactly(true, false);
+  }
 }
