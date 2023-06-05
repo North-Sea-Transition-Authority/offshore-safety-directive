@@ -99,7 +99,7 @@ class NominationWorkAreaItemService {
         case PRE_SUBMISSION -> ReverseRouter.route(
             on(NominationTaskListController.class).getTaskList(dto.nominationId()));
         case POST_SUBMISSION -> ReverseRouter.route(
-            on(NominationCaseProcessingController.class).renderCaseProcessing(dto.nominationId()));
+            on(NominationCaseProcessingController.class).renderCaseProcessing(dto.nominationId(), null));
       };
     };
   }

@@ -227,7 +227,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))));
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))));
 
     var captor = ArgumentCaptor.forClass(NominationDecisionForm.class);
 

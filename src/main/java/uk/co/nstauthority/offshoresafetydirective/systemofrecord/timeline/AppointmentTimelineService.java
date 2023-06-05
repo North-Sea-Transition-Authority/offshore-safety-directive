@@ -248,7 +248,7 @@ class AppointmentTimelineService {
       );
       return canAccessNomination
           ? ReverseRouter.route(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId()))
+              on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId(), null))
           : null;
     } catch (InvalidAuthenticationException exception) {
       // catches when no user is logged in

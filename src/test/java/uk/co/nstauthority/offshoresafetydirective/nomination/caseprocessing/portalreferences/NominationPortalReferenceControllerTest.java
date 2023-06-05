@@ -129,7 +129,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
             .with(user(NOMINATION_MANAGER_USER))
             .param("references.inputValue", newReferences))
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
@@ -153,7 +153,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
@@ -180,7 +180,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
             .with(user(NOMINATION_MANAGER_USER))
             .param("references.inputValue", newReferences))
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),
@@ -204,7 +204,7 @@ class NominationPortalReferenceControllerTest extends AbstractControllerTest {
             .with(csrf())
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(nominationPortalReferencePersistenceService).updatePortalReferences(nominationDetail.getNomination(),

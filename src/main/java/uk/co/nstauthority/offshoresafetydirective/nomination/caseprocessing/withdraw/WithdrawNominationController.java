@@ -110,7 +110,7 @@ public class WithdrawNominationController {
         NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
       }
 
-      return ReverseRouter.redirect(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId));
+      return ReverseRouter.redirect(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
     });
   }
 }

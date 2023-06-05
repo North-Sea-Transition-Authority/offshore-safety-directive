@@ -134,7 +134,7 @@ public class GeneralCaseNoteController {
           }
 
           return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId));
+              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
         }
     );
   }

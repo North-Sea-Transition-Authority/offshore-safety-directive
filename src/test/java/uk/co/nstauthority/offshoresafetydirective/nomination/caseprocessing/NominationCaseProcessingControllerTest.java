@@ -102,7 +102,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
         .test();
   }
@@ -113,7 +113,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
         .test();
   }
@@ -127,7 +127,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     ).thenReturn(new ModelAndView(viewName));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(status().isOk())
@@ -142,7 +142,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     )).thenReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
                 .with(user(NOMINATION_MANAGE_USER))
         )
         .andExpect(status().isBadRequest());

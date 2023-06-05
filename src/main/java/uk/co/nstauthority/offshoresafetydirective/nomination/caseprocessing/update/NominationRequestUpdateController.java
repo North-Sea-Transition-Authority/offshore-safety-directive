@@ -111,7 +111,7 @@ public class NominationRequestUpdateController {
           nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
 
           return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId));
+              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
         });
   }
 

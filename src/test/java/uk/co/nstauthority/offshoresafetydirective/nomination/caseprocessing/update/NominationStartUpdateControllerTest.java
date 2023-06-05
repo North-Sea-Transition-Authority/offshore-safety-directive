@@ -146,7 +146,7 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("startActionUrl",
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdate(NOMINATION_ID))))
         .andExpect(model().attribute("backLinkUrl",
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(model().attribute("reasonForUpdate", reasonForUpdate))
         .andExpect(view().name("osd/nomination/update/startNominationUpdate"));
   }

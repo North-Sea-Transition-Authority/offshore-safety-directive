@@ -161,7 +161,7 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(generalCaseNoteSubmissionService).submitCaseNote(eq(nominationDetail), any(GeneralCaseNoteForm.class));

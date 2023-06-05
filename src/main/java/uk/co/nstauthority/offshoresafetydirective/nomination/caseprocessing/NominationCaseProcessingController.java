@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -40,7 +41,8 @@ public class NominationCaseProcessingController {
   }
 
   @GetMapping
-  public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId) {
+  public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId,
+                                           @RequestParam(value = "version", required = false) Integer version) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,

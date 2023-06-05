@@ -143,7 +143,7 @@ class NominationQaChecksControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(
-            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(QA_CHECK_NOTIFICATION_BANNER));
 
     verify(caseEventService).createCompletedQaChecksEvent(nominationDetail, comment);

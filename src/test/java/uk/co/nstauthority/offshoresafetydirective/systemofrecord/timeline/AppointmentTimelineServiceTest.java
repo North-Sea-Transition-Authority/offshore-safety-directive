@@ -966,7 +966,7 @@ class AppointmentTimelineServiceTest {
         .extracting(AppointmentView::nominationUrl)
         .isEqualTo(
             ReverseRouter.route(on(NominationCaseProcessingController.class)
-                .renderCaseProcessing(appointmentDto.nominationId()))
+                .renderCaseProcessing(appointmentDto.nominationId(), null))
         );
   }
 

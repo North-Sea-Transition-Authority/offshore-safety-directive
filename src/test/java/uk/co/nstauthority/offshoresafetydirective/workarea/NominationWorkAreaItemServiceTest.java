@@ -289,7 +289,7 @@ class NominationWorkAreaItemServiceTest {
           case PRE_SUBMISSION -> assertion.isEqualTo(ReverseRouter.route(
               on(NominationTaskListController.class).getTaskList(nomination.getNominationId())));
           case POST_SUBMISSION -> assertion.isEqualTo(ReverseRouter.route(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId())));
+              on(NominationCaseProcessingController.class).renderCaseProcessing(nomination.getNominationId(), null)));
         }
       }
     }
@@ -322,7 +322,7 @@ class NominationWorkAreaItemServiceTest {
                 on(NominationTaskListController.class).getTaskList(draftNomination.getNominationId())),
             ReverseRouter.route(
                 on(NominationCaseProcessingController.class)
-                    .renderCaseProcessing(submittedNomination.getNominationId()))
+                    .renderCaseProcessing(submittedNomination.getNominationId(), null))
         );
   }
 

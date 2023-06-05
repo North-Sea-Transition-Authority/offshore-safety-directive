@@ -175,7 +175,7 @@ class WithdrawNominationControllerTest extends AbstractControllerTest {
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationCaseProcessingController.class)
-            .renderCaseProcessing(NOMINATION_ID))))
+            .renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(caseEventService).createWithdrawEvent(nominationDetail, reason);

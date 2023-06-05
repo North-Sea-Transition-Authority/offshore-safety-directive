@@ -180,7 +180,8 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID))))
+            ReverseRouter.route(
+                on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     var formCaptor = ArgumentCaptor.forClass(ConfirmNominationAppointmentForm.class);

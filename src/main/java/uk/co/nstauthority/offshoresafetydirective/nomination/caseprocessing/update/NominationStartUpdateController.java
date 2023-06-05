@@ -87,7 +87,7 @@ public class NominationStartUpdateController {
         .addObject("startActionUrl",
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdate(nominationId)))
         .addObject("backLinkUrl",
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId)))
+            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null)))
         .addObject("reasonForUpdate", updateReason);
   }
 
