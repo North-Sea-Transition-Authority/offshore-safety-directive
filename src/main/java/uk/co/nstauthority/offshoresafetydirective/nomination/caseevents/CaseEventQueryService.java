@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -79,12 +80,9 @@ public class CaseEventQueryService {
     return updateRequestEvent.isPresent() && nominationDetailDto.nominationStatus() != NominationStatus.WITHDRAWN;
   }
 
-  public List<CaseEventView> getCaseEventViewsForNominationDetail(NominationDetail nominationDetail) {
-    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    var events = caseEventRepository.findAllByNominationAndNominationVersion(
-        nominationDetail.getNomination(),
-        dto.version()
-    );
+  public List<CaseEventView> getCaseEventViews(Nomination nomination) {
+
+    var events = caseEventRepository.findAllByNomination(nomination);
 
     var createdByUserIds = events.stream()
         .map(caseEvent -> new WebUserAccountId(caseEvent.getCreatedBy()))

@@ -31,7 +31,8 @@ public class NominationDetailService {
       NominationService nominationService,
       NominationDetailRepository nominationDetailRepository,
       NominationReferenceService nominationReferenceService,
-      NominationSubmittedEventPublisher nominationSubmittedEventPublisher, CaseEventService caseEventService, Clock clock) {
+      NominationSubmittedEventPublisher nominationSubmittedEventPublisher, CaseEventService caseEventService,
+      Clock clock) {
     this.nominationService = nominationService;
     this.nominationDetailRepository = nominationDetailRepository;
     this.nominationReferenceService = nominationReferenceService;
@@ -73,6 +74,16 @@ public class NominationDetailService {
                                                                           Collection<NominationStatus> nominationStatuses) {
     return nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
         nominationId.id(),
+        nominationStatuses
+    );
+  }
+
+  public Optional<NominationDetail> getVersionedNominationDetailWithStatuses(NominationId nominationId,
+                                                                             Integer version,
+                                                                             Collection<NominationStatus> nominationStatuses) {
+    return nominationDetailRepository.findFirstByNomination_IdAndVersionAndStatusInOrderByVersionDesc(
+        nominationId.id(),
+        version,
         nominationStatuses
     );
   }

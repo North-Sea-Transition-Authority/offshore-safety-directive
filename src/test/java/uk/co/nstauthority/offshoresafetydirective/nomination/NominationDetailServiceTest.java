@@ -412,4 +412,44 @@ class NominationDetailServiceTest {
         .contains(nominationDetail);
   }
 
+  @Test
+  void getVersionedNominationDetailWithStatuses_whenExists_thenDetailReturned() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var statuses = EnumSet.of(NominationStatus.SUBMITTED);
+
+    when(nominationDetailRepository.findFirstByNomination_IdAndVersionAndStatusInOrderByVersionDesc(
+        nominationDetail.getNomination().getId(),
+        nominationDetail.getVersion(),
+        statuses
+    )).thenReturn(Optional.of(nominationDetail));
+
+    var result = nominationDetailService.getVersionedNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        nominationDetail.getVersion(),
+        statuses
+    );
+
+    assertThat(result).contains(nominationDetail);
+  }
+
+  @Test
+  void getVersionedNominationDetailWithStatuses_whenDoesNotExists_thenEmpty() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var statuses = EnumSet.of(NominationStatus.SUBMITTED);
+
+    when(nominationDetailRepository.findFirstByNomination_IdAndVersionAndStatusInOrderByVersionDesc(
+        nominationDetail.getNomination().getId(),
+        nominationDetail.getVersion(),
+        statuses
+    )).thenReturn(Optional.empty());
+
+    var result = nominationDetailService.getVersionedNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        nominationDetail.getVersion(),
+        statuses
+    );
+
+    assertThat(result).isEmpty();
+  }
+
 }

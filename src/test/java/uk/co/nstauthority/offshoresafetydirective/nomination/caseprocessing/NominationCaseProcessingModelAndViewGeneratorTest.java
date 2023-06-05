@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -19,6 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -29,8 +31,11 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
@@ -81,6 +86,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
 
+  @Mock
+  private NominationDetailService nominationDetailService;
+
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -94,13 +102,11 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .build();
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
-    when(userDetailService.getUserDetail()).thenReturn(userDetail);
-
     var nominationManagementInteractableService = new CaseProcessingActionService(fileUploadConfig);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
         nominationSummaryService, permissionService, userDetailService, caseEventQueryService,
-        nominationPortalReferenceAccessService, nominationManagementInteractableService);
+        nominationPortalReferenceAccessService, nominationManagementInteractableService, nominationDetailService);
   }
 
   @Test
@@ -116,12 +122,22 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
         .build();
 
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
         .thenReturn(Optional.of(header));
 
-    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -132,6 +148,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -223,13 +241,23 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
         .withStatus(nominationStatus)
         .build();
 
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
         .thenReturn(Optional.of(header));
 
-    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -240,6 +268,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -325,13 +355,23 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
         .thenReturn(Optional.of(header));
 
-    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -342,6 +382,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -455,13 +497,24 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
         .thenReturn(Optional.of(header));
 
-    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -473,10 +526,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
-    when(caseEventQueryService.hasUpdateRequest(nominationDetail)).thenReturn(true);
-
     when(caseEventQueryService.hasUpdateRequest(NominationDetailDto.fromNominationDetail(nominationDetail)))
         .thenReturn(true);
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail))
+        .thenReturn(true);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -587,13 +643,23 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
 
-    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail))
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
         .thenReturn(Optional.of(header));
 
-    when(caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEventView));
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
@@ -604,6 +670,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
@@ -708,6 +776,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         nominationDetail.getNomination()
     )).thenReturn(List.of(portalReferenceDto));
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
+
     var modelAndViewDto = CaseProcessingFormDto.builder().build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -732,6 +807,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         nominationDetail.getNomination()
     )).thenReturn(List.of(portalReferenceDto));
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
+
     var modelAndViewDto = CaseProcessingFormDto.builder().build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
@@ -740,6 +822,22 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .asInstanceOf(InstanceOfAssertFactories.type(WonsPortalReferenceForm.class))
         .extracting(form -> form.getReferences().getInputValue())
         .isEqualTo(referenceText);
+  }
+
+  @Test
+  void getCaseProcessingModelAndView_whenNoLatestNominationDetail_thenError() {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.empty());
+
+    var modelAndViewDto = CaseProcessingFormDto.builder().build();
+    assertThatThrownBy(() -> modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasFieldOrPropertyWithValue("reason", "No latest post submission NominationDetail for Nomination [%s]".formatted(
+            new NominationId(nominationDetail)
+        ));
   }
 
   private void assertBreadcrumbs(ModelAndView modelAndView, NominationDetail nominationDetail) {

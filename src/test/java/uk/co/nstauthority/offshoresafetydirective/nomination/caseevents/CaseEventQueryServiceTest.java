@@ -169,20 +169,19 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenQaChecksEvent_thenVerifyResult() {
+  void getCaseEventViews_whenQaChecksEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.QA_CHECKS;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
         .thenReturn(List.of(caseEventCreator));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -206,13 +205,12 @@ class CaseEventQueryServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = CaseEventType.class, names = {"NO_OBJECTION_DECISION", "OBJECTION_DECISION"})
-  void getCaseEventViewsForNominationDetail_whenDecisionEvent_thenVerifyResult(CaseEventType caseEventType) {
+  void getCaseEventViews_whenDecisionEvent_thenVerifyResult(CaseEventType caseEventType) {
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -221,7 +219,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -245,14 +243,13 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenWithdrawnEvent_thenVerifyResult() {
+  void getCaseEventViews_whenWithdrawnEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.WITHDRAWN;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -261,7 +258,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -284,14 +281,13 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenConfirmAppointmentEvent_thenVerifyResult() {
+  void getCaseEventViews_whenConfirmAppointmentEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.CONFIRM_APPOINTMENT;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -300,7 +296,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -324,14 +320,13 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenGeneralNoteEvent_thenVerifyResult() {
+  void getCaseEventViews_whenGeneralNoteEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.GENERAL_NOTE;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -340,7 +335,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -363,20 +358,19 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenNominationSubmittedEvent_thenVerifyResult() {
+  void getCaseEventViews_whenNominationSubmittedEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.NOMINATION_SUBMITTED;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
         .thenReturn(List.of(caseEventCreator));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -399,20 +393,19 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenSentForConsultationEvent_thenVerifyResult() {
+  void getCaseEventViews_whenSentForConsultationEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.SENT_FOR_CONSULTATION;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
         .thenReturn(List.of(caseEventCreator));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -435,15 +428,14 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenConsultationResponseEvent_thenVerifyResult() {
+  void getCaseEventViews_whenConsultationResponseEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.CONSULTATION_RESPONSE;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .withComment("response")
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -452,7 +444,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -475,15 +467,14 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_whenNominationUpdateRequestedEvent_thenVerifyResult() {
+  void getCaseEventViews_whenNominationUpdateRequestedEvent_thenVerifyResult() {
     var caseEventType = CaseEventType.UPDATE_REQUESTED;
     var caseEvent = caseEventBuilder
         .withCaseEventType(caseEventType)
         .withComment("response")
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -492,7 +483,7 @@ class CaseEventQueryServiceTest {
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
         .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     var caseEventAssertObject = assertThat(result)
         .hasSize(1)
@@ -515,7 +506,7 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventViewsForNominationDetail_assertSort() {
+  void getCaseEventViews_assertSort() {
     var caseEventType = CaseEventType.GENERAL_NOTE;
     var firstCaseEventByCreatedDate = caseEventBuilder
         .withCreatedInstant(Instant.now().plus(Period.ofDays(1)))
@@ -527,8 +518,7 @@ class CaseEventQueryServiceTest {
         .withCaseEventType(caseEventType)
         .build();
 
-    when(caseEventRepository.findAllByNominationAndNominationVersion(nominationDetail.getNomination(),
-        NOMINATION_DETAIL_VERSION))
+    when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate));
 
     when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
@@ -538,7 +528,7 @@ class CaseEventQueryServiceTest {
         List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate)))
         .thenReturn(Map.of(firstCaseEventByCreatedDate, List.of(caseEventFileView)));
 
-    var result = caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail);
+    var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
     assertThat(result)
         .extracting(CaseEventView::getEventInstant)

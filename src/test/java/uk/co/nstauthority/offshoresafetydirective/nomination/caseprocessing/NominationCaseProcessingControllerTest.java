@@ -94,6 +94,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -109,6 +110,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestPermissions_onlyManageNominationAndViewPermissionsAllowed() {
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
@@ -120,6 +122,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @Test
   void renderCaseProcessing_verifyReturn() throws Exception {
+
     var viewName = "test_view";
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         eq(nominationDetail),
@@ -136,6 +139,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @Test
   void renderCaseProcessing_whenNoSubmittedNomination_thenIsBadRequest() throws Exception {
+
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
@@ -148,6 +152,61 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .andExpect(status().isBadRequest());
 
     verifyNoInteractions(nominationCaseProcessingModelAndViewGenerator);
+  }
+
+  @Test
+  void renderCaseProcessing_whenVersionNumberProvided_ensureSpecificVersionUsed() throws Exception {
+
+    Integer version = 5;
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.SUBMITTED)
+        .withVersion(version)
+        .build();
+
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        version,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    var viewName = "test_view";
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+        eq(nominationDetail),
+        any(CaseProcessingFormDto.class))
+    ).thenReturn(new ModelAndView(viewName));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
+                .queryParam("version", version.toString())
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name(viewName));
+  }
+
+  @Test
+  void renderCaseProcessing_whenVersionNumberProvidedAndDoesNotExist_verifyError() throws Exception {
+
+    Integer version = 5;
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.SUBMITTED)
+        .withVersion(version)
+        .build();
+
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        version,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
+                .queryParam("version", version.toString())
+        )
+        .andExpect(status().isNotFound());
   }
 
 }

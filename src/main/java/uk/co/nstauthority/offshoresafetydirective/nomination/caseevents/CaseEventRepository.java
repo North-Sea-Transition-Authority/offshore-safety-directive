@@ -23,7 +23,7 @@ interface CaseEventRepository extends CrudRepository<CaseEvent, UUID> {
       int nominationVersion
   );
 
-  List<CaseEvent> findAllByNominationAndNominationVersion(Nomination nomination, int nominationVersion);
+  List<CaseEvent> findAllByNomination(Nomination nomination);
 
   Optional<CaseEvent> findByUuidAndNominationAndNominationVersion(UUID uuid, Nomination nomination,
                                                                   int nominationVersion);

@@ -20,8 +20,10 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
@@ -53,6 +55,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final CaseEventQueryService caseEventQueryService;
   private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
   private final CaseProcessingActionService caseProcessingActionService;
+  private final NominationDetailService nominationDetailService;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(
@@ -62,8 +65,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
       UserDetailService userDetailService,
       CaseEventQueryService caseEventQueryService,
       NominationPortalReferenceAccessService referenceAccessService,
-      CaseProcessingActionService caseProcessingActionService
-  ) {
+      CaseProcessingActionService caseProcessingActionService,
+      NominationDetailService nominationDetailService) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
@@ -71,18 +74,31 @@ public class NominationCaseProcessingModelAndViewGenerator {
     this.caseEventQueryService = caseEventQueryService;
     this.nominationPortalReferenceAccessService = referenceAccessService;
     this.caseProcessingActionService = caseProcessingActionService;
+    this.nominationDetailService = nominationDetailService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
                                                     CaseProcessingFormDto modelAndViewDto) {
 
-    var headerInformation = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail)
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-            "Unable to find %s for nomination with ID: [%d]".formatted(
-                NominationCaseProcessingHeader.class.getSimpleName(),
-                nominationDetail.getNomination().getId()
-            )
-        ));
+    var latestPostSubmissionNominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+            new NominationId(nominationDetail),
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        )
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "No latest post submission NominationDetail for Nomination [%s]".formatted(
+                new NominationId(nominationDetail)
+            )));
+
+    var headerInformation =
+        nominationCaseProcessingService.getNominationCaseProcessingHeader(latestPostSubmissionNominationDetail)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Unable to find %s for nomination with ID: [%d]".formatted(
+                    NominationCaseProcessingHeader.class.getSimpleName(),
+                    nominationDetail.getNomination().getId()
+                )
+            ));
 
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(nominationDetail.getNomination().getReference())
         .addWorkAreaBreadcrumb()
@@ -122,7 +138,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
             modelAndViewDto.getNominationConsultationResponseForm()
         )
         .addObject(NominationRequestUpdateController.FORM_NAME, modelAndViewDto.getNominationRequestUpdateForm())
-        .addObject("caseEvents", caseEventQueryService.getCaseEventViewsForNominationDetail(nominationDetail))
+        .addObject("caseEvents", caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
         .addObject(
             "activePortalReferencesView",
             nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination())

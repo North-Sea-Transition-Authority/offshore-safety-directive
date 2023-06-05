@@ -19,4 +19,10 @@ interface NominationDetailRepository extends CrudRepository<NominationDetail, In
       Collection<NominationStatus> nominationStatuses
   );
 
+  Optional<NominationDetail> findFirstByNomination_IdAndVersionAndStatusInOrderByVersionDesc(
+      Integer nominationId,
+      Integer version,
+      Collection<NominationStatus> nominationStatuses
+  );
+
 }
