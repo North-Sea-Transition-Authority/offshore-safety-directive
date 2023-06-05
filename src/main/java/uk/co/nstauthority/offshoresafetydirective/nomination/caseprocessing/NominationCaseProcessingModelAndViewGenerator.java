@@ -216,7 +216,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canSubmitDecision(NominationDetailDto dto) {
-    return dto.nominationStatus() == NominationStatus.SUBMITTED;
+    return dto.nominationStatus() == NominationStatus.SUBMITTED && !caseEventQueryService.hasUpdateRequest(dto);
   }
 
   private boolean canConfirmAppointments(NominationDetailDto dto) {

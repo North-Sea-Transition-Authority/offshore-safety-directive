@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
@@ -474,6 +475,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     when(caseEventQueryService.hasUpdateRequest(nominationDetail)).thenReturn(true);
 
+    when(caseEventQueryService.hasUpdateRequest(NominationDetailDto.fromNominationDetail(nominationDetail)))
+        .thenReturn(true);
+
     var qaChecksForm = new NominationQaChecksForm();
     var decisionForm = new NominationDecisionForm();
     var withdrawForm = new WithdrawNominationForm();
@@ -558,10 +562,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
                     CaseProcessingActionItem.SEND_FOR_CONSULTATION,
                     CaseProcessingActionItem.CONSULTATION_RESPONSE
                 ),
-                CaseProcessingActionGroup.DECISION, List.of(
-                    CaseProcessingActionItem.NOMINATION_DECISION,
-                    CaseProcessingActionItem.WITHDRAW
-                ),
+                CaseProcessingActionGroup.DECISION, List.of(CaseProcessingActionItem.WITHDRAW),
                 CaseProcessingActionGroup.RELATED_APPLICATIONS, List.of(
                     CaseProcessingActionItem.PEARS_REFERENCE,
                     CaseProcessingActionItem.WONS_REFERENCE

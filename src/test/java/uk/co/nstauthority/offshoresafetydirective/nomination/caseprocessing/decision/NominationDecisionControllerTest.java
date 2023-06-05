@@ -45,6 +45,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
@@ -99,6 +100,12 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
         .thenReturn(Optional.of(nominationDetail));
   }
 
@@ -236,5 +243,53 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             tuple(fileUuid, fileDescription, fileUploadInstant)
         );
 
+  }
+
+  @SecurityTest
+  void submitDecision_whenNoUpdateRequest_thenAccess() throws Exception {
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail))
+        .thenReturn(false);
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
+        .thenReturn(new ModelAndView());
+
+    mockMvc.perform(
+        post(
+            ReverseRouter.route(on(NominationDecisionController.class)
+                .submitDecision(
+                    NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
+                    null, null, null
+                )
+            )
+        )
+        .with(user(NOMINATION_MANAGER_USER))
+        .with(csrf())
+    )
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void submitDecision_whenUpdateRequest_thenForbidden() throws Exception {
+
+    when(caseEventQueryService.hasUpdateRequest(nominationDetail))
+        .thenReturn(true);
+
+    when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail), any()))
+        .thenReturn(new ModelAndView());
+
+    mockMvc.perform(
+        post(
+            ReverseRouter.route(on(NominationDecisionController.class)
+                .submitDecision(
+                    NOMINATION_ID, true, CaseProcessingActionIdentifier.DECISION,
+                    null, null, null
+                )
+            )
+        )
+            .with(user(NOMINATION_MANAGER_USER))
+            .with(csrf())
+    )
+        .andExpect(status().isForbidden());
   }
 }

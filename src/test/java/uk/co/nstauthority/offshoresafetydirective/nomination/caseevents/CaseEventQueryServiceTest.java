@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortal
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
@@ -649,9 +650,9 @@ class CaseEventQueryServiceTest {
         .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
         .build();
 
-    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
         EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
+        nominationDetail.getNomination().getId(),
         nominationVersion
     ))
         .thenReturn(Optional.of(expectedCaseEvent));
@@ -675,9 +676,9 @@ class CaseEventQueryServiceTest {
         .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
         .build();
 
-    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
         EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
+        nominationDetail.getNomination().getId(),
         nominationVersion
     ))
         .thenReturn(Optional.of(expectedCaseEvent));
@@ -698,9 +699,9 @@ class CaseEventQueryServiceTest {
         .withStatus(nominationStatus)
         .build();
 
-    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
         EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
+        nominationDetail.getNomination().getId(),
         nominationVersion
     ))
         .thenReturn(Optional.empty());
@@ -720,14 +721,120 @@ class CaseEventQueryServiceTest {
         .withStatus(NominationStatus.WITHDRAWN)
         .build();
 
-    when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
         EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
+        nominationDetail.getNomination().getId(),
         nominationVersion
     ))
         .thenReturn(Optional.empty());
 
     var hasUpdateRequest = caseEventQueryService.hasUpdateRequest(nominationDetail);
+
+    assertFalse(hasUpdateRequest);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "WITHDRAWN")
+  void hasUpdateRequest_DtoVariant_whenUpdateRequestAndNotWithdrawnStatus_thenTrue(NominationStatus nominationStatus) {
+
+    var nominationVersion = 5;
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(nominationStatus)
+        .build();
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    var expectedCaseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetailDto.nominationId().id(),
+        nominationVersion
+    ))
+        .thenReturn(Optional.of(expectedCaseEvent));
+
+    var hasUpdateRequest = caseEventQueryService.hasUpdateRequest(nominationDetailDto);
+
+    assertTrue(hasUpdateRequest);
+  }
+
+  @Test
+  void hasUpdateRequest_DtoVariant_whenUpdateRequestAndWithdrawnStatus_thenFalse() {
+
+    var nominationVersion = 5;
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.WITHDRAWN)
+        .withVersion(nominationVersion)
+        .build();
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    var expectedCaseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
+        .build();
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetailDto.nominationId().id(),
+        nominationVersion
+    ))
+        .thenReturn(Optional.of(expectedCaseEvent));
+
+    var hasUpdateRequest = caseEventQueryService.hasUpdateRequest(nominationDetailDto);
+
+    assertFalse(hasUpdateRequest);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "WITHDRAWN")
+  void hasUpdateRequest_DtoVariant_whenNoUpdateRequestAndNotWithdrawnStatus_thenFalse(NominationStatus nominationStatus) {
+
+    var nominationVersion = 5;
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(nominationStatus)
+        .build();
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetailDto.nominationId().id(),
+        nominationVersion
+    ))
+        .thenReturn(Optional.empty());
+
+    var hasUpdateRequest = caseEventQueryService.hasUpdateRequest(nominationDetailDto);
+
+    assertFalse(hasUpdateRequest);
+  }
+
+  @Test
+  void hasUpdateRequest_DtoVariant_whenNoUpdateRequestAndWithdrawnStatus_thenFalse() {
+
+    var nominationVersion = 5;
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .withStatus(NominationStatus.WITHDRAWN)
+        .build();
+
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
+    when(caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
+        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+        nominationDetailDto.nominationId().id(),
+        nominationVersion
+    ))
+        .thenReturn(Optional.empty());
+
+    var hasUpdateRequest = caseEventQueryService.hasUpdateRequest(nominationDetailDto);
 
     assertFalse(hasUpdateRequest);
   }

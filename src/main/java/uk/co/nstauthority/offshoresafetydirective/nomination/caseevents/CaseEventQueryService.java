@@ -64,12 +64,15 @@ public class CaseEventQueryService {
   }
 
   public boolean hasUpdateRequest(NominationDetail nominationDetail) {
-
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+    return hasUpdateRequest(nominationDetailDto);
+  }
 
-    Optional<CaseEvent> updateRequestEvent = caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
+  public boolean hasUpdateRequest(NominationDetailDto nominationDetailDto) {
+
+    Optional<CaseEvent> updateRequestEvent = caseEventRepository.findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
         EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
+        nominationDetailDto.nominationId().id(),
         nominationDetailDto.version()
     );
 

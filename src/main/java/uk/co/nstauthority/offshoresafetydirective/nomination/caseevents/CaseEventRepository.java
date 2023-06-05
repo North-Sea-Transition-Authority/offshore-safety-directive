@@ -17,6 +17,12 @@ interface CaseEventRepository extends CrudRepository<CaseEvent, UUID> {
       int nominationVersion
   );
 
+  Optional<CaseEvent> findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
+      Collection<CaseEventType> caseEventTypes,
+      int nominationId,
+      int nominationVersion
+  );
+
   List<CaseEvent> findAllByNominationAndNominationVersion(Nomination nomination, int nominationVersion);
 
   Optional<CaseEvent> findByUuidAndNominationAndNominationVersion(UUID uuid, Nomination nomination,

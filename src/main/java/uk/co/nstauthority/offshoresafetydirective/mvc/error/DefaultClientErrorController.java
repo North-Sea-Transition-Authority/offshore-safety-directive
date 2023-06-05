@@ -10,13 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.util.WebUtils;
 import uk.co.nstauthority.offshoresafetydirective.mvc.DefaultModelAttributeService;
 
 @Controller
-@RequestMapping("/error")
 public class DefaultClientErrorController implements ErrorController {
 
   private final DefaultModelAttributeService defaultModelAttributeService;
@@ -34,7 +34,7 @@ public class DefaultClientErrorController implements ErrorController {
    * Handles framework-level errors (404s, authorisation failures, filter exceptions) for browser clients. Errors thrown
    * by app code (controller methods and below) are handled in DefaultExceptionResolver.
    */
-  @GetMapping
+  @RequestMapping(value = "/error", method = {RequestMethod.GET, RequestMethod.POST})
   public ModelAndView handleError(HttpServletRequest request) {
 
     var templateName = getHttpStatus(request)
@@ -55,7 +55,7 @@ public class DefaultClientErrorController implements ErrorController {
     return modelAndView;
   }
 
-  @GetMapping("/unauthorised")
+  @GetMapping("/error/unauthorised")
   public ModelAndView getUnauthorisedErrorPage() {
     return new ModelAndView(ErrorTemplate.UNAUTHORISED.getTemplateName());
   }
