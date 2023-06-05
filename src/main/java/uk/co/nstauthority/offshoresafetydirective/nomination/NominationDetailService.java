@@ -54,12 +54,10 @@ public class NominationDetailService {
   public NominationDetail getLatestNominationDetail(NominationId nominationId) {
     var nomination = nominationService.getNominationByIdOrError(nominationId);
     return nominationDetailRepository.findFirstByNominationOrderByVersionDesc(nomination)
-        .orElseThrow(() -> {
-          throw new OsdEntityNotFoundException(String.format(
-              "Cannot find latest NominationDetail with ID: %s",
-              nomination.getId()
-          ));
-        });
+        .orElseThrow(() -> new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s",
+            nomination.getId()
+        )));
   }
 
   public Optional<NominationDetail> getNominationDetailWithVersion(Nomination nomination, int version) {
@@ -86,6 +84,7 @@ public class NominationDetailService {
   public void deleteNominationDetail(NominationDetail nominationDetail) {
     if (nominationDetail.getStatus() == NominationStatus.DRAFT) {
       nominationDetail.setStatus(NominationStatus.DELETED);
+      nominationDetail.setVersion(null);
       nominationDetailRepository.save(nominationDetail);
     } else {
       throw new IllegalArgumentException("Cannot delete NominationDetail [%d] as NominationStatus is not %s"

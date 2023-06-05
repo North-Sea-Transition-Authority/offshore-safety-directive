@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.deletion;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -11,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,9 +135,10 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void deleteNomination_assertRedirectAndCalls() throws Exception {
+  void deleteNomination_whenFirstNominationVersion_thenAssertRedirectAndCalls() throws Exception {
 
     var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(1)
         .withStatus(NominationStatus.DRAFT)
         .build();
 
@@ -150,28 +151,91 @@ class DeleteNominationControllerTest extends AbstractControllerTest {
         )
         .build();
 
-    var result = mockMvc.perform(
-            post(ReverseRouter.route(on(DeleteNominationController.class).deleteNomination(NOMINATION_ID, null)))
-                .with(user(NOMINATION_CREATOR_USER))
-                .with(csrf()))
+    mockMvc.perform(
+        post(ReverseRouter.route(on(DeleteNominationController.class).deleteNomination(NOMINATION_ID, null)))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf())
+    )
         .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+        .andExpect(notificationBanner(expectedNotificationBanner))
         .andReturn();
 
-    var actualNotificationBanner = (NotificationBanner) result.getFlashMap().get("flash");
+    verify(nominationDetailService).deleteNominationDetail(nominationDetail);
+  }
 
-    assertThat(actualNotificationBanner)
-        .extracting(
-            NotificationBanner::getTitle,
-            NotificationBanner::getHeading,
-            NotificationBanner::getContent,
-            NotificationBanner::getType
-        ).containsExactly(
-            expectedNotificationBanner.getTitle(),
-            expectedNotificationBanner.getHeading(),
-            expectedNotificationBanner.getContent(),
-            expectedNotificationBanner.getType()
-        );
+  @Test
+  void deleteNomination_whenNotFirstNominationVersion_thenAssertRedirectAndCalls() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(2)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    var expectedNotificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Deleted draft nomination update created on %s"
+            .formatted(DateUtil.formatLongDateTime(nominationDetail.getCreatedInstant()))
+        )
+        .build();
+
+    mockMvc.perform(
+        post(ReverseRouter.route(on(DeleteNominationController.class).deleteNomination(NOMINATION_ID, null)))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf())
+    )
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+        .andExpect(notificationBanner(expectedNotificationBanner))
+        .andReturn();
 
     verify(nominationDetailService).deleteNominationDetail(nominationDetail);
+  }
+
+  @Test
+  void renderDeleteNomination_whenFirstNominationVersion_thenAssertModelProperties() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(1)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    )
+        .andExpect(model().attribute("deleteButtonPrompt", "Delete nomination"))
+        .andExpect(model().attribute("pageTitle", "Are you sure you want to delete this draft nomination?"));
+  }
+
+  @Test
+  void renderDeleteNomination_whenNotFirstNominationVersion_thenAssertModelProperties() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(2)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    )
+        .andExpect(model().attribute("deleteButtonPrompt", "Delete draft update"))
+        .andExpect(model().attribute(
+            "pageTitle",
+            "Are you sure you want to delete this draft nomination update?"
+        ));
   }
 }

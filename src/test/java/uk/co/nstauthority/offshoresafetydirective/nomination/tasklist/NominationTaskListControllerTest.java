@@ -198,6 +198,63 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         );
   }
 
+  @Test
+  void getTaskList_whenFirstNominationVersion_thenAssertModelProperties() throws Exception {
+
+    givenTaskListSectionsExist();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(1)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    )
+        .andExpect(model().attribute("deleteNominationButtonPrompt", "Delete nomination"));
+  }
+
+  @Test
+  void getTaskList_whenNotFirstNominationVersion_thenAssertModelProperties() throws Exception {
+
+    givenTaskListSectionsExist();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(2)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    )
+        .andExpect(model().attribute("deleteNominationButtonPrompt", "Delete draft update"));
+  }
+
+  private void givenTaskListSectionsExist() {
+    var sectionName = "section name";
+    var sectionDisplayOrder = 10;
+    var sectionWarningText = "section warning text";
+
+    setupMockTaskListSection(sectionName, sectionDisplayOrder, sectionWarningText);
+
+    var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
+
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
+        .withTaskListLabels(true)
+        .withNotCompletedLabel(false)
+        .withItemValid(true)
+        .withCustomTaskListLabel(new TaskListLabel("label text", TaskListLabelType.GREY))
+        .build();
+
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+  }
+
   private void setupMockTaskListItem(TaskListItemView taskListItemViewToReturn,
                                      NominationTaskListItemType nominationTaskListItemType) {
 

@@ -14,6 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -48,10 +49,16 @@ public class NominationTaskListController {
   public ModelAndView getTaskList(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
     var modelAndView = new ModelAndView("osd/nomination/tasklist/taskList")
         .addObject("deleteNominationUrl",
-            ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(nominationId)))
+            ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(nominationId))
+        )
+        .addObject(
+            "deleteNominationButtonPrompt",
+            (nominationDetailDto.version() == 1) ? "Delete nomination" : "Delete draft update"
+        )
         .addObject(
             "taskListSections",
             TaskListSectionUtil.createSectionViews(

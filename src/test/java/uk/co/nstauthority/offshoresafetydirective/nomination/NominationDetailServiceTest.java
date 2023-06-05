@@ -188,12 +188,24 @@ class NominationDetailServiceTest {
 
   @Test
   void deleteNominationDetail_whenCalled_thenVerifyEntityUpdatedAndSaved() {
-    var detail = NominationDetailTestUtil.builder()
+
+    var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.DRAFT)
+        .withVersion(10)
         .build();
-    nominationDetailService.deleteNominationDetail(detail);
-    assertThat(detail.getStatus()).isEqualTo(NominationStatus.DELETED);
-    verify(nominationDetailRepository).save(detail);
+
+    var captor = ArgumentCaptor.forClass(NominationDetail.class);
+
+    nominationDetailService.deleteNominationDetail(nominationDetail);
+
+    verify(nominationDetailRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            NominationDetail::getStatus,
+            NominationDetail::getVersion
+        )
+        .containsExactly(NominationStatus.DELETED, null);
   }
 
   @ParameterizedTest
