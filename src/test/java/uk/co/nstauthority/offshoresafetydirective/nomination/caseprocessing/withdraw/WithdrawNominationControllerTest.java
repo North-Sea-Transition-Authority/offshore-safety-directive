@@ -39,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -77,18 +78,19 @@ class WithdrawNominationControllerTest extends AbstractControllerTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
-
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
         .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
 
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)))
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
         .thenReturn(Optional.of(nominationDetail));
   }
 

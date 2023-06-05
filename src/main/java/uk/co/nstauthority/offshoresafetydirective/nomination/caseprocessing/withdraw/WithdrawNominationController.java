@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -36,7 +37,10 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/manage")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION})
+@HasNominationStatus(
+    statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION},
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 public class WithdrawNominationController {
 
   public static final String FORM_NAME = "withdrawNominationForm";

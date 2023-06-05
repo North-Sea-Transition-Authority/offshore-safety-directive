@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Clock;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -108,22 +109,33 @@ public class NominationDetailService {
   }
 
   @Transactional
-  public void withdrawNominationDetail(NominationDetail nominationDetail) {
+  public void withdrawNominationDetail(NominationDetail nominationDetailToWithdraw) {
+
     var allowedStatuses = EnumSet.of(
         NominationStatus.SUBMITTED,
         NominationStatus.AWAITING_CONFIRMATION
     );
 
-    if (!allowedStatuses.contains(nominationDetail.getStatus())) {
+    if (!allowedStatuses.contains(nominationDetailToWithdraw.getStatus())) {
       var statuses = allowedStatuses.stream()
           .map(Enum::name)
           .collect(Collectors.joining(","));
       throw new IllegalArgumentException("Cannot withdrawn NominationDetail [%d] as NominationStatus is not one of [%s]"
-          .formatted(nominationDetail.getId(), statuses));
+          .formatted(nominationDetailToWithdraw.getId(), statuses));
     }
 
-    nominationDetail.setStatus(NominationStatus.WITHDRAWN);
-    nominationDetailRepository.save(nominationDetail);
+    nominationDetailToWithdraw.setStatus(NominationStatus.WITHDRAWN);
+
+    // check for any draft updates and ensure they are delete as well
+    Optional<NominationDetail> draftNominationDetailUpdate = nominationDetailRepository
+        .findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+            nominationDetailToWithdraw.getNomination().getId(),
+            Collections.singletonList(NominationStatus.DRAFT)
+        );
+
+    draftNominationDetailUpdate.ifPresent(this::deleteNominationDetail);
+
+    nominationDetailRepository.save(nominationDetailToWithdraw);
   }
 
 }

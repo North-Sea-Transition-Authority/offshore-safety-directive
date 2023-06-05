@@ -13,8 +13,11 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import org.hibernate.AssertionFailure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -284,18 +287,71 @@ class NominationDetailServiceTest {
   }
 
   @Test
-  void withdrawNominationDetail_verifyWithdrawn() {
+  void withdrawNominationDetail_whenNoDraftUpdate_thenSubmittedNominationWithdrawn() {
+
     var detail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
+    when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        detail.getNomination().getId(),
+        Collections.singletonList(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.empty());
+
     nominationDetailService.withdrawNominationDetail(detail);
 
     var captor = ArgumentCaptor.forClass(NominationDetail.class);
-    verify(nominationDetailRepository).save(captor.capture());
+    verify(nominationDetailRepository, times(1)).save(captor.capture());
 
     assertThat(captor.getValue()).isEqualTo(detail);
     assertThat(captor.getValue().getStatus()).isEqualTo(NominationStatus.WITHDRAWN);
+  }
+
+  @Test
+  void withdrawNominationDetail_whenDraftUpdateInProgress_thenDraftUpdateDeleted() {
+
+    var nominationDetailToWithdraw = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.SUBMITTED)
+        .withVersion(1)
+        .withId(10)
+        .build();
+
+    var draftNominationDetailUpdate = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
+        .withVersion(2)
+        .withId(20)
+        .build();
+
+    when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        nominationDetailToWithdraw.getNomination().getId(),
+        Collections.singletonList(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(draftNominationDetailUpdate));
+
+    nominationDetailService.withdrawNominationDetail(nominationDetailToWithdraw);
+
+    var captor = ArgumentCaptor.forClass(NominationDetail.class);
+    verify(nominationDetailRepository, times(2)).save(captor.capture());
+
+    List<NominationDetail> persistedNominationDetails = captor.getAllValues();
+
+    var withdrawNominationDetail = persistedNominationDetails
+        .stream()
+        .filter(nominationDetail -> nominationDetail.getId().equals(nominationDetailToWithdraw.getId()))
+        .findFirst()
+        .orElseThrow(() -> new AssertionFailure("Could not find withdrawn nomination detail to verify"));
+
+    var deletedNominationDetail = persistedNominationDetails
+        .stream()
+        .filter(nominationDetail -> nominationDetail.getId().equals(draftNominationDetailUpdate.getId()))
+        .findFirst()
+        .orElseThrow(() -> new AssertionFailure("Could not find deleted nomination detail to verify"));
+
+    assertThat(withdrawNominationDetail.getStatus()).isEqualTo(NominationStatus.WITHDRAWN);
+    assertThat(deletedNominationDetail)
+        .extracting(NominationDetail::getStatus, NominationDetail::getVersion)
+        .containsExactly(NominationStatus.DELETED, null);
   }
 
   @Test
