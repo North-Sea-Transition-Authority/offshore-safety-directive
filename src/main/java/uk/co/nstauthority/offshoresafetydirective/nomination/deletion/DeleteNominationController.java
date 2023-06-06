@@ -83,11 +83,11 @@ public class DeleteNominationController {
   public ModelAndView deleteNomination(@PathVariable("nominationId") NominationId nominationId,
                                        @Nullable RedirectAttributes redirectAttributes) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
+
     nominationDetailService.deleteNominationDetail(nominationDetail);
 
     if (redirectAttributes != null) {
-
-      var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
       var bannerHeading = (nominationDetailDto.version() == 1)
           ? "Deleted draft nomination created on %s"
