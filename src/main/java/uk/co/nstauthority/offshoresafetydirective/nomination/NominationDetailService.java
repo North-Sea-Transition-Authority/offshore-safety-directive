@@ -5,6 +5,7 @@ import java.time.Clock;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -90,6 +91,16 @@ public class NominationDetailService {
 
   public Optional<NominationDetail> getNominationDetail(NominationDetailId nominationDetailId) {
     return nominationDetailRepository.findById(nominationDetailId.id());
+  }
+
+  public List<NominationDetailDto> getPostSubmissionNominationDetailDtos(Nomination nomination) {
+    return nominationDetailRepository.findAllByNominationAndStatusIn(
+        nomination,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )
+        .stream()
+        .map(NominationDetailDto::fromNominationDetail)
+        .toList();
   }
 
   @Transactional

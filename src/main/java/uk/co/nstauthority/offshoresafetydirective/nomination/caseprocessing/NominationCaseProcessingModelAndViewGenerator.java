@@ -56,6 +56,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
   private final CaseProcessingActionService caseProcessingActionService;
   private final NominationDetailService nominationDetailService;
+  private final NominationCaseProcessingSelectionService nominationCaseProcessingSelectionService;
 
   @Autowired
   public NominationCaseProcessingModelAndViewGenerator(
@@ -66,7 +67,8 @@ public class NominationCaseProcessingModelAndViewGenerator {
       CaseEventQueryService caseEventQueryService,
       NominationPortalReferenceAccessService referenceAccessService,
       CaseProcessingActionService caseProcessingActionService,
-      NominationDetailService nominationDetailService) {
+      NominationDetailService nominationDetailService,
+      NominationCaseProcessingSelectionService nominationCaseProcessingSelectionService) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
     this.permissionService = permissionService;
@@ -75,6 +77,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
     this.nominationPortalReferenceAccessService = referenceAccessService;
     this.caseProcessingActionService = caseProcessingActionService;
     this.nominationDetailService = nominationDetailService;
+    this.nominationCaseProcessingSelectionService = nominationCaseProcessingSelectionService;
   }
 
   public ModelAndView getCaseProcessingModelAndView(NominationDetail nominationDetail,
@@ -142,9 +145,17 @@ public class NominationCaseProcessingModelAndViewGenerator {
         .addObject(
             "activePortalReferencesView",
             nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination())
+        )
+        .addObject(
+            NominationCaseProcessingController.VERSION_FORM_NAME,
+            modelAndViewDto.getCaseProcessingVersionForm()
+        )
+        .addObject(
+            "versionOptions",
+            nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination())
         );
 
-    addRelevantCaseProcessingActions(modelAndView, nominationDetail);
+    addRelevantCaseProcessingActions(modelAndView, latestPostSubmissionNominationDetail);
 
     BreadcrumbsUtil.addBreadcrumbsToModel(modelAndView, breadcrumbs);
 

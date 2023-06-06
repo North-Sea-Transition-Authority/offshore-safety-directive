@@ -22,6 +22,7 @@ public class CaseProcessingFormDto {
   private final WonsPortalReferenceForm wonsPortalReferenceForm;
   private final NominationConsultationResponseForm nominationConsultationResponseForm;
   private final NominationRequestUpdateForm nominationRequestUpdateForm;
+  private final CaseProcessingVersionForm caseProcessingVersionForm;
 
   private CaseProcessingFormDto(NominationQaChecksForm nominationQaChecksForm,
                                 NominationDecisionForm nominationDecisionForm,
@@ -31,7 +32,8 @@ public class CaseProcessingFormDto {
                                 PearsPortalReferenceForm pearsPortalReferenceForm,
                                 WonsPortalReferenceForm wonsPortalReferenceForm,
                                 NominationConsultationResponseForm nominationConsultationResponseForm,
-                                NominationRequestUpdateForm nominationRequestUpdateForm) {
+                                NominationRequestUpdateForm nominationRequestUpdateForm,
+                                CaseProcessingVersionForm caseProcessingVersionForm) {
 
     this.nominationQaChecksForm = nominationQaChecksForm;
     this.nominationDecisionForm = nominationDecisionForm;
@@ -42,6 +44,7 @@ public class CaseProcessingFormDto {
     this.wonsPortalReferenceForm = wonsPortalReferenceForm;
     this.nominationConsultationResponseForm = nominationConsultationResponseForm;
     this.nominationRequestUpdateForm = nominationRequestUpdateForm;
+    this.caseProcessingVersionForm = caseProcessingVersionForm;
   }
 
   public NominationQaChecksForm getNominationQaChecksForm() {
@@ -80,6 +83,10 @@ public class CaseProcessingFormDto {
     return nominationRequestUpdateForm;
   }
 
+  CaseProcessingVersionForm getCaseProcessingVersionForm() {
+    return caseProcessingVersionForm;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -95,6 +102,7 @@ public class CaseProcessingFormDto {
     private WonsPortalReferenceForm wonsPortalReferenceForm = new WonsPortalReferenceForm();
     private NominationConsultationResponseForm nominationConsultationResponseForm = new NominationConsultationResponseForm();
     private NominationRequestUpdateForm nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    private CaseProcessingVersionForm caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     private Builder() {
     }
@@ -147,10 +155,15 @@ public class CaseProcessingFormDto {
       return this;
     }
 
+    Builder withCaseProcessingVersionForm(CaseProcessingVersionForm caseProcessingVersionForm) {
+      this.caseProcessingVersionForm = caseProcessingVersionForm;
+      return this;
+    }
+
     public CaseProcessingFormDto build() {
       return new CaseProcessingFormDto(nominationQaChecksForm, nominationDecisionForm, withdrawNominationForm,
           confirmNominationAppointmentForm, generalCaseNoteForm, pearsPortalReferenceForm, wonsPortalReferenceForm,
-          nominationConsultationResponseForm, nominationRequestUpdateForm);
+          nominationConsultationResponseForm, nominationRequestUpdateForm, caseProcessingVersionForm);
     }
   }
 

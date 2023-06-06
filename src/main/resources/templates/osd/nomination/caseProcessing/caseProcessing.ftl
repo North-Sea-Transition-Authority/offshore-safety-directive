@@ -13,6 +13,7 @@
 <#import '_sendForConsultationSlideout.ftl' as _sendForConsultationSlideout>
 <#import '_consultationResponseSlideout.ftl' as _consultationResponseSlideout>
 <#import '_requestUpdateSlideout.ftl' as _requestUpdateSlideout>
+<#import '../../layout/components/inlineInputAction.ftl' as inlineInputAction>
 
 <#-- @ftlvariable name="headerInformation" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeader" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
@@ -27,6 +28,9 @@
 <#-- @ftlvariable name="existingCaseNoteFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="existingConsultationResponseFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 <#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction>>" -->
+<#-- @ftlvariable name="nominationVersionForm" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingVersionForm" -->
+<#-- @ftlvariable name="versionOptions" type="java.util.Map<String, String>" -->
+
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -236,12 +240,26 @@ errorItems=[]
 
     <@fdsTabs.tabs tabsHeading="Nomination tabs">
         <@fdsTabs.tabList>
-            <@fdsTabs.tab tabLabel="Nomination form" tabAnchor="nomination-form-tab"/>
+            <@fdsTabs.tab tabLabel="Nomination" tabAnchor="nomination-form-tab"/>
             <@fdsTabs.tab tabLabel="Case events" tabAnchor="case-events-tab"/>
         </@fdsTabs.tabList>
 
         <@fdsTabs.tabContent tabAnchor="nomination-form-tab">
-          <h2 class="govuk-heading-l">Nomination form</h2>
+          <span class="govuk-caption-m">Version ${nominationVersionForm.nominationDetailVersion}</span>
+          <h2 class="govuk-heading-l">Nomination</h2>
+            <@fdsForm.htmlForm>
+                <@inlineInputAction.inlineInputAction>
+                    <@fdsSelect.select
+                        path="nominationVersionForm.nominationDetailVersion"
+                        options=versionOptions
+                        labelText="Nomination history"
+                    />
+                    <@fdsAction.button
+                        buttonText="Change version"
+                        buttonClass="govuk-button govuk-button--secondary"
+                    />
+                </@inlineInputAction.inlineInputAction>
+            </@fdsForm.htmlForm>
             <@_activePortalReferences.activePortalReferences activePortalReferencesView/>
             <@nominationSummary.nominationSummary summaryView=summaryView/>
         </@fdsTabs.tabContent>

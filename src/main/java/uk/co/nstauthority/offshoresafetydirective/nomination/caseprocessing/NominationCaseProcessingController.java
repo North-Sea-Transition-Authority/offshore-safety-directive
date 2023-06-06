@@ -1,11 +1,18 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import com.google.common.primitives.Ints;
+import java.util.Objects;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,7 +21,9 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -33,6 +42,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 )
 public class NominationCaseProcessingController {
 
+  public static final String VERSION_FORM_NAME = "nominationVersionForm";
+
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final NominationDetailService nominationDetailService;
 
@@ -46,20 +57,45 @@ public class NominationCaseProcessingController {
 
   @GetMapping
   public ModelAndView renderCaseProcessing(@PathVariable("nominationId") NominationId nominationId,
-                                           @RequestParam(value = "version", required = false) Integer version) {
+                                           @Nullable @RequestParam(value = "version", required = false) String version) {
 
-    var nominationDetailVersion = Optional.ofNullable(version);
+    var parsedVersion = Optional.ofNullable(version)
+        .map(Ints::tryParse)
+        .orElse(null);
 
-    var nominationDetail = nominationDetailVersion
-        .map(versionNumber -> getVersionedPostSubmissionNominationDetail(nominationId, versionNumber))
-        .orElseGet(() -> getLatestPostSubmissionNominationDetail(nominationId));
+    NominationDetail nominationDetail = getApplicableNominationDetail(nominationId, parsedVersion);
 
-    var modelAndViewDto = CaseProcessingFormDto.builder().build();
+    var foundVersion = NominationDetailDto.fromNominationDetail(nominationDetail).version();
+
+    var form = new CaseProcessingVersionForm();
+    form.setNominationDetailVersion(foundVersion);
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withCaseProcessingVersionForm(form)
+        .build();
     return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         nominationDetail,
         modelAndViewDto
     );
+  }
 
+  private NominationDetail getApplicableNominationDetail(NominationId nominationId, @Nullable Integer version) {
+
+    var nominationDetailVersion = Optional.ofNullable(version);
+    return nominationDetailVersion
+        .map(versionNumber -> getVersionedPostSubmissionNominationDetail(nominationId, versionNumber))
+        .orElseGet(() -> getLatestPostSubmissionNominationDetail(nominationId));
+  }
+
+  @PostMapping
+  public ModelAndView changeCaseProcessingVersion(@PathVariable("nominationId") NominationId nominationId,
+                                                  @Nullable @ModelAttribute(VERSION_FORM_NAME) CaseProcessingVersionForm form) {
+
+    var versionToRedirect = Optional.ofNullable(Objects.requireNonNull(form).getNominationDetailVersion())
+        .map(Objects::toString)
+        .orElse(null);
+    return ReverseRouter.redirect(on(NominationCaseProcessingController.class)
+        .renderCaseProcessing(nominationId, versionToRedirect));
   }
 
   private NominationDetail getVersionedPostSubmissionNominationDetail(NominationId nominationId, Integer version) {

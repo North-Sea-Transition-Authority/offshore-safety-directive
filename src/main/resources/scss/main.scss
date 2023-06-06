@@ -8,3 +8,6 @@ $govuk-assets-path: "../../govuk-frontend/govuk/assets/";
 
 // Fivium Design System Docs master stylesheet
 @import "../templates/fds/all";
+
+// WIOS overrides
+@import "osd/all";
