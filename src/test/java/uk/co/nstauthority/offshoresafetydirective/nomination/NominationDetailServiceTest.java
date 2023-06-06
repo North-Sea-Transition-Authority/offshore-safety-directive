@@ -452,4 +452,42 @@ class NominationDetailServiceTest {
     assertThat(result).isEmpty();
   }
 
+  @Test
+  void getPostSubmissionNominationDetailDtos_whenNoPostSubmissionDetails_thenEmpty() {
+    var nomination = NominationTestUtil.builder().build();
+
+    when(nominationDetailRepository.findAllByNominationAndStatusIn(
+        nomination,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(List.of());
+
+    var result = nominationDetailService.getPostSubmissionNominationDetailDtos(nomination);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getPostSubmissionNominationDetailDtos_whenHasPostSubmissionDetails_thenVerifyDtos() {
+    var nomination = NominationTestUtil.builder().build();
+
+    var firstNominationDetail = NominationDetailTestUtil.builder()
+        .withId(1)
+        .build();
+    var secondNominationDetail = NominationDetailTestUtil.builder()
+        .withId(2)
+        .build();
+
+    when(nominationDetailRepository.findAllByNominationAndStatusIn(
+        nomination,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(List.of(firstNominationDetail, secondNominationDetail));
+
+    var result = nominationDetailService.getPostSubmissionNominationDetailDtos(nomination);
+
+    assertThat(result).containsExactly(
+        NominationDetailDto.fromNominationDetail(firstNominationDetail),
+        NominationDetailDto.fromNominationDetail(secondNominationDetail)
+    );
+  }
+
 }

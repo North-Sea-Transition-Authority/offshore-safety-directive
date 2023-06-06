@@ -61,6 +61,7 @@ import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.MapEntryAssert;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ExtendWith(MockitoExtension.class)
@@ -89,6 +90,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private NominationDetailService nominationDetailService;
 
+  @Mock
+  private NominationCaseProcessingSelectionService nominationCaseProcessingSelectionService;
+
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -106,7 +110,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
         nominationSummaryService, permissionService, userDetailService, caseEventQueryService,
-        nominationPortalReferenceAccessService, nominationManagementInteractableService, nominationDetailService);
+        nominationPortalReferenceAccessService, nominationManagementInteractableService, nominationDetailService,
+        nominationCaseProcessingSelectionService);
   }
 
   @Test
@@ -149,6 +154,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
@@ -160,6 +169,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
     var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -171,51 +181,28 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
         .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-    var persistentAttributes = List.of(
-        "breadcrumbsList",
-        "currentPage",
-        "headerInformation",
-        "summaryView",
-        "qaChecksForm",
-        "form",
-        "withdrawNominationForm",
-        "confirmAppointmentForm",
-        "generalCaseNoteForm",
-        "pearsPortalReferenceForm",
-        "wonsPortalReferenceForm",
-        "caseEvents",
-        "activePortalReferencesView",
-        "nominationConsultationResponseForm",
-        "nominationRequestUpdateForm"
-    );
-
-    var ignoredAttributes = List.of("breadcrumbsList", "currentPage");
-    var assertionAttributes = persistentAttributes.stream()
-        .filter(s -> !ignoredAttributes.contains(s))
-        .toList();
-
-    assertThat(result.getModel())
-        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
-        .extracting(assertionAttributes.toArray(String[]::new))
-        .containsExactly(
-            header,
-            nominationSummaryView,
-            qaChecksForm,
-            decisionForm,
-            withdrawForm,
-            confirmAppointmentForm,
-            generalCaseNoteForm,
-            pearsPortalReferenceForm,
-            wonsPortalReferenceForm,
-            List.of(caseEventView),
-            activePortalReferencesView,
-            nominationConsultationResponseForm,
-            nominationRequestUpdateForm
-        );
+    MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage");
 
     assertBreadcrumbs(result, nominationDetail);
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
@@ -242,11 +229,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withId(1)
-        .withStatus(nominationStatus)
+        .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
         .withId(2)
+        .withStatus(nominationStatus)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -269,6 +257,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
@@ -280,6 +272,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
     var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -291,52 +284,28 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
         .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-    var persistentAttributes = List.of(
-        "breadcrumbsList",
-        "managementActions",
-        "currentPage",
-        "headerInformation",
-        "summaryView",
-        "qaChecksForm",
-        "form",
-        "withdrawNominationForm",
-        "confirmAppointmentForm",
-        "generalCaseNoteForm",
-        "pearsPortalReferenceForm",
-        "wonsPortalReferenceForm",
-        "caseEvents",
-        "activePortalReferencesView",
-        "nominationConsultationResponseForm",
-        "nominationRequestUpdateForm"
-    );
-
-    var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
-    var assertionAttributes = persistentAttributes.stream()
-        .filter(s -> !ignoredAttributes.contains(s))
-        .toList();
-
-    assertThat(result.getModel())
-        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
-        .extracting(assertionAttributes.toArray(String[]::new))
-        .containsExactly(
-            header,
-            nominationSummaryView,
-            qaChecksForm,
-            decisionForm,
-            withdrawForm,
-            confirmAppointmentForm,
-            generalCaseNoteForm,
-            pearsPortalReferenceForm,
-            wonsPortalReferenceForm,
-            List.of(caseEventView),
-            activePortalReferencesView,
-            nominationConsultationResponseForm,
-            nominationRequestUpdateForm
-        );
+    MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
 
     assertBreadcrumbs(result, nominationDetail);
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
@@ -361,6 +330,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
         .withId(2)
+        .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -383,6 +353,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
@@ -394,6 +368,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
     var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -405,52 +380,28 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
         .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-    var persistentAttributes = List.of(
-        "breadcrumbsList",
-        "currentPage",
-        "headerInformation",
-        "summaryView",
-        "qaChecksForm",
-        "form",
-        "withdrawNominationForm",
-        "confirmAppointmentForm",
-        "generalCaseNoteForm",
-        "pearsPortalReferenceForm",
-        "wonsPortalReferenceForm",
-        "caseEvents",
-        "activePortalReferencesView",
-        "managementActions",
-        "nominationConsultationResponseForm",
-        "nominationRequestUpdateForm"
-    );
-
-    var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
-    var assertionAttributes = persistentAttributes.stream()
-        .filter(s -> !ignoredAttributes.contains(s))
-        .toList();
-
-    assertThat(result.getModel())
-        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
-        .extracting(assertionAttributes.toArray(String[]::new))
-        .containsExactly(
-            header,
-            nominationSummaryView,
-            qaChecksForm,
-            decisionForm,
-            withdrawForm,
-            confirmAppointmentForm,
-            generalCaseNoteForm,
-            pearsPortalReferenceForm,
-            wonsPortalReferenceForm,
-            List.of(caseEventView),
-            activePortalReferencesView,
-            nominationConsultationResponseForm,
-            nominationRequestUpdateForm
-        );
+        MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
 
     @SuppressWarnings("unchecked")
     var managementActions =
@@ -526,11 +477,17 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
-    when(caseEventQueryService.hasUpdateRequest(NominationDetailDto.fromNominationDetail(nominationDetail)))
+    when(caseEventQueryService.hasUpdateRequest(NominationDetailDto.fromNominationDetail(latestNominationDetail)))
         .thenReturn(true);
 
-    when(caseEventQueryService.hasUpdateRequest(nominationDetail))
+    when(caseEventQueryService.hasUpdateRequest(latestNominationDetail))
         .thenReturn(true);
+
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
@@ -543,6 +500,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
     var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -554,52 +512,28 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
         .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-    var persistentAttributes = List.of(
-        "breadcrumbsList",
-        "currentPage",
-        "headerInformation",
-        "summaryView",
-        "qaChecksForm",
-        "form",
-        "withdrawNominationForm",
-        "confirmAppointmentForm",
-        "generalCaseNoteForm",
-        "pearsPortalReferenceForm",
-        "wonsPortalReferenceForm",
-        "caseEvents",
-        "activePortalReferencesView",
-        "managementActions",
-        "nominationConsultationResponseForm",
-        "nominationRequestUpdateForm"
-    );
-
-    var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
-    var assertionAttributes = persistentAttributes.stream()
-        .filter(s -> !ignoredAttributes.contains(s))
-        .toList();
-
-    assertThat(result.getModel())
-        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
-        .extracting(assertionAttributes.toArray(String[]::new))
-        .containsExactly(
-            header,
-            nominationSummaryView,
-            qaChecksForm,
-            decisionForm,
-            withdrawForm,
-            confirmAppointmentForm,
-            generalCaseNoteForm,
-            pearsPortalReferenceForm,
-            wonsPortalReferenceForm,
-            List.of(caseEventView),
-            activePortalReferencesView,
-            nominationConsultationResponseForm,
-            nominationRequestUpdateForm
-        );
+    MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
 
     @SuppressWarnings("unchecked")
     var managementActions =
@@ -644,11 +578,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withId(1)
-        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
         .withId(2)
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -671,6 +606,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     var qaChecksForm = new NominationQaChecksForm();
@@ -682,6 +621,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var wonsPortalReferenceForm = new WonsPortalReferenceForm();
     var nominationConsultationResponseForm = new NominationConsultationResponseForm();
     var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withNominationQaChecksForm(qaChecksForm)
@@ -693,52 +633,28 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .withWonsPortalReferenceForm(wonsPortalReferenceForm)
         .withNominationConsultationResponseForm(nominationConsultationResponseForm)
         .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
         .build();
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-    var persistentAttributes = List.of(
-        "breadcrumbsList",
-        "managementActions",
-        "currentPage",
-        "headerInformation",
-        "summaryView",
-        "qaChecksForm",
-        "form",
-        "withdrawNominationForm",
-        "confirmAppointmentForm",
-        "generalCaseNoteForm",
-        "pearsPortalReferenceForm",
-        "wonsPortalReferenceForm",
-        "caseEvents",
-        "activePortalReferencesView",
-        "nominationConsultationResponseForm",
-        "nominationRequestUpdateForm"
-    );
-
-    var ignoredAttributes = List.of("breadcrumbsList", "currentPage", "managementActions");
-    var assertionAttributes = persistentAttributes.stream()
-        .filter(s -> !ignoredAttributes.contains(s))
-        .toList();
-
-    assertThat(result.getModel())
-        .containsOnlyKeys(persistentAttributes.toArray(String[]::new))
-        .extracting(assertionAttributes.toArray(String[]::new))
-        .containsExactly(
-            header,
-            nominationSummaryView,
-            qaChecksForm,
-            decisionForm,
-            withdrawForm,
-            confirmAppointmentForm,
-            generalCaseNoteForm,
-            pearsPortalReferenceForm,
-            wonsPortalReferenceForm,
-            List.of(caseEventView),
-            activePortalReferencesView,
-            nominationConsultationResponseForm,
-            nominationRequestUpdateForm
-        );
+    MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
 
     @SuppressWarnings("unchecked")
     var managementActions =

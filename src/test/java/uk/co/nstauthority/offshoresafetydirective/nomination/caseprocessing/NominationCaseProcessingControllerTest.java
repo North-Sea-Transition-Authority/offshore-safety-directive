@@ -4,7 +4,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -105,6 +108,12 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
+        .withPostEndpoint(
+            ReverseRouter.route(
+                on(NominationCaseProcessingController.class).changeCaseProcessingVersion(NOMINATION_ID, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
         .test();
   }
 
@@ -116,6 +125,12 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(
+                on(NominationCaseProcessingController.class).changeCaseProcessingVersion(NOMINATION_ID, null)),
+            status().is3xxRedirection(),
+            status().isForbidden()
         )
         .test();
   }
@@ -207,6 +222,43 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .queryParam("version", version.toString())
         )
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void changeCaseProcessingVersion_whenNoSubmittedNomination_thenIsBadRequest() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationCaseProcessingController.class).changeCaseProcessingVersion(NOMINATION_ID, null)))
+            .with(user(NOMINATION_MANAGE_USER))
+            .with(csrf())
+        )
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void changeCaseProcessingVersion_verifyRedirect() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    Integer version = 5;
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationCaseProcessingController.class).changeCaseProcessingVersion(NOMINATION_ID, null)))
+            .with(user(NOMINATION_MANAGE_USER))
+            .with(csrf())
+            .param("nominationDetailVersion", String.valueOf(version))
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(
+            on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, version.toString()))));
   }
 
 }

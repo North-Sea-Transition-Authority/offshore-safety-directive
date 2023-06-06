@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -24,5 +25,7 @@ interface NominationDetailRepository extends CrudRepository<NominationDetail, In
       Integer version,
       Collection<NominationStatus> nominationStatuses
   );
+
+  List<NominationDetail> findAllByNominationAndStatusIn(Nomination nomination, Collection<NominationStatus> statuses);
 
 }
