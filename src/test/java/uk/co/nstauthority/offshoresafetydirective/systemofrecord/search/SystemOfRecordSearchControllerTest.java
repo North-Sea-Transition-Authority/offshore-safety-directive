@@ -15,6 +15,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,15 +23,15 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
@@ -72,7 +73,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null));
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()));
   }
 
   @Test
@@ -108,7 +109,10 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", expectedAppointedOperator));
+        .andExpect(model().attribute(
+            "filteredAppointedOperator",
+            Map.of(String.valueOf(expectedAppointedOperator.id()), expectedAppointedOperator.name())
+        ));
   }
 
   @Test
@@ -120,7 +124,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("appointments", Collections.emptyList()))
         .andExpect(model().attributeExists("searchForm"))
         .andExpect(model().attribute("hasAddedFilter", false))
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null));
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()));
 
     then(portalOrganisationUnitQueryService)
         .shouldHaveNoInteractions();
@@ -252,9 +256,12 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
-        .andExpect(model().attribute("filteredInstallation", expectedFilteredInstallation))
+        .andExpect(model().attribute(
+            "filteredInstallation",
+            Map.of(String.valueOf(expectedFilteredInstallation.id()), expectedFilteredInstallation.name())
+        ))
         .andExpect(model().attribute(
             "installationRestUrl",
             RestApiUtil.route(on(InstallationRestController.class)
@@ -277,9 +284,9 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", Collections.emptyList()))
-        .andExpect(model().attribute("filteredInstallation", (InstallationDto) null))
+        .andExpect(model().attribute("filteredInstallation", Collections.emptyMap()))
         .andExpect(model().attribute(
             "installationRestUrl",
             RestApiUtil.route(on(InstallationRestController.class)
@@ -396,9 +403,15 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     given(portalAssetRetrievalService.getWellbore(new WellboreId(10)))
         .willReturn(Optional.of(expectedWellbore));
 
+    var expectedLicence = LicenceDtoTestUtil.builder().build();
+
+    given(portalAssetRetrievalService.getLicence(new LicenceId(20)))
+        .willReturn(Optional.of(expectedLicence));
+
     mockMvc.perform(
         get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderWellSearch(null)))
             .param("wellbore", "10")
+            .param("licence", "20")
     )
         .andExpect(view().name("osd/systemofrecord/search/well/searchWellAppointments"))
         .andExpect(model().attribute(
@@ -411,12 +424,23 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
-        .andExpect(model().attribute("filteredWellbore", expectedWellbore))
+        .andExpect(model().attribute(
+            "filteredWellbore",
+            Map.of(String.valueOf(expectedWellbore.wellboreId().id()), expectedWellbore.name())
+        ))
         .andExpect(model().attribute(
             "wellboreRestUrl",
             RestApiUtil.route(on(WellRestController.class).searchWells(null))
+        ))
+        .andExpect(model().attribute(
+            "licenceRestUrl",
+            RestApiUtil.route(on(LicenceRestController.class).searchLicencesByReference(null))
+        ))
+        .andExpect(model().attribute(
+            "filteredLicence",
+            Map.of(String.valueOf(expectedLicence.licenceId().id()), expectedLicence.licenceReference().value())
         ));
   }
 
@@ -435,13 +459,18 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", Collections.emptyList()))
-        .andExpect(model().attribute("filteredWellbore", (WellDto) null))
+        .andExpect(model().attribute("filteredWellbore", Collections.emptyMap()))
         .andExpect(model().attribute(
             "wellboreRestUrl",
             RestApiUtil.route(on(WellRestController.class).searchWells(null))
-        ));
+        ))
+        .andExpect(model().attribute(
+            "licenceRestUrl",
+            RestApiUtil.route(on(LicenceRestController.class).searchLicencesByReference(null))
+        ))
+        .andExpect(model().attribute("filteredLicence", Collections.emptyMap()));
 
     then(appointmentSearchService)
         .shouldHaveNoInteractions();
@@ -500,6 +529,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
         .withWellboreId(123)
+        .withLicenceId(456)
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
@@ -507,6 +537,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             ))
             .with(csrf())
             .param("wellboreId", searchUrlParams.wellbore())
+            .param("licenceId", searchUrlParams.licence())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
@@ -569,7 +600,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             "appointedOperatorRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
-        .andExpect(model().attribute("filteredAppointedOperator", (PortalOrganisationDto) null))
+        .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
   }
 }

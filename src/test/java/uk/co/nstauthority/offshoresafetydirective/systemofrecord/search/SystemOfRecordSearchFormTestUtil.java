@@ -20,6 +20,8 @@ class SystemOfRecordSearchFormTestUtil {
 
     private Integer installationId = null;
 
+    private Integer licenceId = null;
+
     private Builder() {
     }
 
@@ -38,11 +40,17 @@ class SystemOfRecordSearchFormTestUtil {
       return this;
     }
 
+    Builder withLicenceId(Integer licenceId) {
+      this.licenceId = licenceId;
+      return this;
+    }
+
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
       form.setAppointedOperatorId(appointedOperatorId);
       form.setWellboreId(wellboreId);
       form.setInstallationId(installationId);
+      form.setLicenceId(licenceId);
       return form;
     }
   }

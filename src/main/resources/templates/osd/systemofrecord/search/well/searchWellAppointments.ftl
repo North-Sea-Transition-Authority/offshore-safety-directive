@@ -7,8 +7,9 @@
 <#-- @ftlvariable name="hasAddedFilter" type="Boolean" -->
 <#-- @ftlvariable name="searchForm" type="uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordSearchForm" -->
 <#-- @ftlvariable name="wellboreRestUrl" type="String" -->
-<#-- @ftlvariable name="filteredAppointedOperator" type="uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto" -->
-<#-- @ftlvariable name="filteredWellbore" type="uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto" -->
+<#-- @ftlvariable name="filteredWellbore" type="java.util.Map<Integer, String>" -->
+<#-- @ftlvariable name="licenceRestUrl" type="String" -->
+<#-- @ftlvariable name="filteredLicence" type="java.util.Map<Integer, String>" -->
 
 <#assign pageTitle = "View appointments for wells" />
 
@@ -31,10 +32,18 @@
           selectorMinInputLength=3
           inputClass="govuk-!-width-three-quarters govuk-!-margin-bottom-0"
           formGroupClass="govuk-!-margin-bottom-0"
-          preselectedItems=(filteredWellbore?has_content)?then(
-            {filteredWellbore.wellboreId().id()?long?c : filteredWellbore.name()},
-            {}
-          )
+          preselectedItems=filteredWellbore
+        />
+      </@fdsSearch.searchFilterItem>
+      <@fdsSearch.searchFilterItem itemName="Wells within licence" expanded=searchForm.licenceId?has_content>
+        <@fdsSearchSelector.searchSelectorRest
+          path="searchForm.licenceId"
+          restUrl=springUrl(licenceRestUrl)
+          labelText=""
+          selectorMinInputLength=1
+          inputClass="govuk-!-width-three-quarters govuk-!-margin-bottom-0"
+          formGroupClass="govuk-!-margin-bottom-0"
+          preselectedItems=filteredLicence
         />
       </@fdsSearch.searchFilterItem>
     </@fdsSearch.searchFilterList>

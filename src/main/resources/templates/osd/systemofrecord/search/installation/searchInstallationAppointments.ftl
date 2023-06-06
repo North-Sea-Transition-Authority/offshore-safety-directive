@@ -7,7 +7,7 @@
 <#-- @ftlvariable name="hasAddedFilter" type="Boolean" -->
 <#-- @ftlvariable name="searchForm" type="uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordSearchForm" -->
 <#-- @ftlvariable name="installationRestUrl" type="String" -->
-<#-- @ftlvariable name="filteredInstallation" type="uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto" -->
+<#-- @ftlvariable name="filteredInstallation" type="java.util.Map<String, String>" -->
 
 <#assign pageTitle = "View appointments for installations" />
 
@@ -29,10 +29,7 @@
           selectorMinInputLength=3
           inputClass="govuk-!-width-three-quarters govuk-!-margin-bottom-0"
           formGroupClass="govuk-!-margin-bottom-0"
-          preselectedItems=(filteredInstallation?has_content)?then(
-            {filteredInstallation.id()?long?c : filteredInstallation.name()},
-            {}
-          )
+          preselectedItems=filteredInstallation
         />
       </@fdsSearch.searchFilterItem>
     </@fdsSearch.searchFilterList>

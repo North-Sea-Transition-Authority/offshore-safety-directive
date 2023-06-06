@@ -10,7 +10,7 @@ import uk.co.fivium.energyportalapi.generated.client.LicencesProjectionRoot;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @Service
-class LicenceQueryService {
+public class LicenceQueryService {
 
   static final LicenceProjectionRoot SINGLE_LICENCE_PROJECTION_ROOT =
       new LicenceProjectionRoot()
@@ -32,12 +32,12 @@ class LicenceQueryService {
 
 
   @Autowired
-  LicenceQueryService(LicenceApi licenceApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
+  public LicenceQueryService(LicenceApi licenceApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
     this.licenceApi = licenceApi;
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  Optional<LicenceDto> getLicenceById(LicenceId licenceId) {
+  public Optional<LicenceDto> getLicenceById(LicenceId licenceId) {
     return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
             licenceApi.findLicence(
                 licenceId.id(),

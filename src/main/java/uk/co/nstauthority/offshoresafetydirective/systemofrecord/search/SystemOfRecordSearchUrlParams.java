@@ -9,11 +9,12 @@ import org.springframework.util.LinkedMultiValueMap;
 record SystemOfRecordSearchUrlParams(
     String appointedOperator,
     String wellbore,
-    String installation
+    String installation,
+    String licence
 ) {
 
   static SystemOfRecordSearchUrlParams empty() {
-    return new SystemOfRecordSearchUrlParams(null, null, null);
+    return new SystemOfRecordSearchUrlParams(null, null, null, null);
   }
 
   @SuppressWarnings("unchecked")
@@ -43,6 +44,8 @@ record SystemOfRecordSearchUrlParams(
 
     private String installation = "";
 
+    private String licence = "";
+
     Builder withAppointedOperatorId(Integer appointedOperatorId) {
       this.appointedOperator = (appointedOperatorId != null) ? String.valueOf(appointedOperatorId) : "";
       return this;
@@ -58,11 +61,17 @@ record SystemOfRecordSearchUrlParams(
       return this;
     }
 
+    Builder withLicenceId(Integer licenceId) {
+      this.licence = (licenceId != null) ? String.valueOf(licenceId) : "";
+      return this;
+    }
+
     SystemOfRecordSearchUrlParams build() {
       return new SystemOfRecordSearchUrlParams(
           appointedOperator,
           wellbore,
-          installation
+          installation,
+          licence
       );
     }
   }

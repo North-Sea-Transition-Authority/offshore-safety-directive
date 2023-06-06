@@ -11,6 +11,7 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 @Service
@@ -24,7 +25,7 @@ class AppointmentQueryService {
   }
 
   List<AppointmentQueryResultItemDto> search(Collection<PortalAssetType> portalAssetTypeRestrictions,
-                                             SystemOfRecordSearchForm searchForm) {
+                                             SystemOfRecordSearchFilter searchFilter) {
     return dslContext
         .select(
             field("assets.portal_asset_id"),
@@ -38,13 +39,13 @@ class AppointmentQueryService {
         .from(table("assets"))
         .join(table("appointments"))
           .on(field("appointments.asset_id").eq(field("assets.id")))
-        .where(getPredicateConditions(portalAssetTypeRestrictions, searchForm))
+        .where(getPredicateConditions(portalAssetTypeRestrictions, searchFilter))
         .fetchInto(AppointmentQueryResultItemDto.class);
   }
 
 
   private List<Condition> getPredicateConditions(Collection<PortalAssetType> portalAssetTypeRestrictions,
-                                                 SystemOfRecordSearchForm searchForm) {
+                                                 SystemOfRecordSearchFilter searchFilter) {
 
     List<Condition> predicateList = new ArrayList<>();
 
@@ -52,25 +53,32 @@ class AppointmentQueryService {
     predicateList.add(field("appointments.responsible_to_date").isNull());
 
     // if operator ID filter provided then filter by appointed operator
-    if (searchForm.getAppointedOperatorId() != null) {
+    if (searchFilter.appointedOperatorId() != null) {
       predicateList.add(
-          field("appointments.appointed_portal_operator_id").eq(String.valueOf(searchForm.getAppointedOperatorId()))
+          field("appointments.appointed_portal_operator_id")
+              .eq(String.valueOf(searchFilter.appointedOperatorId()))
       );
     }
 
     // if wellbore ID filter provided then filter by wellbore ID and wellbore type
-    if (searchForm.getWellboreId() != null) {
+    if (!CollectionUtils.isEmpty(searchFilter.wellboreIds())) {
+
+      List<String> wellboreIdStrings = searchFilter.wellboreIds()
+          .stream()
+          .map(String::valueOf)
+          .toList();
+
       predicateList.add(
-          field("assets.portal_asset_id").eq(String.valueOf(searchForm.getWellboreId()))
+          field("assets.portal_asset_id").in(wellboreIdStrings)
       );
       // as different portal assets could have the same ID ensure the restriction list is only wellbore
       portalAssetTypeRestrictions = Set.of(PortalAssetType.WELLBORE);
     }
 
     // if installation ID filter provided then filter by installation ID and installation type
-    if (searchForm.getInstallationId() != null) {
+    if (searchFilter.installationId() != null) {
       predicateList.add(
-          field("assets.portal_asset_id").eq(String.valueOf(searchForm.getInstallationId()))
+          field("assets.portal_asset_id").eq(String.valueOf(searchFilter.installationId()))
       );
       // as different portal assets could have the same ID ensure the restriction list is only installation
       portalAssetTypeRestrictions = Set.of(PortalAssetType.INSTALLATION);

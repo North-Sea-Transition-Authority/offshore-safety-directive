@@ -18,6 +18,7 @@ import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -62,12 +63,21 @@ class AppointmentSearchService {
   }
 
   List<AppointmentSearchItemDto> searchAppointments(SystemOfRecordSearchForm searchForm) {
-    return search(Set.of(PortalAssetType.values()), searchForm);
+
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(searchForm.getAppointedOperatorId())
+        .build();
+
+    return search(Set.of(PortalAssetType.values()), searchFilter);
   }
 
   List<AppointmentSearchItemDto> searchInstallationAppointments(SystemOfRecordSearchForm searchForm) {
 
-    var resultingAppointments = search(Set.of(PortalAssetType.INSTALLATION), searchForm);
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(searchForm.getInstallationId())
+        .build();
+
+    var resultingAppointments = search(Set.of(PortalAssetType.INSTALLATION), searchFilter);
 
     // if we have no results, and have only searched for an installation then add the installation
     // to the result list to show as a no operator appointment
@@ -93,32 +103,62 @@ class AppointmentSearchService {
 
   List<AppointmentSearchItemDto> searchWellboreAppointments(SystemOfRecordSearchForm searchForm) {
 
-    var resultingAppointments = search(Set.of(PortalAssetType.WELLBORE), searchForm);
+    List<AppointmentSearchItemDto> appointmentsToReturn = new ArrayList<>();
 
-    // if we have no results, and have only searched for a wellbore then add the wellbore
-    // to the result list to show as a no operator appointment
-    if (
-        CollectionUtils.isEmpty(resultingAppointments)
-            && searchForm.getWellboreId() != null
-            && searchForm.isEmptyExcept("wellboreId")
-    ) {
-      wellQueryService.getWell(new WellboreId(searchForm.getWellboreId()))
-          .ifPresent(wellbore ->
-              resultingAppointments.add(
-                  createNoAppointedOperatorItem(
-                      new AppointedPortalAssetId(String.valueOf(wellbore.wellboreId().id())),
-                      PortalAssetType.WELLBORE,
-                      new AssetName(wellbore.name())
-                  )
-              )
-          );
-    }
+    List<WellboreId> wellboreIds = new ArrayList<>();
+    List<LicenceId> licenceIds = new ArrayList<>();
 
-    return resultingAppointments;
+    Optional.ofNullable(searchForm.getWellboreId())
+        .ifPresent(wellboreId -> wellboreIds.add(new WellboreId(wellboreId)));
+
+    Optional.ofNullable(searchForm.getLicenceId())
+        .ifPresent(licenceId -> licenceIds.add(new LicenceId(licenceId)));
+
+    Set<WellDto> resultingWellbores = wellQueryService.searchWellbores(
+        wellboreIds,
+        null,
+        licenceIds
+    );
+
+    List<Integer> wellboreIdsToFilter = resultingWellbores
+        .stream()
+        .map(wellbore -> wellbore.wellboreId().id())
+        .sorted()
+        .toList();
+
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withWellboreIds(wellboreIdsToFilter)
+        .build();
+
+    Map<AppointedPortalAssetId, AppointmentSearchItemDto> assetAppointments =
+        search(Set.of(PortalAssetType.WELLBORE), searchFilter)
+            .stream()
+            .collect(Collectors.toMap(AppointmentSearchItemDto::assetId, Function.identity()));
+
+    resultingWellbores.forEach(wellbore ->
+        Optional.ofNullable(
+            assetAppointments.get(new AppointedPortalAssetId(String.valueOf(wellbore.wellboreId().id())))
+        )
+            .ifPresentOrElse(
+                // add operator appointment
+                appointmentsToReturn::add,
+                // add a no operator appointment
+                () -> appointmentsToReturn.add(
+                    createNoAppointedOperatorItem(
+                        new AppointedPortalAssetId(String.valueOf(wellbore.wellboreId().id())),
+                        PortalAssetType.WELLBORE,
+                        new AssetName(wellbore.name())
+                    )
+                )
+            )
+    );
+
+    return appointmentsToReturn;
   }
 
   List<AppointmentSearchItemDto> searchForwardApprovalAppointments(SystemOfRecordSearchForm searchForm) {
-    return search(Set.of(PortalAssetType.SUBAREA), searchForm);
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
+    return search(Set.of(PortalAssetType.SUBAREA), searchFilter);
   }
 
   /**
@@ -130,11 +170,11 @@ class AppointmentSearchService {
    * 4) Any appointments for assets that no longer exist in the Energy Portal
    *
    * @param assetTypeRestrictions The assets types to restrict results to
-   * @param searchForm The form with the search filters
+   * @param searchFilter The search filters to apply
    * @return a list of appointments matching the search criteria
    */
   private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
-                                                SystemOfRecordSearchForm searchForm) {
+                                                SystemOfRecordSearchFilter searchFilter) {
 
     List<AppointmentSearchItemDto> appointments = new ArrayList<>();
 
@@ -144,7 +184,7 @@ class AppointmentSearchService {
     Set<LicenceBlockSubareaId> subareaIds = new HashSet<>();
 
     List<AppointmentQueryResultItemDto> resultingAppointments =
-        appointmentQueryService.search(assetTypeRestrictions, searchForm);
+        appointmentQueryService.search(assetTypeRestrictions, searchFilter);
 
     // convert resulting appointments to a map for ease of lookup
     Map<AppointedPortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems =

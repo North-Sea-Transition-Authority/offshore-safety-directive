@@ -2,10 +2,12 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -67,7 +70,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(resultItemDtos);
 
     var resultingAppointments = appointmentSearchService.searchAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -101,7 +108,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(installationAppointment));
 
     given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
@@ -171,7 +182,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
@@ -222,7 +237,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(wellboreAppointment));
 
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
@@ -292,7 +311,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(wellboreAppointment));
 
     // when the API doesn't return the asset
@@ -343,7 +366,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(subareaAppointment));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
@@ -411,9 +438,13 @@ class AppointmentSearchServiceTest {
         .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
@@ -499,7 +530,11 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(installationAppointment, wellboreAppointment, subareaAppointment));
 
     // and all assets are returned from the API
@@ -678,8 +713,12 @@ class AppointmentSearchServiceTest {
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
 
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withAppointedOperatorId(SYSTEM_OF_RECORD_SEARCH_FORM.getAppointedOperatorId())
+        .build();
+
     // return the assets out of order
-    given(appointmentQueryService.search(assetTypeRestrictions, SYSTEM_OF_RECORD_SEARCH_FORM))
+    given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(
             appointmentForFirstWellbore,
             appointmentForSecondWellbore,
@@ -716,7 +755,11 @@ class AppointmentSearchServiceTest {
       List<AppointmentQueryResultItemDto> resultItemDtos
   ) {
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(SYSTEM_OF_RECORD_SEARCH_FORM.getInstallationId())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(resultItemDtos);
 
     var resultingAppointments =
@@ -749,7 +792,11 @@ class AppointmentSearchServiceTest {
         .withAssetName(appointedInstallation.name())
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(SYSTEM_OF_RECORD_SEARCH_FORM.getInstallationId())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(List.of(installationAppointment));
 
     given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
@@ -818,7 +865,11 @@ class AppointmentSearchServiceTest {
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(SYSTEM_OF_RECORD_SEARCH_FORM.getInstallationId())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
@@ -899,7 +950,11 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(SYSTEM_OF_RECORD_SEARCH_FORM.getInstallationId())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(List.of(
             appointmentForFirstInstallation,
             appointmentForSecondInstallation,
@@ -920,222 +975,13 @@ class AppointmentSearchServiceTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  void searchWellboreAppointments_whenNoAppointmentsFound_thenEmptyListReturned(
-      List<AppointmentQueryResultItemDto> resultItemDtos
-  ) {
-
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
-        .willReturn(resultItemDtos);
-
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
-
-    assertThat(resultingAppointments).isEmpty();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenAppointments_thenPopulatedListReturned() {
-
-    var appointedWellboreId = new WellboreId(100);
-
-    var appointedWellbore = WellDtoTestUtil.builder()
-        .withWellboreId(appointedWellboreId.id())
-        .build();
-
-    var appointedOperatorId = new PortalOrganisationUnitId(200);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    // given a wellbore appointment
-    var wellboreAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
-        .withAssetName(appointedWellbore.name())
-        .build();
-
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
-        .willReturn(List.of(wellboreAppointment));
-
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
-        .willReturn(List.of(appointedWellbore));
-
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    // when we search appointments
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
-
-    assertThat(resultingAppointments)
-        .extracting(
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
-            AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate,
-            AppointmentSearchItemDto::timelineUrl
-        )
-        .containsExactly(
-            tuple(
-                String.valueOf(appointedWellboreId.id()),
-                appointedWellbore.name(),
-                appointedOperator.name(),
-                AppointmentType.NOMINATED,
-                wellboreAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
-                        new PortalAssetId(String.valueOf(appointedWellboreId.id()))
-                    )
-                )
-            )
-        );
-
-    then(installationQueryService)
-        .shouldHaveNoInteractions();
-
-    then(licenceBlockSubareaQueryService)
-        .shouldHaveNoInteractions();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenAppointmentWithAssetIdNotInPortal_thenAppointmentReturnedWithCacheName() {
-
-    var appointedWellboreId = new WellboreId(100);
-
-    var appointedWellbore = WellDtoTestUtil.builder()
-        .withWellboreId(appointedWellboreId.id())
-        .withRegistrationNumber("ASSET NAME FROM API")
-        .build();
-
-    var appointedOperatorId = new PortalOrganisationUnitId(200);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    // given a wellbore appointment
-    var wellboreAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
-        .withAssetName("NOT THE ASSET NAME FROM THE API")
-        .build();
-
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
-        .willReturn(List.of(wellboreAppointment));
-
-    // when the API doesn't return the asset
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
-        .willReturn(Collections.emptyList());
-
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    // when we search appointments
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
-
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value()
-        )
-        .containsExactly("NOT THE ASSET NAME FROM THE API");
-
-    then(installationQueryService)
-        .shouldHaveNoInteractions();
-
-    then(licenceBlockSubareaQueryService)
-        .shouldHaveNoInteractions();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenMultipleAppointments_thenSortedByWellApiResponse() {
-
-    var appointedOperatorId = new PortalOrganisationUnitId(200);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    var firstAppointedWellboreId = new WellboreId(300);
-
-    // Note: the well api determines the order of wells as the registration number
-    // is an aggregate of other wellbore properties. Registration number set in this test
-    // just for ease of assertion later
-    var firstWellboreByRegistrationNumber = WellDtoTestUtil.builder()
-        .withWellboreId(firstAppointedWellboreId.id())
-        .withRegistrationNumber("first wellbore")
-        .build();
-
-    var appointmentForFirstWellbore = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withPortalAssetId(String.valueOf(firstAppointedWellboreId.id()))
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .build();
-
-    var secondAppointedWellboreId = new WellboreId(400);
-
-    var secondWellboreByRegistrationNumber = WellDtoTestUtil.builder()
-        .withWellboreId(secondAppointedWellboreId.id())
-        .withRegistrationNumber("second wellbore")
-        .build();
-
-    var appointmentForSecondWellbore = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withPortalAssetId(String.valueOf(secondAppointedWellboreId.id()))
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withAssetName("NOT FROM PORTAL")
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .build();
-
-    var wellboreIdNotInPortal = new WellboreId(-1);
-
-    var appointmentForWellboreNotInPortal  = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withPortalAssetId(String.valueOf(wellboreIdNotInPortal.id()))
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .build();
-
-    // When the wellbore api returns only wellbores we know about, excluding the wellbore not in the portal
-    // The order of wellbores is determined by the return order of this method
-    // The Energy Portal API sorts the wellbores and the rules are not exposed to the consumer
-    given(wellQueryService.getWellsByIds(
-        Set.of(firstAppointedWellboreId, secondAppointedWellboreId, wellboreIdNotInPortal)
-    ))
-        .willReturn(List.of(firstWellboreByRegistrationNumber, secondWellboreByRegistrationNumber));
-
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), SYSTEM_OF_RECORD_SEARCH_FORM))
-        .willReturn(List.of(
-            appointmentForFirstWellbore,
-            appointmentForSecondWellbore,
-            appointmentForWellboreNotInPortal
-        ));
-
-    var resultingAppointmentSearchItems =
-        appointmentSearchService.searchWellboreAppointments(SYSTEM_OF_RECORD_SEARCH_FORM);
-
-    assertThat(resultingAppointmentSearchItems)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
-        .containsExactly(
-            firstWellboreByRegistrationNumber.name(),
-            secondWellboreByRegistrationNumber.name(),
-            appointmentForWellboreNotInPortal.getAssetName()
-        );
-  }
-
-  @ParameterizedTest
-  @NullAndEmptySource
   void searchForwardApprovalAppointments_whenNoAppointmentsFound_thenEmptyListReturned(
       List<AppointmentQueryResultItemDto> resultItemDtos
   ) {
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(SYSTEM_OF_RECORD_SEARCH_FORM);
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(resultItemDtos);
 
     var resultingAppointments =
@@ -1168,7 +1014,9 @@ class AppointmentSearchServiceTest {
         .withAssetName(appointedSubarea.displayName())
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(SYSTEM_OF_RECORD_SEARCH_FORM);
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(List.of(subareaAppointment));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
@@ -1237,7 +1085,9 @@ class AppointmentSearchServiceTest {
         .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(SYSTEM_OF_RECORD_SEARCH_FORM);
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
@@ -1317,7 +1167,9 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), SYSTEM_OF_RECORD_SEARCH_FORM))
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(SYSTEM_OF_RECORD_SEARCH_FORM);
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(List.of(appointmentForFirstSubarea, appointmentForSecondSubarea, appointmentForNotInPortalSubarea));
 
     var resultingAppointmentSearchItems =
@@ -1333,186 +1185,6 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchWellboreAppointments_whenOnlySearchingForWellboreAndNoAppointmentsFound_thenNoOperatorAppointmentReturned() {
-
-    // given a search form with a wellbore ID
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
-        .withWellboreId(100)
-        .build();
-
-    // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
-        .willReturn(Collections.emptyList());
-
-    var expectedWellbore = WellDtoTestUtil.builder()
-        .withWellboreId(searchFormWithWellboreId.getWellboreId())
-        .build();
-
-    // and the wellbore is a valid wellbore
-    given(wellQueryService.getWell(new WellboreId(searchFormWithWellboreId.getWellboreId())))
-        .willReturn(Optional.of(expectedWellbore));
-
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
-
-    // then a no operator appointment is returned
-    assertThat(resultingAppointments)
-        .extracting(
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
-            AppointmentSearchItemDto::appointmentDate,
-            AppointmentSearchItemDto::appointmentType
-        )
-        .containsExactly(
-            tuple(
-                String.valueOf(searchFormWithWellboreId.getWellboreId()),
-                expectedWellbore.name(),
-                "No wellbore operator",
-                null,
-                null
-            )
-        );
-  }
-
-  @Test
-  void searchWellboreAppointments_whenNotOnlySearchingForWellboreAndNoAppointmentsFound_thenEmptyListReturned() {
-
-    // given a search form with a wellbore ID and another property
-    var searchFormWithWellboreIdAndOtherProperty = SystemOfRecordSearchFormTestUtil.builder()
-        .withWellboreId(100)
-        .withAppointedOperatorId(200)
-        .build();
-
-    // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreIdAndOtherProperty))
-        .willReturn(Collections.emptyList());
-
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreIdAndOtherProperty);
-
-    assertThat(resultingAppointments).isEmpty();
-
-    then(wellQueryService)
-        .shouldHaveNoInteractions();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenEmptySearchFormAndNoAppointmentsFound_thenEmptyListReturned() {
-
-    // given an empty search form
-    var emptySearchForm = new SystemOfRecordSearchForm();
-
-    // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), emptySearchForm))
-        .willReturn(Collections.emptyList());
-
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(emptySearchForm);
-
-    assertThat(resultingAppointments).isEmpty();
-
-    then(wellQueryService)
-        .shouldHaveNoInteractions();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenSearchByOnlyWellboreIdAndNoAppointmentAndWellboreDoesNotExist_thenEmptyList() {
-
-    // given a search form with a wellbore ID that doesn't exist
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
-        .withWellboreId(-1)
-        .build();
-
-    // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
-        .willReturn(Collections.emptyList());
-
-    // and the wellbore doesn't exist
-    given(wellQueryService.getWell(new WellboreId(searchFormWithWellboreId.getWellboreId())))
-        .willReturn(Optional.empty());
-
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
-
-    // then no results returned
-    assertThat(resultingAppointments).isEmpty();
-  }
-
-  @Test
-  void searchWellboreAppointments_whenAppointmentsFoundAndSearchedForWellbore_thenAppointmentsReturned() {
-
-    // given a form with a wellbore filter
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
-        .withWellboreId(100)
-        .build();
-
-    var appointedWellboreId = new WellboreId(100);
-
-    var appointedWellbore = WellDtoTestUtil.builder()
-        .withWellboreId(appointedWellboreId.id())
-        .build();
-
-    var appointedOperatorId = new PortalOrganisationUnitId(200);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    // and a wellbore appointment for a wellbore matching that filter exists
-    var wellboreAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withAssetType(PortalAssetType.WELLBORE)
-        .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
-        .withAssetName(appointedWellbore.name())
-        .build();
-
-    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFormWithWellboreId))
-        .willReturn(List.of(wellboreAppointment));
-
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
-        .willReturn(List.of(appointedWellbore));
-
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    // when we search appointments
-    var resultingAppointments =
-        appointmentSearchService.searchWellboreAppointments(searchFormWithWellboreId);
-
-    // the valid operator appointments is returned
-    assertThat(resultingAppointments)
-        .extracting(
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
-            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
-            AppointmentSearchItemDto::appointmentType,
-            AppointmentSearchItemDto::appointmentDate,
-            AppointmentSearchItemDto::timelineUrl
-        )
-        .containsExactly(
-            tuple(
-                String.valueOf(appointedWellboreId.id()),
-                appointedWellbore.name(),
-                appointedOperator.name(),
-                AppointmentType.NOMINATED,
-                wellboreAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
-                        new PortalAssetId(String.valueOf(appointedWellboreId.id()))
-                    )
-                )
-            )
-        );
-
-    // and we don't get the wellbore to add a no operator appointment
-    then(wellQueryService)
-        .should(never())
-        .getWell(appointedWellboreId);
-  }
-
-  @Test
   void searchInstallationAppointments_whenOnlySearchingForInstallationsAndNoAppointmentsFound_thenNoOperatorAppointmentReturned() {
 
     // given a search form with an installation ID
@@ -1520,8 +1192,10 @@ class AppointmentSearchServiceTest {
         .withInstallationId(100)
         .build();
 
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchFormWithInstallationId);
+
     // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationId))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(Collections.emptyList());
 
     var expectedInstallation = InstallationDtoTestUtil.builder()
@@ -1556,35 +1230,15 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchInstallationAppointments_whenNotOnlySearchingForInstallationAndNoAppointmentsFound_thenEmptyListReturned() {
-
-    // given a search form with an installation ID and another property
-    var searchFormWithInstallationIdAndOtherProperty = SystemOfRecordSearchFormTestUtil.builder()
-        .withInstallationId(100)
-        .withAppointedOperatorId(200)
-        .build();
-
-    // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationIdAndOtherProperty))
-        .willReturn(Collections.emptyList());
-
-    var resultingAppointments =
-        appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationIdAndOtherProperty);
-
-    assertThat(resultingAppointments).isEmpty();
-
-    then(wellQueryService)
-        .shouldHaveNoInteractions();
-  }
-
-  @Test
   void searchInstallationAppointments_whenEmptySearchFormAndNoAppointmentsFound_thenEmptyListReturned() {
 
     // given an empty search form
     var emptySearchForm = new SystemOfRecordSearchForm();
 
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(emptySearchForm);
+
     // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), emptySearchForm))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(Collections.emptyList());
 
     var resultingAppointments =
@@ -1604,8 +1258,10 @@ class AppointmentSearchServiceTest {
         .withInstallationId(-1)
         .build();
 
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchFormWithInstallationId);
+
     // and no appointments match the search
-    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFormWithInstallationId))
+    given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(Collections.emptyList());
 
     // and the installation doesn't exist
@@ -1617,5 +1273,261 @@ class AppointmentSearchServiceTest {
 
     // then no results returned
     assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void searchWellboreAppointments_whenNoSearchParams_thenVerifyInteractions() {
+
+    var emptySearchForm = new SystemOfRecordSearchForm();
+
+    appointmentSearchService.searchWellboreAppointments(emptySearchForm);
+
+    then(wellQueryService)
+        .should(onlyOnce())
+        .searchWellbores(Collections.emptyList(), null, Collections.emptyList());
+  }
+
+  @Test
+  void searchWellboreAppointments_whenSearchParams_thenVerifyInteractions() {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(123)
+        .withLicenceId(456)
+        .build();
+
+    appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    then(wellQueryService)
+        .should(onlyOnce())
+        .searchWellbores(List.of(new WellboreId(123)), null, List.of(new LicenceId(456)));
+
+    then(appointmentQueryService)
+        .should(onlyOnce())
+        .search(anyCollection(), any());
+  }
+
+  @Test
+  void searchWellboreAppointments_whenNoWellboresMatchingFilters_thenNoAppointments() {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(123)
+        .withLicenceId(456)
+        .build();
+
+    given(wellQueryService.searchWellbores(
+        List.of(new WellboreId(123)),
+        null,
+        List.of(new LicenceId(456)))
+    )
+        .willReturn(Collections.emptySet());
+
+    var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    assertThat(resultingWellboreAppointments).isEmpty();
+  }
+
+  @Test
+  void searchWellboreAppointments_whenWellboresMatchingFiltersAndNoAppointments_thenNoOperatorAppointmentsReturned() {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(123)
+        .withLicenceId(456)
+        .build();
+
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
+
+    var expectedWellbore = WellDtoTestUtil.builder()
+        .withWellboreId(123)
+        .build();
+
+    given(wellQueryService.searchWellbores(
+        List.of(new WellboreId(123)),
+        null,
+        List.of(new LicenceId(456)))
+    )
+        .willReturn(Set.of(expectedWellbore));
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
+        .willReturn(Collections.emptyList());
+
+    var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    assertThat(resultingWellboreAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::appointmentType
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(searchForm.getWellboreId()),
+                expectedWellbore.name(),
+                "No wellbore operator",
+                null,
+                null
+            )
+        );
+  }
+
+  @Test
+  void searchWellboreAppointments_whenWellboresMatchingFiltersAndAppointments_thenAppointmentsReturned() {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withWellboreId(123)
+        .withLicenceId(456)
+        .build();
+
+    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
+
+    var appointedWellbore = WellDtoTestUtil.builder()
+        .withWellboreId(123)
+        .build();
+
+    given(wellQueryService.searchWellbores(
+        List.of(new WellboreId(123)),
+        null,
+        List.of(new LicenceId(456)))
+    )
+        .willReturn(Set.of(appointedWellbore));
+
+    var appointedOperatorId = new PortalOrganisationUnitId(567);
+
+    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withId(appointedOperatorId.id())
+        .build();
+
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+        .willReturn(List.of(appointedOperator));
+
+    var expectedAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
+        .withAssetType(PortalAssetType.WELLBORE)
+        .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
+        .withAppointedOperatorId(String.valueOf(appointedOperatorId.id()))
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAssetName(appointedWellbore.name())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
+        .willReturn(List.of(expectedAppointment));
+
+    var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    assertThat(resultingWellboreAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentType,
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
+        )
+        .containsExactly(
+            tuple(
+                String.valueOf(appointedWellbore.wellboreId().id()),
+                appointedWellbore.name(),
+                appointedOperator.name(),
+                AppointmentType.NOMINATED,
+                expectedAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
+                    )
+                )
+            )
+        );
+  }
+
+  @Test
+  void searchWellboreAppointments_whenWellboresMatchingFiltersAndSomeAppointments_thenNoOperatorAppointmentsAndAppointmentsReturned() {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withLicenceId(456)
+        .build();
+
+    var wellboreWithAppointment = WellDtoTestUtil.builder()
+        .withWellboreId(123)
+        .build();
+
+    var noAppointmentWellbore = WellDtoTestUtil.builder()
+        .withWellboreId(345)
+        .build();
+
+    var appointedOperatorId = new PortalOrganisationUnitId(567);
+
+    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withId(appointedOperatorId.id())
+        .build();
+
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+        .willReturn(List.of(appointedOperator));
+
+    // GIVEN two wellbores
+    given(wellQueryService.searchWellbores(
+        Collections.emptyList(),
+        null,
+        List.of(new LicenceId(456)))
+    )
+        .willReturn(Set.of(wellboreWithAppointment, noAppointmentWellbore));
+
+    // AND only one has an appointment
+    var wellboreAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
+        .withAssetType(PortalAssetType.WELLBORE)
+        .withPortalAssetId(String.valueOf(wellboreWithAppointment.wellboreId().id()))
+        .withAppointedOperatorId(String.valueOf(appointedOperatorId.id()))
+        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAssetName(wellboreWithAppointment.name())
+        .build();
+
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withWellboreId(wellboreWithAppointment.wellboreId().id())
+        .withWellboreId(noAppointmentWellbore.wellboreId().id())
+        .build();
+
+    given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
+        .willReturn(List.of(wellboreAppointment));
+
+    var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
+
+    // THEN we will get an appointment for the wellbore with an appointment and a no operator appointment for the
+    // wellbore without an appointment
+    assertThat(resultingWellboreAppointments)
+        .extracting(
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetId().id(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value(),
+            appointmentSearchItemDto -> appointmentSearchItemDto.appointedOperatorName().value(),
+            AppointmentSearchItemDto::appointmentType,
+            AppointmentSearchItemDto::appointmentDate,
+            AppointmentSearchItemDto::timelineUrl
+        )
+        .containsExactlyInAnyOrder(
+            tuple(
+                String.valueOf(wellboreWithAppointment.wellboreId().id()),
+                wellboreWithAppointment.name(),
+                appointedOperator.name(),
+                AppointmentType.NOMINATED,
+                wellboreAppointment.getAppointmentDate().toLocalDate(),
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(wellboreWithAppointment.wellboreId().id()))
+                    )
+                )
+            ),
+            tuple(
+                String.valueOf(noAppointmentWellbore.wellboreId().id()),
+                noAppointmentWellbore.name(),
+                "No wellbore operator",
+                null,
+                null,
+                ReverseRouter.route(on(AppointmentTimelineController.class)
+                    .renderWellboreAppointmentTimeline(
+                        new PortalAssetId(String.valueOf(noAppointmentWellbore.wellboreId().id()))
+                    )
+                )
+            )
+
+        );
+
   }
 }

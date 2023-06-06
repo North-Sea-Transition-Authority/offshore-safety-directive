@@ -89,6 +89,7 @@ class SystemOfRecordSearchFormTest {
         .withAppointedOperatorId(inputToTest)
         .withWellbore(inputToTest)
         .withInstallation(inputToTest)
+        .withLicence(inputToTest)
         .build();
 
     assertThat(searchForm).hasAllNullFieldsOrProperties();
@@ -98,21 +99,24 @@ class SystemOfRecordSearchFormTest {
   void build_whenInputNotBlank_thenValueReturned() {
 
     var searchForm = SystemOfRecordSearchForm.builder()
-        .withAppointedOperatorId("123")
-        .withWellbore("456")
-        .withInstallation("789")
+        .withAppointedOperatorId("100")
+        .withWellbore("200")
+        .withInstallation("300")
+        .withLicence("400")
         .build();
 
     assertThat(searchForm)
         .extracting(
             SystemOfRecordSearchForm::getAppointedOperatorId,
             SystemOfRecordSearchForm::getWellboreId,
-            SystemOfRecordSearchForm::getInstallationId
+            SystemOfRecordSearchForm::getInstallationId,
+            SystemOfRecordSearchForm::getLicenceId
         )
         .containsExactly(
-            123,
-            456,
-            789
+            100,
+            200,
+            300,
+            400
         );
   }
 

@@ -15,6 +15,8 @@ public class SystemOfRecordSearchForm {
 
   private Integer installationId;
 
+  private Integer licenceId;
+
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
   }
@@ -37,6 +39,14 @@ public class SystemOfRecordSearchForm {
 
   public void setInstallationId(Integer installationId) {
     this.installationId = installationId;
+  }
+
+  public Integer getLicenceId() {
+    return licenceId;
+  }
+
+  public void setLicenceId(Integer licenceId) {
+    this.licenceId = licenceId;
   }
 
   /**
@@ -81,6 +91,8 @@ public class SystemOfRecordSearchForm {
 
     private Integer installation;
 
+    private Integer licence;
+
     Builder withAppointedOperatorId(String appointedOperatorId) {
       this.appointedOperator = (StringUtils.isNotBlank(appointedOperatorId))
           ? Integer.parseInt(appointedOperatorId)
@@ -102,11 +114,19 @@ public class SystemOfRecordSearchForm {
       return this;
     }
 
+    Builder withLicence(String licenceId) {
+      this.licence = (StringUtils.isNotBlank(licenceId))
+          ? Integer.parseInt(licenceId)
+          : null;
+      return this;
+    }
+
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
       form.setAppointedOperatorId(appointedOperator);
       form.setWellboreId(wellbore);
       form.setInstallationId(installation);
+      form.setLicenceId(licence);
       return form;
     }
   }

@@ -32,7 +32,7 @@ class AppointmentQueryServiceTest {
   void search_whenNoResults_thenEmptyListReturned() {
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
-        new SystemOfRecordSearchForm()
+        SystemOfRecordSearchFilter.builder().build()
     );
     assertThat(resultingAppointments).isEmpty();
   }
@@ -80,7 +80,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
-        new SystemOfRecordSearchForm()
+        SystemOfRecordSearchFilter.builder().build()
     );
 
     assertThat(resultingAppointments)
@@ -108,7 +108,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        new SystemOfRecordSearchForm()
+        SystemOfRecordSearchFilter.builder().build()
     );
 
     assertThat(resultingAppointments).isEmpty();
@@ -149,7 +149,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        new SystemOfRecordSearchForm()
+        SystemOfRecordSearchFilter.builder().build()
     );
 
     assertThat(resultingAppointments)
@@ -162,8 +162,8 @@ class AppointmentQueryServiceTest {
 
     var filteredAppointedOperatorId = 10;
 
-    // given a search form with an appointed operator filter
-    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+    // given a search filter with an appointed operator filter
+    var searchFilter = SystemOfRecordSearchFilter.builder()
         .withAppointedOperatorId(filteredAppointedOperatorId)
         .build();
 
@@ -203,7 +203,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION, PortalAssetType.WELLBORE),
-        searchForm
+        searchFilter
     );
 
     // then the resulting search items will only be appointments for the filtered operator
@@ -219,7 +219,7 @@ class AppointmentQueryServiceTest {
     var filteredAppointedOperatorId = 10;
 
     // given a search form with an appointed operator filter
-    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilter = SystemOfRecordSearchFilter.builder()
         .withAppointedOperatorId(filteredAppointedOperatorId)
         .build();
 
@@ -242,7 +242,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        searchForm
+        searchFilter
     );
 
     // then no resulting search items are returned
@@ -253,7 +253,7 @@ class AppointmentQueryServiceTest {
   void search_whenNoAppointedOperatorFilter_thenResultsReturned() {
 
     // given a search form without an appointed operator filter
-    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilter = SystemOfRecordSearchFilter.builder()
         .withAppointedOperatorId(null)
         .build();
 
@@ -276,7 +276,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        searchForm
+        searchFilter
     );
 
     // then appointments returned regardless of operator
@@ -289,7 +289,7 @@ class AppointmentQueryServiceTest {
   void search_whenWellboreIdFilterAndNoMatchingAppointments_thenEmptyListReturned() {
 
     // given a search form with a wellbore ID provided
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithWellboreId = SystemOfRecordSearchFilter.builder()
         .withWellboreId(100)
         .build();
 
@@ -313,7 +313,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        searchFormWithWellboreId
+        searchFilterWithWellboreId
     );
 
     assertThat(resultingAppointments).isEmpty();
@@ -325,7 +325,7 @@ class AppointmentQueryServiceTest {
     var filteredWellboreId = 100;
 
     // given a search form with a wellbore ID provided
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithWellboreId = SystemOfRecordSearchFilter.builder()
         .withWellboreId(filteredWellboreId)
         .build();
 
@@ -349,7 +349,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        searchFormWithWellboreId
+        searchFilterWithWellboreId
     );
 
     assertThat(resultingAppointments)
@@ -371,7 +371,7 @@ class AppointmentQueryServiceTest {
     var filteredWellboreId = 100;
 
     // given a search form with a wellbore ID provided
-    var searchFormWithWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithWellboreId = SystemOfRecordSearchFilter.builder()
         .withWellboreId(filteredWellboreId)
         .build();
 
@@ -414,7 +414,7 @@ class AppointmentQueryServiceTest {
     // and the restrictions provided by the consumer includes other asset types that are not wellbores
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE, PortalAssetType.INSTALLATION),
-        searchFormWithWellboreId
+        searchFilterWithWellboreId
     );
 
     assertThat(resultingAppointments)
@@ -434,7 +434,7 @@ class AppointmentQueryServiceTest {
   void search_whenNoWellboreIdFilter_thenResultsReturned() {
 
     // given a search form without a wellbore ID provided
-    var searchFormWithoutWellboreId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithoutWellboreId = SystemOfRecordSearchFilter.builder()
         .withWellboreId(null)
         .build();
 
@@ -458,7 +458,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
-        searchFormWithoutWellboreId
+        searchFilterWithoutWellboreId
     );
 
     // then search items are still returned
@@ -479,7 +479,7 @@ class AppointmentQueryServiceTest {
   void search_whenInstallationIdFilterAndNoMatchingAppointments_thenEmptyListReturned() {
 
     // given a search form with an installation ID provided
-    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
         .withInstallationId(100)
         .build();
 
@@ -503,7 +503,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
-        searchFormWithInstallationId
+        searchFilterWithInstallationId
     );
 
     assertThat(resultingAppointments).isEmpty();
@@ -515,7 +515,7 @@ class AppointmentQueryServiceTest {
     var filteredInstallationId = 100;
 
     // given a search form with an installation ID provided
-    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
         .withInstallationId(filteredInstallationId)
         .build();
 
@@ -539,7 +539,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
-        searchFormWithInstallationId
+        searchFilterWithInstallationId
     );
 
     assertThat(resultingAppointments)
@@ -561,7 +561,7 @@ class AppointmentQueryServiceTest {
     var filteredInstallationId = 100;
 
     // given a search form with an installation ID provided
-    var searchFormWithInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
         .withInstallationId(filteredInstallationId)
         .build();
 
@@ -604,7 +604,7 @@ class AppointmentQueryServiceTest {
     // and the restrictions provided by the consumer includes other asset types that are not installations
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE, PortalAssetType.INSTALLATION),
-        searchFormWithInstallationId
+        searchFilterWithInstallationId
     );
 
     assertThat(resultingAppointments)
@@ -624,7 +624,7 @@ class AppointmentQueryServiceTest {
   void search_whenNoInstallationIdFilter_thenResultsReturned() {
 
     // given a search form without an installation ID provided
-    var searchFormWithoutInstallationId = SystemOfRecordSearchFormTestUtil.builder()
+    var searchFilterWithoutInstallationId = SystemOfRecordSearchFilter.builder()
         .withInstallationId(null)
         .build();
 
@@ -648,7 +648,7 @@ class AppointmentQueryServiceTest {
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
-        searchFormWithoutInstallationId
+        searchFilterWithoutInstallationId
     );
 
     // then search items are still returned

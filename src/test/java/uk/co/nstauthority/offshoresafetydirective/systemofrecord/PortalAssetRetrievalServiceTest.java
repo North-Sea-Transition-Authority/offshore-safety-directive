@@ -12,6 +12,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -30,6 +33,9 @@ class PortalAssetRetrievalServiceTest {
 
   @Mock
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+
+  @Mock
+  private LicenceQueryService licenceQueryService;
 
   @InjectMocks
   private PortalAssetRetrievalService portalAssetRetrievalService;
@@ -116,5 +122,33 @@ class PortalAssetRetrievalServiceTest {
     var resultingSubarea = portalAssetRetrievalService.getLicenceBlockSubarea(licenceBlockSubareaId);
 
     assertThat(resultingSubarea).contains(expectedSubarea);
+  }
+
+  @Test
+  void getLicence_whenMatchingLicence_thenPopulatedOptional() {
+
+    var licenceId = new LicenceId(123);
+
+    var expectedLicence = LicenceDtoTestUtil.builder().build();
+
+    given(licenceQueryService.getLicenceById(licenceId))
+        .willReturn(Optional.of(expectedLicence));
+
+    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId);
+
+    assertThat(resultingLicence).contains(expectedLicence);
+  }
+
+  @Test
+  void getLicence_whenNoMatchingLicence_thenEmptyOptional() {
+
+    var licenceId = new LicenceId(123);
+
+    given(licenceQueryService.getLicenceById(licenceId))
+        .willReturn(Optional.empty());
+
+    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId);
+
+    assertThat(resultingLicence).isEmpty();
   }
 }

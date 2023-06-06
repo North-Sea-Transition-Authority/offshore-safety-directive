@@ -4,6 +4,8 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +18,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -143,6 +147,7 @@ public class SystemOfRecordSearchController {
     if (systemOfRecordSearchUrlParams != null) {
       searchForm = SystemOfRecordSearchForm.builder()
           .withWellbore(systemOfRecordSearchUrlParams.wellbore())
+          .withLicence(systemOfRecordSearchUrlParams.licence())
           .build();
     } else {
       searchForm = new SystemOfRecordSearchForm();
@@ -162,6 +167,7 @@ public class SystemOfRecordSearchController {
 
     var searchParams = SystemOfRecordSearchUrlParams.builder()
         .withWellboreId(searchForm.getWellboreId())
+        .withLicenceId(searchForm.getLicenceId())
         .build();
 
     return ReverseRouter.redirect(
@@ -183,12 +189,16 @@ public class SystemOfRecordSearchController {
 
   private ModelAndView getBaseSearchModelAndView(String modelAndViewName, SystemOfRecordSearchForm searchForm) {
 
-    PortalOrganisationDto filteredAppointedOperator = null;
+    Map<String, String> filteredAppointedOperator = Collections.emptyMap();
 
     if (searchForm.getAppointedOperatorId() != null) {
       filteredAppointedOperator = portalOrganisationUnitQueryService
           .getOrganisationById(searchForm.getAppointedOperatorId())
-          .orElse(null);
+          .stream()
+          .collect(Collectors.toMap(
+              operator -> String.valueOf(operator.id()),
+              PortalOrganisationDto::name
+          ));
     }
 
     return new ModelAndView(modelAndViewName)
@@ -209,12 +219,27 @@ public class SystemOfRecordSearchController {
   private ModelAndView getWellboreSearchModelAndView(SystemOfRecordSearchForm searchForm,
                                                      List<AppointmentSearchItemDto> appointments) {
 
-    WellDto filteredWellbore = null;
+    Map<String, String> filteredWellbore = Collections.emptyMap();
+    Map<String, String> filteredLicence = Collections.emptyMap();
 
     if (searchForm.getWellboreId() != null) {
       filteredWellbore = portalAssetRetrievalService
           .getWellbore(new WellboreId(searchForm.getWellboreId()))
-          .orElse(null);
+          .stream()
+          .collect(Collectors.toMap(
+              wellbore -> String.valueOf(wellbore.wellboreId().id()),
+              WellDto::name
+          ));
+    }
+
+    if (searchForm.getLicenceId() != null) {
+      filteredLicence = portalAssetRetrievalService
+          .getLicence(new LicenceId(searchForm.getLicenceId()))
+          .stream()
+          .collect(Collectors.toMap(
+              licence -> String.valueOf(licence.licenceId().id()),
+              licence -> licence.licenceReference().value()
+          ));
     }
 
     return getBaseSearchModelAndView(WELLBORES_MODEL_AND_VIEW_NAME, searchForm)
@@ -223,18 +248,27 @@ public class SystemOfRecordSearchController {
         .addObject(
             "wellboreRestUrl",
             RestApiUtil.route(on(WellRestController.class).searchWells(null))
-        );
+        )
+        .addObject(
+            "licenceRestUrl",
+            RestApiUtil.route(on(LicenceRestController.class).searchLicencesByReference(null))
+        )
+        .addObject("filteredLicence", filteredLicence);
   }
 
   private ModelAndView getInstallationSearchModelAndView(SystemOfRecordSearchForm searchForm,
                                                          List<AppointmentSearchItemDto> appointments) {
 
-    InstallationDto filteredInstallation = null;
+    Map<String, String> filteredInstallation = Collections.emptyMap();
 
     if (searchForm.getInstallationId() != null) {
       filteredInstallation = portalAssetRetrievalService
           .getInstallation(new InstallationId(searchForm.getInstallationId()))
-          .orElse(null);
+          .stream()
+          .collect(Collectors.toMap(
+              installation -> String.valueOf(installation.id()),
+              InstallationDto::name
+          ));
     }
 
     return getBaseSearchModelAndView(INSTALLATIONS_MODEL_AND_VIEW_NAME, searchForm)

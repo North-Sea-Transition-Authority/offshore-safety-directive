@@ -13,15 +13,19 @@ class SystemOfRecordSearchUrlParamsTest {
   void getUrlQueryParams_whenNoNullInputs_thenAllFieldValuesInMap() {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withWellboreId(123)
-        .withAppointedOperatorId(456)
+        .withWellboreId(100)
+        .withAppointedOperatorId(200)
+        .withInstallationId(300)
+        .withLicenceId(400)
         .build();
 
     assertThat(searchUrlParams.getUrlQueryParams())
         .containsExactlyInAnyOrderEntriesOf(
             Map.of(
-                "wellbore", List.of("123"),
-                "appointedOperator", List.of("456")
+                "wellbore", List.of("100"),
+                "appointedOperator", List.of("200"),
+                "installation", List.of("300"),
+                "licence", List.of("400")
             )
         );
   }
@@ -52,6 +56,8 @@ class SystemOfRecordSearchUrlParamsTest {
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
         .withAppointedOperatorId(null)
         .withWellboreId(null)
+        .withInstallationId(null)
+        .withLicenceId(null)
         .build();
 
     assertThat(searchUrlParams).hasNoNullFieldsOrProperties();
@@ -59,7 +65,9 @@ class SystemOfRecordSearchUrlParamsTest {
     assertThat(searchUrlParams)
         .extracting(
             SystemOfRecordSearchUrlParams::appointedOperator,
-            SystemOfRecordSearchUrlParams::wellbore
+            SystemOfRecordSearchUrlParams::wellbore,
+            SystemOfRecordSearchUrlParams::installation,
+            SystemOfRecordSearchUrlParams::licence
         )
         .allMatch(o -> o.equals(""));
   }
@@ -68,8 +76,10 @@ class SystemOfRecordSearchUrlParamsTest {
   void build_whenNonNullInput_thenPopulatedStringReturned() {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withAppointedOperatorId(123)
-        .withWellboreId(456)
+        .withAppointedOperatorId(100)
+        .withWellboreId(200)
+        .withInstallationId(300)
+        .withLicenceId(400)
         .build();
 
     assertThat(searchUrlParams).hasNoNullFieldsOrProperties();
@@ -77,11 +87,15 @@ class SystemOfRecordSearchUrlParamsTest {
     assertThat(searchUrlParams)
         .extracting(
             SystemOfRecordSearchUrlParams::appointedOperator,
-            SystemOfRecordSearchUrlParams::wellbore
+            SystemOfRecordSearchUrlParams::wellbore,
+            SystemOfRecordSearchUrlParams::installation,
+            SystemOfRecordSearchUrlParams::licence
         )
         .containsExactly(
-            "123",
-            "456"
+            "100",
+            "200",
+            "300",
+            "400"
         );
   }
 
