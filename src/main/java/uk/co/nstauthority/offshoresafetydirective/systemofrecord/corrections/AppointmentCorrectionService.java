@@ -17,12 +17,18 @@ class AppointmentCorrectionService {
     this.appointmentUpdateService = appointmentUpdateService;
   }
 
+  AppointmentCorrectionForm getForm(AppointmentDto appointment) {
+    var form = new AppointmentCorrectionForm();
+    form.setAppointedOperatorId(Integer.valueOf(appointment.appointedOperatorId().id()));
+    return form;
+  }
+
   @Transactional
   public void updateCorrection(AppointmentDto appointmentDto, AppointmentCorrectionForm appointmentCorrectionForm) {
     var updateDto = new AppointmentDto(
         appointmentDto.appointmentId(),
         appointmentDto.portalAssetId(),
-        new AppointedOperatorId(appointmentCorrectionForm.getNominatedOperatorId().toString()),
+        new AppointedOperatorId(appointmentCorrectionForm.getAppointedOperatorId().toString()),
         appointmentDto.appointmentFromDate(),
         appointmentDto.appointmentToDate(),
         appointmentDto.appointmentCreatedDate(),

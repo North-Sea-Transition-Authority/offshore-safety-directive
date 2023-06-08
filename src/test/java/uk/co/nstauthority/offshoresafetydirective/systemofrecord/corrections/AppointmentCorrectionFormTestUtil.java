@@ -14,19 +14,19 @@ class AppointmentCorrectionFormTestUtil {
 
   static class Builder {
 
-    private Integer nominatedOperatorId = 10;
+    private Integer appointedOperatorId = 10;
 
     private Builder() {
     }
 
-    Builder withNominatedOperatorId(Integer nominatedOperatorId) {
-      this.nominatedOperatorId = nominatedOperatorId;
+    Builder withAppointedOperatorId(Integer appointedOperatorId) {
+      this.appointedOperatorId = appointedOperatorId;
       return this;
     }
 
     AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
-      form.setNominatedOperatorId(nominatedOperatorId);
+      form.setAppointedOperatorId(appointedOperatorId);
       return form;
     }
   }

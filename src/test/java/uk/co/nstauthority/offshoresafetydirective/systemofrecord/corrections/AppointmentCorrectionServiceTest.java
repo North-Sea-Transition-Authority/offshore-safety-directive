@@ -44,7 +44,7 @@ class AppointmentCorrectionServiceTest {
         .build();
 
     var form = new AppointmentCorrectionForm();
-    form.setNominatedOperatorId(123);
+    form.setAppointedOperatorId(123);
 
     appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
 
@@ -56,7 +56,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("portalAssetId", originalAppointmentDto.portalAssetId())
         .hasFieldOrPropertyWithValue(
             "appointedOperatorId",
-            new AppointedOperatorId(form.getNominatedOperatorId().toString())
+            new AppointedOperatorId(form.getAppointedOperatorId().toString())
         )
         .hasFieldOrPropertyWithValue("appointmentFromDate", originalAppointmentDto.appointmentFromDate())
         .hasFieldOrPropertyWithValue("appointmentToDate", originalAppointmentDto.appointmentToDate())
@@ -64,6 +64,20 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("appointmentType", originalAppointmentDto.appointmentType())
         .hasFieldOrPropertyWithValue("legacyNominationReference", originalAppointmentDto.legacyNominationReference())
         .hasFieldOrPropertyWithValue("nominationId", originalAppointmentDto.nominationId())
+        .hasAssertedAllProperties();
+  }
+
+  @Test
+  void getForm_assertMappings() {
+
+    var appointment = AppointmentDtoTestUtil.builder()
+        .withAppointedOperatorId(500)
+        .build();
+
+    var resultingForm = appointmentCorrectionService.getForm(appointment);
+
+    PropertyObjectAssert.thenAssertThat(resultingForm)
+        .hasFieldOrPropertyWithValue("appointedOperatorId", 500)
         .hasAssertedAllProperties();
   }
 }

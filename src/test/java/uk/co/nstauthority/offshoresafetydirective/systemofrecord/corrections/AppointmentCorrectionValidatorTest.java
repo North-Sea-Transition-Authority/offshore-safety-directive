@@ -46,7 +46,7 @@ class AppointmentCorrectionValidatorTest {
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOperatorId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult);
@@ -66,7 +66,7 @@ class AppointmentCorrectionValidatorTest {
 
     assertThat(errorMessages)
         .containsExactly(
-            entry("nominatedOperatorId", Set.of("Select an operator"))
+            entry("appointedOperatorId", Set.of("Select the appointed operator"))
         );
   }
 
@@ -74,12 +74,12 @@ class AppointmentCorrectionValidatorTest {
   void validate_whenAppointedOrganisationNoLongerInPortal_thenError() {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
-        .withNominatedOperatorId(100)
+        .withAppointedOperatorId(100)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOperatorId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.empty());
 
     appointmentCorrectionValidator.validate(form, bindingResult);
@@ -88,7 +88,7 @@ class AppointmentCorrectionValidatorTest {
 
     assertThat(errorMessages)
         .containsExactly(
-            entry("nominatedOperatorId", Set.of("Select a valid operator"))
+            entry("appointedOperatorId", Set.of("Select a valid operator"))
         );
   }
 
@@ -96,7 +96,7 @@ class AppointmentCorrectionValidatorTest {
   void validate_whenAppointedOrganisationIsDuplicate_thenError() {
 
   var form = AppointmentCorrectionFormTestUtil.builder()
-      .withNominatedOperatorId(100)
+      .withAppointedOperatorId(100)
       .build();
 
   var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -105,7 +105,7 @@ class AppointmentCorrectionValidatorTest {
       .isDuplicate(true)
       .build();
 
-  when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOperatorId()))
+  when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
       .thenReturn(Optional.of(duplicatePortalOrganisationUnit));
 
   appointmentCorrectionValidator.validate(form, bindingResult);
@@ -114,7 +114,7 @@ class AppointmentCorrectionValidatorTest {
 
   assertThat(errorMessages)
       .containsExactly(
-          entry("nominatedOperatorId", Set.of("Select a valid operator"))
+          entry("appointedOperatorId", Set.of("Select a valid operator"))
       );
   }
 

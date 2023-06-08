@@ -28,7 +28,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.ObjectError;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -97,6 +97,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var assetDto = AssetDtoTestUtil.builder().build();
     when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
         .thenReturn(Optional.of(assetDto));
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(new AppointmentCorrectionForm());
 
     new HasPermissionSecurityTestUtil.SmokeTester(mockMvc, teamMemberService)
         .withUser(USER)
@@ -175,6 +178,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withAssetName(assetName)
         .build();
+
     when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
@@ -183,6 +187,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.empty());
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(new AppointmentCorrectionForm());
 
     mockMvc.perform(get(
             ReverseRouter.route(on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -192,16 +199,22 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderCorrection_whenNoPreselectedOperator_verifyNotMapped() throws Exception {
+  void renderCorrection_whenNoOperatorInForm_thenPreSelectedOperatorNotPopulated() throws Exception {
+
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId.id())
         .build();
+
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
 
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(new AppointmentCorrectionForm());
+
     var assetDto = AssetDtoTestUtil.builder().build();
+
     when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
@@ -209,17 +222,60 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
     var assetName = "asset name";
+
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.of(new AssetName(assetName)));
-
-    var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
-
-    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
-        .thenReturn(Optional.empty());
 
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("preselectedOperator", Map.of()));
+  }
+
+  @Test
+  void renderCorrection_whenOperatorInFormNotFound_thenPreSelectedOperatorNotPopulated() throws Exception {
+
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var operatorId = 200;
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .build();
+
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(operatorId)
+        .build();
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(form);
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+        .thenReturn(Optional.empty());
+
+    var assetDto = AssetDtoTestUtil.builder().build();
+
+    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+        .thenReturn(Optional.of(assetDto));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var assetName = "asset name";
+
+    when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
+        .thenReturn(Optional.of(new AssetName(assetName)));
+
+    mockMvc.perform(
+        get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)
+            )
+        )
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(model().attribute("preselectedOperator", Map.of()));
@@ -251,6 +307,13 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
         .thenReturn(Optional.of(organisationDto));
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(expectedOrganisationId)
+        .build();
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(form);
 
     mockMvc.perform(get(
             ReverseRouter.route(
@@ -344,9 +407,12 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(new AppointmentCorrectionForm());
+
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
-      bindingResult.addError(new ObjectError("error", "error"));
+      bindingResult.addError(new FieldError("object", "field", "message"));
       return invocation;
     }).when(appointmentCorrectionValidator).validate(any(AppointmentCorrectionForm.class), any());
 

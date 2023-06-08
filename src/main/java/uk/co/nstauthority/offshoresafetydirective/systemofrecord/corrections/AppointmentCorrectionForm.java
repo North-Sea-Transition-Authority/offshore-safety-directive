@@ -2,13 +2,13 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 public class AppointmentCorrectionForm {
 
-  private Integer nominatedOperatorId;
+  private Integer appointedOperatorId;
 
-  public Integer getNominatedOperatorId() {
-    return nominatedOperatorId;
+  public Integer getAppointedOperatorId() {
+    return appointedOperatorId;
   }
 
-  public void setNominatedOperatorId(Integer nominatedOperatorId) {
-    this.nominatedOperatorId = nominatedOperatorId;
+  public void setAppointedOperatorId(Integer appointedOperatorId) {
+    this.appointedOperatorId = appointedOperatorId;
   }
 }

@@ -27,19 +27,19 @@ class AppointmentCorrectionValidator implements Validator {
 
     ValidationUtils.rejectIfEmpty(
         bindingResult,
-        "nominatedOperatorId",
-        "nominatedOperatorId.required",
-        "Select an operator"
+        "appointedOperatorId",
+        "appointedOperatorId.required",
+        "Select the appointed operator"
     );
 
-    if (form.getNominatedOperatorId() != null) {
+    if (form.getAppointedOperatorId() != null) {
 
-      var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOperatorId());
+      var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId());
 
       if (operator.isEmpty() || operator.get().isDuplicate()) {
         errors.rejectValue(
-            "nominatedOperatorId",
-            "nominatedOperatorId.invalid",
+            "appointedOperatorId",
+            "appointedOperatorId.invalid",
             "Select a valid operator"
         );
       }

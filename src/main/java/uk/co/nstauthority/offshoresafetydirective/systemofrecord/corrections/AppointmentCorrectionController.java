@@ -74,7 +74,7 @@ public class AppointmentCorrectionController {
 
     var appointmentDto = getAppointmentDto(appointmentId);
     var assetDto = getAssetDto(appointmentDto.portalAssetId());
-    var form = new AppointmentCorrectionForm();
+    var form = appointmentCorrectionService.getForm(appointmentDto);
 
     return getModelAndView(appointmentDto, assetDto, form);
   }
@@ -132,7 +132,7 @@ public class AppointmentCorrectionController {
             .submitCorrection(appointmentDto.appointmentId(), null, null, null)))
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchAllPortalOrganisations(null)))
-        .addObject("preselectedOperator", getPreselectedOperator(appointmentDto))
+        .addObject("preselectedOperator", getPreselectedOperator(form))
         .addObject("form", form);
   }
 
@@ -141,9 +141,8 @@ public class AppointmentCorrectionController {
         .orElse(assetDto.assetName());
   }
 
-  private Map<String, String> getPreselectedOperator(AppointmentDto appointmentDto) {
-    var operatorId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
-    var operator = portalOrganisationUnitQueryService.getOrganisationById(operatorId);
+  private Map<String, String> getPreselectedOperator(AppointmentCorrectionForm form) {
+    var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId());
     return operator.stream()
         .collect(Collectors.toMap(
             portalOrganisationDto -> String.valueOf(portalOrganisationDto.id()),
