@@ -111,6 +111,13 @@ The application will be running on `localhost:8080/wios/<endpoint>`
 
 ## Development setup
 
+### Setup local development users
+
+A SQL script exists in `/devtools/setup_test_users/sql` which will create users in the relevant teams 
+to use for local development. The script contains the email addresses and 
+[this page](https://confluence.fivium.co.uk/display/BESPOKE/WIOS+Testing+users) contains a 
+summary of the roles for the users.
+
 ### Checkstyle
 
 1. In Intellij install the Checkstyle-IDEA plugin (from third-party repositories)
