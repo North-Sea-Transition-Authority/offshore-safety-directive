@@ -14,6 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasUpdateRequest;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -46,7 +47,10 @@ public class NominationStartUpdateController {
   }
 
   @GetMapping
-  @HasNominationStatus(statuses = {NominationStatus.DRAFT, NominationStatus.SUBMITTED})
+  @HasNominationStatus(
+      statuses = { NominationStatus.DRAFT, NominationStatus.SUBMITTED },
+      fetchType = NominationDetailFetchType.LATEST
+  )
   public ModelAndView startUpdateEntryPoint(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -70,7 +74,7 @@ public class NominationStartUpdateController {
   }
 
   @GetMapping("/start")
-  @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+  @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
   public ModelAndView renderStartUpdate(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -92,7 +96,7 @@ public class NominationStartUpdateController {
   }
 
   @PostMapping("/start")
-  @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+  @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
   public ModelAndView startUpdate(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = getLatestNominationDetail(nominationId);
     nominationUpdateService.createDraftUpdate(nominationDetail);

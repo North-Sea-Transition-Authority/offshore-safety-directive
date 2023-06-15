@@ -18,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNoUpdateRequest;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -37,9 +38,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/manage")
+@RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+@HasNominationStatus(
+    statuses = NominationStatus.SUBMITTED,
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 @HasNoUpdateRequest
 public class NominationDecisionController {
 

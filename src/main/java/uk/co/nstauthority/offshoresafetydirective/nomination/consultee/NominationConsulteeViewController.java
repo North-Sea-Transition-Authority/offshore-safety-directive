@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -18,10 +19,15 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/consultation")
 @HasPermission(permissions = {RolePermission.CONSULTEE_VIEW_NOMINATIONS})
-@HasNominationStatus(statuses = {
-    NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
-    NominationStatus.WITHDRAWN
-})
+@HasNominationStatus(
+    statuses = {
+        NominationStatus.SUBMITTED,
+        NominationStatus.CLOSED,
+        NominationStatus.AWAITING_CONFIRMATION,
+        NominationStatus.WITHDRAWN
+    },
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 class NominationConsulteeViewController {
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;

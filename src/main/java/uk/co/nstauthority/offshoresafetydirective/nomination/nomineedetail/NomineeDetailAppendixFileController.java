@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
@@ -34,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/nominee-details/{nominationDetailId}/file")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.DRAFT)
+@HasNominationStatus(statuses = NominationStatus.DRAFT, fetchType = NominationDetailFetchType.LATEST)
 public class NomineeDetailAppendixFileController {
 
   public static final FilePurpose PURPOSE = new FilePurpose("APPENDIX_C_DOCUMENT");
@@ -93,13 +94,11 @@ public class NomineeDetailAppendixFileController {
                                                NominationDetailId nominationDetailId) {
     return nominationDetailService.getNominationDetail(nominationDetailId)
         .filter(nominationDetail -> nominationDetail.getNomination().getId().equals(nominationId.id()))
-        .orElseThrow(() -> {
-          throw new OsdEntityNotFoundException(
-              "Cannot find latest NominationDetail with ID [%d] for Nomination [%d]".formatted(
-                  nominationDetailId.id(),
-                  nominationId.id()
-              ));
-        });
+        .orElseThrow(() -> new OsdEntityNotFoundException(
+            "Cannot find latest NominationDetail with ID [%d] for Nomination [%d]".formatted(
+                nominationDetailId.id(),
+                nominationId.id()
+            )));
   }
 
 }

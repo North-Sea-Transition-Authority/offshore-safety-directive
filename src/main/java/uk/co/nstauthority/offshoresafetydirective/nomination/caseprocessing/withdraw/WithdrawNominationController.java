@@ -35,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/manage")
+@RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(
     statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION},

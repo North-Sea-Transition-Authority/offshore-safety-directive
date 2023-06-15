@@ -17,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -29,9 +30,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/manage")
+@RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.SUBMITTED)
+@HasNominationStatus(
+    statuses = NominationStatus.SUBMITTED,
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 public class NominationPortalReferenceController {
 
   public static final String PEARS_FORM_NAME = "pearsPortalReferenceForm";

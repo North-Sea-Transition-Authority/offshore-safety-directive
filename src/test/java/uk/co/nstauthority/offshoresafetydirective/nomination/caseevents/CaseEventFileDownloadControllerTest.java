@@ -23,9 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -33,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -67,12 +68,14 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withUuid(caseEventUuid)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        CaseEventFileDownloadController.ALLOWED_STATUSES
-    )).thenReturn(Optional.of(nominationDetail));
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
     when(fileControllerHelperService.downloadFile(
@@ -89,7 +92,9 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(caseEvent));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
-        .withPermittedNominationStatuses(CaseEventFileDownloadController.ALLOWED_STATUSES)
+        .withPermittedNominationStatuses(
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        )
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
@@ -127,12 +132,14 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withUuid(caseEventUuid)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        CaseEventFileDownloadController.ALLOWED_STATUSES
-    )).thenReturn(Optional.of(nominationDetail));
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
     when(fileControllerHelperService.downloadFile(
@@ -186,16 +193,18 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     var caseEventUuid = UUID.randomUUID();
     var caseEventId = new CaseEventId(caseEventUuid);
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     var caseEvent = CaseEventTestUtil.builder()
         .withUuid(caseEventUuid)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        CaseEventFileDownloadController.ALLOWED_STATUSES
-    )).thenReturn(Optional.of(nominationDetail));
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
         .thenReturn(Optional.of(caseEvent));
@@ -238,21 +247,26 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
         .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
 
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
-        .withNominationId(NOMINATION_ID)
-        .build();
-
     var fileUuid = UUID.randomUUID();
     var caseEventUuid = UUID.randomUUID();
     var caseEventId = new CaseEventId(caseEventUuid);
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
+    // return a valid nomination detail in order to pass the @HasNominationStatus check
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        CaseEventFileDownloadController.ALLOWED_STATUSES
-    )).thenReturn(Optional.empty());
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(
+            NominationDetailTestUtil.builder()
+                .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+                .withNominationId(NOMINATION_ID)
+                .build()
+        ));
+
+    // mock that is important for the test to check that the controller handles a nomination not being found
+    // if the @HasNominationStatus is ever removed
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
             on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
@@ -275,12 +289,14 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     var caseEventUuid = UUID.randomUUID();
     var caseEventId = new CaseEventId(caseEventUuid);
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        CaseEventFileDownloadController.ALLOWED_STATUSES
-    )).thenReturn(Optional.of(nominationDetail));
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
         .thenReturn(Optional.empty());

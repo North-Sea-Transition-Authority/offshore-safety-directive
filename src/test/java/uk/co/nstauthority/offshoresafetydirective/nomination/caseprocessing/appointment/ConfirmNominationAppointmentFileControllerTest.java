@@ -31,19 +31,20 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadResult;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -80,7 +81,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
     var fileId = UUID.randomUUID();
     var fileName = "file name";
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -123,7 +128,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
     var fileId = UUID.randomUUID();
     var fileName = "file name";
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -164,7 +173,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
     var fileId = UUID.randomUUID();
     var fileName = "file name";
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -200,7 +213,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -237,7 +254,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -272,7 +293,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -299,7 +324,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -334,7 +363,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -371,7 +404,11 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,

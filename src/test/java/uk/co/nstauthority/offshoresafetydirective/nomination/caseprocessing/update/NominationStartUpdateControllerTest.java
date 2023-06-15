@@ -14,7 +14,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,21 +62,18 @@ class NominationStartUpdateControllerTest extends AbstractControllerTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
+    // for checking the nomination detail in the @HasNominationStatus annotation
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
         .thenReturn(nominationDetail);
 
+    // used in the controller to get the nomination
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
+    // used in the update request interceptor
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)
     ))
         .thenReturn(Optional.of(nominationDetail));
 

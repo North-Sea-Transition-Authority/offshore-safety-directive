@@ -31,19 +31,20 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -78,12 +79,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
         .withNominationId(NOMINATION_ID)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
 
@@ -108,12 +114,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
 
@@ -136,12 +147,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
         .withNominationId(NOMINATION_ID)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
 
@@ -181,12 +197,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
@@ -212,12 +233,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS))
@@ -241,12 +267,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     mockMvc.perform(post(ReverseRouter.route(
             on(NominationConsultationResponseFileController.class).delete(NOMINATION_ID, new UploadedFileId(fileUuid))))
@@ -280,12 +311,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
@@ -311,12 +347,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS))
@@ -340,12 +381,17 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
 
     var fileUuid = UUID.randomUUID();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");

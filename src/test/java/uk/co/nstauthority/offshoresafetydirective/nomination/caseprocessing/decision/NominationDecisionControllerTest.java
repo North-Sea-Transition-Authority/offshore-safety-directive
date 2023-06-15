@@ -88,25 +88,22 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
+    // when retrieving the nomination detail in the request
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)
-    )).thenReturn(Optional.of(nominationDetail));
-
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED)))
+    ))
         .thenReturn(Optional.of(nominationDetail));
 
+    // for checking the nomination detail in the @HasNominationStatus annotation
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
     ))
         .thenReturn(Optional.of(nominationDetail));
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
   }
 
   @SecurityTest

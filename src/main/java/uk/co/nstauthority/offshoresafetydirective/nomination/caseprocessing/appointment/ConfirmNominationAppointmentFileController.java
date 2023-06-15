@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
@@ -31,7 +32,10 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/confirm-appointment/file")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.AWAITING_CONFIRMATION)
+@HasNominationStatus(
+    statuses = NominationStatus.AWAITING_CONFIRMATION,
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 public class ConfirmNominationAppointmentFileController {
 
   public static final String PURPOSE = "APPOINTMENT_CONFIRMATION_DOCUMENT";

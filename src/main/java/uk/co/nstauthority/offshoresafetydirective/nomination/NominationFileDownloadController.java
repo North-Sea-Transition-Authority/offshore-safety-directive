@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -23,12 +24,15 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
     RolePermission.VIEW_NOMINATIONS,
     RolePermission.CONSULTEE_VIEW_NOMINATIONS
 })
-@HasNominationStatus(statuses = {
-    NominationStatus.SUBMITTED,
-    NominationStatus.AWAITING_CONFIRMATION,
-    NominationStatus.WITHDRAWN,
-    NominationStatus.CLOSED
-})
+@HasNominationStatus(
+    statuses = {
+        NominationStatus.SUBMITTED,
+        NominationStatus.AWAITING_CONFIRMATION,
+        NominationStatus.WITHDRAWN,
+        NominationStatus.CLOSED
+    },
+    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
+)
 public class NominationFileDownloadController {
 
   private final FileControllerHelperService fileControllerHelperService;
