@@ -6,6 +6,11 @@ plugins {
 	id 'checkstyle'
 	id 'jacoco'
 	id 'maven-publish'
+  id 'nu.studer.jooq' version '8.1'
+  //docker-compose needed to startup a postgres container for Jooq codegen
+  id 'com.avast.gradle.docker-compose' version "0.16.9"
+  //Flyway added manually here, as it's used for the Jooq codegen
+  id "org.flywaydb.flyway" version "9.12.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -52,6 +57,8 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 
 	implementation 'org.springframework.boot:spring-boot-starter-jooq'
+  implementation 'org.jooq:jooq-codegen'
+  implementation 'org.jooq:jooq-meta'
 
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
@@ -71,6 +78,7 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'
+	jooqGenerator 'org.postgresql:postgresql'
 
 	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
 	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
@@ -95,6 +103,66 @@ tasks {
 	bootJar {
 		archiveFileName.set("${rootProject.name}.jar")
 	}
+}
+
+dockerCompose {
+  useComposeFiles = ['local-dev-compose.yml']
+}
+
+flyway {
+  user = 'osd'
+  password = 'dev'
+  schemas = ['osd']
+}
+
+//Set the url before the build to dynamically set the port
+//This must be done here, not above, as the serviceInfos object won't exist at configuration time
+flywayMigrate.doFirst {
+  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos.db.host + ':' + dockerCompose.servicesInfos.db.ports[5432] + '/osd'
+  System.setProperty('DB_URL', url)
+}
+
+jooq {
+  version = dependencyManagement.importedProperties['jooq.version']
+  configurations {
+    main {
+      generateSchemaSourceOnCompilation = false
+      generationTool {
+        jdbc {
+          driver = 'org.postgresql.Driver'
+          user = 'osd'
+          password = 'dev'
+        }
+        generator {
+          database {
+            name = 'org.jooq.meta.postgres.PostgresDatabase'
+            inputSchema = 'osd'
+          }
+          target {
+            packageName = 'uk.co.nstauthority.offshoresafetydirective.generated.jooq'
+          }
+        }
+      }
+    }
+  }
+}
+
+flywayMigrate.dependsOn(composeUp)
+
+generateJooq.dependsOn(flywayMigrate)
+
+generateJooq.finalizedBy(composeDown)
+
+generateJooq.doFirst {
+  //Jooq doesn't allow you to specify the config at runtime
+  //This will make the field modifiable so we can change the url
+  def clazz = generateJooq.class.superclass
+  def field = clazz.getDeclaredField("jooqConfiguration")
+
+  field.accessible = true
+
+  def jooqConfiguration = (org.jooq.meta.jaxb.Configuration) field.get(generateJooq)
+  jooqConfiguration.jdbc.url = System.getProperty('DB_URL')
 }
 
 sonarqube {
@@ -127,6 +195,8 @@ checkstyle {
 	ignoreFailures = false
 	maxWarnings = 0
 }
+
+checkstyleMain.exclude 'uk/co/nstauthority/offshoresafetydirective/generated/**'
 
 jacocoTestReport {
 	reports {

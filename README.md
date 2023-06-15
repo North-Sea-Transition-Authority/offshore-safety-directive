@@ -103,8 +103,11 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 - `npm install`
 - `npx gulp buildAll`
 
-### 5. Run the app
+### 5. Generate Jooq classes
+Execute the gradle task `generateJooq`. You will need to re-generate when you change the database.
+(This requires docker to be running on your machine)
 
+### 6. Run the app
 Create a run configuration for the Spring app and start the application.
 
 The application will be running on `localhost:8080/wios/<endpoint>`

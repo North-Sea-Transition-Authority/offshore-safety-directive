@@ -36,6 +36,30 @@ steps:
       - npm install
       - npx gulp buildAll
 
+  - name: build-java
+    image: quay.io/testcontainers/dind-drone-plugin
+    privileged: true
+    # See https://confluence.fivium.co.uk/display/JAVA/Testcontainers
+    volumes:
+      - name: docker-cache-overlay2
+        path: /drone/docker/overlay2
+      - name: docker-cache-image
+        path: /drone/docker/image
+    environment:
+      CI_WORKSPACE: /drone/src
+      GRADLE_USER_HOME: /drone/src/gradle_cache
+      DOCKER_CONFIG_JSON:
+        from_secret: docker_config
+      DOCKER_CONFIG: /drone/dockerconfig # testcontainers override location for Docker config JSON
+    settings:
+      storage_driver: overlay2 --dns=192.168.10.1
+      cmd:
+        - mkdir $DOCKER_CONFIG
+        - echo $DOCKER_CONFIG_JSON > $DOCKER_CONFIG/config.json
+        - chmod +x gradlew
+        - ./gradlew generateJooq checkstyleMain test bootJar
+      build_image: repo1.dev.fivium.local:5000/docker-compose-java17
+
   - name: build-backend
     image: eclipse-temurin:17-jdk
     commands:
@@ -213,6 +237,14 @@ volumes:
   - name: docker-sock
     host:
       path: /var/run/docker.sock
+
+  - name: docker-cache-overlay2
+    host:
+      path: /home/fivium/docker-drone-cache-v2/overlay2
+
+  - name: docker-cache-image
+    host:
+      path: /home/fivium/docker-drone-cache-v2/image
 
   - name: drone-trivy-cache
     host:
