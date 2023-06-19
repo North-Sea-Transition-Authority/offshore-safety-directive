@@ -7,9 +7,10 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +68,7 @@ class AppointmentCorrectionServiceTest {
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
 
-    var phaseNames = List.of("phase 1", "phase 2");
+    var phaseNames = Set.of("phase 1", "phase 2");
     form.setPhases(phaseNames);
     var assetAppointmentPhases = phaseNames.stream()
         .map(AssetAppointmentPhase::new)
@@ -155,7 +156,7 @@ class AppointmentCorrectionServiceTest {
 
     var assetPhaseNames = EnumSet.allOf(InstallationPhase.class).stream()
         .map(Enum::name)
-        .toList();
+        .collect(Collectors.toSet());
 
     var assetPhases = assetPhaseNames.stream()
         .map(AssetAppointmentPhase::new)
@@ -184,7 +185,7 @@ class AppointmentCorrectionServiceTest {
 
     var assetPhaseNames = Stream.of(InstallationPhase.DECOMMISSIONING)
         .map(Enum::name)
-        .toList();
+        .collect(Collectors.toSet());
 
     var assetPhases = assetPhaseNames.stream()
         .map(AssetAppointmentPhase::new)

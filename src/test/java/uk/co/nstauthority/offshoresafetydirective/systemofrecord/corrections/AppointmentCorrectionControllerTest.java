@@ -258,11 +258,77 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("preselectedOperator", Map.of()));
   }
 
-  @Test
-  void renderCorrection() throws Exception {
+  @ParameterizedTest
+  @EnumSource(value = PortalAssetType.class, names = "SUBAREA", mode = EnumSource.Mode.EXCLUDE)
+  void renderCorrection_excludingSubarea(PortalAssetType portalAssetType) throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var assetDto = AssetDtoTestUtil.builder().build();
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .withAssetDto(assetDto)
+        .build();
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
+
+    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+        .thenReturn(Optional.of(assetDto));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
+        .thenReturn(Optional.of(new AssetName(assetName)));
+
+    var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
+        .thenReturn(Optional.of(organisationDto));
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(expectedOrganisationId)
+        .build();
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(form);
+
+    var phaseMap = Map.of("PHASE_1", "phase 1");
+    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
+        .thenReturn(phaseMap);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/systemofrecord/correction/correctAppointment"))
+        .andExpect(model().attribute("assetName", assetName))
+        .andExpect(model().attribute("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName()))
+        .andExpect(model().attribute("submitUrl",
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null))))
+        .andExpect(model().attribute("portalOrganisationsRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(null))))
+        .andExpect(model().attribute("preselectedOperator", Map.of(
+            organisationDto.id().toString(),
+            OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
+        )))
+        .andExpect(model().attribute("phases", phaseMap))
+        .andExpect(model().attributeDoesNotExist("phaseSelectionHint"));
+  }
+
+  @Test
+  void renderCorrection_whenSubareaAsset() throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId.id())
         .withAssetDto(assetDto)
@@ -312,7 +378,8 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             organisationDto.id().toString(),
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
         )))
-        .andExpect(model().attribute("phases", phaseMap));
+        .andExpect(model().attribute("phases", phaseMap))
+        .andExpect(model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."));
   }
 
   @SecurityTest

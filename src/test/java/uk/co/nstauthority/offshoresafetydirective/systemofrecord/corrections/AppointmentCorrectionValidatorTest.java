@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +21,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -124,7 +127,7 @@ class AppointmentCorrectionValidatorTest {
   void validate_whenNotForAllPhases_andNoPhasesSelected_thenError() {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withForAllPhases(false)
-        .withPhases(List.of())
+        .withPhases(Set.of())
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -186,6 +189,87 @@ class AppointmentCorrectionValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
+    var hint = new AppointmentCorrectionValidationHint(assetDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhases(Set.of(WellPhase.DECOMMISSIONING.name()))
+        .withForAllPhases(false)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
+    var hint = new AppointmentCorrectionValidationHint(assetDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    assertThat(errorMessages)
+        .containsExactly(
+            entry("phases", Set.of("Select another phase in addition to decommissioning"))
+        );
+  }
+
+  @Test
+  void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhases(Set.of(WellPhase.DECOMMISSIONING.name(), WellPhase.EXPLORATION_AND_APPRAISAL.name()))
+        .withForAllPhases(false)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
+    var hint = new AppointmentCorrectionValidationHint(assetDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = PortalAssetType.class, names = {"INSTALLATION", "WELLBORE"})
+  void validate_whenNotSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(PortalAssetType portalAssetType) {
+
+    var decomPhase = switch (portalAssetType) {
+      case INSTALLATION -> InstallationPhase.DECOMMISSIONING;
+      case WELLBORE -> WellPhase.DECOMMISSIONING;
+      default -> throw new IllegalStateException("PortalAssetType [%s] has no known decommissioning phase to use");
+    };
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhases(Set.of(decomPhase.name()))
+        .withForAllPhases(false)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
     var hint = new AppointmentCorrectionValidationHint(assetDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();

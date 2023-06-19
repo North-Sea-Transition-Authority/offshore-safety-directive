@@ -6,6 +6,7 @@
 <#-- @ftlvariable name="assetTypeDisplayName" type="String" -->
 <#-- @ftlvariable name="preselectedOperator" type="java.util.Map<Integer, String>" -->
 <#-- @ftlvariable name="submitUrl" type="String" -->
+<#-- @ftlvariable name="phaseSelectionHint" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 
 <@defaultPage
@@ -38,7 +39,8 @@
                     path="form.phases"
                     nestingPath="form.forAllPhases"
                     checkboxes=phases
-                    fieldsetHeadingText="Which ${assetTypeSentenceCaseDisplayName} activity phases is this appointment for?"
+                    fieldsetHeadingText="Select all ${assetTypeSentenceCaseDisplayName} activity phases for this appointment"
+                    hintText=phaseSelectionHint!""
                 />
             </@fdsRadio.radioNo>
         </@fdsRadio.radioGroup>

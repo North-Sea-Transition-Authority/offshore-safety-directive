@@ -34,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -124,7 +125,7 @@ public class AppointmentCorrectionController {
     var assetDto = appointmentDto.assetDto();
     var assetName = getAssetName(assetDto);
 
-    return new ModelAndView("osd/systemofrecord/correction/correctAppointment")
+    var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("assetName", assetName.value())
         .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
         .addObject("assetTypeSentenceCaseDisplayName", assetDto.portalAssetType().getSentenceCaseDisplayName())
@@ -135,6 +136,12 @@ public class AppointmentCorrectionController {
         .addObject("preselectedOperator", getPreselectedOperator(form))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .addObject("form", form);
+
+    if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {
+      modelAndView.addObject("phaseSelectionHint", "If decommissioning is required, another phase must be selected.");
+    }
+
+    return modelAndView;
   }
 
   private AssetName getAssetName(AssetDto assetDto) {

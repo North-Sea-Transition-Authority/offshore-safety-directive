@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ class AppointmentCorrectionService {
         .filter(entry -> entry.getKey().equals(appointment.appointmentId()))
         .flatMap(entry -> entry.getValue().stream())
         .map(AssetAppointmentPhase::value)
-        .toList();
+        .collect(Collectors.toSet());
 
     form.setPhases(phaseNames);
 

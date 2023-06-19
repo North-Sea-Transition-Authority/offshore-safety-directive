@@ -52,7 +52,7 @@ class NominatedBlockSubareaFormValidator implements Validator {
       errors.rejectValue(
           "validForFutureWellsInSubarea",
           "validForFutureWellsInSubarea.invalid",
-          "Cannot set this nomination for all future wells when then only selected well phase is decommissioning"
+          "Cannot set this nomination for all future wells when the only selected well phase is decommissioning"
       );
     }
   }

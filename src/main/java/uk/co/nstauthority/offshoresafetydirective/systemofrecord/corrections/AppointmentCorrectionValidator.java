@@ -1,9 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +15,16 @@ import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
 class AppointmentCorrectionValidator implements SmartValidator {
+
+  private static final String PHASES_FIELD_NAME = "phases";
+  private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
+  private static final String FOR_ALL_PHASES_FIELD_NAME = "forAllPhases";
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
@@ -45,8 +51,8 @@ class AppointmentCorrectionValidator implements SmartValidator {
 
     ValidationUtils.rejectIfEmpty(
         bindingResult,
-        "appointedOperatorId",
-        "appointedOperatorId.required",
+        APPOINTED_OPERATOR_FIELD_NAME,
+        "%s.required".formatted(APPOINTED_OPERATOR_FIELD_NAME),
         "Select the appointed operator"
     );
 
@@ -56,8 +62,8 @@ class AppointmentCorrectionValidator implements SmartValidator {
 
       if (operator.isEmpty() || operator.get().isDuplicate()) {
         errors.rejectValue(
-            "appointedOperatorId",
-            "appointedOperatorId.invalid",
+            APPOINTED_OPERATOR_FIELD_NAME,
+            "%s.invalid".formatted(APPOINTED_OPERATOR_FIELD_NAME),
             "Select a valid operator"
         );
       }
@@ -66,19 +72,19 @@ class AppointmentCorrectionValidator implements SmartValidator {
     if (form.getForAllPhases() == null) {
       ValidationUtils.rejectIfEmpty(
           bindingResult,
-          "forAllPhases",
-          "forAllPhases.required",
+          FOR_ALL_PHASES_FIELD_NAME,
+          "%s.required".formatted(FOR_ALL_PHASES_FIELD_NAME),
           "Select Yes if this appointment is for all activity phases"
       );
     } else if (BooleanUtils.isFalse(form.getForAllPhases())) {
 
       // Null safe to prevent checking each time
-      var formPhases = Optional.ofNullable(form.getPhases()).orElse(List.of());
+      var formPhases = Optional.ofNullable(form.getPhases()).orElse(Set.of());
 
       if (formPhases.isEmpty()) {
         errors.rejectValue(
-            "phases",
-            "phases.required",
+            PHASES_FIELD_NAME,
+            "%s.required".formatted(PHASES_FIELD_NAME),
             "Select at least one activity phase"
         );
       } else {
@@ -89,7 +95,21 @@ class AppointmentCorrectionValidator implements SmartValidator {
             .containsAll(formPhases);
 
         if (!hasOnlyValidPhaseValues) {
-          errors.rejectValue("phases", "phases.invalid", "Select a valid activity phase");
+          errors.rejectValue(
+              PHASES_FIELD_NAME,
+              "%s.invalid".formatted(PHASES_FIELD_NAME),
+              "Select a valid activity phase"
+          );
+        }
+      }
+
+      if (PortalAssetType.SUBAREA.equals(hint.assetDto().portalAssetType())) {
+        if (formPhases.size() == 1 && formPhases.contains(WellPhase.DECOMMISSIONING.name())) {
+          errors.rejectValue(
+              PHASES_FIELD_NAME,
+              "%s.requiresAdditionalPhase".formatted(PHASES_FIELD_NAME),
+              "Select another phase in addition to decommissioning"
+          );
         }
       }
     }

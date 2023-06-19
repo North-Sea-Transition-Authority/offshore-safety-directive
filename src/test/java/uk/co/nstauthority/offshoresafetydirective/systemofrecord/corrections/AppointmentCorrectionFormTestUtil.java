@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 
@@ -19,7 +19,7 @@ class AppointmentCorrectionFormTestUtil {
 
     private Integer appointedOperatorId = 123;
     private Boolean forAllPhases = false;
-    private List<String> phases = new ArrayList<>();
+    private Set<String> phases = new HashSet<>();
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -40,7 +40,7 @@ class AppointmentCorrectionFormTestUtil {
         return this;
     }
 
-    Builder withPhases(List<String> phases) {
+    Builder withPhases(Set<String> phases) {
       this.phases = phases;
       return this;
     }

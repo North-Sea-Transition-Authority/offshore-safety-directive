@@ -1,12 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
-import java.util.List;
+import java.util.Set;
 
 public class AppointmentCorrectionForm {
 
   private Integer appointedOperatorId;
   private Boolean forAllPhases;
-  private List<String> phases;
+  private Set<String> phases;
 
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
@@ -24,11 +24,11 @@ public class AppointmentCorrectionForm {
     this.forAllPhases = forAllPhases;
   }
 
-  public List<String> getPhases() {
+  public Set<String> getPhases() {
     return phases;
   }
 
-  public void setPhases(List<String> phases) {
+  public void setPhases(Set<String> phases) {
     this.phases = phases;
   }
 }
