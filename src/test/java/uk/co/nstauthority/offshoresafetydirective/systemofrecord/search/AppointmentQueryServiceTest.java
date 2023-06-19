@@ -354,7 +354,7 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(
@@ -419,7 +419,7 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(
@@ -464,7 +464,7 @@ class AppointmentQueryServiceTest {
     // then search items are still returned
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(
@@ -544,7 +544,7 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(
@@ -609,7 +609,7 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(
@@ -654,7 +654,7 @@ class AppointmentQueryServiceTest {
     // then search items are still returned
     assertThat(resultingAppointments)
         .extracting(
-            appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedPortalAssetId().id(),
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
         .containsExactly(

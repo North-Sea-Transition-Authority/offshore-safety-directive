@@ -3,9 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 import java.time.LocalDate;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 
 class AppointmentSearchItemDtoTestUtil {
 
@@ -19,7 +19,7 @@ class AppointmentSearchItemDtoTestUtil {
 
   static class Builder {
 
-    private AppointedPortalAssetId assetId = new AppointedPortalAssetId("450");
+    private PortalAssetId assetId = new PortalAssetId("450");
 
     private AssetName assetName = new AssetName("Asset name");
 
@@ -32,7 +32,7 @@ class AppointmentSearchItemDtoTestUtil {
     private String timelineUrl = "/timeline-url";
 
     Builder withAssetId(String assetId) {
-      this.assetId = new AppointedPortalAssetId(assetId);
+      this.assetId = new PortalAssetId(assetId);
       return this;
     }
 

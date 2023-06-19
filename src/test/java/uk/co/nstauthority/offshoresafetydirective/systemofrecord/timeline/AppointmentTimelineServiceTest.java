@@ -215,18 +215,18 @@ class AppointmentTimelineServiceTest {
     assertThat(resultingAppointmentTimelineHistory.get().appointments())
         .extracting(
             AppointmentView::appointmentId,
-            AppointmentView::portalAssetId,
             AppointmentView::appointedOperatorName,
             AppointmentView::appointmentFromDate,
-            AppointmentView::appointmentToDate
+            AppointmentView::appointmentToDate,
+            AppointmentView::assetDto
         )
         .containsExactly(
             tuple(
                 expectedAppointment.appointmentId(),
-                expectedAppointment.portalAssetId(),
                 appointedOperator.name(),
                 expectedAppointment.appointmentFromDate(),
-                expectedAppointment.appointmentToDate()
+                expectedAppointment.appointmentToDate(),
+                expectedAppointment.assetDto()
             )
         );
   }

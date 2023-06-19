@@ -95,7 +95,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(appointmentDto));
 
     var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(appointmentCorrectionService.getForm(appointmentDto))
@@ -158,7 +158,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .withAssetName(assetName)
         .build();
 
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -193,7 +193,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(new AppointmentCorrectionForm());
 
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -236,7 +236,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
         .thenReturn(Optional.empty());
 
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -273,7 +273,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
 
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -426,7 +426,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(appointmentDto));
 
     var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     when(appointmentCorrectionService.getForm(appointmentDto))
@@ -462,7 +462,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(appointmentDto));
 
     var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     mockMvc.perform(post(
@@ -498,7 +498,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
 
-    when(assetAccessService.getAsset(appointmentDto.portalAssetId().toPortalAssetId()))
+    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
         .thenReturn(Optional.of(assetDto));
 
     var assetName = "asset name";
@@ -512,11 +512,11 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var expectedRedirect = switch (portalAssetType) {
       case INSTALLATION -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderInstallationAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderInstallationAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
       case WELLBORE -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderWellboreAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderWellboreAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
       case SUBAREA -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderSubareaAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderSubareaAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
     };
 
     mockMvc.perform(post(

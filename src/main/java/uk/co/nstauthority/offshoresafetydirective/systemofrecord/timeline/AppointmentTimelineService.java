@@ -179,14 +179,14 @@ class AppointmentTimelineService {
 
     return new AppointmentView(
         appointmentDto.appointmentId(),
-        appointmentDto.portalAssetId(),
         operatorName,
         appointmentDto.appointmentFromDate(),
         appointmentDto.appointmentToDate(),
         phases,
         getCreatedByReference(appointmentDto),
         getNominationUrl(appointmentDto),
-        correctionUpdateRoute
+        correctionUpdateRoute,
+        appointmentDto.assetDto()
     );
   }
 

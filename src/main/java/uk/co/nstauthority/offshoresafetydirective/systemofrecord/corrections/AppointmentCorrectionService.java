@@ -67,7 +67,6 @@ class AppointmentCorrectionService {
                                AppointmentCorrectionForm appointmentCorrectionForm) {
     var updateDto = new AppointmentDto(
         appointmentDto.appointmentId(),
-        appointmentDto.portalAssetId(),
         new AppointedOperatorId(appointmentCorrectionForm.getAppointedOperatorId().toString()),
         appointmentDto.appointmentFromDate(),
         appointmentDto.appointmentToDate(),

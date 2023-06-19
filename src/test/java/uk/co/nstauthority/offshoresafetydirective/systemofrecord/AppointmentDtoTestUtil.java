@@ -22,8 +22,6 @@ public class AppointmentDtoTestUtil {
 
     private AppointmentId appointmentId = new AppointmentId(UUID.randomUUID());
 
-    private AppointedPortalAssetId portalAssetId = new AppointedPortalAssetId("portal asset id");
-
     private AppointedOperatorId appointedOperatorId = new AppointedOperatorId("123");
 
     private AppointmentFromDate appointmentFromDate = new AppointmentFromDate(
@@ -44,11 +42,6 @@ public class AppointmentDtoTestUtil {
 
     public Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
-      return this;
-    }
-
-    public Builder withPortalAssetId(String portalAssetId) {
-      this.portalAssetId = new AppointedPortalAssetId(portalAssetId);
       return this;
     }
 
@@ -95,7 +88,6 @@ public class AppointmentDtoTestUtil {
     public AppointmentDto build() {
       return new AppointmentDto(
           appointmentId,
-          portalAssetId,
           appointedOperatorId,
           appointmentFromDate,
           appointmentToDate,

@@ -5,8 +5,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 public record AppointmentDto(
     AppointmentId appointmentId,
-    // TODO OSDOP-499 - Remove AppointedPortalAssetId field in favour of AssetDto
-    AppointedPortalAssetId portalAssetId,
     AppointedOperatorId appointedOperatorId,
     AppointmentFromDate appointmentFromDate,
     AppointmentToDate appointmentToDate,
@@ -20,7 +18,6 @@ public record AppointmentDto(
   static AppointmentDto fromAppointment(Appointment appointment) {
     return new AppointmentDto(
         new AppointmentId(appointment.getId()),
-        new AppointedPortalAssetId(appointment.getAsset().getPortalAssetId()),
         new AppointedOperatorId(String.valueOf(appointment.getAppointedPortalOperatorId())),
         new AppointmentFromDate(appointment.getResponsibleFromDate()),
         new AppointmentToDate(appointment.getResponsibleToDate()),

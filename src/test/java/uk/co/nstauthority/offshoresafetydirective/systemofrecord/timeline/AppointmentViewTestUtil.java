@@ -8,11 +8,11 @@ import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 
 class AppointmentViewTestUtil {
 
@@ -27,8 +27,6 @@ class AppointmentViewTestUtil {
   static class Builder {
 
     private AppointmentId appointmentId = new AppointmentId(UUID.randomUUID());
-
-    private AppointedPortalAssetId portalAssetId = new AppointedPortalAssetId("portal asset id");
 
     private String appointedOperatorName = "operator name";
 
@@ -46,13 +44,10 @@ class AppointmentViewTestUtil {
 
     private String updateAppointmentUrl = "/appointment-url";
 
+    private AssetDto assetDto = AssetDtoTestUtil.builder().build();
+
     Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
-      return this;
-    }
-
-    Builder withPortalAssetId(String portalAssetId) {
-      this.portalAssetId = new AppointedPortalAssetId(portalAssetId);
       return this;
     }
 
@@ -104,17 +99,22 @@ class AppointmentViewTestUtil {
       return this;
     }
 
+    Builder withAssetDto(AssetDto assetDto) {
+      this.assetDto = assetDto;
+      return this;
+    }
+
     AppointmentView build() {
       return new AppointmentView(
           appointmentId,
-          portalAssetId,
           appointedOperatorName,
           appointmentFromDate,
           appointmentToDate,
           phases,
           createdByReference,
           nominationUrl,
-          updateAppointmentUrl
+          updateAppointmentUrl,
+          assetDto
       );
     }
 

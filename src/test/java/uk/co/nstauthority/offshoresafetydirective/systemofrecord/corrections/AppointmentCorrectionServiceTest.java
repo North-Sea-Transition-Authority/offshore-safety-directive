@@ -53,9 +53,13 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection() {
 
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetId("portal/asset/id")
+        .build();
+
     var originalAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(UUID.randomUUID())
-        .withPortalAssetId("portal/asset/id")
+        .withAssetDto(assetDto)
         .withAppointedOperatorId(456)
         .withAppointmentFromDate(LocalDate.now().minusDays(1))
         .withAppointmentToDate(LocalDate.now().plusDays(2))
@@ -81,7 +85,6 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(captor.getValue())
         .hasFieldOrPropertyWithValue("appointmentId", originalAppointmentDto.appointmentId())
-        .hasFieldOrPropertyWithValue("portalAssetId", originalAppointmentDto.portalAssetId())
         .hasFieldOrPropertyWithValue(
             "appointedOperatorId",
             new AppointedOperatorId(form.getAppointedOperatorId().toString())

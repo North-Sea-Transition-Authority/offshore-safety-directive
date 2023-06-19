@@ -111,11 +111,11 @@ public class AppointmentCorrectionController {
   private ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {
     return switch (appointmentDto.assetDto().portalAssetType()) {
       case INSTALLATION -> ReverseRouter.redirect(on(AppointmentTimelineController.class)
-          .renderInstallationAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderInstallationAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
       case WELLBORE -> ReverseRouter.redirect(on(AppointmentTimelineController.class)
-          .renderWellboreAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderWellboreAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
       case SUBAREA -> ReverseRouter.redirect(on(AppointmentTimelineController.class)
-          .renderSubareaAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
+          .renderSubareaAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
     };
   }
 

@@ -56,20 +56,20 @@ class AppointmentAccessServiceTest {
     assertThat(resultingAppointments)
         .extracting(
             appointmentDto -> appointmentDto.appointmentId().id(),
-            appointmentDto -> appointmentDto.portalAssetId().id(),
             appointmentDto -> appointmentDto.appointedOperatorId().id(),
             appointmentDto -> appointmentDto.appointmentFromDate().value(),
             appointmentDto -> appointmentDto.appointmentToDate().value(),
-            AppointmentDto::appointmentCreatedDate
+            AppointmentDto::appointmentCreatedDate,
+            AppointmentDto::assetDto
         )
         .containsExactly(
             tuple(
                 expectedAppointment.getId(),
-                expectedAppointment.getAsset().getPortalAssetId(),
                 String.valueOf(expectedAppointment.getAppointedPortalOperatorId()),
                 expectedAppointment.getResponsibleFromDate(),
                 expectedAppointment.getResponsibleToDate(),
-                expectedAppointment.getCreatedDatetime()
+                expectedAppointment.getCreatedDatetime(),
+                AssetDto.fromAsset(expectedAppointment.getAsset())
             )
         );
   }
@@ -129,7 +129,6 @@ class AppointmentAccessServiceTest {
 
     PropertyObjectAssert.thenAssertThat(result.get())
         .hasFieldOrPropertyWithValue("appointmentId", appointmentId)
-        .hasFieldOrPropertyWithValue("portalAssetId", new AppointedPortalAssetId(asset.getPortalAssetId()))
         .hasFieldOrPropertyWithValue(
             "appointedOperatorId",
             new AppointedOperatorId(String.valueOf(appointedOperatorId))

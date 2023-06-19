@@ -3,14 +3,14 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 import java.sql.Date;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 class AppointmentQueryResultItemDto {
 
-  private final AppointedPortalAssetId appointedPortalAssetId;
+  private final PortalAssetId portalAssetId;
 
   private final PortalAssetType portalAssetType;
 
@@ -31,7 +31,7 @@ class AppointmentQueryResultItemDto {
                                 String appointmentType,
                                 Date appointmentDate,
                                 String assetName) {
-    this.appointedPortalAssetId = new AppointedPortalAssetId(portalAssetId);
+    this.portalAssetId = new PortalAssetId(portalAssetId);
     this.portalAssetType = PortalAssetType.valueOf(portalAssetType);
     this.appointmentId = new AppointmentId(UUID.fromString(appointmentId));
     this.appointedOperatorId = new AppointedOperatorId(appointedOperatorId);
@@ -40,8 +40,8 @@ class AppointmentQueryResultItemDto {
     this.assetName = assetName;
   }
 
-  AppointedPortalAssetId getAppointedPortalAssetId() {
-    return appointedPortalAssetId;
+  PortalAssetId getPortalAssetId() {
+    return portalAssetId;
   }
 
   PortalAssetType getPortalAssetType() {

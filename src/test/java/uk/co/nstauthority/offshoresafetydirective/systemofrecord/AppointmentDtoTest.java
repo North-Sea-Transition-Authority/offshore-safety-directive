@@ -17,10 +17,6 @@ class AppointmentDtoTest {
     PropertyObjectAssert.thenAssertThat(resultingAppointmentDto)
         .hasFieldOrPropertyWithValue("appointmentId", new AppointmentId(appointment.getId()))
         .hasFieldOrPropertyWithValue(
-            "portalAssetId",
-            new AppointedPortalAssetId(appointment.getAsset().getPortalAssetId())
-        )
-        .hasFieldOrPropertyWithValue(
             "appointedOperatorId",
             new AppointedOperatorId(String.valueOf(appointment.getAppointedPortalOperatorId()))
         )

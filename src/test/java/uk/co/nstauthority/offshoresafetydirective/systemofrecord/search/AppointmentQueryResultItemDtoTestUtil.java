@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 class AppointmentQueryResultItemDtoTestUtil {
@@ -22,7 +22,7 @@ class AppointmentQueryResultItemDtoTestUtil {
 
   static class Builder {
 
-    private AppointedPortalAssetId appointedPortalAssetId = new AppointedPortalAssetId("123");
+    private PortalAssetId portalAssetId = new PortalAssetId("123");
 
     private PortalAssetType portalAssetType = PortalAssetType.INSTALLATION;
 
@@ -37,7 +37,7 @@ class AppointmentQueryResultItemDtoTestUtil {
     private AppointmentId appointmentId = new AppointmentId(UUID.randomUUID());
 
     Builder withPortalAssetId(String portalAssetId) {
-      this.appointedPortalAssetId = new AppointedPortalAssetId(portalAssetId);
+      this.portalAssetId = new PortalAssetId(portalAssetId);
       return this;
     }
 
@@ -73,7 +73,7 @@ class AppointmentQueryResultItemDtoTestUtil {
 
     AppointmentQueryResultItemDto build() {
       return new AppointmentQueryResultItemDto(
-          appointedPortalAssetId.id(),
+          portalAssetId.id(),
           portalAssetType.name(),
           String.valueOf(appointmentId.id()),
           appointedOperatorId.id(),
