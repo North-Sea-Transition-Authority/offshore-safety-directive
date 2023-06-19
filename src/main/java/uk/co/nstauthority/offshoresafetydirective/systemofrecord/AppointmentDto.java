@@ -12,7 +12,8 @@ public record AppointmentDto(
     Instant appointmentCreatedDate,
     AppointmentType appointmentType,
     String legacyNominationReference,
-    NominationId nominationId
+    NominationId nominationId,
+    AssetDto assetDto
 ) {
 
   static AppointmentDto fromAppointment(Appointment appointment) {
@@ -27,7 +28,8 @@ public record AppointmentDto(
         appointment.getCreatedByLegacyNominationReference(),
         (appointment.getCreatedByNominationId() != null)
             ? new NominationId(appointment.getCreatedByNominationId())
-            : null
+            : null,
+        AssetDto.fromAsset(appointment.getAsset())
     );
   }
 }

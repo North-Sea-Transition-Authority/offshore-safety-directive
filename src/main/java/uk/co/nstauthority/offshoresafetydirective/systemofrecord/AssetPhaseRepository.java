@@ -13,4 +13,6 @@ interface AssetPhaseRepository extends CrudRepository<AssetPhase, UUID> {
 
   List<AssetPhase> findByAsset_IdIn(Set<UUID> assetIds);
 
+  List<AssetPhase> findAllByAppointment(Appointment appointment);
+
 }

@@ -28,7 +28,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedPortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
@@ -73,10 +72,9 @@ public class AppointmentCorrectionController {
   public ModelAndView renderCorrection(@PathVariable AppointmentId appointmentId) {
 
     var appointmentDto = getAppointmentDto(appointmentId);
-    var assetDto = getAssetDto(appointmentDto.portalAssetId());
     var form = appointmentCorrectionService.getForm(appointmentDto);
 
-    return getModelAndView(appointmentDto, assetDto, form);
+    return getModelAndView(appointmentDto, form);
   }
 
   @PostMapping
@@ -86,18 +84,17 @@ public class AppointmentCorrectionController {
                                        RedirectAttributes redirectAttributes) {
 
     var appointmentDto = getAppointmentDto(appointmentId);
-    var assetDto = getAssetDto(appointmentDto.portalAssetId());
 
     appointmentCorrectionValidator.validate(form, bindingResult);
 
     return controllerHelperService.checkErrorsAndRedirect(
         Objects.requireNonNull(bindingResult),
-        getModelAndView(appointmentDto, assetDto, form),
+        getModelAndView(appointmentDto, form),
         form,
         () -> {
           appointmentCorrectionService.updateCorrection(appointmentDto, Objects.requireNonNull(form));
 
-          var assetName = getAssetName(assetDto);
+          var assetName = getAssetName(appointmentDto.assetDto());
           var notificationBanner = NotificationBanner.builder()
               .withBannerType(NotificationBannerType.SUCCESS)
               .withHeading("Corrected appointment for %s".formatted(assetName.value()))
@@ -105,12 +102,12 @@ public class AppointmentCorrectionController {
 
           NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
 
-          return getSubmitRedirectRoute(appointmentDto, assetDto);
+          return getSubmitRedirectRoute(appointmentDto);
         });
   }
 
-  private ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto, AssetDto assetDto) {
-    return switch (assetDto.portalAssetType()) {
+  private ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {
+    return switch (appointmentDto.assetDto().portalAssetType()) {
       case INSTALLATION -> ReverseRouter.redirect(on(AppointmentTimelineController.class)
           .renderInstallationAppointmentTimeline(appointmentDto.portalAssetId().toPortalAssetId()));
       case WELLBORE -> ReverseRouter.redirect(on(AppointmentTimelineController.class)
@@ -120,19 +117,22 @@ public class AppointmentCorrectionController {
     };
   }
 
-  private ModelAndView getModelAndView(AppointmentDto appointmentDto, AssetDto assetDto,
+  private ModelAndView getModelAndView(AppointmentDto appointmentDto,
                                        AppointmentCorrectionForm form) {
 
+    var assetDto = appointmentDto.assetDto();
     var assetName = getAssetName(assetDto);
 
     return new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("assetName", assetName.value())
         .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
+        .addObject("assetTypeSentenceCaseDisplayName", assetDto.portalAssetType().getSentenceCaseDisplayName())
         .addObject("submitUrl", ReverseRouter.route(on(AppointmentCorrectionController.class)
             .submitCorrection(appointmentDto.appointmentId(), null, null, null)))
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchAllPortalOrganisations(null)))
         .addObject("preselectedOperator", getPreselectedOperator(form))
+        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .addObject("form", form);
   }
 
@@ -156,16 +156,6 @@ public class AppointmentCorrectionController {
             HttpStatus.NOT_FOUND,
             "Appointment with ID [%s] could not be found".formatted(
                 appointmentId.id()
-            )
-        ));
-  }
-
-  private AssetDto getAssetDto(AppointedPortalAssetId appointedPortalAssetId) {
-    return assetAccessService.getAsset(appointedPortalAssetId.toPortalAssetId())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "Asset with ID [%s] could not be found".formatted(
-                appointedPortalAssetId.toPortalAssetId().id()
             )
         ));
   }

@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
 public class AppointmentDtoTestUtil {
 
@@ -38,6 +39,8 @@ public class AppointmentDtoTestUtil {
     private String legacyNominationReference = "";
 
     private NominationId nominationId = new NominationId(123);
+
+    private AssetDto assetDto = AssetDtoTestUtil.builder().build();
 
     public Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
@@ -84,6 +87,11 @@ public class AppointmentDtoTestUtil {
       return this;
     }
 
+    public Builder withAssetDto(AssetDto assetDto) {
+      this.assetDto = assetDto;
+      return this;
+    }
+
     public AppointmentDto build() {
       return new AppointmentDto(
           appointmentId,
@@ -94,7 +102,8 @@ public class AppointmentDtoTestUtil {
           appointmentCreatedDate,
           appointmentType,
           legacyNominationReference,
-          nominationId
+          nominationId,
+          assetDto
       );
     }
   }

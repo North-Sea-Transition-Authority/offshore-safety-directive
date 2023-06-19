@@ -1,10 +1,15 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +23,9 @@ class AssetPhasePersistenceServiceTest {
 
   @Mock
   private AssetPhaseRepository assetPhaseRepository;
+
+  @Mock
+  private AppointmentRepository appointmentRepository;
 
   @InjectMocks
   private AssetPhasePersistenceService assetPhasePersistenceService;
@@ -46,5 +54,67 @@ class AssetPhasePersistenceServiceTest {
             tuple(asset, appointment, developmentPhase),
             tuple(asset, appointment, designPhase)
         );
+  }
+
+  @Test
+  void updateAssetPhases() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .build();
+
+    var assetPhaseToRemove = AssetPhaseTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+
+    var appointment = AppointmentTestUtil.builder().build();
+    when(appointmentRepository.findById(appointmentId.id()))
+        .thenReturn(Optional.of(appointment));
+
+    when(assetPhaseRepository.findAllByAppointment(appointment))
+        .thenReturn(List.of(assetPhaseToRemove));
+
+    var phasesToSave = List.of(
+        new AssetAppointmentPhase("phase 1"),
+        new AssetAppointmentPhase("phase 2")
+    );
+
+    assetPhasePersistenceService.updateAssetPhases(appointmentDto, phasesToSave);
+
+    verify(assetPhaseRepository).deleteAll(List.of(assetPhaseToRemove));
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<AssetPhase>> captor = ArgumentCaptor.forClass(List.class);
+
+    verify(assetPhaseRepository).saveAll(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(AssetPhase::getAppointment, AssetPhase::getAsset, AssetPhase::getPhase)
+        .containsExactly(
+            Tuple.tuple(appointment, appointment.getAsset(), phasesToSave.get(0).value()),
+            Tuple.tuple(appointment, appointment.getAsset(), phasesToSave.get(1).value())
+        );
+  }
+
+  @Test
+  void updateAssetPhases_whenNoAppointmentFound_thenError() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .build();
+
+    when(appointmentRepository.findById(appointmentId.id()))
+        .thenReturn(Optional.empty());
+
+    var phasesToSave = List.of(
+        new AssetAppointmentPhase("phase 1"),
+        new AssetAppointmentPhase("phase 2")
+    );
+
+    assertThatThrownBy(() -> assetPhasePersistenceService.updateAssetPhases(appointmentDto, phasesToSave))
+        .isInstanceOf(RuntimeException.class)
+        .hasMessage("No appointment found with id [%s]".formatted(
+            appointmentDto.appointmentId().id()
+        ));
   }
 }

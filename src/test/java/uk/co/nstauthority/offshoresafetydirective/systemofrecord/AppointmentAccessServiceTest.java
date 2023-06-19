@@ -140,6 +140,7 @@ class AppointmentAccessServiceTest {
         .hasFieldOrPropertyWithValue("appointmentType", appointmentType)
         .hasFieldOrPropertyWithValue("legacyNominationReference", legacyReference)
         .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
+        .hasFieldOrPropertyWithValue("assetDto", AssetDto.fromAsset(asset))
         .hasAssertedAllProperties();
   }
 
