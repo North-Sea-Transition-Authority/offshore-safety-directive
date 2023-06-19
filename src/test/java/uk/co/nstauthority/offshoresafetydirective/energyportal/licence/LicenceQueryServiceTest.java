@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceApi;
+import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
@@ -91,21 +92,21 @@ class LicenceQueryServiceTest {
   }
 
   @Test
-  void searchByLicenceReference_whenMatch_thenLicenceReturned() {
+  void searchLicences_whenMatch_thenLicenceReturned() {
 
-    var matchingLicenceReference = new LicenceDto.LicenceReference("matching licence reference");
+    var licenceSearchFilter = LicenceSearchFilter.builder().build();
 
     var expectedPortalLicence = EpaLicenceTestUtil.builder().build();
 
     given(licenceApi.searchLicences(
-        eq(matchingLicenceReference.value()),
+        eq(licenceSearchFilter),
         eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
         .willReturn(List.of(expectedPortalLicence));
 
-    var resultingLicence = licenceQueryService.searchByLicenceReference(matchingLicenceReference);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
 
     assertThat(resultingLicence)
         .extracting(
@@ -125,27 +126,27 @@ class LicenceQueryServiceTest {
   }
 
   @Test
-  void searchByLicenceReference_whenNoMatch_thenEmptyListReturned() {
+  void searchLicences_whenNoMatch_thenEmptyListReturned() {
 
-    var unmatchedLicenceReference = new LicenceDto.LicenceReference("unmatched licence reference");
+    var licenceSearchFilter = LicenceSearchFilter.builder().build();
 
     given(licenceApi.searchLicences(
-        eq(unmatchedLicenceReference.value()),
+        eq(licenceSearchFilter),
         eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingLicence = licenceQueryService.searchByLicenceReference(unmatchedLicenceReference);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
 
     assertThat(resultingLicence).isEmpty();
   }
 
   @Test
-  void searchByLicenceReference_whenMultipleMatchesWithSameLicenceType_thenResultsOrderedByLicenceNumber() {
+  void searchLicences_whenMultipleMatchesWithSameLicenceType_thenResultsOrderedByLicenceNumber() {
 
-    var matchingLicenceReference = new LicenceDto.LicenceReference("matching licence reference");
+    var licenceSearchFilter = LicenceSearchFilter.builder().build();
 
     var firstLicenceByNumber = EpaLicenceTestUtil.builder()
         .withLicenceType("A")
@@ -160,14 +161,14 @@ class LicenceQueryServiceTest {
         .build();
 
     given(licenceApi.searchLicences(
-        eq(matchingLicenceReference.value()),
+        eq(licenceSearchFilter),
         eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
         .willReturn(List.of(secondLicenceByNumber, firstLicenceByNumber));
 
-    var resultingLicence = licenceQueryService.searchByLicenceReference(matchingLicenceReference);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
 
     assertThat(resultingLicence)
         .extracting(
@@ -193,9 +194,9 @@ class LicenceQueryServiceTest {
   }
 
   @Test
-  void searchByLicenceReference_whenMultipleMatchesWithSameLicenceNumber_thenResultsOrderedByLicenceType() {
+  void searchLicences_whenMultipleMatchesWithSameLicenceNumber_thenResultsOrderedByLicenceType() {
 
-    var matchingLicenceReference = new LicenceDto.LicenceReference("matching licence reference");
+    var licenceSearchFilter = LicenceSearchFilter.builder().build();
 
     var firstLicenceByType = EpaLicenceTestUtil.builder()
         .withLicenceType("A")
@@ -210,14 +211,14 @@ class LicenceQueryServiceTest {
         .build();
 
     given(licenceApi.searchLicences(
-        eq(matchingLicenceReference.value()),
+        eq(licenceSearchFilter),
         eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
         .willReturn(List.of(secondLicenceByType, firstLicenceByType));
 
-    var resultingLicence = licenceQueryService.searchByLicenceReference(matchingLicenceReference);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
 
     assertThat(resultingLicence)
         .extracting(

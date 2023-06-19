@@ -436,7 +436,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "licenceRestUrl",
-            RestApiUtil.route(on(LicenceRestController.class).searchLicencesByReference(null))
+            RestApiUtil.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(null))
         ))
         .andExpect(model().attribute(
             "filteredLicence",
@@ -468,7 +468,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "licenceRestUrl",
-            RestApiUtil.route(on(LicenceRestController.class).searchLicencesByReference(null))
+            RestApiUtil.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(null))
         ))
         .andExpect(model().attribute("filteredLicence", Collections.emptyMap()));
 

@@ -12,8 +12,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
+import uk.co.fivium.energyportalapi.generated.types.LicenceShoreLocation;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
@@ -26,24 +30,27 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+  @Captor
+  private ArgumentCaptor<LicenceSearchFilter> licenceSearchFilterArgumentCaptor;
+
   @MockBean
   private LicenceQueryService licenceQueryService;
 
   @SecurityTest
-  void searchLicencesByReference_whenUnauthenticated_thenOk() throws Exception {
+  void searchOffshoreLicencesByReference_whenUnauthenticated_thenOk() throws Exception {
 
     var searchTerm = "search";
 
     mockMvc.perform(
         get(
-          ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+          ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
         )
     )
         .andExpect(status().isOk());
   }
 
   @SecurityTest
-  void searchLicencesByReference_whenLoggedIn_thenOk() throws Exception {
+  void searchOffshoreLicencesByReference_whenLoggedIn_thenOk() throws Exception {
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
@@ -51,7 +58,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
         )
             .with(user(loggedInUser))
     )
@@ -60,16 +67,16 @@ class LicenceRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void searchLicencesByReference_whenNoResults_thenNoItemsReturned() throws Exception {
+  void searchOffshoreLicencesByReference_whenNoResults_thenNoItemsReturned() throws Exception {
 
     var searchTerm = "search";
 
-    given(licenceQueryService.searchByLicenceReference(new LicenceDto.LicenceReference(searchTerm)))
+    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
         .willReturn(Collections.emptyList());
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -79,21 +86,26 @@ class LicenceRestControllerTest extends AbstractControllerTest {
     var searchResult = OBJECT_MAPPER.readValue(response.getContentAsString(), RestSearchResult.class);
 
     assertThat(searchResult.getResults()).isEmpty();
+
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
+        .isEqualTo(searchTerm);
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
+        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
-  void searchLicencesByReference_whenResults_thenItemsReturned() throws Exception {
+  void searchOffshoreLicencesByReference_whenResults_thenItemsReturned() throws Exception {
 
     var searchTerm = "search";
 
     var expectedLicence = LicenceDtoTestUtil.builder().build();
 
-    given(licenceQueryService.searchByLicenceReference(new LicenceDto.LicenceReference(searchTerm)))
+    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
         .willReturn(List.of(expectedLicence));
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -110,10 +122,15 @@ class LicenceRestControllerTest extends AbstractControllerTest {
                 expectedLicence.licenceReference().value()
             )
         );
+
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
+        .isEqualTo(searchTerm);
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
+        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
-  void searchLicencesByReference_whenMultipleResultsWithSameLicenceType_thenSortedByLicenceNumber() throws Exception {
+  void searchOffshoreLicencesByReference_whenMultipleResultsWithSameLicenceType_thenSortedByLicenceNumber() throws Exception {
 
     var searchTerm = "search";
 
@@ -129,12 +146,12 @@ class LicenceRestControllerTest extends AbstractControllerTest {
         .withLicenceReference("second")
         .build();
 
-    given(licenceQueryService.searchByLicenceReference(new LicenceDto.LicenceReference(searchTerm)))
+    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
         .willReturn(List.of(secondLicenceByNumber, firstLicenceByNumber));
 
     var response = mockMvc.perform(
             get(
-                ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+                ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
             )
         )
         .andExpect(status().isOk())
@@ -149,10 +166,15 @@ class LicenceRestControllerTest extends AbstractControllerTest {
             firstLicenceByNumber.licenceReference().value(),
             secondLicenceByNumber.licenceReference().value()
         );
+
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
+        .isEqualTo(searchTerm);
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
+        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
-  void searchLicencesByReference_whenMultipleResultsWithSameLicenceNumber_thenSortedByLicenceType() throws Exception {
+  void searchOffshoreLicencesByReference_whenMultipleResultsWithSameLicenceNumber_thenSortedByLicenceType() throws Exception {
 
     var searchTerm = "search";
 
@@ -168,12 +190,12 @@ class LicenceRestControllerTest extends AbstractControllerTest {
         .withLicenceReference("second")
         .build();
 
-    given(licenceQueryService.searchByLicenceReference(new LicenceDto.LicenceReference(searchTerm)))
+    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
         .willReturn(List.of(secondLicenceByType, firstLicenceByType));
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -188,5 +210,10 @@ class LicenceRestControllerTest extends AbstractControllerTest {
             firstLicenceByType.licenceReference().value(),
             secondLicenceByType.licenceReference().value()
         );
+
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
+        .isEqualTo(searchTerm);
+    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
+        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 }

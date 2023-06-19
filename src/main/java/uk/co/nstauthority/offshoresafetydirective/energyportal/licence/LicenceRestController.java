@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
+import uk.co.fivium.energyportalapi.generated.types.LicenceShoreLocation;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
@@ -22,11 +24,16 @@ public class LicenceRestController {
     this.licenceQueryService = licenceQueryService;
   }
 
-  @GetMapping
-  public RestSearchResult searchLicencesByReference(@RequestParam("term") String searchTerm) {
+  @GetMapping("/offshore")
+  public RestSearchResult searchOffshoreLicencesByReference(@RequestParam("term") String searchTerm) {
+
+    var licenceSearchFilter = LicenceSearchFilter.builder()
+        .withLicenceReference(searchTerm)
+        .withShoreLocation(LicenceShoreLocation.OFFSHORE)
+        .build();
 
     List<RestSearchItem> searchItemsResult = licenceQueryService
-        .searchByLicenceReference(new LicenceDto.LicenceReference(searchTerm))
+        .searchLicences(licenceSearchFilter)
         .stream()
         .sorted(LicenceDto.sort())
         .map(licence -> new RestSearchItem(
