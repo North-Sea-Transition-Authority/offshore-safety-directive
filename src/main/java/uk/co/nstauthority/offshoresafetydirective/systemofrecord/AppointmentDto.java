@@ -5,6 +5,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 public record AppointmentDto(
     AppointmentId appointmentId,
+    // TODO OSDOP-499 - Remove AppointedPortalAssetId field in favour of AssetDto
     AppointedPortalAssetId portalAssetId,
     AppointedOperatorId appointedOperatorId,
     AppointmentFromDate appointmentFromDate,

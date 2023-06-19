@@ -369,7 +369,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
       var bindingResult = (BindingResult) invocation.getArgument(1);
       bindingResult.addError(new FieldError("object", "field", "message"));
       return invocation;
-    }).when(appointmentCorrectionValidator).validate(any(AppointmentCorrectionForm.class), any());
+    }).when(appointmentCorrectionValidator).validate(any(AppointmentCorrectionForm.class), any(), any());
 
     mockMvc.perform(post(
             ReverseRouter.route(

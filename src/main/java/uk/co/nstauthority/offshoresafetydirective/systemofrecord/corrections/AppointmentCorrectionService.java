@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmen
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
 class AppointmentCorrectionService {
@@ -56,10 +57,7 @@ class AppointmentCorrectionService {
   }
 
   Map<String, String> getSelectablePhaseMap(AssetDto assetDto) {
-    var phaseClass = switch (assetDto.portalAssetType()) {
-      case INSTALLATION -> InstallationPhase.class;
-      case SUBAREA, WELLBORE -> WellPhase.class;
-    };
+    var phaseClass = PortalAssetTypeUtil.getEnumPhaseClass(assetDto.portalAssetType());
     return DisplayableEnumOptionUtil.getDisplayableOptions(phaseClass);
   }
 

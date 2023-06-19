@@ -29,23 +29,18 @@
 
         <@fdsRadio.radioGroup
             path="form.forAllPhases"
-            labelText="Is this for all ${assetTypeSentenceCaseDisplayName} phases?"
+            labelText="Is this appointment for all ${assetTypeSentenceCaseDisplayName} activity phases?"
             hiddenContent=true
         >
-          <@fdsRadio.radioYes path="form.forAllPhases"/>
-          <@fdsRadio.radioNo path="form.forAllPhases">
-              <@fdsCheckbox.checkboxGroup
-                  path="form.phases"
-                  nestingPath="form.forAllPhases"
-                  fieldsetHeadingText="Which ${assetTypeSentenceCaseDisplayName} phases is this appointment for?"
-              >
+            <@fdsRadio.radioYes path="form.forAllPhases"/>
+            <@fdsRadio.radioNo path="form.forAllPhases">
                 <@fdsCheckbox.checkboxes
                     path="form.phases"
                     nestingPath="form.forAllPhases"
                     checkboxes=phases
+                    fieldsetHeadingText="Which ${assetTypeSentenceCaseDisplayName} activity phases is this appointment for?"
                 />
-              </@fdsCheckbox.checkboxGroup>
-          </@fdsRadio.radioNo>
+            </@fdsRadio.radioNo>
         </@fdsRadio.radioGroup>
 
         <@fdsAction.submitButtons

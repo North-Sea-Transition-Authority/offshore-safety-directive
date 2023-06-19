@@ -84,8 +84,9 @@ public class AppointmentCorrectionController {
                                        RedirectAttributes redirectAttributes) {
 
     var appointmentDto = getAppointmentDto(appointmentId);
+    var validatorHint = new AppointmentCorrectionValidationHint(appointmentDto.assetDto());
 
-    appointmentCorrectionValidator.validate(form, bindingResult);
+    appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
     return controllerHelperService.checkErrorsAndRedirect(
         Objects.requireNonNull(bindingResult),

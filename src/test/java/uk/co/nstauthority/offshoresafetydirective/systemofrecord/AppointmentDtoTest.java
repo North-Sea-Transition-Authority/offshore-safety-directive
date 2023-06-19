@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
 class AppointmentDtoTest {
 
@@ -11,28 +12,27 @@ class AppointmentDtoTest {
   void fromAppointment_verifyMapping() {
 
     var appointment = AppointmentTestUtil.builder().build();
-
     var resultingAppointmentDto = AppointmentDto.fromAppointment(appointment);
 
-    assertThat(resultingAppointmentDto)
-        .extracting(
-            appointmentDto -> appointmentDto.appointmentId().id(),
-            appointmentDto -> appointmentDto.portalAssetId().id(),
-            appointmentDto -> appointmentDto.appointedOperatorId().id(),
-            appointmentDto -> appointmentDto.appointmentFromDate().value(),
-            appointmentDto -> appointmentDto.appointmentToDate().value(),
-            AppointmentDto::appointmentCreatedDate,
-            AppointmentDto::appointmentType
+    PropertyObjectAssert.thenAssertThat(resultingAppointmentDto)
+        .hasFieldOrPropertyWithValue("appointmentId", new AppointmentId(appointment.getId()))
+        .hasFieldOrPropertyWithValue(
+            "portalAssetId",
+            new AppointedPortalAssetId(appointment.getAsset().getPortalAssetId())
         )
-        .containsExactly(
-            appointment.getId(),
-            appointment.getAsset().getPortalAssetId(),
-            String.valueOf(appointment.getAppointedPortalOperatorId()),
-            appointment.getResponsibleFromDate(),
-            appointment.getResponsibleToDate(),
-            appointment.getCreatedDatetime(),
-            appointment.getAppointmentType()
-        );
+        .hasFieldOrPropertyWithValue(
+            "appointedOperatorId",
+            new AppointedOperatorId(String.valueOf(appointment.getAppointedPortalOperatorId()))
+        )
+        .hasFieldOrPropertyWithValue(
+            "appointmentFromDate",
+            new AppointmentFromDate(appointment.getResponsibleFromDate())
+        )
+        .hasFieldOrPropertyWithValue("appointmentToDate", new AppointmentToDate(appointment.getResponsibleToDate()))
+        .hasFieldOrPropertyWithValue("appointmentCreatedDate", appointment.getCreatedDatetime())
+        .hasFieldOrPropertyWithValue("appointmentType", appointment.getAppointmentType())
+        .hasFieldOrPropertyWithValue("assetDto", AssetDto.fromAsset(appointment.getAsset()))
+        .hasAssertedAllPropertiesExcept("legacyNominationReference", "nominationId");
   }
 
   @Test
