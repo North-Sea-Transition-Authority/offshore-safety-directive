@@ -16,4 +16,9 @@ class TestController {
     return new ModelAndView(TEST_VIEW_NAME);
   }
 
+  @GetMapping("/security/test")
+  ModelAndView testEndpointWithMultiUrlPath() {
+    return new ModelAndView(TEST_VIEW_NAME);
+  }
+
 }

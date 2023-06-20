@@ -60,10 +60,8 @@ public class WebSecurityConfiguration {
             "/notify/callback"
         )
           .permitAll()
-        .mvcMatchers("/*")
-          .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
         .anyRequest()
-          .authenticated()
+          .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
         .and()
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout()

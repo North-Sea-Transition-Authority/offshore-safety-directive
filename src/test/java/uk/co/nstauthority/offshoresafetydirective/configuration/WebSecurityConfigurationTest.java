@@ -58,9 +58,19 @@ class WebSecurityConfigurationTest {
 
     var user = ServiceUserDetailTestUtil.Builder().build();
 
+    // check for a single path endpoint, e.g. /endpoint
     mockMvc.perform(get(ReverseRouter.route(on(TestController.class).testEndpoint()))
             .with(user(user, emptyGrantedAuthorityCollection))
       )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            CONTEXT_PATH + ReverseRouter.route(on(DefaultClientErrorController.class).getUnauthorisedErrorPage())
+        ));
+
+    // check for a multi path endpoint e.g. /first/second
+    mockMvc.perform(get(ReverseRouter.route(on(TestController.class).testEndpointWithMultiUrlPath()))
+            .with(user(user, emptyGrantedAuthorityCollection))
+        )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
             CONTEXT_PATH + ReverseRouter.route(on(DefaultClientErrorController.class).getUnauthorisedErrorPage())
