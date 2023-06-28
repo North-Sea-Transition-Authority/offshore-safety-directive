@@ -13,6 +13,13 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   breadcrumbsList=breadcrumbsList
 >
+
+  <#if reasonForUpdate?has_content>
+    <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
+      <pre class="govuk-body">${reasonForUpdate}</pre>
+    </@fdsDetails.summaryDetails>
+  </#if>
+
   <@fdsAction.link
     linkText=deleteNominationButtonPrompt
     linkClass="govuk-button govuk-button--secondary"

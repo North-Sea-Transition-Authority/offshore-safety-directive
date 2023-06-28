@@ -77,7 +77,8 @@ class NominationWorkAreaItemService {
             Optional.ofNullable(dto.nominatedOrganisationUnitDto())
                 .map(PortalOrganisationDto::name)
                 .orElse(DEFAULT_TEXT)
-        );
+        )
+        .addProperty("hasUpdateRequest", dto.nominationHasUpdateRequest().value());
 
     if (canAddPearsReferencesToModelProperties(dto)) {
       addPearsReferencesToModelProperties(modelProperties, dto);

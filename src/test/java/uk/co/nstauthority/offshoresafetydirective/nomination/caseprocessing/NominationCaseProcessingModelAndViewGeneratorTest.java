@@ -480,8 +480,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(caseEventQueryService.hasUpdateRequest(NominationDetailDto.fromNominationDetail(latestNominationDetail)))
         .thenReturn(true);
 
-    when(caseEventQueryService.hasUpdateRequest(latestNominationDetail))
-        .thenReturn(true);
+    var updateReason = "reason";
+    when(caseEventQueryService.getLatestReasonForUpdate(latestNominationDetail))
+        .thenReturn(Optional.of(updateReason));
 
     var selectionMap = Map.of("1", "selection");
     when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
@@ -533,6 +534,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
         .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
         .hasKeyWithValue("versionOptions", selectionMap)
+        .hasKeyWithValue("updateRequestReason", updateReason)
         .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
 
     @SuppressWarnings("unchecked")

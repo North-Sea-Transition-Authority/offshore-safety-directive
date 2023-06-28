@@ -5,6 +5,7 @@ import static org.jooq.impl.DSL.condition;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.nvl2;
 import static org.jooq.impl.DSL.or;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -58,7 +60,8 @@ class NominationWorkAreaQueryService {
             field("nomination_details.created_datetime"),
             field("nomination_details.submitted_datetime"),
             field("nomination_details.version"),
-            field("nomination_portal_references.portal_references").as("pears_references")
+            field("nomination_portal_references.portal_references").as("pears_references"),
+            nvl2(field("update_requests.uuid"), val(true), val(false)).as("has_update_request")
         )
         .from(table("nominations"))
         .join(table("nomination_details"))
@@ -76,6 +79,12 @@ class NominationWorkAreaQueryService {
             field("nomination_portal_references.nomination_id").eq(field("nominations.id"))
                 .and(field("nomination_portal_references.portal_reference_type").eq(val(PortalReferenceType.PEARS.name())))
         )
+        .leftJoin(table("case_events").as("update_requests")).on(
+            field("update_requests.type").eq(val(CaseEventType.UPDATE_REQUESTED.name()))
+                .and(field("update_requests.nomination_id").eq(field("nominations.id")))
+                .and(field("update_requests.nomination_version").eq(field("nomination_details.version")))
+        )
+
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
         .fetchInto(NominationWorkAreaQueryResult.class);

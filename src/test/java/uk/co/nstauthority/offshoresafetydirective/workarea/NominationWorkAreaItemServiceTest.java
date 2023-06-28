@@ -70,6 +70,7 @@ class NominationWorkAreaItemServiceTest {
         .withApplicantOrganisationId(1)
         .withNominatedOrganisationId(2)
         .withPearsReferences(pearsReference)
+        .withHasNominationUpdateRequest(false)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
@@ -104,7 +105,8 @@ class NominationWorkAreaItemServiceTest {
             Map.entry("applicantReference",
                 queryResult.getApplicantReference().reference()),
             Map.entry("pearsReferences",
-                queryResult.getPearsReferences().references())
+                queryResult.getPearsReferences().references()),
+            Map.entry("hasUpdateRequest", false)
         );
   }
 
@@ -143,6 +145,7 @@ class NominationWorkAreaItemServiceTest {
         .withNominatedOrganisationId(2)
         .withApplicantReference(null)
         .withPearsReferences(null)
+        .withHasNominationUpdateRequest(false)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
@@ -163,7 +166,8 @@ class NominationWorkAreaItemServiceTest {
             Map.entry("applicantOrganisation", "Not provided"),
             Map.entry("nominationOrganisation", "Not provided"),
             Map.entry("applicantReference", "Not provided"),
-            Map.entry("pearsReferences", "")
+            Map.entry("pearsReferences", ""),
+            Map.entry("hasUpdateRequest", false)
         )
         .map(Map.Entry::getKey)
         .doesNotContain("pearsReferencesAbbreviated");
@@ -408,5 +412,40 @@ class NominationWorkAreaItemServiceTest {
 
     assertThrows(IllegalStateException.class, () -> nominationWorkAreaItemService.getNominationWorkAreaItems());
 
+  }
+
+  @Test
+  void getNominationWorkAreaItems_whenHasUpdateRequest_thenVerifyMapped() {
+    var hasUpdateRequest = true;
+    var draftNomination = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(NominationStatus.SUBMITTED)
+        .withHasNominationUpdateRequest(hasUpdateRequest)
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
+
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).modelProperties().getProperties())
+        .extractingByKey("hasUpdateRequest")
+        .isEqualTo(hasUpdateRequest);
+  }
+
+  @Test
+  void getNominationWorkAreaItems_whenDoesNotHasUpdateRequest_thenVerifyNotMapped() {
+    var hasUpdateRequest = false;
+    var draftNomination = NominationWorkAreaQueryResultTestUtil.builder()
+        .withNominationStatus(NominationStatus.SUBMITTED)
+        .withHasNominationUpdateRequest(hasUpdateRequest)
+        .build();
+
+    when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
+
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).modelProperties().getProperties())
+        .containsEntry("hasUpdateRequest", false);
   }
 }

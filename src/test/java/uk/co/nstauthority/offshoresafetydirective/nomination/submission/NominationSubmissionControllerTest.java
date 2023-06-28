@@ -16,6 +16,8 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -145,6 +147,92 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID))
         ))
         .andExpect(model().attribute("isSubmittable", isSubmittable));
+  }
+
+  @Test
+  void getSubmissionPage_whenHasUpdateRequest_assertReasonInModelProperties() throws Exception {
+
+    var isSubmittable = false;
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(111)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    var reasonForUpdate = "reason";
+    when(caseEventQueryService.getLatestReasonForUpdate(latestNominationDetail))
+        .thenReturn(Optional.of(reasonForUpdate));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attribute("reasonForUpdate", reasonForUpdate));
+  }
+
+  @Test
+  void getSubmissionPage_whenNoSubmittedNominationDetailFound_thenAssertNoReasonInModelProperties() throws Exception {
+
+    var isSubmittable = false;
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.empty());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attributeDoesNotExist("reasonForUpdate"));
+  }
+
+  @Test
+  void getSubmissionPage_whenHasNoUpdateReason_thenAssertNoReasonInModelProperties() throws Exception {
+
+    var isSubmittable = false;
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(111)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(caseEventQueryService.getLatestReasonForUpdate(latestNominationDetail))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attributeDoesNotExist("reasonForUpdate"));
   }
 
   @Test

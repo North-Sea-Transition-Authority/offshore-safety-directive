@@ -30,6 +30,12 @@
   >
     <@fdsForm.htmlForm actionUrl=springUrl(actionUrl)>
 
+      <#if reasonForUpdate?has_content>
+          <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
+            <pre class="govuk-body">${reasonForUpdate}</pre>
+          </@fdsDetails.summaryDetails>
+      </#if>
+
       <@nominationSummary.nominationSummary summaryView=summaryView />
 
       <#if isSubmittable>

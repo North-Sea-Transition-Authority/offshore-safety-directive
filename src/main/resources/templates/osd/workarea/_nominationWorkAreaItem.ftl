@@ -5,10 +5,20 @@
 
     <#assign modelProperties = workAreaItem.modelProperties().properties />
 
+    <#assign updateRequestedTag>
+        <#if modelProperties["hasUpdateRequest"]>
+            <@fdsResultList.resultListTag
+                tagText="Update requested"
+                tagClass="govuk-tag--blue"
+            />
+        </#if>
+    </#assign>
+
     <@fdsResultList.resultListItem
       captionHeadingText=workAreaItem.captionText()!""
       linkHeadingUrl=springUrl(workAreaItem.actionUrl())
       linkHeadingText=workAreaItem.headingText()
+      itemTag=updateRequestedTag!""
     >
 
         <#assign defaultText = "Not provided"/>

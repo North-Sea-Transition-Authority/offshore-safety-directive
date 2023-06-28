@@ -208,15 +208,20 @@ public class NominationCaseProcessingModelAndViewGenerator {
         actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
       }
 
-      if (caseEventQueryService.hasUpdateRequest(nominationDetail)) {
-        if (canUpdateNomination(nominationDetailDto)) {
-          actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
-        }
-      } else {
-        if (canRequestNominationUpdate(nominationDetailDto)) {
-          actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
-        }
-      }
+      caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
+          .ifPresentOrElse(
+              reason -> {
+                if (canUpdateNomination(nominationDetailDto)) {
+                  actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
+                  modelAndView.addObject("updateRequestReason", reason);
+                }
+              },
+              () -> {
+                if (canRequestNominationUpdate(nominationDetailDto)) {
+                  actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+                }
+              }
+          );
 
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
           .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))

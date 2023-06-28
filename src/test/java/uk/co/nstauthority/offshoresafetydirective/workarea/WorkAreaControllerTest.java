@@ -64,6 +64,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
             .addProperty("nominationType", "nomination type")
             .addProperty("applicantOrganisation", "applicant org")
             .addProperty("nominationOrganisation", "nominated org")
+            .addProperty("hasUpdateRequest", false)
     );
     when(workAreaItemService.getWorkAreaItems()).thenReturn(List.of(workAreaItem));
 

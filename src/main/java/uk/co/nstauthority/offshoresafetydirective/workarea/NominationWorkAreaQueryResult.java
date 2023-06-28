@@ -29,12 +29,13 @@ class NominationWorkAreaQueryResult {
   private final NominationSubmittedTime submittedTime;
   private final NominationVersion nominationVersion;
   private final PearsReferences pearsReferences;
+  private final NominationHasUpdateRequest nominationHasUpdateRequest;
 
   NominationWorkAreaQueryResult(Integer nominationId, Integer applicantOrganisationId, String nominationReference,
                                 String applicantReference, Integer nominatedOrganisationId, String wellsSelectionType,
                                 boolean hasInstallations, String nominationStatus, Timestamp createdTime,
                                 Timestamp submittedTime, Integer nominationVersion,
-                                String pearsReferences) {
+                                String pearsReferences, boolean nominationHasUpdateRequest) {
 
     this.nominationId = getRecordOrNull(nominationId, NominationId::new);
     this.applicantOrganisationId = getRecordOrNull(applicantOrganisationId, ApplicantOrganisationId::new);
@@ -42,6 +43,7 @@ class NominationWorkAreaQueryResult {
     this.applicantReference = getRecordOrNull(applicantReference, ApplicantReference::new);
     this.nominatedOrganisationId = getRecordOrNull(nominatedOrganisationId, NominatedOrganisationId::new);
     this.pearsReferences = getRecordOrNull(pearsReferences, PearsReferences::new);
+    this.nominationHasUpdateRequest = getRecordOrNull(nominationHasUpdateRequest, NominationHasUpdateRequest::new);
     this.nominationDisplayType = NominationDisplayType.getByWellSelectionTypeAndHasInstallations(
         getWellSelectionTypeFromString(wellsSelectionType),
         NominationHasInstallations.fromBoolean(hasInstallations)
@@ -108,5 +110,9 @@ class NominationWorkAreaQueryResult {
 
   public PearsReferences getPearsReferences() {
     return pearsReferences;
+  }
+
+  public NominationHasUpdateRequest getNominationHasUpdateRequest() {
+    return nominationHasUpdateRequest;
   }
 }

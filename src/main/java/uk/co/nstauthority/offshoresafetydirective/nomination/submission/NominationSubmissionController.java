@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.EnumSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -30,16 +32,19 @@ public class NominationSubmissionController {
   private final NominationDetailService nominationDetailService;
   private final NominationSummaryService nominationSummaryService;
   private final FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
+  private final CaseEventQueryService caseEventQueryService;
 
   @Autowired
   public NominationSubmissionController(NominationSubmissionService nominationSubmissionService,
                                         NominationDetailService nominationDetailService,
                                         NominationSummaryService nominationSummaryService,
-                                        FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService) {
+                                        FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService,
+                                        CaseEventQueryService caseEventQueryService) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
     this.nominationSummaryService = nominationSummaryService;
     this.finaliseNominatedSubareaWellsService = finaliseNominatedSubareaWellsService;
+    this.caseEventQueryService = caseEventQueryService;
   }
 
   @GetMapping
@@ -63,11 +68,23 @@ public class NominationSubmissionController {
   }
 
   private ModelAndView getModelAndView(NominationId nominationId, NominationDetail nominationDetail) {
-    return new ModelAndView("osd/nomination/submission/submitNomination")
+
+    var modelAndView = new ModelAndView("osd/nomination/submission/submitNomination")
         .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject("actionUrl", ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(nominationId)))
         .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail))
         .addObject("summaryView",
             nominationSummaryService.getNominationSummaryView(nominationDetail));
+
+    var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    );
+
+    submittedDetail
+        .flatMap(caseEventQueryService::getLatestReasonForUpdate)
+        .ifPresent(reason -> modelAndView.addObject("reasonForUpdate", reason));
+
+    return modelAndView;
   }
 }

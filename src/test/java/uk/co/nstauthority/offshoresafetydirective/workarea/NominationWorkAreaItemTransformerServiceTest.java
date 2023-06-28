@@ -66,7 +66,8 @@ class NominationWorkAreaItemTransformerServiceTest {
         NominationWorkAreaItemDto::nominationStatus,
         NominationWorkAreaItemDto::createdTime,
         NominationWorkAreaItemDto::submittedTime,
-        NominationWorkAreaItemDto::nominationVersion
+        NominationWorkAreaItemDto::nominationVersion,
+        NominationWorkAreaItemDto::nominationHasUpdateRequest
     ).containsExactly(
         Tuple.tuple(
             queryResult.getNominationId(),
@@ -78,7 +79,8 @@ class NominationWorkAreaItemTransformerServiceTest {
             queryResult.getNominationStatus(),
             queryResult.getCreatedTime(),
             queryResult.getSubmittedTime(),
-            queryResult.getNominationVersion()
+            queryResult.getNominationVersion(),
+            queryResult.getNominationHasUpdateRequest()
         )
     );
   }

@@ -3,7 +3,11 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
@@ -13,8 +17,10 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -56,10 +62,10 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
   private NominationDetail nominationDetail;
 
   @MockBean
-  NominationTaskListSection nominationTaskListSection;
+  private NominationTaskListSection nominationTaskListSection;
 
   @MockBean
-  NominationTaskListItem nominationTaskListItem;
+  private NominationTaskListItem nominationTaskListItem;
 
   @BeforeEach
   void setup() {
@@ -138,9 +144,9 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
-            .with(user(NOMINATION_CREATOR_USER))
-    )
+            get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/tasklist/taskList"))
         .andExpect(model().attribute(
@@ -213,7 +219,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
             .with(user(NOMINATION_CREATOR_USER))
-    )
+        )
         .andExpect(model().attribute("deleteNominationButtonPrompt", "Delete nomination"));
   }
 
@@ -232,8 +238,83 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     mockMvc.perform(
         get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
             .with(user(NOMINATION_CREATOR_USER))
-    )
+        )
         .andExpect(model().attribute("deleteNominationButtonPrompt", "Delete draft update"));
+  }
+
+  @Test
+  void getTaskList_whenFirstNominationVersion_thenUpdateReasonNotRetrieved() throws Exception {
+    givenTaskListSectionsExist();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(1)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    ).andExpect(model().attributeDoesNotExist("reasonForUpdate"));
+
+    verify(nominationDetailService, never()).getLatestNominationDetailWithStatuses(eq(NOMINATION_ID), any());
+    verify(caseEventQueryService, never()).getLatestReasonForUpdate(any());
+  }
+
+  @Test
+  void getTaskList_whenNotFirstNomination_andNoUpdateRequested_thenNoUpdateReasonInModel() throws Exception {
+    givenTaskListSectionsExist();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(2)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    var latestSubmittedNominationDetail = NominationDetailTestUtil.builder().build();
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ))
+        .thenReturn(Optional.of(latestSubmittedNominationDetail));
+
+    when(caseEventQueryService.getLatestReasonForUpdate(latestSubmittedNominationDetail))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    ).andExpect(model().attributeDoesNotExist("reasonForUpdate"));
+  }
+
+  @Test
+  void getTaskList_whenNotFirstNomination_andUpdateRequested_thenUpdateReasonInModel() throws Exception {
+    givenTaskListSectionsExist();
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withVersion(2)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    var latestSubmittedNominationDetail = NominationDetailTestUtil.builder().build();
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.SUBMITTED)
+    ))
+        .thenReturn(Optional.of(latestSubmittedNominationDetail));
+
+    var reasonForUpdate = "reason";
+    when(caseEventQueryService.getLatestReasonForUpdate(latestSubmittedNominationDetail))
+        .thenReturn(Optional.of(reasonForUpdate));
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+            .with(user(NOMINATION_CREATOR_USER))
+    ).andExpect(model().attribute("reasonForUpdate", reasonForUpdate));
   }
 
   private void givenTaskListSectionsExist() {

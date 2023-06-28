@@ -20,7 +20,8 @@ record NominationWorkAreaItemDto(
     NominationStatus nominationStatus,
     NominationCreatedTime createdTime,
     NominationSubmittedTime submittedTime,
-    PearsReferences pearsReferences
+    PearsReferences pearsReferences,
+    NominationHasUpdateRequest nominationHasUpdateRequest
 ) {
 
 }

@@ -30,6 +30,7 @@
 <#-- @ftlvariable name="managementActions" type="java.util.Map<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup, java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction>>" -->
 <#-- @ftlvariable name="nominationVersionForm" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingVersionForm" -->
 <#-- @ftlvariable name="versionOptions" type="java.util.Map<String, String>" -->
+<#-- @ftlvariable name="updateRequestReason" type="String" -->
 
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
@@ -117,6 +118,17 @@ errorItems=[]
             <@fdsAction.link linkText=actionKeyValue.actionText linkUrl=springUrl(action.submitUrl) linkClass="govuk-button"/>
         </#if>
     </#macro>
+
+    <#if updateRequestReason?has_content>
+        <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="An update has been requested on this nomination">
+            <#assign infoBannerContent>
+                <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
+                    <pre class="govuk-body">${updateRequestReason}</pre>
+                </@fdsDetails.summaryDetails>
+            </#assign>
+            <@fdsNotificationBanner.notificationBannerContent headingText="Update your nomination to provide the information requested" moreContent=infoBannerContent/>
+        </@fdsNotificationBanner.notificationBannerInfo>
+    </#if>
 
     <#if managementActions?has_content>
         <@fdsAction.buttonGroup>

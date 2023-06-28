@@ -2,6 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.Set;
@@ -26,6 +28,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
@@ -409,6 +413,142 @@ class NominationWorkAreaQueryServiceIntegrationTest {
                 1
             )
         );
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_hasUpdateRequest() {
+    // GIVEN a user with the manage nominations permission in the regulator team
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has a submitted version
+
+    var nomination = givenNominationExists();
+
+    var nominationDetailVersion = 1;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(nominationDetailVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(nominationDetail);
+
+    // AND there is a case event for the nomination and version of type UPDATE_REQUESTED
+    var updateRequestCaseEvent = CaseEventTestUtil.builder()
+        .withUuid(null)
+        .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
+        .withNomination(nomination)
+        .withNominationVersion(nominationDetailVersion)
+        .build();
+
+    entityManager.persistAndFlush(updateRequestCaseEvent);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the item should have an update request
+    assertThat(workAreaItems).hasSize(1);
+    assertTrue(workAreaItems.get(0).getNominationHasUpdateRequest().value());
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_hasNoUpdateRequest() {
+    // GIVEN a user with the manage nominations permission in the regulator team
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has a submitted version
+
+    var nomination = givenNominationExists();
+
+    var nominationDetailVersion = 1;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(nominationDetailVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(nominationDetail);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the item should not have an update request
+    assertThat(workAreaItems).hasSize(1);
+    assertFalse(workAreaItems.get(0).getNominationHasUpdateRequest().value());
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_hasUpdateRequestOnOlderSubmittedVersion_thenShouldNotHaveUpdateRequest() {
+
+    // GIVEN a user with the manage nominations permission in the regulator team
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has a submitted version
+
+    var nomination = givenNominationExists();
+
+    var firstNominationDetailVersion = 1;
+    var firstNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(firstNominationDetailVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(firstNominationDetail);
+
+    var secondNominationDetailVersion = 2;
+    var secondNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(secondNominationDetailVersion)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(secondNominationDetail);
+
+    // AND there exists an update request for an older version of the nomination
+    var updateRequestCaseEvent = CaseEventTestUtil.builder()
+        .withUuid(null)
+        .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
+        .withNomination(nomination)
+        .withNominationVersion(firstNominationDetailVersion)
+        .build();
+
+    entityManager.persistAndFlush(updateRequestCaseEvent);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the item should not have an update request
+    assertThat(workAreaItems).hasSize(1);
+    assertFalse(workAreaItems.get(0).getNominationHasUpdateRequest().value());
   }
 
   private ServiceUserDetail givenUserExistsInTeamWithRoles(TeamType teamType, Set<TeamRole> teamRoles) {

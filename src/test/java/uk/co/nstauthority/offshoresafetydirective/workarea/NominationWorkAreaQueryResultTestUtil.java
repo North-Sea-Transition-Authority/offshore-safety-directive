@@ -26,6 +26,7 @@ class NominationWorkAreaQueryResultTestUtil {
     private Instant submittedTime = null;
     private Integer nominationVersion = 1;
     private String pearsReferences = "pears/1";
+    private boolean nominationHasUpdateRequest = false;
 
     private Builder() {
 
@@ -91,6 +92,11 @@ class NominationWorkAreaQueryResultTestUtil {
       return this;
     }
 
+    public Builder withHasNominationUpdateRequest(boolean hasNominationUpdateRequest) {
+      this.nominationHasUpdateRequest = hasNominationUpdateRequest;
+      return this;
+    }
+
     public NominationWorkAreaQueryResult build() {
 
       var createdTimestamp = Timestamp.from(createdTime);
@@ -102,7 +108,7 @@ class NominationWorkAreaQueryResultTestUtil {
           nominatedOrganisationId,
           Optional.ofNullable(wellSelectionType).map(Enum::name).orElse(null),
           hasInstallations, nominationStatus.name(), createdTimestamp, submittedTimestamp, nominationVersion,
-          pearsReferences);
+          pearsReferences, nominationHasUpdateRequest);
     }
   }
 

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.EnumSet;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.deletion.DeleteNominationController;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -35,14 +37,17 @@ public class NominationTaskListController {
   private final List<NominationTaskListSection> nominationTaskListSections;
 
   private final List<NominationTaskListItem> nominationTaskListItems;
+  private final CaseEventQueryService caseEventQueryService;
 
   @Autowired
   public NominationTaskListController(NominationDetailService nominationDetailService,
                                       List<NominationTaskListSection> nominationTaskListSections,
-                                      List<NominationTaskListItem> nominationTaskListItems) {
+                                      List<NominationTaskListItem> nominationTaskListItems,
+                                      CaseEventQueryService caseEventQueryService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationTaskListSections = nominationTaskListSections;
     this.nominationTaskListItems = nominationTaskListItems;
+    this.caseEventQueryService = caseEventQueryService;
   }
 
   @GetMapping
@@ -67,6 +72,19 @@ public class NominationTaskListController {
                 new NominationTaskListItemType(nominationDetail)
             )
         );
+
+    // The first version of the nomination would not have been submitted at this point
+    // so no need to check if an update request has been made.
+    if (nominationDetailDto.version() != null && nominationDetailDto.version().intValue() > 1) {
+      var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+          nominationId,
+          EnumSet.of(NominationStatus.SUBMITTED)
+      );
+
+      submittedDetail
+          .flatMap(caseEventQueryService::getLatestReasonForUpdate)
+          .ifPresent(reason -> modelAndView.addObject("reasonForUpdate", reason));
+    }
 
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_NAME)
         .addWorkAreaBreadcrumb()
