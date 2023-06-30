@@ -1,11 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
+import java.util.Comparator;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 
 @Service
 class RelatedInformationValidator implements SmartValidator {
@@ -53,6 +58,13 @@ class RelatedInformationValidator implements SmartValidator {
   static final String RELATED_WELL_APPLICATIONS_REQUIRED_MESSAGE =
       "Enter the WONS application references that relate to this nomination";
 
+  private final EnergyPortalFieldQueryService fieldQueryService;
+
+  @Autowired
+  RelatedInformationValidator(EnergyPortalFieldQueryService fieldQueryService) {
+    this.fieldQueryService = fieldQueryService;
+  }
+
   @Override
   public boolean supports(@NotNull Class<?> clazz) {
     return RelatedInformationForm.class.equals(clazz);
@@ -85,6 +97,24 @@ class RelatedInformationValidator implements SmartValidator {
     if (BooleanUtils.isTrue(form.getRelatedToAnyFields())) {
       if (form.getFields().isEmpty()) {
         errors.rejectValue(FIELDS_FIELD_NAME, FIELDS_REQUIRED_CODE, FIELDS_REQUIRED_MESSAGE);
+      } else {
+        var fieldIds = form.getFields()
+            .stream()
+            .map(FieldId::new)
+            .collect(Collectors.toSet());
+
+        fieldQueryService.getFieldsByIds(fieldIds)
+            .stream()
+            .filter(field -> !field.isActive())
+            .sorted(Comparator.comparing(field -> field.name().toLowerCase()))
+            .toList()
+            .forEach(field ->
+              errors.rejectValue(
+                  FIELDS_FIELD_NAME,
+                  "invalid",
+                  "%s is not a valid field selection".formatted(field.name())
+              )
+            );
       }
     }
   }

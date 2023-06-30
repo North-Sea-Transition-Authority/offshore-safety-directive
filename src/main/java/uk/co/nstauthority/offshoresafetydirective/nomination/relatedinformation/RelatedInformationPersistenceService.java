@@ -1,10 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
@@ -57,8 +59,16 @@ class RelatedInformationPersistenceService {
     relatedInformationRepository.save(relatedInformation);
 
     if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyFields())) {
-      relatedInformationFieldPersistenceService.updateLinkedFields(relatedInformation,
-          relatedInformationForm.getFields());
+
+      var fieldIds = relatedInformationForm.getFields()
+          .stream()
+          .map(FieldId::new)
+          .collect(Collectors.toSet());
+
+      relatedInformationFieldPersistenceService.updateLinkedFields(
+          relatedInformation,
+          fieldIds
+      );
     } else if (BooleanUtils.isFalse(relatedInformationForm.getRelatedToAnyFields())) {
       relatedInformationFieldPersistenceService.removeExistingLinkedFields(relatedInformation);
     }

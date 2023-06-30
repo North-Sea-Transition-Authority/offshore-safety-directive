@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -8,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,13 +16,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 
-@ExtendWith(SpringExtension.class)
-@IntegrationTest
+@ExtendWith(MockitoExtension.class)
 class RelatedInformationFieldPersistenceServiceTest {
 
   @Mock
@@ -52,10 +51,10 @@ class RelatedInformationFieldPersistenceServiceTest {
   @Test
   void updateLinkedFields_whenFieldIdsProvided_thenFieldsAreLinked() {
     var relatedInformation = new RelatedInformation();
-    var fieldId = 1000;
-    var field = FieldTestUtil.builder().build();
+    var fieldId = new FieldId(1000);
+    var field = FieldDtoTestUtil.builder().build();
 
-    when(energyPortalFieldQueryService.getPortalFieldsByIds(Set.of(fieldId)))
+    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId)))
         .thenReturn(List.of(field));
 
     relatedInformationFieldPersistenceService.updateLinkedFields(relatedInformation, List.of(fieldId));
@@ -72,17 +71,17 @@ class RelatedInformationFieldPersistenceServiceTest {
             RelatedInformationField::getRelatedInformation
         )
         .containsExactly(
-            Tuple.tuple(field.getFieldId(), field.getFieldName(), relatedInformation)
+            tuple(field.fieldId().id(), field.name(), relatedInformation)
         );
   }
 
   @Test
   void updateLinkedFields_whenDuplicateFieldIdsProvided_thenOnlyUniqueIdsPersisted() {
     var relatedInformation = new RelatedInformation();
-    var fieldId = 1000;
-    var field = FieldTestUtil.builder().build();
+    var fieldId = new FieldId(1000);
+    var field = FieldDtoTestUtil.builder().build();
 
-    when(energyPortalFieldQueryService.getPortalFieldsByIds(Set.of(fieldId)))
+    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId)))
         .thenReturn(List.of(field));
 
     relatedInformationFieldPersistenceService.updateLinkedFields(relatedInformation, List.of(fieldId, fieldId));
@@ -99,7 +98,7 @@ class RelatedInformationFieldPersistenceServiceTest {
             RelatedInformationField::getRelatedInformation
         )
         .containsExactly(
-            Tuple.tuple(field.getFieldId(), field.getFieldName(), relatedInformation)
+            tuple(field.fieldId().id(), field.name(), relatedInformation)
         );
   }
 

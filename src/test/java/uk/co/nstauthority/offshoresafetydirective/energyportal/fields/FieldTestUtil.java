@@ -35,32 +35,32 @@ public class FieldTestUtil {
       geographicArea = FieldGeographicArea.CNS;
     }
 
-    public Builder setFieldId(int fieldId) {
+    public Builder withId(int fieldId) {
       this.fieldId = fieldId;
       return this;
     }
 
-    public Builder setFieldName(String fieldName) {
+    public Builder withName(String fieldName) {
       this.fieldName = fieldName;
       return this;
     }
 
-    public Builder setShore(FieldShore shore) {
+    public Builder withShoreType(FieldShore shore) {
       this.shore = shore;
       return this;
     }
 
-    public Builder setStatus(FieldStatus status) {
+    public Builder withStatus(FieldStatus status) {
       this.status = status;
       return this;
     }
 
-    public Builder setSubType(FieldSubType subType) {
+    public Builder withSubType(FieldSubType subType) {
       this.subType = subType;
       return this;
     }
 
-    public Builder setGeographicArea(FieldGeographicArea geographicArea) {
+    public Builder withGeographicArea(FieldGeographicArea geographicArea) {
       this.geographicArea = geographicArea;
       return this;
     }

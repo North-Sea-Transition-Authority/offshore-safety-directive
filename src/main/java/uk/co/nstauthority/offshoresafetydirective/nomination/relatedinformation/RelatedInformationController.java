@@ -2,6 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -18,8 +21,10 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldAddToListItem;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldRestController;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldRestService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -31,11 +36,11 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @RequestMapping("/nomination/{nominationId}/related-information")
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
-class RelatedInformationController {
+public class RelatedInformationController {
 
   static final String PAGE_NAME = "Related information";
 
-  private final FieldRestService fieldRestService;
+  private final EnergyPortalFieldQueryService fieldQueryService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
   private final RelatedInformationPersistenceService relatedInformationPersistenceService;
   private final NominationDetailService nominationDetailService;
@@ -44,15 +49,15 @@ class RelatedInformationController {
   private final ControllerHelperService controllerHelperService;
 
   @Autowired
-  RelatedInformationController(
-      FieldRestService fieldRestService,
+  public RelatedInformationController(
+      EnergyPortalFieldQueryService fieldQueryService,
       CustomerConfigurationProperties customerConfigurationProperties,
       RelatedInformationPersistenceService relatedInformationPersistenceService,
       NominationDetailService nominationDetailService,
       RelatedInformationFormService relatedInformationFormService,
       RelatedInformationValidator relatedInformationValidator,
       ControllerHelperService controllerHelperService) {
-    this.fieldRestService = fieldRestService;
+    this.fieldQueryService = fieldQueryService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.relatedInformationPersistenceService = relatedInformationPersistenceService;
     this.nominationDetailService = nominationDetailService;
@@ -86,7 +91,16 @@ class RelatedInformationController {
 
   private ModelAndView getRelatedInformationModelAndView(NominationId nominationId, RelatedInformationForm form) {
 
-    var preselectedFields = fieldRestService.getAddToListItemsFromFieldIds(form.getFields());
+    var fieldIds = form.getFields()
+        .stream()
+        .map(FieldId::new)
+        .collect(Collectors.toSet());
+
+    List<FieldAddToListItem> preselectedFields = fieldQueryService.getFieldsByIds(fieldIds)
+        .stream()
+        .sorted(Comparator.comparing(field -> field.name().toLowerCase()))
+        .map(field -> new FieldAddToListItem(String.valueOf(field.fieldId().id()), field.name(), field.isActive()))
+        .toList();
 
     var modelAndView = new ModelAndView("osd/nomination/relatedInformation/relatedInformation")
         .addObject("pageTitle", PAGE_NAME)

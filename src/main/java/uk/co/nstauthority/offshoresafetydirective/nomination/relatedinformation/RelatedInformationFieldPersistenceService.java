@@ -6,8 +6,9 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.fivium.energyportalapi.generated.types.Field;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 
 @Service
 class RelatedInformationFieldPersistenceService {
@@ -32,13 +33,13 @@ class RelatedInformationFieldPersistenceService {
   }
 
   @Transactional
-  public void updateLinkedFields(RelatedInformation relatedInformation, Collection<Integer> fieldIds) {
+  public void updateLinkedFields(RelatedInformation relatedInformation, Collection<FieldId> fieldIds) {
 
     removeExistingLinkedFields(relatedInformation);
 
     var uniqueFieldIds = Set.copyOf(fieldIds);
 
-    var fields = energyPortalFieldQueryService.getPortalFieldsByIds(uniqueFieldIds);
+    var fields = energyPortalFieldQueryService.getFieldsByIds(uniqueFieldIds);
 
     var relatedInformationFields = fields.stream()
         .map(field -> createRelatedInformationField(relatedInformation, field))
@@ -49,10 +50,10 @@ class RelatedInformationFieldPersistenceService {
     }
   }
 
-  private RelatedInformationField createRelatedInformationField(RelatedInformation relatedInformation, Field field) {
+  private RelatedInformationField createRelatedInformationField(RelatedInformation relatedInformation, FieldDto field) {
     var newField = new RelatedInformationField();
-    newField.setFieldId(field.getFieldId());
-    newField.setFieldName(field.getFieldName());
+    newField.setFieldId(field.fieldId().id());
+    newField.setFieldName(field.name());
     newField.setRelatedInformation(relatedInformation);
     return newField;
   }

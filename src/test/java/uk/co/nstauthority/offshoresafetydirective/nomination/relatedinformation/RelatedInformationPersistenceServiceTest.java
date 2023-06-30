@@ -6,8 +6,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +50,8 @@ class RelatedInformationPersistenceServiceTest {
 
     var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
 
-    verify(relatedInformationFieldPersistenceService).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService)
+        .updateLinkedFields(persistedRelatedInformation, Set.of(new FieldId(100)));
     verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
@@ -70,7 +72,8 @@ class RelatedInformationPersistenceServiceTest {
 
     var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
 
-    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService, never())
+        .updateLinkedFields(persistedRelatedInformation, Set.of(new FieldId(100)));
     verify(relatedInformationFieldPersistenceService).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
@@ -91,7 +94,8 @@ class RelatedInformationPersistenceServiceTest {
 
     var persistedRelatedInformation = relatedInformationArgumentCaptor.getValue();
 
-    verify(relatedInformationFieldPersistenceService, never()).updateLinkedFields(persistedRelatedInformation, List.of(100));
+    verify(relatedInformationFieldPersistenceService, never())
+        .updateLinkedFields(persistedRelatedInformation, Set.of(new FieldId(100)));
     verify(relatedInformationFieldPersistenceService, never()).removeExistingLinkedFields(persistedRelatedInformation);
   }
 
