@@ -4,23 +4,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 
 @Transactional
-@IntegrationTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DatabaseIntegrationTest
 class NominationRepositoryTest {
 
   @Autowired
   private NominationRepository nominationRepository;
 
   @Autowired
-  private TestEntityManager testEntityManager;
+  private EntityManager entityManager;
 
   @Test
   void getTotalSubmissionsForYear_whenNoneInYear_thenReturnsZero() {
@@ -38,7 +36,7 @@ class NominationRepositoryTest {
     var nomination = NominationTestUtil.builder()
         .withId(null)
         .build();
-    testEntityManager.persistAndFlush(nomination);
+    persistAndFlush(nomination);
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(null)
@@ -48,7 +46,7 @@ class NominationRepositoryTest {
         .withSubmittedInstant(submittedDate.toInstant(ZoneOffset.UTC))
         .build();
 
-    testEntityManager.persistAndFlush(nominationDetail);
+    persistAndFlush(nominationDetail);
 
     var result = nominationRepository.getTotalSubmissionsForYear(baseDate.getYear());
     assertThat(result).isZero();
@@ -61,7 +59,7 @@ class NominationRepositoryTest {
     var nomination = NominationTestUtil.builder()
         .withId(null)
         .build();
-    testEntityManager.persistAndFlush(nomination);
+    persistAndFlush(nomination);
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(null)
@@ -71,7 +69,7 @@ class NominationRepositoryTest {
         .withSubmittedInstant(submittedDate.toInstant(ZoneOffset.UTC))
         .build();
 
-    testEntityManager.persistAndFlush(nominationDetail);
+    persistAndFlush(nominationDetail);
 
     var result = nominationRepository.getTotalSubmissionsForYear(submittedDate.getYear());
     assertThat(result).isEqualTo(1);
@@ -84,7 +82,7 @@ class NominationRepositoryTest {
     var nomination = NominationTestUtil.builder()
         .withId(null)
         .build();
-    testEntityManager.persistAndFlush(nomination);
+    persistAndFlush(nomination);
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(null)
@@ -102,8 +100,8 @@ class NominationRepositoryTest {
         .withSubmittedInstant(submittedDate.toInstant(ZoneOffset.UTC))
         .build();
 
-    testEntityManager.persistAndFlush(nominationDetail);
-    testEntityManager.persistAndFlush(nominationDetail2);
+    persistAndFlush(nominationDetail);
+    persistAndFlush(nominationDetail2);
 
     var result = nominationRepository.getTotalSubmissionsForYear(submittedDate.getYear());
     assertThat(result).isEqualTo(1);
@@ -117,7 +115,7 @@ class NominationRepositoryTest {
         .withId(null)
         .withReference(null)
         .build();
-    testEntityManager.persistAndFlush(nomination);
+    persistAndFlush(nomination);
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(null)
@@ -127,10 +125,15 @@ class NominationRepositoryTest {
         .withSubmittedInstant(submittedDate.toInstant(ZoneOffset.UTC))
         .build();
 
-    testEntityManager.persistAndFlush(nominationDetail);
+    persistAndFlush(nominationDetail);
 
     var result = nominationRepository.getTotalSubmissionsForYear(submittedDate.getYear());
     assertThat(result).isZero();
+  }
+  
+  private void persistAndFlush(Object entity) {
+    entityManager.persist(entity);
+    entityManager.flush();
   }
 
 }

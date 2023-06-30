@@ -10,9 +10,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.ApplicationIntegrationTest;
 
-@IntegrationTest
+@ApplicationIntegrationTest
 class TaskListEnforceUniqueValuesTest {
 
   @Autowired

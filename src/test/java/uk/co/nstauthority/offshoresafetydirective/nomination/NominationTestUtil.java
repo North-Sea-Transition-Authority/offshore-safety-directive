@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class NominationTestUtil {
 
@@ -16,7 +17,7 @@ public class NominationTestUtil {
 
     private Integer id = 10;
     private Instant createdInstant = Instant.now();
-    private String reference = "WIO/2022/%d".formatted(id);
+    private String reference = "reference/%s".formatted(UUID.randomUUID());
 
     public NominationBuilder withId(Integer id) {
       this.id = id;

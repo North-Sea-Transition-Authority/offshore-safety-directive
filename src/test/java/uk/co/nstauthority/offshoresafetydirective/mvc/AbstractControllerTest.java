@@ -34,7 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "development"})
 @AutoConfigureMockMvc
 @IncludeServiceBrandingConfigurationProperties
 @IncludeEnergyPortalConfigurationProperties

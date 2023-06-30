@@ -5,16 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
-@IntegrationTest
+@DatabaseIntegrationTest
 @Transactional
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class TeamRepositoryTest {
 
   @Autowired
@@ -35,7 +33,7 @@ class TeamRepositoryTest {
         .build();
 
     var otherTeam = TeamTestUtil.Builder()
-        .withTeamType(null)
+        .withTeamType(TeamType.CONSULTEE)
         .withId(null)
         .build();
 
@@ -45,11 +43,13 @@ class TeamRepositoryTest {
     var memberInRegulatorTeam = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(100)
         .withTeam(regulatorTeam)
+        .withUuid(null)
         .build();
 
     var memberInOtherTeam = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(memberInRegulatorTeam.getWuaId())
         .withTeam(otherTeam)
+        .withUuid(null)
         .build();
 
     teamMemberRoleRepository.saveAll(List.of(memberInRegulatorTeam, memberInOtherTeam));
@@ -81,11 +81,13 @@ class TeamRepositoryTest {
     var firstMemberInRegulatorTeam = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(100)
         .withTeam(regulatorTeam)
+        .withUuid(null)
         .build();
 
     var secondMemberInRegulatorTeam = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(200)
         .withTeam(regulatorTeam)
+        .withUuid(null)
         .build();
 
     teamMemberRoleRepository.saveAll(List.of(firstMemberInRegulatorTeam, secondMemberInRegulatorTeam));
@@ -97,7 +99,7 @@ class TeamRepositoryTest {
     );
 
     // THEN only the team the user is a member of is returned
-    assertThat(result).containsExactly(regulatorTeam);
+    assertThat(result).containsOnlyOnce(regulatorTeam);
   }
 
   @Test
@@ -116,20 +118,35 @@ class TeamRepositoryTest {
         .withId(null)
         .build();
 
-    teamRepository.saveAll(List.of(firstRegulatorTeam, secondRegulatorTeam));
+    var nonRegulatorTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .withId(null)
+        .build();
 
-    // AND the same user is in both teams
+    teamRepository.saveAll(List.of(firstRegulatorTeam, secondRegulatorTeam, nonRegulatorTeam));
+
+    // AND the same user is in all teams
     var firstRegulatorTeamMember = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(100)
         .withTeam(firstRegulatorTeam)
+        .withUuid(null)
         .build();
 
     var secondRegulatorTeamMember = TeamMemberRoleTestUtil.Builder()
         .withWebUserAccountId(firstRegulatorTeamMember.getWuaId())
         .withTeam(secondRegulatorTeam)
+        .withUuid(null)
         .build();
 
-    teamMemberRoleRepository.saveAll(List.of(firstRegulatorTeamMember, secondRegulatorTeamMember));
+    var nonRegulatorTeamMember = TeamMemberRoleTestUtil.Builder()
+        .withWebUserAccountId(firstRegulatorTeamMember.getWuaId())
+        .withTeam(nonRegulatorTeam)
+        .withUuid(null)
+        .build();
+
+    teamMemberRoleRepository.saveAll(
+        List.of(firstRegulatorTeamMember, secondRegulatorTeamMember, nonRegulatorTeamMember)
+    );
 
     // WHEN we filter by user and team type
     var result = teamRepository.findAllTeamsOfTypeThatUserIsMemberOf(
@@ -137,8 +154,11 @@ class TeamRepositoryTest {
         teamTypeToCheck
     );
 
-    // THEN both teams are returned
-    assertThat(result).containsExactlyInAnyOrder(firstRegulatorTeam, secondRegulatorTeam);
+    // THEN both regulator teams are returned
+    // AND the non regulator team is not returned
+    assertThat(result)
+        .contains(firstRegulatorTeam, secondRegulatorTeam)
+        .doesNotContain(nonRegulatorTeam);
   }
 
   @Test
@@ -159,12 +179,14 @@ class TeamRepositoryTest {
         .withTeam(team)
         .withWebUserAccountId(100)
         .withRole("FIRST_ROLE")
+        .withUuid(null)
         .build();
 
     var secondRoleTeamMember = TeamMemberRoleTestUtil.Builder()
         .withTeam(team)
         .withWebUserAccountId(100)
         .withRole("SECOND_ROLE")
+        .withUuid(null)
         .build();
 
     teamMemberRoleRepository.saveAll(List.of(firstRoleTeamMember, secondRoleTeamMember));
@@ -176,7 +198,7 @@ class TeamRepositoryTest {
     );
 
     // THEN only one team is returned regardless how many roles exist
-    assertThat(result).containsExactly(team);
+    assertThat(result).containsOnlyOnce(team);
   }
 
   @Test
@@ -206,11 +228,14 @@ class TeamRepositoryTest {
         .withTeam(regulatorTeam)
         .withRole(RegulatorTeamRole.VIEW_NOMINATION.name())
         .withWebUserAccountId(user.wuaId())
+        .withUuid(null)
         .build();
+
     var consulteeTeamMemberRole = TeamMemberRoleTestUtil.Builder()
         .withTeam(consulteeTeam)
         .withRole(ConsulteeTeamRole.CONSULTEE.name())
         .withWebUserAccountId(user.wuaId())
+        .withUuid(null)
         .build();
 
     teamMemberRoleRepository.saveAll(List.of(regulatorTeamMemberRole, consulteeTeamMemberRole));
@@ -234,17 +259,19 @@ class TeamRepositoryTest {
         .withTeam(regulatorTeam)
         .withRole(RegulatorTeamRole.VIEW_NOMINATION.name())
         .withWebUserAccountId(user.wuaId())
+        .withUuid(null)
         .build();
+
     var accessManagerRole = TeamMemberRoleTestUtil.Builder()
         .withTeam(regulatorTeam)
         .withRole(RegulatorTeamRole.ACCESS_MANAGER.name())
         .withWebUserAccountId(user.wuaId())
+        .withUuid(null)
         .build();
 
     teamMemberRoleRepository.saveAll(List.of(viewNominationRole, accessManagerRole));
 
     var result = teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId());
-    assertThat(result).containsExactly(regulatorTeam);
+    assertThat(result).containsOnlyOnce(regulatorTeam);
   }
-
 }

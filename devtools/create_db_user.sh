@@ -1,0 +1,7 @@
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE USER osd_app WITH PASSWORD 'dev';
+    GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO osd_app;
+    ALTER USER osd_app WITH CREATEROLE;
+EOSQL

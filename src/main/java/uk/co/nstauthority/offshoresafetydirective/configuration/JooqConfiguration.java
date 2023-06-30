@@ -1,8 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.configuration;
 
 import javax.sql.DataSource;
+import org.jooq.SQLDialect;
+import org.jooq.Schema;
 import org.jooq.conf.RenderQuotedNames;
 import org.jooq.conf.Settings;
+import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultDSLContext;
@@ -14,8 +17,12 @@ import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 @Configuration
 class JooqConfiguration {
 
+  private final DataSource dataSource;
+
   @Autowired
-  private DataSource dataSource;
+  JooqConfiguration(DataSource dataSource) {
+    this.dataSource = dataSource;
+  }
 
   @Bean
   public DataSourceConnectionProvider connectionProvider() {
@@ -23,17 +30,30 @@ class JooqConfiguration {
   }
 
   @Bean
-  public DefaultDSLContext dsl() {
-    return new DefaultDSLContext(configuration());
+  public DefaultDSLContext dsl(DefaultConfiguration configuration) {
+    return new DefaultDSLContext(configuration);
   }
 
-  public DefaultConfiguration configuration() {
-    DefaultConfiguration jooqConfiguration = new DefaultConfiguration();
-    jooqConfiguration.set(connectionProvider());
-    jooqConfiguration
-        .setSettings(new Settings().withRenderQuotedNames(RenderQuotedNames.NEVER));
+  @Bean
+  public DefaultConfiguration configuration(DataSourceConnectionProvider connectionProvider) {
+    var jooqConfiguration = new DefaultConfiguration();
+    jooqConfiguration.setSQLDialect(SQLDialect.POSTGRES);
+    jooqConfiguration.set(connectionProvider);
+
+    var settings  = new Settings()
+        .withRenderQuotedNames(RenderQuotedNames.NEVER)
+        .withInterpreterDialect(SQLDialect.POSTGRES)
+        .withParseDialect(SQLDialect.POSTGRES)
+        .withRenderSchema(true);
+
+    jooqConfiguration.setSettings(settings);
 
     return jooqConfiguration;
+  }
+
+  @Bean
+  public Schema getDefaultSchema(JooqConfigurationProperties jooqConfigurationProperties) {
+    return DSL.schema(jooqConfigurationProperties.schema());
   }
 
 }

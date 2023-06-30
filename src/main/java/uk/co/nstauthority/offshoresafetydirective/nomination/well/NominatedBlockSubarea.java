@@ -19,12 +19,12 @@ class NominatedBlockSubarea {
   private Integer id;
 
   @ManyToOne
-  @JoinColumn(name = "nomination_detail")
+  @JoinColumn(name = "nomination_detail_id")
   private NominationDetail nominationDetail;
 
   private String blockSubareaId;
 
-  NominatedBlockSubarea() {
+  protected NominatedBlockSubarea() {
   }
 
   @VisibleForTesting

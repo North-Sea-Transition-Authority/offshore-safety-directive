@@ -5,18 +5,18 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import java.time.LocalDate;
 import java.util.Set;
+import javax.persistence.EntityManager;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 @Transactional
-@IntegrationTest
+@DatabaseIntegrationTest
 class AppointmentQueryServiceTest {
 
   @Autowired
@@ -26,7 +26,7 @@ class AppointmentQueryServiceTest {
   private AppointmentQueryService appointmentQueryService;
 
   @Autowired
-  private TestEntityManager entityManager;
+  private EntityManager entityManager;
 
   @Test
   void search_whenNoResults_thenEmptyListReturned() {
@@ -45,7 +45,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    entityManager.persistAndFlush(firstAsset);
+    persistAndFlush(firstAsset);
 
     var activeAppointmentOnFirstAsset = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -53,7 +53,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(activeAppointmentOnFirstAsset);
+    persistAndFlush(activeAppointmentOnFirstAsset);
 
     var endedAppointmentOnFirstAsset = AppointmentTestUtil.builder()
         .withResponsibleToDate(LocalDate.now())
@@ -61,14 +61,14 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(endedAppointmentOnFirstAsset);
+    persistAndFlush(endedAppointmentOnFirstAsset);
 
     var secondAsset = AssetTestUtil.builder()
         .withId(null)
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    entityManager.persistAndFlush(secondAsset);
+    persistAndFlush(secondAsset);
 
     var endedAppointmentOnSecondAsset = AppointmentTestUtil.builder()
         .withResponsibleToDate(LocalDate.now())
@@ -76,7 +76,7 @@ class AppointmentQueryServiceTest {
         .withAsset(secondAsset)
         .build();
 
-    entityManager.persistAndFlush(endedAppointmentOnSecondAsset);
+    persistAndFlush(endedAppointmentOnSecondAsset);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
@@ -85,7 +85,11 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
-        .containsExactly(activeAppointmentOnFirstAsset.getId());
+        .contains(activeAppointmentOnFirstAsset.getId());
+
+    assertThat(resultingAppointments)
+        .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
+        .doesNotContain(endedAppointmentOnSecondAsset.getId());
   }
 
   @Test
@@ -96,7 +100,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    entityManager.persistAndFlush(installationAsset);
+    persistAndFlush(installationAsset);
 
     var installationAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -104,7 +108,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAppointment);
+    persistAndFlush(installationAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -122,7 +126,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    entityManager.persistAndFlush(installationAsset);
+    persistAndFlush(installationAsset);
 
     var installationAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -130,14 +134,14 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAppointment);
+    persistAndFlush(installationAppointment);
 
     var wellboreAsset = AssetTestUtil.builder()
         .withId(null)
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .build();
 
-    entityManager.persistAndFlush(wellboreAsset);
+    persistAndFlush(wellboreAsset);
 
     var wellboreAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -145,7 +149,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointment);
+    persistAndFlush(wellboreAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -154,7 +158,11 @@ class AppointmentQueryServiceTest {
 
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
-        .containsExactly(wellboreAppointment.getId());
+        .contains(wellboreAppointment.getId());
+
+    assertThat(resultingAppointments)
+        .extracting(appointmentQueryResultItemDto -> appointmentQueryResultItemDto.getAppointmentId().id())
+        .doesNotContain(installationAppointment.getId());
   }
 
   @Test
@@ -172,7 +180,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    entityManager.persistAndFlush(installationAsset);
+    persistAndFlush(installationAsset);
 
     // and an appointment for the filtered operator
     var installationAppointmentForFilteredOperator = AppointmentTestUtil.builder()
@@ -182,14 +190,14 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAppointmentForFilteredOperator);
+    persistAndFlush(installationAppointmentForFilteredOperator);
 
     var wellboreAsset = AssetTestUtil.builder()
         .withId(null)
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .build();
 
-    entityManager.persistAndFlush(wellboreAsset);
+    persistAndFlush(wellboreAsset);
 
     // and an appointment for a different operator
     var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
@@ -199,7 +207,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+    persistAndFlush(wellboreAppointmentNotForFilteredOperator);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION, PortalAssetType.WELLBORE),
@@ -210,7 +218,11 @@ class AppointmentQueryServiceTest {
     assertThat(resultingAppointments).hasSize(1);
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
-        .containsExactly(String.valueOf(filteredAppointedOperatorId));
+        .contains(String.valueOf(filteredAppointedOperatorId));
+
+    assertThat(resultingAppointments)
+        .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
+        .doesNotContain("20");
   }
 
   @Test
@@ -228,7 +240,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .build();
 
-    entityManager.persistAndFlush(wellboreAsset);
+    persistAndFlush(wellboreAsset);
 
     // and an appointment for a different operator
     var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
@@ -238,7 +250,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+    persistAndFlush(wellboreAppointmentNotForFilteredOperator);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -262,7 +274,7 @@ class AppointmentQueryServiceTest {
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .build();
 
-    entityManager.persistAndFlush(wellboreAsset);
+    persistAndFlush(wellboreAsset);
 
     // and an appointment for an operator exists
     var wellboreAppointmentNotForFilteredOperator = AppointmentTestUtil.builder()
@@ -272,7 +284,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointmentNotForFilteredOperator);
+    persistAndFlush(wellboreAppointmentNotForFilteredOperator);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -282,7 +294,7 @@ class AppointmentQueryServiceTest {
     // then appointments returned regardless of operator
     assertThat(resultingAppointments)
         .extracting(appointmentQueryResultItem -> appointmentQueryResultItem.getAppointedOperatorId().id())
-        .containsExactly(String.valueOf(20));
+        .contains(String.valueOf(20));
   }
 
   @Test
@@ -300,7 +312,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(unmatchedWellboreAsset);
+    persistAndFlush(unmatchedWellboreAsset);
 
     // and an appointment exists for the wellbore not matching the filter
     var unmatchedWellboreAppointment = AppointmentTestUtil.builder()
@@ -309,7 +321,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(unmatchedWellboreAppointment);
+    persistAndFlush(unmatchedWellboreAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -336,7 +348,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedWellboreAsset);
+    persistAndFlush(matchedWellboreAsset);
 
     // and an appointment exists for the wellbore matching the filter
     var matchedWellboreAppointment = AppointmentTestUtil.builder()
@@ -345,7 +357,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedWellboreAppointment);
+    persistAndFlush(matchedWellboreAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -357,7 +369,7 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 String.valueOf(filteredWellboreId),
                 PortalAssetType.WELLBORE
@@ -382,7 +394,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedWellboreAsset);
+    persistAndFlush(matchedWellboreAsset);
 
     // and an appointment exists for the wellbore matching the filter
     var matchedWellboreAppointment = AppointmentTestUtil.builder()
@@ -391,7 +403,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedWellboreAppointment);
+    persistAndFlush(matchedWellboreAppointment);
 
     // and a non wellbore asset exists with the same ID as a wellbore asset
     var installationAssetWithSameIdAsWellbore = AssetTestUtil.builder()
@@ -400,7 +412,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAssetWithSameIdAsWellbore);
+    persistAndFlush(installationAssetWithSameIdAsWellbore);
 
     // and an appointment exists for the installation with the matching wellbore ID
     var installationAppointment = AppointmentTestUtil.builder()
@@ -409,7 +421,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAppointment);
+    persistAndFlush(installationAppointment);
 
     // and the restrictions provided by the consumer includes other asset types that are not wellbores
     var resultingAppointments = appointmentQueryService.search(
@@ -422,10 +434,22 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 String.valueOf(filteredWellboreId),
                 PortalAssetType.WELLBORE
+            )
+        );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .doesNotContain(
+            tuple(
+                String.valueOf(filteredWellboreId),
+                PortalAssetType.INSTALLATION
             )
         );
   }
@@ -445,7 +469,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAsset);
+    persistAndFlush(wellboreAsset);
 
     // and an appointment exists for the wellbore
     var wellboreAppointment = AppointmentTestUtil.builder()
@@ -454,7 +478,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointment);
+    persistAndFlush(wellboreAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.WELLBORE),
@@ -467,7 +491,7 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 "200",
                 PortalAssetType.WELLBORE
@@ -490,7 +514,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(unmatchedInstallationAsset);
+    persistAndFlush(unmatchedInstallationAsset);
 
     // and an appointment exists for the installation not matching the filter
     var unmatchedInstallationAppointment = AppointmentTestUtil.builder()
@@ -499,7 +523,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(unmatchedInstallationAppointment);
+    persistAndFlush(unmatchedInstallationAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
@@ -526,7 +550,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedInstallationAsset);
+    persistAndFlush(matchedInstallationAsset);
 
     // and an appointment exists for the installation matching the filter
     var matchedInstallationAppointment = AppointmentTestUtil.builder()
@@ -535,7 +559,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedInstallationAppointment);
+    persistAndFlush(matchedInstallationAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
@@ -547,7 +571,7 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 String.valueOf(filteredInstallationId),
                 PortalAssetType.INSTALLATION
@@ -572,7 +596,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedInstallationAsset);
+    persistAndFlush(matchedInstallationAsset);
 
     // and an appointment exists for the wellbore matching the filter
     var matchedInstallationAppointment = AppointmentTestUtil.builder()
@@ -581,7 +605,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(matchedInstallationAppointment);
+    persistAndFlush(matchedInstallationAppointment);
 
     // and a non installation asset exists with the same ID as a installation asset
     var installationAssetWithSameIdAsWellbore = AssetTestUtil.builder()
@@ -590,7 +614,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAssetWithSameIdAsWellbore);
+    persistAndFlush(installationAssetWithSameIdAsWellbore);
 
     // and an appointment exists for the wellbore with the matching installation ID
     var wellboreAppointment = AppointmentTestUtil.builder()
@@ -599,7 +623,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(wellboreAppointment);
+    persistAndFlush(wellboreAppointment);
 
     // and the restrictions provided by the consumer includes other asset types that are not installations
     var resultingAppointments = appointmentQueryService.search(
@@ -612,10 +636,22 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 String.valueOf(filteredInstallationId),
                 PortalAssetType.INSTALLATION
+            )
+        );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .doesNotContain(
+            tuple(
+                String.valueOf(filteredInstallationId),
+                PortalAssetType.WELLBORE
             )
         );
   }
@@ -635,7 +671,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAsset);
+    persistAndFlush(installationAsset);
 
     // and an appointment exists for the installation
     var installationAppointment = AppointmentTestUtil.builder()
@@ -644,7 +680,7 @@ class AppointmentQueryServiceTest {
         .withId(null)
         .build();
 
-    entityManager.persistAndFlush(installationAppointment);
+    persistAndFlush(installationAppointment);
 
     var resultingAppointments = appointmentQueryService.search(
         Set.of(PortalAssetType.INSTALLATION),
@@ -657,11 +693,16 @@ class AppointmentQueryServiceTest {
             appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
             AppointmentQueryResultItemDto::getPortalAssetType
         )
-        .containsExactly(
+        .contains(
             tuple(
                 "200",
                 PortalAssetType.INSTALLATION
             )
         );
+  }
+
+  private void persistAndFlush(Object entity) {
+    entityManager.persist(entity);
+    entityManager.flush();
   }
 }

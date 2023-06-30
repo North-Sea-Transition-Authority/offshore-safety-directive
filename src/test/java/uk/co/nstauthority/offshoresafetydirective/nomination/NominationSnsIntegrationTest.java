@@ -6,15 +6,14 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.UUID;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.annotation.DirtiesContext;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.ApplicationIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
@@ -24,12 +23,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
-@IntegrationTest
+@ApplicationIntegrationTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class NominationSnsIntegrationTest {
 
   @Autowired
-  private TestEntityManager testEntityManager;
+  private EntityManager entityManager;
 
   @Autowired
   private NominationSubmissionService nominationSubmissionService;
@@ -41,7 +40,7 @@ class NominationSnsIntegrationTest {
   private SnsService snsService;
 
   @Test
-  void submittingNominationPublishesSnsMessage() throws JsonProcessingException {
+  void submittingNominationPublishesSnsMessage() {
     SamlAuthenticationUtil.Builder().setSecurityContext();
 
     var correlationId = UUID.randomUUID().toString();
@@ -68,10 +67,10 @@ class NominationSnsIntegrationTest {
         .build();
 
     transactionWrapper.runInNewTransaction(() -> {
-      testEntityManager.persistAndFlush(nomination);
-      testEntityManager.persistAndFlush(nominationDetail);
-      testEntityManager.persistAndFlush(relatedInformation);
-      testEntityManager.persistAndFlush(applicantDetail);
+      persistAndFlush(nomination);
+      persistAndFlush(nominationDetail);
+      persistAndFlush(relatedInformation);
+      persistAndFlush(applicantDetail);
     });
 
     nominationSubmissionService.submitNomination(nominationDetail);
@@ -117,10 +116,10 @@ class NominationSnsIntegrationTest {
         .build();
 
     transactionWrapper.runInNewTransaction(() -> {
-      testEntityManager.persistAndFlush(nomination);
-      testEntityManager.persistAndFlush(nominationDetail);
-      testEntityManager.persistAndFlush(relatedInformation);
-      testEntityManager.persistAndFlush(applicantDetail);
+      persistAndFlush(nomination);
+      persistAndFlush(nominationDetail);
+      persistAndFlush(relatedInformation);
+      persistAndFlush(applicantDetail);
     });
 
     try {
@@ -134,5 +133,10 @@ class NominationSnsIntegrationTest {
     }
 
     verify(snsService, never()).publishMessage(any(), any());
+  }
+  
+  private void persistAndFlush(Object entity) {
+    entityManager.persist(entity);
+    entityManager.flush();
   }
 }

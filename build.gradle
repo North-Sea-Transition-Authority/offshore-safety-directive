@@ -6,11 +6,11 @@ plugins {
 	id 'checkstyle'
 	id 'jacoco'
 	id 'maven-publish'
-  id 'nu.studer.jooq' version '8.1'
-  //docker-compose needed to startup a postgres container for Jooq codegen
-  id 'com.avast.gradle.docker-compose' version "0.16.9"
-  //Flyway added manually here, as it's used for the Jooq codegen
-  id "org.flywaydb.flyway" version "9.12.0"
+	id 'nu.studer.jooq' version '8.1'
+	// docker-compose needed to startup a postgres container for Jooq codegen
+	id 'com.avast.gradle.docker-compose' version "0.16.9"
+	// Flyway added manually here, as it's used for the Jooq codegen
+	id "org.flywaydb.flyway" version "9.12.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -57,8 +57,8 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 
 	implementation 'org.springframework.boot:spring-boot-starter-jooq'
-  implementation 'org.jooq:jooq-codegen'
-  implementation 'org.jooq:jooq-meta'
+  	implementation 'org.jooq:jooq-codegen'
+  	implementation 'org.jooq:jooq-meta'
 
 	implementation 'com.google.guava:guava:31.1-jre'
 	implementation 'org.apache.commons:commons-lang3:3.12.0'
@@ -80,9 +80,12 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'
 
-	// Using H2 for the tests as a temporary measure until a final decision is made on which database is being used.
-	// This will be updated/removed when https://ogajira.atlassian.net/browse/OSDOP-204 is picked up.
+	// for test which require a database but not requiring a full postgres database
 	testImplementation 'com.h2database:h2:2.1.214'
+
+	// for test requiring an actual postgres database be used and the flyway migrations run
+	testImplementation "org.testcontainers:postgresql:1.18.3"
+
 	testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -107,10 +110,11 @@ tasks {
 
 dockerCompose {
   useComposeFiles = ['local-dev-compose.yml']
+  startedServices = ['database']
 }
 
 flyway {
-  user = 'osd'
+  user = 'osd_app'
   password = 'dev'
   schemas = ['osd']
 }
@@ -118,7 +122,7 @@ flyway {
 //Set the url before the build to dynamically set the port
 //This must be done here, not above, as the serviceInfos object won't exist at configuration time
 flywayMigrate.doFirst {
-  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos.db.host + ':' + dockerCompose.servicesInfos.db.ports[5432] + '/osd'
+  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['database'].host + ':' + dockerCompose.servicesInfos['database'].ports[5432] + '/osd'
   System.setProperty('DB_URL', url)
 }
 
@@ -130,7 +134,7 @@ jooq {
       generationTool {
         jdbc {
           driver = 'org.postgresql.Driver'
-          user = 'osd'
+          user = 'osd_app'
           password = 'dev'
         }
         generator {

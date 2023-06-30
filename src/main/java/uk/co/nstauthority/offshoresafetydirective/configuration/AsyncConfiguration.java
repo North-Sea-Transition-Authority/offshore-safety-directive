@@ -12,9 +12,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
-// Async method execution is not enabled for the integration-test profile, as some of our integration tests rely on
+// Async method execution is not enabled for the application-integration-test profile, as some of our tests rely on
 // async listeners firing before their assertions are called.
-@Profile("!integration-test")
+@Profile("!application-integration-test")
 class AsyncConfiguration implements AsyncConfigurer {
 
   // https://moelholm.com/blog/2017/07/24/spring-43-using-a-taskdecorator-to-copy-mdc-data-to-async-threads

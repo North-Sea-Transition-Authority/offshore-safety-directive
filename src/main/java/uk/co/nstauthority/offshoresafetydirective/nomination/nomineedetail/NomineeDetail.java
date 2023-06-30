@@ -20,7 +20,7 @@ class NomineeDetail {
   private Integer id;
 
   @ManyToOne
-  @JoinColumn(name = "nomination_detail")
+  @JoinColumn(name = "nomination_detail_id")
   private NominationDetail nominationDetail;
 
   private Integer nominatedOrganisationId;

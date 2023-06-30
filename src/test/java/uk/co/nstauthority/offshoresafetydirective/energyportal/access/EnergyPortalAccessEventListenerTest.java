@@ -7,47 +7,26 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Set;
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAccessService;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.ApplicationIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
-@DataJpaTest(includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
-    classes = {
-        TeamMemberRoleService.class,
-        AddedToTeamEventPublisher.class,
-        TeamMemberRemovedEventPublisher.class,
-        EnergyPortalAccessEventListener.class,
-        TransactionWrapper.class
-    }
-))
-@AutoConfigureTestDatabase
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ActiveProfiles("integration-test")
-@ExtendWith(SpringExtension.class)
+@ApplicationIntegrationTest
 class EnergyPortalAccessEventListenerTest {
 
   @Autowired
@@ -57,7 +36,7 @@ class EnergyPortalAccessEventListenerTest {
   private TransactionWrapper transactionWrapper;
 
   @Autowired
-  private TestEntityManager entityManager;
+  private EntityManager entityManager;
 
   @MockBean
   private EnergyPortalAccessService energyPortalAccessService;
@@ -95,7 +74,7 @@ class EnergyPortalAccessEventListenerTest {
           .withId(null)
           .build();
 
-      entityManager.persistAndFlush(team);
+      persistAndFlush(team);
 
       teamMemberRoleService.addUserTeamRoles(team, userToAdd, rolesGranted);
     });
@@ -136,7 +115,7 @@ class EnergyPortalAccessEventListenerTest {
             .withId(null)
             .build();
 
-        entityManager.persistAndFlush(team);
+        persistAndFlush(team);
 
         teamMemberRoleService.addUserTeamRoles(team, userToAdd, rolesGranted);
 
@@ -168,7 +147,7 @@ class EnergyPortalAccessEventListenerTest {
           .withId(null)
           .build();
 
-      entityManager.persistAndFlush(team);
+      persistAndFlush(team);
 
       teamMemberRoleService.removeMemberFromTeam(team, userToRemove);
     });
@@ -207,7 +186,7 @@ class EnergyPortalAccessEventListenerTest {
             .withId(null)
             .build();
 
-        entityManager.persistAndFlush(team);
+        persistAndFlush(team);
 
         teamMemberRoleService.removeMemberFromTeam(team, userToRemove);
 
@@ -218,6 +197,11 @@ class EnergyPortalAccessEventListenerTest {
     }
 
     verifyNoInteractions(energyPortalAccessService);
+  }
+
+  private void persistAndFlush(Object entity) {
+    entityManager.persist(entity);
+    entityManager.flush();
   }
 
 }

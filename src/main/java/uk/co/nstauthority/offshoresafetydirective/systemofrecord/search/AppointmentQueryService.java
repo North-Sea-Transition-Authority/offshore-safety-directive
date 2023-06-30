@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
+import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.APPOINTMENTS;
+import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.ASSETS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,17 +28,17 @@ class AppointmentQueryService {
                                              SystemOfRecordSearchFilter searchFilter) {
     return dslContext
         .select(
-            field("assets.portal_asset_id"),
-            field("assets.portal_asset_type"),
-            field("appointments.id"),
-            field("appointments.appointed_portal_operator_id"),
-            field("appointments.type"),
-            field("appointments.responsible_from_date"),
-            field("assets.asset_name")
+            ASSETS.PORTAL_ASSET_ID,
+            ASSETS.PORTAL_ASSET_TYPE,
+            APPOINTMENTS.ID,
+            APPOINTMENTS.APPOINTED_PORTAL_OPERATOR_ID,
+            APPOINTMENTS.TYPE,
+            APPOINTMENTS.RESPONSIBLE_FROM_DATE,
+            ASSETS.ASSET_NAME
         )
-        .from(table("assets"))
-        .join(table("appointments"))
-          .on(field("appointments.asset_id").eq(field("assets.id")))
+        .from(ASSETS)
+        .join(APPOINTMENTS)
+        .on(APPOINTMENTS.ASSET_ID.eq(ASSETS.ID))
         .where(getPredicateConditions(portalAssetTypeRestrictions, searchFilter))
         .fetchInto(AppointmentQueryResultItemDto.class);
   }
@@ -50,13 +50,12 @@ class AppointmentQueryService {
     List<Condition> predicateList = new ArrayList<>();
 
     // only active appointments
-    predicateList.add(field("appointments.responsible_to_date").isNull());
+    predicateList.add(APPOINTMENTS.RESPONSIBLE_TO_DATE.isNull());
 
     // if operator ID filter provided then filter by appointed operator
     if (searchFilter.appointedOperatorId() != null) {
       predicateList.add(
-          field("appointments.appointed_portal_operator_id")
-              .eq(String.valueOf(searchFilter.appointedOperatorId()))
+          APPOINTMENTS.APPOINTED_PORTAL_OPERATOR_ID.eq(String.valueOf(searchFilter.appointedOperatorId()))
       );
     }
 
@@ -68,25 +67,26 @@ class AppointmentQueryService {
           .map(String::valueOf)
           .toList();
 
-      predicateList.add(
-          field("assets.portal_asset_id").in(wellboreIdStrings)
-      );
+      predicateList.add(ASSETS.PORTAL_ASSET_ID.in(wellboreIdStrings));
       // as different portal assets could have the same ID ensure the restriction list is only wellbore
       portalAssetTypeRestrictions = Set.of(PortalAssetType.WELLBORE);
     }
 
     // if installation ID filter provided then filter by installation ID and installation type
     if (searchFilter.installationId() != null) {
-      predicateList.add(
-          field("assets.portal_asset_id").eq(String.valueOf(searchFilter.installationId()))
-      );
+      predicateList.add(ASSETS.PORTAL_ASSET_ID.eq(String.valueOf(searchFilter.installationId())));
       // as different portal assets could have the same ID ensure the restriction list is only installation
       portalAssetTypeRestrictions = Set.of(PortalAssetType.INSTALLATION);
     }
 
     // filter only asset types which match the required types
-    predicateList.add(field("assets.portal_asset_type")
-        .in(portalAssetTypeRestrictions.stream().map(PortalAssetType::name).toList()));
+
+    List<String> portalAssetTypeRestrictionNames = portalAssetTypeRestrictions
+        .stream()
+        .map(PortalAssetType::name)
+        .toList();
+
+    predicateList.add(ASSETS.PORTAL_ASSET_TYPE.in(portalAssetTypeRestrictionNames));
 
     return predicateList;
   }

@@ -19,7 +19,7 @@ class NominatedWellDetail {
   private Integer id;
 
   @ManyToOne
-  @JoinColumn(name = "nomination_detail")
+  @JoinColumn(name = "nomination_detail_id")
   private NominationDetail nominationDetail;
 
   private Boolean forAllWellPhases;

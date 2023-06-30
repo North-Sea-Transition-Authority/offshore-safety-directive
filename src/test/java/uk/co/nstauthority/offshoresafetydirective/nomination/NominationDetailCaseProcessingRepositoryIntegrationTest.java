@@ -2,11 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.IntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingHeaderDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionTestUtil;
@@ -15,14 +15,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionS
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
 @Transactional
-@IntegrationTest
+@DatabaseIntegrationTest
 class NominationDetailCaseProcessingRepositoryIntegrationTest {
 
   @Autowired
   private NominationDetailCaseProcessingRepository nominationDetailCaseProcessingRepository;
 
   @Autowired
-  private TestEntityManager testEntityManager;
+  private EntityManager entityManager;
 
   @Test
   void findCaseProcessingHeaderDto_verifyDataCorrectlyMapped() {
@@ -41,7 +41,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .withReference(nominationReference)
         .build();
 
-    testEntityManager.persistAndFlush(nomination);
+    persistAndFlush(nomination);
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(null)
@@ -49,7 +49,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    testEntityManager.persistAndFlush(nominationDetail);
+    persistAndFlush(nominationDetail);
 
     var applicantDetails = ApplicantDetailTestUtil.builder()
         .withId(null)
@@ -58,7 +58,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .withApplicantReference(applicantReference)
         .build();
 
-    testEntityManager.persistAndFlush(applicantDetails);
+    persistAndFlush(applicantDetails);
 
     var nomineeDetails = NomineeDetailTestingUtil.builder()
         .withId(null)
@@ -66,7 +66,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .withNominatedOrganisationId(nominatedOrgUnitId)
         .build();
 
-    testEntityManager.persistAndFlush(nomineeDetails);
+    persistAndFlush(nomineeDetails);
 
     var wellSelectionSetup = WellSelectionSetupTestUtil.builder()
         .withId(null)
@@ -74,7 +74,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .withWellSelectionType(wellSelectionType)
         .build();
 
-    testEntityManager.persistAndFlush(wellSelectionSetup);
+    persistAndFlush(wellSelectionSetup);
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
         .withId(null)
@@ -82,7 +82,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
         .includeInstallationsInNomination(isInstallationIncluded)
         .build();
 
-    testEntityManager.persistAndFlush(installationInclusion);
+    persistAndFlush(installationInclusion);
 
     var result = nominationDetailCaseProcessingRepository.findCaseProcessingHeaderDto(nominationDetail);
 
@@ -95,7 +95,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
             NominationCaseProcessingHeaderDto::selectionType,
             NominationCaseProcessingHeaderDto::includeInstallationsInNomination,
             NominationCaseProcessingHeaderDto::status
-        ).containsExactly(
+        ).contains(
             nomination.getReference(),
             applicantOrgUnitId,
             nominatedOrgUnitId,
@@ -108,10 +108,17 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
   @Test
   void findCaseProcessingHeaderDto_whenNoNominationDetail_thenEmptyOptional() {
 
-    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(-1)
+        .build();
 
     var result = nominationDetailCaseProcessingRepository.findCaseProcessingHeaderDto(nominationDetail);
 
     assertThat(result).isEmpty();
+  }
+
+  private void persistAndFlush(Object entity) {
+    entityManager.persist(entity);
+    entityManager.flush();
   }
 }

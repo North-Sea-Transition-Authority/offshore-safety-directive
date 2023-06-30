@@ -11,9 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
-import org.springframework.test.annotation.DirtiesContext;
 
-@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
 class UserDetailServiceTest {
 
   private static UserDetailService userDetailService;
