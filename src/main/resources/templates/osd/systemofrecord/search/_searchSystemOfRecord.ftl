@@ -69,7 +69,7 @@
 <#function _appointmentType appointment>
   <#assign appointmentType>
     <#if appointment.appointmentType()?has_content>
-      ${appointment.appointmentType().displayName()}
+      ${appointment.appointmentType().screenDisplayText}
     </#if>
   </#assign>
   <#return appointmentType!""/>

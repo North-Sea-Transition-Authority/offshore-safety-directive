@@ -29,6 +29,31 @@
         />
 
         <@fdsRadio.radioGroup
+            path="form.appointmentType"
+            labelText="Select the type of appointment"
+            hiddenContent=true
+        >
+
+            <#assign isFirstAppointmentType = true/>
+            <#list appointmentTypes as appointmentTypeName, appointmentTypeText>
+                <@fdsRadio.radioItem
+                    path="form.appointmentType"
+                    itemMap={appointmentTypeName: appointmentTypeText}
+                    isFirstItem=isFirstAppointmentType
+                >
+                    <#if appointmentTypeName == "DEEMED">
+                        <@fdsInsetText.insetText>
+                          The start date will automatically be set to the 19 July 2015
+                        </@fdsInsetText.insetText>
+                    <#elseif appointmentTypeName == "OFFLINE_NOMINATION">
+                    <#elseif appointmentTypeName == "ONLINE_NOMINATION">
+                    </#if>
+                </@fdsRadio.radioItem>
+                <#assign isFirstAppointmentType = false/>
+            </#list>
+        </@fdsRadio.radioGroup>
+
+        <@fdsRadio.radioGroup
             path="form.forAllPhases"
             labelText="Is this appointment for all ${assetTypeSentenceCaseDisplayName} activity phases?"
             hiddenContent=true

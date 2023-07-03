@@ -213,15 +213,15 @@ class AppointmentTimelineService {
   private String getCreatedByReference(AppointmentDto appointmentDto) {
     if (AppointmentType.DEEMED.equals(appointmentDto.appointmentType())) {
       return "Deemed appointment";
-    } else if (AppointmentType.FORWARD_APPROVED.equals(appointmentDto.appointmentType())) {
-      return "Forward approval appointment";
+    } else if (AppointmentType.OFFLINE_NOMINATION.equals(appointmentDto.appointmentType())) {
+      return "Offline nomination";
     } else if (
-        AppointmentType.NOMINATED.equals(appointmentDto.appointmentType())
+        AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType())
             && StringUtils.isNotBlank(appointmentDto.legacyNominationReference())
     ) {
       return appointmentDto.legacyNominationReference();
     } else if (
-        AppointmentType.NOMINATED.equals(appointmentDto.appointmentType())
+        AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType())
             && appointmentDto.nominationId() != null
     ) {
       return nominationAccessService

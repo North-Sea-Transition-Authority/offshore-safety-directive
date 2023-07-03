@@ -32,7 +32,7 @@ public class AppointmentDtoTestUtil {
 
     private Instant appointmentCreatedDate = Instant.now();
 
-    private AppointmentType appointmentType = AppointmentType.NOMINATED;
+    private AppointmentType appointmentType = AppointmentType.ONLINE_NOMINATION;
 
     private String legacyNominationReference = "";
 

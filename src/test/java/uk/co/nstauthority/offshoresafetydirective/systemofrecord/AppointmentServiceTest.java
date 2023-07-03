@@ -103,7 +103,7 @@ class AppointmentServiceTest {
                 newAppointmentConfirmationDate,
                 null,
                 nominationDetail.getNomination().getId(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 nomineeDetailDto.nominatedOrganisationId().id(),
                 FIXED_INSTANT
             )
@@ -158,7 +158,7 @@ class AppointmentServiceTest {
                 confirmationDate,
                 null,
                 nominationDetail.getNomination().getId(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 nomineeDetailDto.nominatedOrganisationId().id(),
                 FIXED_INSTANT
             )

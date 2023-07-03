@@ -102,7 +102,7 @@ class AppointmentAccessServiceTest {
     var appointedOperatorId = 100;
     var fromDate = LocalDate.now();
     var toDate = LocalDate.now();
-    var appointmentType = AppointmentType.NOMINATED;
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var nominationId = 200;
     var createdDatetime = Instant.now();
     var legacyReference = "legacy reference";

@@ -102,7 +102,7 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedInstallation.id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedInstallation.name())
         .build();
 
@@ -138,7 +138,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedInstallationId.id()),
                 appointedInstallation.name(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 installationAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderInstallationAppointmentTimeline(
@@ -176,7 +176,7 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedInstallation.id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
@@ -231,7 +231,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.WELLBORE)
         .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedWellbore.name())
         .build();
 
@@ -267,7 +267,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedWellboreId.id()),
                 appointedWellbore.name(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 wellboreAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderWellboreAppointmentTimeline(
@@ -305,7 +305,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.WELLBORE)
         .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
@@ -360,7 +360,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.SUBAREA)
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedSubarea.displayName())
         .build();
 
@@ -396,7 +396,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedSubareaId.id()),
                 appointedSubarea.displayName(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 subareaAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderSubareaAppointmentTimeline(
@@ -434,7 +434,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.SUBAREA)
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
@@ -788,7 +788,7 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedInstallation.id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedInstallation.name())
         .build();
 
@@ -823,7 +823,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedInstallationId.id()),
                 appointedInstallation.name(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 installationAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderInstallationAppointmentTimeline(
@@ -861,7 +861,7 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedInstallation.id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
@@ -1010,7 +1010,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.SUBAREA)
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedSubarea.displayName())
         .build();
 
@@ -1043,7 +1043,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedSubareaId.id()),
                 appointedSubarea.displayName(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 subareaAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderSubareaAppointmentTimeline(
@@ -1081,7 +1081,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.SUBAREA)
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
@@ -1405,7 +1405,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.WELLBORE)
         .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperatorId.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(appointedWellbore.name())
         .build();
 
@@ -1428,7 +1428,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(appointedWellbore.wellboreId().id()),
                 appointedWellbore.name(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 expectedAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderWellboreAppointmentTimeline(
@@ -1476,7 +1476,7 @@ class AppointmentSearchServiceTest {
         .withAssetType(PortalAssetType.WELLBORE)
         .withPortalAssetId(String.valueOf(wellboreWithAppointment.wellboreId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperatorId.id()))
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withAssetName(wellboreWithAppointment.name())
         .build();
 
@@ -1506,7 +1506,7 @@ class AppointmentSearchServiceTest {
                 String.valueOf(wellboreWithAppointment.wellboreId().id()),
                 wellboreWithAppointment.name(),
                 appointedOperator.name(),
-                AppointmentType.NOMINATED,
+                AppointmentType.ONLINE_NOMINATION,
                 wellboreAppointment.getAppointmentDate().toLocalDate(),
                 ReverseRouter.route(on(AppointmentTimelineController.class)
                     .renderWellboreAppointmentTimeline(

@@ -29,12 +29,14 @@ class AppointmentUpdateServiceTest {
   void updateAppointment() {
 
     var appointedOperatorId = 1001;
+    var appointmentType = AppointmentType.DEEMED;
     var appointmentId = UUID.randomUUID();
 
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId)
         .withAppointedOperatorId(appointedOperatorId)
+        .withAppointmentType(appointmentType)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -48,6 +50,7 @@ class AppointmentUpdateServiceTest {
     assertThat(captor.getValue()).isEqualTo(appointment);
 
     verify(appointment).setAppointedPortalOperatorId(appointedOperatorId);
+    verify(appointment).setAppointmentType(appointmentType);
     verifyNoMoreInteractions(appointment);
 
   }

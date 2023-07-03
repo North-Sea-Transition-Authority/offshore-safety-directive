@@ -22,7 +22,7 @@ public class AppointmentTestUtil {
     private Integer appointedPortalOperatorId = 975;
     private LocalDate responsibleFromDate = LocalDate.now();
     private LocalDate responsibleToDate;
-    private AppointmentType appointmentType = AppointmentType.NOMINATED;
+    private AppointmentType appointmentType = AppointmentType.ONLINE_NOMINATION;
     private Integer createdByNominationId = 12321;
     private String createdByLegacyNominationReference;
     private UUID createdByAppointmentId;

@@ -22,6 +22,7 @@ public class AppointmentUpdateService {
         )));
     var operatorId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     appointment.setAppointedPortalOperatorId(operatorId);
+    appointment.setAppointmentType(appointmentDto.appointmentType());
     appointmentRepository.save(appointment);
   }
 

@@ -64,13 +64,18 @@ class AppointmentCorrectionServiceTest {
         .withAppointmentFromDate(LocalDate.now().minusDays(1))
         .withAppointmentToDate(LocalDate.now().plusDays(2))
         .withAppointmentCreatedDatetime(Instant.now())
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withLegacyNominationReference("legacy/ref")
         .withNominationId(new NominationId(789))
         .build();
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
+
+    var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
+    form.setAppointmentType(newAppointmentType);
+
+    assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
 
     var phaseNames = Set.of("phase 1", "phase 2");
     form.setPhases(phaseNames);
@@ -92,7 +97,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("appointmentFromDate", originalAppointmentDto.appointmentFromDate())
         .hasFieldOrPropertyWithValue("appointmentToDate", originalAppointmentDto.appointmentToDate())
         .hasFieldOrPropertyWithValue("appointmentCreatedDate", originalAppointmentDto.appointmentCreatedDate())
-        .hasFieldOrPropertyWithValue("appointmentType", originalAppointmentDto.appointmentType())
+        .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
         .hasFieldOrPropertyWithValue("legacyNominationReference", originalAppointmentDto.legacyNominationReference())
         .hasFieldOrPropertyWithValue("nominationId", originalAppointmentDto.nominationId())
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
@@ -154,7 +159,6 @@ class AppointmentCorrectionServiceTest {
   void getForm_assertMappings_whenAllPhases() {
 
     var appointment = AppointmentDtoTestUtil.builder()
-        .withAppointedOperatorId(500)
         .build();
 
     var assetPhaseNames = EnumSet.allOf(InstallationPhase.class).stream()
@@ -173,18 +177,15 @@ class AppointmentCorrectionServiceTest {
     var resultingForm = appointmentCorrectionService.getForm(appointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
-        .hasFieldOrPropertyWithValue("appointedOperatorId", 500)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
         .hasFieldOrPropertyWithValue("forAllPhases", true)
-        .hasAssertedAllProperties();
+        .hasAssertedAllPropertiesExcept("appointedOperatorId", "appointmentType");
   }
 
   @Test
   void getForm_assertMappings_whenSomePhases() {
 
-    var appointment = AppointmentDtoTestUtil.builder()
-        .withAppointedOperatorId(500)
-        .build();
+    var appointment = AppointmentDtoTestUtil.builder().build();
 
     var assetPhaseNames = Stream.of(InstallationPhase.DECOMMISSIONING)
         .map(Enum::name)
@@ -202,10 +203,9 @@ class AppointmentCorrectionServiceTest {
     var resultingForm = appointmentCorrectionService.getForm(appointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
-        .hasFieldOrPropertyWithValue("appointedOperatorId", 500)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
         .hasFieldOrPropertyWithValue("forAllPhases", false)
-        .hasAssertedAllProperties();
+        .hasAssertedAllPropertiesExcept("appointedOperatorId", "appointmentType");
   }
 
   @Test

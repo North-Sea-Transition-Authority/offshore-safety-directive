@@ -49,6 +49,7 @@ class AppointmentCorrectionService {
         .collect(Collectors.toSet());
 
     form.setPhases(phaseNames);
+    form.setAppointmentType(appointment.appointmentType());
 
     var selectablePhases = getSelectablePhaseMap(appointment.assetDto());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
@@ -71,7 +72,7 @@ class AppointmentCorrectionService {
         appointmentDto.appointmentFromDate(),
         appointmentDto.appointmentToDate(),
         appointmentDto.appointmentCreatedDate(),
-        appointmentDto.appointmentType(),
+        appointmentCorrectionForm.getAppointmentType(),
         appointmentDto.legacyNominationReference(),
         appointmentDto.nominationId(),
         appointmentDto.assetDto()

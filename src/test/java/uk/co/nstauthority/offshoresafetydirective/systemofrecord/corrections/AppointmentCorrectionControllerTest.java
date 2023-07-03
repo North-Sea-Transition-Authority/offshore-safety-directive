@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
+import static java.util.Map.entry;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -45,6 +47,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -300,7 +303,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .thenReturn(phaseMap);
 
-    mockMvc.perform(get(
+    var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
@@ -319,7 +322,20 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
         )))
         .andExpect(model().attribute("phases", phaseMap))
-        .andExpect(model().attributeDoesNotExist("phaseSelectionHint"));
+        .andExpect(model().attributeDoesNotExist("phaseSelectionHint"))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    @SuppressWarnings("unchecked")
+    var appointmentTypes = (Map<String, String>) modelAndView.getModel().get("appointmentTypes");
+    assertThat(appointmentTypes)
+        .containsExactly(
+            entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
+            entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
+            entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
+        );
   }
 
   @Test
@@ -360,7 +376,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .thenReturn(phaseMap);
 
-    mockMvc.perform(get(
+    var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
@@ -379,7 +395,20 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
         )))
         .andExpect(model().attribute("phases", phaseMap))
-        .andExpect(model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."));
+        .andExpect(model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    @SuppressWarnings("unchecked")
+    var appointmentTypes = (Map<String, String>) modelAndView.getModel().get("appointmentTypes");
+    assertThat(appointmentTypes)
+        .containsExactly(
+            entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
+            entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
+            entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
+        );
   }
 
   @SecurityTest

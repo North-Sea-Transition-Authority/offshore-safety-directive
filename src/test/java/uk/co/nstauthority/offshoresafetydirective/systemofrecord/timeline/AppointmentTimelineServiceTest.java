@@ -664,14 +664,14 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenForwardApprovedAppointment_thenCreatedByReferenceIsForwardApproved() {
+  void getAppointmentHistoryForPortalAsset_whenOfflineAppointment() {
 
     var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var forwardApprovalAppointment = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .build();
 
     given(assetAccessService.getAsset(portalAssetId))
@@ -689,7 +689,7 @@ class AppointmentTimelineServiceTest {
     assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
     assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
         .extracting(AppointmentView::createdByReference)
-        .isEqualTo("Forward approval appointment");
+        .isEqualTo("Offline nomination");
   }
 
   @Test
@@ -700,7 +700,7 @@ class AppointmentTimelineServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var legacyAppointment = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withLegacyNominationReference("legacy nomination reference")
         .build();
 
@@ -735,7 +735,7 @@ class AppointmentTimelineServiceTest {
         .build();
 
     var nominatedAppointment = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withLegacyNominationReference(null)
         .withNominationId(nominationDto.nominationId())
         .build();
@@ -771,7 +771,7 @@ class AppointmentTimelineServiceTest {
     var unknownNominationId = new NominationId(-1);
 
     var unknownNominationAppointment = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(AppointmentType.NOMINATED)
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withLegacyNominationReference(null)
         .withNominationId(unknownNominationId)
         .build();

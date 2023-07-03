@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -31,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
@@ -125,6 +127,8 @@ public class AppointmentCorrectionController {
     var assetDto = appointmentDto.assetDto();
     var assetName = getAssetName(assetDto);
 
+    var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
+
     var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("assetName", assetName.value())
         .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
@@ -135,6 +139,7 @@ public class AppointmentCorrectionController {
             .searchAllPortalOrganisations(null)))
         .addObject("preselectedOperator", getPreselectedOperator(form))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
+        .addObject("appointmentTypes", appointmentTypes)
         .addObject("form", form);
 
     if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {

@@ -50,7 +50,7 @@ class AppointmentService {
       appointment.setAsset(asset);
       appointment.setResponsibleFromDate(appointmentConfirmationDate);
       appointment.setCreatedByNominationId(nominationDetail.getNomination().getId());
-      appointment.setAppointmentType(AppointmentType.NOMINATED);
+      appointment.setAppointmentType(AppointmentType.ONLINE_NOMINATION);
       appointment.setAppointedPortalOperatorId(nomineeDetailDto.nominatedOrganisationId().id());
       appointment.setCreatedDatetime(clock.instant());
       newAppointments.add(appointment);
