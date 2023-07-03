@@ -33,7 +33,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -47,7 +46,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class AppointmentCorrectionController {
 
   private final AppointmentAccessService appointmentAccessService;
-  private final AssetAccessService assetAccessService;
   private final PortalAssetNameService portalAssetNameService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentCorrectionService appointmentCorrectionService;
@@ -56,14 +54,12 @@ public class AppointmentCorrectionController {
 
   @Autowired
   public AppointmentCorrectionController(AppointmentAccessService appointmentAccessService,
-                                         AssetAccessService assetAccessService,
                                          PortalAssetNameService portalAssetNameService,
                                          PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                          AppointmentCorrectionService appointmentCorrectionService,
                                          AppointmentCorrectionValidator appointmentCorrectionValidator,
                                          ControllerHelperService controllerHelperService) {
     this.appointmentAccessService = appointmentAccessService;
-    this.assetAccessService = assetAccessService;
     this.portalAssetNameService = portalAssetNameService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentCorrectionService = appointmentCorrectionService;
@@ -87,7 +83,7 @@ public class AppointmentCorrectionController {
                                        RedirectAttributes redirectAttributes) {
 
     var appointmentDto = getAppointmentDto(appointmentId);
-    var validatorHint = new AppointmentCorrectionValidationHint(appointmentDto.assetDto());
+    var validatorHint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 

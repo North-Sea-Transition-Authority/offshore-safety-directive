@@ -48,7 +48,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
@@ -72,9 +71,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   private AppointmentAccessService appointmentAccessService;
 
   @MockBean
-  private AssetAccessService assetAccessService;
-
-  @MockBean
   private PortalAssetNameService portalAssetNameService;
 
   @MockBean
@@ -96,10 +92,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
-
-    var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(new AppointmentCorrectionForm());
@@ -152,17 +144,16 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_whenNoAvailableAssetName_verifyCachedNameIsUsed() throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var appointmentDto = AppointmentDtoTestUtil.builder().build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
-
     var assetName = "asset name";
     var assetDto = AssetDtoTestUtil.builder()
         .withAssetName(assetName)
         .build();
 
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -185,19 +176,15 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
+    var assetDto = AssetDtoTestUtil.builder().build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+        .withAssetDto(assetDto)
         .build();
-
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
 
-    var assetDto = AssetDtoTestUtil.builder().build();
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(new AppointmentCorrectionForm());
-
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -221,26 +208,22 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var appointmentId = new AppointmentId(UUID.randomUUID());
     var operatorId = 200;
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
-        .build();
-
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
-
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(operatorId)
         .build();
 
     var assetDto = AssetDtoTestUtil.builder().build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
+
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(form);
 
     when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
         .thenReturn(Optional.empty());
-
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -275,9 +258,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .build();
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
-
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -454,10 +434,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
 
-    var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
-
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(new AppointmentCorrectionForm());
 
@@ -489,10 +465,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .build();
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
-
-    var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     mockMvc.perform(post(
             ReverseRouter.route(
@@ -526,9 +498,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .build();
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
-
-    when(assetAccessService.getAsset(appointmentDto.assetDto().portalAssetId()))
-        .thenReturn(Optional.of(assetDto));
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))

@@ -1,8 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 
 record AppointmentCorrectionValidationHint(
-    AssetDto assetDto
+    AppointmentDto appointmentDto
 ) {
 }

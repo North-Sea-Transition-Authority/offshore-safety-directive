@@ -1,14 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.util.Set;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 
 public class AppointmentCorrectionForm {
 
   private Integer appointedOperatorId;
   private Boolean forAllPhases;
   private Set<String> phases;
-  private AppointmentType appointmentType;
+  private String appointmentType;
 
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
@@ -34,11 +33,11 @@ public class AppointmentCorrectionForm {
     this.phases = phases;
   }
 
-  public AppointmentType getAppointmentType() {
+  public String getAppointmentType() {
     return appointmentType;
   }
 
-  public void setAppointmentType(AppointmentType appointmentType) {
+  public void setAppointmentType(String appointmentType) {
     this.appointmentType = appointmentType;
   }
 }

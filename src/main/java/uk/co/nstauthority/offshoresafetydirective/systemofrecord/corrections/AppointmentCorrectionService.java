@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
@@ -49,7 +51,7 @@ class AppointmentCorrectionService {
         .collect(Collectors.toSet());
 
     form.setPhases(phaseNames);
-    form.setAppointmentType(appointment.appointmentType());
+    form.setAppointmentType(appointment.appointmentType().name());
 
     var selectablePhases = getSelectablePhaseMap(appointment.assetDto());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
@@ -72,7 +74,7 @@ class AppointmentCorrectionService {
         appointmentDto.appointmentFromDate(),
         appointmentDto.appointmentToDate(),
         appointmentDto.appointmentCreatedDate(),
-        appointmentCorrectionForm.getAppointmentType(),
+        EnumUtils.getEnum(AppointmentType.class, appointmentCorrectionForm.getAppointmentType()),
         appointmentDto.legacyNominationReference(),
         appointmentDto.nominationId(),
         appointmentDto.assetDto()

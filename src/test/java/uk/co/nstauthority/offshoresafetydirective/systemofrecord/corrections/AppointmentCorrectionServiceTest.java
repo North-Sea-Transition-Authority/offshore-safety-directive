@@ -73,7 +73,7 @@ class AppointmentCorrectionServiceTest {
     form.setAppointedOperatorId(123);
 
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
-    form.setAppointmentType(newAppointmentType);
+    form.setAppointmentType(newAppointmentType.name());
 
     assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
 

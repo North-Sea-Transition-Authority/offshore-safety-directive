@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -31,6 +35,9 @@ class AppointmentCorrectionValidatorTest {
 
   @Mock
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @Mock
+  private AppointmentAccessService appointmentAccessService;
 
   @InjectMocks
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
@@ -67,8 +74,11 @@ class AppointmentCorrectionValidatorTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
 
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -86,7 +96,11 @@ class AppointmentCorrectionValidatorTest {
     var form = new AppointmentCorrectionForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var assetDto = AssetDtoTestUtil.builder().build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -95,6 +109,7 @@ class AppointmentCorrectionValidatorTest {
     assertThat(errorMessages)
         .containsExactly(
             entry("appointedOperatorId", Set.of("Select the appointed operator")),
+            entry("appointmentType", Set.of("Select the type of appointment")),
             entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases"))
         );
   }
@@ -109,7 +124,11 @@ class AppointmentCorrectionValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var assetDto = AssetDtoTestUtil.builder().build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     when(portalOrganisationUnitQueryService.getOrganisationById(100))
         .thenReturn(Optional.empty());
@@ -132,7 +151,11 @@ class AppointmentCorrectionValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var assetDto = AssetDtoTestUtil.builder().build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -159,7 +182,11 @@ class AppointmentCorrectionValidatorTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -189,7 +216,11 @@ class AppointmentCorrectionValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -212,7 +243,11 @@ class AppointmentCorrectionValidatorTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.SUBAREA)
         .build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -239,7 +274,11 @@ class AppointmentCorrectionValidatorTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.SUBAREA)
         .build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -270,7 +309,11 @@ class AppointmentCorrectionValidatorTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    var hint = new AppointmentCorrectionValidationHint(assetDto);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -290,10 +333,13 @@ class AppointmentCorrectionValidatorTest {
       .withForAllPhases(true)
       .build();
 
-  var assetDto = AssetDtoTestUtil.builder().build();
-
   var bindingResult = new BeanPropertyBindingResult(form, "form");
-  var hint = new AppointmentCorrectionValidationHint(assetDto);
+  var assetDto = AssetDtoTestUtil.builder().build();
+  var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
   var duplicatePortalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
       .isDuplicate(true)
@@ -310,6 +356,146 @@ class AppointmentCorrectionValidatorTest {
       .containsExactly(
           entry("appointedOperatorId", Set.of("Select a valid operator"))
       );
+  }
+
+  @Test
+  void validate_whenAppointmentTypeIsInvalid_thenHasError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType("INVALID_APPOINTMENT_TYPE_ENUM_NAME")
+        .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry("appointmentType", Set.of("Select the type of appointment"))
+        );
+  }
+
+  @Test
+  void validate_whenNoDeemedAppointments_andAppointmentTypeIsDeemed_thenNoError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of());
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenCurrentAppointmentIsDeemed_andAppointmentTypeIsDeemed_thenNoError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenAnotherAppointmentIsDeemed_andAppointmentTypeIsDeemed_thenHasError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(UUID.randomUUID())
+        .withAssetDto(assetDto)
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var existingDeemedAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(UUID.randomUUID())
+        .withAssetDto(assetDto)
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(existingDeemedAppointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry("appointmentType", Set.of("You can only have one deemed appointment"))
+        );
   }
 
   private static class UnsupportedClass {}
