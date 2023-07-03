@@ -12,6 +12,10 @@ This log lists the architectural decisions for Offshore Safety Directive.
 * [ADR-0005](0005-case-events-rendering.md) - OSDOP-237: Case events rendering
 * [ADR-0006](0006-data-model-for-system-of-record.md) -  OSDOP-254: Data model for phase 1 system of record
 * [ADR-0007](0007-search-system-of-record.md) -  OSDOP-254: Searching the system of record
+* [ADR-0008](0008-terminate-system-of-record-appointments.md) -  OSDOP-435: Terminate a system of record appointment
+* [ADR-0009](0009-work-area-operator-team-onboarding.md) -  OSDOP-181: Work area items for operators and regulators
+* [ADR-0010](0010-nomination-security-operator-onboarding.md) -  OSDOP-181: Controller security for onboarding operators
+* [ADR-0011](0011-operator-user-journey.md) -  OSDOP-181
 
 <!-- adrlogstop -->
 
