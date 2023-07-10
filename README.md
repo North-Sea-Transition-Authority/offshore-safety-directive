@@ -44,7 +44,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | EPMQ AWS secret access key for SNS/SQS                                                               |
 | OSD_EPMQ_ENVIRONMENT_SUFFIX            | EPMQ environment suffix. This should be set to something unique per developer, such as your initials |
 | OSD_EMAIL_TEST_RECIPIENT               | If email is test mode, who to send emails to. Value can be a CSV list                                |
-| OSD_NOTIFY_API_KEY                     | The GOV.UK Notify key                                                                                |
+| OSD_NOTIFY_API_KEY                     | The GOV.UK Notify key [See TPM](https://tpm.fivium.co.uk/index.php/pwd/view/2124)                    |
 
 - Optionally, the EPMQ integration can be disabled by running with the `disable-epmq` profile. In this case the `OSD_EPMQ_*` environment variables do not need to be set.
 - If you receive a `publishEpmqMessagesIntegrationTestPublicationToSnapshotsRepository` error when hot reloading then run the `publishing > publishEpmqMessagesIntegrationTestPublicationToMavenLocal` gradle task.
@@ -111,7 +111,7 @@ Execute the gradle task `generateJooq`. You will need to re-generate when you ch
 ### 6. Run the app
 Create a run configuration for the Spring app and start the application.
 
-The application will be running on `localhost:8080/wios/<endpoint>`
+The application will be running on `localhost:8080/wios/<endpoint>` e.g. `localhost:8080/wios//work-area`
 
 ## Development setup
 
