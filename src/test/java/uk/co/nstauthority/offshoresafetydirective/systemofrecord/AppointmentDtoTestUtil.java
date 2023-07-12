@@ -51,12 +51,20 @@ public class AppointmentDtoTestUtil {
     }
 
     public Builder withAppointmentFromDate(LocalDate appointmentFromDate) {
-      this.appointmentFromDate = new AppointmentFromDate(appointmentFromDate);
+      return this.withAppointmentFromDate(new AppointmentFromDate(appointmentFromDate));
+    }
+
+    public Builder withAppointmentFromDate(AppointmentFromDate appointmentFromDate) {
+      this.appointmentFromDate = appointmentFromDate;
       return this;
     }
 
     public Builder withAppointmentToDate(LocalDate appointmentToDate) {
-      this.appointmentToDate = new AppointmentToDate(appointmentToDate);
+      return this.withAppointmentToDate(new AppointmentToDate(appointmentToDate));
+    }
+
+    public Builder withAppointmentToDate(AppointmentToDate appointmentToDate) {
+      this.appointmentToDate = appointmentToDate;
       return this;
     }
 

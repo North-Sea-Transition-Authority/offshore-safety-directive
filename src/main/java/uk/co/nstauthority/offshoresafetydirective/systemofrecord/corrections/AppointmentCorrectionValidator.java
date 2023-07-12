@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
+import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -14,10 +16,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
@@ -29,15 +33,19 @@ class AppointmentCorrectionValidator implements SmartValidator {
   private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
   private static final String FOR_ALL_PHASES_FIELD_NAME = "forAllPhases";
   private static final String APPOINTMENT_TYPE_FIELD_NAME = "appointmentType";
+  private static final String FIELD_REQUIRED_ERROR = "%s.required";
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentAccessService appointmentAccessService;
+  private final AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
 
   @Autowired
   AppointmentCorrectionValidator(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                 AppointmentAccessService appointmentAccessService) {
+                                 AppointmentAccessService appointmentAccessService,
+                                 AppointmentCorrectionDateValidator appointmentCorrectionDateValidator) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentAccessService = appointmentAccessService;
+    this.appointmentCorrectionDateValidator = appointmentCorrectionDateValidator;
   }
 
   @Override
@@ -56,16 +64,40 @@ class AppointmentCorrectionValidator implements SmartValidator {
     var bindingResult = (BindingResult) Objects.requireNonNull(errors);
     var hint = (AppointmentCorrectionValidationHint) validationHints[0];
 
-    validateAppointedOperatorId(errors, form, bindingResult);
-    validateAppointmentType(errors, form, bindingResult, hint);
-    validatePhases(errors, form, bindingResult, hint);
+    validateAppointedOperatorId(form, bindingResult);
+    quickValidateEndDateFields(form, bindingResult);
+
+    var optionalAppointmentType = getAppointmentType(form);
+    optionalAppointmentType.ifPresentOrElse(
+        appointmentType -> {
+          var appointments = appointmentAccessService.getAppointmentsForAsset(
+              hint.appointmentDto().assetDto().assetId()
+          );
+
+          validateAppointmentType(bindingResult, hint, appointmentType, appointments);
+
+          appointmentCorrectionDateValidator.validateDates(
+              form,
+              bindingResult,
+              hint,
+              appointmentType,
+              appointments
+          );
+        },
+        () -> bindingResult.rejectValue(
+            APPOINTMENT_TYPE_FIELD_NAME,
+            FIELD_REQUIRED_ERROR.formatted(APPOINTMENT_TYPE_FIELD_NAME),
+            "Select the type of appointment"
+        ));
+
+    validatePhases(form, bindingResult, hint);
   }
 
-  private void validateAppointedOperatorId(Errors errors, AppointmentCorrectionForm form, BindingResult bindingResult) {
+  private void validateAppointedOperatorId(AppointmentCorrectionForm form, BindingResult bindingResult) {
     ValidationUtils.rejectIfEmpty(
         bindingResult,
         APPOINTED_OPERATOR_FIELD_NAME,
-        "%s.required".formatted(APPOINTED_OPERATOR_FIELD_NAME),
+        FIELD_REQUIRED_ERROR.formatted(APPOINTED_OPERATOR_FIELD_NAME),
         "Select the appointed operator"
     );
 
@@ -74,7 +106,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
       var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId());
 
       if (operator.isEmpty() || operator.get().isDuplicate()) {
-        errors.rejectValue(
+        bindingResult.rejectValue(
             APPOINTED_OPERATOR_FIELD_NAME,
             "%s.invalid".formatted(APPOINTED_OPERATOR_FIELD_NAME),
             "Select a valid operator"
@@ -83,48 +115,41 @@ class AppointmentCorrectionValidator implements SmartValidator {
     }
   }
 
-  private void validateAppointmentType(Errors errors, AppointmentCorrectionForm form, BindingResult bindingResult,
-                                       AppointmentCorrectionValidationHint hint) {
-    if (form.getAppointmentType() == null) {
-      ValidationUtils.rejectIfEmpty(
-          bindingResult,
-          APPOINTMENT_TYPE_FIELD_NAME,
-          "%s.required".formatted(APPOINTMENT_TYPE_FIELD_NAME),
-          "Select the type of appointment"
-      );
-    } else if (!EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())) {
-      errors.rejectValue(
-          APPOINTMENT_TYPE_FIELD_NAME,
-          "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
-          "Select the type of appointment"
-      );
-    } else {
-      var appointmentType = EnumUtils.getEnum(AppointmentType.class, form.getAppointmentType());
-      if (appointmentType.equals(AppointmentType.DEEMED)) {
+  private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form) {
+    if (form.getAppointmentType() == null || !EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())) {
+      return Optional.empty();
+    }
+    var appointmentType = EnumUtils.getEnum(AppointmentType.class, form.getAppointmentType());
+    return Optional.of(appointmentType);
+  }
 
-        var appointments = appointmentAccessService.getAppointmentsForAsset(hint.appointmentDto().assetDto().assetId());
-        var hasExistingDeemedAppointments = appointments.stream()
-            .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentDto().appointmentId()))
-            .anyMatch(appointmentDto -> AppointmentType.DEEMED.equals(appointmentDto.appointmentType()));
+  private void validateAppointmentType(BindingResult bindingResult,
+                                       AppointmentCorrectionValidationHint hint,
+                                       AppointmentType appointmentType,
+                                       Collection<AppointmentDto> appointments) {
 
-        if (hasExistingDeemedAppointments) {
-          errors.rejectValue(
-              APPOINTMENT_TYPE_FIELD_NAME,
-              "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
-              "You can only have one deemed appointment"
-          );
-        }
+    if (appointmentType.equals(AppointmentType.DEEMED)) {
+      var hasExistingDeemedAppointments = appointments.stream()
+          .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentDto().appointmentId()))
+          .anyMatch(appointmentDto -> AppointmentType.DEEMED.equals(appointmentDto.appointmentType()));
+
+      if (hasExistingDeemedAppointments) {
+        bindingResult.rejectValue(
+            APPOINTMENT_TYPE_FIELD_NAME,
+            "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
+            "You can only have one deemed appointment"
+        );
       }
     }
   }
 
-  private void validatePhases(Errors errors, AppointmentCorrectionForm form, BindingResult bindingResult,
+  private void validatePhases(AppointmentCorrectionForm form, BindingResult bindingResult,
                               AppointmentCorrectionValidationHint hint) {
     if (form.getForAllPhases() == null) {
       ValidationUtils.rejectIfEmpty(
           bindingResult,
           FOR_ALL_PHASES_FIELD_NAME,
-          "%s.required".formatted(FOR_ALL_PHASES_FIELD_NAME),
+          FIELD_REQUIRED_ERROR.formatted(FOR_ALL_PHASES_FIELD_NAME),
           "Select Yes if this appointment is for all activity phases"
       );
     } else if (BooleanUtils.isFalse(form.getForAllPhases())) {
@@ -133,9 +158,9 @@ class AppointmentCorrectionValidator implements SmartValidator {
       var formPhases = Optional.ofNullable(form.getPhases()).orElse(Set.of());
 
       if (formPhases.isEmpty()) {
-        errors.rejectValue(
+        bindingResult.rejectValue(
             PHASES_FIELD_NAME,
-            "%s.required".formatted(PHASES_FIELD_NAME),
+            FIELD_REQUIRED_ERROR.formatted(PHASES_FIELD_NAME),
             "Select at least one activity phase"
         );
       } else {
@@ -146,7 +171,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
             .containsAll(formPhases);
 
         if (!hasOnlyValidPhaseValues) {
-          errors.rejectValue(
+          bindingResult.rejectValue(
               PHASES_FIELD_NAME,
               "%s.invalid".formatted(PHASES_FIELD_NAME),
               "Select a valid activity phase"
@@ -156,13 +181,30 @@ class AppointmentCorrectionValidator implements SmartValidator {
 
       if (PortalAssetType.SUBAREA.equals(hint.appointmentDto().assetDto().portalAssetType())) {
         if (formPhases.size() == 1 && formPhases.contains(WellPhase.DECOMMISSIONING.name())) {
-          errors.rejectValue(
+          bindingResult.rejectValue(
               PHASES_FIELD_NAME,
               "%s.requiresAdditionalPhase".formatted(PHASES_FIELD_NAME),
               "Select another phase in addition to decommissioning"
           );
         }
       }
+    }
+  }
+
+  private void quickValidateEndDateFields(AppointmentCorrectionForm appointmentCorrectionForm,
+                                          BindingResult bindingResult) {
+    ValidationUtils.rejectIfEmpty(
+        bindingResult,
+        "hasEndDate",
+        "hasEndDate.required",
+        "Select Yes if the appointment has an end date"
+    );
+
+    if (BooleanUtils.isTrue(appointmentCorrectionForm.getHasEndDate())) {
+      ThreeFieldDateInputValidator.builder()
+          .mustBeAfterOrEqualTo(AppointmentCorrectionDateValidator.DEEMED_DATE)
+          .mustBeBeforeDate(LocalDate.now())
+          .validate(appointmentCorrectionForm.getEndDate(), bindingResult);
     }
   }
 }

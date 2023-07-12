@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -39,6 +42,9 @@ class AppointmentCorrectionValidatorTest {
   @Mock
   private AppointmentAccessService appointmentAccessService;
 
+  @Mock
+  private AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
+
   @InjectMocks
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
 
@@ -62,11 +68,12 @@ class AppointmentCorrectionValidatorTest {
         .hasMessage("Expected validator hint to be used");
   }
 
-  @Test
-  void validate_whenFullyPopulatedForm_thenNoErrors() {
-
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenFullyPopulatedForm_thenNoErrors(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -85,14 +92,23 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(
+        form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
   @Test
   void validate_whenEmptyForm_thenErrors() {
-
     var form = new AppointmentCorrectionForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var assetDto = AssetDtoTestUtil.builder().build();
@@ -109,17 +125,21 @@ class AppointmentCorrectionValidatorTest {
     assertThat(errorMessages)
         .containsExactly(
             entry("appointedOperatorId", Set.of("Select the appointed operator")),
+            entry("hasEndDate", Set.of("Select Yes if the appointment has an end date")),
             entry("appointmentType", Set.of("Select the type of appointment")),
             entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases"))
         );
+
+    verifyNoInteractions(appointmentCorrectionDateValidator);
   }
 
-  @Test
-  void validate_whenAppointedOrganisationNoLongerInPortal_thenError() {
-
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenAppointedOrganisationNoLongerInPortal_thenError(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(100)
         .withForAllPhases(true)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -133,6 +153,9 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(100))
         .thenReturn(Optional.empty());
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
@@ -140,13 +163,23 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("appointedOperatorId", Set.of("Select a valid operator"))
         );
+
+    verify(appointmentCorrectionDateValidator).validateDates(
+        form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenNotForAllPhases_andNoPhasesSelected_thenError() {
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenNotForAllPhases_andNoPhasesSelected_thenError(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withForAllPhases(false)
         .withPhases(Set.of())
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -162,6 +195,9 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
@@ -169,13 +205,23 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("phases", Set.of("Select at least one activity phase"))
         );
+
+    verify(appointmentCorrectionDateValidator).validateDates(
+        form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenNotForAllPhases_andPhaseIsNotValid_thenError() {
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenNotForAllPhases_andPhaseIsNotValid_thenError(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase("NOT_A_VALID_PHASE")
         .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -192,6 +238,9 @@ class AppointmentCorrectionValidatorTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -200,11 +249,18 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("phases", Set.of("Select a valid activity phase"))
         );
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenNotForAllPhases_andValidPhase_thenNoErrors() {
-
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenNotForAllPhases_andValidPhase_thenNoErrors(AppointmentType appointmentType) {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
@@ -212,6 +268,7 @@ class AppointmentCorrectionValidatorTest {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_DESIGN.name())
         .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -227,16 +284,28 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning() {
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhases(Set.of(WellPhase.DECOMMISSIONING.name()))
         .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -253,6 +322,9 @@ class AppointmentCorrectionValidatorTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -261,13 +333,24 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("phases", Set.of("Select another phase in addition to decommissioning"))
         );
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected() {
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected(
+      AppointmentType appointmentType
+  ) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhases(Set.of(WellPhase.DECOMMISSIONING.name(), WellPhase.EXPLORATION_AND_APPRAISAL.name()))
         .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -285,14 +368,24 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
   @ParameterizedTest
   @EnumSource(value = PortalAssetType.class, names = {"INSTALLATION", "WELLBORE"})
   void validate_whenNotSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(PortalAssetType portalAssetType) {
+    var appointmentType = AppointmentType.DEEMED;
 
     var decomPhase = switch (portalAssetType) {
       case INSTALLATION -> InstallationPhase.DECOMMISSIONING;
@@ -303,6 +396,7 @@ class AppointmentCorrectionValidatorTest {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhases(Set.of(decomPhase.name()))
         .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -320,42 +414,62 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
-  @Test
-  void validate_whenAppointedOrganisationIsDuplicate_thenError() {
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class)
+  void validate_whenAppointedOrganisationIsDuplicate_thenError(AppointmentType appointmentType) {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(100)
+        .withForAllPhases(true)
+        .withAppointmentType(appointmentType)
+        .build();
 
-  var form = AppointmentCorrectionFormTestUtil.builder()
-      .withAppointedOperatorId(100)
-      .withForAllPhases(true)
-      .build();
-
-  var bindingResult = new BeanPropertyBindingResult(form, "form");
-  var assetDto = AssetDtoTestUtil.builder().build();
-  var appointmentDto = AppointmentDtoTestUtil.builder()
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var assetDto = AssetDtoTestUtil.builder().build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
         .build();
 
     var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
-  var duplicatePortalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
-      .isDuplicate(true)
-      .build();
+    var duplicatePortalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .isDuplicate(true)
+        .build();
 
-  when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
-      .thenReturn(Optional.of(duplicatePortalOrganisationUnit));
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(duplicatePortalOrganisationUnit));
 
-  appointmentCorrectionValidator.validate(form, bindingResult, hint);
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
 
-  var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-  assertThat(errorMessages)
-      .containsExactly(
-          entry("appointedOperatorId", Set.of("Select a valid operator"))
-      );
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry("appointedOperatorId", Set.of("Select a valid operator"))
+        );
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
   @Test
@@ -389,12 +503,15 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("appointmentType", Set.of("Select the type of appointment"))
         );
+
+    verifyNoInteractions(appointmentCorrectionDateValidator);
   }
 
   @Test
   void validate_whenNoDeemedAppointments_andAppointmentTypeIsDeemed_thenNoError() {
+    var appointmentType = AppointmentType.DEEMED;
     var form = AppointmentCorrectionFormTestUtil.builder()
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -419,13 +536,15 @@ class AppointmentCorrectionValidatorTest {
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(form, bindingResult, hint, appointmentType, List.of());
   }
 
   @Test
   void validate_whenCurrentAppointmentIsDeemed_andAppointmentTypeIsDeemed_thenNoError() {
+    var appointmentType = AppointmentType.DEEMED;
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -435,7 +554,7 @@ class AppointmentCorrectionValidatorTest {
         .build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var hint = new AppointmentCorrectionValidationHint(appointmentDto);
@@ -451,13 +570,20 @@ class AppointmentCorrectionValidatorTest {
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
   }
 
   @Test
   void validate_whenAnotherAppointmentIsDeemed_andAppointmentTypeIsDeemed_thenHasError() {
+    var appointmentType = AppointmentType.DEEMED;
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -469,13 +595,13 @@ class AppointmentCorrectionValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(UUID.randomUUID())
         .withAssetDto(assetDto)
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var existingDeemedAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(UUID.randomUUID())
         .withAssetDto(assetDto)
-        .withAppointmentType(AppointmentType.DEEMED)
+        .withAppointmentType(appointmentType)
         .build();
 
     var hint = new AppointmentCorrectionValidationHint(appointmentDto);
@@ -496,7 +622,119 @@ class AppointmentCorrectionValidatorTest {
         .containsExactly(
             entry("appointmentType", Set.of("You can only have one deemed appointment"))
         );
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(existingDeemedAppointmentDto)
+    );
   }
 
-  private static class UnsupportedClass {}
+  @Test
+  void validate_hasEndDate_andEndDateContainsInvalidCharacters_thenNotValid() {
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .setHasEndDate(true)
+        .build();
+    form.getEndDate().setDate(LocalDate.now());
+    form.getEndDate().getDayInput().setInputValue("a");
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry(
+                "%s.dayInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("End date must be a real date")
+            )
+        );
+
+    form.getEndDate().setDate(LocalDate.now());
+    form.getEndDate().getMonthInput().setInputValue("a");
+    bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry(
+                "%s.monthInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("End date must be a real date")
+            )
+        );
+
+    form.getEndDate().setDate(LocalDate.now());
+    form.getEndDate().getYearInput().setInputValue("a");
+    bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry(
+                "%s.yearInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("End date must be a real date")
+            )
+        );
+  }
+
+  @Test
+  void validate_hasEndDate_andEndDateIsEmpty_thenValid() {
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .setHasEndDate(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry(
+                "%s.dayInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("Enter a complete End date")
+            ),
+            entry(
+                "%s.monthInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("")
+            ),
+            entry(
+                "%s.yearInput.inputValue".formatted(form.getEndDate().getFieldName()),
+                Set.of("")
+            )
+        );
+  }
+
+  private static class UnsupportedClass {
+  }
 }

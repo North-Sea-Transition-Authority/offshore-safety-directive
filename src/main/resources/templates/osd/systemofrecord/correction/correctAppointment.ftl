@@ -46,11 +46,45 @@
                           The start date will automatically be set to the 19 July 2015
                         </@fdsInsetText.insetText>
                     <#elseif appointmentTypeName == "OFFLINE_NOMINATION">
+                        <@fdsDateInput.dateInput
+                            dayPath="form.offlineAppointmentStartDate.dayInput.inputValue"
+                            monthPath="form.offlineAppointmentStartDate.monthInput.inputValue"
+                            yearPath="form.offlineAppointmentStartDate.yearInput.inputValue"
+                            labelText="Start date"
+                            formId="offlineStartDate"
+                            nestingPath="form.appointmentType"
+                        />
                     <#elseif appointmentTypeName == "ONLINE_NOMINATION">
+                        <@fdsDateInput.dateInput
+                            dayPath="form.onlineAppointmentStartDate.dayInput.inputValue"
+                            monthPath="form.onlineAppointmentStartDate.monthInput.inputValue"
+                            yearPath="form.onlineAppointmentStartDate.yearInput.inputValue"
+                            labelText="Start date"
+                            formId="onlineStartDate"
+                            nestingPath="form.appointmentType"
+                        />
                     </#if>
                 </@fdsRadio.radioItem>
                 <#assign isFirstAppointmentType = false/>
             </#list>
+        </@fdsRadio.radioGroup>
+
+        <@fdsRadio.radioGroup
+            path="form.hasEndDate"
+            labelText="Does this appointment have an end date?"
+            hiddenContent=true
+        >
+            <@fdsRadio.radioYes path="form.hasEndDate">
+              <@fdsDateInput.dateInput
+                dayPath="form.endDate.dayInput.inputValue"
+                monthPath="form.endDate.monthInput.inputValue"
+                yearPath="form.endDate.yearInput.inputValue"
+                labelText="End date"
+                formId="endDate"
+                nestingPath="form.hasEndDate"
+              />
+            </@fdsRadio.radioYes>
+            <@fdsRadio.radioNo path="form.hasEndDate"/>
         </@fdsRadio.radioGroup>
 
         <@fdsRadio.radioGroup

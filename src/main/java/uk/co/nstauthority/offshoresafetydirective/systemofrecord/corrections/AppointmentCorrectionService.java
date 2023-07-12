@@ -1,8 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
+import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -14,6 +16,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -53,6 +57,28 @@ class AppointmentCorrectionService {
     form.setPhases(phaseNames);
     form.setAppointmentType(appointment.appointmentType().name());
 
+    var appointmentFromDate = Optional.ofNullable(appointment.appointmentFromDate())
+        .map(AppointmentFromDate::value);
+
+    if (AppointmentType.ONLINE_NOMINATION.equals(appointment.appointmentType()) && appointmentFromDate.isPresent()) {
+      form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
+    } else if (
+        AppointmentType.OFFLINE_NOMINATION.equals(appointment.appointmentType())
+            && appointmentFromDate.isPresent()
+    ) {
+      form.getOfflineAppointmentStartDate().setDate(appointmentFromDate.get());
+    }
+
+    Optional.ofNullable(appointment.appointmentToDate())
+        .map(AppointmentToDate::value)
+        .ifPresentOrElse(
+            toDate -> {
+              form.setHasEndDate(true);
+              form.getEndDate().setDate(toDate);
+            },
+            () -> form.setHasEndDate(false)
+        );
+
     var selectablePhases = getSelectablePhaseMap(appointment.assetDto());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
     form.setForAllPhases(allPhasesSelected);
@@ -68,11 +94,24 @@ class AppointmentCorrectionService {
   @Transactional
   public void updateCorrection(AppointmentDto appointmentDto,
                                AppointmentCorrectionForm appointmentCorrectionForm) {
+
+    var startDate = getStartDateFromForm(appointmentCorrectionForm)
+        .orElseThrow(() -> new IllegalStateException(
+            "Unable to get start date from form with AppointmentType [%s] with appointment ID [%s]".formatted(
+                appointmentCorrectionForm.getAppointmentType(),
+                appointmentDto.appointmentId()
+            )
+        ));
+
+    Optional<LocalDate> endDate = BooleanUtils.isTrue(appointmentCorrectionForm.getHasEndDate())
+        ? appointmentCorrectionForm.getEndDate().getAsLocalDate()
+        : Optional.empty();
+
     var updateDto = new AppointmentDto(
         appointmentDto.appointmentId(),
         new AppointedOperatorId(appointmentCorrectionForm.getAppointedOperatorId().toString()),
-        appointmentDto.appointmentFromDate(),
-        appointmentDto.appointmentToDate(),
+        new AppointmentFromDate(startDate),
+        endDate.map(AppointmentToDate::new).orElse(null),
         appointmentDto.appointmentCreatedDate(),
         EnumUtils.getEnum(AppointmentType.class, appointmentCorrectionForm.getAppointmentType()),
         appointmentDto.legacyNominationReference(),
@@ -103,6 +142,18 @@ class AppointmentCorrectionService {
 
     appointmentUpdateService.updateAppointment(updateDto);
     assetPhasePersistenceService.updateAssetPhases(appointmentDto, phases);
+  }
+
+  private Optional<LocalDate> getStartDateFromForm(AppointmentCorrectionForm form) {
+    if (!EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())) {
+      return Optional.empty();
+    }
+    var appointmentType = EnumUtils.getEnum(AppointmentType.class, form.getAppointmentType());
+    return switch (appointmentType) {
+      case ONLINE_NOMINATION -> form.getOnlineAppointmentStartDate().getAsLocalDate();
+      case OFFLINE_NOMINATION -> form.getOfflineAppointmentStartDate().getAsLocalDate();
+      case DEEMED -> Optional.of(AppointmentCorrectionDateValidator.DEEMED_DATE);
+    };
   }
 
 }

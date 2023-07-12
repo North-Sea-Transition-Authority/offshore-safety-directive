@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -32,11 +33,16 @@ class AppointmentUpdateServiceTest {
     var appointmentType = AppointmentType.DEEMED;
     var appointmentId = UUID.randomUUID();
 
+    var fromDate = LocalDate.now().minusDays(1);
+    var toDate = LocalDate.now();
+
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId)
         .withAppointedOperatorId(appointedOperatorId)
         .withAppointmentType(appointmentType)
+        .withAppointmentFromDate(fromDate)
+        .withAppointmentToDate(toDate)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -51,7 +57,32 @@ class AppointmentUpdateServiceTest {
 
     verify(appointment).setAppointedPortalOperatorId(appointedOperatorId);
     verify(appointment).setAppointmentType(appointmentType);
+    verify(appointment).setResponsibleFromDate(fromDate);
+    verify(appointment).setResponsibleToDate(toDate);
     verifyNoMoreInteractions(appointment);
+
+  }
+
+  @Test
+  void updateAppointment_whenToDateIsNull() {
+    var appointmentId = UUID.randomUUID();
+
+    var appointment = mock(Appointment.class);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId)
+        .withAppointmentToDate((AppointmentToDate) null)
+        .build();
+
+    when(appointmentRepository.findById(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    appointmentUpdateService.updateAppointment(appointmentDto);
+
+    var captor = ArgumentCaptor.forClass(Appointment.class);
+    verify(appointmentRepository).save(captor.capture());
+
+    assertThat(captor.getValue()).isEqualTo(appointment);
+    verify(appointment).setResponsibleToDate(null);
 
   }
 

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,13 @@ public class AppointmentUpdateService {
     var operatorId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     appointment.setAppointedPortalOperatorId(operatorId);
     appointment.setAppointmentType(appointmentDto.appointmentType());
+    appointment.setResponsibleFromDate(appointmentDto.appointmentFromDate().value());
+
+    var toDate = Optional.ofNullable(appointmentDto.appointmentToDate())
+        .map(AppointmentToDate::value)
+        .orElse(null);
+
+    appointment.setResponsibleToDate(toDate);
     appointmentRepository.save(appointment);
   }
 

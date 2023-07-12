@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.util.Set;
+import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 
 public class AppointmentCorrectionForm {
 
@@ -8,6 +9,10 @@ public class AppointmentCorrectionForm {
   private Boolean forAllPhases;
   private Set<String> phases;
   private String appointmentType;
+  private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
+  private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
+  private Boolean hasEndDate;
+  private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
 
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
@@ -39,5 +44,37 @@ public class AppointmentCorrectionForm {
 
   public void setAppointmentType(String appointmentType) {
     this.appointmentType = appointmentType;
+  }
+
+  public ThreeFieldDateInput getOfflineAppointmentStartDate() {
+    return offlineAppointmentStartDate;
+  }
+
+  public void setOfflineAppointmentStartDate(ThreeFieldDateInput offlineAppointmentStartDate) {
+    this.offlineAppointmentStartDate = offlineAppointmentStartDate;
+  }
+
+  public ThreeFieldDateInput getOnlineAppointmentStartDate() {
+    return onlineAppointmentStartDate;
+  }
+
+  public void setOnlineAppointmentStartDate(ThreeFieldDateInput onlineAppointmentStartDate) {
+    this.onlineAppointmentStartDate = onlineAppointmentStartDate;
+  }
+
+  public Boolean getHasEndDate() {
+    return hasEndDate;
+  }
+
+  public void setHasEndDate(Boolean hasEndDate) {
+    this.hasEndDate = hasEndDate;
+  }
+
+  public ThreeFieldDateInput getEndDate() {
+    return endDate;
+  }
+
+  public void setEndDate(ThreeFieldDateInput endDate) {
+    this.endDate = endDate;
   }
 }

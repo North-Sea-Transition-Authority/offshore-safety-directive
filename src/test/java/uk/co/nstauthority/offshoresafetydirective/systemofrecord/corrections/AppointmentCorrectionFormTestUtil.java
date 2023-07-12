@@ -22,6 +22,7 @@ class AppointmentCorrectionFormTestUtil {
     private Boolean forAllPhases = false;
     private Set<String> phases = new HashSet<>();
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
+    private Boolean hasEndDate = false;
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -57,12 +58,18 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    Builder setHasEndDate(Boolean hasEndDate) {
+      this.hasEndDate = hasEndDate;
+      return this;
+    }
+
     AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
       form.setForAllPhases(forAllPhases);
       form.setPhases(phases);
       form.setAppointmentType(appointmentType);
+      form.setHasEndDate(hasEndDate);
       return form;
     }
   }
