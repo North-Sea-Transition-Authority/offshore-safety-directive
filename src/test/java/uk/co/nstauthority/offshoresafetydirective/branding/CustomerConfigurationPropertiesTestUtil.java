@@ -22,7 +22,7 @@ public class CustomerConfigurationPropertiesTestUtil {
 
     private String businessEmailAddress = "business email address";
 
-    Builder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
@@ -50,6 +50,5 @@ public class CustomerConfigurationPropertiesTestUtil {
           businessEmailAddress
       );
     }
-
   }
 }
