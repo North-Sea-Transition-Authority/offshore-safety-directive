@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
@@ -63,6 +64,9 @@ class AppointmentCorrectionService {
 
     if (AppointmentType.ONLINE_NOMINATION.equals(appointment.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
+
+      var onlineNominationId = Optional.ofNullable(appointment.nominationId()).map(NominationId::id).orElse(null);
+      form.setOnlineNominationReference(onlineNominationId);
     } else if (
         AppointmentType.OFFLINE_NOMINATION.equals(appointment.appointmentType())
             && appointmentFromDate.isPresent()
@@ -120,15 +124,24 @@ class AppointmentCorrectionService {
         appointmentDto.assetDto()
     );
 
-    updateDtoBuilder = switch (appointmentType) {
-      case OFFLINE_NOMINATION ->
-          updateDtoBuilder
-              .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
-      case ONLINE_NOMINATION ->
+    switch (appointmentType) {
+      case OFFLINE_NOMINATION -> {
         updateDtoBuilder
-            .withNominationId(appointmentDto.nominationId());
-      case DEEMED -> updateDtoBuilder;
-    };
+            .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
+      }
+      case ONLINE_NOMINATION -> {
+        var onlineNominationReferenceId = Optional.ofNullable(
+                appointmentCorrectionForm.getOnlineNominationReference())
+            .map(NominationId::new)
+            .orElse(null);
+
+        updateDtoBuilder
+            .withNominationId(onlineNominationReferenceId);
+      }
+      case DEEMED -> {
+
+      }
+    }
 
     var updateDto = updateDtoBuilder.build();
 

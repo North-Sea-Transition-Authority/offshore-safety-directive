@@ -490,4 +490,21 @@ class NominationDetailServiceTest {
     );
   }
 
+  @Test
+  void getNominationsByReferenceLikeWithStatuses_verifyCalls() {
+    var reference = "REF";
+    var statuses = NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);
+
+    var nominationDetailResult = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailRepository.getNominationDetailsByStatusInAndNomination_ReferenceContainsIgnoreCase(
+        statuses,
+        reference
+    )).thenReturn(List.of(nominationDetailResult));
+
+    var result = nominationDetailService.getNominationsByReferenceLikeWithStatuses(reference, statuses);
+    assertThat(result)
+        .containsExactly(NominationDto.fromNomination(nominationDetailResult.getNomination()));
+  }
+
 }

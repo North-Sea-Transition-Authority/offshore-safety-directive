@@ -28,4 +28,9 @@ interface NominationDetailRepository extends CrudRepository<NominationDetail, In
 
   List<NominationDetail> findAllByNominationAndStatusIn(Nomination nomination, Collection<NominationStatus> statuses);
 
+  List<NominationDetail> getNominationDetailsByStatusInAndNomination_ReferenceContainsIgnoreCase(
+      Collection<NominationStatus> statuses,
+      String reference
+  );
+
 }

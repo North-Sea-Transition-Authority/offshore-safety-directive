@@ -13,6 +13,7 @@ public class AppointmentCorrectionForm {
   private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
   private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
   private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
+  private Integer onlineNominationReference;
   private Boolean hasEndDate;
   private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
 
@@ -70,6 +71,14 @@ public class AppointmentCorrectionForm {
 
   public void setOnlineAppointmentStartDate(ThreeFieldDateInput onlineAppointmentStartDate) {
     this.onlineAppointmentStartDate = onlineAppointmentStartDate;
+  }
+
+  public Integer getOnlineNominationReference() {
+    return onlineNominationReference;
+  }
+
+  public void setOnlineNominationReference(Integer onlineNominationReference) {
+    this.onlineNominationReference = onlineNominationReference;
   }
 
   public Boolean getHasEndDate() {

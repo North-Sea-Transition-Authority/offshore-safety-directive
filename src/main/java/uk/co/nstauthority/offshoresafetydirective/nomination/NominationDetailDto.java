@@ -6,8 +6,8 @@ public record NominationDetailDto(
     NominationDetailId nominationDetailId,
     Integer version,
     NominationStatus nominationStatus,
-    NominationId nominationId,
-    Instant submittedInstant
+    Instant submittedInstant,
+    NominationDto nominationDto
 ) {
 
   public static NominationDetailDto fromNominationDetail(NominationDetail nominationDetail) {
@@ -15,9 +15,12 @@ public record NominationDetailDto(
         NominationDetailId.fromNominationDetail(nominationDetail),
         nominationDetail.getVersion(),
         nominationDetail.getStatus(),
-        new NominationId(nominationDetail.getNomination().getId()),
-        nominationDetail.getSubmittedInstant()
+        nominationDetail.getSubmittedInstant(),
+        NominationDto.fromNomination(nominationDetail.getNomination())
     );
   }
 
+  public NominationId nominationId() {
+    return nominationDto.nominationId();
+  }
 }

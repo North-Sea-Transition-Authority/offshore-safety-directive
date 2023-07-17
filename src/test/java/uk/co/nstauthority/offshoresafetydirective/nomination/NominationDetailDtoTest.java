@@ -12,13 +12,13 @@ class NominationDetailDtoTest {
     var version = 2;
     var status = NominationStatus.DRAFT;
     var nomination = NominationTestUtil.builder().build();
-    var submittedInnstant = Instant.now();
+    var submittedInstant = Instant.now();
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(version)
         .withStatus(status)
         .withNomination(nomination)
-        .withSubmittedInstant(submittedInnstant)
+        .withSubmittedInstant(submittedInstant)
         .build();
 
     var result = NominationDetailDto.fromNominationDetail(nominationDetail);
@@ -27,8 +27,8 @@ class NominationDetailDtoTest {
         .hasFieldOrPropertyWithValue("nominationDetailId", new NominationDetailId(nominationDetail.getId()))
         .hasFieldOrPropertyWithValue("version", version)
         .hasFieldOrPropertyWithValue("nominationStatus", status)
-        .hasFieldOrPropertyWithValue("nominationId", new NominationId(nomination.getId()))
-        .hasFieldOrPropertyWithValue("submittedInstant", submittedInnstant)
+        .hasFieldOrPropertyWithValue("submittedInstant", submittedInstant)
+        .hasFieldOrPropertyWithValue("nominationDto", NominationDto.fromNomination(nominationDetail.getNomination()))
         .hasAssertedAllProperties();
   }
 }

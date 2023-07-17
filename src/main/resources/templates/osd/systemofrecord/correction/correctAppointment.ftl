@@ -8,6 +8,7 @@
 <#-- @ftlvariable name="submitUrl" type="String" -->
 <#-- @ftlvariable name="phaseSelectionHint" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 
 <@defaultPage
     pageHeading="Update appointment"
@@ -60,6 +61,12 @@
                             nestingPath="form.appointmentType"
                         />
                     <#elseif appointmentTypeName == "ONLINE_NOMINATION">
+                        <@fdsSearchSelector.searchSelectorRest
+                            path="form.onlineNominationReference"
+                            restUrl=springUrl(nominationReferenceRestUrl)
+                            labelText="${serviceBranding.mnemonic()} nomination reference"
+                            preselectedItems=preselectedNominationReference!{}
+                        />
                         <@fdsDateInput.dateInput
                             dayPath="form.onlineAppointmentStartDate.dayInput.inputValue"
                             monthPath="form.onlineAppointmentStartDate.monthInput.inputValue"

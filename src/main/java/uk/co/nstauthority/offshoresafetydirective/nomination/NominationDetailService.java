@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,9 +96,9 @@ public class NominationDetailService {
 
   public List<NominationDetailDto> getPostSubmissionNominationDetailDtos(Nomination nomination) {
     return nominationDetailRepository.findAllByNominationAndStatusIn(
-        nomination,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    )
+            nomination,
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        )
         .stream()
         .map(NominationDetailDto::fromNominationDetail)
         .toList();
@@ -158,6 +159,18 @@ public class NominationDetailService {
     draftNominationDetailUpdate.ifPresent(this::deleteNominationDetail);
 
     nominationDetailRepository.save(nominationDetailToWithdraw);
+  }
+
+  public Set<NominationDto> getNominationsByReferenceLikeWithStatuses(String reference,
+                                                                      Collection<NominationStatus> statuses) {
+    return nominationDetailRepository.getNominationDetailsByStatusInAndNomination_ReferenceContainsIgnoreCase(
+            statuses,
+            reference
+        )
+        .stream()
+        .map(NominationDetailDto::fromNominationDetail)
+        .map(NominationDetailDto::nominationDto)
+        .collect(Collectors.toSet());
   }
 
 }

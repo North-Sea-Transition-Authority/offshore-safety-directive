@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -27,6 +28,9 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
@@ -51,6 +55,7 @@ public class AppointmentCorrectionController {
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
   private final ControllerHelperService controllerHelperService;
+  private final NominationDetailService nominationDetailService;
 
   @Autowired
   public AppointmentCorrectionController(AppointmentAccessService appointmentAccessService,
@@ -58,13 +63,15 @@ public class AppointmentCorrectionController {
                                          PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                          AppointmentCorrectionService appointmentCorrectionService,
                                          AppointmentCorrectionValidator appointmentCorrectionValidator,
-                                         ControllerHelperService controllerHelperService) {
+                                         ControllerHelperService controllerHelperService,
+                                         NominationDetailService nominationDetailService) {
     this.appointmentAccessService = appointmentAccessService;
     this.portalAssetNameService = portalAssetNameService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
     this.controllerHelperService = controllerHelperService;
+    this.nominationDetailService = nominationDetailService;
   }
 
   @GetMapping
@@ -136,7 +143,25 @@ public class AppointmentCorrectionController {
         .addObject("preselectedOperator", getPreselectedOperator(form))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .addObject("appointmentTypes", appointmentTypes)
-        .addObject("form", form);
+        .addObject("form", form)
+        .addObject(
+            "nominationReferenceRestUrl",
+            RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
+        );
+
+    if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
+        && form.getOnlineNominationReference() != null) {
+      nominationDetailService.getLatestNominationDetailWithStatuses(
+          new NominationId(form.getOnlineNominationReference()),
+          EnumSet.of(NominationStatus.APPOINTED)
+      ).ifPresent(nominationDetail -> {
+        var nomination = nominationDetail.getNomination();
+        modelAndView.addObject("preselectedNominationReference", Map.of(
+            nomination.getId(),
+            nomination.getReference()
+        ));
+      });
+    }
 
     if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {
       modelAndView.addObject("phaseSelectionHint", "If decommissioning is required, another phase must be selected.");

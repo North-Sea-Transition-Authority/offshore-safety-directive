@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionDateValidator.DEEMED_DATE;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -54,7 +55,6 @@ class AppointmentCorrectionServiceTest {
   @InjectMocks
   private AppointmentCorrectionService appointmentCorrectionService;
 
-  // TODO OSDOP-501 - Add full updateCorrection tests for Deemed and Online appointment types
   @Test
   void updateCorrection_whenOfflineNomination() {
 
@@ -120,6 +120,130 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
+  void updateCorrection_whenOnlineNomination() {
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetId("portal/asset/id")
+        .build();
+
+    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(UUID.randomUUID())
+        .withAssetDto(assetDto)
+        .withAppointedOperatorId(456)
+        .withAppointmentFromDate(LocalDate.now().minusDays(1))
+        .withAppointmentToDate(LocalDate.now().plusDays(2))
+        .withAppointmentCreatedDatetime(Instant.now())
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withLegacyNominationReference("legacy/ref")
+        .withNominationId(new NominationId(789))
+        .build();
+
+    var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
+    var onlineNominationReference = 123;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(123)
+        .withAppointmentType(newAppointmentType)
+        .withOnlineNominationReference(onlineNominationReference)
+        .setHasEndDate(true)
+        .build();
+
+    assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
+
+    var phaseNames = Set.of("phase 1", "phase 2");
+    form.setPhases(phaseNames);
+    var assetAppointmentPhases = phaseNames.stream()
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    var startDate = LocalDate.now().minusDays(1);
+    var endDate = LocalDate.now();
+    form.getOnlineAppointmentStartDate().setDate(startDate);
+    form.getEndDate().setDate(endDate);
+
+    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+
+    var captor = ArgumentCaptor.forClass(AppointmentDto.class);
+    verify(appointmentUpdateService).updateAppointment(captor.capture());
+
+    PropertyObjectAssert.thenAssertThat(captor.getValue())
+        .hasFieldOrPropertyWithValue("appointmentId", originalAppointmentDto.appointmentId())
+        .hasFieldOrPropertyWithValue(
+            "appointedOperatorId",
+            new AppointedOperatorId(form.getAppointedOperatorId().toString())
+        )
+        .hasFieldOrPropertyWithValue("appointmentFromDate", new AppointmentFromDate(startDate))
+        .hasFieldOrPropertyWithValue("appointmentToDate", new AppointmentToDate(endDate))
+        .hasFieldOrPropertyWithValue("appointmentCreatedDate", originalAppointmentDto.appointmentCreatedDate())
+        .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
+        .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
+        .hasFieldOrPropertyWithValue("nominationId", new NominationId(onlineNominationReference))
+        .hasFieldOrPropertyWithValue("legacyNominationReference", null)
+        .hasAssertedAllProperties();
+
+    verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);
+  }
+
+  @Test
+  void updateCorrection_whenDeemedNomination() {
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetId("portal/asset/id")
+        .build();
+
+    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(UUID.randomUUID())
+        .withAssetDto(assetDto)
+        .withAppointedOperatorId(456)
+        .withAppointmentFromDate(LocalDate.now().minusDays(1))
+        .withAppointmentToDate(LocalDate.now().plusDays(2))
+        .withAppointmentCreatedDatetime(Instant.now())
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withLegacyNominationReference("legacy/ref")
+        .withNominationId(new NominationId(789))
+        .build();
+
+    var newAppointmentType = AppointmentType.DEEMED;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(123)
+        .withAppointmentType(newAppointmentType)
+        .setHasEndDate(true)
+        .build();
+
+    assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
+
+    var phaseNames = Set.of("phase 1", "phase 2");
+    form.setPhases(phaseNames);
+    var assetAppointmentPhases = phaseNames.stream()
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    var endDate = LocalDate.now();
+    form.getEndDate().setDate(endDate);
+
+    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+
+    var captor = ArgumentCaptor.forClass(AppointmentDto.class);
+    verify(appointmentUpdateService).updateAppointment(captor.capture());
+
+    PropertyObjectAssert.thenAssertThat(captor.getValue())
+        .hasFieldOrPropertyWithValue("appointmentId", originalAppointmentDto.appointmentId())
+        .hasFieldOrPropertyWithValue(
+            "appointedOperatorId",
+            new AppointedOperatorId(form.getAppointedOperatorId().toString())
+        )
+        .hasFieldOrPropertyWithValue("appointmentFromDate", new AppointmentFromDate(DEEMED_DATE))
+        .hasFieldOrPropertyWithValue("appointmentToDate", new AppointmentToDate(endDate))
+        .hasFieldOrPropertyWithValue("appointmentCreatedDate", originalAppointmentDto.appointmentCreatedDate())
+        .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
+        .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
+        .hasFieldOrPropertyWithValue("nominationId", null)
+        .hasFieldOrPropertyWithValue("legacyNominationReference", null)
+        .hasAssertedAllProperties();
+
+    verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);
+  }
+
+  @Test
   void updateCorrection_whenDeemed_thenStartDateIsDeemedDate() {
 
     var originalAppointmentDto = AppointmentDtoTestUtil.builder()
@@ -147,7 +271,7 @@ class AppointmentCorrectionServiceTest {
     assertThat(captor.getValue())
         .extracting(AppointmentDto::appointmentFromDate)
         .extracting(AppointmentFromDate::value)
-        .isEqualTo(AppointmentCorrectionDateValidator.DEEMED_DATE);
+        .isEqualTo(DEEMED_DATE);
   }
 
   @Test

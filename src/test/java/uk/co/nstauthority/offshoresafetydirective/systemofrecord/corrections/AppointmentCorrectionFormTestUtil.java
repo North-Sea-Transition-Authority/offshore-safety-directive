@@ -24,6 +24,7 @@ class AppointmentCorrectionFormTestUtil {
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
     private Boolean hasEndDate = false;
     private String offlineNominationReference = null;
+    private Integer onlineNominationReference = null;
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -69,6 +70,11 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    Builder withOnlineNominationReference(Integer onlineNominationReference) {
+      this.onlineNominationReference = onlineNominationReference;
+      return this;
+    }
+
     AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
@@ -77,6 +83,7 @@ class AppointmentCorrectionFormTestUtil {
       form.setAppointmentType(appointmentType);
       form.setHasEndDate(hasEndDate);
       form.getOfflineNominationReference().setInputValue(offlineNominationReference);
+      form.setOnlineNominationReference(onlineNominationReference);
       return form;
     }
   }
