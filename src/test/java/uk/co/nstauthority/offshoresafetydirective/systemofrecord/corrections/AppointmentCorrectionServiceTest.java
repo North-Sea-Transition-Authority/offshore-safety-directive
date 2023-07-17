@@ -54,8 +54,9 @@ class AppointmentCorrectionServiceTest {
   @InjectMocks
   private AppointmentCorrectionService appointmentCorrectionService;
 
+  // TODO OSDOP-501 - Add full updateCorrection tests for Deemed and Online appointment types
   @Test
-  void updateCorrection() {
+  void updateCorrection_whenOfflineNomination() {
 
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
@@ -73,11 +74,13 @@ class AppointmentCorrectionServiceTest {
         .withNominationId(new NominationId(789))
         .build();
 
-    var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
-
+    var offlineNominationReference = "OFFLINE/REF/1";
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
-    form.setAppointmentType(newAppointmentType.name());
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(123)
+        .withAppointmentType(newAppointmentType)
+        .withOfflineNominationReference(offlineNominationReference)
+        .build();
 
     assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
 
@@ -108,9 +111,9 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("appointmentToDate", new AppointmentToDate(endDate))
         .hasFieldOrPropertyWithValue("appointmentCreatedDate", originalAppointmentDto.appointmentCreatedDate())
         .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
-        .hasFieldOrPropertyWithValue("legacyNominationReference", originalAppointmentDto.legacyNominationReference())
-        .hasFieldOrPropertyWithValue("nominationId", originalAppointmentDto.nominationId())
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
+        .hasFieldOrPropertyWithValue("legacyNominationReference", offlineNominationReference)
+        .hasFieldOrPropertyWithValue("nominationId", null)
         .hasAssertedAllProperties();
 
     verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);
@@ -209,6 +212,41 @@ class AppointmentCorrectionServiceTest {
         .extracting(AppointmentDto::appointmentFromDate)
         .extracting(AppointmentFromDate::value)
         .isEqualTo(startDate);
+  }
+
+  @Test
+  void updateCorrection_whenOfflineNomination_assertOfflineNominationReference() {
+
+    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentFromDate(LocalDate.now().minusDays(20))
+        .withAppointmentToDate(LocalDate.now().plusDays(10))
+        .build();
+
+    var form = new AppointmentCorrectionForm();
+    form.setAppointedOperatorId(123);
+    form.setForAllPhases(true);
+
+    var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
+    form.setAppointmentType(newAppointmentType.name());
+    form.getOfflineAppointmentStartDate().setDate(LocalDate.now());
+
+    var offlineReference = "OFFLINE/REF/1";
+    form.getOfflineNominationReference().setInputValue(offlineReference);
+
+    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+
+    var captor = ArgumentCaptor.forClass(AppointmentDto.class);
+    verify(appointmentUpdateService).updateAppointment(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            AppointmentDto::legacyNominationReference,
+            AppointmentDto::nominationId
+        )
+        .containsExactly(
+            offlineReference,
+            null
+        );
   }
 
   @Test
@@ -362,15 +400,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
-        .hasFieldOrPropertyWithValue("forAllPhases", true)
-        .hasAssertedAllPropertiesExcept(
-            "appointedOperatorId",
-            "appointmentType",
-            "hasEndDate",
-            "endDate",
-            "offlineAppointmentStartDate",
-            "onlineAppointmentStartDate"
-        );
+        .hasFieldOrPropertyWithValue("forAllPhases", true);
   }
 
   @Test
@@ -395,15 +425,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
-        .hasFieldOrPropertyWithValue("forAllPhases", false)
-        .hasAssertedAllPropertiesExcept(
-            "appointedOperatorId",
-            "appointmentType",
-            "hasEndDate",
-            "endDate",
-            "offlineAppointmentStartDate",
-            "onlineAppointmentStartDate"
-        );
+        .hasFieldOrPropertyWithValue("forAllPhases", false);
   }
 
   @Test

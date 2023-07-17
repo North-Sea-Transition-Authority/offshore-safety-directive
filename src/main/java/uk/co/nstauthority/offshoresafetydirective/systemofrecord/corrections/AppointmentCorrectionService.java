@@ -45,6 +45,8 @@ class AppointmentCorrectionService {
   AppointmentCorrectionForm getForm(AppointmentDto appointment) {
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(Integer.valueOf(appointment.appointedOperatorId().id()));
+    form.setAppointmentType(appointment.appointmentType().name());
+    form.getOfflineNominationReference().setInputValue(appointment.legacyNominationReference());
 
     var phaseNames = assetAppointmentPhaseAccessService.getAppointmentPhases(appointment.assetDto())
         .entrySet()
@@ -55,7 +57,6 @@ class AppointmentCorrectionService {
         .collect(Collectors.toSet());
 
     form.setPhases(phaseNames);
-    form.setAppointmentType(appointment.appointmentType().name());
 
     var appointmentFromDate = Optional.ofNullable(appointment.appointmentFromDate())
         .map(AppointmentFromDate::value);
@@ -107,17 +108,29 @@ class AppointmentCorrectionService {
         ? appointmentCorrectionForm.getEndDate().getAsLocalDate()
         : Optional.empty();
 
-    var updateDto = new AppointmentDto(
+    var appointmentType = EnumUtils.getEnum(AppointmentType.class, appointmentCorrectionForm.getAppointmentType());
+
+    var updateDtoBuilder = AppointmentDto.builder(
         appointmentDto.appointmentId(),
         new AppointedOperatorId(appointmentCorrectionForm.getAppointedOperatorId().toString()),
         new AppointmentFromDate(startDate),
         endDate.map(AppointmentToDate::new).orElse(null),
         appointmentDto.appointmentCreatedDate(),
-        EnumUtils.getEnum(AppointmentType.class, appointmentCorrectionForm.getAppointmentType()),
-        appointmentDto.legacyNominationReference(),
-        appointmentDto.nominationId(),
+        appointmentType,
         appointmentDto.assetDto()
     );
+
+    updateDtoBuilder = switch (appointmentType) {
+      case OFFLINE_NOMINATION ->
+          updateDtoBuilder
+              .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
+      case ONLINE_NOMINATION ->
+        updateDtoBuilder
+            .withNominationId(appointmentDto.nominationId());
+      case DEEMED -> updateDtoBuilder;
+    };
+
+    var updateDto = updateDtoBuilder.build();
 
     List<AssetAppointmentPhase> phases;
     if (BooleanUtils.isTrue(appointmentCorrectionForm.getForAllPhases())) {

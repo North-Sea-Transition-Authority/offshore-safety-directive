@@ -46,6 +46,11 @@
                           The start date will automatically be set to the 19 July 2015
                         </@fdsInsetText.insetText>
                     <#elseif appointmentTypeName == "OFFLINE_NOMINATION">
+                        <@fdsTextInput.textInput
+                            path="form.offlineNominationReference.inputValue"
+                            labelText="Nomination reference"
+                            optionalLabel=true
+                        />
                         <@fdsDateInput.dateInput
                             dayPath="form.offlineAppointmentStartDate.dayInput.inputValue"
                             monthPath="form.offlineAppointmentStartDate.monthInput.inputValue"

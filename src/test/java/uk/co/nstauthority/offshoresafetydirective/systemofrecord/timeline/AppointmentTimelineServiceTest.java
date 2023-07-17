@@ -664,21 +664,22 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenOfflineAppointment() {
+  void getAppointmentHistoryForPortalAsset_whenAppointmentFromLegacyNomination_andNoReference_thenCreatedByIsOffline() {
 
     var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
-    var forwardApprovalAppointment = AppointmentDtoTestUtil.builder()
+    var offlineAppointment = AppointmentDtoTestUtil.builder()
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withLegacyNominationReference(null)
         .build();
 
     given(assetAccessService.getAsset(portalAssetId))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(forwardApprovalAppointment));
+        .willReturn(List.of(offlineAppointment));
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -700,7 +701,7 @@ class AppointmentTimelineServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var legacyAppointment = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .withLegacyNominationReference("legacy nomination reference")
         .build();
 

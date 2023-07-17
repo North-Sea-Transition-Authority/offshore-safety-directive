@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentUpdateServiceTest {
@@ -27,7 +28,7 @@ class AppointmentUpdateServiceTest {
   private AppointmentUpdateService appointmentUpdateService;
 
   @Test
-  void updateAppointment() {
+  void updateAppointment_whenDeemedAppointment() {
 
     var appointedOperatorId = 1001;
     var appointmentType = AppointmentType.DEEMED;
@@ -36,6 +37,9 @@ class AppointmentUpdateServiceTest {
     var fromDate = LocalDate.now().minusDays(1);
     var toDate = LocalDate.now();
 
+    var offlineNominationReference = "OFFLINE/REF/1";
+    var onlineNominationReference = new NominationId(150);
+
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId)
@@ -43,6 +47,8 @@ class AppointmentUpdateServiceTest {
         .withAppointmentType(appointmentType)
         .withAppointmentFromDate(fromDate)
         .withAppointmentToDate(toDate)
+        .withLegacyNominationReference(offlineNominationReference)
+        .withNominationId(onlineNominationReference)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -59,8 +65,93 @@ class AppointmentUpdateServiceTest {
     verify(appointment).setAppointmentType(appointmentType);
     verify(appointment).setResponsibleFromDate(fromDate);
     verify(appointment).setResponsibleToDate(toDate);
+    verify(appointment).setCreatedByLegacyNominationReference(null);
+    verify(appointment).setCreatedByNominationId(null);
     verifyNoMoreInteractions(appointment);
+  }
 
+  @Test
+  void updateAppointment_whenOnlineAppointment() {
+    var appointedOperatorId = 1001;
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var appointmentId = UUID.randomUUID();
+
+    var fromDate = LocalDate.now().minusDays(1);
+    var toDate = LocalDate.now();
+
+    var offlineNominationReference = "OFFLINE/REF/1";
+    var onlineNominationReference = new NominationId(150);
+
+    var appointment = mock(Appointment.class);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId)
+        .withAppointedOperatorId(appointedOperatorId)
+        .withAppointmentType(appointmentType)
+        .withAppointmentFromDate(fromDate)
+        .withAppointmentToDate(toDate)
+        .withLegacyNominationReference(offlineNominationReference)
+        .withNominationId(onlineNominationReference)
+        .build();
+
+    when(appointmentRepository.findById(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    appointmentUpdateService.updateAppointment(appointmentDto);
+
+    var captor = ArgumentCaptor.forClass(Appointment.class);
+    verify(appointmentRepository).save(captor.capture());
+
+    assertThat(captor.getValue()).isEqualTo(appointment);
+
+    verify(appointment).setAppointedPortalOperatorId(appointedOperatorId);
+    verify(appointment).setAppointmentType(appointmentType);
+    verify(appointment).setResponsibleFromDate(fromDate);
+    verify(appointment).setResponsibleToDate(toDate);
+    verify(appointment).setCreatedByLegacyNominationReference(null);
+    verify(appointment).setCreatedByNominationId(onlineNominationReference.id());
+    verifyNoMoreInteractions(appointment);
+  }
+
+  @Test
+  void updateAppointment_whenOfflineAppointment() {
+    var appointedOperatorId = 1001;
+    var appointmentType = AppointmentType.OFFLINE_NOMINATION;
+    var appointmentId = UUID.randomUUID();
+
+    var fromDate = LocalDate.now().minusDays(1);
+    var toDate = LocalDate.now();
+
+    var offlineNominationReference = "OFFLINE/REF/1";
+    var onlineNominationReference = new NominationId(150);
+
+    var appointment = mock(Appointment.class);
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId)
+        .withAppointedOperatorId(appointedOperatorId)
+        .withAppointmentType(appointmentType)
+        .withAppointmentFromDate(fromDate)
+        .withAppointmentToDate(toDate)
+        .withLegacyNominationReference(offlineNominationReference)
+        .withNominationId(onlineNominationReference)
+        .build();
+
+    when(appointmentRepository.findById(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    appointmentUpdateService.updateAppointment(appointmentDto);
+
+    var captor = ArgumentCaptor.forClass(Appointment.class);
+    verify(appointmentRepository).save(captor.capture());
+
+    assertThat(captor.getValue()).isEqualTo(appointment);
+
+    verify(appointment).setAppointedPortalOperatorId(appointedOperatorId);
+    verify(appointment).setAppointmentType(appointmentType);
+    verify(appointment).setResponsibleFromDate(fromDate);
+    verify(appointment).setResponsibleToDate(toDate);
+    verify(appointment).setCreatedByLegacyNominationReference(offlineNominationReference);
+    verify(appointment).setCreatedByNominationId(null);
+    verifyNoMoreInteractions(appointment);
   }
 
   @Test
@@ -83,7 +174,6 @@ class AppointmentUpdateServiceTest {
 
     assertThat(captor.getValue()).isEqualTo(appointment);
     verify(appointment).setResponsibleToDate(null);
-
   }
 
   @Test

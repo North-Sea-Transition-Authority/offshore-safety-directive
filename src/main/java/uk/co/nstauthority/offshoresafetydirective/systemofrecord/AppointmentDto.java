@@ -30,4 +30,67 @@ public record AppointmentDto(
         AssetDto.fromAsset(appointment.getAsset())
     );
   }
+
+  public static Builder builder(AppointmentId appointmentId, AppointedOperatorId appointedOperatorId,
+                                AppointmentFromDate appointmentFromDate, AppointmentToDate appointmentToDate,
+                                Instant appointmentCreatedDate, AppointmentType appointmentType, AssetDto assetDto) {
+    return new Builder(
+        appointmentId,
+        appointedOperatorId,
+        appointmentFromDate,
+        appointmentToDate,
+        appointmentCreatedDate,
+        appointmentType,
+        assetDto
+    );
+  }
+
+  public static class Builder {
+
+    private Builder(AppointmentId appointmentId, AppointedOperatorId appointedOperatorId,
+                   AppointmentFromDate appointmentFromDate, AppointmentToDate appointmentToDate,
+                   Instant appointmentCreatedDate, AppointmentType appointmentType, AssetDto assetDto) {
+      this.appointmentId = appointmentId;
+      this.appointedOperatorId = appointedOperatorId;
+      this.appointmentFromDate = appointmentFromDate;
+      this.appointmentToDate = appointmentToDate;
+      this.appointmentCreatedDate = appointmentCreatedDate;
+      this.appointmentType = appointmentType;
+      this.assetDto = assetDto;
+    }
+
+    private final AppointmentId appointmentId;
+    private final AppointedOperatorId appointedOperatorId;
+    private final AppointmentFromDate appointmentFromDate;
+    private final AppointmentToDate appointmentToDate;
+    private final Instant appointmentCreatedDate;
+    private final AppointmentType appointmentType;
+    private final AssetDto assetDto;
+    private String legacyNominationReference;
+    private NominationId nominationId;
+
+    public Builder withLegacyNominationReference(String legacyNominationReference) {
+      this.legacyNominationReference = legacyNominationReference;
+      return this;
+    }
+
+    public Builder withNominationId(NominationId nominationId) {
+      this.nominationId = nominationId;
+      return this;
+    }
+
+    public AppointmentDto build() {
+      return new AppointmentDto(
+          appointmentId,
+          appointedOperatorId,
+          appointmentFromDate,
+          appointmentToDate,
+          appointmentCreatedDate,
+          appointmentType,
+          legacyNominationReference,
+          nominationId,
+          assetDto
+      );
+    }
+  }
 }

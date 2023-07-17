@@ -17,6 +17,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
+import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
@@ -66,6 +67,10 @@ class AppointmentCorrectionValidator implements SmartValidator {
 
     validateAppointedOperatorId(form, bindingResult);
     quickValidateEndDateFields(form, bindingResult);
+
+    StringInputValidator.builder()
+        .isOptional()
+        .validate(form.getOfflineNominationReference(), bindingResult);
 
     var optionalAppointmentType = getAppointmentType(form);
     optionalAppointmentType.ifPresentOrElse(

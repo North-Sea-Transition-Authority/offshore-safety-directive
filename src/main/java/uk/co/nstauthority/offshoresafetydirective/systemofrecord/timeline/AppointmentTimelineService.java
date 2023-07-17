@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -214,12 +213,8 @@ class AppointmentTimelineService {
     if (AppointmentType.DEEMED.equals(appointmentDto.appointmentType())) {
       return "Deemed appointment";
     } else if (AppointmentType.OFFLINE_NOMINATION.equals(appointmentDto.appointmentType())) {
-      return "Offline nomination";
-    } else if (
-        AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType())
-            && StringUtils.isNotBlank(appointmentDto.legacyNominationReference())
-    ) {
-      return appointmentDto.legacyNominationReference();
+      return Optional.ofNullable(appointmentDto.legacyNominationReference())
+          .orElse(AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText());
     } else if (
         AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType())
             && appointmentDto.nominationId() != null

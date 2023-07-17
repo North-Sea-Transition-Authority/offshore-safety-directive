@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.util.Set;
+import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 
 public class AppointmentCorrectionForm {
@@ -10,6 +11,7 @@ public class AppointmentCorrectionForm {
   private Set<String> phases;
   private String appointmentType;
   private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
+  private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
   private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
   private Boolean hasEndDate;
   private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
@@ -52,6 +54,14 @@ public class AppointmentCorrectionForm {
 
   public void setOfflineAppointmentStartDate(ThreeFieldDateInput offlineAppointmentStartDate) {
     this.offlineAppointmentStartDate = offlineAppointmentStartDate;
+  }
+
+  public StringInput getOfflineNominationReference() {
+    return offlineNominationReference;
+  }
+
+  public void setOfflineNominationReference(StringInput offlineNominationReference) {
+    this.offlineNominationReference = offlineNominationReference;
   }
 
   public ThreeFieldDateInput getOnlineAppointmentStartDate() {
