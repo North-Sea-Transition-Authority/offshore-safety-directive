@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.InstallationRegulator
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailTestUtil;
@@ -86,6 +87,41 @@ class InstallationRegulatorNotificationEventListenerTest {
         .willReturn(notifyEmail);
 
     installationRegulatorNotificationEventListener.notifyInstallationRegulatorOfConsultation(event);
+
+    then(notifyEmailService)
+        .should(onlyOnce())
+        .sendEmail(notifyEmail, installationRegulator.email());
+
+    then(notifyEmailService)
+        .shouldHaveNoMoreInteractions();
+  }
+
+  @ArchTest
+  final ArchRule notifyInstallationRegulatorOfNominationDecision_isAsync = methods()
+      .that()
+      .areDeclaredIn(InstallationRegulatorNotificationEventListener.class)
+      .and().haveName("notifyInstallationRegulatorOfNominationDecision")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule notifyInstallationRegulatorOfNominationDecision_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(InstallationRegulatorNotificationEventListener.class)
+      .and().haveName("notifyInstallationRegulatorOfNominationDecision")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void notifyInstallationRegulatorOfNominationDecision_whenInstallationRegulators_thenEmailSent() {
+    var nominationId = new NominationId(100);
+    var event = new NominationDecisionDeterminedEvent(nominationId);
+
+    var notifyEmail = NotifyEmail.builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties).build();
+
+    given(consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(nominationId, installationRegulator.name()))
+        .willReturn(notifyEmail);
+
+    installationRegulatorNotificationEventListener.notifyInstallationRegulatorOfNominationDecision(event);
 
     then(notifyEmailService)
         .should(onlyOnce())

@@ -10,6 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.nstauthority.offshoresafetydirective.branding.InstallationRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
 
@@ -40,11 +41,21 @@ class InstallationRegulatorNotificationEventListener {
 
     LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
-    emailInstallationRegulators(nominationId);
+    NotifyEmail notifyEmail = consulteeEmailCreationService.constructConsultationRequestEmail(
+        nominationId,
+        installationRegulator.name()
+    );
+    notifyEmailService.sendEmail(notifyEmail, installationRegulator.email());
   }
 
-  private void emailInstallationRegulators(NominationId nominationId) {
-    NotifyEmail notifyEmail = consulteeEmailCreationService.constructConsultationRequestEmail(
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void notifyInstallationRegulatorOfNominationDecision(NominationDecisionDeterminedEvent decisionDeterminedEvent) {
+    NominationId nominationId = decisionDeterminedEvent.getNominationId();
+
+    LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
+
+    NotifyEmail notifyEmail = consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(
         nominationId,
         installationRegulator.name()
     );

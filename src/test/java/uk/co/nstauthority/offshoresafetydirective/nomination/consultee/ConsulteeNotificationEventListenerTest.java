@@ -11,13 +11,12 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionPhase;
@@ -30,7 +29,6 @@ import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmail;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailService;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyEmailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.notify.NotifyTemplate;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -82,11 +80,8 @@ class ConsulteeNotificationEventListenerTest {
       .and().haveName("notifyConsulteeCoordinatorOfConsultation")
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
-  @ParameterizedTest
-  @NullAndEmptySource
-  void notifyConsulteeCoordinatorOfConsultation_whenNoConsulteeCoordinators_thenNoEmailSent(
-      List<TeamMemberView> nullOrEmptyTeamMembers
-  ) {
+
+  void notifyConsulteeCoordinatorOfConsultation_whenNoConsulteeCoordinators_thenNoEmailSent() {
 
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
 
@@ -96,7 +91,7 @@ class ConsulteeNotificationEventListenerTest {
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
     )
-        .willReturn(nullOrEmptyTeamMembers);
+        .willReturn(Collections.emptyList());
 
     consulteeNotificationEventListener.notifyConsulteeCoordinatorOfConsultation(event);
 
@@ -112,7 +107,7 @@ class ConsulteeNotificationEventListenerTest {
     var nominationId = new NominationId(100);
     var event = new ConsultationRequestedEvent(nominationId);
 
-    // AND two consultee coordinator users
+    // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
         .withFirstName("first")
         .withContactEmail("first@wios.co.uk")
@@ -172,11 +167,7 @@ class ConsulteeNotificationEventListenerTest {
       .and().haveName("notifyConsultationCoordinatorsOfDecision")
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
-  @ParameterizedTest
-  @NullAndEmptySource
-  void notifyConsultationCoordinatorsOfDecision_whenNoConsulteeCoordinators_thenNoEmailSent(
-      List<TeamMemberView> nullOrEmptyTeamMembers
-  ) {
+  void notifyConsultationCoordinatorsOfDecision_whenNoConsulteeCoordinators_thenNoEmailSent() {
 
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
 
@@ -187,7 +178,7 @@ class ConsulteeNotificationEventListenerTest {
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
     )
-        .willReturn(nullOrEmptyTeamMembers);
+        .willReturn(Collections.emptyList());
 
     consulteeNotificationEventListener.notifyConsultationCoordinatorsOfDecision(event);
 
@@ -203,7 +194,7 @@ class ConsulteeNotificationEventListenerTest {
     var nominationId = new NominationId(100);
     var event = new NominationDecisionDeterminedEvent(nominationId);
 
-    // AND two consultee coordinator users
+    // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
         .withFirstName("first")
         .withContactEmail("first@wios.co.uk")
@@ -262,11 +253,7 @@ class ConsulteeNotificationEventListenerTest {
       .and().haveName("notifyConsultationCoordinatorsOfAppointment")
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
-  @ParameterizedTest
-  @NullAndEmptySource
-  void notifyConsultationCoordinatorsOfAppointment_whenNoConsulteeCoordinators_thenNoEmailSent(
-      List<TeamMemberView> nullOrEmptyTeamMembers
-  ) {
+  void notifyConsultationCoordinatorsOfAppointment_whenNoConsulteeCoordinators_thenNoEmailSent() {
 
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
 
@@ -277,7 +264,7 @@ class ConsulteeNotificationEventListenerTest {
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
     )
-        .willReturn(nullOrEmptyTeamMembers);
+        .willReturn(Collections.emptyList());
 
     consulteeNotificationEventListener.notifyConsultationCoordinatorsOfAppointment(event);
 
@@ -293,7 +280,7 @@ class ConsulteeNotificationEventListenerTest {
     var nominationId = new NominationId(100);
     var event = new AppointmentConfirmedEvent(nominationId);
 
-    // AND two consultee coordinator users
+    // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
         .withFirstName("first")
         .withContactEmail("first@wios.co.uk")

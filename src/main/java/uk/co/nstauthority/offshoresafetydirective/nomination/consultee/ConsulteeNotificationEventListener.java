@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -93,11 +92,9 @@ class ConsulteeNotificationEventListener {
   }
 
   private List<TeamMemberView> getConsultationCoordinators() {
-    List<TeamMemberView> consulteeCoordinators = teamMemberViewService.getTeamMembersWithRoles(
+    return teamMemberViewService.getTeamMembersWithRoles(
         Set.of(CONSULTATION_COORDINATOR_ROLE),
         TeamType.CONSULTEE
     );
-
-    return consulteeCoordinators == null ? Collections.emptyList() : consulteeCoordinators;
   }
 }
