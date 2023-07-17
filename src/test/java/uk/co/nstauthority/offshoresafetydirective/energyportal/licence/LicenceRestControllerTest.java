@@ -17,7 +17,6 @@ import org.mockito.Captor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
-import uk.co.fivium.energyportalapi.generated.types.LicenceShoreLocation;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
@@ -43,7 +42,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(
-          ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+          ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
         )
     )
         .andExpect(status().isOk());
@@ -58,7 +57,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
         )
             .with(user(loggedInUser))
     )
@@ -76,7 +75,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -89,8 +88,6 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
         .isEqualTo(searchTerm);
-    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
-        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
@@ -105,7 +102,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -125,8 +122,6 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
         .isEqualTo(searchTerm);
-    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
-        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
@@ -151,7 +146,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var response = mockMvc.perform(
             get(
-                ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
             )
         )
         .andExpect(status().isOk())
@@ -169,8 +164,6 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
         .isEqualTo(searchTerm);
-    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
-        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 
   @Test
@@ -195,7 +188,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var response = mockMvc.perform(
         get(
-            ReverseRouter.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(searchTerm))
+            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
         )
     )
         .andExpect(status().isOk())
@@ -213,7 +206,5 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     assertThat(licenceSearchFilterArgumentCaptor.getValue().getLicenceReference())
         .isEqualTo(searchTerm);
-    assertThat(licenceSearchFilterArgumentCaptor.getValue().getShoreLocations())
-        .containsExactly(LicenceShoreLocation.OFFSHORE);
   }
 }

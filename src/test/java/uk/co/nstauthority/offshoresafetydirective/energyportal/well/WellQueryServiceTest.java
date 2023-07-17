@@ -98,16 +98,20 @@ class WellQueryServiceTest {
   }
 
   @Test
-  void searchWellsByRegistrationNumber_whenMultipleWellbores_thenOnlySeawardReturned() {
+  void searchWellsByRegistrationNumber_whenSeawardAndLandwardWellboresMatch_thenBothReturned() {
 
     var searchTerm = "matching search term";
 
     var seawardWellbore = EpaWellboreTestUtil.builder()
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.SEAWARD)
+        .withId(100)
+        .withRegistrationNumber("seaward")
         .build();
 
     var landwardWellbore = EpaWellboreTestUtil.builder()
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.LANDWARD)
+        .withId(200)
+        .withRegistrationNumber("landward")
         .build();
 
     given(wellboreApi.searchWellboresByRegistrationNumber(
@@ -129,6 +133,10 @@ class WellQueryServiceTest {
             tuple(
                 new WellboreId(seawardWellbore.getId()),
                 seawardWellbore.getRegistrationNumber()
+            ),
+            tuple(
+                new WellboreId(landwardWellbore.getId()),
+                landwardWellbore.getRegistrationNumber()
             )
         );
   }
@@ -398,7 +406,7 @@ class WellQueryServiceTest {
   }
 
   @Test
-  void searchWellbores_whenLicenceIdsNotProvidedAndSeawardAndLandwardWells_thenOnlySeawardReturned() {
+  void searchWellbores_whenLicenceIdsNotProvidedAndSeawardAndLandwardWells_thenBothReturned() {
 
     var wellboreId = new WellboreId(123);
     var registrationNumber = new WellboreRegistrationNumber("registration number");
@@ -409,7 +417,7 @@ class WellQueryServiceTest {
         .withRegistrationNumber("seaward wellbore")
         .build();
 
-    var nonSeawardWellbore = EpaWellboreTestUtil.builder()
+    var landwardWellbore = EpaWellboreTestUtil.builder()
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.LANDWARD)
         .withRegistrationNumber("landward wellbore")
         .build();
@@ -423,7 +431,7 @@ class WellQueryServiceTest {
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
-        .willReturn(List.of(nonSeawardWellbore, seawardWellbore));
+        .willReturn(List.of(landwardWellbore, seawardWellbore));
 
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
@@ -433,7 +441,7 @@ class WellQueryServiceTest {
 
     assertThat(resultingWellbores)
         .extracting(WellDto::name)
-        .containsExactly(seawardWellbore.getRegistrationNumber());
+        .containsExactlyInAnyOrder(seawardWellbore.getRegistrationNumber(), landwardWellbore.getRegistrationNumber());
   }
 
   @Test
@@ -546,7 +554,7 @@ class WellQueryServiceTest {
   }
 
   @Test
-  void searchWellbores_whenLicenceIdsProvidedAndSeawardAndLandwardWells_thenOnlySeawardReturned() {
+  void searchWellbores_whenLicenceIdsProvidedAndSeawardAndLandwardWells_thenBothReturned() {
 
     var wellboreId = new WellboreId(123);
     var registrationNumber = new WellboreRegistrationNumber("registration number");
@@ -557,7 +565,7 @@ class WellQueryServiceTest {
         .withRegistrationNumber("seaward wellbore")
         .build();
 
-    var nonSeawardWellbore = EpaWellboreTestUtil.builder()
+    var landwardWellbore = EpaWellboreTestUtil.builder()
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.LANDWARD)
         .withRegistrationNumber("landward wellbore")
         .build();
@@ -571,7 +579,7 @@ class WellQueryServiceTest {
         any(RequestPurpose.class),
         any(LogCorrelationId.class)
     ))
-        .willReturn(List.of(nonSeawardWellbore, seawardWellbore));
+        .willReturn(List.of(landwardWellbore, seawardWellbore));
 
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
@@ -581,7 +589,7 @@ class WellQueryServiceTest {
 
     assertThat(resultingWellbores)
         .extracting(WellDto::name)
-        .containsExactly(seawardWellbore.getRegistrationNumber());
+        .containsExactlyInAnyOrder(seawardWellbore.getRegistrationNumber(), landwardWellbore.getRegistrationNumber());
   }
 
   @Test

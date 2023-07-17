@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 import uk.co.fivium.energyportalapi.generated.client.WellboresProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 
@@ -61,7 +60,6 @@ public class WellQueryService {
             logCorrelationId
         )
             .stream()
-            .filter(wellbore -> RegulatoryJurisdiction.SEAWARD.equals(wellbore.getRegulatoryJurisdiction()))
             .map(WellDto::fromPortalWellbore)
             .toList()
     ));
@@ -114,7 +112,6 @@ public class WellQueryService {
               logCorrelationId
           )
               .stream()
-              .filter(wellbore -> RegulatoryJurisdiction.SEAWARD.equals(wellbore.getRegulatoryJurisdiction()))
               .map(WellDto::fromPortalWellbore)
               .collect(Collectors.toSet())
       );
@@ -136,7 +133,6 @@ public class WellQueryService {
               logCorrelationId
           )
               .stream()
-              .filter(wellbore -> RegulatoryJurisdiction.SEAWARD.equals(wellbore.getRegulatoryJurisdiction()))
               .map(WellDto::fromPortalWellbore)
               .collect(Collectors.toSet())
       );
@@ -152,7 +148,6 @@ public class WellQueryService {
               logCorrelationId
           )
               .stream()
-              .filter(wellbore -> RegulatoryJurisdiction.SEAWARD.equals(wellbore.getRegulatoryJurisdiction()))
               .map(WellDto::fromPortalWellbore)
               .collect(Collectors.toSet())
       );

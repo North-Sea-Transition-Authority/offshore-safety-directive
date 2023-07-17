@@ -251,7 +251,7 @@ public class SystemOfRecordSearchController {
         )
         .addObject(
             "licenceRestUrl",
-            RestApiUtil.route(on(LicenceRestController.class).searchOffshoreLicencesByReference(null))
+            RestApiUtil.route(on(LicenceRestController.class).searchLicences(null))
         )
         .addObject("filteredLicence", filteredLicence);
   }
