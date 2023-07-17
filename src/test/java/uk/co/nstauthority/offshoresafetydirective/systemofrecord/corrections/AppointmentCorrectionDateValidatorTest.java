@@ -880,6 +880,152 @@ class AppointmentCorrectionDateValidatorTest {
     assertFalse(bindingResult.hasErrors());
   }
 
+  @Test
+  void validateAppointmentEndDateIsBetweenAcceptableRange_whenHasInvalidCharacters_thenError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(LocalDate.now())
+        .build();
+    form.getEndDate().getDayInput().setInputValue("a");
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
+                Set.of("End date must be a real date")
+            )
+        );
+  }
+
+  @Test
+  void validateAppointmentEndDateIsBetweenAcceptableRange_whenIsEmpty_thenError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(null)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
+                Set.of("Enter a complete End date")
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
+                Set.of("")
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
+                Set.of("")
+            )
+        );
+  }
+
+  @Test
+  void validateAppointmentEndDateIsBetweenAcceptableRange_whenValidRange_thenNoErrors() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(DEEMED_DATE.plusDays(5))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validateAppointmentEndDateIsBetweenAcceptableRange_whenBeforeDeemedDate_thenError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(DEEMED_DATE.minusDays(2))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
+                Set.of("End date must be the same as or after %s".formatted(
+                    DateUtil.formatShortDate(DEEMED_DATE)
+                ))
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
+                Set.of("")
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
+                Set.of("")
+            )
+        );
+  }
+
+  @Test
+  void validateAppointmentEndDateIsBetweenAcceptableRange_whenInFuture_thenError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(LocalDate.now().plusDays(1))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
+                Set.of("End date must be the same as or before %s".formatted(
+                    DateUtil.formatShortDate(LocalDate.now())
+                ))
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
+                Set.of("")
+            ),
+            entry(
+                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
+                Set.of("")
+            )
+        );
+  }
+
   private ThreeFieldDateInput getAssociatedStartDateInput(AppointmentCorrectionForm appointmentCorrectionForm,
                                                           AppointmentType appointmentType) {
     return switch (appointmentType) {

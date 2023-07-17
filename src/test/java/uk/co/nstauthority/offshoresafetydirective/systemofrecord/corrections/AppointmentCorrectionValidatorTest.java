@@ -6,10 +6,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.entry;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -213,7 +212,11 @@ class AppointmentCorrectionValidatorTest {
             entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases"))
         );
 
-    verifyNoInteractions(appointmentCorrectionDateValidator);
+    verify(appointmentCorrectionDateValidator).validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+    verifyNoMoreInteractions(appointmentCorrectionDateValidator);
   }
 
   @ParameterizedTest
@@ -686,7 +689,11 @@ class AppointmentCorrectionValidatorTest {
             entry("appointmentType", Set.of("Select the type of appointment"))
         );
 
-    verifyNoInteractions(appointmentCorrectionDateValidator);
+    verify(appointmentCorrectionDateValidator).validateAppointmentEndDateIsBetweenAcceptableRange(
+        form,
+        bindingResult
+    );
+    verifyNoMoreInteractions(appointmentCorrectionDateValidator);
   }
 
   @Test
@@ -811,111 +818,6 @@ class AppointmentCorrectionValidatorTest {
         appointmentType,
         List.of(existingDeemedAppointmentDto)
     );
-  }
-
-  @Test
-  void validate_hasEndDate_andEndDateContainsInvalidCharacters_thenNotValid() {
-    var appointmentDto = AppointmentDtoTestUtil.builder().build();
-    var form = AppointmentCorrectionFormTestUtil.builder()
-        .withHasEndDate(true)
-        .build();
-    form.getEndDate().setDate(LocalDate.now());
-    form.getEndDate().getDayInput().setInputValue("a");
-
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
-
-    appointmentCorrectionValidator.validate(
-        form,
-        bindingResult,
-        hint
-    );
-
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
-                "%s.dayInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("End date must be a real date")
-            )
-        );
-
-    form.getEndDate().setDate(LocalDate.now());
-    form.getEndDate().getMonthInput().setInputValue("a");
-    bindingResult = new BeanPropertyBindingResult(form, "form");
-
-    appointmentCorrectionValidator.validate(
-        form,
-        bindingResult,
-        hint
-    );
-
-    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
-                "%s.monthInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("End date must be a real date")
-            )
-        );
-
-    form.getEndDate().setDate(LocalDate.now());
-    form.getEndDate().getYearInput().setInputValue("a");
-    bindingResult = new BeanPropertyBindingResult(form, "form");
-
-    appointmentCorrectionValidator.validate(
-        form,
-        bindingResult,
-        hint
-    );
-
-    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
-                "%s.yearInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("End date must be a real date")
-            )
-        );
-  }
-
-  @Test
-  void validate_hasEndDate_andEndDateIsEmpty_thenValid() {
-    var appointmentDto = AppointmentDtoTestUtil.builder().build();
-    var form = AppointmentCorrectionFormTestUtil.builder()
-        .withHasEndDate(true)
-        .withEndDate(null)
-        .build();
-
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
-
-    appointmentCorrectionValidator.validate(
-        form,
-        bindingResult,
-        hint
-    );
-
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
-                "%s.dayInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("Enter a complete End date")
-            ),
-            entry(
-                "%s.monthInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                "%s.yearInput.inputValue".formatted(form.getEndDate().getFieldName()),
-                Set.of("")
-            )
-        );
   }
 
   @Test

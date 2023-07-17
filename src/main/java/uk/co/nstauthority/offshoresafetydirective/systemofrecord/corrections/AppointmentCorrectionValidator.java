@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -17,7 +16,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
-import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -78,7 +76,15 @@ class AppointmentCorrectionValidator implements SmartValidator {
     var hint = (AppointmentCorrectionValidationHint) validationHints[0];
 
     validateAppointedOperatorId(form, bindingResult);
-    quickValidateEndDateFields(form, bindingResult);
+
+    ValidationUtils.rejectIfEmpty(
+        bindingResult,
+        "hasEndDate",
+        "hasEndDate.required",
+        "Select Yes if the appointment has an end date"
+    );
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(form, bindingResult);
 
     StringInputValidator.builder()
         .isOptional()
@@ -233,20 +239,4 @@ class AppointmentCorrectionValidator implements SmartValidator {
     }
   }
 
-  private void quickValidateEndDateFields(AppointmentCorrectionForm appointmentCorrectionForm,
-                                          BindingResult bindingResult) {
-    ValidationUtils.rejectIfEmpty(
-        bindingResult,
-        "hasEndDate",
-        "hasEndDate.required",
-        "Select Yes if the appointment has an end date"
-    );
-
-    if (BooleanUtils.isTrue(appointmentCorrectionForm.getHasEndDate())) {
-      ThreeFieldDateInputValidator.builder()
-          .mustBeAfterOrEqualTo(AppointmentCorrectionDateValidator.DEEMED_DATE)
-          .mustBeBeforeDate(LocalDate.now())
-          .validate(appointmentCorrectionForm.getEndDate(), bindingResult);
-    }
-  }
 }

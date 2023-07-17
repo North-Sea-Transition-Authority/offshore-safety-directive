@@ -49,7 +49,7 @@ class AppointmentCorrectionDateValidator {
         .toList();
 
     validateAppointmentStartDate(form, appointmentType, bindingResult);
-    validateAppointmentEndDate(form, bindingResult, startDate);
+    validateAppointmentEndDateIsNotBeforeStartDate(form, bindingResult, startDate);
 
     var startDateInputValueFieldName = getStartDateInput(form, appointmentType)
         .map(threeFieldDateInput -> threeFieldDateInput.getDayInput().getFieldName())
@@ -106,12 +106,22 @@ class AppointmentCorrectionDateValidator {
 
   }
 
-  private void validateAppointmentEndDate(AppointmentCorrectionForm form,
-                                          BindingResult bindingResult, LocalDate startDate) {
+  void validateAppointmentEndDateIsBetweenAcceptableRange(AppointmentCorrectionForm form,
+                                                          BindingResult bindingResult) {
 
     if (BooleanUtils.isTrue(form.getHasEndDate())) {
       ThreeFieldDateInputValidator.builder()
           .mustBeBeforeOrEqualTo(LocalDate.now())
+          .mustBeAfterOrEqualTo(DEEMED_DATE)
+          .validate(form.getEndDate(), bindingResult);
+    }
+  }
+
+  private void validateAppointmentEndDateIsNotBeforeStartDate(AppointmentCorrectionForm form,
+                                                              BindingResult bindingResult, LocalDate startDate) {
+
+    if (!form.getEndDate().fieldHasErrors(bindingResult) && BooleanUtils.isTrue(form.getHasEndDate())) {
+      ThreeFieldDateInputValidator.builder()
           .mustBeAfterOrEqualTo(startDate)
           .validate(form.getEndDate(), bindingResult);
     }
