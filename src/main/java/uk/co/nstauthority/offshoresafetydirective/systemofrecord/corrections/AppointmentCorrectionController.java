@@ -30,7 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
@@ -151,9 +150,8 @@ public class AppointmentCorrectionController {
 
     if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
         && form.getOnlineNominationReference() != null) {
-      nominationDetailService.getLatestNominationDetailWithStatuses(
-          new NominationId(form.getOnlineNominationReference()),
-          EnumSet.of(NominationStatus.APPOINTED)
+      nominationDetailService.getLatestNominationDetailOptional(
+          new NominationId(form.getOnlineNominationReference())
       ).ifPresent(nominationDetail -> {
         var nomination = nominationDetail.getNomination();
         modelAndView.addObject("preselectedNominationReference", Map.of(

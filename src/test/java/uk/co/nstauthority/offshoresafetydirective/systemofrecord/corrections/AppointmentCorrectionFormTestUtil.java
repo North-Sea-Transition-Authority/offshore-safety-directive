@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
@@ -24,7 +26,9 @@ class AppointmentCorrectionFormTestUtil {
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
     private Boolean hasEndDate = false;
     private String offlineNominationReference = null;
-    private Integer onlineNominationReference = null;
+    private Integer onlineNominationReference = 321;
+    private LocalDate offlineStartDate = LocalDate.now();
+    private LocalDate onlineStartDate = LocalDate.now();
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -75,6 +79,16 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    Builder withOfflineStartDate(LocalDate offlineStartDate) {
+      this.offlineStartDate = offlineStartDate;
+      return this;
+    }
+
+    Builder withOnlineStartDate(LocalDate onlineStartDate) {
+      this.onlineStartDate = onlineStartDate;
+      return this;
+    }
+
     AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
@@ -82,6 +96,25 @@ class AppointmentCorrectionFormTestUtil {
       form.setPhases(phases);
       form.setAppointmentType(appointmentType);
       form.setHasEndDate(hasEndDate);
+
+      if (offlineStartDate == null) {
+        form.setOfflineAppointmentStartDate(new ThreeFieldDateInput(
+            form.getOfflineAppointmentStartDate().getFieldName(),
+            form.getOfflineAppointmentStartDate().getDisplayName()
+        ));
+      } else {
+        form.getOfflineAppointmentStartDate().setDate(offlineStartDate);
+      }
+
+      if (onlineStartDate == null) {
+        form.setOnlineAppointmentStartDate(new ThreeFieldDateInput(
+            form.getOnlineAppointmentStartDate().getFieldName(),
+            form.getOnlineAppointmentStartDate().getDisplayName()
+        ));
+      } else {
+        form.getOnlineAppointmentStartDate().setDate(onlineStartDate);
+      }
+
       form.getOfflineNominationReference().setInputValue(offlineNominationReference);
       form.setOnlineNominationReference(onlineNominationReference);
       return form;

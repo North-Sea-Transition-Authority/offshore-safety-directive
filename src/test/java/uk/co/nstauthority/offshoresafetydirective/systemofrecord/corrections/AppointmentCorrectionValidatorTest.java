@@ -10,20 +10,29 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
@@ -36,6 +45,16 @@ import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 @ExtendWith(MockitoExtension.class)
 class AppointmentCorrectionValidatorTest {
 
+  private static final String SERVICE_MNEMONIC = "MNEM";
+  private static final ServiceConfigurationProperties SERVICE_CONFIGURATION_PROPERTIES =
+      ServiceConfigurationPropertiesTestUtil.builder()
+          .withServiceMnemonic(SERVICE_MNEMONIC)
+          .build();
+  private static final ServiceBrandingConfigurationProperties SERVICE_BRANDING_CONFIGURATION_PROPERTIES =
+      ServiceBrandingConfigurationPropertiesTestUtil.builder()
+          .withServiceConfigurationProperties(SERVICE_CONFIGURATION_PROPERTIES)
+          .build();
+
   @Mock
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
@@ -45,8 +64,21 @@ class AppointmentCorrectionValidatorTest {
   @Mock
   private AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
 
-  @InjectMocks
+  @Mock
+  private NominationDetailService nominationDetailService;
+
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
+
+  @BeforeEach
+  void setUp() {
+    appointmentCorrectionValidator = new AppointmentCorrectionValidator(
+        portalOrganisationUnitQueryService,
+        appointmentAccessService,
+        appointmentCorrectionDateValidator,
+        nominationDetailService,
+        SERVICE_BRANDING_CONFIGURATION_PROPERTIES
+    );
+  }
 
   @Test
   void supports_doesSupport() {
@@ -69,7 +101,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class)
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
   void validate_whenFullyPopulatedForm_thenNoErrors(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
@@ -94,6 +126,57 @@ class AppointmentCorrectionValidatorTest {
 
     when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(
+        form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
+  }
+
+  @Test
+  void validate_whenFullyPopulatedForm_andOnlineNominationAppointmentType_thenNoErrors() {
+    var onlineReference = 110;
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
+        .withAppointmentType(appointmentType)
+        .withOnlineNominationReference(onlineReference)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    var nominationId = new NominationId(onlineReference);
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.APPOINTED)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -160,7 +243,7 @@ class AppointmentCorrectionValidatorTest {
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     assertThat(errorMessages)
-        .containsExactly(
+        .contains(
             entry("appointedOperatorId", Set.of("Select a valid operator"))
         );
 
@@ -202,7 +285,7 @@ class AppointmentCorrectionValidatorTest {
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     assertThat(errorMessages)
-        .containsExactly(
+        .contains(
             entry("phases", Set.of("Select at least one activity phase"))
         );
 
@@ -246,7 +329,7 @@ class AppointmentCorrectionValidatorTest {
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     assertThat(errorMessages)
-        .containsExactly(
+        .contains(
             entry("phases", Set.of("Select a valid activity phase"))
         );
 
@@ -259,7 +342,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class)
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
   void validate_whenNotForAllPhases_andValidPhase_thenNoErrors(AppointmentType appointmentType) {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -330,7 +413,7 @@ class AppointmentCorrectionValidatorTest {
 
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     assertThat(errorMessages)
-        .containsExactly(
+        .contains(
             entry("phases", Set.of("Select another phase in addition to decommissioning"))
         );
 
@@ -343,7 +426,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class)
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
   void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected(
       AppointmentType appointmentType
   ) {
@@ -460,7 +543,7 @@ class AppointmentCorrectionValidatorTest {
     var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
     assertThat(errorMessages)
-        .containsExactly(
+        .contains(
             entry("appointedOperatorId", Set.of("Select a valid operator"))
         );
 
@@ -733,6 +816,68 @@ class AppointmentCorrectionValidatorTest {
                 Set.of("")
             )
         );
+  }
+
+  @Test
+  void validate_whenOnlineAppointmentType_andReferenceIsEmpty_thenHasError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .withOnlineNominationReference(null)
+        .build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsEntry("onlineNominationReference", Set.of(
+            "Enter a %s nomination reference".formatted(
+                SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic()
+            )
+        ));
+  }
+
+  @Test
+  void validate_whenOnlineAppointmentType_andNoAppointedNomination_thenHasError() {
+
+    var nominationId = new NominationId(123);
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .withOnlineNominationReference(null)
+        .withOnlineNominationReference(nominationId.id())
+        .build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.APPOINTED)
+    )).thenReturn(Optional.empty());
+
+    appointmentCorrectionValidator.validate(
+        form,
+        bindingResult,
+        hint
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsEntry("onlineNominationReference", Set.of(
+            "Enter a valid %s nomination reference".formatted(
+                SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic()
+            )
+        ));
   }
 
   private static class UnsupportedClass {

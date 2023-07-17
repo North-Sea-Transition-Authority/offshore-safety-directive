@@ -64,7 +64,6 @@ class AppointmentCorrectionService {
 
     if (AppointmentType.ONLINE_NOMINATION.equals(appointment.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
-
       var onlineNominationId = Optional.ofNullable(appointment.nominationId()).map(NominationId::id).orElse(null);
       form.setOnlineNominationReference(onlineNominationId);
     } else if (

@@ -19,7 +19,6 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +44,6 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
@@ -204,6 +202,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(model().attribute("preselectedOperator", Map.of()));
+
   }
 
   @Test
@@ -404,32 +403,13 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderCorrection_whenOnlineNomination_andHasNominationReference_andNominationIsPresent() throws Exception {
-
+  void renderCorrection_whenOnlineAppointmentType_andNoOnlineReference_thenNoPreselectedNomination() throws Exception {
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
-
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetType(PortalAssetType.INSTALLATION)
-        .build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentId(appointmentId.id())
-        .withAssetDto(assetDto)
+        .withAppointmentType(appointmentType)
         .build();
-
-    var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
-    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
-
-    var onlineNominationReference = 123;
-    var form = AppointmentCorrectionFormTestUtil.builder()
-        .withAppointedOperatorId(expectedOrganisationId)
-        .withOnlineNominationReference(onlineNominationReference)
-        .build();
-
-    var nominationDetail = NominationDetailTestUtil.builder().build();
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        new NominationId(form.getOnlineNominationReference()),
-        EnumSet.of(NominationStatus.APPOINTED)
-    )).thenReturn(Optional.of(nominationDetail));
 
     when(appointmentAccessService.findAppointmentDtoById(appointmentId))
         .thenReturn(Optional.of(appointmentDto));
@@ -437,75 +417,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    var assetName = "asset name";
-    when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
-
-    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
-        .thenReturn(Optional.of(organisationDto));
+    var form = AppointmentCorrectionFormTestUtil.builder().build();
 
     when(appointmentCorrectionService.getForm(appointmentDto))
         .thenReturn(form);
-
-    var phaseMap = Map.of("PHASE_1", "phase 1");
-    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
-        .thenReturn(phaseMap);
-
-    mockMvc.perform(get(
-            ReverseRouter.route(
-                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
-            .with(user(USER)))
-        .andExpect(status().isOk())
-        .andExpect(model().attribute("preselectedNominationReference", Map.of(
-            nominationDetail.getNomination().getId(),
-            nominationDetail.getNomination().getReference()
-        )));
-  }
-
-  @Test
-  void renderCorrection_whenOnlineNomination_andHasNominationReference_andNominationIsNotPresent() throws Exception {
-    var appointmentId = new AppointmentId(UUID.randomUUID());
-
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetType(PortalAssetType.INSTALLATION)
-        .build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
-        .withAssetDto(assetDto)
-        .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
-
-    when(teamMemberService.getUserAsTeamMembers(USER))
-        .thenReturn(List.of(APPOINTMENT_MANAGER));
-
-    var assetName = "asset name";
-    when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
-
-    var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
-    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
-
-    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
-        .thenReturn(Optional.of(organisationDto));
-
-    var onlineNominationReference = 123;
-    var form = AppointmentCorrectionFormTestUtil.builder()
-        .withAppointedOperatorId(expectedOrganisationId)
-        .withOnlineNominationReference(onlineNominationReference)
-        .build();
-
-    when(appointmentCorrectionService.getForm(appointmentDto))
-        .thenReturn(form);
-
-    var phaseMap = Map.of("PHASE_1", "phase 1");
-    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
-        .thenReturn(phaseMap);
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        new NominationId(form.getOnlineNominationReference()),
-        EnumSet.of(NominationStatus.APPOINTED)
-    )).thenReturn(Optional.empty());
 
     mockMvc.perform(get(
             ReverseRouter.route(
@@ -513,6 +428,83 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(model().attributeDoesNotExist("preselectedNominationReference"));
+  }
+
+  @Test
+  void renderCorrection_whenOnlineAppointmentType_andOnlineReferenceIsNotFound_thenNoPreselectedNomination() throws Exception {
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .withAppointmentType(appointmentType)
+        .build();
+
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var onlineReference = 1234;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withOnlineNominationReference(onlineReference)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailOptional(
+        new NominationId(form.getOnlineNominationReference())
+    ))
+        .thenReturn(Optional.empty());
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(form);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeDoesNotExist("preselectedNominationReference"));
+  }
+
+  @Test
+  void renderCorrection_whenOnlineAppointmentType_andValidReference_thenHasPreselectedNomination() throws Exception {
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentId(appointmentId.id())
+        .withAppointmentType(appointmentType)
+        .build();
+
+    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+        .thenReturn(Optional.of(appointmentDto));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var onlineReference = 1234;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withOnlineNominationReference(onlineReference)
+        .build();
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetailOptional(
+        new NominationId(form.getOnlineNominationReference())
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(appointmentCorrectionService.getForm(appointmentDto))
+        .thenReturn(form);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "preselectedNominationReference",
+            Map.of(nominationDetail.getNomination().getId(), nominationDetail.getNomination().getReference())
+        ));
   }
 
   @SecurityTest

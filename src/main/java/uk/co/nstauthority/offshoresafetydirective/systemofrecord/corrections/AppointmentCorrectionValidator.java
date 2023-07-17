@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -18,8 +19,12 @@ import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
@@ -34,19 +39,26 @@ class AppointmentCorrectionValidator implements SmartValidator {
   private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
   private static final String FOR_ALL_PHASES_FIELD_NAME = "forAllPhases";
   private static final String APPOINTMENT_TYPE_FIELD_NAME = "appointmentType";
+  private static final String ONLINE_REFERENCE_FIELD_NAME = "onlineNominationReference";
   private static final String FIELD_REQUIRED_ERROR = "%s.required";
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentAccessService appointmentAccessService;
   private final AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
+  private final NominationDetailService nominationDetailService;
+  private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
 
   @Autowired
   AppointmentCorrectionValidator(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                  AppointmentAccessService appointmentAccessService,
-                                 AppointmentCorrectionDateValidator appointmentCorrectionDateValidator) {
+                                 AppointmentCorrectionDateValidator appointmentCorrectionDateValidator,
+                                 NominationDetailService nominationDetailService,
+                                 ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentAccessService = appointmentAccessService;
     this.appointmentCorrectionDateValidator = appointmentCorrectionDateValidator;
+    this.nominationDetailService = nominationDetailService;
+    this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
   }
 
   @Override
@@ -79,7 +91,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
               hint.appointmentDto().assetDto().assetId()
           );
 
-          validateAppointmentType(bindingResult, hint, appointmentType, appointments);
+          validateAppointmentType(bindingResult, form, hint, appointmentType, appointments);
 
           appointmentCorrectionDateValidator.validateDates(
               form,
@@ -129,6 +141,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
   }
 
   private void validateAppointmentType(BindingResult bindingResult,
+                                       AppointmentCorrectionForm form,
                                        AppointmentCorrectionValidationHint hint,
                                        AppointmentType appointmentType,
                                        Collection<AppointmentDto> appointments) {
@@ -144,6 +157,30 @@ class AppointmentCorrectionValidator implements SmartValidator {
             "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
             "You can only have one deemed appointment"
         );
+      }
+    } else if (AppointmentType.ONLINE_NOMINATION.equals(appointmentType)) {
+      ValidationUtils.rejectIfEmpty(
+          bindingResult,
+          ONLINE_REFERENCE_FIELD_NAME,
+          FIELD_REQUIRED_ERROR.formatted(ONLINE_REFERENCE_FIELD_NAME),
+          "Enter a %s nomination reference".formatted(
+              serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
+          )
+      );
+      if (!bindingResult.hasFieldErrors(ONLINE_REFERENCE_FIELD_NAME)) {
+        var appointedNominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+            new NominationId(form.getOnlineNominationReference()),
+            EnumSet.of(NominationStatus.APPOINTED)
+        );
+        if (appointedNominationDetail.isEmpty()) {
+          bindingResult.rejectValue(
+              ONLINE_REFERENCE_FIELD_NAME,
+              "%s.invalidNomination".formatted(ONLINE_REFERENCE_FIELD_NAME),
+              "Enter a valid %s nomination reference".formatted(
+                  serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
+              )
+          );
+        }
       }
     }
   }

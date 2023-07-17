@@ -35,6 +35,8 @@ class AppointmentCorrectionDateValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
+        .withOfflineStartDate(null)
+        .withOnlineStartDate(null)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
