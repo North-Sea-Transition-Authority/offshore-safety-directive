@@ -29,6 +29,7 @@ class AppointmentCorrectionFormTestUtil {
     private Integer onlineNominationReference = 321;
     private LocalDate offlineStartDate = LocalDate.now();
     private LocalDate onlineStartDate = LocalDate.now();
+    private LocalDate endDate = null;
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -64,7 +65,7 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
-    Builder setHasEndDate(Boolean hasEndDate) {
+    Builder withHasEndDate(Boolean hasEndDate) {
       this.hasEndDate = hasEndDate;
       return this;
     }
@@ -86,6 +87,17 @@ class AppointmentCorrectionFormTestUtil {
 
     Builder withOnlineStartDate(LocalDate onlineStartDate) {
       this.onlineStartDate = onlineStartDate;
+      return this;
+    }
+
+    Builder withStartDate(LocalDate localDate) {
+      this.onlineStartDate = localDate;
+      this.offlineStartDate = localDate;
+      return this;
+    }
+
+    Builder withEndDate(LocalDate localDate) {
+      this.endDate = localDate;
       return this;
     }
 
@@ -115,8 +127,18 @@ class AppointmentCorrectionFormTestUtil {
         form.getOnlineAppointmentStartDate().setDate(onlineStartDate);
       }
 
+      if (endDate == null) {
+        form.setEndDate(new ThreeFieldDateInput(
+            form.getEndDate().getFieldName(),
+            form.getEndDate().getDisplayName()
+        ));
+      } else {
+        form.getEndDate().setDate(endDate);
+      }
+
       form.getOfflineNominationReference().setInputValue(offlineNominationReference);
       form.setOnlineNominationReference(onlineNominationReference);
+
       return form;
     }
   }

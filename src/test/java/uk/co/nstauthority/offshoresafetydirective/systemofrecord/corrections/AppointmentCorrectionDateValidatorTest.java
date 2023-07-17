@@ -35,8 +35,7 @@ class AppointmentCorrectionDateValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withOfflineStartDate(null)
-        .withOnlineStartDate(null)
+        .withStartDate(null)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -98,10 +97,10 @@ class AppointmentCorrectionDateValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
+        .withStartDate(LocalDate.now())
         .build();
 
-    var startDateInput = getAssociatedStartDateInput(form ,appointmentType);
-    startDateInput.setDate(LocalDate.now());
+    var startDateInput = getAssociatedStartDateInput(form, appointmentType);
     startDateInput.getDayInput().setInputValue("a");
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -181,7 +180,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(startDate);
     form.getEndDate().setDate(endDate);
@@ -223,9 +222,9 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
+        .withEndDate(endDate)
         .build();
-    form.getEndDate().setDate(endDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var hint = new AppointmentCorrectionValidationHint(appointmentDto);
 
@@ -267,7 +266,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(DEEMED_DATE);
     form.getEndDate().setDate(endDate);
@@ -293,7 +292,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     form.getEndDate().setDate(endDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -316,7 +315,7 @@ class AppointmentCorrectionDateValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(false)
+        .withHasEndDate(false)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(DEEMED_DATE);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -339,7 +338,7 @@ class AppointmentCorrectionDateValidatorTest {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(false)
+        .withHasEndDate(false)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var hint = new AppointmentCorrectionValidationHint(appointmentDto);
@@ -363,7 +362,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(date);
     form.getEndDate().setDate(date);
@@ -388,7 +387,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     form.getEndDate().setDate(DEEMED_DATE);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -470,7 +469,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -512,7 +511,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -553,7 +552,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -598,7 +597,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -640,7 +639,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -691,7 +690,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -742,7 +741,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
@@ -790,7 +789,7 @@ class AppointmentCorrectionDateValidatorTest {
 
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);

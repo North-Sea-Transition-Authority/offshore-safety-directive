@@ -144,7 +144,7 @@ class AppointmentCorrectionServiceTest {
         .withAppointedOperatorId(123)
         .withAppointmentType(newAppointmentType)
         .withOnlineNominationReference(onlineNominationReference)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
 
     assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());
@@ -206,7 +206,7 @@ class AppointmentCorrectionServiceTest {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(123)
         .withAppointmentType(newAppointmentType)
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
 
     assertThat(newAppointmentType).isNotEqualTo(originalAppointmentDto.appointmentType());

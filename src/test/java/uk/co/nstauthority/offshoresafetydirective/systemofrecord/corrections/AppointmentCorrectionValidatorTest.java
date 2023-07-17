@@ -382,6 +382,57 @@ class AppointmentCorrectionValidatorTest {
     );
   }
 
+  @Test
+  void validate_whenNotForAllPhases_andValidPhase_thenNoErrors() {
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhase(InstallationPhase.DEVELOPMENT_DESIGN.name())
+        .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    var nominationId = new NominationId(form.getOnlineNominationReference());
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.APPOINTED)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
+  }
+
   @ParameterizedTest
   @EnumSource(value = AppointmentType.class)
   void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(AppointmentType appointmentType) {
@@ -453,6 +504,54 @@ class AppointmentCorrectionValidatorTest {
 
     when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+    verify(appointmentCorrectionDateValidator).validateDates(form,
+        bindingResult,
+        hint,
+        appointmentType,
+        List.of(appointmentDto)
+    );
+  }
+
+  @Test
+  void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected_andOnlineNomination() {
+    var appointmentType = AppointmentType.ONLINE_NOMINATION;
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withPhases(Set.of(WellPhase.DECOMMISSIONING.name(), WellPhase.EXPLORATION_AND_APPRAISAL.name()))
+        .withForAllPhases(false)
+        .withAppointmentType(appointmentType)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    var nominationId = new NominationId(form.getOnlineNominationReference());
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        EnumSet.of(NominationStatus.APPOINTED)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -718,7 +817,7 @@ class AppointmentCorrectionValidatorTest {
   void validate_hasEndDate_andEndDateContainsInvalidCharacters_thenNotValid() {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
-        .setHasEndDate(true)
+        .withHasEndDate(true)
         .build();
     form.getEndDate().setDate(LocalDate.now());
     form.getEndDate().getDayInput().setInputValue("a");
@@ -787,7 +886,8 @@ class AppointmentCorrectionValidatorTest {
   void validate_hasEndDate_andEndDateIsEmpty_thenValid() {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var form = AppointmentCorrectionFormTestUtil.builder()
-        .setHasEndDate(true)
+        .withHasEndDate(true)
+        .withEndDate(null)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
