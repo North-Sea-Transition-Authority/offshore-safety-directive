@@ -29,7 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
         NominationStatus.SUBMITTED,
         NominationStatus.AWAITING_CONFIRMATION,
         NominationStatus.WITHDRAWN,
-        NominationStatus.CLOSED
+        NominationStatus.APPOINTED,
+        NominationStatus.OBJECTED
     },
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
 )

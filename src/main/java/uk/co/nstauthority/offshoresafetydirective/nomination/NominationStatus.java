@@ -10,7 +10,8 @@ public enum NominationStatus implements DisplayableEnum {
   DRAFT("Draft", 10, NominationStatusSubmissionStage.PRE_SUBMISSION),
   SUBMITTED("Submitted", 20, NominationStatusSubmissionStage.POST_SUBMISSION),
   AWAITING_CONFIRMATION("Awaiting confirmation of appointment", 30, NominationStatusSubmissionStage.POST_SUBMISSION),
-  CLOSED("Closed", 40, NominationStatusSubmissionStage.POST_SUBMISSION),
+  APPOINTED("Appointed", 40, NominationStatusSubmissionStage.POST_SUBMISSION),
+  OBJECTED("Objected", 45, NominationStatusSubmissionStage.POST_SUBMISSION),
   WITHDRAWN("Withdrawn", 50, NominationStatusSubmissionStage.POST_SUBMISSION),
   DELETED("Deleted", 60, NominationStatusSubmissionStage.PRE_SUBMISSION);
 
@@ -18,7 +19,7 @@ public enum NominationStatus implements DisplayableEnum {
   private final Integer displayOrder;
   private final NominationStatusSubmissionStage submissionStage;
 
-  private static final Set<NominationStatus> CLOSED_STATUSES = EnumSet.of(CLOSED, WITHDRAWN, DELETED);
+  private static final Set<NominationStatus> CLOSED_STATUSES = EnumSet.of(APPOINTED, WITHDRAWN, DELETED, OBJECTED);
 
   NominationStatus(String displayText, Integer displayOrder,
                    NominationStatusSubmissionStage submissionStage) {

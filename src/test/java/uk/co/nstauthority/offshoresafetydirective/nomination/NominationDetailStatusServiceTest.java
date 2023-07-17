@@ -35,7 +35,7 @@ class NominationDetailStatusServiceTest {
 
     assertThat(captor.getValue()).isEqualTo(nominationDetail)
         .extracting(NominationDetail::getStatus)
-        .isEqualTo(NominationStatus.CLOSED);
+        .isEqualTo(NominationStatus.APPOINTED);
 
   }
 

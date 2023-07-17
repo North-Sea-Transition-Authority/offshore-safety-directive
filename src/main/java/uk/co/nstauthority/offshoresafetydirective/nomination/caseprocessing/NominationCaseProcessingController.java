@@ -36,8 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNominationStatus(
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION,
     statuses = {
-        NominationStatus.SUBMITTED, NominationStatus.CLOSED, NominationStatus.AWAITING_CONFIRMATION,
-        NominationStatus.WITHDRAWN
+        NominationStatus.SUBMITTED, NominationStatus.APPOINTED, NominationStatus.AWAITING_CONFIRMATION,
+        NominationStatus.WITHDRAWN, NominationStatus.OBJECTED
     }
 )
 public class NominationCaseProcessingController {

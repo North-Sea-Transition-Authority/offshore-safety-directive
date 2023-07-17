@@ -123,7 +123,7 @@ public class NominationDetailService {
           .formatted(nominationDetail.getId(), NominationStatus.SUBMITTED));
     }
     if (nominationDecision.equals(NominationDecision.OBJECTION)) {
-      nominationDetail.setStatus(NominationStatus.CLOSED);
+      nominationDetail.setStatus(NominationStatus.OBJECTED);
     } else {
       nominationDetail.setStatus(NominationStatus.AWAITING_CONFIRMATION);
     }

@@ -99,10 +99,9 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
-        .withPermittedNominationStatus(NominationStatus.SUBMITTED)
-        .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
-        .withPermittedNominationStatus(NominationStatus.CLOSED)
-        .withPermittedNominationStatus(NominationStatus.WITHDRAWN)
+        .withPermittedNominationStatuses(
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        )
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(

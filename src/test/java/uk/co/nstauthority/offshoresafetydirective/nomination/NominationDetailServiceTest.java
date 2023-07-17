@@ -265,7 +265,7 @@ class NominationDetailServiceTest {
     nominationDetailService.updateNominationDetailStatusByDecision(detail, nominationDecision);
 
     switch (nominationDecision) {
-      case OBJECTION -> assertThat(detail.getStatus()).isEqualTo(NominationStatus.CLOSED);
+      case OBJECTION -> assertThat(detail.getStatus()).isEqualTo(NominationStatus.OBJECTED);
       case NO_OBJECTION -> assertThat(detail.getStatus()).isEqualTo(NominationStatus.AWAITING_CONFIRMATION);
     }
   }

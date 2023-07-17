@@ -132,7 +132,7 @@ public class NomineeDetailSummaryService {
               nominationDetailDto.nominationDetailId(),
               uploadedFileId
           ));
-      case SUBMITTED, AWAITING_CONFIRMATION, CLOSED, WITHDRAWN -> ReverseRouter.route(
+      case SUBMITTED, AWAITING_CONFIRMATION, APPOINTED, WITHDRAWN, OBJECTED -> ReverseRouter.route(
           on(NominationFileDownloadController.class).download(
               nominationId,
               uploadedFileId

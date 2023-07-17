@@ -127,7 +127,7 @@ class CaseEventQueryServiceTest {
     var nominationVersion = 2;
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
-        .withStatus(NominationStatus.CLOSED)
+        .withStatus(NominationStatus.APPOINTED)
         .build();
 
     var confirmationInstant = Instant.now();
@@ -154,7 +154,7 @@ class CaseEventQueryServiceTest {
     var nominationVersion = 2;
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
-        .withStatus(NominationStatus.CLOSED)
+        .withStatus(NominationStatus.APPOINTED)
         .build();
 
     when(caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(

@@ -21,7 +21,7 @@ public class NominationDetailStatusService {
           "NominationDetail [%s] expected status [%s] but was [%s]".formatted(nominationDetail.getId(),
               NominationStatus.AWAITING_CONFIRMATION.name(), nominationDetail.getStatus().name()));
     }
-    nominationDetail.setStatus(NominationStatus.CLOSED);
+    nominationDetail.setStatus(NominationStatus.APPOINTED);
     nominationDetailRepository.save(nominationDetail);
   }
 
