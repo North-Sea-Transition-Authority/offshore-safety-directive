@@ -136,7 +136,6 @@ public class CaseEventQueryService {
         case NO_OBJECTION_DECISION, OBJECTION_DECISION -> caseEventBuilder
             .withCustomDatePrompt("Decision date")
             .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
-            .withCustomCreatorPrompt("Decided by")
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Decision comment")
             .withFileViews(uploadedFileViews)
@@ -151,7 +150,6 @@ public class CaseEventQueryService {
         case CONFIRM_APPOINTMENT -> caseEventBuilder
             .withCustomDatePrompt("Appointment date")
             .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
-            .withCustomCreatorPrompt("Confirmed by")
             .withBody(caseEvent.getComment())
             .withCustomBodyPrompt("Appointment comments")
             .withFileViews(uploadedFileViews)
