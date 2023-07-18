@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 public enum TeamType {
 
-  REGULATOR("Regulator", 10),
+  REGULATOR("Licensing authority", 10),
   CONSULTEE("Consultee", 20);
 
   private final String displayText;
