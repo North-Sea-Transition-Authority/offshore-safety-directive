@@ -22,7 +22,7 @@ public enum RegulatorTeamRole implements TeamRole {
   ),
   MANAGE_NOMINATION(
       "Manage nominations",
-      "Can create and process phase one nomination applications",
+      "Can create, process and view nomination applications",
       30,
       EnumSet.of(RolePermission.CREATE_NOMINATION, RolePermission.MANAGE_NOMINATIONS)
   ),
@@ -34,7 +34,7 @@ public enum RegulatorTeamRole implements TeamRole {
   ),
   MANAGE_ASSET_APPOINTMENTS(
       "Manage well and installation appointments",
-      "Can carry out updates to the system of record including corrections and terminations",
+      "Can view and carry out updates to the system of record including corrections and terminations",
       50,
       Set.of(RolePermission.MANAGE_APPOINTMENTS)
   );
