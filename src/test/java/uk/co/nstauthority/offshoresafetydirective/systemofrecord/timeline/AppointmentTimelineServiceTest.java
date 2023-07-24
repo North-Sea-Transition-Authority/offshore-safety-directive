@@ -271,7 +271,65 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenMultipleAppointments_thenOrderedByDescendingCreatedDatetime() {
+  void getAppointmentHistoryForPortalAsset_whenMultipleAppointments_thenOrderedByDescendingStartDate() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder()
+        .withAssetName("from system of record")
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    var appointedOperatorId = new PortalOrganisationUnitId(100);
+
+    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withId(appointedOperatorId.id())
+        .build();
+
+    // given multiple appointments on different start dates
+
+    var earliestAppointmentByStartDate = AppointmentDtoTestUtil.builder()
+        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
+        .withAppointmentToDate(LocalDate.of(2022, 12, 1))
+        .withAppointedOperatorId(appointedOperatorId.id())
+        .withAppointmentId(UUID.randomUUID())
+        .build();
+
+    var latestAppointmentByStartDate = AppointmentDtoTestUtil.builder()
+        .withAppointmentFromDate(LocalDate.of(2023, 1, 1))
+        .withAppointmentToDate(LocalDate.of(2023, 2, 1))
+        .withAppointedOperatorId(appointedOperatorId.id())
+        .withAppointmentId(UUID.randomUUID())
+        .build();
+
+    // and the appointments are returned out of order
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(earliestAppointmentByStartDate, latestAppointmentByStartDate));
+
+    given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+        .willReturn(List.of(appointedOperator));
+
+    // when we request the timeline history
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    // then the appointments are sorted by start date descending
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().appointments())
+        .extracting(AppointmentView::appointmentId)
+        .containsExactly(
+            latestAppointmentByStartDate.appointmentId(),
+            earliestAppointmentByStartDate.appointmentId()
+        );
+
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenMultipleAppointmentsWithSameStartDate_thenOrderedByDescendingCreationDatetime() {
 
     var portalAssetId = new PortalAssetId("something from system of record");
 
@@ -290,27 +348,23 @@ class AppointmentTimelineServiceTest {
 
     // given multiple appointments with the same start date
 
-    var appointmentDate = LocalDate.of(2023, 2, 24);
-
-    var firstAppointmentByCreationDate = AppointmentDtoTestUtil.builder()
-        .withAppointmentCreatedDatetime(Instant.now().minus(1, ChronoUnit.HOURS))
-        .withAppointmentFromDate(appointmentDate)
-        .withAppointmentToDate(appointmentDate)
+    var earliestAppointmentByCreationTime = AppointmentDtoTestUtil.builder()
+        .withAppointmentCreatedDatetime(Instant.now().minus(1, ChronoUnit.DAYS))
+        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
         .withAppointedOperatorId(appointedOperatorId.id())
         .withAppointmentId(UUID.randomUUID())
         .build();
 
-    var secondAppointmentByCreationDate = AppointmentDtoTestUtil.builder()
-        .withAppointmentCreatedDatetime(Instant.now().plus(1, ChronoUnit.HOURS))
-        .withAppointmentFromDate(appointmentDate)
-        .withAppointmentToDate(appointmentDate)
+    var latestAppointmentByCreationTime = AppointmentDtoTestUtil.builder()
+        .withAppointmentCreatedDatetime(Instant.now())
+        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
         .withAppointedOperatorId(appointedOperatorId.id())
         .withAppointmentId(UUID.randomUUID())
         .build();
 
     // and the appointments are returned out of order
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(firstAppointmentByCreationDate, secondAppointmentByCreationDate));
+        .willReturn(List.of(earliestAppointmentByCreationTime, latestAppointmentByCreationTime));
 
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
@@ -326,10 +380,9 @@ class AppointmentTimelineServiceTest {
     assertThat(resultingAppointmentTimelineHistory.get().appointments())
         .extracting(AppointmentView::appointmentId)
         .containsExactly(
-            secondAppointmentByCreationDate.appointmentId(),
-            firstAppointmentByCreationDate.appointmentId()
+            latestAppointmentByCreationTime.appointmentId(),
+            earliestAppointmentByCreationTime.appointmentId()
         );
-
   }
 
   @Test

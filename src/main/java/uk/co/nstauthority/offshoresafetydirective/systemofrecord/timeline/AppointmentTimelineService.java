@@ -147,7 +147,12 @@ class AppointmentTimelineService {
 
     appointments
         .stream()
-        .sorted(Comparator.comparing(AppointmentDto::appointmentCreatedDate).reversed())
+        .sorted(
+            (
+                Comparator.comparing(appointment -> ((AppointmentDto) appointment).appointmentFromDate().value())
+                    .thenComparing(appointment -> ((AppointmentDto) appointment).appointmentCreatedDate())
+            ).reversed()
+        )
         .forEach(appointment -> {
 
           var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
