@@ -79,11 +79,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
-    var appointmentView = AppointmentViewTestUtil.builder().build();
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
 
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
-        .withAppointmentView(appointmentView)
+        .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -104,7 +104,7 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.INSTALLATION.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("appointments", List.of(appointmentView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
   }
 
   @Test
@@ -112,11 +112,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
-    var appointmentView = AppointmentViewTestUtil.builder().build();
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
 
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
-        .withAppointmentView(appointmentView)
+        .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -137,7 +137,7 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.WELLBORE.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("appointments", List.of(appointmentView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
   }
 
   @Test
@@ -145,11 +145,11 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
 
-    var appointmentView = AppointmentViewTestUtil.builder().build();
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
 
     var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
         .withAssetName(assetName)
-        .withAppointmentView(appointmentView)
+        .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
     given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -170,7 +170,7 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.SUBAREA.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("appointments", List.of(appointmentView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
   }
 
   @Test

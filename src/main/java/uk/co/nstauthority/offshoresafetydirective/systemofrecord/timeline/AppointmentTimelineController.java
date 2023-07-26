@@ -52,6 +52,6 @@ public class AppointmentTimelineController {
         .addObject("assetName", assetAppointmentHistory.assetName().value())
         .addObject("assetTypeDisplayName", portalAssetType.getDisplayName())
         .addObject("assetTypeDisplayNameSentenceCase", portalAssetType.getSentenceCaseDisplayName())
-        .addObject("appointments", assetAppointmentHistory.appointments());
+        .addObject("timelineItemViews", assetAppointmentHistory.timelineItemViews());
   }
 }

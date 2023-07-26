@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -169,7 +170,7 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).isEmpty();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).isEmpty();
 
     then(organisationUnitQueryService).shouldHaveNoInteractions();
   }
@@ -212,23 +213,28 @@ class AppointmentTimelineServiceTest {
 
     // then the expected appointment is returned
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
         .extracting(
-            AppointmentView::appointmentId,
-            AppointmentView::appointedOperatorName,
-            AppointmentView::appointmentFromDate,
-            AppointmentView::appointmentToDate,
-            AppointmentView::assetDto
+            AssetTimelineItemView::timelineEventType,
+            AssetTimelineItemView::title,
+            AssetTimelineItemView::createdInstant
         )
         .containsExactly(
             tuple(
-                expectedAppointment.appointmentId(),
+                TimelineEventType.APPOINTMENT,
                 appointedOperator.name(),
-                expectedAppointment.appointmentFromDate(),
-                expectedAppointment.appointmentToDate(),
-                expectedAppointment.assetDto()
+                expectedAppointment.appointmentCreatedDate()
             )
         );
+
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    var timelineView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(timelineView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("appointmentId", expectedAppointment.appointmentId())
+        .containsEntry("appointmentFromDate", expectedAppointment.appointmentFromDate())
+        .containsEntry("appointmentToDate", expectedAppointment.appointmentToDate())
+        .containsEntry("assetDto", expectedAppointment.assetDto());
   }
 
   @Test
@@ -265,9 +271,9 @@ class AppointmentTimelineServiceTest {
 
     // then the operator name will be a sensible default string
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments())
-        .extracting(AppointmentView::appointedOperatorName)
-        .containsExactly("Unknown operator");
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(timelineItemView.title()).isEqualTo("Unknown operator");
   }
 
   @Test
@@ -319,8 +325,8 @@ class AppointmentTimelineServiceTest {
 
     // then the appointments are sorted by start date descending
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments())
-        .extracting(AppointmentView::appointmentId)
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
+        .extracting(view -> view.assetTimelineModelProperties().getModelProperties().get("appointmentId"))
         .containsExactly(
             latestAppointmentByStartDate.appointmentId(),
             earliestAppointmentByStartDate.appointmentId()
@@ -346,7 +352,7 @@ class AppointmentTimelineServiceTest {
         .withId(appointedOperatorId.id())
         .build();
 
-    // given multiple appointments with the same start date
+    // given multiple timelineItemViews with the same start date
 
     var earliestAppointmentByCreationTime = AppointmentDtoTestUtil.builder()
         .withAppointmentCreatedDatetime(Instant.now().minus(1, ChronoUnit.DAYS))
@@ -362,7 +368,7 @@ class AppointmentTimelineServiceTest {
         .withAppointmentId(UUID.randomUUID())
         .build();
 
-    // and the appointments are returned out of order
+    // and the timelineItemViews are returned out of order
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(earliestAppointmentByCreationTime, latestAppointmentByCreationTime));
 
@@ -375,10 +381,11 @@ class AppointmentTimelineServiceTest {
         PortalAssetType.INSTALLATION
     );
 
-    // then the appointments are sorted by creation date descending
+    // then the timelineItemViews are sorted by creation date descending
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments())
-        .extracting(AppointmentView::appointmentId)
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
+        .map(assetTimelineItemView -> assetTimelineItemView.assetTimelineModelProperties().getModelProperties())
+        .map(stringObjectMap -> (AppointmentId) stringObjectMap.get("appointmentId"))
         .containsExactly(
             latestAppointmentByCreationTime.appointmentId(),
             earliestAppointmentByCreationTime.appointmentId()
@@ -411,8 +418,16 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases()).isEmpty();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases).isEmpty();
   }
 
   @Test
@@ -447,8 +462,15 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(expectedInstallationPhase.getScreenDisplayText());
   }
@@ -492,8 +514,15 @@ class AppointmentTimelineServiceTest {
 
     // then only the known phase is returned
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(knownInstallationPhase.getScreenDisplayText());
   }
@@ -537,8 +566,15 @@ class AppointmentTimelineServiceTest {
 
     // then only the known phase is returned
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(
             firstPhaseByDisplayOrder.getScreenDisplayText(),
@@ -582,8 +618,15 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(expectedWellPhase.getScreenDisplayText());
   }
@@ -630,8 +673,15 @@ class AppointmentTimelineServiceTest {
 
     // then only the known phase is returned
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(knownWellPhase.getScreenDisplayText());
   }
@@ -678,8 +728,15 @@ class AppointmentTimelineServiceTest {
 
     // then only the known phase is returned
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0).phases())
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    @SuppressWarnings("unchecked")
+    var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
+        .getModelProperties()
+        .get("phases");
+
+    assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(
             firstPhaseByDisplayOrder.getScreenDisplayText(),
@@ -710,10 +767,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("Deemed appointment");
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", "Deemed appointment");
   }
 
   @Test
@@ -740,10 +799,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("Offline nomination");
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", "Offline nomination");
   }
 
   @Test
@@ -770,10 +831,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("legacy nomination reference");
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", legacyAppointment.legacyNominationReference());
   }
 
   @Test
@@ -809,10 +872,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("nomination reference");
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", nominationDto.nominationReference());
   }
 
   @Test
@@ -845,39 +910,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("Unknown");
-  }
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
 
-  @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentFromUnknownSource_thenCreatedByReferenceIsUnknown() {
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
 
-    var portalAssetId = new PortalAssetId("something from system of record");
-
-    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
-
-    var appointmentWithUnknownType = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(null)
-        .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentWithUnknownType));
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
-    );
-
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::createdByReference)
-        .isEqualTo("Unknown");
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", "Unknown");
   }
 
   @Test
@@ -903,10 +941,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::nominationUrl)
-        .isNull();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("nominationUrl");
   }
 
   @Test
@@ -935,10 +975,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::nominationUrl)
-        .isNull();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("nominationUrl");
   }
 
   @Test
@@ -975,10 +1017,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::nominationUrl)
-        .isNull();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("nominationUrl");
   }
 
   @Test
@@ -1015,10 +1059,13 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::nominationUrl)
-        .isEqualTo(
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry(
+            "nominationUrl",
             ReverseRouter.route(on(NominationCaseProcessingController.class)
                 .renderCaseProcessing(appointmentDto.nominationId(), null))
         );
@@ -1067,11 +1114,16 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::updateUrl)
-        .isEqualTo(ReverseRouter.route(
-            on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId())));
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry(
+            "updateUrl",
+            ReverseRouter.route(on(AppointmentCorrectionController.class)
+                .renderCorrection(appointmentDto.appointmentId()))
+        );
   }
 
   @Test
@@ -1117,10 +1169,12 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::updateUrl)
-        .isNull();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("updateUrl");
   }
 
   @Test
@@ -1152,9 +1206,11 @@ class AppointmentTimelineServiceTest {
     );
 
     assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().appointments()).hasSize(1);
-    assertThat(resultingAppointmentTimelineHistory.get().appointments().get(0))
-        .extracting(AppointmentView::updateUrl)
-        .isNull();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("updateUrl");
   }
 }

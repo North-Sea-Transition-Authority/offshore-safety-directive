@@ -90,7 +90,7 @@ class AppointmentTimelineService {
       return Optional.empty();
     }
 
-    List<AppointmentView> appointmentViews = new ArrayList<>();
+    List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
     AssetName cachedAssetName = null;
 
     if (assetOptional.isPresent()) {
@@ -102,7 +102,7 @@ class AppointmentTimelineService {
           .toList();
 
       if (!CollectionUtils.isEmpty(appointments)) {
-        appointmentViews = getAppointmentViews(appointments, asset);
+        timelineItemViews = getTimelineItemViews(appointments, asset);
       }
 
       cachedAssetName = asset.assetName();
@@ -110,7 +110,7 @@ class AppointmentTimelineService {
 
     AssetName assetName = energyPortalAssetName.orElse(cachedAssetName);
 
-    return Optional.of(new AssetAppointmentHistory(assetName, appointmentViews));
+    return Optional.of(new AssetAppointmentHistory(assetName, timelineItemViews));
   }
 
   private Map<AppointedOperatorId, PortalOrganisationDto> getAppointedOperators(List<AppointmentDto> appointments) {
@@ -130,9 +130,9 @@ class AppointmentTimelineService {
         ));
   }
 
-  private List<AppointmentView> getAppointmentViews(List<AppointmentDto> appointments, AssetDto assetDto) {
+  private List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
 
-    List<AppointmentView> appointmentViews = new ArrayList<>();
+    List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
 
     Map<AppointedOperatorId, PortalOrganisationDto> organisationUnitLookup = getAppointedOperators(appointments);
 
@@ -148,10 +148,9 @@ class AppointmentTimelineService {
     appointments
         .stream()
         .sorted(
-            (
-                Comparator.comparing(appointment -> ((AppointmentDto) appointment).appointmentFromDate().value())
-                    .thenComparing(appointment -> ((AppointmentDto) appointment).appointmentCreatedDate())
-            ).reversed()
+            Comparator.comparing(appointment -> ((AppointmentDto) appointment).appointmentFromDate().value())
+                .thenComparing(appointment -> ((AppointmentDto) appointment).appointmentCreatedDate())
+                .reversed()
         )
         .forEach(appointment -> {
 
@@ -163,35 +162,74 @@ class AppointmentTimelineService {
               .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
               .orElse(Collections.emptyList());
 
-          var appointmentView = convertToAppointmentView(appointment, operatorName, phases, canUpdateAppointments);
+          var appointmentView = convertToTimelineItemView(appointment, operatorName, phases, canUpdateAppointments);
 
-          appointmentViews.add(appointmentView);
+          timelineItemViews.add(appointmentView);
         });
 
-    return appointmentViews;
+    return timelineItemViews;
   }
 
-  private AppointmentView convertToAppointmentView(AppointmentDto appointmentDto,
-                                                   String operatorName,
-                                                   List<AssetAppointmentPhase> phases,
-                                                   boolean canUpdateAppointment) {
+  private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
+                                                          String operatorName,
+                                                          List<AssetAppointmentPhase> phases,
+                                                          boolean canUpdateAppointment) {
 
-    var correctionUpdateRoute = canUpdateAppointment
-        ? ReverseRouter.route(
-            on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
-        : null;
+    var modelProperties = new AssetTimelineModelProperties()
+        .addProperty("appointmentId", appointmentDto.appointmentId())
+        .addProperty("appointmentFromDate", appointmentDto.appointmentFromDate())
+        .addProperty("appointmentToDate", appointmentDto.appointmentToDate())
+        .addProperty("phases", phases)
+        .addProperty("assetDto", appointmentDto.assetDto());
 
-    return new AppointmentView(
-        appointmentDto.appointmentId(),
+    switch (appointmentDto.appointmentType()) {
+      case ONLINE_NOMINATION -> addOnlineNominationModelProperties(modelProperties, appointmentDto);
+      case OFFLINE_NOMINATION -> addOfflineNominationModelProperties(modelProperties, appointmentDto);
+      case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
+    }
+
+    if (canUpdateAppointment) {
+      modelProperties.addProperty(
+          "updateUrl",
+          ReverseRouter.route(
+              on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
+      );
+    }
+
+    return new AssetTimelineItemView(
+        TimelineEventType.APPOINTMENT,
         operatorName,
-        appointmentDto.appointmentFromDate(),
-        appointmentDto.appointmentToDate(),
-        phases,
-        getCreatedByReference(appointmentDto),
-        getNominationUrl(appointmentDto),
-        correctionUpdateRoute,
-        appointmentDto.assetDto()
+        modelProperties,
+        appointmentDto.appointmentCreatedDate()
     );
+  }
+
+  private void addOnlineNominationModelProperties(AssetTimelineModelProperties modelProperties,
+                                                  AppointmentDto appointmentDto) {
+    Optional.ofNullable(getNominationUrl(appointmentDto))
+        .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
+
+    var nominationReference =  nominationAccessService
+        .getNomination(appointmentDto.nominationId())
+        .map(NominationDto::nominationReference)
+        .orElse("Unknown");
+
+    modelProperties.addProperty("createdByReference", nominationReference);
+  }
+
+  private void addOfflineNominationModelProperties(AssetTimelineModelProperties modelProperties,
+                                                   AppointmentDto appointmentDto) {
+
+    var reference = Optional.ofNullable(appointmentDto.legacyNominationReference())
+        .orElse(AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText());
+
+    modelProperties.addProperty("createdByReference", reference);
+  }
+
+  private void addDeemedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {
+
+    modelProperties.addProperty("createdByReference", "Deemed appointment");
+
   }
 
   private List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
@@ -214,25 +252,6 @@ class AppointmentTimelineService {
     };
   }
 
-  private String getCreatedByReference(AppointmentDto appointmentDto) {
-    if (AppointmentType.DEEMED.equals(appointmentDto.appointmentType())) {
-      return "Deemed appointment";
-    } else if (AppointmentType.OFFLINE_NOMINATION.equals(appointmentDto.appointmentType())) {
-      return Optional.ofNullable(appointmentDto.legacyNominationReference())
-          .orElse(AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText());
-    } else if (
-        AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType())
-            && appointmentDto.nominationId() != null
-    ) {
-      return nominationAccessService
-          .getNomination(appointmentDto.nominationId())
-          .map(NominationDto::nominationReference)
-          .orElse("Unknown");
-    } else {
-      return "Unknown";
-    }
-  }
-
   private String getNominationUrl(AppointmentDto appointmentDto) {
 
     if (appointmentDto.nominationId() == null) {
@@ -248,7 +267,7 @@ class AppointmentTimelineService {
       );
       return canAccessNomination
           ? ReverseRouter.route(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId(), null))
+          on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId(), null))
           : null;
     } catch (InvalidAuthenticationException exception) {
       // catches when no user is logged in

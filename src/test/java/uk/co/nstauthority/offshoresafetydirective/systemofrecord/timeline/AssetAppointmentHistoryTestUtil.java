@@ -19,19 +19,19 @@ class AssetAppointmentHistoryTestUtil {
 
     private AssetName assetName = new AssetName("asset name");
 
-    private List<AppointmentView> appointmentViews = new ArrayList<>();
+    private List<AssetTimelineItemView> assetTimelineItemViews = new ArrayList<>();
 
     Builder withAssetName(String assetName) {
       return withAssetName(new AssetName(assetName));
     }
 
-    Builder withAppointmentView(AppointmentView appointmentView) {
-      this.appointmentViews.add(appointmentView);
+    Builder withTimelineItemView(AssetTimelineItemView assetTimelineItemView) {
+      this.assetTimelineItemViews.add(assetTimelineItemView);
       return this;
     }
 
-    Builder withAppointmentViews(List<AppointmentView> appointmentViews) {
-      this.appointmentViews = appointmentViews;
+    Builder withTimelineItemViews(List<AssetTimelineItemView> assetTimelineItemViews) {
+      this.assetTimelineItemViews = assetTimelineItemViews;
       return this;
     }
 
@@ -41,7 +41,7 @@ class AssetAppointmentHistoryTestUtil {
     }
 
     AssetAppointmentHistory build() {
-      return new AssetAppointmentHistory(assetName, appointmentViews);
+      return new AssetAppointmentHistory(assetName, assetTimelineItemViews);
     }
 
   }
