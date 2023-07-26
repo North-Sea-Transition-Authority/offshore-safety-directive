@@ -1,5 +1,5 @@
 <#include '../layout/layout.ftl'/>
-<#import '_technicalSupport.ftl' as technicalSupportContact>
+<#import '../technicalSupport/_technicalSupport.ftl' as technicalSupportContact>
 
 <#-- @ftlvariable name="technicalSupport" type="uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties" -->
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->

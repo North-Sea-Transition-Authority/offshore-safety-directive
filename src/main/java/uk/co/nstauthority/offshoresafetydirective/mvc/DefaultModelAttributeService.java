@@ -2,16 +2,19 @@ package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.accessibility.AccessibilityStatementController;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
@@ -44,6 +47,9 @@ public class DefaultModelAttributeService {
     attributes.put("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties());
     attributes.put("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
     attributes.put("navigationItems", topNavigationService.getTopNavigationItems());
+    attributes.put("footerItems", List.of(
+        new FooterItem(AccessibilityStatementController.PAGE_NAME,
+            ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))));
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 

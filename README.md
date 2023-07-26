@@ -93,6 +93,11 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                                           |
 | OSD_CAN_SHOW_STACK_TRACE                   | Boolean flag to control if the stack trace shows up when a 500 response is received (Optional)                                 |
 | OSD_DATAWAREHOUSE_USER_PASSWORD            | The database password for the `datawarehouse` database user                                                                    |
+| OSD_STATEMENT_PREPARED_DATE                | The date the accessibility statement was prepared. E.g. 05 May 2023                                                            |
+| OSD_STATEMENT_LAST_REVIEW_DATE             | The date the accessibility statement was last reviewed. E.g. 05 May 2023                                                       |
+| OSD_SERVICE_LAST_TEST_DATE                 | The date the service was last tested. E.g. 05 May 2023                                                                         |
+| OSD_SERVICE_LAST_TESTED_BY                 | The company who carried out the last service E.g. Fivium Ltd                                                                   |
+| OSD_DESIGN_SYSTEM_LAST_TEST_DATE           | The date the design system was last tested. E.g. 05 May 2023                                                                   |
 
 ### 3. Initialise the Fivium Design System
 

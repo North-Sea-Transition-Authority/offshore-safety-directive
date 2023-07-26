@@ -11,12 +11,14 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import uk.co.nstauthority.offshoresafetydirective.accessibility.AccessibilityStatementController;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
+import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
@@ -68,7 +70,11 @@ class DefaultModelAttributeServiceTest {
                 "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
                 "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
                 "loggedInUser", user,
-                "navigationItems", List.of(topNavigationItem)
+                "navigationItems", List.of(topNavigationItem),
+                "footerItems", List.of(
+                    new FooterItem("Accessibility statement",
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                )
             )
         );
   }
@@ -94,7 +100,11 @@ class DefaultModelAttributeServiceTest {
                 "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
                 "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
                 "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "navigationItems", List.of(topNavigationItem)
+                "navigationItems", List.of(topNavigationItem),
+                "footerItems", List.of(
+                    new FooterItem("Accessibility statement",
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                )
             )
         );
   }
@@ -127,7 +137,11 @@ class DefaultModelAttributeServiceTest {
                 "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
                 "loggedInUser", user,
                 "navigationItems", List.of(topNavigationItem),
-                "currentEndPoint", "/request-uri"
+                "currentEndPoint", "/request-uri",
+                "footerItems", List.of(
+                    new FooterItem("Accessibility statement",
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                )
             )
         );
   }
@@ -157,7 +171,11 @@ class DefaultModelAttributeServiceTest {
                 "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
                 "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
                 "navigationItems", List.of(topNavigationItem),
-                "currentEndPoint", "/request-uri"
+                "currentEndPoint", "/request-uri",
+                "footerItems", List.of(
+                    new FooterItem("Accessibility statement",
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                )
             )
         );
   }
@@ -188,7 +206,11 @@ class DefaultModelAttributeServiceTest {
                 "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
                 "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
                 "loggedInUser", user,
-                "navigationItems", List.of(topNavigationItem)
+                "navigationItems", List.of(topNavigationItem),
+                "footerItems", List.of(
+                    new FooterItem("Accessibility statement",
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                )
             )
         );
   }

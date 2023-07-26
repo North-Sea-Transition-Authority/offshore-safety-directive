@@ -9,6 +9,7 @@
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
+<#-- @ftlvariable name="footerItems" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.footer.FooterItem>" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner" -->
 
@@ -102,6 +103,18 @@
     <@_serviceHeader pageSize=pageSize />
   </#assign>
 
+  <#local footerMetaContent>
+    <@fdsFooter.footerMeta footerMetaHiddenHeading="Support links">
+      <#list footerItems as footerItem>
+        <@fdsFooter.footerMetaLink linkText=footerItem.prompt() linkUrl=springUrl(footerItem.url())/>
+      </#list>
+    </@fdsFooter.footerMeta>
+  </#local>
+
+  <#assign osdFooter>
+    <@fdsFooter.footer wrapperWidth=isFullPageWidth footerMetaContent=footerMetaContent metaLinks=true/>
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=SERVICE_NAME
@@ -122,6 +135,7 @@
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
+    footerContent=osdFooter
     noIndex=!allowSearchEngineIndexing
     caption=pageHeadingCaption
     wrapperWidth=isFullPageWidth

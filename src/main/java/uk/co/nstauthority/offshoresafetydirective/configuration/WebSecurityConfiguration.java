@@ -57,7 +57,8 @@ public class WebSecurityConfiguration {
             "/assets/**",
             "/system-of-record/**",
             "/api/public/**",
-            "/notify/callback"
+            "/notify/callback",
+            "/accessibility-statement"
         )
           .permitAll()
         .anyRequest()
