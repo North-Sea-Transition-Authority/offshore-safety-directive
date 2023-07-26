@@ -10,11 +10,14 @@
       ariaDescribedBy="${file.uploadedFileView().fileId()}-description"
     />
     <span> - ${file.uploadedFileView().fileSize()}</span>
-    <p
-      id="${file.uploadedFileView().fileId()}-description"
-      class="govuk-body">
-        ${file.uploadedFileView().fileDescription()}
-    </p>
+    <#if file.uploadedFileView().fileDescription()?has_content>
+      <p
+        id="${file.uploadedFileView().fileId()}-description"
+        class="govuk-body"
+      >
+          ${file.uploadedFileView().fileDescription()}
+      </p>
+  </#if>
 </#macro>
 
 <#macro fileSummary fileSummaryViews>

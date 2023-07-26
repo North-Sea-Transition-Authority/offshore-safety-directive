@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionServic
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
@@ -188,6 +189,7 @@ class AppointmentTimelineService {
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
+
     if (canUpdateAppointment) {
       modelProperties.addProperty(
           "updateUrl",
@@ -229,6 +231,16 @@ class AppointmentTimelineService {
   private void addDeemedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {
 
     modelProperties.addProperty("createdByReference", "Deemed appointment");
+
+    if (userDetailService.isUserLoggedIn()) {
+      modelProperties.addProperty(
+          "deemedLetter",
+          new FileSummaryView(
+              DeemedLetterDownloadController.getAsUploadedFileView(),
+              ReverseRouter.route(on(DeemedLetterDownloadController.class).download())
+          )
+      );
+    }
 
   }
 

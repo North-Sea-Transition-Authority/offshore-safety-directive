@@ -29,6 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionServic
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
@@ -294,7 +295,7 @@ class AppointmentTimelineServiceTest {
         .withId(appointedOperatorId.id())
         .build();
 
-    // given multiple appointments on different start dates
+    // given multiple timelineItemViews on different start dates
 
     var earliestAppointmentByStartDate = AppointmentDtoTestUtil.builder()
         .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
@@ -310,7 +311,7 @@ class AppointmentTimelineServiceTest {
         .withAppointmentId(UUID.randomUUID())
         .build();
 
-    // and the appointments are returned out of order
+    // and the timelineItemViews are returned out of order
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(earliestAppointmentByStartDate, latestAppointmentByStartDate));
 
@@ -1175,6 +1176,123 @@ class AppointmentTimelineServiceTest {
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("updateUrl");
+  }
+
+  @ParameterizedTest
+  @EnumSource(AppointmentType.class)
+  void getAppointmentHistoryForPortalAssset_whenUnauthenticated_thenNoDeemedLetter(AppointmentType appointmentType) {
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .withAppointmentType(appointmentType)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(false);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("deemedLetter");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAssset_whenAuthenticated_andDeemed_thenHasDeemedLetter() {
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    given(userDetailService.getUserDetail())
+        .willReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(true);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    var expectedSummaryView = new FileSummaryView(
+      DeemedLetterDownloadController.getAsUploadedFileView(),
+      ReverseRouter.route(on(DeemedLetterDownloadController.class).download())
+    );
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("deemedLetter", expectedSummaryView);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "DEEMED")
+  void getAppointmentHistoryForPortalAssset_whenAuthenticated_andNotDeemed_thenNoDeemedLetter(
+      AppointmentType appointmentType
+  ) {
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .withAppointmentType(appointmentType)
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    given(userDetailService.getUserDetail())
+        .willReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    given(userDetailService.isUserLoggedIn())
+        .willReturn(true);
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("deemedLetter");
   }
 
   @Test

@@ -2,11 +2,13 @@
 <#import '../../../../fds/components/dataItems/dataItems.ftl' as fdsDataItems>
 <#import '../../../../fds/components/timeline/timeline.ftl' as fdsTimeline>
 <#import '../../../../fds/components/button/button.ftl' as fdsAction>
+<#import '../../../nomination/files/fileSummary.ftl' as fileSummary>
 
 <#-- @ftlvariable name="item" type="uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineItemView" -->
 
 <#macro appointmentTimelineItem timelineItemView>
     <#assign modelProperties = timelineItemView.assetTimelineModelProperties().modelProperties/>
+
     <@fdsTimeline.timelineTimeStamp
         timeStampHeading=timelineItemView.title()
         nodeNumber=""
@@ -20,7 +22,14 @@
             </@fdsDataItems.dataItem>
             <@fdsDataItems.dataItem>
                 <@fdsDataItems.dataValues key="Phases" value=_appointmentPhases(modelProperties)/>
-                <@fdsDataItems.dataValues key="" value=""/>
+                <#if modelProperties["deemedLetter"]?has_content>
+                    <#assign deemedLetterContent>
+                        <@fileSummary.fileSummary [modelProperties["deemedLetter"]]/>
+                    </#assign>
+                    <@fdsDataItems.dataValues key="Deemed appointment document" value=deemedLetterContent/>
+                <#else>
+                    <@fdsDataItems.dataValues key="" value=""/>
+                </#if>
                 <@fdsDataItems.dataValues key="" value=""/>
             </@fdsDataItems.dataItem>
         </@fdsTimeline.timelineEvent>
