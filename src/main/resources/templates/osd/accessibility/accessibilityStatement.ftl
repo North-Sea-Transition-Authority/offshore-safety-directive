@@ -32,9 +32,9 @@
         We know some parts of this website are not fully accessible. We've listed the issues we know about
         in the
         <@fdsAction.link
-        linkText="non-accessible content"
-        linkUrl="#non-accessible-content"
-        openInNewTab=false
+            linkText="non-accessible content"
+            linkUrl="#non-accessible-content"
+            openInNewTab=false
         />
         section.
     </p>
@@ -50,8 +50,8 @@
 
     <ul class="govuk-list">
         <@technicalSupportContact.technicalSupportContactDetails
-        technicalSupportProperties=technicalSupport
-        technicalSupportEmailSubject="Accessibility issue"
+            technicalSupportProperties=technicalSupport
+            technicalSupportEmailSubject="Accessibility issue"
         />
     </ul>
     <p class="govuk-body">
@@ -78,7 +78,7 @@
     <h2 class="govuk-heading-m" id="non-accessible-content">Non-accessible content</h2>
     <p class="govuk-body">The content listed below is non-accessible for the following reasons.</p>
 
-    <h3 class="govuk-heading-s">Non-compliance with the accessibility regulations TBC</h3>
+    <h3 class="govuk-heading-s">Non-compliance with the accessibility regulations</h3>
     <ul class="govuk-list govuk-list--bullet">
         <li>
             users are not always notified when conditionally revealed content associated with a radio button or checkbox is
