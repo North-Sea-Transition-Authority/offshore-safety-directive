@@ -7,7 +7,7 @@ public record AssetDto(
     PortalAssetType portalAssetType
 ) {
 
-  static AssetDto fromAsset(Asset asset) {
+  public static AssetDto fromAsset(Asset asset) {
     return new AssetDto(
         new AssetId(asset.getId()),
         new PortalAssetId(asset.getPortalAssetId()),

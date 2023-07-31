@@ -47,13 +47,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -91,11 +93,11 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    var appointmentDto = AppointmentDtoTestUtil.builder().build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    var appointment = AppointmentTestUtil.builder().build();
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
     new HasPermissionSecurityTestUtil.SmokeTester(mockMvc, teamMemberService)
@@ -147,15 +149,16 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
     var assetName = "asset name";
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withAssetName(assetName)
         .build();
+    var assetDto = AssetDto.fromAsset(asset);
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAssetDto(assetDto)
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -163,7 +166,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.empty());
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
     mockMvc.perform(get(
@@ -178,14 +181,15 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var assetDto = AssetDtoTestUtil.builder().build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAssetDto(assetDto)
+    var asset = AssetTestUtil.builder().build();
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -215,14 +219,15 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .withAppointedOperatorId(operatorId)
         .build();
 
-    var assetDto = AssetDtoTestUtil.builder().build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAssetDto(assetDto)
+    var asset = AssetTestUtil.builder().build();
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
@@ -252,15 +257,17 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_excludingSubarea(PortalAssetType portalAssetType) throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
-        .withAssetDto(assetDto)
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -279,7 +286,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .withAppointedOperatorId(expectedOrganisationId)
         .build();
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     var phaseMap = Map.of("PHASE_1", "phase 1");
@@ -329,15 +336,19 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_whenSubareaAsset() throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(PortalAssetType.SUBAREA)
         .build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
-        .withAssetDto(assetDto)
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -356,7 +367,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .withAppointedOperatorId(expectedOrganisationId)
         .build();
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     var phaseMap = Map.of("PHASE_1", "phase 1");
@@ -386,7 +397,8 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
-        .andExpect(model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."))
+        .andExpect(
+            model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."))
         .andReturn()
         .getModelAndView();
 
@@ -406,20 +418,21 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_whenOnlineAppointmentType_andNoOnlineReference_thenNoPreselectedNomination() throws Exception {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+
+    var appointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
         .build();
 
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
     var form = AppointmentCorrectionFormTestUtil.builder().build();
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     mockMvc.perform(get(
@@ -434,13 +447,14 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_whenOnlineAppointmentType_andOnlineReferenceIsNotFound_thenNoPreselectedNomination() throws Exception {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+
+    var appointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
         .build();
 
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -455,7 +469,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.empty());
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     mockMvc.perform(get(
@@ -470,13 +484,14 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   void renderCorrection_whenOnlineAppointmentType_andValidReference_thenHasPreselectedNomination() throws Exception {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+
+    var appointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
         .build();
 
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
@@ -493,7 +508,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(nominationDetail));
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
     mockMvc.perform(get(
@@ -525,7 +540,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
+    when(appointmentAccessService.getAppointment(appointmentId))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(post(
@@ -544,13 +559,14 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
 
-    when(appointmentCorrectionService.getForm(appointmentDto))
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
     doAnswer(invocation -> {
@@ -576,11 +592,12 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     mockMvc.perform(post(
             ReverseRouter.route(
@@ -590,7 +607,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection());
 
     verify(appointmentCorrectionService).updateCorrection(
-        eq(appointmentDto),
+        eq(appointment),
         any(AppointmentCorrectionForm.class)
     );
   }
@@ -604,16 +621,20 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(appointmentId.id())
-        .withAssetDto(assetDto)
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
         .build();
-    when(appointmentAccessService.findAppointmentDtoById(appointmentId))
-        .thenReturn(Optional.of(appointmentDto));
+
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))

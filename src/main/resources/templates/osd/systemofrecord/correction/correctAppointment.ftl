@@ -116,6 +116,25 @@
             </@fdsRadio.radioNo>
         </@fdsRadio.radioGroup>
 
+        <@fdsTextarea.textarea
+            path="form.reason.inputValue"
+            labelText="What is the reason for the correction?"
+            hintText="The explanation provided should be sufficient to understand why the correction was carried out"
+        />
+
+        <@fdsDetails.summaryDetails summaryTitle="What information should I provide for the correction reason?">
+            <p class="govuk-body">
+                You should include information on:
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Who requested the information be corrected</li>
+                <li>The evidence provided for the correction</li>
+                <li>Reference any relevant documents attached to the appointment</li>
+                <li>If information provided does not align with an associated nomination or forward approval clearly state why</li>
+                <li>Include information from the current correction reason, if one exists, that is still relevant to the information shown on the appointment</li>
+            </ul>
+        </@fdsDetails.summaryDetails>
+
         <@fdsAction.submitButtons
             primaryButtonText="Submit"
             secondaryLinkText="Cancel"

@@ -30,6 +30,7 @@ class AppointmentCorrectionFormTestUtil {
     private LocalDate offlineStartDate = LocalDate.now();
     private LocalDate onlineStartDate = LocalDate.now();
     private LocalDate endDate = null;
+    private String correctionReason = "reason for correction";
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -101,6 +102,11 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    Builder withCorrectionReason(String correctionReason) {
+      this.correctionReason = correctionReason;
+      return this;
+    }
+
     AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
@@ -108,6 +114,7 @@ class AppointmentCorrectionFormTestUtil {
       form.setPhases(phases);
       form.setAppointmentType(appointmentType);
       form.setHasEndDate(hasEndDate);
+      form.getReason().setInputValue(correctionReason);
 
       if (offlineStartDate == null) {
         form.setOfflineAppointmentStartDate(new ThreeFieldDateInput(

@@ -2,12 +2,15 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionDateValidator.DEEMED_DATE;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -15,27 +18,29 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
@@ -43,36 +48,52 @@ import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectA
 @ExtendWith(MockitoExtension.class)
 class AppointmentCorrectionServiceTest {
 
-  @Mock
   private AppointmentUpdateService appointmentUpdateService;
-
-  @Mock
   private AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
-
-  @Mock
   private AssetPhasePersistenceService assetPhasePersistenceService;
-
-  @InjectMocks
+  private Clock clock;
+  private UserDetailService userDetailService;
+  private AppointmentCorrectionRepository appointmentCorrectionRepository;
   private AppointmentCorrectionService appointmentCorrectionService;
+
+  @BeforeEach
+  void setUp() {
+    appointmentUpdateService = mock(AppointmentUpdateService.class);
+    assetAppointmentPhaseAccessService = mock(AssetAppointmentPhaseAccessService.class);
+    assetPhasePersistenceService = mock(AssetPhasePersistenceService.class);
+    clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
+    userDetailService = mock(UserDetailService.class);
+    appointmentCorrectionRepository = mock(AppointmentCorrectionRepository.class);
+    appointmentCorrectionService = new AppointmentCorrectionService(
+        appointmentUpdateService,
+        assetAppointmentPhaseAccessService,
+        assetPhasePersistenceService,
+        clock,
+        userDetailService,
+        appointmentCorrectionRepository
+    );
+  }
 
   @Test
   void updateCorrection_whenOfflineNomination() {
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
-        .withAssetDto(assetDto)
-        .withAppointedOperatorId(456)
-        .withAppointmentFromDate(LocalDate.now().minusDays(1))
-        .withAppointmentToDate(LocalDate.now().plusDays(2))
-        .withAppointmentCreatedDatetime(Instant.now())
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAsset(asset)
+        .withAppointedPortalOperatorId(456)
+        .withResponsibleFromDate(LocalDate.now().minusDays(1))
+        .withResponsibleToDate(LocalDate.now().plusDays(2))
+        .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withLegacyNominationReference("legacy/ref")
-        .withNominationId(new NominationId(789))
+        .withCreatedByLegacyNominationReference("legacy/ref")
+        .withCreatedByNominationId(789)
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var offlineNominationReference = "OFFLINE/REF/1";
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
@@ -96,7 +117,10 @@ class AppointmentCorrectionServiceTest {
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -122,21 +146,23 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenOnlineNomination() {
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
-        .withAssetDto(assetDto)
-        .withAppointedOperatorId(456)
-        .withAppointmentFromDate(LocalDate.now().minusDays(1))
-        .withAppointmentToDate(LocalDate.now().plusDays(2))
-        .withAppointmentCreatedDatetime(Instant.now())
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAsset(asset)
+        .withAppointedPortalOperatorId(456)
+        .withResponsibleFromDate(LocalDate.now().minusDays(1))
+        .withResponsibleToDate(LocalDate.now().plusDays(2))
+        .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
-        .withLegacyNominationReference("legacy/ref")
-        .withNominationId(new NominationId(789))
+        .withCreatedByLegacyNominationReference("legacy/ref")
+        .withCreatedByNominationId(789)
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
     var onlineNominationReference = 123;
@@ -160,7 +186,10 @@ class AppointmentCorrectionServiceTest {
     form.getOnlineAppointmentStartDate().setDate(startDate);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -186,21 +215,23 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenDeemedNomination() {
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
-        .withAssetDto(assetDto)
-        .withAppointedOperatorId(456)
-        .withAppointmentFromDate(LocalDate.now().minusDays(1))
-        .withAppointmentToDate(LocalDate.now().plusDays(2))
-        .withAppointmentCreatedDatetime(Instant.now())
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAsset(asset)
+        .withAppointedPortalOperatorId(456)
+        .withResponsibleFromDate(LocalDate.now().minusDays(1))
+        .withResponsibleToDate(LocalDate.now().plusDays(2))
+        .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
-        .withLegacyNominationReference("legacy/ref")
-        .withNominationId(new NominationId(789))
+        .withCreatedByLegacyNominationReference("legacy/ref")
+        .withCreatedByNominationId(789)
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var newAppointmentType = AppointmentType.DEEMED;
     var form = AppointmentCorrectionFormTestUtil.builder()
@@ -220,7 +251,10 @@ class AppointmentCorrectionServiceTest {
     var endDate = LocalDate.now();
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -246,9 +280,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenDeemed_thenStartDateIsDeemedDate() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = AppointmentCorrectionFormTestUtil.builder()
@@ -263,7 +297,10 @@ class AppointmentCorrectionServiceTest {
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -277,9 +314,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenOnlineNomination_startDate() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = new AppointmentCorrectionForm();
@@ -295,7 +332,10 @@ class AppointmentCorrectionServiceTest {
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -309,9 +349,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenOfflineNomination_startDate() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = new AppointmentCorrectionForm();
@@ -327,7 +367,10 @@ class AppointmentCorrectionServiceTest {
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -341,9 +384,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenOfflineNomination_assertOfflineNominationReference() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = new AppointmentCorrectionForm();
@@ -357,7 +400,10 @@ class AppointmentCorrectionServiceTest {
     var offlineReference = "OFFLINE/REF/1";
     form.getOfflineNominationReference().setInputValue(offlineReference);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -376,9 +422,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenHasEndDate() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = new AppointmentCorrectionForm();
@@ -392,7 +438,10 @@ class AppointmentCorrectionServiceTest {
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -406,9 +455,9 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenDoesNotHaveEndDate() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.now().minusDays(20))
-        .withAppointmentToDate(LocalDate.now().plusDays(10))
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
     var form = new AppointmentCorrectionForm();
@@ -419,7 +468,10 @@ class AppointmentCorrectionServiceTest {
     form.setAppointmentType(newAppointmentType.name());
     form.setHasEndDate(false);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -432,16 +484,21 @@ class AppointmentCorrectionServiceTest {
   @Test
   void updateCorrection_whenForAllPhases_andInstallationPhaseExpected_thenVerifyAllPhases() {
 
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var form = new AppointmentCorrectionForm();
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var assetAppointmentPhases = EnumSet.allOf(InstallationPhase.class)
         .stream()
@@ -456,20 +513,25 @@ class AppointmentCorrectionServiceTest {
   @EnumSource(value = PortalAssetType.class, names = {"SUBAREA", "WELLBORE"})
   void updateCorrection_whenForAllPhases_andWellPhaseExpected_thenVerifyAllPhases(PortalAssetType portalAssetType) {
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
-        .withAssetDto(assetDto)
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAsset(asset)
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var form = new AppointmentCorrectionForm();
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
 
-    appointmentCorrectionService.updateCorrection(originalAppointmentDto, form);
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.updateCorrection(originalAppointment, form);
 
     var assetAppointmentPhases = EnumSet.allOf(WellPhase.class)
         .stream()
@@ -482,9 +544,11 @@ class AppointmentCorrectionServiceTest {
 
   @Test
   void updateCorrection_whenInvalidAppointmentType_thenError() {
-    var originalAppointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentId(UUID.randomUUID())
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
         .build();
+
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var form = new AppointmentCorrectionForm();
     var appointmentType = "INVALID_APPOINTMENT_TYPE";
@@ -492,7 +556,7 @@ class AppointmentCorrectionServiceTest {
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
 
-    assertThatThrownBy(() -> appointmentCorrectionService.updateCorrection(originalAppointmentDto, form))
+    assertThatThrownBy(() -> appointmentCorrectionService.updateCorrection(originalAppointment, form))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to get start date from form with AppointmentType [%s] with appointment ID [%s]"
             .formatted(
@@ -501,11 +565,54 @@ class AppointmentCorrectionServiceTest {
             ));
   }
 
+  @ParameterizedTest
+  @EnumSource(AppointmentType.class)
+  void updateCorrection_verifySavedCorrectionReason(AppointmentType appointmentType) {
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAppointmentType(appointmentType)
+        .build();
+
+    var correctionReason = "correction reason";
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(123)
+        .withAppointmentType(appointmentType)
+        .withCorrectionReason(correctionReason)
+        .build();
+
+    var wuaId = 1000L;
+    var user = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(wuaId)
+        .build();
+    when(userDetailService.getUserDetail())
+        .thenReturn(user);
+
+    appointmentCorrectionService.updateCorrection(appointment, form);
+
+    var captor = ArgumentCaptor.forClass(AppointmentCorrection.class);
+    verify(appointmentCorrectionRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            AppointmentCorrection::getAppointment,
+            AppointmentCorrection::getReasonForCorrection,
+            AppointmentCorrection::getCorrectedByWuaId,
+            AppointmentCorrection::getCreatedTimestamp
+        )
+        .containsExactly(
+            appointment,
+            correctionReason,
+            wuaId,
+            clock.instant()
+        );
+  }
+
   @Test
   void getForm_assertMappings_whenAllPhases() {
 
-    var appointment = AppointmentDtoTestUtil.builder()
-        .build();
+    var originalAppointment = AppointmentTestUtil.builder().build();
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var assetPhaseNames = EnumSet.allOf(InstallationPhase.class).stream()
         .map(Enum::name)
@@ -515,12 +622,12 @@ class AppointmentCorrectionServiceTest {
         .map(AssetAppointmentPhase::new)
         .toList();
 
-    when(assetAppointmentPhaseAccessService.getAppointmentPhases(appointment.assetDto()))
+    when(assetAppointmentPhaseAccessService.getAppointmentPhases(originalAppointmentDto.assetDto()))
         .thenReturn(
-            Map.of(appointment.appointmentId(), assetPhases)
+            Map.of(originalAppointmentDto.appointmentId(), assetPhases)
         );
 
-    var resultingForm = appointmentCorrectionService.getForm(appointment);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
@@ -530,7 +637,8 @@ class AppointmentCorrectionServiceTest {
   @Test
   void getForm_assertMappings_whenSomePhases() {
 
-    var appointment = AppointmentDtoTestUtil.builder().build();
+    var originalAppointment = AppointmentTestUtil.builder().build();
+    var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var assetPhaseNames = Stream.of(InstallationPhase.DECOMMISSIONING)
         .map(Enum::name)
@@ -540,12 +648,12 @@ class AppointmentCorrectionServiceTest {
         .map(AssetAppointmentPhase::new)
         .toList();
 
-    when(assetAppointmentPhaseAccessService.getAppointmentPhases(appointment.assetDto()))
+    when(assetAppointmentPhaseAccessService.getAppointmentPhases(originalAppointmentDto.assetDto()))
         .thenReturn(
-            Map.of(appointment.appointmentId(), assetPhases)
+            Map.of(originalAppointmentDto.appointmentId(), assetPhases)
         );
 
-    var resultingForm = appointmentCorrectionService.getForm(appointment);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
@@ -556,29 +664,12 @@ class AppointmentCorrectionServiceTest {
   void getForm_assertMappings_whenHasNullStartDate() {
     var appointmentType = AppointmentType.OFFLINE_NOMINATION;
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var originalAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withAppointmentFromDate((AppointmentFromDate) null)
+        .withResponsibleFromDate(null)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
-
-    assertThat(resultingForm)
-        .extracting(
-            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate()
-        )
-        .containsExactly(
-            Optional.empty(),
-            Optional.empty()
-        );
-
-    appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentType(appointmentType)
-        .withAppointmentFromDate((LocalDate) null)
-        .build();
-
-    resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -596,12 +687,12 @@ class AppointmentCorrectionServiceTest {
     var appointmentType = AppointmentType.OFFLINE_NOMINATION;
     var startDate = LocalDate.now();
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var originalAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withAppointmentFromDate(startDate)
+        .withResponsibleFromDate(startDate)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -619,12 +710,12 @@ class AppointmentCorrectionServiceTest {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var startDate = LocalDate.now();
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var originalAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withAppointmentFromDate(startDate)
+        .withResponsibleFromDate(startDate)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -641,12 +732,11 @@ class AppointmentCorrectionServiceTest {
   void getForm_assertMappings_startDate_whenDeemed() {
     var appointmentType = AppointmentType.DEEMED;
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var originalAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withAppointmentFromDate(LocalDate.now())
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -664,11 +754,11 @@ class AppointmentCorrectionServiceTest {
 
     var endDate = LocalDate.now();
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentToDate(endDate)
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(endDate)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -684,27 +774,11 @@ class AppointmentCorrectionServiceTest {
   @Test
   void getForm_assertMappings_hasEndDate_whenEndDateNotProvided() {
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentToDate((AppointmentToDate) null)
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
-
-    assertThat(resultingForm)
-        .extracting(
-            AppointmentCorrectionForm::getHasEndDate,
-            form -> form.getEndDate().getAsLocalDate()
-        )
-        .containsExactly(
-            false,
-            Optional.empty()
-        );
-
-    appointmentDto = AppointmentDtoTestUtil.builder()
-        .withAppointmentToDate((LocalDate) null)
-        .build();
-
-    resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(
@@ -721,12 +795,12 @@ class AppointmentCorrectionServiceTest {
   void getForm_assertMappings_whenOnlineNomination_andNoAppointmentFromDate() {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
 
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var originalAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withAppointmentFromDate((AppointmentFromDate) null)
+        .withResponsibleFromDate(null)
         .build();
 
-    var resultingForm = appointmentCorrectionService.getForm(appointmentDto);
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     assertThat(resultingForm)
         .extracting(

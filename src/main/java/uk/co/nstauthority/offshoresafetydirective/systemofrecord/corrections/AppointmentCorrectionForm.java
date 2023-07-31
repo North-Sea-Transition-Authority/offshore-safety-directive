@@ -17,6 +17,8 @@ public class AppointmentCorrectionForm {
   private Boolean hasEndDate;
   private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
 
+  private StringInput reason = new StringInput("reason", "a reason for the correction");
+
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
   }
@@ -95,5 +97,13 @@ public class AppointmentCorrectionForm {
 
   public void setEndDate(ThreeFieldDateInput endDate) {
     this.endDate = endDate;
+  }
+
+  public StringInput getReason() {
+    return reason;
+  }
+
+  public void setReason(StringInput reason) {
+    this.reason = reason;
   }
 }

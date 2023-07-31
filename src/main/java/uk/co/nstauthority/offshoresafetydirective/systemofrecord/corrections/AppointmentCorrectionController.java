@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -32,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
@@ -76,10 +76,10 @@ public class AppointmentCorrectionController {
   @GetMapping
   public ModelAndView renderCorrection(@PathVariable AppointmentId appointmentId) {
 
-    var appointmentDto = getAppointmentDto(appointmentId);
-    var form = appointmentCorrectionService.getForm(appointmentDto);
+    var appointment = getAppointment(appointmentId);
+    var form = appointmentCorrectionService.getForm(appointment);
 
-    return getModelAndView(appointmentDto, form);
+    return getModelAndView(appointment, form);
   }
 
   @PostMapping
@@ -88,17 +88,18 @@ public class AppointmentCorrectionController {
                                        @Nullable BindingResult bindingResult,
                                        RedirectAttributes redirectAttributes) {
 
-    var appointmentDto = getAppointmentDto(appointmentId);
+    var appointment = getAppointment(appointmentId);
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var validatorHint = new AppointmentCorrectionValidationHint(appointmentDto);
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
     return controllerHelperService.checkErrorsAndRedirect(
         Objects.requireNonNull(bindingResult),
-        getModelAndView(appointmentDto, form),
+        getModelAndView(appointment, form),
         form,
         () -> {
-          appointmentCorrectionService.updateCorrection(appointmentDto, Objects.requireNonNull(form));
+          appointmentCorrectionService.updateCorrection(appointment, Objects.requireNonNull(form));
 
           var assetName = getAssetName(appointmentDto.assetDto());
           var notificationBanner = NotificationBanner.builder()
@@ -123,9 +124,10 @@ public class AppointmentCorrectionController {
     };
   }
 
-  private ModelAndView getModelAndView(AppointmentDto appointmentDto,
+  private ModelAndView getModelAndView(Appointment appointment,
                                        AppointmentCorrectionForm form) {
 
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var assetDto = appointmentDto.assetDto();
     var assetName = getAssetName(assetDto);
 
@@ -182,8 +184,8 @@ public class AppointmentCorrectionController {
         ));
   }
 
-  private AppointmentDto getAppointmentDto(AppointmentId appointmentId) {
-    return appointmentAccessService.findAppointmentDtoById(appointmentId)
+  private Appointment getAppointment(AppointmentId appointmentId) {
+    return appointmentAccessService.getAppointment(appointmentId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "Appointment with ID [%s] could not be found".formatted(

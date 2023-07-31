@@ -209,7 +209,8 @@ class AppointmentCorrectionValidatorTest {
             entry("appointedOperatorId", Set.of("Select the appointed operator")),
             entry("hasEndDate", Set.of("Select Yes if the appointment has an end date")),
             entry("appointmentType", Set.of("Select the type of appointment")),
-            entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases"))
+            entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases")),
+            entry("reason.inputValue", Set.of("Enter a reason for the correction"))
         );
 
     verify(appointmentCorrectionDateValidator).validateAppointmentEndDateIsBetweenAcceptableRange(
@@ -880,6 +881,39 @@ class AppointmentCorrectionValidatorTest {
                 SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic()
             )
         ));
+  }
+
+  @Test
+  void validate_whenReasonContainsOnlyWhitespace_thenError() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withCorrectionReason("    ")
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+
+    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsEntry("reason.inputValue", Set.of("Enter a reason for the correction"));
   }
 
   private static class UnsupportedClass {

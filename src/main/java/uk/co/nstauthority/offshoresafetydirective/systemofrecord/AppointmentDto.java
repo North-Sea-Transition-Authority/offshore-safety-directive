@@ -15,7 +15,7 @@ public record AppointmentDto(
     AssetDto assetDto
 ) {
 
-  static AppointmentDto fromAppointment(Appointment appointment) {
+  public static AppointmentDto fromAppointment(Appointment appointment) {
     return new AppointmentDto(
         new AppointmentId(appointment.getId()),
         new AppointedOperatorId(String.valueOf(appointment.getAppointedPortalOperatorId())),

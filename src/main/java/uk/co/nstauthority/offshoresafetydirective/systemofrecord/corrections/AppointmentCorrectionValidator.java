@@ -114,6 +114,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
         ));
 
     validatePhases(form, bindingResult, hint);
+    validateReason(form, bindingResult);
   }
 
   private void validateAppointedOperatorId(AppointmentCorrectionForm form, BindingResult bindingResult) {
@@ -237,6 +238,11 @@ class AppointmentCorrectionValidator implements SmartValidator {
         }
       }
     }
+  }
+
+  private void validateReason(AppointmentCorrectionForm appointmentCorrectionForm, BindingResult bindingResult) {
+    StringInputValidator.builder()
+        .validate(appointmentCorrectionForm.getReason(), bindingResult);
   }
 
 }

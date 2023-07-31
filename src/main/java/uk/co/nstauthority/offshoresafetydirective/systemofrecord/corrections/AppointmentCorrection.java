@@ -27,7 +27,7 @@ class AppointmentCorrection {
 
   private Instant createdTimestamp;
 
-  private Integer correctedByWuaId;
+  private Long correctedByWuaId;
 
   private String reasonForCorrection;
 
@@ -59,11 +59,11 @@ class AppointmentCorrection {
     this.createdTimestamp = createdTimestamp;
   }
 
-  Integer getCorrectedByWuaId() {
+  Long getCorrectedByWuaId() {
     return correctedByWuaId;
   }
 
-  void setCorrectedByWuaId(Integer correctedByWuaId) {
+  void setCorrectedByWuaId(Long correctedByWuaId) {
     this.correctedByWuaId = correctedByWuaId;
   }
 

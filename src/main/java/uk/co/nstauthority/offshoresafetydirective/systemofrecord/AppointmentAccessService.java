@@ -27,7 +27,7 @@ public class AppointmentAccessService {
         .map(AppointmentDto::fromAppointment);
   }
 
-  Optional<Appointment> getAppointment(AppointmentId appointmentId) {
+  public Optional<Appointment> getAppointment(AppointmentId appointmentId) {
     return appointmentRepository.findById(appointmentId.id());
   }
 }

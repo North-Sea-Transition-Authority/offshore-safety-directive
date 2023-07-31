@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
@@ -11,11 +12,13 @@ import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
@@ -33,47 +36,57 @@ class AppointmentCorrectionService {
   private final AppointmentUpdateService appointmentUpdateService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
   private final AssetPhasePersistenceService assetPhasePersistenceService;
+  private final Clock clock;
+  private final UserDetailService userDetailService;
+  private final AppointmentCorrectionRepository appointmentCorrectionRepository;
+
 
   @Autowired
   AppointmentCorrectionService(AppointmentUpdateService appointmentUpdateService,
                                AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
-                               AssetPhasePersistenceService assetPhasePersistenceService) {
+                               AssetPhasePersistenceService assetPhasePersistenceService, Clock clock,
+                               UserDetailService userDetailService,
+                               AppointmentCorrectionRepository appointmentCorrectionRepository) {
     this.appointmentUpdateService = appointmentUpdateService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
+    this.clock = clock;
+    this.userDetailService = userDetailService;
+    this.appointmentCorrectionRepository = appointmentCorrectionRepository;
   }
 
-  AppointmentCorrectionForm getForm(AppointmentDto appointment) {
+  AppointmentCorrectionForm getForm(Appointment appointment) {
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(Integer.valueOf(appointment.appointedOperatorId().id()));
-    form.setAppointmentType(appointment.appointmentType().name());
-    form.getOfflineNominationReference().setInputValue(appointment.legacyNominationReference());
+    form.setAppointedOperatorId(Integer.valueOf(appointmentDto.appointedOperatorId().id()));
+    form.setAppointmentType(appointmentDto.appointmentType().name());
+    form.getOfflineNominationReference().setInputValue(appointmentDto.legacyNominationReference());
 
-    var phaseNames = assetAppointmentPhaseAccessService.getAppointmentPhases(appointment.assetDto())
+    var phaseNames = assetAppointmentPhaseAccessService.getAppointmentPhases(appointmentDto.assetDto())
         .entrySet()
         .stream()
-        .filter(entry -> entry.getKey().equals(appointment.appointmentId()))
+        .filter(entry -> entry.getKey().equals(appointmentDto.appointmentId()))
         .flatMap(entry -> entry.getValue().stream())
         .map(AssetAppointmentPhase::value)
         .collect(Collectors.toSet());
 
     form.setPhases(phaseNames);
 
-    var appointmentFromDate = Optional.ofNullable(appointment.appointmentFromDate())
+    var appointmentFromDate = Optional.ofNullable(appointmentDto.appointmentFromDate())
         .map(AppointmentFromDate::value);
 
-    if (AppointmentType.ONLINE_NOMINATION.equals(appointment.appointmentType()) && appointmentFromDate.isPresent()) {
+    if (AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
-      var onlineNominationId = Optional.ofNullable(appointment.nominationId()).map(NominationId::id).orElse(null);
+      var onlineNominationId = Optional.ofNullable(appointmentDto.nominationId()).map(NominationId::id).orElse(null);
       form.setOnlineNominationReference(onlineNominationId);
     } else if (
-        AppointmentType.OFFLINE_NOMINATION.equals(appointment.appointmentType())
+        AppointmentType.OFFLINE_NOMINATION.equals(appointmentDto.appointmentType())
             && appointmentFromDate.isPresent()
     ) {
       form.getOfflineAppointmentStartDate().setDate(appointmentFromDate.get());
     }
 
-    Optional.ofNullable(appointment.appointmentToDate())
+    Optional.ofNullable(appointmentDto.appointmentToDate())
         .map(AppointmentToDate::value)
         .ifPresentOrElse(
             toDate -> {
@@ -83,7 +96,7 @@ class AppointmentCorrectionService {
             () -> form.setHasEndDate(false)
         );
 
-    var selectablePhases = getSelectablePhaseMap(appointment.assetDto());
+    var selectablePhases = getSelectablePhaseMap(appointmentDto.assetDto());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
     form.setForAllPhases(allPhasesSelected);
 
@@ -96,8 +109,10 @@ class AppointmentCorrectionService {
   }
 
   @Transactional
-  public void updateCorrection(AppointmentDto appointmentDto,
+  public void updateCorrection(Appointment appointment,
                                AppointmentCorrectionForm appointmentCorrectionForm) {
+
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
 
     var startDate = getStartDateFromForm(appointmentCorrectionForm)
         .orElseThrow(() -> new IllegalStateException(
@@ -165,6 +180,7 @@ class AppointmentCorrectionService {
           .toList();
     }
 
+    saveCorrectionReason(appointment, appointmentCorrectionForm.getReason().getInputValue());
     appointmentUpdateService.updateAppointment(updateDto);
     assetPhasePersistenceService.updateAssetPhases(appointmentDto, phases);
   }
@@ -179,6 +195,15 @@ class AppointmentCorrectionService {
       case OFFLINE_NOMINATION -> form.getOfflineAppointmentStartDate().getAsLocalDate();
       case DEEMED -> Optional.of(AppointmentCorrectionDateValidator.DEEMED_DATE);
     };
+  }
+
+  private void saveCorrectionReason(Appointment appointment, String reason) {
+    var correction = new AppointmentCorrection();
+    correction.setAppointment(appointment);
+    correction.setReasonForCorrection(reason);
+    correction.setCreatedTimestamp(clock.instant());
+    correction.setCorrectedByWuaId(userDetailService.getUserDetail().wuaId());
+    appointmentCorrectionRepository.save(correction);
   }
 
 }
