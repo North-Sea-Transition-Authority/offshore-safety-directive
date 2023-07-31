@@ -28,8 +28,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class WellSelectionSetupController {
 
-  public static final String PAGE_NAME = "Well nominations";
-
   private final WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final ControllerHelperService controllerHelperService;
@@ -88,7 +86,6 @@ public class WellSelectionSetupController {
         .addObject("form", form)
         .addObject("backLinkUrl", backLinkUrl)
         .addObject("actionUrl", actionUrl)
-        .addObject("pageTitle", PAGE_NAME)
         .addObject("wellSelectionTypes", DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class));
   }
 }

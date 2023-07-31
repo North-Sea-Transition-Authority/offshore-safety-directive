@@ -27,8 +27,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class InstallationInclusionController {
 
-  static final String PAGE_TITLE = "Installation nominations";
-
   private final ControllerHelperService controllerHelperService;
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
   private final InstallationInclusionFormService installationInclusionFormService;
@@ -78,7 +76,6 @@ public class InstallationInclusionController {
   private ModelAndView getModelAndView(NominationId nominationId, InstallationInclusionForm form) {
     return new ModelAndView("osd/nomination/installation/installationInclusion")
         .addObject("form", form)
-        .addObject("pageTitle", PAGE_TITLE)
         .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject(
             "actionUrl",

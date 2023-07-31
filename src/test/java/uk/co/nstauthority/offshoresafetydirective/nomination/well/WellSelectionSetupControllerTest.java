@@ -151,8 +151,7 @@ class WellSelectionSetupControllerTest extends AbstractControllerTest {
             "actionUrl",
             ReverseRouter.route(on(WellSelectionSetupController.class).saveWellSetup(NOMINATION_ID, null, null))
         ))
-        .andExpect(model().attribute("wellSelectionTypes", DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class)))
-        .andExpect(model().attribute("pageTitle", WellSelectionSetupController.PAGE_NAME));
+        .andExpect(model().attribute("wellSelectionTypes", DisplayableEnumOptionUtil.getDisplayableOptions(WellSelectionType.class)));
   }
 
   @Test

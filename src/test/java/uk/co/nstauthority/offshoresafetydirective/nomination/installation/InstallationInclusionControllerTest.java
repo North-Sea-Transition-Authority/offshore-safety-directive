@@ -139,7 +139,6 @@ class InstallationInclusionControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationInclusion"))
         .andExpect(model().attribute("form", form))
-        .andExpect(model().attribute("pageTitle", InstallationInclusionController.PAGE_TITLE))
         .andExpect(model().attribute(
             "backLinkUrl",
             ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))

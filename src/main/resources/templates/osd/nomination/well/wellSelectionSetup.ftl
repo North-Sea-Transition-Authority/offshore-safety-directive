@@ -1,14 +1,15 @@
 <#include '../../layout/layout.ftl'>
 
-<#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="wellSetupAnswers" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 
+<#assign pageTitle = "Is this nomination in relation to well operatorship?">
+
 <@defaultPage
   htmlTitle=pageTitle
-  pageHeading=pageTitle
+  pageHeading=""
   errorItems=errorList
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=springUrl(backLinkUrl)
@@ -19,7 +20,9 @@
     <@fdsRadio.radio
       path="form.wellSelectionType"
       radioItems=wellSelectionTypes
-      labelText="Is this nomination in relation to well operatorship?"
+      fieldsetHeadingSize="h1"
+      fieldsetHeadingClass="govuk-fieldset__legend--l"
+      labelText=pageTitle
     />
     <@fdsAction.button buttonText="Save and continue"/>
   </@fdsForm.htmlForm>
