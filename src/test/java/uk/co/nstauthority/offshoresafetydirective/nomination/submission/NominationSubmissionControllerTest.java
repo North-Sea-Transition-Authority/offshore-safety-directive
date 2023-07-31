@@ -20,6 +20,8 @@ import java.util.EnumSet;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -33,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
@@ -77,8 +80,78 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestNominationStatuses_onlyDraftPermitted() {
+  void getSubmissionPage_whenDraft_thenRenderSubmissionPage() throws Exception {
+    var draftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
 
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
+
+    when(nominationSubmissionService.canSubmitNomination(draftNominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"));
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = NominationStatus.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"DRAFT", "DELETED"}
+  )
+  void getSubmissionPage_wheNotDraft_thenRenderSubmissionPage(NominationStatus nominationStatus) throws Exception {
+    var nonDraftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(nominationStatus)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nonDraftNominationDetail);
+
+    when(nominationSubmissionService.canSubmitNomination(nonDraftNominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(nonDraftNominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NominationCaseProcessingController.class)
+            .renderCaseProcessing(NOMINATION_ID, null))));
+  }
+
+  @SecurityTest
+  void getSubmissionPage_whenDeleted_thenForbidden() throws Exception {
+    var deletedNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DELETED)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(deletedNominationDetail);
+
+    when(nominationSubmissionService.canSubmitNomination(deletedNominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(deletedNominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
+  void submitNomination_smokeTestNominationStatuses_onlyDraftPermitted() {
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
@@ -88,9 +161,6 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         .withPermittedNominationStatus(NominationStatus.DRAFT)
         .withNominationDetail(nominationDetail)
         .withUser(NOMINATION_CREATOR_USER)
-        .withGetEndpoint(
-            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
-        )
         .withPostEndpoint(
             ReverseRouter.route(on(NominationSubmissionController.class)
                 .submitNomination(NOMINATION_ID)),
@@ -251,6 +321,38 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
     then(finaliseNominatedSubareaWellsService)
         .should(onlyOnce())
         .finaliseNominatedSubareaWells(nominationDetail);
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = NominationStatus.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"DRAFT", "DELETED"}
+  )
+  void getSubmissionPage_whenNotDraftStatus_thenRedirect(NominationStatus nominationStatus) throws Exception {
+
+    var nominationDetail1 = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(nominationStatus)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail1);
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail1))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    var nominationId =  nominationDetail1.getNomination().getId();
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(NominationCaseProcessingController.class)
+                .renderCaseProcessing(new NominationId(nominationId), null))));
   }
 
   @Test

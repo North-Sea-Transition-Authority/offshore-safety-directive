@@ -3,6 +3,7 @@
 <#-- @ftlvariable name="pageTitle" type="String" -->
 <#-- @ftlvariable name="workAreaLink" type="String" -->
 <#-- @ftlvariable name="nominationReference" type="String" -->
+<#-- @ftlvariable name="nominationManagementLink" type="String" -->
 
 <#assign nominationSubmittedText="Nomination submitted"/>
 
@@ -10,6 +11,7 @@
   pageHeading=""
   htmlTitle=nominationSubmittedText
   pageSize=PageSize.TWO_THIRDS_COLUMN
+  backLinkUrl=springUrl(nominationManagementLink)
 >
  <@fdsPanel.panel panelTitle=nominationSubmittedText panelText="Your reference number" panelRef=nominationReference/>
   <h2 class="govuk-heading-m">

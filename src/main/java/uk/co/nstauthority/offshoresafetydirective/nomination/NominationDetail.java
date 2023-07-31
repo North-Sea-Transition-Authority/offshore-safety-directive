@@ -74,7 +74,7 @@ public class NominationDetail implements Serializable {
     return this;
   }
 
-  NominationStatus getStatus() {
+  public NominationStatus getStatus() {
     return status;
   }
 

@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
@@ -40,6 +41,9 @@ public class NominationSubmitConfirmationController {
   private ModelAndView getModelAndView(Nomination nomination) {
     return new ModelAndView("osd/nomination/submission/submissionConfirmation")
         .addObject("workAreaLink", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
-        .addObject("nominationReference", nomination.getReference());
+        .addObject("nominationReference", nomination.getReference())
+        .addObject("nominationManagementLink",
+            ReverseRouter.route(on(NominationCaseProcessingController.class)
+                .renderCaseProcessing(new NominationId(nomination.getId()), null)));
   }
 }

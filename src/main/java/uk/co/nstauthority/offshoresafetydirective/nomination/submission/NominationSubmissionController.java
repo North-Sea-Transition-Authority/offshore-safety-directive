@@ -18,13 +18,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/submit")
-@HasNominationStatus(statuses = NominationStatus.DRAFT)
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class NominationSubmissionController {
 
@@ -48,9 +48,22 @@ public class NominationSubmissionController {
   }
 
   @GetMapping
+  @HasNominationStatus(statuses = {
+      NominationStatus.DRAFT,
+      NominationStatus.SUBMITTED,
+      NominationStatus.APPOINTED,
+      NominationStatus.AWAITING_CONFIRMATION,
+      NominationStatus.OBJECTED,
+      NominationStatus.WITHDRAWN
+  })
   public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+
+    if (NominationStatus.DRAFT != nominationDetail.getStatus()) {
+      return ReverseRouter.redirect(on(NominationCaseProcessingController.class)
+          .renderCaseProcessing(nominationId, null));
+    }
 
     // Materialise the wellbores in any nominated subareas so applicants can check the wells that are included
     // on the nomination prior to submission. If we did this on submission the applicant will not know which
@@ -61,6 +74,7 @@ public class NominationSubmissionController {
   }
 
   @PostMapping
+  @HasNominationStatus(statuses = NominationStatus.DRAFT)
   public ModelAndView submitNomination(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     nominationSubmissionService.submitNomination(nominationDetail);
