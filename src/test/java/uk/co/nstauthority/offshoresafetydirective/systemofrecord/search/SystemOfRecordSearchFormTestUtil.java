@@ -22,6 +22,8 @@ class SystemOfRecordSearchFormTestUtil {
 
     private Integer licenceId = null;
 
+    private String subareaId = null;
+
     private Builder() {
     }
 
@@ -45,12 +47,18 @@ class SystemOfRecordSearchFormTestUtil {
       return this;
     }
 
+    Builder withSubareaId(String subareaId) {
+      this.subareaId = subareaId;
+      return this;
+    }
+
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
       form.setAppointedOperatorId(appointedOperatorId);
       form.setWellboreId(wellboreId);
       form.setInstallationId(installationId);
       form.setLicenceId(licenceId);
+      form.setSubareaId(subareaId);
       return form;
     }
   }

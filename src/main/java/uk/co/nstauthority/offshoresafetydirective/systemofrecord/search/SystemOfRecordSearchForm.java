@@ -17,6 +17,8 @@ public class SystemOfRecordSearchForm {
 
   private Integer licenceId;
 
+  private String subareaId;
+
   public Integer getAppointedOperatorId() {
     return appointedOperatorId;
   }
@@ -47,6 +49,14 @@ public class SystemOfRecordSearchForm {
 
   public void setLicenceId(Integer licenceId) {
     this.licenceId = licenceId;
+  }
+
+  public String getSubareaId() {
+    return subareaId;
+  }
+
+  public void setSubareaId(String subareaId) {
+    this.subareaId = subareaId;
   }
 
   /**
@@ -93,6 +103,8 @@ public class SystemOfRecordSearchForm {
 
     private Integer licence;
 
+    private String subarea;
+
     Builder withAppointedOperatorId(String appointedOperatorId) {
       this.appointedOperator = (StringUtils.isNotBlank(appointedOperatorId))
           ? Integer.parseInt(appointedOperatorId)
@@ -121,12 +133,20 @@ public class SystemOfRecordSearchForm {
       return this;
     }
 
+    Builder withSubarea(String subareaId) {
+      this.subarea = (StringUtils.isNotBlank(subareaId))
+          ? subareaId
+          : null;
+      return this;
+    }
+
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
       form.setAppointedOperatorId(appointedOperator);
       form.setWellboreId(wellbore);
       form.setInstallationId(installation);
       form.setLicenceId(licence);
+      form.setSubareaId(subarea);
       return form;
     }
   }

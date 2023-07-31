@@ -35,7 +35,7 @@ public class SystemOfRecordLandingPageController {
         )
         .addObject(
             "forwardAreaApprovalSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch(null))
         );
   }
 }

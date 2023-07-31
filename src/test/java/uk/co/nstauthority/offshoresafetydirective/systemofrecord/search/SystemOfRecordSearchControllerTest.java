@@ -29,6 +29,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -571,7 +574,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
   @SecurityTest
   void renderForwardAreaApprovalSearch_verifyUnauthenticatedAccess() throws Exception {
     mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class)
-            .renderForwardAreaApprovalSearch()))
+            .renderForwardAreaApprovalSearch(null)))
     )
         .andExpect(status().isOk());
   }
@@ -584,8 +587,16 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     given(appointmentSearchService.searchForwardApprovalAppointments(any(SystemOfRecordSearchForm.class)))
         .willReturn(List.of(expectedAppointment));
 
+    var expectedFilter = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("100")
+        .build();
+
+    given(portalAssetRetrievalService.getLicenceBlockSubarea(new LicenceBlockSubareaId("100")))
+        .willReturn(Optional.of(expectedFilter));
+
     mockMvc.perform(get(ReverseRouter.route(on(SystemOfRecordSearchController.class)
-            .renderForwardAreaApprovalSearch()))
+            .renderForwardAreaApprovalSearch(null)))
+            .param("subarea", "100")
     )
         .andExpect(view().name(
             "osd/systemofrecord/search/forwardapproval/searchForwardAreaApprovalAppointments"
@@ -601,6 +612,14 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
-        .andExpect(model().attribute("appointments", List.of(expectedAppointment)));
+        .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
+        .andExpect(model().attribute("filteredSubarea",
+            Map.of(String.valueOf(expectedFilter.subareaId().id()), expectedFilter.displayName())
+        ))
+        .andExpect(model().attribute(
+            "subareaRestUrl",
+            RestApiUtil.route(on(LicenceBlockSubareaRestController.class)
+                .searchSubareas(null))
+        ));
   }
 }

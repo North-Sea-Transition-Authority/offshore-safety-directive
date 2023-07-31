@@ -701,6 +701,145 @@ class AppointmentQueryServiceTest {
         );
   }
 
+  @Test
+  void search_whenAssetOfSubarea_andSubareaAppointmentExists_thenReturnExistingSubarea() {
+    // given a search form with a subarea ID provided
+    var searchFilterWithSubareaId = SystemOfRecordSearchFilter.builder()
+        .withSubareaId("subarea id")
+        .build();
+
+    // given a subarea exists
+    var subareaAsset = AssetTestUtil.builder()
+        .withPortalAssetId("subarea id")
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAsset);
+
+    // and an appointment exists for the subarea
+    var subareaAppointment = AppointmentTestUtil.builder()
+        .withAsset(subareaAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.SUBAREA),
+        searchFilterWithSubareaId
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsExactly(
+            tuple(
+                "subarea id",
+                PortalAssetType.SUBAREA
+            )
+        );
+  }
+
+  @Test
+  void search_whenAssetOfSubarea_andNoMatchingSubareaAppointmentExists_thenReturnEmptyList() {
+    // given a search form with a subarea ID provided
+    var searchFilterWithSubareaId = SystemOfRecordSearchFilter.builder()
+        .withSubareaId("subarea id")
+        .build();
+
+    // given a subarea exists
+    var subareaAsset = AssetTestUtil.builder()
+        .withPortalAssetId("not subarea id")
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAsset);
+
+    // and an appointment exists for the subarea
+    var subareaAppointment = AppointmentTestUtil.builder()
+        .withAsset(subareaAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.SUBAREA),
+        searchFilterWithSubareaId
+    );
+
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void search_whenAssetOfSubareaAndInstallation_andSubareaTypeRestriction_thenReturnOnlySubareas() {
+    // given a search form with a subarea ID provided
+    var searchFilterWithSubareaId = SystemOfRecordSearchFilter.builder()
+        .withSubareaId("100")
+        .build();
+
+    // given a subarea exists
+    var subareaAsset = AssetTestUtil.builder()
+        .withPortalAssetId("100")
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAsset);
+
+    // and an installation exists
+    var installationAsset = AssetTestUtil.builder()
+        .withPortalAssetId("200")
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAsset);
+
+    // and an appointment exists for the subarea
+    var subareaAppointment = AppointmentTestUtil.builder()
+        .withAsset(subareaAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(subareaAppointment);
+
+    // and an appointment exists for the installation
+    var installationAppointment = AppointmentTestUtil.builder()
+        .withAsset(installationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAppointment);
+
+    // when the method is called with a restriction of just subareas
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.SUBAREA),
+        searchFilterWithSubareaId
+    );
+
+    // only subareas are returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .containsOnly(
+            tuple(
+                "100",
+                PortalAssetType.SUBAREA
+            )
+        );
+  }
+
   private void persistAndFlush(Object entity) {
     entityManager.persist(entity);
     entityManager.flush();

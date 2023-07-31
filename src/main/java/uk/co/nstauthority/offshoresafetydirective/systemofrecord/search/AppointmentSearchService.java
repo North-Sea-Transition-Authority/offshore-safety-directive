@@ -96,7 +96,6 @@ class AppointmentSearchService {
               )
           );
     }
-
     return resultingAppointments;
   }
 
@@ -156,8 +155,30 @@ class AppointmentSearchService {
   }
 
   List<AppointmentSearchItemDto> searchForwardApprovalAppointments(SystemOfRecordSearchForm searchForm) {
-    var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
-    return search(Set.of(PortalAssetType.SUBAREA), searchFilter);
+    var searchFilter = SystemOfRecordSearchFilter.builder()
+        .withSubareaId(searchForm.getSubareaId())
+        .build();
+
+    var resultingAppointments = search(Set.of(PortalAssetType.SUBAREA), searchFilter);
+
+    if (
+        CollectionUtils.isEmpty(resultingAppointments)
+            && searchForm.getSubareaId() != null
+            && searchForm.isEmptyExcept("subareaId")
+    ) {
+      licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(searchForm.getSubareaId()))
+          .ifPresent(subarea ->
+              resultingAppointments.add(
+                  createNoAppointedOperatorItem(
+                      new PortalAssetId(subarea.subareaId().id()),
+                      PortalAssetType.SUBAREA,
+                      new AssetName(subarea.displayName())
+                  )
+              )
+          );
+    }
+
+    return resultingAppointments;
   }
 
   /**

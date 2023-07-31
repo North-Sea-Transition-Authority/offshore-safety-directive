@@ -10,11 +10,12 @@ record SystemOfRecordSearchUrlParams(
     String appointedOperator,
     String wellbore,
     String installation,
-    String licence
+    String licence,
+    String subarea
 ) {
 
   static SystemOfRecordSearchUrlParams empty() {
-    return new SystemOfRecordSearchUrlParams(null, null, null, null);
+    return new SystemOfRecordSearchUrlParams(null, null, null, null, null);
   }
 
   @SuppressWarnings("unchecked")
@@ -46,6 +47,8 @@ record SystemOfRecordSearchUrlParams(
 
     private String licence = "";
 
+    private String subarea = "";
+
     Builder withAppointedOperatorId(Integer appointedOperatorId) {
       this.appointedOperator = (appointedOperatorId != null) ? String.valueOf(appointedOperatorId) : "";
       return this;
@@ -66,12 +69,18 @@ record SystemOfRecordSearchUrlParams(
       return this;
     }
 
+    Builder withSubareaId(String subareaId) {
+      this.subarea = (subareaId != null) ? subareaId : "";
+      return this;
+    }
+
     SystemOfRecordSearchUrlParams build() {
       return new SystemOfRecordSearchUrlParams(
           appointedOperator,
           wellbore,
           installation,
-          licence
+          licence,
+          subarea
       );
     }
   }

@@ -17,6 +17,7 @@ class SystemOfRecordSearchUrlParamsTest {
         .withAppointedOperatorId(200)
         .withInstallationId(300)
         .withLicenceId(400)
+        .withSubareaId("500")
         .build();
 
     assertThat(searchUrlParams.getUrlQueryParams())
@@ -25,7 +26,8 @@ class SystemOfRecordSearchUrlParamsTest {
                 "wellbore", List.of("100"),
                 "appointedOperator", List.of("200"),
                 "installation", List.of("300"),
-                "licence", List.of("400")
+                "licence", List.of("400"),
+                "subarea", List.of("500")
             )
         );
   }
@@ -58,6 +60,7 @@ class SystemOfRecordSearchUrlParamsTest {
         .withWellboreId(null)
         .withInstallationId(null)
         .withLicenceId(null)
+        .withSubareaId(null)
         .build();
 
     assertThat(searchUrlParams).hasNoNullFieldsOrProperties();
@@ -67,7 +70,8 @@ class SystemOfRecordSearchUrlParamsTest {
             SystemOfRecordSearchUrlParams::appointedOperator,
             SystemOfRecordSearchUrlParams::wellbore,
             SystemOfRecordSearchUrlParams::installation,
-            SystemOfRecordSearchUrlParams::licence
+            SystemOfRecordSearchUrlParams::licence,
+            SystemOfRecordSearchUrlParams::subarea
         )
         .allMatch(o -> o.equals(""));
   }
@@ -80,6 +84,7 @@ class SystemOfRecordSearchUrlParamsTest {
         .withWellboreId(200)
         .withInstallationId(300)
         .withLicenceId(400)
+        .withSubareaId("500")
         .build();
 
     assertThat(searchUrlParams).hasNoNullFieldsOrProperties();

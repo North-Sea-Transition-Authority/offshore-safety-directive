@@ -90,6 +90,7 @@ class SystemOfRecordSearchFormTest {
         .withWellbore(inputToTest)
         .withInstallation(inputToTest)
         .withLicence(inputToTest)
+        .withSubarea(inputToTest)
         .build();
 
     assertThat(searchForm).hasAllNullFieldsOrProperties();
@@ -103,6 +104,7 @@ class SystemOfRecordSearchFormTest {
         .withWellbore("200")
         .withInstallation("300")
         .withLicence("400")
+        .withSubarea("500")
         .build();
 
     assertThat(searchForm)
@@ -110,13 +112,15 @@ class SystemOfRecordSearchFormTest {
             SystemOfRecordSearchForm::getAppointedOperatorId,
             SystemOfRecordSearchForm::getWellboreId,
             SystemOfRecordSearchForm::getInstallationId,
-            SystemOfRecordSearchForm::getLicenceId
+            SystemOfRecordSearchForm::getLicenceId,
+            SystemOfRecordSearchForm::getSubareaId
         )
         .containsExactly(
             100,
             200,
             300,
-            400
+            400,
+            "500"
         );
   }
 

@@ -59,7 +59,7 @@ class SystemOfRecordLandingPageControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "forwardAreaApprovalSearchUrl",
-            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch())
+            ReverseRouter.route(on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch(null))
         ));
   }
 

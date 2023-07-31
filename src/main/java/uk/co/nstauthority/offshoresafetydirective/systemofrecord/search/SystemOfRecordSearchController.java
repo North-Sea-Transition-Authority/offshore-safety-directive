@@ -20,6 +20,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -177,14 +180,37 @@ public class SystemOfRecordSearchController {
   }
 
   @GetMapping("/forward-area-approvals")
-  public ModelAndView renderForwardAreaApprovalSearch() {
-    var searchForm = new SystemOfRecordSearchForm();
-    return getBaseSearchModelAndView(FORWARD_APPROVALS_MODEL_AND_VIEW_NAME, searchForm)
-        .addObject(
-            APPOINTMENTS_MODEL_ATTRIBUTE_NAME,
-            appointmentSearchService.searchForwardApprovalAppointments(searchForm)
-        )
-        .addObject(HAS_ADDED_FILTER_MODEL_ATTRIBUTE_NAME, true);
+  public ModelAndView renderForwardAreaApprovalSearch(SystemOfRecordSearchUrlParams systemOfRecordSearchUrlParams) {
+    SystemOfRecordSearchForm searchForm;
+
+    if (systemOfRecordSearchUrlParams != null) {
+      searchForm = SystemOfRecordSearchForm.builder()
+          .withSubarea(systemOfRecordSearchUrlParams.subarea())
+          .build();
+    } else {
+      searchForm = new SystemOfRecordSearchForm();
+    }
+
+    List<AppointmentSearchItemDto> appointments = (searchForm.isEmpty())
+        ? Collections.emptyList()
+        : appointmentSearchService.searchForwardApprovalAppointments(searchForm);
+
+    return getSubareaSearchModelAndView(searchForm, appointments);
+  }
+
+  @PostMapping("/forward-area-approvals")
+  public ModelAndView searchForwardAreaApprovals(
+      @ModelAttribute(SEARCH_FORM_ATTRIBUTE_NAME) SystemOfRecordSearchForm searchForm
+  ) {
+
+    var searchParams = SystemOfRecordSearchUrlParams.builder()
+        .withSubareaId(searchForm.getSubareaId())
+        .build();
+
+    return ReverseRouter.redirect(
+        on(SystemOfRecordSearchController.class).renderForwardAreaApprovalSearch(null),
+        searchParams.getUrlQueryParams()
+    );
   }
 
   private ModelAndView getBaseSearchModelAndView(String modelAndViewName, SystemOfRecordSearchForm searchForm) {
@@ -278,6 +304,29 @@ public class SystemOfRecordSearchController {
             "installationRestUrl",
             RestApiUtil.route(on(InstallationRestController.class)
                 .searchInstallationsByNameAndType(null, List.of(FacilityType.values())))
+        );
+  }
+
+  private ModelAndView getSubareaSearchModelAndView(SystemOfRecordSearchForm searchForm,
+                                                    List<AppointmentSearchItemDto> appointments) {
+    Map<String, String> filteredSubarea = Collections.emptyMap();
+
+    if (searchForm.getSubareaId() != null) {
+      filteredSubarea = portalAssetRetrievalService
+          .getLicenceBlockSubarea(new LicenceBlockSubareaId(searchForm.getSubareaId()))
+          .stream()
+          .collect(Collectors.toMap(
+              subarea -> String.valueOf(searchForm.getSubareaId()),
+              LicenceBlockSubareaDto::displayName
+          ));
+    }
+
+    return getBaseSearchModelAndView(FORWARD_APPROVALS_MODEL_AND_VIEW_NAME, searchForm)
+        .addObject(APPOINTMENTS_MODEL_ATTRIBUTE_NAME, appointments)
+        .addObject("filteredSubarea", filteredSubarea)
+        .addObject("subareaRestUrl",
+            RestApiUtil.route(on(LicenceBlockSubareaRestController.class)
+                .searchSubareas(null))
         );
   }
 }

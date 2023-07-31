@@ -18,6 +18,7 @@ class SystemOfRecordSearchFilterTest {
         .hasFieldOrPropertyWithValue("appointedOperatorId", null)
         .hasFieldOrPropertyWithValue("installationId", null)
         .hasFieldOrPropertyWithValue("wellboreIds", Collections.emptyList())
+        .hasFieldOrPropertyWithValue("subareaId", null)
         .hasAssertedAllProperties();
   }
 
@@ -28,6 +29,7 @@ class SystemOfRecordSearchFilterTest {
         .withWellboreId(1)
         .withInstallationId(2)
         .withAppointedOperatorId(3)
+        .withSubareaId("4")
         .build();
 
     var resultingFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
@@ -36,6 +38,7 @@ class SystemOfRecordSearchFilterTest {
         .hasFieldOrPropertyWithValue("wellboreIds", List.of(1))
         .hasFieldOrPropertyWithValue("installationId", 2)
         .hasFieldOrPropertyWithValue("appointedOperatorId", 3)
+        .hasFieldOrPropertyWithValue("subareaId", "4")
         .hasAssertedAllProperties();
   }
 

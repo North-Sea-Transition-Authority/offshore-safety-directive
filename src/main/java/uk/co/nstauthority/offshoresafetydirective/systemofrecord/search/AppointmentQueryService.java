@@ -79,6 +79,11 @@ class AppointmentQueryService {
       portalAssetTypeRestrictions = Set.of(PortalAssetType.INSTALLATION);
     }
 
+    if (searchFilter.subareaId() != null) {
+      predicateList.add(ASSETS.PORTAL_ASSET_ID.eq(searchFilter.subareaId()));
+      portalAssetTypeRestrictions = Set.of(PortalAssetType.SUBAREA);
+    }
+
     // filter only asset types which match the required types
 
     List<String> portalAssetTypeRestrictionNames = portalAssetTypeRestrictions

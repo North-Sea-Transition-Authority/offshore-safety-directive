@@ -7,14 +7,16 @@ import java.util.Optional;
 record SystemOfRecordSearchFilter(
     Integer appointedOperatorId,
     Integer installationId,
-    List<Integer> wellboreIds
+    List<Integer> wellboreIds,
+    String subareaId
 ) {
 
   static SystemOfRecordSearchFilter fromSearchForm(SystemOfRecordSearchForm searchForm) {
     return new SystemOfRecordSearchFilter(
         searchForm.getAppointedOperatorId(),
         searchForm.getInstallationId(),
-        Optional.ofNullable(searchForm.getWellboreId()).stream().toList()
+        Optional.ofNullable(searchForm.getWellboreId()).stream().toList(),
+        searchForm.getSubareaId()
     );
   }
 
@@ -27,6 +29,7 @@ record SystemOfRecordSearchFilter(
     private Integer appointedOperatorId;
     private Integer installationId;
     private List<Integer> wellboreIds = new ArrayList<>();
+    private String subareaId;
 
     private Builder() {
     }
@@ -53,11 +56,17 @@ record SystemOfRecordSearchFilter(
       return this;
     }
 
+    Builder withSubareaId(String subareaId) {
+      this.subareaId = subareaId;
+      return this;
+    }
+
     SystemOfRecordSearchFilter build() {
       return new SystemOfRecordSearchFilter(
           appointedOperatorId,
           installationId,
-          wellboreIds
+          wellboreIds,
+          subareaId
       );
     }
   }
