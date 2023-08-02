@@ -257,21 +257,23 @@ errorItems=[]
         </@fdsTabs.tabList>
 
         <@fdsTabs.tabContent tabAnchor="nomination-form-tab">
-          <span class="govuk-caption-m">Version ${nominationVersionForm.nominationDetailVersion}</span>
-          <h2 class="govuk-heading-l">Nomination</h2>
-            <@fdsForm.htmlForm>
-                <@inlineInputAction.inlineInputAction>
-                    <@fdsSelect.select
-                        path="nominationVersionForm.nominationDetailVersion"
-                        options=versionOptions
-                        labelText="Nomination history"
-                    />
-                    <@fdsAction.button
-                        buttonText="Change version"
-                        buttonClass="govuk-button govuk-button--secondary"
-                    />
-                </@inlineInputAction.inlineInputAction>
-            </@fdsForm.htmlForm>
+            <#if nominationVersionForm.nominationDetailVersion?has_content>
+              <span class="govuk-caption-m">Version ${nominationVersionForm.nominationDetailVersion}</span>
+              <h2 class="govuk-heading-l">Nomination</h2>
+                <@fdsForm.htmlForm>
+                    <@inlineInputAction.inlineInputAction>
+                        <@fdsSelect.select
+                            path="nominationVersionForm.nominationDetailVersion"
+                            options=versionOptions
+                            labelText="Nomination history"
+                        />
+                        <@fdsAction.button
+                            buttonText="Change version"
+                            buttonClass="govuk-button govuk-button--secondary"
+                        />
+                    </@inlineInputAction.inlineInputAction>
+                </@fdsForm.htmlForm>
+            </#if>
             <@_activePortalReferences.activePortalReferences activePortalReferencesView/>
             <@nominationSummary.nominationSummary summaryView=summaryView/>
         </@fdsTabs.tabContent>
