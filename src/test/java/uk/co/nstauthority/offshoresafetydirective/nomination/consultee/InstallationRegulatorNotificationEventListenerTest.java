@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -14,6 +16,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionPhase;
@@ -46,6 +49,8 @@ class InstallationRegulatorNotificationEventListenerTest {
 
   private static InstallationRegulatorNotificationEventListener installationRegulatorNotificationEventListener;
 
+  private final ArgumentCaptor<NotifyEmail> notifyEmailArgumentCaptor = ArgumentCaptor.forClass(NotifyEmail.class);
+
   @BeforeEach
   void setup() {
     consulteeEmailCreationService = mock(ConsulteeEmailCreationService.class);
@@ -58,7 +63,8 @@ class InstallationRegulatorNotificationEventListenerTest {
         .build();
 
     installationRegulatorNotificationEventListener = new InstallationRegulatorNotificationEventListener(
-        consulteeEmailCreationService, installationRegulator, notifyEmailService);
+        consulteeEmailCreationService, installationRegulator, notifyEmailService
+    );
   }
 
   @ArchTest
@@ -81,16 +87,22 @@ class InstallationRegulatorNotificationEventListenerTest {
     var nominationId = new NominationId(100);
     var event = new ConsultationRequestedEvent(nominationId);
 
-    var notifyEmail = NotifyEmail.builder(NotifyTemplate.CONSULTATION_REQUESTED, serviceBrandingConfigurationProperties).build();
+    var notifyEmailBuilder = NotifyEmail
+        .builder(NotifyTemplate.CONSULTATION_REQUESTED, serviceBrandingConfigurationProperties);
 
-    given(consulteeEmailCreationService.constructConsultationRequestEmail(nominationId, installationRegulator.name()))
-        .willReturn(notifyEmail);
+    given(consulteeEmailCreationService.constructDefaultConsultationRequestEmail(nominationId))
+        .willReturn(notifyEmailBuilder);
 
     installationRegulatorNotificationEventListener.notifyInstallationRegulatorOfConsultation(event);
 
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, installationRegulator.email());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(installationRegulator.email()));
+
+    var emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(installationRegulator.name());
 
     then(notifyEmailService)
         .shouldHaveNoMoreInteractions();
@@ -116,16 +128,22 @@ class InstallationRegulatorNotificationEventListenerTest {
     var nominationId = new NominationId(100);
     var event = new NominationDecisionDeterminedEvent(nominationId);
 
-    var notifyEmail = NotifyEmail.builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties).build();
+    var notifyEmailBuilder = NotifyEmail
+        .builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties);
 
-    given(consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(nominationId, installationRegulator.name()))
-        .willReturn(notifyEmail);
+    given(consulteeEmailCreationService.constructDefaultNominationDecisionDeterminedEmail(nominationId))
+        .willReturn(notifyEmailBuilder);
 
     installationRegulatorNotificationEventListener.notifyInstallationRegulatorOfNominationDecision(event);
 
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, installationRegulator.email());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(installationRegulator.email()));
+
+    var emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(installationRegulator.name());
 
     then(notifyEmailService)
         .shouldHaveNoMoreInteractions();

@@ -35,7 +35,8 @@ class ConsulteeNotificationEventListener {
 
   @Autowired
   ConsulteeNotificationEventListener(ConsulteeEmailCreationService consulteeEmailCreationService,
-                                     TeamMemberViewService teamMemberViewService, NotifyEmailService notifyEmailService) {
+                                     TeamMemberViewService teamMemberViewService,
+                                     NotifyEmailService notifyEmailService) {
     this.consulteeEmailCreationService = consulteeEmailCreationService;
     this.teamMemberViewService = teamMemberViewService;
     this.notifyEmailService = notifyEmailService;
@@ -49,13 +50,10 @@ class ConsulteeNotificationEventListener {
 
     LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
-    getConsultationCoordinators().forEach(consulteeCoordinator -> {
-      NotifyEmail notifyEmail = consulteeEmailCreationService.constructConsultationRequestEmail(
-          nominationId,
-          consulteeCoordinator.firstName()
-      );
-      notifyEmailService.sendEmail(notifyEmail, consulteeCoordinator.contactEmail());
-    });
+    NotifyEmail.Builder defaultConsultationEmailBuilder = consulteeEmailCreationService
+        .constructDefaultConsultationRequestEmail(nominationId);
+
+    emailConsultationCoordinators(defaultConsultationEmailBuilder);
   }
 
   @Async
@@ -66,13 +64,10 @@ class ConsulteeNotificationEventListener {
 
     LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
 
-    getConsultationCoordinators().forEach(consulteeCoordinator -> {
-      NotifyEmail notifyEmail = consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(
-          nominationId,
-          consulteeCoordinator.firstName()
-      );
-      notifyEmailService.sendEmail(notifyEmail, consulteeCoordinator.contactEmail());
-    });
+    NotifyEmail.Builder defaultDecisionEmailBuilder = consulteeEmailCreationService
+        .constructDefaultNominationDecisionDeterminedEmail(nominationId);
+
+    emailConsultationCoordinators(defaultDecisionEmailBuilder);
   }
 
   @Async
@@ -82,19 +77,27 @@ class ConsulteeNotificationEventListener {
     NominationId nominationId = appointmentConfirmedEvent.getNominationId();
 
     LOGGER.info("Handling AppointmentConfirmedEvent for nomination with ID {}", nominationId.id());
-    getConsultationCoordinators().forEach(consulteeCoordinator -> {
-      NotifyEmail notifyEmail = consulteeEmailCreationService.constructAppointmentConfirmedEmail(
-          nominationId,
-          consulteeCoordinator.firstName()
-      );
-      notifyEmailService.sendEmail(notifyEmail, consulteeCoordinator.contactEmail());
-    });
+
+    NotifyEmail.Builder defaultAppointmentEmailBuilder = consulteeEmailCreationService
+        .constructDefaultAppointmentConfirmedEmail(nominationId);
+
+    emailConsultationCoordinators(defaultAppointmentEmailBuilder);
   }
 
-  private List<TeamMemberView> getConsultationCoordinators() {
-    return teamMemberViewService.getTeamMembersWithRoles(
+  private void emailConsultationCoordinators(NotifyEmail.Builder emailBuilder) {
+
+    List<TeamMemberView> consultationCoordinators = teamMemberViewService.getTeamMembersWithRoles(
         Set.of(CONSULTATION_COORDINATOR_ROLE),
         TeamType.CONSULTEE
     );
+
+    consultationCoordinators.forEach(consulteeCoordinator -> {
+
+      NotifyEmail email = emailBuilder
+          .addRecipientIdentifier(consulteeCoordinator.firstName())
+          .build();
+
+      notifyEmailService.sendEmail(email, consulteeCoordinator.contactEmail());
+    });
   }
 }

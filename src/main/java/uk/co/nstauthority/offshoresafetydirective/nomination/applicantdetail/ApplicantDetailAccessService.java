@@ -11,7 +11,7 @@ public class ApplicantDetailAccessService {
   private final ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
   @Autowired
-  ApplicantDetailAccessService(ApplicantDetailPersistenceService applicantDetailPersistenceService) {
+  public ApplicantDetailAccessService(ApplicantDetailPersistenceService applicantDetailPersistenceService) {
     this.applicantDetailPersistenceService = applicantDetailPersistenceService;
   }
 

@@ -41,11 +41,10 @@ class InstallationRegulatorNotificationEventListener {
 
     LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
-    NotifyEmail notifyEmail = consulteeEmailCreationService.constructConsultationRequestEmail(
-        nominationId,
-        installationRegulator.name()
-    );
-    notifyEmailService.sendEmail(notifyEmail, installationRegulator.email());
+    NotifyEmail.Builder consultationRequestedEmailBuilder = consulteeEmailCreationService
+        .constructDefaultConsultationRequestEmail(nominationId);
+
+    emailInstallationRegulator(consultationRequestedEmailBuilder);
   }
 
   @Async
@@ -55,10 +54,18 @@ class InstallationRegulatorNotificationEventListener {
 
     LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
 
-    NotifyEmail notifyEmail = consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(
-        nominationId,
-        installationRegulator.name()
-    );
-    notifyEmailService.sendEmail(notifyEmail, installationRegulator.email());
+    NotifyEmail.Builder decisionDeterminedEmailBuilder = consulteeEmailCreationService
+        .constructDefaultNominationDecisionDeterminedEmail(nominationId);
+
+    emailInstallationRegulator(decisionDeterminedEmailBuilder);
+  }
+
+  private void emailInstallationRegulator(NotifyEmail.Builder emailBuilder) {
+
+    NotifyEmail email = emailBuilder
+        .addRecipientIdentifier(installationRegulator.name())
+        .build();
+
+    notifyEmailService.sendEmail(email, installationRegulator.email());
   }
 }

@@ -38,7 +38,7 @@ public class NominationDetail implements Serializable {
   @Column(name = "submitted_datetime")
   private Instant submittedInstant;
 
-  Integer getId() {
+  public Integer getId() {
     return id;
   }
 

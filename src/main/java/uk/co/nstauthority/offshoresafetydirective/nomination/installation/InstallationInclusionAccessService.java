@@ -6,16 +6,16 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class InstallationInclusionAccessService {
+public class InstallationInclusionAccessService {
 
   private final InstallationInclusionRepository installationInclusionRepository;
 
   @Autowired
-  InstallationInclusionAccessService(InstallationInclusionRepository installationInclusionRepository) {
+  public InstallationInclusionAccessService(InstallationInclusionRepository installationInclusionRepository) {
     this.installationInclusionRepository = installationInclusionRepository;
   }
 
-  Optional<InstallationInclusion> getInstallationInclusion(NominationDetail nominationDetail) {
+  public Optional<InstallationInclusion> getInstallationInclusion(NominationDetail nominationDetail) {
     return installationInclusionRepository.findByNominationDetail(nominationDetail);
   }
 }

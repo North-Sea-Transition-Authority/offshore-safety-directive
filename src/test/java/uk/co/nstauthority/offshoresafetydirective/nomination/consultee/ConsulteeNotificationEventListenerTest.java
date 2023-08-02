@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
@@ -17,6 +19,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionPhase;
@@ -52,8 +55,13 @@ class ConsulteeNotificationEventListenerTest {
 
   private static ConsulteeNotificationEventListener consulteeNotificationEventListener;
 
+  private static final NominationId NOMINATION_ID = new NominationId(100);
+
+  private final ArgumentCaptor<NotifyEmail> notifyEmailArgumentCaptor = ArgumentCaptor.forClass(NotifyEmail.class);
+
   @BeforeEach
   void setup() {
+
     teamMemberViewService = mock(TeamMemberViewService.class);
     notifyEmailService = mock(NotifyEmailService.class);
     consulteeEmailCreationService = mock(ConsulteeEmailCreationService.class);
@@ -81,12 +89,10 @@ class ConsulteeNotificationEventListenerTest {
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
 
+  @Test
   void notifyConsulteeCoordinatorOfConsultation_whenNoConsulteeCoordinators_thenNoEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-    var event = new ConsultationRequestedEvent(nominationId);
+    var event = new ConsultationRequestedEvent(NOMINATION_ID);
 
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
@@ -101,11 +107,8 @@ class ConsulteeNotificationEventListenerTest {
 
   @Test
   void notifyConsulteeCoordinatorOfConsultation_whenConsulteeCoordinators_thenEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-    var event = new ConsultationRequestedEvent(nominationId);
+    var event = new ConsultationRequestedEvent(NOMINATION_ID);
 
     // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
@@ -125,16 +128,11 @@ class ConsulteeNotificationEventListenerTest {
     )
         .willReturn(List.of(firstConsultationCoordinatorTeamMember, secondConsultationCoordinatorTeamMember));
 
+    var notifyEmailBuilder = NotifyEmail
+        .builder(NotifyTemplate.CONSULTATION_REQUESTED, serviceBrandingConfigurationProperties);
 
-    var notifyEmail = NotifyEmail.builder(NotifyTemplate.CONSULTATION_REQUESTED, serviceBrandingConfigurationProperties).build();
-
-    given(consulteeEmailCreationService.constructConsultationRequestEmail(nominationId,
-        firstConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
-
-    given(consulteeEmailCreationService.constructConsultationRequestEmail(nominationId,
-        secondConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
+    given(consulteeEmailCreationService.constructDefaultConsultationRequestEmail(NOMINATION_ID))
+        .willReturn(notifyEmailBuilder);
 
     // WHEN the event listener is invoked
     consulteeNotificationEventListener.notifyConsulteeCoordinatorOfConsultation(event);
@@ -142,11 +140,21 @@ class ConsulteeNotificationEventListenerTest {
     // THEN each consultee coordinator gets an email addressed to them
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, firstConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(firstConsultationCoordinatorTeamMember.contactEmail()));
+
+    var emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(firstConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, secondConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(secondConsultationCoordinatorTeamMember.contactEmail()));
+
+    emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(secondConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .shouldHaveNoMoreInteractions();
@@ -168,12 +176,8 @@ class ConsulteeNotificationEventListenerTest {
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
   void notifyConsultationCoordinatorsOfDecision_whenNoConsulteeCoordinators_thenNoEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-
-    var event = new NominationDecisionDeterminedEvent(nominationId);
+    var event = new NominationDecisionDeterminedEvent(NOMINATION_ID);
 
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
@@ -188,11 +192,8 @@ class ConsulteeNotificationEventListenerTest {
 
   @Test
   void notifyConsultationCoordinatorsOfDecision_whenConsulteeCoordinators_thenEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-    var event = new NominationDecisionDeterminedEvent(nominationId);
+    var event = new NominationDecisionDeterminedEvent(NOMINATION_ID);
 
     // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
@@ -212,15 +213,11 @@ class ConsulteeNotificationEventListenerTest {
     )
         .willReturn(List.of(firstConsultationCoordinatorTeamMember, secondConsultationCoordinatorTeamMember));
 
-    var notifyEmail = NotifyEmail.builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties).build();
+    var notifyEmailBuilder = NotifyEmail
+        .builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties);
 
-    given(consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(nominationId,
-        firstConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
-
-    given(consulteeEmailCreationService.constructNominationDecisionDeterminedEmail(nominationId,
-        secondConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
+    given(consulteeEmailCreationService.constructDefaultNominationDecisionDeterminedEmail(NOMINATION_ID))
+        .willReturn(notifyEmailBuilder);
 
     // WHEN the event listener is invoked
     consulteeNotificationEventListener.notifyConsultationCoordinatorsOfDecision(event);
@@ -228,11 +225,21 @@ class ConsulteeNotificationEventListenerTest {
     // THEN each consultee coordinator gets an email addressed to them
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, firstConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(firstConsultationCoordinatorTeamMember.contactEmail()));
+
+    var emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(firstConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, secondConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(secondConsultationCoordinatorTeamMember.contactEmail()));
+
+    emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(secondConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .shouldHaveNoMoreInteractions();
@@ -253,13 +260,10 @@ class ConsulteeNotificationEventListenerTest {
       .and().haveName("notifyConsultationCoordinatorsOfAppointment")
       .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
 
+  @Test
   void notifyConsultationCoordinatorsOfAppointment_whenNoConsulteeCoordinators_thenNoEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-
-    var event = new AppointmentConfirmedEvent(nominationId);
+    var event = new AppointmentConfirmedEvent(NOMINATION_ID);
 
     given(teamMemberViewService.getTeamMembersWithRoles(
         Set.of(consulteeCoordinatorRole.name()), TeamType.CONSULTEE)
@@ -274,11 +278,8 @@ class ConsulteeNotificationEventListenerTest {
 
   @Test
   void notifyConsultationCoordinatorsOfAppointment_whenConsulteeCoordinators_thenEmailSent() {
-
     var consulteeCoordinatorRole = ConsulteeTeamRole.CONSULTATION_COORDINATOR;
-
-    var nominationId = new NominationId(100);
-    var event = new AppointmentConfirmedEvent(nominationId);
+    var event = new AppointmentConfirmedEvent(NOMINATION_ID);
 
     // GIVEN two consultee coordinator users
     var firstConsultationCoordinatorTeamMember = TeamMemberViewTestUtil.Builder()
@@ -298,15 +299,11 @@ class ConsulteeNotificationEventListenerTest {
     )
         .willReturn(List.of(firstConsultationCoordinatorTeamMember, secondConsultationCoordinatorTeamMember));
 
-    var notifyEmail = NotifyEmail.builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties).build();
+    var notifyEmailBuilder = NotifyEmail
+        .builder(NotifyTemplate.NOMINATION_DECISION_DETERMINED, serviceBrandingConfigurationProperties);
 
-    given(consulteeEmailCreationService.constructAppointmentConfirmedEmail(nominationId,
-        firstConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
-
-    given(consulteeEmailCreationService.constructAppointmentConfirmedEmail(nominationId,
-        secondConsultationCoordinatorTeamMember.firstName()))
-        .willReturn(notifyEmail);
+    given(consulteeEmailCreationService.constructDefaultAppointmentConfirmedEmail(NOMINATION_ID))
+        .willReturn(notifyEmailBuilder);
 
     // WHEN the event listener is invoked
     consulteeNotificationEventListener.notifyConsultationCoordinatorsOfAppointment(event);
@@ -314,11 +311,21 @@ class ConsulteeNotificationEventListenerTest {
     // THEN each consultee coordinator gets an email addressed to them
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, firstConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(firstConsultationCoordinatorTeamMember.contactEmail()));
+
+    var emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(firstConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .should(onlyOnce())
-        .sendEmail(notifyEmail, secondConsultationCoordinatorTeamMember.contactEmail());
+        .sendEmail(notifyEmailArgumentCaptor.capture(), eq(secondConsultationCoordinatorTeamMember.contactEmail()));
+
+    emailMailMerge = notifyEmailArgumentCaptor.getValue().getPersonalisations();
+
+    assertThat(emailMailMerge.get(NotifyEmail.RECIPIENT_NAME_PERSONALISATION_KEY))
+        .isEqualTo(secondConsultationCoordinatorTeamMember.firstName());
 
     then(notifyEmailService)
         .shouldHaveNoMoreInteractions();
