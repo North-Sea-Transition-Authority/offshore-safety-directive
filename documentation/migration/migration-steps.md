@@ -19,15 +19,12 @@ such as `XVIEWMGR` which has permission to make tables in other schemas.
 ## 2. Write the raw appointment data to the Energy Portal database
 
 ### Wellbore appointments prerequisites
-- Remove columns C-L and columns S-U in the well migration template sheet
 - Add an ID column in column A with a series of unique integer IDs
 
 ### Installation appointments prerequisites
-- Remove columns I and J in the installation migration template sheet
 - Add an ID column in column A with a series of unique integer IDs
 
 ### Forward approval appointments prerequisites
-- Remove columns N in the forward approval migration template sheet
 - Add an ID column in column A with a series of unique integer IDs
 
 ### Migrate the raw data into the database
@@ -69,7 +66,7 @@ END;
 
 ## 3. Cleanse the wellbore data
 
-Prior to cleansing the wellbore data the following two patches need to be run on the Energy Portal database:
+Prior to cleansing the wellbore data the following patches need to be run on the Energy Portal database:
 
 - `/energyportal/V03_create_wellbore_migration_table.sql`
 - `/energyportal/V04_create_wellbore_cleanse_package.sql`
@@ -92,7 +89,7 @@ Any errors in the migration process will be written to `wios_migration.wellbore_
 
 ## 4. Cleanse the installation data
 
-Prior to cleansing the installation data the following two patches need to be run on the Energy Portal database:
+Prior to cleansing the installation data the following patches need to be run on the Energy Portal database:
 
 - `/energyportal/V05_create_installation_migration_table.sql`
 - `/energyportal/V06_create_installation_cleanse_package.sql`
@@ -156,6 +153,10 @@ SELECT
 , wa.appointment_source
 , wa.legacy_nomination_reference
 FROM wios_migration.wellbore_appointments wa
+WHERE wa.migratable_appointment_id NOT IN(
+  SELECT DISTINCT wme.migratable_appointment_id
+  FROM wios_migration.wellbore_migration_errors wme
+)
 ```
 Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
 
@@ -178,6 +179,10 @@ SELECT
 , ia.appointment_source
 , ia.legacy_nomination_reference
 FROM wios_migration.installation_appointments ia
+WHERE ia.migratable_appointment_id NOT IN(
+  SELECT DISTINCT ime.migratable_appointment_id
+  FROM wios_migration.installation_migration_errors ime
+)
 ```
 Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
 
@@ -201,6 +206,10 @@ SELECT
 , sa.appointment_source
 , sa.legacy_nomination_reference
 FROM wios_migration.subarea_appointments sa
+WHERE sa.migratable_appointment_id NOT IN(
+  SELECT DISTINCT sme.migratable_appointment_id
+  FROM wios_migration.subarea_migration_errors sme
+)
 ```
 Export the results the above SQL to a CSV. This will be the CSV that we migrate into WIOS.
 
@@ -245,3 +254,8 @@ the `osd_migration.migratable_subarea_appointments` table and create rows in the
 - `osd.assets`
 - `osd.appointments`
 - `osd.asset_phases`
+
+## 13. Report migration errors to NSTA
+
+Any migration errors owing to issues in the migration spreadsheet data need to be reported back to the NSTA. They will
+need to fix up any data so the rows can be migrated in a subsequent migration run.

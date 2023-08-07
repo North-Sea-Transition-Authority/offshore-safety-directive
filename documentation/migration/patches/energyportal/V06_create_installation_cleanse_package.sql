@@ -749,6 +749,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
         , ia.responsible_to_date
         , LEAD(ia.responsible_from_date) OVER(PARTITION BY ia.installation_id ORDER BY ia.responsible_from_date) next_responsible_from_date
         FROM wios_migration.installation_appointments ia
+        WHERE ia.migratable_appointment_id NOT IN(
+          SELECT DISTINCT ime.migratable_appointment_id
+          FROM wios_migration.installation_migration_errors ime
+        )
       ) t
       WHERE t.responsible_to_date != t.next_responsible_from_date
     )
@@ -771,6 +775,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
       FROM wios_migration.installation_appointments ia
       LEFT JOIN appointments_by_source abs ON abs.installation_id = ia.installation_id AND abs.appointment_source = 'DEEMED'
       WHERE COALESCE(abs.count, 0) > 1
+      AND ia.migratable_appointment_id NOT IN(
+        SELECT DISTINCT ime.migratable_appointment_id
+        FROM wios_migration.installation_migration_errors ime
+      )
     )
     LOOP
 
@@ -792,6 +800,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
         HAVING COUNT(*) > 1
       )
       AND ia.responsible_to_date IS NULL
+      AND ia.migratable_appointment_id NOT IN(
+        SELECT DISTINCT ime.migratable_appointment_id
+        FROM wios_migration.installation_migration_errors ime
+      )
     )
     LOOP
 

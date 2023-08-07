@@ -768,6 +768,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
         , wa.responsible_to_date
         , LEAD(wa.responsible_from_date) OVER(PARTITION BY wa.wellbore_id ORDER BY wa.responsible_from_date) next_responsible_from_date
         FROM wios_migration.wellbore_appointments wa
+        WHERE wa.migratable_appointment_id NOT IN(
+          SELECT DISTINCT wme.migratable_appointment_id
+          FROM wios_migration.wellbore_migration_errors wme
+        )
       ) t
       WHERE t.responsible_to_date != t.next_responsible_from_date
     )
@@ -790,6 +794,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
       FROM wios_migration.wellbore_appointments wa
       LEFT JOIN appointments_by_source abs ON abs.wellbore_id = wa.wellbore_id AND abs.appointment_source = 'DEEMED'
       WHERE COALESCE(abs.count, 0) > 1
+      AND wa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT wme.migratable_appointment_id
+        FROM wios_migration.wellbore_migration_errors wme
+      )
     )
     LOOP
 
@@ -811,6 +819,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
         HAVING COUNT(*) > 1
       )
       AND wa.responsible_to_date IS NULL
+      AND wa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT wme.migratable_appointment_id
+        FROM wios_migration.wellbore_migration_errors wme
+      )
     )
     LOOP
 
