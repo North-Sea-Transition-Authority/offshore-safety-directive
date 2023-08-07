@@ -154,19 +154,17 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
     @param p_migratable_appointment_id The migratable appointment ID we are working on
     @param p_operator_name The operator name to attempt to find a matching operator from
-    @param p_operator_lookup An associative array of all the known portal operator names to their
-                             associated operator ID.
   */
   PROCEDURE migrate_operator_name_to_operator(
     p_migratable_appointment_id IN wios_migration.raw_installation_appointments_data.migratable_appointment_id%TYPE
   , p_operator_name IN wios_migration.raw_installation_appointments_data.appointed_operator_name%TYPE
-  , p_operator_lookup IN wios_migration.operator_name_mapping.t_operator_lookup_type
   )
   IS
 
     PRAGMA AUTONOMOUS_TRANSACTION;
 
     l_matched_operator_id NUMBER;
+    l_matched_operator_name wios_migration.installation_appointments.appointed_operator_name%TYPE;
 
   BEGIN
 
@@ -174,15 +172,19 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
     l_matched_operator_id := wios_migration.operator_name_mapping.get_operator_from_name(
       p_operator_name => p_operator_name
-    , p_operator_lookup_type => p_operator_lookup
     );
 
     IF l_matched_operator_id IS NOT NULL THEN
 
+      SELECT xou.name
+      INTO l_matched_operator_name
+      FROM decmgr.xview_organisation_units xou
+      WHERE xou.organ_id = l_matched_operator_id;
+
       UPDATE wios_migration.installation_appointments ia
       SET
         ia.appointed_operator_id = l_matched_operator_id
-      , ia.appointed_operator_name = TO_CHAR(p_operator_name)
+      , ia.appointed_operator_name = l_matched_operator_name
       WHERE ia.migratable_appointment_id = p_migratable_appointment_id;
 
       IF SQL%ROWCOUNT != 1 THEN
@@ -569,7 +571,6 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
   IS
 
     t_installation_lookup t_installation_lookup_type;
-    t_operator_lookup wios_migration.operator_name_mapping.t_operator_lookup_type;
 
   BEGIN
 
@@ -585,8 +586,6 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
       t_installation_lookup(devuk_installation.name) := devuk_installation.id;
 
     END LOOP;
-
-    t_operator_lookup := wios_migration.operator_name_mapping.initialise_operator_lookup();
 
     FOR migratable_installation_appointment IN (
       SELECT
@@ -621,7 +620,6 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
         migrate_operator_name_to_operator(
           p_migratable_appointment_id => migratable_installation_appointment.migratable_appointment_id
         , p_operator_name => migratable_installation_appointment.appointed_operator_name
-        , p_operator_lookup => t_operator_lookup
         );
 
         migrate_appointment_dates(
