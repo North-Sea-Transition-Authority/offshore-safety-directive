@@ -16,7 +16,7 @@ CREATE TABLE wios_migration.installation_appointments (
     FOREIGN KEY (migratable_appointment_id) REFERENCES wios_migration.raw_installation_appointments_data(migratable_appointment_id)
 , CONSTRAINT installation_development_check CHECK(is_development_phase IN (0, 1))
 , CONSTRAINT installation_decommissioning_check CHECK(is_decommissioning_phase IN (0, 1))
-, CONSTRAINT installation_appointment_source_check CHECK(appointment_source IN ('DEEMED', 'NOMINATED', 'FORWARD_APPROVED'))
+, CONSTRAINT installation_appointment_source_check CHECK(appointment_source IN ('DEEMED', 'OFFLINE_NOMINATION', 'FORWARD_APPROVED'))
 ) TABLESPACE tbsdata;
 
 CREATE TABLE wios_migration.unmatched_installations (

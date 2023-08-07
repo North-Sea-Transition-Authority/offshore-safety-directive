@@ -2,6 +2,9 @@ CREATE OR REPLACE PACKAGE wios_migration.subarea_appointment_migration AS
 
   K_LOG_PREFIX CONSTANT VARCHAR2(4000) := 'SUBAREA_APPOINTMENT_MIGRATION: ';
 
+  K_DEEMED_SOURCE CONSTANT wios_migration.raw_subarea_appointments_data.appointment_source%TYPE := 'deemed';
+  K_OFFLINE_NOMINATION_SOURCE CONSTANT wios_migration.raw_subarea_appointments_data.appointment_source%TYPE := 'nominated';
+
   TYPE t_subarea_lookup_type
     IS TABLE OF VARCHAR2(4000) NOT NULL
     INDEX BY VARCHAR2(4000);
@@ -600,9 +603,6 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
     PRAGMA AUTONOMOUS_TRANSACTION;
 
-    K_DEEMED_SOURCE CONSTANT wios_migration.raw_subarea_appointments_data.appointment_source%TYPE := 'deemed';
-    K_NOMINATED_SOURCE CONSTANT wios_migration.raw_subarea_appointments_data.appointment_source%TYPE := 'nominated';
-
     l_appointment_source wios_migration.subarea_appointments.appointment_source%TYPE;
 
   BEGIN
@@ -613,9 +613,9 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
       l_appointment_source := 'DEEMED';
 
-    ELSIF LOWER(p_appointment_source) = K_NOMINATED_SOURCE THEN
+    ELSIF LOWER(p_appointment_source) = K_OFFLINE_NOMINATION_SOURCE THEN
 
-      l_appointment_source := 'NOMINATED';
+      l_appointment_source := 'OFFLINE_NOMINATION';
 
     ELSE
 
@@ -734,7 +734,19 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
     FOR migratable_subarea_appointment IN (
       SELECT
-        sad.*
+        sad.migratable_appointment_id
+      , sad.licence_type
+      , sad.licence_number
+      , sad.block_reference
+      , sad.subarea_name
+      , sad.appointed_operator_name
+      , LOWER(sad.appointment_source) appointment_source
+      , sad.is_decommissioning_phase
+      , sad.is_development_phase
+      , sad.is_exploration_phase
+      , sad.legacy_nomination_reference
+      , sad.responsible_from_date
+      , sad.responsible_to_date
       , ROWNUM row_index
       , COUNT(*) OVER() total_rows
       FROM wios_migration.raw_subarea_appointments_data sad
@@ -788,25 +800,18 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
         , p_appointment_source => migratable_subarea_appointment.appointment_source
         );
 
-        IF UPPER(migratable_subarea_appointment.appointment_source) = 'NOMINATED' AND migratable_subarea_appointment.legacy_nomination_reference IS NOT NULL THEN
+        IF LOWER(migratable_subarea_appointment.appointment_source) = K_OFFLINE_NOMINATION_SOURCE AND migratable_subarea_appointment.legacy_nomination_reference IS NOT NULL THEN
 
           migrate_legacy_nomination_reference(
             p_migratable_appointment_id => migratable_subarea_appointment.migratable_appointment_id
           , p_legacy_nomination_reference => migratable_subarea_appointment.legacy_nomination_reference
           );
 
-        ELSIF UPPER(migratable_subarea_appointment.appointment_source) = 'NOMINATED' AND migratable_subarea_appointment.legacy_nomination_reference IS NULL THEN
+        ELSIF LOWER(migratable_subarea_appointment.appointment_source) != K_OFFLINE_NOMINATION_SOURCE AND migratable_subarea_appointment.legacy_nomination_reference IS NOT NULL THEN
 
           add_migration_error(
             p_migratable_appointment_id => migratable_subarea_appointment.migratable_appointment_id
-          , p_error_message => 'Found nominated appointment source without legacy nomination reference for migratable_appointment_id ' || migratable_subarea_appointment.migratable_appointment_id
-          );
-
-        ELSIF UPPER(migratable_subarea_appointment.appointment_source) != 'NOMINATED' AND migratable_subarea_appointment.legacy_nomination_reference IS NOT NULL THEN
-
-          add_migration_error(
-            p_migratable_appointment_id => migratable_subarea_appointment.migratable_appointment_id
-          , p_error_message => 'Legacy nomination reference provided for non NOMINATED appointment for migratable_appointment_id ' || migratable_subarea_appointment.migratable_appointment_id
+          , p_error_message => 'Legacy nomination reference provided for non ' || K_OFFLINE_NOMINATION_SOURCE || ' appointment for migratable_appointment_id ' || migratable_subarea_appointment.migratable_appointment_id
           );
 
         END IF;

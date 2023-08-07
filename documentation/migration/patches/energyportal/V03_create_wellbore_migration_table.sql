@@ -18,7 +18,7 @@ CREATE TABLE wios_migration.wellbore_appointments (
 , CONSTRAINT exploration_check CHECK(is_exploration_phase IN (0, 1))
 , CONSTRAINT development_check CHECK(is_development_phase IN (0, 1))
 , CONSTRAINT decommissioning_check CHECK(is_decommissioning_phase IN (0, 1))
-, CONSTRAINT appointment_source_check CHECK(appointment_source IN ('DEEMED', 'NOMINATED', 'FORWARD_APPROVED'))
+, CONSTRAINT appointment_source_check CHECK(appointment_source IN ('DEEMED', 'OFFLINE_NOMINATION', 'FORWARD_APPROVED'))
 ) TABLESPACE tbsdata;
 
 CREATE TABLE wios_migration.unmatched_wellbores (
