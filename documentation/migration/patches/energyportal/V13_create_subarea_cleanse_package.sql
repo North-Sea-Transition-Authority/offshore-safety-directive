@@ -398,10 +398,76 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
     END IF;
 
-    l_appointment_to_date := convert_to_date(
-      p_date_as_string => p_appointment_to_date
-    , p_migratable_appointment_id => p_migratable_appointment_id
-    );
+    -- determine if we are using the end date from the spreadsheet or need to
+    -- determine the end date from any subsequent appointment
+    IF p_appointment_to_date IS NOT NULL THEN
+
+      l_appointment_to_date := convert_to_date(
+        p_date_as_string => p_appointment_to_date
+      , p_migratable_appointment_id => p_migratable_appointment_id
+      );
+
+    ELSE
+
+      DECLARE
+
+        l_inferred_to_date_as_string VARCHAR2(4000);
+        l_licence_type VARCHAR2(4000);
+        l_licence_number VARCHAR2(4000);
+        l_block_reference VARCHAR2(4000);
+        l_subarea_name VARCHAR2(4000);
+
+      BEGIN
+
+        SELECT
+          TO_CHAR(s.licence_type)
+        , TO_CHAR(s.licence_number)
+        , TO_CHAR(s.block_reference)
+        , TO_CHAR(s.subarea_name)
+        INTO
+          l_licence_type
+        , l_licence_number
+        , l_block_reference
+        , l_subarea_name
+        FROM wios_migration.raw_subarea_appointments_data s
+        WHERE s.migratable_appointment_id = p_migratable_appointment_id;
+
+        SELECT x.next_appointment_from_date
+        INTO l_inferred_to_date_as_string
+        FROM (
+          SELECT
+            s.migratable_appointment_id
+          , LEAD(TO_CHAR(s.responsible_from_date))
+              OVER(
+                PARTITION BY TO_CHAR(s.licence_type), TO_CHAR(s.licence_number), TO_CHAR(s.block_reference), TO_CHAR(s.subarea_name)
+                ORDER BY TO_DATE(TO_CHAR(s.responsible_from_date), 'DD/MM/YYYY')
+              ) next_appointment_from_date
+          FROM wios_migration.raw_subarea_appointments_data s
+          WHERE TO_CHAR(s.licence_type) = l_licence_type
+          AND TO_CHAR(s.licence_number) = l_licence_number
+          AND TO_CHAR(s.block_reference) = l_block_reference
+          AND TO_CHAR(s.subarea_name) = l_subarea_name
+        ) x
+        WHERE x.migratable_appointment_id = p_migratable_appointment_id;
+
+        l_appointment_to_date := convert_to_date(
+          p_date_as_string => l_inferred_to_date_as_string
+        , p_migratable_appointment_id => p_migratable_appointment_id
+        );
+
+      EXCEPTION WHEN OTHERS THEN
+
+        l_appointment_to_date := NULL;
+
+        add_migration_error(
+          p_migratable_appointment_id => p_migratable_appointment_id
+        , p_error_message => 'Could not infer responsible to date' || CHR(10) ||
+            CHR(10) || SQLERRM || CHR(10) || CHR(10) || dbms_utility.format_error_backtrace()
+        );
+
+      END;
+
+    END IF;
 
     -- if the input appointment date is null then check if the subarea is
     -- ended in the portal. If so set the appointment to the end date of the
