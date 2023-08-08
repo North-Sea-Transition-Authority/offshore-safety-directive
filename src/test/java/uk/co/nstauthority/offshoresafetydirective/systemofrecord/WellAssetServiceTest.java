@@ -13,8 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.generated.types.Licence;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreMechanicalStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
@@ -25,7 +29,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.NominatedSubareaWellAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellDto;
 
 @ExtendWith(MockitoExtension.class)
 class WellAssetServiceTest {
@@ -177,10 +180,25 @@ class WellAssetServiceTest {
     when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
 
-    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
-        .thenReturn(List.of(
-            new NominatedSubareaWellDto(firstWellboreId),
-            new NominatedSubareaWellDto(secondWellboreId)
+    var licence = Licence.newBuilder().build();
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(nominationDetail))
+        .thenReturn(
+            List.of(
+                new WellDto(
+                  firstWellboreId,
+                  "first asset name",
+                  WellboreMechanicalStatus.DRILLING,
+                  LicenceDto.fromPortalLicence(licence),
+                  LicenceDto.fromPortalLicence(licence)
+                ),
+                new WellDto(
+                    secondWellboreId,
+                    "second asset name",
+                    WellboreMechanicalStatus.DRILLING,
+                    LicenceDto.fromPortalLicence(licence),
+                    LicenceDto.fromPortalLicence(licence)
+                )
         ));
 
     var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
@@ -188,11 +206,12 @@ class WellAssetServiceTest {
     assertThat(result)
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
-            NominatedAssetDto::portalAssetType
+            NominatedAssetDto::portalAssetType,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
         )
         .containsExactly(
-            tuple(String.valueOf(firstWellboreId.id()), PortalAssetType.WELLBORE),
-            tuple(String.valueOf(secondWellboreId.id()), PortalAssetType.WELLBORE)
+            tuple(String.valueOf(firstWellboreId.id()), PortalAssetType.WELLBORE, "first asset name"),
+            tuple(String.valueOf(secondWellboreId.id()), PortalAssetType.WELLBORE, "second asset name")
         );
   }
 
@@ -214,10 +233,25 @@ class WellAssetServiceTest {
     when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
 
-    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
-        .thenReturn(List.of(
-            new NominatedSubareaWellDto(firstWellboreId),
-            new NominatedSubareaWellDto(secondWellboreId)
+    var licence = Licence.newBuilder().build();
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(nominationDetail))
+        .thenReturn(
+            List.of(
+                new WellDto(
+                    firstWellboreId,
+                    "first asset name",
+                    WellboreMechanicalStatus.DRILLING,
+                    LicenceDto.fromPortalLicence(licence),
+                    LicenceDto.fromPortalLicence(licence)
+                ),
+                new WellDto(
+                    secondWellboreId,
+                    "second asset name",
+                    WellboreMechanicalStatus.DRILLING,
+                    LicenceDto.fromPortalLicence(licence),
+                    LicenceDto.fromPortalLicence(licence)
+                )
         ));
 
     var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
@@ -225,11 +259,12 @@ class WellAssetServiceTest {
     assertThat(result)
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
-            NominatedAssetDto::phases
+            NominatedAssetDto::phases,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
         )
         .containsExactly(
-            tuple(String.valueOf(firstWellboreId.id()), List.of(wellPhase.name())),
-            tuple(String.valueOf(secondWellboreId.id()), List.of(wellPhase.name()))
+            tuple(String.valueOf(firstWellboreId.id()), List.of(wellPhase.name()), "first asset name"),
+            tuple(String.valueOf(secondWellboreId.id()), List.of(wellPhase.name()), "second asset name")
         );
   }
 
@@ -250,10 +285,25 @@ class WellAssetServiceTest {
     when(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
         .thenReturn(Optional.of(nominatedBlockSubareaDetailView));
 
-    when(nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail))
-        .thenReturn(List.of(
-            new NominatedSubareaWellDto(firstWellboreId),
-            new NominatedSubareaWellDto(secondWellboreId)
+    var licence = Licence.newBuilder().build();
+
+    when(nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(nominationDetail))
+        .thenReturn(
+            List.of(
+                new WellDto(
+                    firstWellboreId,
+                    "first asset name",
+                    WellboreMechanicalStatus.DRILLING,
+                    LicenceDto.fromPortalLicence(licence),
+                    LicenceDto.fromPortalLicence(licence)
+                ),
+                new WellDto(
+                    secondWellboreId,
+                    "second asset name",
+                    WellboreMechanicalStatus.DRILLING,
+                    LicenceDto.fromPortalLicence(licence),
+                    LicenceDto.fromPortalLicence(licence)
+                )
         ));
 
     var result = wellAssetService.getNominatedWellAssetDtos(nominationDetail);
@@ -266,11 +316,12 @@ class WellAssetServiceTest {
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
             NominatedAssetDto::phases,
-            NominatedAssetDto::portalAssetType
-        )
+            NominatedAssetDto::portalAssetType,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
+            )
         .containsExactly(
-            tuple(String.valueOf(firstWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE),
-            tuple(String.valueOf(secondWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE)
+            tuple(String.valueOf(firstWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE, "first asset name"),
+            tuple(String.valueOf(secondWellboreId.id()), wellPhaseNames, PortalAssetType.WELLBORE, "second asset name")
         );
   }
 

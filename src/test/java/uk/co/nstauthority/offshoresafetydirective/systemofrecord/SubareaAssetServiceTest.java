@@ -71,10 +71,15 @@ class SubareaAssetServiceTest {
     assertThat(result)
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value(),
             NominatedAssetDto::phases
         )
         .containsExactly(
-            tuple(String.valueOf(subarea.subareaId().id()), List.of(wellPhase.name()))
+            tuple(
+                String.valueOf(subarea.subareaId().id()),
+                subarea.displayName(),
+                List.of(wellPhase.name())
+            )
         );
   }
 
@@ -108,10 +113,16 @@ class SubareaAssetServiceTest {
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
             NominatedAssetDto::phases,
-            NominatedAssetDto::portalAssetType
+            NominatedAssetDto::portalAssetType,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
         )
         .containsExactly(
-            tuple(String.valueOf(subarea.subareaId().id()), wellPhaseNames, PortalAssetType.SUBAREA)
+            tuple(
+                String.valueOf(subarea.subareaId().id()),
+                wellPhaseNames,
+                PortalAssetType.SUBAREA,
+                subarea.displayName()
+            )
         );
   }
 
@@ -178,10 +189,15 @@ class SubareaAssetServiceTest {
     assertThat(result)
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
-            NominatedAssetDto::portalAssetType
+            NominatedAssetDto::portalAssetType,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
         )
         .containsExactly(
-            tuple(String.valueOf(subareaExtant.subareaId().id()), PortalAssetType.SUBAREA)
+            tuple(
+                String.valueOf(subareaExtant.subareaId().id()),
+                PortalAssetType.SUBAREA,
+                subareaExtant.displayName()
+            )
         );
   }
 

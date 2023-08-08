@@ -35,12 +35,17 @@ class AssetPersistenceServiceTest {
     var existingAssetDto = new NominatedAssetDto(
         new PortalAssetId(existingAsset.getPortalAssetId()),
         portalAssetType,
+        new AssetName(existingAsset.getAssetName()),
         List.of(InstallationPhase.DECOMMISSIONING.name())
     );
+
+    var assetName = "asset name";
+
     var newAssetDto = new NominatedAssetDto(
         newAssetId,
         portalAssetType,
-        List.of(InstallationPhase.DECOMMISSIONING.name())
+        new AssetName(assetName),
+    List.of(InstallationPhase.DECOMMISSIONING.name())
     );
 
     when(assetRepository.findAllByPortalAssetIdIn(List.of(existingAsset.getPortalAssetId(), newAssetId.id())))
@@ -71,17 +76,20 @@ class AssetPersistenceServiceTest {
             Asset::getPortalAssetType
         )
         .containsExactly(
-            tuple(newAssetId.id(), "PLACEHOLDER", portalAssetType)
+            tuple(newAssetId.id(), assetName, portalAssetType)
         );
   }
 
   @Test
   void persistNominatedAssets_whenNoExisting_verifySavedMissing() {
+    var assetName = "asset name";
     var portalAssetType = PortalAssetType.INSTALLATION;
     var newAssetId = new PortalAssetId("portal/asset/1");
+    var newAssetName = new AssetName(assetName);
     var newAssetDto = new NominatedAssetDto(
         newAssetId,
         portalAssetType,
+        newAssetName,
         List.of(InstallationPhase.DECOMMISSIONING.name())
     );
 
@@ -112,7 +120,7 @@ class AssetPersistenceServiceTest {
             Asset::getPortalAssetType
         )
         .containsExactly(
-            tuple(newAssetId.id(), "PLACEHOLDER", portalAssetType)
+            tuple(newAssetId.id(), assetName, portalAssetType)
         );
   }
 

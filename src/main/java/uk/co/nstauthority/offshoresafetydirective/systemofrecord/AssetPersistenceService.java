@@ -67,8 +67,7 @@ class AssetPersistenceService {
 
   private Asset createAssetEntity(NominatedAssetDto nominatedAssetDto) {
     var asset = new Asset();
-    // TODO OSDOP-341 - Use names attached to portal asset
-    asset.setAssetName("PLACEHOLDER");
+    asset.setAssetName(nominatedAssetDto.portalAssetName().value());
     asset.setPortalAssetId(nominatedAssetDto.portalAssetId().id());
     asset.setPortalAssetType(nominatedAssetDto.portalAssetType());
     return asset;

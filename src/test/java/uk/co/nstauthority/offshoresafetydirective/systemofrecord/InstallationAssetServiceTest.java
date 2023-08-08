@@ -44,6 +44,7 @@ class InstallationAssetServiceTest {
     var portalAssetId = 123;
     var installationDto = InstallationDtoTestUtil.builder()
         .withId(portalAssetId)
+        .withName("asset name")
         .build();
     var detailView = NominatedInstallationDetailViewTestUtil.builder()
         .withInstallations(List.of(installationDto))
@@ -59,11 +60,13 @@ class InstallationAssetServiceTest {
         .first()
         .extracting(
             nominatedAssetDto -> nominatedAssetDto.portalAssetId().id(),
-            NominatedAssetDto::portalAssetType
+            NominatedAssetDto::portalAssetType,
+            nominatedAssetDto -> nominatedAssetDto.portalAssetName().value()
         )
         .containsExactly(
             String.valueOf(portalAssetId),
-            PortalAssetType.INSTALLATION
+            PortalAssetType.INSTALLATION,
+            "asset name"
         );
   }
 

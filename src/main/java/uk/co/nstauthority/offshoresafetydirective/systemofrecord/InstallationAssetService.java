@@ -33,10 +33,13 @@ class InstallationAssetService {
     var phases = getInstallationPhases(installationDetailView);
     return installationDetailView.getInstallations()
         .stream()
-        .map(dto -> new PortalAssetId(String.valueOf(dto.id())))
-        .map(portalAssetId -> new NominatedAssetDto(portalAssetId, PortalAssetType.INSTALLATION, phases))
+        .map(installation -> new NominatedAssetDto(
+            new PortalAssetId(String.valueOf(installation.id())),
+            PortalAssetType.INSTALLATION,
+            new AssetName(installation.name()),
+            phases
+        ))
         .toList();
-
   }
 
   private List<String> getInstallationPhases(NominatedInstallationDetailView installationDetailView) {

@@ -3,6 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.NominatedSubareaWellDto;
@@ -11,16 +13,28 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells.N
 public class NominatedSubareaWellAccessService {
 
   private final NominatedSubareaWellRepository nominatedSubareaWellRepository;
+  private final WellQueryService wellQueryService;
+
 
   @Autowired
-  public NominatedSubareaWellAccessService(NominatedSubareaWellRepository nominatedSubareaWellRepository) {
+  public NominatedSubareaWellAccessService(NominatedSubareaWellRepository nominatedSubareaWellRepository,
+                                           WellQueryService wellQueryService) {
     this.nominatedSubareaWellRepository = nominatedSubareaWellRepository;
+    this.wellQueryService = wellQueryService;
   }
 
-  public List<NominatedSubareaWellDto> getNominatedSubareaWellbores(NominationDetail nominationDetail) {
-    return nominatedSubareaWellRepository.findByNominationDetail(nominationDetail)
+  public List<WellDto> getNominatedSubareaWellDetailView(NominationDetail nominationDetail) {
+
+    var nominatedSubareaWells = nominatedSubareaWellRepository.findByNominationDetail(nominationDetail)
         .stream()
         .map(nominatedSubareaWell -> new NominatedSubareaWellDto(new WellboreId(nominatedSubareaWell.getWellboreId())))
         .toList();
+
+    List<WellboreId> nominatedSubareaIds = nominatedSubareaWells
+        .stream()
+        .map(NominatedSubareaWellDto::wellboreId)
+        .toList();
+
+    return wellQueryService.getWellsByIds(nominatedSubareaIds);
   }
 }

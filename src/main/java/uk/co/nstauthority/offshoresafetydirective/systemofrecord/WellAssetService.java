@@ -62,8 +62,11 @@ class WellAssetService {
 
     return wellDetailView.getWells()
         .stream()
-        .map(dto -> new PortalAssetId(String.valueOf(dto.wellboreId().id())))
-        .map(portalAssetId -> new NominatedAssetDto(portalAssetId, PortalAssetType.WELLBORE, phases))
+        .map(well -> new NominatedAssetDto(
+            new PortalAssetId(String.valueOf(well.wellboreId().id())),
+            PortalAssetType.WELLBORE,
+            new AssetName(well.name()),
+            phases))
         .toList();
   }
 
@@ -78,12 +81,13 @@ class WellAssetService {
 
     var wellPhaseNames = getWellPhases(blockSubareaDetailView);
 
-    var wellbores = nominatedSubareaWellAccessService.getNominatedSubareaWellbores(nominationDetail);
+    var wellbores = nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(nominationDetail);
 
     return wellbores.stream()
         .map(wellbore -> new NominatedAssetDto(
             makePortalAssetId(wellbore.wellboreId()),
             PortalAssetType.WELLBORE,
+            new AssetName(wellbore.name()),
             wellPhaseNames
         ))
         .toList();
@@ -112,5 +116,4 @@ class WellAssetService {
     }
     return EnumUtil.getEnumNames(wellPhases);
   }
-
 }

@@ -66,6 +66,7 @@ class SubareaAssetService {
           .map(dto -> new NominatedAssetDto(
               new PortalAssetId(dto.subareaId().id()),
               PortalAssetType.SUBAREA,
+              new AssetName(dto.displayName()),
               wellPhaseNames
           ))
           .toList();
@@ -83,5 +84,4 @@ class SubareaAssetService {
     }
     return EnumUtil.getEnumNames(wellPhases);
   }
-
 }

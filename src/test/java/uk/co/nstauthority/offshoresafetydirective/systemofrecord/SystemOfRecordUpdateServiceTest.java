@@ -50,6 +50,7 @@ class SystemOfRecordUpdateServiceTest {
     var assetDto = new NominatedAssetDto(
         new PortalAssetId(existingAsset.getPortalAssetId()),
         PortalAssetType.INSTALLATION,
+        new AssetName(existingAsset.getAssetName()),
         List.of("stub phase")
     );
     var appointment = AppointmentTestUtil.builder()
@@ -94,6 +95,7 @@ class SystemOfRecordUpdateServiceTest {
     var assetDto = new NominatedAssetDto(
         new PortalAssetId(existingAsset.getPortalAssetId()),
         PortalAssetType.WELLBORE,
+        new AssetName(existingAsset.getAssetName()),
         List.of("stub phase")
     );
     var appointment = AppointmentTestUtil.builder()
@@ -139,6 +141,7 @@ class SystemOfRecordUpdateServiceTest {
     var nominatedInstallationAssetDto = new NominatedAssetDto(
         new PortalAssetId(installationAsset.getPortalAssetId()),
         PortalAssetType.INSTALLATION,
+        new AssetName(installationAsset.getAssetName()),
         List.of("stub installation phase")
     );
     var wellAsset = AssetTestUtil.builder()
@@ -148,6 +151,7 @@ class SystemOfRecordUpdateServiceTest {
     var nominatedWellAssetDto = new NominatedAssetDto(
         new PortalAssetId(wellAsset.getPortalAssetId()),
         PortalAssetType.WELLBORE,
+        new AssetName(installationAsset.getAssetName()),
         List.of("stub well phase")
     );
     var installationAppointment = AppointmentTestUtil.builder()
@@ -198,6 +202,7 @@ class SystemOfRecordUpdateServiceTest {
     var assetDto = new NominatedAssetDto(
         new PortalAssetId(existingAsset.getPortalAssetId()),
         PortalAssetType.SUBAREA,
+        new AssetName(existingAsset.getAssetName()),
         List.of("stub phase")
     );
     var appointment = AppointmentTestUtil.builder()

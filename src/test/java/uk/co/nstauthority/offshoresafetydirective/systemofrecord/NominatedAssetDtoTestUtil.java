@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -20,6 +18,7 @@ public class NominatedAssetDtoTestUtil {
     private PortalAssetId portalAssetId;
     private PortalAssetType portalAssetType;
     private List<String> phases;
+    private  AssetName portalAssetName;
 
     private Builder() {
     }
@@ -44,10 +43,16 @@ public class NominatedAssetDtoTestUtil {
       return this;
     }
 
+    public Builder withPortalAssetName(AssetName assetName){
+      this.portalAssetName = assetName;
+      return this;
+    }
+
     public NominatedAssetDto build() {
       return new NominatedAssetDto(
           portalAssetId,
           portalAssetType,
+          portalAssetName,
           phases
       );
     }
