@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.Instant;
@@ -37,16 +36,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
@@ -56,16 +51,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
-class AppointmentTimelineServiceTest {
-
-  @Mock
-  private PortalAssetNameService portalAssetNameService;
-
-  @Mock
-  private AssetAccessService assetAccessService;
-
-  @Mock
-  private AppointmentAccessService appointmentAccessService;
+class AppointmentTimelineItemServiceTest {
 
   @Mock
   private PortalOrganisationUnitQueryService organisationUnitQueryService;
@@ -89,115 +75,14 @@ class AppointmentTimelineServiceTest {
   private AppointmentCorrectionService appointmentCorrectionService;
 
   @InjectMocks
-  private AppointmentTimelineService appointmentTimelineService;
+  private AppointmentTimelineItemService appointmentTimelineItemService;
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenNotInPortalOrSystemOfRecord_thenEmptyOptional() {
-
-    var portalAssetId = new PortalAssetId("something not in sor or portal");
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
-        .willReturn(Optional.empty());
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.empty());
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
-    );
-
-    assertThat(resultingAppointmentTimelineHistory).isEmpty();
-  }
-
-  @Test
-  void getAppointmentHistoryForPortalAsset_whenAssetFromPortal_thenAssetNameIsPortalName() {
-
-    var portalAssetId = new PortalAssetId("something in portal");
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
-        .willReturn(Optional.of(new AssetName("from portal")));
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.empty());
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
-    );
-
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get())
-        .extracting(assetAppointmentHistory -> assetAppointmentHistory.assetName().value())
-        .isEqualTo("from portal");
-  }
-
-  @Test
-  void getAppointmentHistoryForPortalAsset_whenAssetFromSystemOfRecord_thenAssetNameCachedAssetName() {
-
-    var portalAssetId = new PortalAssetId("something in sor and not from portal");
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
-        .willReturn(Optional.empty());
+  void getTimelineItemViews_whenAppointment_thenPopulatedAppointmentViewList() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withAssetName("from system of record")
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
-    );
-
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get())
-        .extracting(AssetAppointmentHistory::assetName)
-        .isEqualTo(assetInSystemOfRecord.assetName());
-  }
-
-  @Test
-  void getAppointmentHistoryForPortalAsset_whenNoAppointments_thenEmptyAppointmentViewList() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
-
-    var assetInSystemOfRecord = AssetDtoTestUtil.builder()
-        .withAssetName("from system of record")
-        .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(Collections.emptyList());
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
-    );
-
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).isEmpty();
-
-    then(organisationUnitQueryService).shouldHaveNoInteractions();
-  }
-
-  @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointment_thenPopulatedAppointmentViewList() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
-
-    var assetInSystemOfRecord = AssetDtoTestUtil.builder()
-        .withAssetName("from system of record")
-        .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
 
     // given an appointment with an operator known to the portal
 
@@ -207,29 +92,25 @@ class AppointmentTimelineServiceTest {
         .withId(appointedOperatorId.id())
         .build();
 
-    var expectedAppointment = AppointmentDtoTestUtil.builder()
+    var expectedAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointedOperatorId(appointedOperatorId.id())
         .build();
 
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(expectedAppointment));
-
     // Treat user as not logged in to skip overhead in code we don't need to check
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
     // when we request the timeline history
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(expectedAppointmentDto),
+        assetInSystemOfRecord
     );
 
     // then the expected appointment is returned
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
+    assertThat(resultingAppointmentTimelineHistoryItems)
         .extracting(
             AssetTimelineItemView::timelineEventType,
             AssetTimelineItemView::title,
@@ -239,34 +120,28 @@ class AppointmentTimelineServiceTest {
             tuple(
                 TimelineEventType.APPOINTMENT,
                 appointedOperator.name(),
-                expectedAppointment.appointmentCreatedDate()
+                expectedAppointmentDto.appointmentCreatedDate()
             )
         );
 
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    var timelineView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    var timelineView = resultingAppointmentTimelineHistoryItems.get(0);
     assertThat(timelineView.assetTimelineModelProperties().getModelProperties())
-        .containsEntry("appointmentId", expectedAppointment.appointmentId())
-        .containsEntry("appointmentFromDate", expectedAppointment.appointmentFromDate())
-        .containsEntry("appointmentToDate", expectedAppointment.appointmentToDate())
-        .containsEntry("assetDto", expectedAppointment.assetDto());
+        .containsEntry("appointmentId", expectedAppointmentDto.appointmentId())
+        .containsEntry("appointmentFromDate", expectedAppointmentDto.appointmentFromDate())
+        .containsEntry("appointmentToDate", expectedAppointmentDto.appointmentToDate())
+        .containsEntry("assetDto", expectedAppointmentDto.assetDto());
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentButOperatorNotInPortal_thenUnknownOperatorName() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenAppointmentButOperatorNotInPortal_thenUnknownOperatorName() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
     // given an appointment with an operator not known to the portal
-
     var appointedOperatorId = new PortalOrganisationUnitId(-1);
 
     var expectedAppointment = AppointmentDtoTestUtil.builder()
@@ -276,36 +151,27 @@ class AppointmentTimelineServiceTest {
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(Collections.emptyList());
 
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(expectedAppointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
     // when we request the timeline history
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(expectedAppointment),
+        assetInSystemOfRecord
     );
 
     // then the operator name will be a sensible default string
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
-    assertThat(timelineItemView.title()).isEqualTo("Unknown operator");
+    assertThat(resultingAppointmentTimelineHistoryItems)
+        .extracting(AssetTimelineItemView::title)
+        .containsExactly("Unknown operator");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenMultipleAppointments_thenOrderedByDescendingStartDate() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenMultipleAppointments_thenOrderedByDescendingStartDate() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withAssetName("from system of record")
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
 
     var appointedOperatorId = new PortalOrganisationUnitId(100);
 
@@ -329,10 +195,6 @@ class AppointmentTimelineServiceTest {
         .withAppointmentId(UUID.randomUUID())
         .build();
 
-    // and the timelineItemViews are returned out of order
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(earliestAppointmentByStartDate, latestAppointmentByStartDate));
-
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
@@ -340,14 +202,13 @@ class AppointmentTimelineServiceTest {
         .willThrow(InvalidAuthenticationException.class);
 
     // when we request the timeline history
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(earliestAppointmentByStartDate, latestAppointmentByStartDate),
+        assetInSystemOfRecord
     );
 
     // then the appointments are sorted by start date descending
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
+    assertThat(resultingAppointmentTimelineHistoryItems)
         .extracting(view -> view.assetTimelineModelProperties().getModelProperties().get("appointmentId"))
         .containsExactly(
             latestAppointmentByStartDate.appointmentId(),
@@ -357,16 +218,11 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenMultipleAppointmentsWithSameStartDate_thenOrderedByDescendingCreationDatetime() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenMultipleAppointmentsWithSameStartDate_thenOrderedByDescendingCreationDatetime() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withAssetName("from system of record")
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
 
     var appointedOperatorId = new PortalOrganisationUnitId(100);
 
@@ -390,10 +246,6 @@ class AppointmentTimelineServiceTest {
         .withAppointmentId(UUID.randomUUID())
         .build();
 
-    // and the timelineItemViews are returned out of order
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(earliestAppointmentByCreationTime, latestAppointmentByCreationTime));
-
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
@@ -401,14 +253,13 @@ class AppointmentTimelineServiceTest {
         .willThrow(InvalidAuthenticationException.class);
 
     // when we request the timeline history
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(earliestAppointmentByCreationTime, latestAppointmentByCreationTime),
+        assetInSystemOfRecord
     );
 
     // then the timelineItemViews are sorted by creation date descending
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
+    assertThat(resultingAppointmentTimelineHistoryItems)
         .map(assetTimelineItemView -> assetTimelineItemView.assetTimelineModelProperties().getModelProperties())
         .map(stringObjectMap -> (AppointmentId) stringObjectMap.get("appointmentId"))
         .containsExactly(
@@ -418,9 +269,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenNoPhasesForAppointment_thenEmptyPhaseListInView() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenNoPhasesForAppointment_thenEmptyPhaseListInView() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -429,26 +278,18 @@ class AppointmentTimelineServiceTest {
     given(assetAppointmentPhaseAccessService.getAppointmentPhases(assetInSystemOfRecord))
         .willReturn(Collections.emptyMap());
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
     var appointment = AppointmentDtoTestUtil.builder().build();
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -459,9 +300,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenInstallationAndKnownPhasesForAppointment_thenPopulatedPhaseListInView() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenInstallationAndKnownPhasesForAppointment_thenPopulatedPhaseListInView() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -478,23 +317,16 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -507,9 +339,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenInstallationAndUnknownPhasesForAppointment_thenUnknownPhasesIgnored() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenInstallationAndUnknownPhasesForAppointment_thenUnknownPhasesIgnored() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -532,24 +362,17 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
     // then only the known phase is returned
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -562,9 +385,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenInstallationMultiplePhasesForAppointment_thenOrderByPhaseDisplayOrder() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenInstallationMultiplePhasesForAppointment_thenOrderByPhaseDisplayOrder() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -587,24 +408,17 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
     // then only the known phase is returned
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -622,11 +436,9 @@ class AppointmentTimelineServiceTest {
   // wellbores and subareas use the same well phases so test both scenarios together
   @ParameterizedTest
   @EnumSource(value = PortalAssetType.class, mode = EnumSource.Mode.INCLUDE, names = {"WELLBORE", "SUBAREA"})
-  void getAppointmentHistoryForPortalAsset_whenWellboreAndKnownPhasesForAppointment_thenPopulatedPhaseListInView(
+  void getTimelineItemViews_whenWellboreAndKnownPhasesForAppointment_thenPopulatedPhaseListInView(
       PortalAssetType portalAssetType
   ) {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
@@ -643,23 +455,16 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -673,11 +478,9 @@ class AppointmentTimelineServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = PortalAssetType.class, mode = EnumSource.Mode.INCLUDE, names = {"WELLBORE", "SUBAREA"})
-  void getAppointmentHistoryForPortalAsset_whenWellAndUnknownPhasesForAppointment_thenUnknownPhasesIgnored(
+  void getTimelineItemViews_whenWellAndUnknownPhasesForAppointment_thenUnknownPhasesIgnored(
       PortalAssetType portalAssetType
   ) {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
@@ -700,24 +503,17 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
     // then only the known phase is returned
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -731,11 +527,9 @@ class AppointmentTimelineServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = PortalAssetType.class, mode = EnumSource.Mode.INCLUDE, names = {"WELLBORE", "SUBAREA"})
-  void getAppointmentHistoryForPortalAsset_whenWellMultiplePhasesForAppointment_thenOrderByPhaseDisplayOrder(
+  void getTimelineItemViews_whenWellMultiplePhasesForAppointment_thenOrderByPhaseDisplayOrder(
       PortalAssetType portalAssetType
   ) {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
@@ -758,24 +552,17 @@ class AppointmentTimelineServiceTest {
             )
         );
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointment));
-
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        portalAssetType
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
     );
 
     // then only the known phase is returned
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     @SuppressWarnings("unchecked")
     var phases = (List<AssetAppointmentPhase>) timelineItemView.assetTimelineModelProperties()
@@ -791,9 +578,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenDeemedAppointment_thenCreatedByReferenceIsDeemed() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenDeemedAppointment_thenCreatedByReferenceIsDeemed() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -801,33 +586,24 @@ class AppointmentTimelineServiceTest {
         .withAppointmentType(AppointmentType.DEEMED)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(deemedAppointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(deemedAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", "Deemed appointment");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentFromLegacyNomination_andNoReference_thenCreatedByIsOffline() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenAppointmentFromLegacyNomination_andNoReference_thenCreatedByIsOffline() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -836,33 +612,23 @@ class AppointmentTimelineServiceTest {
         .withLegacyNominationReference(null)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(offlineAppointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(offlineAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
-
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", "Offline nomination");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentFromLegacyNomination_thenCreatedByReferenceIsLegacyReference() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenAppointmentFromLegacyNomination_thenCreatedByReferenceIsLegacyReference() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -871,33 +637,24 @@ class AppointmentTimelineServiceTest {
         .withLegacyNominationReference("legacy nomination reference")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(legacyAppointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(legacyAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", legacyAppointment.legacyNominationReference());
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentFromNomination_thenCreatedByReferenceIsNominationReference() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenAppointmentFromNomination_thenCreatedByReferenceIsNominationReference() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -912,36 +669,27 @@ class AppointmentTimelineServiceTest {
         .withNominationId(nominationDto.nominationId())
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(nominatedAppointment));
-
     given(nominationAccessService.getNomination(nominationDto.nominationId()))
         .willReturn(Optional.of(nominationDto));
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(nominatedAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", nominationDto.nominationReference());
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenAppointmentFromUnknownNomination_thenCreatedByReferenceIsUnknown() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenAppointmentFromUnknownNomination_thenCreatedByReferenceIsUnknown() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -953,36 +701,27 @@ class AppointmentTimelineServiceTest {
         .withNominationId(unknownNominationId)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(unknownNominationAppointment));
-
     given(nominationAccessService.getNomination(unknownNominationId))
         .willReturn(Optional.empty());
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(unknownNominationAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", "Unknown");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenNoNominationId_thenNominationUrlIsNull() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenNoNominationId_thenNominationUrlIsNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -990,33 +729,24 @@ class AppointmentTimelineServiceTest {
         .withNominationId(null)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(noNominationIdAppointment));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(noNominationIdAppointment),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("nominationUrl");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserNotLoggedIn_thenNominationUrlIsNull() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserNotLoggedIn_thenNominationUrlIsNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1024,45 +754,30 @@ class AppointmentTimelineServiceTest {
         .withNominationId(new NominationId(100))
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("nominationUrl");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserLoggedButNoPermissionOnNomination_thenNominationUrlIsNull() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserLoggedButNoPermissionOnNomination_thenNominationUrlIsNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(new NominationId(100))
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
@@ -1075,36 +790,27 @@ class AppointmentTimelineServiceTest {
     )
         .willReturn(false);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("nominationUrl");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndHasPermissionOnNomination_thenNominationUrlIsNotNull() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserLoggedAndHasPermissionOnNomination_thenNominationUrlIsNotNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(new NominationId(100))
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
@@ -1123,15 +829,14 @@ class AppointmentTimelineServiceTest {
     )
         .willReturn(true);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry(
@@ -1142,9 +847,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndHasPermissionToManageAppointments_thenCanManageAppointment() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserLoggedAndHasPermissionToManageAppointments_thenCanManageAppointment() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1152,12 +855,6 @@ class AppointmentTimelineServiceTest {
         .withNominationId(new NominationId(100))
         .withAppointmentToDate(new AppointmentToDate(null))
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
@@ -1176,15 +873,14 @@ class AppointmentTimelineServiceTest {
     ))
         .willReturn(true);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry(
@@ -1200,9 +896,7 @@ class AppointmentTimelineServiceTest {
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndDoesNotHavePermissionToManageAppointments_thenCannotManageAppointment() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserLoggedAndDoesNotHavePermissionToManageAppointments_thenCannotManageAppointment() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1210,12 +904,6 @@ class AppointmentTimelineServiceTest {
         .withNominationId(new NominationId(100))
         .withAppointmentToDate(new AppointmentToDate(LocalDate.now()))
         .build();
-
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
     given(userDetailService.getUserDetail())
@@ -1233,15 +921,14 @@ class AppointmentTimelineServiceTest {
     ))
         .willReturn(false);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("updateUrl")
@@ -1251,7 +938,6 @@ class AppointmentTimelineServiceTest {
   @ParameterizedTest
   @EnumSource(AppointmentType.class)
   void getAppointmentHistoryForPortalAssset_whenUnauthenticated_thenNoDeemedLetter(AppointmentType appointmentType) {
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1260,24 +946,17 @@ class AppointmentTimelineServiceTest {
         .withAppointmentType(appointmentType)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("deemedLetter");
@@ -1285,7 +964,6 @@ class AppointmentTimelineServiceTest {
 
   @Test
   void getAppointmentHistoryForPortalAssset_whenAuthenticated_andDeemed_thenHasDeemedLetter() {
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1294,31 +972,24 @@ class AppointmentTimelineServiceTest {
         .withAppointmentType(AppointmentType.DEEMED)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     given(userDetailService.getUserDetail())
         .willReturn(ServiceUserDetailTestUtil.Builder().build());
 
     given(userDetailService.isUserLoggedIn())
         .willReturn(true);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     var expectedSummaryView = new FileSummaryView(
-      DeemedLetterDownloadController.getAsUploadedFileView(),
-      ReverseRouter.route(on(DeemedLetterDownloadController.class).download())
+        DeemedLetterDownloadController.getAsUploadedFileView(),
+        ReverseRouter.route(on(DeemedLetterDownloadController.class).download())
     );
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
@@ -1330,7 +1001,6 @@ class AppointmentTimelineServiceTest {
   void getAppointmentHistoryForPortalAssset_whenAuthenticated_andNotDeemed_thenNoDeemedLetter(
       AppointmentType appointmentType
   ) {
-    var portalAssetId = new PortalAssetId("something from system of record");
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1339,33 +1009,24 @@ class AppointmentTimelineServiceTest {
         .withAppointmentType(appointmentType)
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     given(userDetailService.getUserDetail())
         .willReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("deemedLetter");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUnauthenticated_thenCannotManageAppointment() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUnauthenticated_thenCannotManageAppointment() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1373,33 +1034,24 @@ class AppointmentTimelineServiceTest {
         .withNominationId(new NominationId(100))
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("updateUrl");
   }
 
   @Test
-  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndIsMemberOfRegulatorTeam() {
-
-    var portalAssetId = new PortalAssetId("something from system of record");
+  void getTimelineItemViews_whenUserLoggedAndIsMemberOfRegulatorTeam() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -1407,14 +1059,7 @@ class AppointmentTimelineServiceTest {
         .withNominationId(new NominationId(100))
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
-        .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(List.of(appointmentDto));
-
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
-
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
@@ -1439,16 +1084,14 @@ class AppointmentTimelineServiceTest {
     given(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(List.of(appointmentDto.appointmentId())))
         .willReturn(List.of(appointmentCorrectionHistoryView));
 
-    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
-        portalAssetId,
-        PortalAssetType.INSTALLATION
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
     );
 
-    assertThat(resultingAppointmentTimelineHistory).isPresent();
-    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
 
-    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
-
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry(
             "corrections",

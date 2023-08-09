@@ -54,7 +54,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -652,12 +652,12 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .build();
 
     var expectedRedirect = switch (portalAssetType) {
-      case INSTALLATION -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderInstallationAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
-      case WELLBORE -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderWellboreAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
-      case SUBAREA -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderSubareaAppointmentTimeline(appointmentDto.assetDto().portalAssetId()));
+      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
     };
 
     mockMvc.perform(post(

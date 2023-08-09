@@ -14,7 +14,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
@@ -30,17 +29,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.Nomi
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
@@ -49,13 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
-class AppointmentTimelineService {
-
-  private final PortalAssetNameService portalAssetNameService;
-
-  private final AssetAccessService assetAccessService;
-
-  private final AppointmentAccessService appointmentAccessService;
+class AppointmentTimelineItemService {
 
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
@@ -72,19 +60,13 @@ class AppointmentTimelineService {
   private final RegulatorTeamService regulatorTeamService;
 
   @Autowired
-  AppointmentTimelineService(PortalAssetNameService portalAssetNameService,
-                             AssetAccessService assetAccessService,
-                             AppointmentAccessService appointmentAccessService,
-                             PortalOrganisationUnitQueryService organisationUnitQueryService,
-                             AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
-                             NominationAccessService nominationAccessService,
-                             UserDetailService userDetailService,
-                             PermissionService permissionService,
-                             AppointmentCorrectionService appointmentCorrectionService,
-                             RegulatorTeamService regulatorTeamService) {
-    this.portalAssetNameService = portalAssetNameService;
-    this.assetAccessService = assetAccessService;
-    this.appointmentAccessService = appointmentAccessService;
+  AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                 AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
+                                 NominationAccessService nominationAccessService,
+                                 UserDetailService userDetailService,
+                                 PermissionService permissionService,
+                                 AppointmentCorrectionService appointmentCorrectionService,
+                                 RegulatorTeamService regulatorTeamService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -94,58 +76,7 @@ class AppointmentTimelineService {
     this.regulatorTeamService = regulatorTeamService;
   }
 
-  Optional<AssetAppointmentHistory> getAppointmentHistoryForPortalAsset(PortalAssetId portalAssetId,
-                                                                        PortalAssetType portalAssetType) {
-
-    Optional<AssetName> energyPortalAssetName = portalAssetNameService.getAssetName(portalAssetId, portalAssetType);
-
-    Optional<AssetDto> assetOptional = assetAccessService.getAsset(portalAssetId);
-
-    if (assetOptional.isEmpty() && energyPortalAssetName.isEmpty()) {
-      return Optional.empty();
-    }
-
-    List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
-    AssetName cachedAssetName = null;
-
-    if (assetOptional.isPresent()) {
-
-      var asset = assetOptional.get();
-
-      List<AppointmentDto> appointments = appointmentAccessService.getAppointmentsForAsset(asset.assetId())
-          .stream()
-          .toList();
-
-      if (!CollectionUtils.isEmpty(appointments)) {
-        timelineItemViews = getTimelineItemViews(appointments, asset);
-      }
-
-      cachedAssetName = asset.assetName();
-    }
-
-    AssetName assetName = energyPortalAssetName.orElse(cachedAssetName);
-
-    return Optional.of(new AssetAppointmentHistory(assetName, timelineItemViews));
-  }
-
-  private Map<AppointedOperatorId, PortalOrganisationDto> getAppointedOperators(List<AppointmentDto> appointments) {
-
-    Set<PortalOrganisationUnitId> appointedOrganisationUnitIds = appointments
-        .stream()
-        .map(
-            appointmentDto -> new PortalOrganisationUnitId(Integer.parseInt(appointmentDto.appointedOperatorId().id())))
-        .collect(Collectors.toSet());
-
-    return organisationUnitQueryService
-        .getOrganisationByIds(appointedOrganisationUnitIds)
-        .stream()
-        .collect(Collectors.toMap(
-            portalOrganisationDto -> new AppointedOperatorId(String.valueOf(portalOrganisationDto.id())),
-            Function.identity()
-        ));
-  }
-
-  private List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
+  public List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
 
     List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
 
@@ -219,6 +150,23 @@ class AppointmentTimelineService {
     return timelineItemViews;
   }
 
+  private Map<AppointedOperatorId, PortalOrganisationDto> getAppointedOperators(List<AppointmentDto> appointments) {
+
+    Set<PortalOrganisationUnitId> appointedOrganisationUnitIds = appointments
+        .stream()
+        .map(
+            appointmentDto -> new PortalOrganisationUnitId(Integer.parseInt(appointmentDto.appointedOperatorId().id())))
+        .collect(Collectors.toSet());
+
+    return organisationUnitQueryService
+        .getOrganisationByIds(appointedOrganisationUnitIds)
+        .stream()
+        .collect(Collectors.toMap(
+            portalOrganisationDto -> new AppointedOperatorId(String.valueOf(portalOrganisationDto.id())),
+            Function.identity()
+        ));
+  }
+
   private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
                                                           String operatorName,
                                                           List<AssetAppointmentPhase> phases,
@@ -270,7 +218,7 @@ class AppointmentTimelineService {
     Optional.ofNullable(getNominationUrl(appointmentDto))
         .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
 
-    var nominationReference =  nominationAccessService
+    var nominationReference = nominationAccessService
         .getNomination(appointmentDto.nominationId())
         .map(NominationDto::nominationReference)
         .orElse("Unknown");

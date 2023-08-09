@@ -18,64 +18,64 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
-@ContextConfiguration(classes = AppointmentTimelineController.class)
-class AppointmentTimelineControllerTest extends AbstractControllerTest {
+@ContextConfiguration(classes = AssetTimelineController.class)
+class AssetTimelineControllerTest extends AbstractControllerTest {
 
   private static final PortalAssetId PORTAL_ASSET_ID = new PortalAssetId("portal-asset-id");
 
   @MockBean
-  private AppointmentTimelineService appointmentTimelineService;
+  private AssetTimelineService assetTimelineService;
 
   @SecurityTest
-  void renderInstallationAppointmentTimeline_verifyUnauthenticated() throws Exception {
+  void renderInstallationTimeline_verifyUnauthenticated() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.INSTALLATION
     ))
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AppointmentTimelineController.class)
-            .renderInstallationAppointmentTimeline(PORTAL_ASSET_ID))
+        get(ReverseRouter.route(on(AssetTimelineController.class)
+            .renderInstallationTimeline(PORTAL_ASSET_ID))
         ))
         .andExpect(status().isOk());
   }
 
   @SecurityTest
-  void renderWellboreAppointmentTimeline_verifyUnauthenticated() throws Exception {
+  void renderWellboreTimeline_verifyUnauthenticated() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.WELLBORE
     ))
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AppointmentTimelineController.class)
-            .renderWellboreAppointmentTimeline(PORTAL_ASSET_ID))
+        get(ReverseRouter.route(on(AssetTimelineController.class)
+            .renderWellboreTimeline(PORTAL_ASSET_ID))
         ))
         .andExpect(status().isOk());
   }
 
   @SecurityTest
-  void renderSubareaAppointmentTimeline_verifyUnauthenticated() throws Exception {
+  void renderSubareaTimeline_verifyUnauthenticated() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.SUBAREA
     ))
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AppointmentTimelineController.class)
-            .renderSubareaAppointmentTimeline(PORTAL_ASSET_ID))
+        get(ReverseRouter.route(on(AssetTimelineController.class)
+            .renderSubareaTimeline(PORTAL_ASSET_ID))
         ))
         .andExpect(status().isOk());
   }
 
   @Test
-  void renderInstallationAppointmentTimeline_verifyModelProperties() throws Exception {
+  void renderInstallationTimeline_verifyModelProperties() throws Exception {
 
     var assetName = "asset name";
 
@@ -86,15 +86,15 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.INSTALLATION
     ))
         .willReturn(Optional.of(assetAppointmentHistory));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderInstallationAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
@@ -108,7 +108,7 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderWellboreAppointmentTimeline_verifyModelProperties() throws Exception {
+  void renderWellboreTimeline_verifyModelProperties() throws Exception {
 
     var assetName = "asset name";
 
@@ -119,15 +119,15 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.WELLBORE
     ))
         .willReturn(Optional.of(assetAppointmentHistory));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderWellboreAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderWellboreTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
@@ -141,7 +141,7 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderSubareaAppointmentTimeline_verifyModelProperties() throws Exception {
+  void renderSubareaTimeline_verifyModelProperties() throws Exception {
 
     var assetName = "asset name";
 
@@ -152,15 +152,15 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.SUBAREA
     ))
         .willReturn(Optional.of(assetAppointmentHistory));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderSubareaAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderSubareaTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/timeline/appointmentTimeline"))
@@ -174,49 +174,49 @@ class AppointmentTimelineControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderInstallationAppointmentTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
+  void renderInstallationTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.INSTALLATION
     ))
         .willReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderInstallationAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isNotFound());
   }
 
   @Test
-  void renderWellboreAppointmentTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
+  void renderWellboreTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.WELLBORE
     ))
         .willReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderWellboreAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderWellboreTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isNotFound());
   }
 
   @Test
-  void renderSubareaAppointmentTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
+  void renderSubareaTimeline_whenNoAssetFound_thenNotFoundResponse() throws Exception {
 
-    given(appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.SUBAREA
     ))
         .willReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(AppointmentTimelineController.class)
-                .renderSubareaAppointmentTimeline(PORTAL_ASSET_ID))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderSubareaTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isNotFound());
   }

@@ -15,33 +15,33 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 @Controller
 @RequestMapping("/system-of-record")
 @Unauthenticated
-public class AppointmentTimelineController {
+public class AssetTimelineController {
 
-  private final AppointmentTimelineService appointmentTimelineService;
+  private final AssetTimelineService assetTimelineService;
 
   @Autowired
-  public AppointmentTimelineController(AppointmentTimelineService appointmentTimelineService) {
-    this.appointmentTimelineService = appointmentTimelineService;
+  public AssetTimelineController(AssetTimelineService assetTimelineService) {
+    this.assetTimelineService = assetTimelineService;
   }
 
   @GetMapping("/installation/{portalAssetId}")
-  public ModelAndView renderInstallationAppointmentTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetAppointmentTimelineModel(portalAssetId, PortalAssetType.INSTALLATION);
+  public ModelAndView renderInstallationTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModel(portalAssetId, PortalAssetType.INSTALLATION);
   }
 
   @GetMapping("/wellbore/{portalAssetId}")
-  public ModelAndView renderWellboreAppointmentTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetAppointmentTimelineModel(portalAssetId, PortalAssetType.WELLBORE);
+  public ModelAndView renderWellboreTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModel(portalAssetId, PortalAssetType.WELLBORE);
   }
 
   @GetMapping("/forward-approval/{portalAssetId}")
-  public ModelAndView renderSubareaAppointmentTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetAppointmentTimelineModel(portalAssetId, PortalAssetType.SUBAREA);
+  public ModelAndView renderSubareaTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModel(portalAssetId, PortalAssetType.SUBAREA);
   }
 
-  private ModelAndView getAssetAppointmentTimelineModel(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+  private ModelAndView getAssetTimelineModel(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
 
-    var assetAppointmentHistory = appointmentTimelineService
+    var assetAppointmentHistory = assetTimelineService
         .getAppointmentHistoryForPortalAsset(portalAssetId, portalAssetType)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,

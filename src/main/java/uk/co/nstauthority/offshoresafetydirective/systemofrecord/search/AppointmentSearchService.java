@@ -33,7 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperat
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 
 @Service
 class AppointmentSearchService {
@@ -423,12 +423,12 @@ class AppointmentSearchService {
   private String getTimelineUrl(PortalAssetId appointedPortalAssetId, PortalAssetType portalAssetType) {
     PortalAssetId portalAssetId = new PortalAssetId(appointedPortalAssetId.id());
     return switch (portalAssetType) {
-      case INSTALLATION -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderInstallationAppointmentTimeline(portalAssetId));
-      case WELLBORE -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderWellboreAppointmentTimeline(portalAssetId));
-      case SUBAREA -> ReverseRouter.route(on(AppointmentTimelineController.class)
-          .renderSubareaAppointmentTimeline(portalAssetId));
+      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderInstallationTimeline(portalAssetId));
+      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderWellboreTimeline(portalAssetId));
+      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderSubareaTimeline(portalAssetId));
     };
   }
 

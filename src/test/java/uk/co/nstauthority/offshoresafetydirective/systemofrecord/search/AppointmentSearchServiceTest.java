@@ -37,7 +37,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentSearchServiceTest {
@@ -140,8 +140,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 installationAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderInstallationAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderInstallationTimeline(
                         new PortalAssetId(String.valueOf(appointedInstallationId.id()))
                     )
                 )
@@ -269,8 +269,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 wellboreAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderWellboreTimeline(
                         new PortalAssetId(String.valueOf(appointedWellboreId.id()))
                     )
                 )
@@ -398,8 +398,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 subareaAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderSubareaAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderSubareaTimeline(
                         new PortalAssetId(appointedSubareaId.id())
                     )
                 )
@@ -825,8 +825,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 installationAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderInstallationAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderInstallationTimeline(
                         new PortalAssetId(String.valueOf(appointedInstallationId.id()))
                     )
                 )
@@ -1046,8 +1046,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 subareaAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderSubareaAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderSubareaTimeline(
                         new PortalAssetId(appointedSubareaId.id())
                     )
                 )
@@ -1404,8 +1404,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 expectedAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderWellboreTimeline(
                         new PortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
                     )
                 )
@@ -1482,8 +1482,8 @@ class AppointmentSearchServiceTest {
                 appointedOperator.name(),
                 AppointmentType.ONLINE_NOMINATION,
                 wellboreAppointment.getAppointmentDate().toLocalDate(),
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderWellboreTimeline(
                         new PortalAssetId(String.valueOf(wellboreWithAppointment.wellboreId().id()))
                     )
                 )
@@ -1494,8 +1494,8 @@ class AppointmentSearchServiceTest {
                 "No wellbore operator",
                 null,
                 null,
-                ReverseRouter.route(on(AppointmentTimelineController.class)
-                    .renderWellboreAppointmentTimeline(
+                ReverseRouter.route(on(AssetTimelineController.class)
+                    .renderWellboreTimeline(
                         new PortalAssetId(String.valueOf(noAppointmentWellbore.wellboreId().id()))
                     )
                 )
