@@ -40,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -48,6 +49,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @ExtendWith(MockitoExtension.class)
@@ -1081,6 +1083,7 @@ class AppointmentTimelineServiceTest {
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(new NominationId(100))
+        .withAppointmentToDate(new AppointmentToDate(null))
         .build();
 
     given(assetAccessService.getAsset(portalAssetId))
@@ -1124,6 +1127,11 @@ class AppointmentTimelineServiceTest {
             "updateUrl",
             ReverseRouter.route(on(AppointmentCorrectionController.class)
                 .renderCorrection(appointmentDto.appointmentId()))
+        )
+        .containsEntry(
+            "terminateUrl",
+            ReverseRouter.route(on(AppointmentTerminationController.class)
+                .renderTermination(appointmentDto.appointmentId()))
         );
   }
 
@@ -1136,6 +1144,7 @@ class AppointmentTimelineServiceTest {
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(new NominationId(100))
+        .withAppointmentToDate(new AppointmentToDate(LocalDate.now()))
         .build();
 
     given(assetAccessService.getAsset(portalAssetId))
@@ -1175,7 +1184,8 @@ class AppointmentTimelineServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
-        .doesNotContainKey("updateUrl");
+        .doesNotContainKey("updateUrl")
+        .doesNotContainKey("terminateUrl");
   }
 
   @ParameterizedTest

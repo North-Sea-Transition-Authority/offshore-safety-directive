@@ -40,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Service
@@ -174,7 +175,7 @@ class AppointmentTimelineService {
   private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
                                                           String operatorName,
                                                           List<AssetAppointmentPhase> phases,
-                                                          boolean canUpdateAppointment) {
+                                                          boolean canManageAppointments) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", appointmentDto.appointmentId())
@@ -189,13 +190,18 @@ class AppointmentTimelineService {
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
-
-    if (canUpdateAppointment) {
+    if (canManageAppointments) {
       modelProperties.addProperty(
           "updateUrl",
           ReverseRouter.route(
               on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
       );
+      if (appointmentDto.appointmentToDate() != null && appointmentDto.appointmentToDate().value() == null) {
+        modelProperties.addProperty(
+            "terminateUrl",
+            ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(appointmentDto.appointmentId()))
+        );
+      }
     }
 
     return new AssetTimelineItemView(

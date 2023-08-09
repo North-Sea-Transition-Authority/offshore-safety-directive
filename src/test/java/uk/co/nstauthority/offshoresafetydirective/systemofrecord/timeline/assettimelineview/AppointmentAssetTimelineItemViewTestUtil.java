@@ -27,7 +27,7 @@ public class AppointmentAssetTimelineItemViewTestUtil {
     private AssetTimelineModelProperties assetTimelineModelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", new AppointmentId(UUID.randomUUID()))
         .addProperty("appointmentFromDate", new AppointmentFromDate(LocalDate.now()))
-        .addProperty("appointmentToDate", null)
+        .addProperty("appointmentToDate", new AppointmentToDate(null))
         .addProperty("phases", List.of(new AssetAppointmentPhase(InstallationPhase.DEVELOPMENT_DESIGN.name())))
         .addProperty("createdByReference", "CREATED/BY/REF/1")
         .addProperty(

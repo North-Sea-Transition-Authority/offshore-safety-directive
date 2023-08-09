@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSu
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
@@ -30,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPort
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
@@ -48,6 +50,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     NominationInterceptor.class,
     HasPermissionInterceptor.class,
     UpdateRequestInterceptor.class,
+    IsCurrentAppointmentInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
 })
@@ -77,6 +80,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected CaseEventQueryService caseEventQueryService;
+
+  @MockBean
+  protected AppointmentAccessService appointmentAccessService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

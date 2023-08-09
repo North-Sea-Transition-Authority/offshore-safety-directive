@@ -46,7 +46,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
@@ -70,9 +69,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
       .build();
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
-  @MockBean
-  private AppointmentAccessService appointmentAccessService;
 
   @MockBean
   private PortalAssetNameService portalAssetNameService;
