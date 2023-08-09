@@ -1,0 +1,10 @@
+// Preserve whitespace
+@mixin preserve-whitespace {
+  white-space: pre-line;
+}
+
+.govuk-body {
+  &__preserve-whitespace {
+    @include preserve-whitespace;
+  }
+}

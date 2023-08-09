@@ -133,4 +133,22 @@ class RegulatorTeamServiceTest {
 
     verify(teamMemberRoleService, times(1)).addUserTeamRoles(team, userToAdd, rolesAsStrings);
   }
+
+  @Test
+  void isMemberOfRegulatorTeam_whenIsMember() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)).thenReturn(List.of(
+        TeamTestUtil.Builder().build()
+    ));
+    var result = regulatorTeamService.isMemberOfRegulatorTeam(user);
+    assertTrue(result);
+  }
+
+  @Test
+  void isMemberOfRegulatorTeam_whenIsNotMember() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.REGULATOR)).thenReturn(List.of());
+    var result = regulatorTeamService.isMemberOfRegulatorTeam(user);
+    assertFalse(result);
+  }
 }

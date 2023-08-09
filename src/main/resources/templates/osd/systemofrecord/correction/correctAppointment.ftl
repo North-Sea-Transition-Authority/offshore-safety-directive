@@ -1,4 +1,5 @@
 <#include '../../layout/layout.ftl'>
+<#import 'correctionHistoryTimeline.ftl' as correctionHistoryTimeline>
 
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
@@ -9,6 +10,7 @@
 <#-- @ftlvariable name="phaseSelectionHint" type="String" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
+<#-- @ftlvariable name="correctionHistoryViews" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView>" -->
 
 <@defaultPage
     pageHeading="Update appointment"
@@ -133,6 +135,10 @@
                 <li>If information provided does not align with an associated nomination or forward approval clearly state why</li>
                 <li>Include information from the current correction reason, if one exists, that is still relevant to the information shown on the appointment</li>
             </ul>
+        </@fdsDetails.summaryDetails>
+
+        <@fdsDetails.summaryDetails summaryTitle="View correction history">
+            <@correctionHistoryTimeline.correctionHistory correctionHistoryViews=correctionHistoryViews />
         </@fdsDetails.summaryDetails>
 
         <@fdsAction.submitButtons

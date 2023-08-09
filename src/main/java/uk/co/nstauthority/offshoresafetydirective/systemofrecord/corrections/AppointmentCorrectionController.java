@@ -130,6 +130,7 @@ public class AppointmentCorrectionController {
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var assetDto = appointmentDto.assetDto();
     var assetName = getAssetName(assetDto);
+    var correctionHistoryViews = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
 
     var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
 
@@ -144,6 +145,7 @@ public class AppointmentCorrectionController {
         .addObject("preselectedOperator", getPreselectedOperator(form))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .addObject("appointmentTypes", appointmentTypes)
+        .addObject("correctionHistoryViews", correctionHistoryViews)
         .addObject("form", form)
         .addObject(
             "nominationReferenceRestUrl",

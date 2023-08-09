@@ -1,8 +1,10 @@
 <#include '../../../util/url.ftl'>
 <#import '../../../../fds/components/dataItems/dataItems.ftl' as fdsDataItems>
+<#import '../../../../fds/components/details/details.ftl' as fdsDetails>
 <#import '../../../../fds/components/timeline/timeline.ftl' as fdsTimeline>
 <#import '../../../../fds/components/button/button.ftl' as fdsAction>
 <#import '../../../nomination/files/fileSummary.ftl' as fileSummary>
+<#import '../../correction/correctionHistoryTimeline.ftl' as correctionHistoryTimeline>
 
 <#-- @ftlvariable name="item" type="uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineItemView" -->
 
@@ -32,6 +34,11 @@
                 </#if>
                 <@fdsDataItems.dataValues key="" value=""/>
             </@fdsDataItems.dataItem>
+            <#if modelProperties["corrections"]?has_content>
+                <@fdsDetails.summaryDetails summaryTitle="View correction history">
+                    <@correctionHistoryTimeline.correctionHistory correctionHistoryViews=modelProperties["corrections"] />
+                </@fdsDetails.summaryDetails>
+            </#if>
         </@fdsTimeline.timelineEvent>
     </@fdsTimeline.timelineTimeStamp>
 </#macro>
@@ -83,7 +90,7 @@
 <#function _timelineActions modelProperties>
     <#assign display>
         <#if modelProperties["updateUrl"]?has_content>
-            <@fdsAction.link linkText="Update appointment" linkUrl=springUrl(modelProperties["updateUrl"])/>
+            <@fdsAction.link linkText="Update appointment" linkUrl=springUrl(modelProperties["updateUrl"]) linkClass="govuk-link govuk-link--no-visited-state"/>
         </#if>
         <#if modelProperties["terminateUrl"]?has_content>
             <@fdsAction.link linkText="Terminate appointment" linkUrl=springUrl(modelProperties["terminateUrl"])/>

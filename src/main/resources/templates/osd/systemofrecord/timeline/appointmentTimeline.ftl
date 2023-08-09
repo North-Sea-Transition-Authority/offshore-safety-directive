@@ -21,9 +21,9 @@
   <#if timelineItemViews?has_content>
     <@fdsTimeline.timeline>
       <@fdsTimeline.timelineSection>
-          <#list timelineItemViews as timelineItemView>
-              <@_timelineItem.timelineItem timelineItemView/>
-          </#list>
+        <#list timelineItemViews as timelineItemView>
+          <@_timelineItem.timelineItem timelineItemView/>
+        </#list>
       </@fdsTimeline.timelineSection>
     </@fdsTimeline.timeline>
   <#else>

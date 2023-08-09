@@ -10,14 +10,17 @@ import static uk.co.nstauthority.offshoresafetydirective.systemofrecord.correcti
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.ZoneId;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,12 +30,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
@@ -55,6 +62,7 @@ class AppointmentCorrectionServiceTest {
   private UserDetailService userDetailService;
   private AppointmentCorrectionRepository appointmentCorrectionRepository;
   private AppointmentCorrectionService appointmentCorrectionService;
+  private EnergyPortalUserService energyPortalUserService;
 
   @BeforeEach
   void setUp() {
@@ -64,13 +72,15 @@ class AppointmentCorrectionServiceTest {
     clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
     userDetailService = mock(UserDetailService.class);
     appointmentCorrectionRepository = mock(AppointmentCorrectionRepository.class);
+    energyPortalUserService = mock(EnergyPortalUserService.class);
     appointmentCorrectionService = new AppointmentCorrectionService(
         appointmentUpdateService,
         assetAppointmentPhaseAccessService,
         assetPhasePersistenceService,
         clock,
         userDetailService,
-        appointmentCorrectionRepository
+        appointmentCorrectionRepository,
+        energyPortalUserService
     );
   }
 
@@ -860,6 +870,162 @@ class AppointmentCorrectionServiceTest {
             Map.entry(
                 WellPhase.DECOMMISSIONING.name(),
                 WellPhase.DECOMMISSIONING.getScreenDisplayText())
+        );
+  }
+
+  @Test
+  void getAppointmentCorrectionHistoryViews() {
+    var appointment = AppointmentTestUtil.builder().build();
+
+    var firstCorrectionInstant = Instant.now().minus(Period.ofDays(1));
+    var firstCorrectionCreatedBy = new WebUserAccountId(200L);
+    var firstCorrectionReason = "first reason";
+    var firstUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(firstCorrectionCreatedBy.id())
+        .withForename("first")
+        .build();
+
+    var secondCorrectionInstant = Instant.now();
+    var secondCorrectionCreatedBy = new WebUserAccountId(400L);
+    var secondCorrectionReason = "second reason";
+    var secondUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(secondCorrectionCreatedBy.id())
+        .withForename("second")
+        .build();
+
+    var firstCorrection = AppointmentCorrectionTestUtil.builder()
+        .withCreatedTimestamp(firstCorrectionInstant)
+        .withCorrectedByWuaId(firstCorrectionCreatedBy.id())
+        .withReasonForCorrection(firstCorrectionReason)
+        .build();
+    var secondCorrection = AppointmentCorrectionTestUtil.builder()
+        .withCreatedTimestamp(secondCorrectionInstant)
+        .withCorrectedByWuaId(secondCorrectionCreatedBy.id())
+        .withReasonForCorrection(secondCorrectionReason)
+        .build();
+
+    when(appointmentCorrectionRepository.findAllByAppointment(appointment))
+        .thenReturn(List.of(firstCorrection, secondCorrection));
+
+    when(energyPortalUserService.findByWuaIds(Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy)))
+        .thenReturn(List.of(firstUser, secondUser));
+
+    var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
+
+    assertThat(result)
+        .extracting(
+            AppointmentCorrectionHistoryView::createdInstant,
+            AppointmentCorrectionHistoryView::createdBy,
+            AppointmentCorrectionHistoryView::reason
+        )
+        .containsExactly(
+            Tuple.tuple(
+                secondCorrectionInstant,
+                secondUser.displayName(),
+                secondCorrectionReason
+            ),
+            Tuple.tuple(
+                firstCorrectionInstant,
+                firstUser.displayName(),
+                firstCorrectionReason
+            )
+        );
+  }
+
+  @Test
+  void getAppointmentCorrectionHistoryViews_whenUserIsUnknown_thenAssertUserDisplayName() {
+    var appointment = AppointmentTestUtil.builder().build();
+
+    var correctionInstant = Instant.now().minus(Period.ofDays(1));
+    var correctionCreatedBy = new WebUserAccountId(200L);
+    var correctionReason = "reason";
+
+    var correction = AppointmentCorrectionTestUtil.builder()
+        .withCreatedTimestamp(correctionInstant)
+        .withCorrectedByWuaId(correctionCreatedBy.id())
+        .withReasonForCorrection(correctionReason)
+        .build();
+
+    when(appointmentCorrectionRepository.findAllByAppointment(appointment))
+        .thenReturn(List.of(correction));
+
+    when(energyPortalUserService.findByWuaIds(Set.of(correctionCreatedBy)))
+        .thenReturn(List.of());
+
+    var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
+
+    assertThat(result)
+        .extracting(
+            AppointmentCorrectionHistoryView::createdInstant,
+            AppointmentCorrectionHistoryView::createdBy,
+            AppointmentCorrectionHistoryView::reason
+        )
+        .containsExactly(
+            Tuple.tuple(
+                correctionInstant,
+                "Unknown user",
+                correctionReason
+            )
+        );
+  }
+
+  @Test
+  void getAppointmentCorrectionHistoryViews_whenCalledWithAppointmentId() {
+
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var firstCorrectionInstant = Instant.now().minus(Period.ofDays(1));
+    var firstCorrectionCreatedBy = new WebUserAccountId(200L);
+    var firstCorrectionReason = "first reason";
+    var firstUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(firstCorrectionCreatedBy.id())
+        .withForename("first")
+        .build();
+
+    var secondCorrectionInstant = Instant.now();
+    var secondCorrectionCreatedBy = new WebUserAccountId(400L);
+    var secondCorrectionReason = "second reason";
+    var secondUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(secondCorrectionCreatedBy.id())
+        .withForename("second")
+        .build();
+
+    var firstCorrection = AppointmentCorrectionTestUtil.builder()
+        .withCreatedTimestamp(firstCorrectionInstant)
+        .withCorrectedByWuaId(firstCorrectionCreatedBy.id())
+        .withReasonForCorrection(firstCorrectionReason)
+        .build();
+    var secondCorrection = AppointmentCorrectionTestUtil.builder()
+        .withCreatedTimestamp(secondCorrectionInstant)
+        .withCorrectedByWuaId(secondCorrectionCreatedBy.id())
+        .withReasonForCorrection(secondCorrectionReason)
+        .build();
+
+    when(appointmentCorrectionRepository.findAllByAppointment_IdIn(List.of(appointmentId.id())))
+        .thenReturn(List.of(firstCorrection, secondCorrection));
+
+    when(energyPortalUserService.findByWuaIds(Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy)))
+        .thenReturn(List.of(firstUser, secondUser));
+
+    var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(List.of(appointmentId));
+
+    assertThat(result)
+        .extracting(
+            AppointmentCorrectionHistoryView::createdInstant,
+            AppointmentCorrectionHistoryView::createdBy,
+            AppointmentCorrectionHistoryView::reason
+        )
+        .containsExactly(
+            Tuple.tuple(
+                secondCorrectionInstant,
+                secondUser.displayName(),
+                secondCorrectionReason
+            ),
+            Tuple.tuple(
+                firstCorrectionInstant,
+                firstUser.displayName(),
+                firstCorrectionReason
+            )
         );
   }
 }

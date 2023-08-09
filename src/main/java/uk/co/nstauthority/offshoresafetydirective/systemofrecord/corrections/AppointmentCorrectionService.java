@@ -2,10 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -14,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
@@ -21,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperat
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
@@ -31,7 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersi
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
-class AppointmentCorrectionService {
+public class AppointmentCorrectionService {
 
   private final AppointmentUpdateService appointmentUpdateService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
@@ -39,6 +47,7 @@ class AppointmentCorrectionService {
   private final Clock clock;
   private final UserDetailService userDetailService;
   private final AppointmentCorrectionRepository appointmentCorrectionRepository;
+  private final EnergyPortalUserService energyPortalUserService;
 
 
   @Autowired
@@ -46,13 +55,15 @@ class AppointmentCorrectionService {
                                AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                AssetPhasePersistenceService assetPhasePersistenceService, Clock clock,
                                UserDetailService userDetailService,
-                               AppointmentCorrectionRepository appointmentCorrectionRepository) {
+                               AppointmentCorrectionRepository appointmentCorrectionRepository,
+                               EnergyPortalUserService energyPortalUserService) {
     this.appointmentUpdateService = appointmentUpdateService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
     this.clock = clock;
     this.userDetailService = userDetailService;
     this.appointmentCorrectionRepository = appointmentCorrectionRepository;
+    this.energyPortalUserService = energyPortalUserService;
   }
 
   AppointmentCorrectionForm getForm(Appointment appointment) {
@@ -183,6 +194,49 @@ class AppointmentCorrectionService {
     saveCorrectionReason(appointment, appointmentCorrectionForm.getReason().getInputValue());
     appointmentUpdateService.updateAppointment(updateDto);
     assetPhasePersistenceService.updateAssetPhases(appointmentDto, phases);
+  }
+
+  public List<AppointmentCorrectionHistoryView> getAppointmentCorrectionHistoryViews(Appointment appointment) {
+    List<AppointmentCorrection> corrections = appointmentCorrectionRepository.findAllByAppointment(appointment);
+    return convertToAppointmentCorrectionHistoryViews(corrections);
+  }
+
+  public List<AppointmentCorrectionHistoryView> getAppointmentCorrectionHistoryViews(
+      Collection<AppointmentId> appointmentIds
+  ) {
+
+    List<UUID> appointmentIdValues = appointmentIds
+        .stream()
+        .map(AppointmentId::id)
+        .toList();
+
+    List<AppointmentCorrection> corrections = appointmentCorrectionRepository.findAllByAppointment_IdIn(appointmentIdValues);
+
+    return convertToAppointmentCorrectionHistoryViews(corrections);
+  }
+
+  private List<AppointmentCorrectionHistoryView> convertToAppointmentCorrectionHistoryViews(
+      Collection<AppointmentCorrection> corrections
+  ) {
+
+    var wuaIds = corrections.stream()
+        .map(AppointmentCorrection::getCorrectedByWuaId)
+        .map(WebUserAccountId::new)
+        .collect(Collectors.toSet());
+
+    Map<Long, EnergyPortalUserDto> userIdAndUserMap = energyPortalUserService.findByWuaIds(wuaIds)
+        .stream()
+        .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
+
+    return corrections.stream()
+        .map(appointmentCorrection -> AppointmentCorrectionHistoryView.fromAppointmentCorrection(
+            appointmentCorrection,
+            userIdAndUserMap.containsKey(appointmentCorrection.getCorrectedByWuaId())
+                ? userIdAndUserMap.get(appointmentCorrection.getCorrectedByWuaId()).displayName()
+                : "Unknown user"
+        ))
+        .sorted(Comparator.comparing(AppointmentCorrectionHistoryView::createdInstant).reversed())
+        .toList();
   }
 
   private Optional<LocalDate> getStartDateFromForm(AppointmentCorrectionForm form) {

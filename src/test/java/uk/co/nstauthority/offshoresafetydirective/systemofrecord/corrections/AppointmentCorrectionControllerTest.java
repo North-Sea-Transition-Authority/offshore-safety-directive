@@ -289,6 +289,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .thenReturn(phaseMap);
 
+    var correctionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder().build();
+    when(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment))
+        .thenReturn(List.of(correctionHistoryView));
+
     var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -312,6 +316,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
+        .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
         .andExpect(model().attributeDoesNotExist("phaseSelectionHint"))
         .andReturn()
         .getModelAndView();
@@ -370,6 +375,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .thenReturn(phaseMap);
 
+    var correctionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder().build();
+    when(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment))
+        .thenReturn(List.of(correctionHistoryView));
+
     var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -393,6 +402,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
+        .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
         .andExpect(
             model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."))
         .andReturn()

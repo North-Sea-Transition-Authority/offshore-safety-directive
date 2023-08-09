@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
@@ -40,8 +42,11 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 class AppointmentTimelineService {
@@ -62,6 +67,10 @@ class AppointmentTimelineService {
 
   private final PermissionService permissionService;
 
+  private final AppointmentCorrectionService appointmentCorrectionService;
+
+  private final RegulatorTeamService regulatorTeamService;
+
   @Autowired
   AppointmentTimelineService(PortalAssetNameService portalAssetNameService,
                              AssetAccessService assetAccessService,
@@ -70,7 +79,9 @@ class AppointmentTimelineService {
                              AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                              NominationAccessService nominationAccessService,
                              UserDetailService userDetailService,
-                             PermissionService permissionService) {
+                             PermissionService permissionService,
+                             AppointmentCorrectionService appointmentCorrectionService,
+                             RegulatorTeamService regulatorTeamService) {
     this.portalAssetNameService = portalAssetNameService;
     this.assetAccessService = assetAccessService;
     this.appointmentAccessService = appointmentAccessService;
@@ -79,6 +90,8 @@ class AppointmentTimelineService {
     this.nominationAccessService = nominationAccessService;
     this.userDetailService = userDetailService;
     this.permissionService = permissionService;
+    this.appointmentCorrectionService = appointmentCorrectionService;
+    this.regulatorTeamService = regulatorTeamService;
   }
 
   Optional<AssetAppointmentHistory> getAppointmentHistoryForPortalAsset(PortalAssetId portalAssetId,
@@ -141,33 +154,67 @@ class AppointmentTimelineService {
     Map<AppointmentId, List<AssetAppointmentPhase>> appointmentPhases = assetAppointmentPhaseAccessService
         .getAppointmentPhases(assetDto);
 
-    var canUpdateAppointments = userDetailService.isUserLoggedIn()
-        && permissionService.hasPermission(
-        userDetailService.getUserDetail(),
-        Set.of(RolePermission.MANAGE_APPOINTMENTS)
-    );
+    Optional<ServiceUserDetail> loggedInUser;
 
-    appointments
+    try {
+      loggedInUser = Optional.of(userDetailService.getUserDetail());
+    } catch (InvalidAuthenticationException exception) {
+      loggedInUser = Optional.empty();
+    }
+
+    var canUpdateAppointments = false;
+    var isMemberOfRegulatorTeam = false;
+
+    Map<AppointmentId, List<AppointmentCorrectionHistoryView>> appointmentCorrectionMap = new HashMap<>();
+
+    if (loggedInUser.isPresent()) {
+
+      canUpdateAppointments = permissionService.hasPermission(
+          loggedInUser.get(),
+          Set.of(RolePermission.MANAGE_APPOINTMENTS)
+      );
+
+      isMemberOfRegulatorTeam = regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser.get());
+
+      if (isMemberOfRegulatorTeam) {
+
+        var appointmentIds = appointments.stream().map(AppointmentDto::appointmentId).toList();
+
+        appointmentCorrectionMap = appointmentCorrectionService
+            .getAppointmentCorrectionHistoryViews(appointmentIds)
+            .stream()
+            .collect(Collectors.groupingBy(AppointmentCorrectionHistoryView::appointmentId, Collectors.toList()));
+      }
+    }
+
+    appointments = appointments
         .stream()
         .sorted(
             Comparator.comparing(appointment -> ((AppointmentDto) appointment).appointmentFromDate().value())
                 .thenComparing(appointment -> ((AppointmentDto) appointment).appointmentCreatedDate())
                 .reversed()
         )
-        .forEach(appointment -> {
+        .toList();
 
-          var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
-              .map(PortalOrganisationDto::name)
-              .orElse("Unknown operator");
+    for (AppointmentDto appointment: appointments) {
 
-          var phases = Optional.ofNullable(appointmentPhases.get(appointment.appointmentId()))
-              .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
-              .orElse(Collections.emptyList());
+      var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
+          .map(PortalOrganisationDto::name)
+          .orElse("Unknown operator");
 
-          var appointmentView = convertToTimelineItemView(appointment, operatorName, phases, canUpdateAppointments);
+      var phases = Optional.ofNullable(appointmentPhases.get(appointment.appointmentId()))
+          .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
+          .orElse(Collections.emptyList());
 
-          timelineItemViews.add(appointmentView);
-        });
+      var corrections = Optional.ofNullable(appointmentCorrectionMap.getOrDefault(appointment.appointmentId(), null))
+          .orElse(Collections.emptyList());
+
+      var appointmentView = convertToTimelineItemView(
+          appointment, operatorName, phases, canUpdateAppointments, corrections, isMemberOfRegulatorTeam
+      );
+
+      timelineItemViews.add(appointmentView);
+    }
 
     return timelineItemViews;
   }
@@ -175,7 +222,9 @@ class AppointmentTimelineService {
   private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
                                                           String operatorName,
                                                           List<AssetAppointmentPhase> phases,
-                                                          boolean canManageAppointments) {
+                                                          boolean canManageAppointments,
+                                                          List<AppointmentCorrectionHistoryView> corrections,
+                                                          boolean isRegulator) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", appointmentDto.appointmentId())
@@ -183,6 +232,10 @@ class AppointmentTimelineService {
         .addProperty("appointmentToDate", appointmentDto.appointmentToDate())
         .addProperty("phases", phases)
         .addProperty("assetDto", appointmentDto.assetDto());
+
+    if (isRegulator) {
+      modelProperties.addProperty("corrections", corrections);
+    }
 
     switch (appointmentDto.appointmentType()) {
       case ONLINE_NOMINATION -> addOnlineNominationModelProperties(modelProperties, appointmentDto);

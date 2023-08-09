@@ -49,8 +49,11 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentTimelineServiceTest {
@@ -78,6 +81,12 @@ class AppointmentTimelineServiceTest {
 
   @Mock
   private NominationAccessService nominationAccessService;
+
+  @Mock
+  private RegulatorTeamService regulatorTeamService;
+
+  @Mock
+  private AppointmentCorrectionService appointmentCorrectionService;
 
   @InjectMocks
   private AppointmentTimelineService appointmentTimelineService;
@@ -208,6 +217,10 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(expectedAppointment));
 
+    // Treat user as not logged in to skip overhead in code we don't need to check
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     // when we request the timeline history
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -266,6 +279,9 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(expectedAppointment));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     // when we request the timeline history
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -319,6 +335,9 @@ class AppointmentTimelineServiceTest {
 
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     // when we request the timeline history
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
@@ -378,6 +397,9 @@ class AppointmentTimelineServiceTest {
     given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     // when we request the timeline history
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -414,6 +436,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -458,6 +483,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -509,6 +537,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -562,6 +593,9 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -614,6 +648,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -669,6 +706,9 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         portalAssetType
@@ -721,6 +761,9 @@ class AppointmentTimelineServiceTest {
     given(assetAccessService.getAsset(portalAssetId))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointment));
 
@@ -764,6 +807,9 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(deemedAppointment));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -796,6 +842,9 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(offlineAppointment));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -827,6 +876,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(legacyAppointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -869,6 +921,9 @@ class AppointmentTimelineServiceTest {
     given(nominationAccessService.getNomination(nominationDto.nominationId()))
         .willReturn(Optional.of(nominationDto));
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -907,6 +962,9 @@ class AppointmentTimelineServiceTest {
     given(nominationAccessService.getNomination(unknownNominationId))
         .willReturn(Optional.empty());
 
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
+
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -937,6 +995,9 @@ class AppointmentTimelineServiceTest {
 
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(noNominationIdAppointment));
+
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -1010,7 +1071,7 @@ class AppointmentTimelineServiceTest {
 
     given(permissionService.hasPermission(
         loggedInUser,
-        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+        Set.of(RolePermission.MANAGE_APPOINTMENTS))
     )
         .willReturn(false);
 
@@ -1049,6 +1110,12 @@ class AppointmentTimelineServiceTest {
 
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.MANAGE_APPOINTMENTS))
+    )
+        .willReturn(false);
 
     given(permissionService.hasPermission(
         loggedInUser,
@@ -1096,9 +1163,6 @@ class AppointmentTimelineServiceTest {
 
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
-
-    given(userDetailService.isUserLoggedIn())
-        .willReturn(true);
 
     given(permissionService.hasPermission(
         loggedInUser,
@@ -1154,12 +1218,8 @@ class AppointmentTimelineServiceTest {
         .willReturn(List.of(appointmentDto));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
-
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
-
-    given(userDetailService.isUserLoggedIn())
-        .willReturn(true);
 
     given(permissionService.hasPermission(
         loggedInUser,
@@ -1206,8 +1266,8 @@ class AppointmentTimelineServiceTest {
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(appointmentDto));
 
-    given(userDetailService.isUserLoggedIn())
-        .willReturn(false);
+    given(userDetailService.getUserDetail())
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -1288,9 +1348,6 @@ class AppointmentTimelineServiceTest {
     given(userDetailService.getUserDetail())
         .willReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    given(userDetailService.isUserLoggedIn())
-        .willReturn(true);
-
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
         PortalAssetType.INSTALLATION
@@ -1323,10 +1380,7 @@ class AppointmentTimelineServiceTest {
         .willReturn(List.of(appointmentDto));
 
     given(userDetailService.getUserDetail())
-        .willReturn(null);
-
-    given(userDetailService.isUserLoggedIn())
-        .willReturn(false);
+        .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,
@@ -1340,5 +1394,65 @@ class AppointmentTimelineServiceTest {
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .doesNotContainKey("updateUrl");
+  }
+
+  @Test
+  void getAppointmentHistoryForPortalAsset_whenUserLoggedAndIsMemberOfRegulatorTeam() {
+
+    var portalAssetId = new PortalAssetId("something from system of record");
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(new NominationId(100))
+        .build();
+
+    given(assetAccessService.getAsset(portalAssetId))
+        .willReturn(Optional.of(assetInSystemOfRecord));
+
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+        .willReturn(List.of(appointmentDto));
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.MANAGE_APPOINTMENTS))
+    )
+        .willReturn(false);
+
+    given(permissionService.hasPermission(
+        loggedInUser,
+        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
+    )
+        .willReturn(true);
+
+    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser))
+        .willReturn(true);
+
+    var appointmentCorrectionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder()
+        .withAppointmentId(appointmentDto.appointmentId())
+        .build();
+    given(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(List.of(appointmentDto.appointmentId())))
+        .willReturn(List.of(appointmentCorrectionHistoryView));
+
+    var resultingAppointmentTimelineHistory = appointmentTimelineService.getAppointmentHistoryForPortalAsset(
+        portalAssetId,
+        PortalAssetType.INSTALLATION
+    );
+
+    assertThat(resultingAppointmentTimelineHistory).isPresent();
+    assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews()).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistory.get().timelineItemViews().get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry(
+            "corrections",
+            List.of(appointmentCorrectionHistoryView)
+        );
   }
 }

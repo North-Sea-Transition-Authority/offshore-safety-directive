@@ -37,6 +37,10 @@ public class RegulatorTeamService {
         .findFirst();
   }
 
+  public boolean isMemberOfRegulatorTeam(ServiceUserDetail user) {
+    return getRegulatorTeamForUser(user).isPresent();
+  }
+
   Optional<Team> getTeam(TeamId teamId) {
     return teamService.getTeam(teamId, TeamType.REGULATOR);
   }
