@@ -14,6 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenti
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -23,15 +24,19 @@ public class DefaultModelAttributeService {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
 
+  private final WonsContactConfigurationProperties wonsContactConfigurationProperties;
+
   private final UserDetailService userDetailService;
 
   private final TopNavigationService topNavigationService;
 
   @Autowired
   public DefaultModelAttributeService(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
+                                      WonsContactConfigurationProperties wonsContactConfigurationProperties,
                                       UserDetailService userDetailService,
                                       TopNavigationService topNavigationService) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
+    this.wonsContactConfigurationProperties = wonsContactConfigurationProperties;
     this.userDetailService = userDetailService;
     this.topNavigationService = topNavigationService;
   }
@@ -50,6 +55,8 @@ public class DefaultModelAttributeService {
     attributes.put("footerItems", List.of(
         new FooterItem(AccessibilityStatementController.PAGE_NAME,
             ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))));
+    attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
+
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 

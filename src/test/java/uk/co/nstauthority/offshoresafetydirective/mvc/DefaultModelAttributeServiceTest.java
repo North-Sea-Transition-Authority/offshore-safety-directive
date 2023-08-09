@@ -17,6 +17,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
@@ -26,6 +28,11 @@ class DefaultModelAttributeServiceTest {
 
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties =
       ServiceBrandingConfigurationPropertiesTestUtil
+          .builder()
+          .build();
+
+  private final WonsContactConfigurationProperties wonsContactConfigurationProperties =
+      WonsContactConfigurationPropertiesTestUtil
           .builder()
           .build();
 
@@ -41,6 +48,7 @@ class DefaultModelAttributeServiceTest {
     topNavigationService = mock(TopNavigationService.class);
     defaultModelAttributeService = new DefaultModelAttributeService(
         serviceBrandingConfigurationProperties,
+        wonsContactConfigurationProperties,
         userDetailService,
         topNavigationService
     );
@@ -74,7 +82,8 @@ class DefaultModelAttributeServiceTest {
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
-                )
+                ),
+                "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
   }
@@ -104,7 +113,8 @@ class DefaultModelAttributeServiceTest {
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
-                )
+                ),
+                "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
   }
@@ -141,7 +151,8 @@ class DefaultModelAttributeServiceTest {
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
-                )
+                ),
+                "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
   }
@@ -175,7 +186,8 @@ class DefaultModelAttributeServiceTest {
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
-                )
+                ),
+                "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
   }
@@ -210,7 +222,8 @@ class DefaultModelAttributeServiceTest {
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
-                )
+                ),
+                "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
   }

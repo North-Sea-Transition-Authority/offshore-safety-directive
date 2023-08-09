@@ -36,7 +36,7 @@
           </@fdsDetails.summaryDetails>
       </#if>
 
-      <@nominationSummary.nominationSummary summaryView=summaryView />
+      <@nominationSummary.nominationSummary summaryView=summaryView/>
 
       <#if isSubmittable>
         <@fdsAction.submitButtons

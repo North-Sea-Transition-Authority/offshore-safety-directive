@@ -41,6 +41,7 @@ public class ManageWellsController {
   private final NominationDetailService nominationDetailService;
   private final ManageWellsService manageWellsService;
 
+
   @Autowired
   public ManageWellsController(NominationDetailService nominationDetailService,
                                ManageWellsService manageWellsService) {
@@ -55,6 +56,9 @@ public class ManageWellsController {
   }
 
   private ModelAndView getWellManagementModelAndView(NominationId nominationId, NominationDetail nominationDetail) {
+    var nominatedWellDetailView = manageWellsService.getNominatedWellDetailView(nominationDetail)
+        .orElse(new NominatedWellDetailView());
+
     var modelAndView = new ModelAndView("osd/nomination/well/managewells/wellManagement")
         .addObject("pageTitle", PAGE_TITLE)
         .addObject(
@@ -70,9 +74,7 @@ public class ManageWellsController {
             ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId))
         )
         .addObject(
-            "nominatedWellDetailView",
-            manageWellsService.getNominatedWellDetailView(nominationDetail)
-                .orElse(new NominatedWellDetailView())
+            "nominatedWellDetailView", nominatedWellDetailView
         )
         .addObject(
             "saveAndContinueUrl",

@@ -2,7 +2,7 @@
 <#import '_nominatedWellDetailSummary.ftl' as nominatedWellDetailSummary>
 <#import '_licenceBlockSubareaSummary.ftl' as licenceBlockSubareaSummary>
 <#import '_excludedWellSummary.ftl' as excludedWellSummary>
-<#import '_nominatedSubareaWellsSummary.ftl' as nominatedSubareaWellsSummary>
+<#import '_nominatedWellListSummary.ftl' as nominatedWellListSummary>
 
 <#-- @ftlvariable name="wellSelectionSetupView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupView" -->
 <#-- @ftlvariable name="nominatedWellDetailView" type="uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView" -->
@@ -13,6 +13,7 @@
   wellSelectionSetupView
   nominatedWellDetailView
   nominatedBlockSubareaDetailView
+  nominatedWellView
   excludedWellView
   nominatedSubareaWellsView
   wellSelectionSetupChangeUrl=""
@@ -32,6 +33,10 @@
       nominatedWellDetailView=nominatedWellDetailView
       changeUrl=nominatedWellDetailViewChangeUrl
     />
+    <@nominatedWellListSummary.nominatedWellListSummary
+      nominatedWellsView=nominatedWellView
+      wellSelectionType=wellSelectionSetupView.wellSelectionType
+    />
   </#if>
 
   <#if wellSelectionSetupView.wellSelectionType?has_content
@@ -46,8 +51,9 @@
         excludedWellView=excludedWellView
         changeUrl=excludedWellChangeUrl
       />
-      <@nominatedSubareaWellsSummary.nominatedSubareaWellsSummary
-        nominatedSubareaWellsView=nominatedSubareaWellsView
+      <@nominatedWellListSummary.nominatedWellListSummary
+        nominatedWellsView=nominatedSubareaWellsView.nominatedSubareaWellbores()
+        wellSelectionType=wellSelectionSetupView.wellSelectionType
       />
     </#if>
   </#if>

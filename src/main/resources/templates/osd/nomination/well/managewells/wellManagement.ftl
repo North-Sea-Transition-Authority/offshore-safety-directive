@@ -22,6 +22,7 @@
     wellSelectionSetupView=wellSelectionSetupView
     wellSelectionSetupChangeUrl=wellSelectionSetupChangeUrl
     nominatedWellDetailView=nominatedWellDetailView
+    nominatedWellView=nominatedWellDetailView.wells
     nominatedWellDetailViewChangeUrl=nominatedWellDetailViewChangeUrl
     nominatedBlockSubareaDetailView=nominatedBlockSubareaDetailView
     nominatedBlockSubareaDetailViewChangeUrl=nominatedBlockSubareaDetailViewChangeUrl

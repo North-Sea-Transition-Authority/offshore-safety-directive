@@ -11,11 +11,6 @@
     changeLinkUrl=springUrl(changeUrl)
   >
     <@fdsSummaryList.summaryList>
-      <@fdsSummaryList.summaryListRowNoAction keyText="Wells">
-        <#list nominatedWellDetailView.wells as well>
-          <div>${well.name()}</div>
-        </#list>
-      </@fdsSummaryList.summaryListRowNoAction>
       <@fdsSummaryList.summaryListRowNoAction keyText="Is this nomination for all well activity phases?">
         <#if nominatedWellDetailView.isNominationForAllWellPhases?has_content>
           ${nominatedWellDetailView.isNominationForAllWellPhases?then('Yes', 'No')}
