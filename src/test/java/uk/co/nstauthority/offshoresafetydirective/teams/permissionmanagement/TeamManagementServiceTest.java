@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,29 @@ class TeamManagementServiceTest {
         .containsExactly(
             TeamView.fromTeam(firstTeam, customerConfigurationProperties),
             TeamView.fromTeam(secondTeam, customerConfigurationProperties)
+        );
+  }
+
+  @Test
+  void getManageTeamTypeUrls() {
+    var regulatorTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+    var firstConsulteeTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    var secondConsulteeTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+
+    var result = teamManagementService.getManageTeamTypeUrls(
+        List.of(regulatorTeam, firstConsulteeTeam, secondConsulteeTeam)
+    );
+
+    assertThat(result)
+        .containsExactly(
+            entry(TeamType.REGULATOR, "/"),
+            entry(TeamType.CONSULTEE, "/")
         );
   }
 }

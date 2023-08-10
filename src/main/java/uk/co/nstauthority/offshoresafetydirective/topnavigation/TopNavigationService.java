@@ -9,15 +9,15 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordLandingPageController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamListController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamTypeSelectionController;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Service
 public class TopNavigationService {
 
-  static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Manage teams";
+  static final String TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE = "Teams";
 
-  static final String SEARCH_SYSTEM_OF_RECORD_NAVIGATION_ITEM_TITLE = "Search appointments";
+  static final String SEARCH_SYSTEM_OF_RECORD_NAVIGATION_ITEM_TITLE = "Appointments";
 
   public List<TopNavigationItem> getTopNavigationItems() {
     var navigationItems = new ArrayList<TopNavigationItem>();
@@ -28,7 +28,7 @@ public class TopNavigationService {
     navigationItems.add(
         new TopNavigationItem(
             TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-            ReverseRouter.route(on(TeamListController.class).resolveTeamListEntryRoute())
+            ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection())
         )
     );
 
