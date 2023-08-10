@@ -49,6 +49,13 @@ public class TeamService {
     return accessibleTeams;
   }
 
+  public List<Team> getUserAccessibleTeamsOfType(ServiceUserDetail user, TeamType teamType) {
+    return getUserAccessibleTeams(user)
+        .stream()
+        .filter(team -> team.getTeamType().equals(teamType))
+        .toList();
+  }
+
   public boolean isMemberOfTeam(WebUserAccountId webUserAccountId, TeamId teamId) {
     return teamMemberService.isMemberOfTeam(teamId, webUserAccountId);
   }

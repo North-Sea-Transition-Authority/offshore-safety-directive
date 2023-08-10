@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
@@ -57,13 +59,19 @@ class TeamManagementServiceTest {
         .build();
 
     var result = teamManagementService.getManageTeamTypeUrls(
-        List.of(regulatorTeam, firstConsulteeTeam, secondConsulteeTeam)
+        List.of(firstConsulteeTeam, regulatorTeam, secondConsulteeTeam)
     );
 
     assertThat(result)
         .containsExactly(
-            entry(TeamType.REGULATOR, "/"),
-            entry(TeamType.CONSULTEE, "/")
+            entry(
+                TeamType.REGULATOR,
+                ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(TeamType.REGULATOR.getUrlSlug()))
+            ),
+            entry(
+                TeamType.CONSULTEE,
+                ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(TeamType.CONSULTEE.getUrlSlug()))
+            )
         );
   }
 }

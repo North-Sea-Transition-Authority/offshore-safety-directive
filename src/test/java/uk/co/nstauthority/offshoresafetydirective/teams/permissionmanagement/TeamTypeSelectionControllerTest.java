@@ -4,6 +4,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -51,17 +52,52 @@ class TeamTypeSelectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderTeamTypeSelection() throws Exception {
+  void renderTeamTypeSelection_whenOneTeamTypeAccessible() throws Exception {
     var user = ServiceUserDetailTestUtil.Builder().build();
-    var team = TeamTestUtil.Builder().build();
+    var teamType = TeamType.REGULATOR;
+    var firstTeamOfSameType = TeamTestUtil.Builder()
+        .withTeamType(teamType)
+        .build();
+
+    var secondTeamOfSameType = TeamTestUtil.Builder()
+        .withTeamType(teamType)
+        .build();
+
+    Map<TeamType, String> teamTypeRouteMap = Map.of(teamType, "/");
+
+    doReturn(user).when(userDetailService).getUserDetail();
+    when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(firstTeamOfSameType, secondTeamOfSameType));
+    when(teamManagementService.getManageTeamTypeUrls(List.of(firstTeamOfSameType, secondTeamOfSameType)))
+        .thenReturn(teamTypeRouteMap);
+
+    mockMvc.perform(get(ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()))
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(teamType.getUrlSlug()))
+        ));
+  }
+
+  @Test
+  void renderTeamTypeSelection_whenMultipleTeamTypesAccessible() throws Exception {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var firstTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+
+    var secondTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+
     Map<TeamType, String> teamTypeRouteMap = Map.of(
-        TeamType.REGULATOR,
-        "/"
+        TeamType.REGULATOR, "/",
+        TeamType.CONSULTEE, "/"
     );
 
     doReturn(user).when(userDetailService).getUserDetail();
-    when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(team));
-    when(teamManagementService.getManageTeamTypeUrls(List.of(team))).thenReturn(teamTypeRouteMap);
+    when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(firstTeam, secondTeam));
+    when(teamManagementService.getManageTeamTypeUrls(List.of(firstTeam, secondTeam)))
+        .thenReturn(teamTypeRouteMap);
 
     mockMvc.perform(get(ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()))
             .with(user(user)))

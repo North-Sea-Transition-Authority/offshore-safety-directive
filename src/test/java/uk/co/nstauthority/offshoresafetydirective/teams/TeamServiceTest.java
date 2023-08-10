@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -186,5 +187,44 @@ class TeamServiceTest {
 
     when(teamMemberService.isMemberOfTeam(teamId, wuaId)).thenReturn(false);
     assertFalse(teamService.isMemberOfTeam(wuaId, teamId));
+  }
+
+  @Test
+  void getUserAccessibleTeamsOfType_whenTypeIsNotAccessible() {
+    var teamServiceSpy = spy(teamService);
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var nonAccessibleTeamType = TeamType.REGULATOR;
+
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+
+    when(teamServiceSpy.getUserAccessibleTeams(user))
+        .thenReturn(List.of(team));
+
+    var result = teamServiceSpy.getUserAccessibleTeamsOfType(user, nonAccessibleTeamType);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void getUserAccessibleTeamsOfType_whenTypeIsAccessible() {
+    var teamServiceSpy = spy(teamService);
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var teamType = TeamType.REGULATOR;
+
+    var expectedTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+    var teamWithDifferentTeamType = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+
+    when(teamServiceSpy.getUserAccessibleTeams(user))
+        .thenReturn(List.of(teamWithDifferentTeamType, expectedTeam));
+
+    var result = teamServiceSpy.getUserAccessibleTeamsOfType(user, teamType);
+
+    assertThat(result).containsExactly(expectedTeam);
   }
 }
