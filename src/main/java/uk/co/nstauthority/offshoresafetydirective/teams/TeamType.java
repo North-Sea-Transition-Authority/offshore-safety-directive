@@ -6,7 +6,8 @@ import java.util.Optional;
 public enum TeamType {
 
   REGULATOR("Licensing authority", 10, "licensing-authority"),
-  CONSULTEE("Consultee", 20, "consultee");
+  CONSULTEE("Consultee", 20, "consultee"),
+  INDUSTRY("Industry", 30, "industry");
 
   private final String displayText;
   private final int displayOrder;

@@ -13,6 +13,8 @@ public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
     return switch (teamType) {
       case REGULATOR -> ReverseRouter.route(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
       case CONSULTEE -> ReverseRouter.route(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
+      // TODO OSDOP-180 - Add route to view team members
+      case INDUSTRY -> throw new IllegalStateException("Industry team is not supported");
     };
   }
 
@@ -20,7 +22,8 @@ public record TeamView(TeamId teamId, TeamType teamType, String displayName) {
     var teamId = new TeamId(team.getUuid());
     var teamName = switch (team.getTeamType()) {
       case REGULATOR -> customerConfigurationProperties.mnemonic();
-      case CONSULTEE -> team.getDisplayName();
+      // TODO OSDOP-179 - Ensure correct team name is shown for industry
+      case CONSULTEE, INDUSTRY -> team.getDisplayName();
     };
     return new TeamView(teamId, team.getTeamType(), teamName);
   }

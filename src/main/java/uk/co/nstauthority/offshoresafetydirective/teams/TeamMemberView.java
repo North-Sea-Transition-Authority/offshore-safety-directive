@@ -26,6 +26,8 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
           .renderRemoveMember(teamView.teamId(), wuaId));
       case CONSULTEE -> ReverseRouter.route(on(ConsulteeRemoveMemberController.class)
           .renderRemoveMember(teamView.teamId(), wuaId));
+      // TODO OSDOP-533 - Remove member from industry team
+      case INDUSTRY -> throw new IllegalStateException("Removing member of industry team is not supported");
     };
   }
 
@@ -35,6 +37,8 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
           .renderEditMember(teamView.teamId(), wuaId));
       case CONSULTEE -> ReverseRouter.route(on(ConsulteeEditMemberController.class)
           .renderEditMember(teamView.teamId(), wuaId));
+      // TODO OSDOP-534 - Edit member roles in industry team
+      case INDUSTRY -> throw new IllegalStateException("Editing member of industry team is not supported");
     };
   }
 
