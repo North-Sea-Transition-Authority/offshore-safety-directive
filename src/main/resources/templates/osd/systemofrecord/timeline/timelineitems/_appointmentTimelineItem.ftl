@@ -95,12 +95,6 @@
         <#if modelProperties["terminateUrl"]?has_content>
             <@fdsAction.link linkText="Terminate appointment" linkUrl=springUrl(modelProperties["terminateUrl"])/>
         </#if>
-        <#if modelProperties["terminateUrl"]?has_content>
-            <@fdsAction.link linkText="Terminate appointment" linkUrl=springUrl(modelProperties["terminateUrl"])/>
-        </#if>
-        <#if modelProperties["terminateUrl"]?has_content>
-            <@fdsAction.link linkText="Terminate appointment" linkUrl=springUrl(modelProperties["terminateUrl"])/>
-        </#if>
     </#assign>
     <#return display/>
 </#function>
