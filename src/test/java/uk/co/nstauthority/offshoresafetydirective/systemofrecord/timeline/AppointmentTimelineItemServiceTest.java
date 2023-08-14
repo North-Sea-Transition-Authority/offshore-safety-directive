@@ -47,6 +47,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 

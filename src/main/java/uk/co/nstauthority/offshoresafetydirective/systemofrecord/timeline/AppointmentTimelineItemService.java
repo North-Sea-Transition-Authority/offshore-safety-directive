@@ -43,7 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
-class AppointmentTimelineItemService {
+public class AppointmentTimelineItemService {
 
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
@@ -74,6 +74,26 @@ class AppointmentTimelineItemService {
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.regulatorTeamService = regulatorTeamService;
+  }
+
+  public List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
+                                                                     List<AssetAppointmentPhase> assetPhases) {
+    return switch (assetDto.portalAssetType()) {
+      case INSTALLATION -> assetPhases
+          .stream()
+          .map(assetPhase -> Optional.ofNullable(InstallationPhase.valueOfOrNull(assetPhase.value())))
+          .flatMap(Optional::stream)
+          .sorted(Comparator.comparing(InstallationPhase::getDisplayOrder))
+          .map(installationPhase -> new AssetAppointmentPhase(installationPhase.getScreenDisplayText()))
+          .toList();
+      case WELLBORE, SUBAREA -> assetPhases
+          .stream()
+          .map(assetPhase -> Optional.ofNullable(WellPhase.valueOfOrNull(assetPhase.value())))
+          .flatMap(Optional::stream)
+          .sorted(Comparator.comparing(WellPhase::getDisplayOrder))
+          .map(wellPhase -> new AssetAppointmentPhase(wellPhase.getScreenDisplayText()))
+          .toList();
+    };
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
@@ -249,26 +269,6 @@ class AppointmentTimelineItemService {
       );
     }
 
-  }
-
-  private List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
-                                                                      List<AssetAppointmentPhase> assetPhases) {
-    return switch (assetDto.portalAssetType()) {
-      case INSTALLATION -> assetPhases
-          .stream()
-          .map(assetPhase -> Optional.ofNullable(InstallationPhase.valueOfOrNull(assetPhase.value())))
-          .flatMap(Optional::stream)
-          .sorted(Comparator.comparing(InstallationPhase::getDisplayOrder))
-          .map(installationPhase -> new AssetAppointmentPhase(installationPhase.getScreenDisplayText()))
-          .toList();
-      case WELLBORE, SUBAREA -> assetPhases
-          .stream()
-          .map(assetPhase -> Optional.ofNullable(WellPhase.valueOfOrNull(assetPhase.value())))
-          .flatMap(Optional::stream)
-          .sorted(Comparator.comparing(WellPhase::getDisplayOrder))
-          .map(wellPhase -> new AssetAppointmentPhase(wellPhase.getScreenDisplayText()))
-          .toList();
-    };
   }
 
   private String getNominationUrl(AppointmentDto appointmentDto) {

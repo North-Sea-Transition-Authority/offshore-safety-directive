@@ -24,4 +24,11 @@ public class AssetAppointmentPhaseAccessService {
             Collectors.mapping(assetPhase -> new AssetAppointmentPhase(assetPhase.getPhase()), Collectors.toList())
         ));
   }
+
+  public List<AssetAppointmentPhase> getPhasesByAppointment(Appointment appointment) {
+    return assetPhaseRepository.findAllByAppointment(appointment)
+        .stream()
+        .map(assetPhase -> new AssetAppointmentPhase(assetPhase.getPhase()))
+        .toList();
+  }
 }

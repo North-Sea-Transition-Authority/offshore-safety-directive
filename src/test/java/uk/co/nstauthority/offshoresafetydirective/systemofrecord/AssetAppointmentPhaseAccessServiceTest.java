@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +26,6 @@ class AssetAppointmentPhaseAccessServiceTest {
 
   @Test
   void getAppointmentPhases_whenAssetPhasesNotFound_thenEmptyMap() {
-
     var asset = AssetDtoTestUtil.builder().build();
 
     given(assetPhaseRepository.findByAsset_Id(asset.assetId().id()))
@@ -79,4 +79,39 @@ class AssetAppointmentPhaseAccessServiceTest {
         );
   }
 
+  @Test
+  void getPhasesByAppointment_whenAppointmentPhasesNotFound_thenEmptyList() {
+    var appointment = AppointmentTestUtil.builder().build();
+    when(assetPhaseRepository.findAllByAppointment(appointment))
+        .thenReturn(Collections.emptyList());
+
+    List<AssetAppointmentPhase> resultingAppointmentPhases =
+        assetAppointmentPhaseAccessService.getPhasesByAppointment(appointment);
+
+    assertThat(resultingAppointmentPhases).isEmpty();
+  }
+
+  @Test
+  void getPhasesByAppointment_whenAppointmentPhasesFound_thenReturnList() {
+    var appointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+    var firstAppointmentPhase = "FIRST_APPOINTMENT_PHASE";
+
+    var appointmentPhase = AssetPhaseTestUtil.builder()
+        .withAppointment(appointment)
+        .withPhase(firstAppointmentPhase)
+        .build();
+
+    when(assetPhaseRepository.findAllByAppointment(appointment))
+        .thenReturn(List.of(appointmentPhase));
+
+    List<AssetAppointmentPhase> resultingAppointmentPhases =
+        assetAppointmentPhaseAccessService.getPhasesByAppointment(appointment);
+
+    assertThat(resultingAppointmentPhases)
+        .extracting(AssetAppointmentPhase::value)
+        .containsExactly(firstAppointmentPhase);
+
+  }
 }
