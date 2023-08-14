@@ -51,7 +51,7 @@ class AssetTimelineService {
 
       var assetDto = assetOptional.get();
 
-      List<AppointmentDto> appointments = appointmentAccessService.getAppointmentsForAsset(assetDto.assetId())
+      List<AppointmentDto> appointments = appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId())
           .stream()
           .toList();
 

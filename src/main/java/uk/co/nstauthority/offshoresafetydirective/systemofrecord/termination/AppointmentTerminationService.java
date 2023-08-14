@@ -1,9 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
@@ -12,12 +15,13 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineItemService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 
 @Service
@@ -26,22 +30,58 @@ class AppointmentTerminationService {
   private final AppointmentAccessService appointmentAccessService;
   private final NominationAccessService nominationAccessService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
-  private final AppointmentTimelineItemService appointmentTimelineItemService;
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private final AppointmentUpdateService appointmentUpdateService;
+  private final AppointmentTerminationRepository appointmentTerminationRepository;
+  private final UserDetailService userDetailService;
+  private final AppointmentPhasesService appointmentPhasesService;
 
   @Autowired
   AppointmentTerminationService(PortalAssetNameService portalAssetNameService,
                                        AppointmentAccessService appointmentAccessService,
                                        NominationAccessService nominationAccessService,
                                        AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
-                                       AppointmentTimelineItemService appointmentTimelineItemService,
-                                       PortalOrganisationUnitQueryService organisationUnitQueryService) {
+                                       PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                       AppointmentUpdateService appointmentUpdateService,
+                                       AppointmentTerminationRepository appointmentTerminationRepository,
+                                       UserDetailService userDetailService,
+                                       AppointmentPhasesService appointmentPhasesService) {
     this.portalAssetNameService = portalAssetNameService;
     this.appointmentAccessService = appointmentAccessService;
     this.nominationAccessService = nominationAccessService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
-    this.appointmentTimelineItemService = appointmentTimelineItemService;
     this.organisationUnitQueryService = organisationUnitQueryService;
+    this.appointmentUpdateService = appointmentUpdateService;
+    this.appointmentTerminationRepository = appointmentTerminationRepository;
+    this.userDetailService = userDetailService;
+    this.appointmentPhasesService = appointmentPhasesService;
+  }
+
+  @Transactional
+  public void terminateAppointment(Appointment appointment, AppointmentTerminationForm form) {
+    var terminationDate = form.getTerminationDate().getAsLocalDate()
+        .orElseThrow(
+            () -> new IllegalStateException(
+                "Termination date is invalid in form for appointment [%s]".formatted(appointment.getId())
+            )
+        );
+
+    var termination = new AppointmentTermination();
+    termination.setAppointment(appointment);
+    termination.setTerminationDate(terminationDate);
+    termination.setReasonForTermination(form.getReason().getInputValue());
+    termination.setCreatedTimestamp(Instant.now());
+    termination.setCorrectedByWuaId(userDetailService.getUserDetail().wuaId());
+
+    appointmentTerminationRepository.save(termination);
+
+    appointment.setResponsibleToDate(terminationDate);
+    var appointmentDto = AppointmentDto.fromAppointment(appointment);
+    appointmentUpdateService.updateAppointment(appointmentDto);
+  }
+
+  public Optional<AppointmentTermination> findAppointmentTermination(Appointment appointment) {
+    return appointmentTerminationRepository.findTerminationByAppointment(appointment);
   }
 
   AssetName getAssetName(AssetDto assetDto) {
@@ -69,14 +109,14 @@ class AppointmentTerminationService {
 
   List<AssetAppointmentPhase> getAppointmentPhases(Appointment appointment, AssetDto assetDto) {
     var phasesForAppointment = assetAppointmentPhaseAccessService.getPhasesByAppointment(appointment);
-    return appointmentTimelineItemService.getDisplayTextAppointmentPhases(assetDto, phasesForAppointment);
+    return appointmentPhasesService.getDisplayTextAppointmentPhases(assetDto, phasesForAppointment);
   }
 
   String getAppointedOperator(AppointedOperatorId appointedOperatorId) {
     var appointedOrganisationOptional = organisationUnitQueryService
         .getOrganisationById(Integer.parseInt(appointedOperatorId.id()));
     var appointedOrganisation = appointedOrganisationOptional.orElseThrow(() -> new IllegalStateException(
-        "No PortalOrganisationDto found for AppointedOperatorId %s".formatted(appointedOperatorId.id())));
+        "No AppointmentOrganisation found for PortalAssetId %s".formatted(appointedOperatorId.id())));
     return appointedOrganisation.name();
   }
 

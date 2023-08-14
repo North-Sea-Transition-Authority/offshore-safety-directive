@@ -15,7 +15,7 @@ public class AppointmentAccessService {
     this.appointmentRepository = appointmentRepository;
   }
 
-  public List<AppointmentDto> getAppointmentsForAsset(AssetId assetId) {
+  public List<AppointmentDto> getAppointmentDtosForAsset(AssetId assetId) {
     return appointmentRepository.findAllByAsset_id(assetId.id())
         .stream()
         .map(AppointmentDto::fromAppointment)
@@ -29,5 +29,9 @@ public class AppointmentAccessService {
 
   public Optional<Appointment> getAppointment(AppointmentId appointmentId) {
     return appointmentRepository.findById(appointmentId.id());
+  }
+
+  public List<Appointment> getAppointmentsForAsset(AssetId assetId) {
+    return appointmentRepository.findAllByAsset_id(assetId.id());
   }
 }

@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
-import java.util.Collections;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,9 +114,6 @@ class AssetTimelineServiceTest {
 
     given(assetAccessService.getAsset(portalAssetId))
         .willReturn(Optional.of(assetInSystemOfRecord));
-
-    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
-        .willReturn(Collections.emptyList());
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
         portalAssetId,

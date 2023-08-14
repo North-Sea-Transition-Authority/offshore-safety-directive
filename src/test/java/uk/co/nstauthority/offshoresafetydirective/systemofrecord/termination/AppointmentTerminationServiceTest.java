@@ -2,31 +2,39 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AppointmentTimelineItemService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 
@@ -35,6 +43,9 @@ class AppointmentTerminationServiceTest {
 
   @Mock
   private PortalAssetNameService portalAssetNameService;
+
+  @Mock
+  private AppointmentUpdateService appointmentUpdateService;
 
   @Mock
   private AppointmentAccessService appointmentAccessService;
@@ -46,10 +57,16 @@ class AppointmentTerminationServiceTest {
   private AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
 
   @Mock
-  private AppointmentTimelineItemService appointmentTimelineItemService;
+  private UserDetailService userDetailService;
 
   @Mock
   private PortalOrganisationUnitQueryService organisationUnitQueryService;
+
+  @Mock
+  private AppointmentPhasesService appointmentPhasesService;
+
+  @Mock
+  private AppointmentTerminationRepository appointmentTerminationRepository;
 
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
@@ -176,7 +193,7 @@ class AppointmentTerminationServiceTest {
     when(assetAppointmentPhaseAccessService.getPhasesByAppointment(appointment))
         .thenReturn(phasesForAppointment);
 
-    when(appointmentTimelineItemService.getDisplayTextAppointmentPhases(assetDto, phasesForAppointment))
+    when(appointmentPhasesService.getDisplayTextAppointmentPhases(assetDto, phasesForAppointment))
         .thenReturn(List.of(new AssetAppointmentPhase("Development formatted")));
 
     var resultingPhases = appointmentTerminationService.getAppointmentPhases(appointment, assetDto);
@@ -195,7 +212,7 @@ class AppointmentTerminationServiceTest {
 
     assertThatThrownBy(() -> appointmentTerminationService.getAppointedOperator(appointedOperatorId))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No PortalOrganisationDto found for AppointedOperatorId %s".formatted(appointedOperatorId.id()));
+        .hasMessage("No AppointmentOrganisation found for PortalAssetId %s".formatted(appointedOperatorId.id()));
   }
 
   @Test
@@ -211,5 +228,65 @@ class AppointmentTerminationServiceTest {
 
     var resultingAppointedOperator = appointmentTerminationService.getAppointedOperator(appointedOperatorId);
     assertThat(resultingAppointedOperator).isEqualTo(appointedOrganisation.name());
+  }
+
+  @Test
+  void updateTermination_whenInvalidTerminationDate_thenThrowException() {
+    var appointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+
+    var form = new AppointmentTerminationForm();
+    form.setTerminationDate(new ThreeFieldDateInput(null, null));
+
+    assertThatThrownBy(() -> appointmentTerminationService.terminateAppointment(appointment, form))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Termination date is invalid in form for appointment [%s]"
+            .formatted(appointment.getId()));
+  }
+
+  @Test
+  void updateTermination_whenValid_thenVerifyAppointmentIsUpdated() {
+    var appointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+
+    var terminationDate = LocalDate.now().minusDays(1);
+
+    var form = new AppointmentTerminationForm();
+    form.getTerminationDate().setDate(terminationDate);
+    form.getReason().setInputValue("reason");
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(user);
+
+    appointmentTerminationService.terminateAppointment(appointment, form);
+
+    var appointmentTerminationArgumentCaptor = ArgumentCaptor.forClass(AppointmentTermination.class);
+    verify(appointmentTerminationRepository).save(appointmentTerminationArgumentCaptor.capture());
+
+
+    var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
+    verify(appointmentUpdateService).updateAppointment(appointmentDtoArgumentCaptor.capture());
+
+    assertThat(appointmentTerminationArgumentCaptor.getValue())
+        .extracting(
+            AppointmentTermination::getTerminationDate,
+            AppointmentTermination::getReasonForTermination,
+            AppointmentTermination::getCorrectedByWuaId,
+            AppointmentTermination::getAppointment
+        )
+        .containsExactly(
+            LocalDate.now().minusDays(1),
+            "reason",
+            user.wuaId(),
+            appointment
+        );
+
+    assertThat(appointmentDtoArgumentCaptor.getValue())
+        .extracting(appointmentDto -> appointmentDto.appointmentToDate().value())
+        .isEqualTo(terminationDate);
   }
 }

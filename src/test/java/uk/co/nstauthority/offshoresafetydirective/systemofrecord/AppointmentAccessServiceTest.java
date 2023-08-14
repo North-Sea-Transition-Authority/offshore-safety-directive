@@ -29,31 +29,31 @@ class AppointmentAccessServiceTest {
   private AppointmentAccessService appointmentAccessService;
 
   @Test
-  void getAppointmentsForAsset_whenNoAppointments_themEmptyListReturned() {
+  void getAppointmentDtosForAsset_whenNoAppointments_themEmptyListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
     given(appointmentRepository.findAllByAsset_id(assetId.id()))
         .willReturn(Collections.emptyList());
 
-    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+    var resultingAppointmentDtos = appointmentAccessService.getAppointmentDtosForAsset(assetId);
 
-    assertThat(resultingAppointments).isEmpty();
+    assertThat(resultingAppointmentDtos).isEmpty();
   }
 
   @Test
-  void getAppointmentsForAsset_whenAppointments_thenPopulatedListReturned() {
+  void getAppointmentDtosForAsset_whenAppointments_thenPopulatedListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
-    var expectedAppointment = AppointmentTestUtil.builder().build();
+    var expectedAppointmentDtos = AppointmentTestUtil.builder().build();
 
     given(appointmentRepository.findAllByAsset_id(assetId.id()))
-        .willReturn(List.of(expectedAppointment));
+        .willReturn(List.of(expectedAppointmentDtos));
 
-    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+    var resultingAppointmentDtos = appointmentAccessService.getAppointmentDtosForAsset(assetId);
 
-    assertThat(resultingAppointments)
+    assertThat(resultingAppointmentDtos)
         .extracting(
             appointmentDto -> appointmentDto.appointmentId().id(),
             appointmentDto -> appointmentDto.appointedOperatorId().id(),
@@ -64,12 +64,12 @@ class AppointmentAccessServiceTest {
         )
         .containsExactly(
             tuple(
-                expectedAppointment.getId(),
-                String.valueOf(expectedAppointment.getAppointedPortalOperatorId()),
-                expectedAppointment.getResponsibleFromDate(),
-                expectedAppointment.getResponsibleToDate(),
-                expectedAppointment.getCreatedDatetime(),
-                AssetDto.fromAsset(expectedAppointment.getAsset())
+                expectedAppointmentDtos.getId(),
+                String.valueOf(expectedAppointmentDtos.getAppointedPortalOperatorId()),
+                expectedAppointmentDtos.getResponsibleFromDate(),
+                expectedAppointmentDtos.getResponsibleToDate(),
+                expectedAppointmentDtos.getCreatedDatetime(),
+                AssetDto.fromAsset(expectedAppointmentDtos.getAsset())
             )
         );
   }
@@ -155,4 +155,51 @@ class AppointmentAccessServiceTest {
     assertThat(result).isEmpty();
   }
 
+  @Test
+  void getAppointmentsForAsset_whenNoAppointments_themEmptyListReturned() {
+
+    var assetId = new AssetId(UUID.randomUUID());
+
+    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+        .willReturn(Collections.emptyList());
+
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void getAppointmentsForAsset_whenAppointments_thenPopulatedListReturned() {
+
+    var assetId = new AssetId(UUID.randomUUID());
+
+    var expectedAppointments = AppointmentTestUtil.builder().build();
+
+    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+        .willReturn(List.of(expectedAppointments));
+
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+
+    assertThat(resultingAppointments)
+        .extracting(
+            Appointment::getId,
+            Appointment::getAppointmentType,
+            Appointment::getAsset,
+            Appointment::getAppointedPortalOperatorId,
+            Appointment::getCreatedDatetime,
+            Appointment::getResponsibleFromDate,
+            Appointment::getResponsibleToDate
+        )
+        .containsExactly(
+            tuple(
+                expectedAppointments.getId(),
+                expectedAppointments.getAppointmentType(),
+                expectedAppointments.getAsset(),
+                expectedAppointments.getAppointedPortalOperatorId(),
+                expectedAppointments.getCreatedDatetime(),
+                expectedAppointments.getResponsibleFromDate(),
+                expectedAppointments.getResponsibleToDate()
+            )
+        );
+  }
 }

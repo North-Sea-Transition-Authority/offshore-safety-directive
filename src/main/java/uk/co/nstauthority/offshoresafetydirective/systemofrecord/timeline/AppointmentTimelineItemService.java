@@ -26,11 +26,10 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
@@ -59,6 +58,8 @@ public class AppointmentTimelineItemService {
 
   private final RegulatorTeamService regulatorTeamService;
 
+  private final AppointmentPhasesService appointmentPhasesService;
+
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
                                  AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
@@ -66,7 +67,7 @@ public class AppointmentTimelineItemService {
                                  UserDetailService userDetailService,
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
-                                 RegulatorTeamService regulatorTeamService) {
+                                 RegulatorTeamService regulatorTeamService, AppointmentPhasesService appointmentPhasesService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -74,26 +75,8 @@ public class AppointmentTimelineItemService {
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.regulatorTeamService = regulatorTeamService;
-  }
 
-  public List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
-                                                                     List<AssetAppointmentPhase> assetPhases) {
-    return switch (assetDto.portalAssetType()) {
-      case INSTALLATION -> assetPhases
-          .stream()
-          .map(assetPhase -> Optional.ofNullable(InstallationPhase.valueOfOrNull(assetPhase.value())))
-          .flatMap(Optional::stream)
-          .sorted(Comparator.comparing(InstallationPhase::getDisplayOrder))
-          .map(installationPhase -> new AssetAppointmentPhase(installationPhase.getScreenDisplayText()))
-          .toList();
-      case WELLBORE, SUBAREA -> assetPhases
-          .stream()
-          .map(assetPhase -> Optional.ofNullable(WellPhase.valueOfOrNull(assetPhase.value())))
-          .flatMap(Optional::stream)
-          .sorted(Comparator.comparing(WellPhase::getDisplayOrder))
-          .map(wellPhase -> new AssetAppointmentPhase(wellPhase.getScreenDisplayText()))
-          .toList();
-    };
+    this.appointmentPhasesService = appointmentPhasesService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
@@ -113,14 +96,14 @@ public class AppointmentTimelineItemService {
       loggedInUser = Optional.empty();
     }
 
-    var canUpdateAppointments = false;
+    var canManageAppointments = false;
     var isMemberOfRegulatorTeam = false;
 
     Map<AppointmentId, List<AppointmentCorrectionHistoryView>> appointmentCorrectionMap = new HashMap<>();
 
     if (loggedInUser.isPresent()) {
 
-      canUpdateAppointments = permissionService.hasPermission(
+      canManageAppointments = permissionService.hasPermission(
           loggedInUser.get(),
           Set.of(RolePermission.MANAGE_APPOINTMENTS)
       );
@@ -154,14 +137,15 @@ public class AppointmentTimelineItemService {
           .orElse("Unknown operator");
 
       var phases = Optional.ofNullable(appointmentPhases.get(appointment.appointmentId()))
-          .map(assetAppointmentPhases -> getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
+          .map(assetAppointmentPhases -> appointmentPhasesService
+              .getDisplayTextAppointmentPhases(assetDto, assetAppointmentPhases))
           .orElse(Collections.emptyList());
 
       var corrections = Optional.ofNullable(appointmentCorrectionMap.getOrDefault(appointment.appointmentId(), null))
           .orElse(Collections.emptyList());
 
       var appointmentView = convertToTimelineItemView(
-          appointment, operatorName, phases, canUpdateAppointments, corrections, isMemberOfRegulatorTeam
+          appointment, operatorName, phases, canManageAppointments, corrections, isMemberOfRegulatorTeam
       );
 
       timelineItemViews.add(appointmentView);
@@ -217,7 +201,8 @@ public class AppointmentTimelineItemService {
           ReverseRouter.route(
               on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
       );
-      if (appointmentDto.appointmentToDate() != null && appointmentDto.appointmentToDate().value() == null) {
+      if (appointmentDto.appointmentToDate() != null
+          && appointmentDto.appointmentToDate().value() == null) {
         modelProperties.addProperty(
             "terminateUrl",
             ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(appointmentDto.appointmentId()))

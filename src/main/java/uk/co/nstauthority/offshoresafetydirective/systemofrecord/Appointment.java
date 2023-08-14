@@ -82,7 +82,7 @@ public class Appointment {
     return responsibleToDate;
   }
 
-  void setResponsibleToDate(LocalDate responsibleToDate) {
+  public void setResponsibleToDate(LocalDate responsibleToDate) {
     this.responsibleToDate = responsibleToDate;
   }
 

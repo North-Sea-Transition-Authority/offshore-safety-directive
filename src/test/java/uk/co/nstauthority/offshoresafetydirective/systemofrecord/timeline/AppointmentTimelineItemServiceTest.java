@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -46,7 +47,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
@@ -74,6 +74,9 @@ class AppointmentTimelineItemServiceTest {
 
   @Mock
   private AppointmentCorrectionService appointmentCorrectionService;
+
+  @Mock
+  private AppointmentPhasesService appointmentPhasesService;
 
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
@@ -145,7 +148,7 @@ class AppointmentTimelineItemServiceTest {
     // given an appointment with an operator not known to the portal
     var appointedOperatorId = new PortalOrganisationUnitId(-1);
 
-    var expectedAppointment = AppointmentDtoTestUtil.builder()
+    var expectedAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointedOperatorId(appointedOperatorId.id())
         .build();
 
@@ -157,7 +160,7 @@ class AppointmentTimelineItemServiceTest {
 
     // when we request the timeline history
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(expectedAppointment),
+        List.of(expectedAppointmentDto),
         assetInSystemOfRecord
     );
 
@@ -212,8 +215,8 @@ class AppointmentTimelineItemServiceTest {
     assertThat(resultingAppointmentTimelineHistoryItems)
         .extracting(view -> view.assetTimelineModelProperties().getModelProperties().get("appointmentId"))
         .containsExactly(
-            latestAppointmentByStartDate.appointmentId(),
-            earliestAppointmentByStartDate.appointmentId()
+            new AppointmentId(latestAppointmentByStartDate.appointmentId().id()),
+            new AppointmentId(earliestAppointmentByStartDate.appointmentId().id())
         );
 
   }
@@ -264,8 +267,8 @@ class AppointmentTimelineItemServiceTest {
         .map(assetTimelineItemView -> assetTimelineItemView.assetTimelineModelProperties().getModelProperties())
         .map(stringObjectMap -> (AppointmentId) stringObjectMap.get("appointmentId"))
         .containsExactly(
-            latestAppointmentByCreationTime.appointmentId(),
-            earliestAppointmentByCreationTime.appointmentId()
+            new AppointmentId(latestAppointmentByCreationTime.appointmentId().id()),
+            new AppointmentId(earliestAppointmentByCreationTime.appointmentId().id())
         );
   }
 
@@ -314,9 +317,20 @@ class AppointmentTimelineItemServiceTest {
     given(assetAppointmentPhaseAccessService.getAppointmentPhases(assetInSystemOfRecord))
         .willReturn(
             Map.of(
-                appointment.appointmentId(), List.of(new AssetAppointmentPhase(expectedInstallationPhase.name()))
+                new AppointmentId(appointment.appointmentId().id()),
+                List.of(new AssetAppointmentPhase(expectedInstallationPhase.name()))
             )
         );
+
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(expectedInstallationPhase.name())
+        )))
+        .willReturn(
+            List.of(
+                new AssetAppointmentPhase(expectedInstallationPhase.getScreenDisplayText())
+            ));
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
@@ -346,7 +360,7 @@ class AppointmentTimelineItemServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    var appointment = AppointmentDtoTestUtil.builder().build();
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
 
     var unknownInstallationPhase = "NOT AN INSTALLATION PHASE";
     var knownInstallationPhase = InstallationPhase.DECOMMISSIONING;
@@ -355,7 +369,7 @@ class AppointmentTimelineItemServiceTest {
     given(assetAppointmentPhaseAccessService.getAppointmentPhases(assetInSystemOfRecord))
         .willReturn(
             Map.of(
-                appointment.appointmentId(),
+                new AppointmentId(appointmentDto.appointmentId().id()),
                 List.of(
                     new AssetAppointmentPhase(unknownInstallationPhase),
                     new AssetAppointmentPhase(knownInstallationPhase.name())
@@ -363,11 +377,23 @@ class AppointmentTimelineItemServiceTest {
             )
         );
 
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(unknownInstallationPhase),
+            new AssetAppointmentPhase(knownInstallationPhase.name())
+        )))
+        .willReturn(
+            List.of(
+                new AssetAppointmentPhase(unknownInstallationPhase),
+                new AssetAppointmentPhase(knownInstallationPhase.getScreenDisplayText())
+        ));
+
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(appointment),
+        List.of(appointmentDto),
         assetInSystemOfRecord
     );
 
@@ -382,7 +408,7 @@ class AppointmentTimelineItemServiceTest {
 
     assertThat(phases)
         .extracting(AssetAppointmentPhase::value)
-        .containsExactly(knownInstallationPhase.getScreenDisplayText());
+        .containsExactly(unknownInstallationPhase, knownInstallationPhase.getScreenDisplayText());
   }
 
   @Test
@@ -392,7 +418,7 @@ class AppointmentTimelineItemServiceTest {
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
 
-    var appointment = AppointmentDtoTestUtil.builder().build();
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
 
     var firstPhaseByDisplayOrder = InstallationPhase.DEVELOPMENT_DESIGN;
     var secondPhaseByDisplayOrder = InstallationPhase.DECOMMISSIONING;
@@ -401,19 +427,32 @@ class AppointmentTimelineItemServiceTest {
     given(assetAppointmentPhaseAccessService.getAppointmentPhases(assetInSystemOfRecord))
         .willReturn(
             Map.of(
-                appointment.appointmentId(),
+                new AppointmentId(appointmentDto.appointmentId().id()),
                 List.of(
-                    new AssetAppointmentPhase(secondPhaseByDisplayOrder.name()),
-                    new AssetAppointmentPhase(firstPhaseByDisplayOrder.name())
+                    new AssetAppointmentPhase(firstPhaseByDisplayOrder.name()),
+                    new AssetAppointmentPhase(secondPhaseByDisplayOrder.name())
                 )
             )
         );
+
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(firstPhaseByDisplayOrder.name()),
+            new AssetAppointmentPhase(secondPhaseByDisplayOrder.name())
+        ))
+    )
+        .willReturn(
+            List.of(
+                new AssetAppointmentPhase(firstPhaseByDisplayOrder.getScreenDisplayText()),
+                new AssetAppointmentPhase(secondPhaseByDisplayOrder.getScreenDisplayText())
+            ));
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(appointment),
+        List.of(appointmentDto),
         assetInSystemOfRecord
     );
 
@@ -458,6 +497,17 @@ class AppointmentTimelineItemServiceTest {
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
+
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(expectedWellPhase.name())
+        ))
+    )
+        .willReturn(
+            List.of(
+                new AssetAppointmentPhase(expectedWellPhase.getScreenDisplayText())
+        ));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -507,6 +557,14 @@ class AppointmentTimelineItemServiceTest {
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
 
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(unknownWellPhase),
+            new AssetAppointmentPhase(knownWellPhase.name())
+        )))
+    .willReturn(List.of(new AssetAppointmentPhase(knownWellPhase.getScreenDisplayText())));
+
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
         assetInSystemOfRecord
@@ -547,14 +605,26 @@ class AppointmentTimelineItemServiceTest {
             Map.of(
                 appointment.appointmentId(),
                 List.of(
-                    new AssetAppointmentPhase(secondPhaseByDisplayOrder.name()),
-                    new AssetAppointmentPhase(firstPhaseByDisplayOrder.name())
+                    new AssetAppointmentPhase(firstPhaseByDisplayOrder.name()),
+                    new AssetAppointmentPhase(secondPhaseByDisplayOrder.name())
                 )
             )
         );
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
+
+    given(appointmentPhasesService.getDisplayTextAppointmentPhases(
+        assetInSystemOfRecord,
+        List.of(
+            new AssetAppointmentPhase(firstPhaseByDisplayOrder.name()),
+            new AssetAppointmentPhase(secondPhaseByDisplayOrder.name())
+        )))
+        .willReturn(
+            List.of(
+                new AssetAppointmentPhase(firstPhaseByDisplayOrder.getScreenDisplayText()),
+                new AssetAppointmentPhase(secondPhaseByDisplayOrder.getScreenDisplayText())
+            ));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -633,9 +703,11 @@ class AppointmentTimelineItemServiceTest {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
+    var legacyNominationReference = "legacy nomination reference";
+
     var legacyAppointment = AppointmentDtoTestUtil.builder()
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
-        .withLegacyNominationReference("legacy nomination reference")
+        .withLegacyNominationReference(legacyNominationReference)
         .build();
 
     given(userDetailService.getUserDetail())
@@ -651,7 +723,7 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
-        .containsEntry("createdByReference", legacyAppointment.legacyNominationReference());
+        .containsEntry("createdByReference", legacyNominationReference);
   }
 
   @Test
@@ -808,9 +880,10 @@ class AppointmentTimelineItemServiceTest {
   void getTimelineItemViews_whenUserLoggedAndHasPermissionOnNomination_thenNominationUrlIsNotNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+    var nominationId = new NominationId(100);
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(nominationId)
         .build();
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
@@ -843,7 +916,7 @@ class AppointmentTimelineItemServiceTest {
         .containsEntry(
             "nominationUrl",
             ReverseRouter.route(on(NominationCaseProcessingController.class)
-                .renderCaseProcessing(appointmentDto.nominationId(), null))
+                .renderCaseProcessing(nominationId, null))
         );
   }
 
@@ -999,7 +1072,7 @@ class AppointmentTimelineItemServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "DEEMED")
-  void getAppointmentHistoryForPortalAssset_whenAuthenticated_andNotDeemed_thenNoDeemedLetter(
+  void getAppointmentHistoryForPortalAsset_whenAuthenticated_andNotDeemed_thenNoDeemedLetter(
       AppointmentType appointmentType
   ) {
 
