@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.entry;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,18 +49,11 @@ class TeamManagementServiceTest {
 
   @Test
   void getManageTeamTypeUrls() {
-    var regulatorTeam = TeamTestUtil.Builder()
-        .withTeamType(TeamType.REGULATOR)
-        .build();
-    var firstConsulteeTeam = TeamTestUtil.Builder()
-        .withTeamType(TeamType.CONSULTEE)
-        .build();
-    var secondConsulteeTeam = TeamTestUtil.Builder()
-        .withTeamType(TeamType.CONSULTEE)
-        .build();
-
     var result = teamManagementService.getManageTeamTypeUrls(
-        List.of(firstConsulteeTeam, regulatorTeam, secondConsulteeTeam)
+        Set.of(
+            TeamType.CONSULTEE,
+            TeamType.REGULATOR
+        )
     );
 
     assertThat(result)

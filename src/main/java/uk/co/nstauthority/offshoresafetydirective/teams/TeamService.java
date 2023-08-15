@@ -39,6 +39,9 @@ public class TeamService {
     if (userHasPermissionInTeamType(RolePermission.MANAGE_CONSULTEE_TEAMS, TeamType.REGULATOR, userAsTeamMembers)) {
       viewableTeamTypes.add(TeamType.CONSULTEE);
     }
+    if (userHasPermissionInTeamType(RolePermission.MANAGE_INDUSTRY_TEAMS, TeamType.REGULATOR, userAsTeamMembers)) {
+      viewableTeamTypes.add(TeamType.INDUSTRY);
+    }
 
     var accessibleTeams = new ArrayList<Team>();
     if (!viewableTeamTypes.isEmpty()) {

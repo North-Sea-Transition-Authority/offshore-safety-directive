@@ -18,7 +18,7 @@ public enum RegulatorTeamRole implements TeamRole {
       "Third party access manager",
       "Can manage organisation and consultee access to this service",
       20,
-      EnumSet.of(RolePermission.MANAGE_CONSULTEE_TEAMS)
+      EnumSet.of(RolePermission.MANAGE_CONSULTEE_TEAMS, RolePermission.MANAGE_INDUSTRY_TEAMS)
   ),
   MANAGE_NOMINATION(
       "Manage nominations",

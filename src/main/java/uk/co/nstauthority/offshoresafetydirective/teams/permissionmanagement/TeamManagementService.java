@@ -2,13 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
@@ -27,11 +25,7 @@ public class TeamManagementService {
     this.customerConfigurationProperties = customerConfigurationProperties;
   }
 
-  public Map<TeamType, String> getManageTeamTypeUrls(Collection<Team> teams) {
-    Set<TeamType> teamTypes = teams.stream()
-        .map(Team::getTeamType)
-        .collect(Collectors.toSet());
-
+  public Map<TeamType, String> getManageTeamTypeUrls(Set<TeamType> teamTypes) {
     return teamTypes.stream()
         .sorted(Comparator.comparing(TeamType::getDisplayOrder))
         .collect(StreamUtil.toLinkedHashMap(

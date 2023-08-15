@@ -15,7 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 
 @RestController
-@RequestMapping("/api/public/organisations")
+@RequestMapping("/api/public/organisations/units")
 @Unauthenticated
 public class PortalOrganisationUnitRestController {
 

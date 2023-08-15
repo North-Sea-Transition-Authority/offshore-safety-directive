@@ -9,7 +9,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface TeamRepository extends CrudRepository<Team, UUID> {
+public interface TeamRepository extends CrudRepository<Team, UUID> {
 
   Optional<Team> findByUuidAndTeamType(UUID uuid, TeamType teamType);
 

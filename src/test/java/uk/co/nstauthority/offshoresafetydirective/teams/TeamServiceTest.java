@@ -102,7 +102,7 @@ class TeamServiceTest {
     when(teamMemberService.getUserAsTeamMembers(user))
         .thenReturn(List.of(consulteeTeamManager));
 
-    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE)))
+    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE, TeamType.INDUSTRY)))
         .thenReturn(List.of(consulteeTeam));
 
     when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))
@@ -159,7 +159,7 @@ class TeamServiceTest {
     when(teamMemberService.getUserAsTeamMembers(user))
         .thenReturn(List.of(consulteeTeamManager));
 
-    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE)))
+    when(teamRepository.findAllByTeamTypeIn(List.of(TeamType.CONSULTEE, TeamType.INDUSTRY)))
         .thenReturn(List.of(consulteeTeam));
 
     when(teamRepository.findAllTeamsThatUserIsMemberOf(user.wuaId()))

@@ -14,7 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 
 @Entity
 @Table(name = "team_scopes")
-class TeamScope {
+public class TeamScope {
 
   @Id
   @GeneratedValue(generator = "uuid")
@@ -38,11 +38,11 @@ class TeamScope {
     this.id = id;
   }
 
-  UUID getId() {
+  public UUID getId() {
     return id;
   }
 
-  Team getTeam() {
+  public Team getTeam() {
     return team;
   }
 
@@ -50,7 +50,7 @@ class TeamScope {
     this.team = team;
   }
 
-  String getPortalId() {
+  public String getPortalId() {
     return portalId;
   }
 
@@ -58,7 +58,7 @@ class TeamScope {
     this.portalId = portalId;
   }
 
-  PortalTeamType getPortalTeamType() {
+  public PortalTeamType getPortalTeamType() {
     return portalTeamType;
   }
 

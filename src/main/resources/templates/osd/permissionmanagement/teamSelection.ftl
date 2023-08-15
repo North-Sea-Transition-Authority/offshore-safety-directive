@@ -11,12 +11,16 @@
     pageSize=PageSize.FULL_COLUMN
 >
 
-    <@fdsResultList.resultList resultCount=teamViews?size resultCountSuffix="team">
-        <#list teamViews as teamView>
-            <@fdsResultList.resultListItem
-                linkHeadingUrl=springUrl(teamView.teamUrl())
-                linkHeadingText=teamView.displayName()/>
-        </#list>
-    </@fdsResultList.resultList>
-
+    <#if createIndustryTeamUrl?has_content>
+      <@fdsAction.link linkText="Create team" linkUrl=springUrl(createIndustryTeamUrl) linkClass="govuk-button"/>
+    </#if>
+    <#if teamViews?size gt 0>
+        <@fdsResultList.resultList resultCount=teamViews?size resultCountSuffix="team">
+            <#list teamViews as teamView>
+                <@fdsResultList.resultListItem
+                    linkHeadingUrl=springUrl(teamView.teamUrl())
+                    linkHeadingText=teamView.displayName()/>
+            </#list>
+        </@fdsResultList.resultList>
+    </#if>
 </@defaultPage>

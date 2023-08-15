@@ -13,6 +13,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -67,7 +68,9 @@ class TeamTypeSelectionControllerTest extends AbstractControllerTest {
 
     doReturn(user).when(userDetailService).getUserDetail();
     when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(firstTeamOfSameType, secondTeamOfSameType));
-    when(teamManagementService.getManageTeamTypeUrls(List.of(firstTeamOfSameType, secondTeamOfSameType)))
+    when(teamManagementService.getManageTeamTypeUrls(
+        Set.of(teamType)
+    ))
         .thenReturn(teamTypeRouteMap);
 
     mockMvc.perform(get(ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()))
@@ -96,7 +99,9 @@ class TeamTypeSelectionControllerTest extends AbstractControllerTest {
 
     doReturn(user).when(userDetailService).getUserDetail();
     when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(firstTeam, secondTeam));
-    when(teamManagementService.getManageTeamTypeUrls(List.of(firstTeam, secondTeam)))
+    when(teamManagementService.getManageTeamTypeUrls(
+        Set.of(firstTeam.getTeamType(), secondTeam.getTeamType())
+    ))
         .thenReturn(teamTypeRouteMap);
 
     mockMvc.perform(get(ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()))
