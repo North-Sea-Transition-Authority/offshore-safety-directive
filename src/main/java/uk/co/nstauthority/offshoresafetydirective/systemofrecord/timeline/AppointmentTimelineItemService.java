@@ -38,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -60,6 +61,9 @@ public class AppointmentTimelineItemService {
 
   private final AppointmentPhasesService appointmentPhasesService;
 
+  private final AppointmentTerminationService appointmentTerminationService;
+
+
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
                                  AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
@@ -67,7 +71,8 @@ public class AppointmentTimelineItemService {
                                  UserDetailService userDetailService,
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
-                                 RegulatorTeamService regulatorTeamService, AppointmentPhasesService appointmentPhasesService) {
+                                 RegulatorTeamService regulatorTeamService, AppointmentPhasesService appointmentPhasesService,
+                                 AppointmentTerminationService appointmentTerminationService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -75,8 +80,8 @@ public class AppointmentTimelineItemService {
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.regulatorTeamService = regulatorTeamService;
-
     this.appointmentPhasesService = appointmentPhasesService;
+    this.appointmentTerminationService = appointmentTerminationService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
@@ -195,14 +200,17 @@ public class AppointmentTimelineItemService {
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
-    if (canManageAppointments) {
+    var hasNotBeenTerminated =
+        appointmentTerminationService.hasNotBeenTerminated(new AppointmentId(appointmentDto.appointmentId().id()));
+
+    if (canManageAppointments && hasNotBeenTerminated) {
       modelProperties.addProperty(
           "updateUrl",
           ReverseRouter.route(
               on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
       );
-      if (appointmentDto.appointmentToDate() != null
-          && appointmentDto.appointmentToDate().value() == null) {
+      // if appointment is not current, show terminate link
+      if (AppointmentDto.isCurrentAppointment(appointmentDto)) {
         modelProperties.addProperty(
             "terminateUrl",
             ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(appointmentDto.appointmentId()))

@@ -96,6 +96,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
     new HasPermissionSecurityTestUtil.SmokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
@@ -123,6 +126,54 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void renderCorrection_whenAppointmentHasNotBeenTerminated_thenAssertOk() throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var appointment = AppointmentTestUtil.builder().build();
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(new AppointmentCorrectionForm());
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void renderCorrection_whenAppointmentHasBeenTerminated_thenForbidden() throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var appointment = AppointmentTestUtil.builder().build();
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(new AppointmentCorrectionForm());
+
+    when(appointmentTerminationService.hasBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void renderCorrection_whenNoAppointment_verifyNotFound() throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
@@ -132,6 +183,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(get(
             ReverseRouter.route(
@@ -165,6 +219,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
 
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
@@ -195,6 +252,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.of(new AssetName(assetName)));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(get(
             ReverseRouter.route(
@@ -236,6 +296,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.of(new AssetName(assetName)));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(
             get(
@@ -292,6 +355,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var correctionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder().build();
     when(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment))
         .thenReturn(List.of(correctionHistoryView));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(
@@ -371,6 +437,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
     var phaseMap = Map.of("PHASE_1", "phase 1");
     when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
         .thenReturn(phaseMap);
@@ -441,6 +510,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -477,6 +549,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(get(
             ReverseRouter.route(
@@ -517,6 +592,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -538,6 +616,56 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void submitCorrection_whenAppointmentHasNotBeenTerminated_thenAssertOk() throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null)))
+            .with(csrf())
+            .with(user(USER)))
+        .andExpect(status().is3xxRedirection());
+  }
+
+  @SecurityTest
+  void submitCorrection_whenAppointmentHasBeenTerminated_thenForbidden() throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationService.hasBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null)))
+            .with(csrf())
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void submitCorrection_whenNoAppointmentFound_thenNotFound() throws Exception {
 
@@ -548,6 +676,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(appointmentAccessService.getAppointment(appointmentId))
         .thenReturn(Optional.empty());
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(post(
             ReverseRouter.route(
@@ -574,6 +705,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(new AppointmentCorrectionForm());
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
@@ -604,6 +738,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(appointmentAccessService.getAppointment(appointmentId))
         .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     mockMvc.perform(post(
             ReverseRouter.route(
@@ -645,6 +782,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.of(new AssetName(assetName)));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)

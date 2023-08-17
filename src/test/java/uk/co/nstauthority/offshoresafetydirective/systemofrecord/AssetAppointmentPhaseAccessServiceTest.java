@@ -96,9 +96,12 @@ class AssetAppointmentPhaseAccessServiceTest {
     var appointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
         .build();
+    var asset = AssetTestUtil.builder().build();
+
     var firstAppointmentPhase = "FIRST_APPOINTMENT_PHASE";
 
     var appointmentPhase = AssetPhaseTestUtil.builder()
+        .withAsset(asset)
         .withAppointment(appointment)
         .withPhase(firstAppointmentPhase)
         .build();

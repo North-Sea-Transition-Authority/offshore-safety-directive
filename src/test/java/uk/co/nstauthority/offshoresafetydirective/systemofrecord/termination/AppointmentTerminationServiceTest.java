@@ -2,6 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,6 +72,54 @@ class AppointmentTerminationServiceTest {
 
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
+
+  @Test
+  void hasNotBeenTerminated_whenTerminationExists_thenReturnFalse() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    var termination = AppointmentTerminationTestUtil.builder().build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationRepository.findTerminationByAppointment(appointment))
+        .thenReturn(Optional.of(termination));
+
+    var hasNotBeenTerminated = appointmentTerminationService.hasNotBeenTerminated(appointmentId);
+    assertFalse(hasNotBeenTerminated);
+  }
+
+  @Test
+  void hasNotBeenTerminated_whenNoTerminationExists_andAppointmentIsFound_thenReturnTrue() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationRepository.findTerminationByAppointment(appointment))
+        .thenReturn( Optional.empty());
+
+    var hasNotBeenTerminated = appointmentTerminationService.hasNotBeenTerminated(appointmentId);
+    assertTrue(hasNotBeenTerminated);
+  }
+
+  @Test
+  void hasNotBeenTerminated_whenAppointmentIsNotFound_thenThrowException() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("No appointment found for AppointmentId [%s].".formatted(appointmentId.id()));
+  }
 
   @Test
   void getAssetName_whenAssetNameNotFound_thenReturnProvidedName() {

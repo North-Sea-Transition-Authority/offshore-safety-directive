@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
@@ -46,6 +47,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/appointment/{appointmentId}/correct")
 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+@HasNotBeenTerminated
 public class AppointmentCorrectionController {
 
   private final AppointmentAccessService appointmentAccessService;

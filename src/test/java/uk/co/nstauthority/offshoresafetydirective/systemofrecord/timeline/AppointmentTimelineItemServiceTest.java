@@ -48,6 +48,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
@@ -77,6 +78,9 @@ class AppointmentTimelineItemServiceTest {
 
   @Mock
   private AppointmentPhasesService appointmentPhasesService;
+
+  @Mock
+  private AppointmentTerminationService appointmentTerminationService;
 
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
@@ -945,6 +949,9 @@ class AppointmentTimelineItemServiceTest {
         loggedInUser,
         Set.of(RolePermission.MANAGE_APPOINTMENTS)
     ))
+        .willReturn(true);
+
+    given(appointmentTerminationService.hasNotBeenTerminated(appointmentDto.appointmentId()))
         .willReturn(true);
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(

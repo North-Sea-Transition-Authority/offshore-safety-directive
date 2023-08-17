@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
@@ -35,8 +36,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final HasPermissionInterceptor hasPermissionInterceptor;
   private final HasTeamPermissionInterceptor hasTeamPermissionInterceptor;
   private final UpdateRequestInterceptor updateRequestInterceptor;
-
   private final IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor;
+  private final HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
@@ -44,13 +45,15 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       HasPermissionInterceptor hasPermissionInterceptor,
                       HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
                       UpdateRequestInterceptor updateRequestInterceptor,
-                      IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor) {
+                      IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor,
+                      HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
     this.hasTeamPermissionInterceptor = hasTeamPermissionInterceptor;
     this.updateRequestInterceptor = updateRequestInterceptor;
     this.isCurrentAppointmentInterceptor = isCurrentAppointmentInterceptor;
+    this.hasNotBeenTerminatedInterceptor = hasNotBeenTerminatedInterceptor;
   }
 
   @Override
@@ -77,6 +80,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);
     registry.addInterceptor(isCurrentAppointmentInterceptor)
+        .addPathPatterns("/appointment/**");
+    registry.addInterceptor(hasNotBeenTerminatedInterceptor)
         .addPathPatterns("/appointment/**");
   }
 

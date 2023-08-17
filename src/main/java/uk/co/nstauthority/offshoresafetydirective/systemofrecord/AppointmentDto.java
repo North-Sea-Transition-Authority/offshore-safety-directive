@@ -31,6 +31,10 @@ public record AppointmentDto(
     );
   }
 
+  public static boolean isCurrentAppointment(AppointmentDto appointmentDto) {
+    return appointmentDto.appointmentToDate() != null && appointmentDto.appointmentToDate().value() == null;
+  }
+
   public static Builder builder(AppointmentId appointmentId, AppointedOperatorId appointedOperatorId,
                                 AppointmentFromDate appointmentFromDate, AppointmentToDate appointmentToDate,
                                 Instant appointmentCreatedDate, AppointmentType appointmentType, AssetDto assetDto) {

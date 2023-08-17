@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
@@ -32,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
@@ -51,6 +53,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     HasPermissionInterceptor.class,
     UpdateRequestInterceptor.class,
     IsCurrentAppointmentInterceptor.class,
+    HasNotBeenTerminatedInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
 })
@@ -83,6 +86,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected AppointmentAccessService appointmentAccessService;
+
+  @MockBean
+  protected AppointmentTerminationService appointmentTerminationService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

@@ -25,7 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 
 @Service
-class AppointmentTerminationService {
+public class AppointmentTerminationService {
   private final PortalAssetNameService portalAssetNameService;
   private final AppointmentAccessService appointmentAccessService;
   private final NominationAccessService nominationAccessService;
@@ -36,8 +36,9 @@ class AppointmentTerminationService {
   private final UserDetailService userDetailService;
   private final AppointmentPhasesService appointmentPhasesService;
 
+
   @Autowired
-  AppointmentTerminationService(PortalAssetNameService portalAssetNameService,
+  public AppointmentTerminationService(PortalAssetNameService portalAssetNameService,
                                        AppointmentAccessService appointmentAccessService,
                                        NominationAccessService nominationAccessService,
                                        AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
@@ -80,8 +81,15 @@ class AppointmentTerminationService {
     appointmentUpdateService.updateAppointment(appointmentDto);
   }
 
-  public Optional<AppointmentTermination> findAppointmentTermination(Appointment appointment) {
-    return appointmentTerminationRepository.findTerminationByAppointment(appointment);
+  public boolean hasNotBeenTerminated(AppointmentId appointmentId) {
+    var appointment = getAppointment(appointmentId)
+        .orElseThrow(() -> new IllegalStateException(
+            "No appointment found for AppointmentId [%s].".formatted(appointmentId.id())));
+    return appointmentTerminationRepository.findTerminationByAppointment(appointment).isEmpty();
+  }
+
+  public boolean hasBeenTerminated(AppointmentId appointmentId) {
+    return !hasNotBeenTerminated(appointmentId);
   }
 
   AssetName getAssetName(AssetDto assetDto) {

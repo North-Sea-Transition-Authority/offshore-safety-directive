@@ -73,9 +73,6 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   private static final String CREATED_BY_DEEMED_APPOINTMENT = "Deemed appointment";
 
   @MockBean
-  private AppointmentTerminationService appointmentTerminationService;
-
-  @MockBean
   private AppointmentTerminationValidator appointmentTerminationValidator;
 
   @Autowired
@@ -122,6 +119,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
     new HasPermissionSecurityTestUtil.SmokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
@@ -148,8 +148,8 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
-  @Test
-  void renderTermination_whenAppointmentIsCurrent_thenAssertOk() throws Exception {
+  @SecurityTest
+  void renderTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
          .withId(APPOINTMENT_ID.id())
@@ -162,6 +162,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
         .willReturn(Optional.of(currentAppointmentDto));
 
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
@@ -171,8 +174,32 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @Test
   void renderTermination_whenAppointmentIsNotCurrent_thenAssertForbidden() throws Exception {
-    var currentAppointment = AppointmentTestUtil.builder()
+    var endedAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(LocalDate.now())
+        .withId(APPOINTMENT_ID.id())
+        .build();
+    var endAppointmentDto = AppointmentDto.fromAppointment(endedAppointment);
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .willReturn(Optional.of(endAppointmentDto));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void renderTermination_whenAppointmentHasBeenTerminated_thenForbidden() throws Exception {
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
         .withId(APPOINTMENT_ID.id())
         .build();
     var currentAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
@@ -183,6 +210,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
         .willReturn(Optional.of(currentAppointmentDto));
 
+    when(appointmentTerminationService.hasBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
@@ -190,7 +220,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
+  @SecurityTest
   void renderTermination_whenAppointmentNotFound_thenAssertNotFound() throws Exception {
 
     given(teamMemberService.getUserAsTeamMembers(USER))
@@ -240,6 +270,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.getCreatedByDisplayString(appointmentDto))
         .thenReturn("Deemed appointment");
 
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
     mockMvc.perform(get(
             ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
             .with(user(USER)))
@@ -265,7 +298,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
-  @Test
+  @SecurityTest
   void submitTermination_whenAppointmentIsNotCurrent_thenAssertForbidden() throws Exception {
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(LocalDate.now())
@@ -286,8 +319,8 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void submitTermination_whenAppointmentIsCurrent_thenAssertOk() throws Exception {
+  @SecurityTest
+  void submitTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
         .withId(APPOINTMENT_ID.id())
@@ -297,6 +330,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     given(teamMemberService.getUserAsTeamMembers(USER))
         .willReturn(List.of(APPOINTMENT_MANAGER));
 
+    given(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .willReturn(true);
+
     given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
         .willReturn(Optional.of(currentAppointmentDto));
 
@@ -305,6 +341,30 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
                 on(AppointmentTerminationController.class).submitTermination(APPOINTMENT_ID, null, null, null)))
             .with(user(USER)))
         .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void submitTermination_whenAppointmentHasBeenTerminated_thenForbidden() throws Exception {
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
+        .withId(APPOINTMENT_ID.id())
+        .build();
+    var currentAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    given(appointmentTerminationService.hasBeenTerminated(APPOINTMENT_ID))
+        .willReturn(true);
+
+    given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .willReturn(Optional.of(currentAppointmentDto));
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).submitTermination(APPOINTMENT_ID, null, null, null)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -317,6 +377,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
       bindingResult.addError(new FieldError("object", "field", "message"));
       return invocation;
     }).when(appointmentTerminationValidator).validate(any(AppointmentTerminationForm.class), any(), any());
+
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
 
     mockMvc.perform(post(
             ReverseRouter.route(
@@ -348,6 +411,10 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
     when(appointmentTerminationService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(appointment));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
 
     var assetName = "asset name";
     when(appointmentTerminationService.getAssetName(assetDto))
