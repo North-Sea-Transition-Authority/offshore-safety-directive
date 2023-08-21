@@ -2,10 +2,13 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.in
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,9 +17,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamRepository;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeTestUtil;
@@ -31,6 +36,9 @@ class IndustryTeamServiceTest {
 
   @Mock
   private TeamScopeService teamScopeService;
+
+  @Mock
+  private TeamMemberRoleService teamMemberRoleService;
 
   @InjectMocks
   private IndustryTeamService industryTeamService;
@@ -102,4 +110,25 @@ class IndustryTeamServiceTest {
             orgName
         );
   }
+  
+  @Test
+  void addUserTeamRoles_verifyRepositoryInteractions() {
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
+    var industryRoles = Set.of(
+        IndustryTeamRole.ACCESS_MANAGER
+    );
+
+    industryTeamService.addUserTeamRoles(team, userToAdd, industryRoles);
+
+    var rolesAsStrings = industryRoles
+        .stream()
+        .map(IndustryTeamRole::name)
+        .collect(Collectors.toSet());
+
+    verify(teamMemberRoleService, times(1)).addUserTeamRoles(team, userToAdd, rolesAsStrings);
+  }
+
 }

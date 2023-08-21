@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import java.util.Collection;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -21,7 +20,7 @@ public class PermissionService {
     this.teamMemberService = teamMemberService;
   }
 
-  public boolean hasPermission(ServiceUserDetail user, Set<RolePermission> requiredPermissions) {
+  public boolean hasPermission(ServiceUserDetail user, Collection<RolePermission> requiredPermissions) {
 
     var teamMembers = teamMemberService.getUserAsTeamMembers(user);
 
