@@ -25,7 +25,7 @@ public class PortalOrganisationGroupRestController {
   public RestSearchResult searchPortalOrganisationGroups(@RequestParam("term") String searchTerm) {
     var results = portalOrganisationGroupQueryService.queryOrganisationByName(searchTerm)
         .stream()
-        .map(dto -> new RestSearchItem(String.valueOf(dto.organisationGroupId()), dto.name()))
+        .map(dto -> new RestSearchItem(dto.organisationGroupId(), dto.name()))
         .toList();
 
     return new RestSearchResult(results);

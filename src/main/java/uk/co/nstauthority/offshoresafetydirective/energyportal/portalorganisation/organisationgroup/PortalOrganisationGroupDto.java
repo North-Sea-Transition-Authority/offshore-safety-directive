@@ -3,13 +3,13 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 
 public record PortalOrganisationGroupDto(
-    Integer organisationGroupId,
+    String organisationGroupId,
     String name
 ) {
 
   public static PortalOrganisationGroupDto fromOrganisationGroup(OrganisationGroup organisationGroup) {
     return new PortalOrganisationGroupDto(
-        organisationGroup.getOrganisationGroupId(),
+        organisationGroup.getOrganisationGroupId().toString(),
         organisationGroup.getName()
     );
   }

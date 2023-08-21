@@ -19,9 +19,12 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = TeamSelectionController.class)
 class TeamSelectionControllerTest extends AbstractControllerTest {
@@ -75,6 +78,58 @@ class TeamSelectionControllerTest extends AbstractControllerTest {
     doReturn(user).when(userDetailService).getUserDetail();
     when(teamService.getUserAccessibleTeamsOfType(user, teamType)).thenReturn(List.of(team));
     when(teamManagementService.teamsToTeamViews(List.of(team))).thenReturn(List.of(teamView));
+
+    mockMvc.perform(get(ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(teamType.getUrlSlug())))
+            .with(user(user)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(teamView.teamUrl()));
+  }
+
+  @Test
+  void renderTeamList_whenUserIsInOnlyOneIndustryTeam_andCanManageIndustryTeams_thenOk() throws Exception {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var teamType = TeamType.INDUSTRY;
+    var team = TeamTestUtil.Builder()
+        .withTeamType(teamType)
+        .build();
+    var teamView = TeamTestUtil.createTeamView(team);
+
+    doReturn(user).when(userDetailService).getUserDetail();
+    when(teamService.getUserAccessibleTeamsOfType(user, teamType)).thenReturn(List.of(team));
+    when(teamManagementService.teamsToTeamViews(List.of(team))).thenReturn(List.of(teamView));
+
+    var thirdPartyAccessManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(thirdPartyAccessManager));
+
+    mockMvc.perform(get(ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(teamType.getUrlSlug())))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/permissionmanagement/teamSelection"));
+  }
+
+  @Test
+  void renderTeamList_whenUserIsInOnlyOneIndustryTeam_andCannotManageIndustryTeams_thenRedirected() throws Exception {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var teamType = TeamType.INDUSTRY;
+    var team = TeamTestUtil.Builder()
+        .withTeamType(teamType)
+        .build();
+    var teamView = TeamTestUtil.createTeamView(team);
+
+    doReturn(user).when(userDetailService).getUserDetail();
+    when(teamService.getUserAccessibleTeamsOfType(user, teamType)).thenReturn(List.of(team));
+    when(teamManagementService.teamsToTeamViews(List.of(team))).thenReturn(List.of(teamView));
+
+    var nominationViewer = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withRole(IndustryTeamRole.NOMINATION_VIEWER)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(nominationViewer));
 
     mockMvc.perform(get(ReverseRouter.route(on(TeamSelectionController.class).renderTeamList(teamType.getUrlSlug())))
             .with(user(user)))

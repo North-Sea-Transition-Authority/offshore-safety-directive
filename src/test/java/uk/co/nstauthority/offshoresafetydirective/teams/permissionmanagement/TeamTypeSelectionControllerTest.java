@@ -21,12 +21,16 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = TeamTypeSelectionController.class)
 class TeamTypeSelectionControllerTest extends AbstractControllerTest {
+
+  private static final String TEAM_NAME = "Select a team";
 
   @MockBean
   private TeamService teamService;
@@ -108,7 +112,41 @@ class TeamTypeSelectionControllerTest extends AbstractControllerTest {
             .with(user(user)))
         .andExpect(status().isOk())
         .andExpect(model().attribute("teamTypeRouteMap", teamTypeRouteMap))
-        .andExpect(model().attribute("pageTitle", "Select a team"))
+        .andExpect(model().attribute("pageTitle", TEAM_NAME))
+        .andExpect(view().name("osd/permissionmanagement/teamTypeSelection"));
+  }
+
+  @Test
+  void renderTeamTypeSelection_whenCanManageIndustryTeams_andNoIndustryTeams_thenIndustryAccessible() throws Exception {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var firstTeam = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+
+    Map<TeamType, String> teamTypeRouteMap = Map.of(
+        TeamType.REGULATOR, "/",
+        TeamType.INDUSTRY, "/"
+    );
+
+    var thirdPartyAccessManager = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(thirdPartyAccessManager));
+
+    doReturn(user).when(userDetailService).getUserDetail();
+    when(teamService.getUserAccessibleTeams(user)).thenReturn(List.of(firstTeam));
+    when(teamManagementService.getManageTeamTypeUrls(
+        Set.of(firstTeam.getTeamType(), TeamType.INDUSTRY)
+    ))
+        .thenReturn(teamTypeRouteMap);
+
+    mockMvc.perform(get(ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()))
+            .with(user(user)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("teamTypeRouteMap", teamTypeRouteMap))
+        .andExpect(model().attribute("pageTitle", TEAM_NAME))
         .andExpect(view().name("osd/permissionmanagement/teamTypeSelection"));
   }
 }

@@ -26,7 +26,7 @@ class IndustryTeamService {
 
   public Optional<Team> findIndustryTeamForOrganisationGroup(PortalOrganisationGroupDto portalOrganisationGroupDto) {
     return teamScopeService.getTeamScope(
-            portalOrganisationGroupDto.organisationGroupId().toString(),
+            portalOrganisationGroupDto.organisationGroupId(),
             PortalTeamType.ORGANISATION_GROUP)
         .map(TeamScope::getTeam);
   }
@@ -41,7 +41,7 @@ class IndustryTeamService {
     teamScopeService.addTeamScope(
         createdTeam,
         PortalTeamType.ORGANISATION_GROUP,
-        portalOrganisationGroupDto.organisationGroupId().toString()
+        portalOrganisationGroupDto.organisationGroupId()
     );
 
     return createdTeam;
