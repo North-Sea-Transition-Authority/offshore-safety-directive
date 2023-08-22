@@ -471,4 +471,45 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
             on(IndustryAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId))));
   }
 
+  @Test
+  void addMemberToTeamSubmission_whenValidForm_andAlreadyInTeam_thenUserTakenToEditRoles() throws Exception {
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .withRole(IndustryTeamRole.ACCESS_MANAGER)
+        .build();
+
+    var teamId = team.toTeamId();
+
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+    when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
+    when(teamService.getTeam(teamId, IndustryAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
+
+    var username = "username";
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
+
+    when(energyPortalUserService.findUserByUsername(username))
+        .thenReturn(List.of(userToAdd));
+
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    when(teamService.isMemberOfTeam(wuaId, teamId)).thenReturn(true);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(IndustryAddMemberController.class)
+                .addMemberToTeamSubmission(teamId, null, null)))
+                .with(csrf())
+                .with(user(user))
+                .param("username", username)
+        )
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(
+            on(IndustryEditMemberController.class).renderEditMember(teamId, wuaId))));
+  }
+
 }

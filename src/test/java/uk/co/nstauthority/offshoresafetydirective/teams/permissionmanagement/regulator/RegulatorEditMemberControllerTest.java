@@ -208,7 +208,7 @@ class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeading("Changed roles for %s".formatted(teamMemberView.getDisplayName()))
+        .withHeading("Roles updated for %s".formatted(teamMemberView.getDisplayName()))
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(RegulatorEditMemberController.class)

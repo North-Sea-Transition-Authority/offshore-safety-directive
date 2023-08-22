@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee;
+package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -38,35 +38,35 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRolesForm;
 
 @Controller
-@RequestMapping("/permission-management/consultee/{teamId}/edit/{wuaId}")
+@RequestMapping("/permission-management/industry/{teamId}/edit/{wuaId}")
 @HasTeamPermission(
     anyTeamPermissionOf = RolePermission.GRANT_ROLES,
-    anyNonTeamPermissionOf = RolePermission.MANAGE_CONSULTEE_TEAMS
+    anyNonTeamPermissionOf = RolePermission.MANAGE_INDUSTRY_TEAMS
 )
-public class ConsulteeEditMemberController extends AbstractTeamController {
+public class IndustryEditMemberController extends AbstractTeamController {
 
-  static final TeamType TEAM_TYPE = TeamType.CONSULTEE;
+  static final TeamType TEAM_TYPE = TeamType.INDUSTRY;
 
   private final TeamMemberService teamMemberService;
   private final TeamMemberViewService teamMemberViewService;
   private final TeamMemberRoleService teamMemberRoleService;
   private final ControllerHelperService controllerHelperService;
-  private final ConsulteeTeamMemberEditRolesValidator consulteeTeamMemberEditRolesValidator;
+  private final IndustryTeamMemberEditRolesValidator industryTeamMemberEditRolesValidator;
 
   @Autowired
-  ConsulteeEditMemberController(
+  IndustryEditMemberController(
       TeamMemberService teamMemberService,
       TeamMemberViewService teamMemberViewService,
       TeamMemberRoleService teamMemberRoleService,
       ControllerHelperService controllerHelperService,
-      ConsulteeTeamMemberEditRolesValidator consulteeTeamMemberEditRolesValidator,
+      IndustryTeamMemberEditRolesValidator industryTeamMemberEditRolesValidator,
       TeamService teamService) {
     super(teamService);
     this.teamMemberService = teamMemberService;
     this.teamMemberViewService = teamMemberViewService;
     this.teamMemberRoleService = teamMemberRoleService;
     this.controllerHelperService = controllerHelperService;
-    this.consulteeTeamMemberEditRolesValidator = consulteeTeamMemberEditRolesValidator;
+    this.industryTeamMemberEditRolesValidator = industryTeamMemberEditRolesValidator;
   }
 
   @GetMapping
@@ -107,7 +107,7 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
             "No roles found for user [%s] in team [%s]".formatted(wuaId, teamId)));
 
-    consulteeTeamMemberEditRolesValidator.validate(form, bindingResult,
+    industryTeamMemberEditRolesValidator.validate(form, bindingResult,
         new TeamMemberEditRolesValidatorHint(team, teamMember));
 
     return controllerHelperService.checkErrorsAndRedirect(
@@ -127,7 +127,7 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
               notificationBanner
           );
 
-          return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
+          return ReverseRouter.redirect(on(IndustryTeamManagementController.class).renderMemberList(teamId));
         });
 
   }
@@ -136,9 +136,9 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
     return new ModelAndView("osd/permissionmanagement/addTeamMemberRolesPage")
         .addObject("form", form)
         .addObject("pageTitle", userView.getDisplayName())
-        .addObject("roles", DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(ConsulteeTeamRole.class))
+        .addObject("roles", DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(IndustryTeamRole.class))
         .addObject("backLinkUrl",
-          ReverseRouter.route(on(ConsulteeTeamManagementController.class).renderMemberList(teamId))
+          ReverseRouter.route(on(IndustryTeamManagementController.class).renderMemberList(teamId))
         );
   }
 }

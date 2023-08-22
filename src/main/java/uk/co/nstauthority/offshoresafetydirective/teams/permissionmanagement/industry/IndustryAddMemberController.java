@@ -75,7 +75,9 @@ public class IndustryAddMemberController extends AbstractTeamController {
         () -> {
           var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
           var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
-          // TODO OSDOP-534 - Redirect to edit roles controller if user already belongs to team
+          if (teamService.isMemberOfTeam(wuaId, teamId)) {
+            return ReverseRouter.redirect(on(IndustryEditMemberController.class).renderEditMember(teamId, wuaId));
+          }
           return ReverseRouter.redirect(on(IndustryAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId));
         }
     );

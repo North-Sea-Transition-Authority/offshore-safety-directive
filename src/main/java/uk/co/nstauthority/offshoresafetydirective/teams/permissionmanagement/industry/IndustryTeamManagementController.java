@@ -57,7 +57,7 @@ public class IndustryTeamManagementController extends AbstractTeamController {
           .addObject("addTeamMemberUrl",
               ReverseRouter.route(on(IndustryAddMemberController.class).renderAddTeamMember(teamId)))
           .addObject("canRemoveUsers", true)
-          .addObject("canEditUsers", false);
+          .addObject("canEditUsers", true);
     }
     return modelAndView;
   }

@@ -24,6 +24,7 @@ public class TeamMemberTestUtil {
     private Set<TeamRole> teamRoles = new HashSet<>();
     private TeamId teamId = new TeamId(UUID.randomUUID());
     private TeamType teamType = TeamType.REGULATOR;
+    private boolean addedCustomRoles = false;
 
     public TeamMemberBuilder withWebUserAccountId(long webUserAccountId) {
       this.webUserAccountId = new WebUserAccountId(webUserAccountId);
@@ -42,16 +43,18 @@ public class TeamMemberTestUtil {
 
     public TeamMemberBuilder withRole(TeamRole teamRole) {
       teamRoles.add(teamRole);
+      addedCustomRoles = true;
       return this;
     }
 
     public TeamMemberBuilder withRoles(Set<TeamRole> teamRoles) {
       this.teamRoles = teamRoles;
+      addedCustomRoles = true;
       return this;
     }
 
     public TeamMember build() {
-      if (teamRoles.isEmpty()) {
+      if (!addedCustomRoles) {
         teamRoles.add(RegulatorTeamRole.ACCESS_MANAGER);
       }
 

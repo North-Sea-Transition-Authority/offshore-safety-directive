@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
@@ -84,6 +85,21 @@ class TeamMemberViewTest {
     assertThat(teamMemberView)
         .extracting(TeamMemberView::editUrl)
         .isEqualTo(ReverseRouter.route(on(ConsulteeEditMemberController.class).renderEditMember(
+            team.toTeamId(),
+            teamMemberView.wuaId()
+        )));
+  }
+
+  @Test
+  void editUrl_whenIndustryTeam() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+    assertThat(teamMemberView)
+        .extracting(TeamMemberView::editUrl)
+        .isEqualTo(ReverseRouter.route(on(IndustryEditMemberController.class).renderEditMember(
             team.toTeamId(),
             teamMemberView.wuaId()
         )));

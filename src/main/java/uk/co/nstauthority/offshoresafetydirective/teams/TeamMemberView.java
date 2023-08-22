@@ -8,6 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeRemoveMemberController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorRemoveMemberController;
@@ -38,8 +39,8 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
           .renderEditMember(teamView.teamId(), wuaId));
       case CONSULTEE -> ReverseRouter.route(on(ConsulteeEditMemberController.class)
           .renderEditMember(teamView.teamId(), wuaId));
-      // TODO OSDOP-534 - Edit member roles in industry team
-      case INDUSTRY -> throw new IllegalStateException("Editing member of industry team is not supported");
+      case INDUSTRY -> ReverseRouter.route(on(IndustryEditMemberController.class)
+          .renderEditMember(teamView.teamId(), wuaId));
     };
   }
 
