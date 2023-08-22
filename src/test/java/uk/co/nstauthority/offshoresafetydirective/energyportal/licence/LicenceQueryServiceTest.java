@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceApi;
@@ -88,6 +90,69 @@ class LicenceQueryServiceTest {
 
     var resultingLicence = licenceQueryService.getLicenceById(unmatchedLicenceId);
 
+    assertThat(resultingLicence).isEmpty();
+  }
+
+  @Test
+  void getLicencesByIdIn_whenMatch_thenLicencesReturned() {
+    var matchingLicenceId = new LicenceId(100);
+    var matchingLicenceIdList = List.of(matchingLicenceId.id());
+
+    var expectedPortalLicence = EpaLicenceTestUtil.builder()
+        .withLicenceNumber(1)
+        .withLicenceReference("reference")
+        .withLicenceType("type")
+        .build();
+
+    given(licenceApi.searchLicencesById(
+        eq(matchingLicenceIdList),
+        eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedPortalLicence));
+
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(matchingLicenceIdList);
+
+    assertThat(resultingLicence)
+        .extracting(
+            licenceDto -> licenceDto.licenceId().id(),
+            licenceDto -> licenceDto.licenceType().value(),
+            licenceDto -> licenceDto.licenceNumber().value(),
+            licenceDto -> licenceDto.licenceReference().value()
+        )
+        .containsExactly(
+            tuple(
+                expectedPortalLicence.getId(),
+                expectedPortalLicence.getLicenceType(),
+                expectedPortalLicence.getLicenceNo(),
+                expectedPortalLicence.getLicenceRef()
+            )
+        );
+  }
+
+  @Test
+  void getLicencesByIdIn_whenNoMatch_thenEmptyListReturned() {
+    var unmatchedLicenceId = new LicenceId(-1);
+    var unmatchedLicenceIdList = List.of(unmatchedLicenceId.id());
+
+    given(licenceApi.searchLicencesById(
+        eq(unmatchedLicenceIdList),
+        eq(LicenceQueryService.MULTI_LICENCE_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(Collections.emptyList());
+
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(unmatchedLicenceIdList);
+
+    assertThat(resultingLicence).isEmpty();
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getLicencesByIdIn_whenNullOrEmptyList_thenEmptyListReturned(List<Integer> nullOrEmptyList) {
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(nullOrEmptyList);
     assertThat(resultingLicence).isEmpty();
   }
 

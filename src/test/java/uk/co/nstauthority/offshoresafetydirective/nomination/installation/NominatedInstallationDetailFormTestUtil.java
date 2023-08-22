@@ -18,6 +18,9 @@ public class NominatedInstallationDetailFormTestUtil {
 
     private List<Integer> installations = new ArrayList<>();
     private boolean hasAddedInstallations = false;
+
+    private List<Integer> licences = new ArrayList<>();
+    private boolean hasAddedLicences = false;
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
     private Boolean developmentConstructionPhase;
@@ -35,6 +38,18 @@ public class NominatedInstallationDetailFormTestUtil {
     public NominatedInstallationDetailFormBuilder withInstallation(int installationId) {
       this.installations.add(installationId);
       hasAddedInstallations = true;
+      return this;
+    }
+
+    public NominatedInstallationDetailFormBuilder withLicences(List<Integer> licences) {
+      this.licences = licences;
+      hasAddedLicences = true;
+      return this;
+    }
+
+    public NominatedInstallationDetailFormBuilder withLicence(Integer licenceId) {
+      this.licences.add(licenceId);
+      hasAddedLicences = true;
       return this;
     }
 
@@ -80,9 +95,15 @@ public class NominatedInstallationDetailFormTestUtil {
         installations.add(2);
       }
 
+      if (!hasAddedLicences) {
+        licences.add(1);
+        licences.add(2);
+      }
+
       return new NominatedInstallationDetailForm()
           .setInstallations(installations)
           .setForAllInstallationPhases(forAllInstallationPhases)
+          .setLicences(licences)
           .setDevelopmentDesignPhase(developmentDesignPhase)
           .setDevelopmentConstructionPhase(developmentConstructionPhase)
           .setDevelopmentInstallationPhase(developmentInstallationPhase)

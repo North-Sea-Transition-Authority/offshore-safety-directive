@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -24,6 +23,8 @@ import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,10 +34,14 @@ class NominatedInstallationDetailFormValidatorTest {
 
   private static InstallationQueryService installationQueryService;
 
+  private static LicenceQueryService licenceQueryService;
+
   @BeforeAll
   static void setup() {
     installationQueryService = mock(InstallationQueryService.class);
-    nominatedInstallationDetailFormValidator = new NominatedInstallationDetailFormValidator(installationQueryService);
+    licenceQueryService = mock(LicenceQueryService.class);
+    nominatedInstallationDetailFormValidator = new NominatedInstallationDetailFormValidator(installationQueryService,
+        licenceQueryService);
   }
 
   @Test
@@ -50,26 +55,22 @@ class NominatedInstallationDetailFormValidatorTest {
   }
 
   @Test
-  void validate_whenNoInstallationsSelected_thenError() {
-    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withInstallations(Collections.emptyList())
-        .build();
+  void validate_whenEmptyForm_thenErrors() {
+    var form = new NominatedInstallationDetailForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+    var resultingErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    var installationsRequiredErrorMessage = NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR;
+    var licencesRequiredErrorMessage = NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR;
+    var forAllInstallationPhasesErrorMessage = NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR;
 
-    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
+    assertThat(resultingErrors).containsExactly(
+        entry(installationsRequiredErrorMessage.field(), Set.of(installationsRequiredErrorMessage.code())),
+        entry(licencesRequiredErrorMessage.field(), Set.of(licencesRequiredErrorMessage.code())),
+        entry(forAllInstallationPhasesErrorMessage.field(), Set.of(forAllInstallationPhasesErrorMessage.code()))
     );
   }
 
@@ -77,15 +78,19 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenValidFormWithAllInstallationPhasesSelected_thenNoErrors() {
 
     var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
 
     var form = NominatedInstallationDetailFormTestUtil.builder()
         .withForAllInstallationPhases(true)
         .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
@@ -97,15 +102,20 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenValidFormWithNotAllInstallationPhasesSelected_thenNoErrors() {
 
     var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
 
     var form = NominatedInstallationDetailFormTestUtil.builder()
         .withForAllInstallationPhases(false)
         .withDevelopmentConstructionPhase(true)
         .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
+
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -119,16 +129,20 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenForAllInstallationPhasesNotSelected_thenError() {
 
     var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withForAllInstallationPhases(null)
         .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
@@ -151,6 +165,7 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenNotForAllInstallationPhasesAndNoPhasesSelected_thenError() {
 
     var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withForAllInstallationPhases(false)
@@ -161,10 +176,13 @@ class NominatedInstallationDetailFormValidatorTest {
         .withDevelopmentProductionPhase(null)
         .withDecommissioningPhase(null)
         .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -189,16 +207,20 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenInstallationIdsInFormNotInPortal_thenError() {
 
     var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
 
     var form = NominatedInstallationDetailFormTestUtil.builder()
         // known installation id
         .withInstallation(installation.id())
         // unknown installation id
         .withInstallation(2000)
+        .withLicence(licence.licenceId().id())
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -219,6 +241,44 @@ class NominatedInstallationDetailFormValidatorTest {
     );
   }
 
+  @Test
+  void validate_whenLicenceIdsInFormNotInPortal_thenError() {
+
+    var installation = InstallationDtoTestUtil.builder().build();
+    var knownLicence = LicenceDtoTestUtil.builder().build();
+
+    var unknownLicenceId = 2000;
+
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallation(installation.id())
+        .withLicence(unknownLicenceId)
+        .withLicence(knownLicence.licenceId().id())
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
+        .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(knownLicence));
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.LICENCE_NOT_FOUND_IN_PORTAL_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
+    );
+  }
+
   @ParameterizedTest
   @MethodSource("getInvalidInstallationArguments")
   void validate_whenInvalidInstallationIdsInForm_thenError(InstallationDto invalidInstallation) {
@@ -227,12 +287,17 @@ class NominatedInstallationDetailFormValidatorTest {
         .withType(NominatedInstallationController.PERMITTED_INSTALLATION_TYPES.get(0))
         .build();
 
+    var licence = LicenceDtoTestUtil.builder().build();
+
     var form = NominatedInstallationDetailFormTestUtil.builder()
         .withInstallations(List.of(installationWithValidType.id(), invalidInstallation.id()))
+        .withLicence(licence.licenceId().id())
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(form.getInstallations()))
         .thenReturn(List.of(installationWithValidType, invalidInstallation));
+    when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
+        .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 

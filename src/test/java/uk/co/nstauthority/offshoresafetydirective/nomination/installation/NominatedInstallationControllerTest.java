@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -35,6 +37,9 @@ import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnu
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -71,6 +76,9 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   @MockBean
   private InstallationQueryService installationQueryService;
+
+  @MockBean
+  private LicenceQueryService licenceQueryService;
 
   @BeforeEach
   void setup() {
@@ -153,8 +161,14 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         .withName("B installation")
         .build();
 
+    var firstLicence = LicenceDtoTestUtil.builder()
+        .withLicenceId(1)
+        .withLicenceReference("reference 1")
+        .build();
+
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withInstallations(List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
+        .withLicence(firstLicence.licenceId().id())
         .build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
@@ -163,6 +177,9 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
     )
         .thenReturn(List.of(lastInstallationAlphabeticallyByName, firstInstallationAlphabeticallyByName));
+
+    when(licenceQueryService.getLicencesByIdIn(List.of(firstLicence.licenceId().id())))
+        .thenReturn(List.of(firstLicence));
 
     var modelAndView = mockMvc.perform(
         get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
@@ -196,6 +213,12 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(InstallationRestController.class)
                 .searchInstallationsByNameAndType(null, NominatedInstallationController.PERMITTED_INSTALLATION_TYPES))
         ))
+        .andExpect(model().attribute(
+            "alreadyAddedLicences",
+            List.of(new LicenceAddToListView(firstLicence))
+        ))
+        .andExpect(model().attribute("licencesRestUrl", RestApiUtil.route(on(LicenceRestController.class)
+            .searchLicences(null))))
         .andExpect(model().attribute("form", form))
         .andExpect(model().attributeExists("accidentRegulatorBranding"))
         .andExpect(model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding"))
@@ -207,8 +230,49 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
         (AccidentRegulatorConfigurationProperties) modelAndView.getModel().get("accidentRegulatorBranding")
     )
         .hasNoNullFieldsOrProperties();
+  }
 
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getNominatedInstallationDetail_whenAlreadyAddedLicencesNull_assertEmptyList(List<Integer> nullOrEmptyList) throws Exception {
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .withLicences(nullOrEmptyList)
+        .build();
 
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    verify(licenceQueryService, never()).getLicencesByIdIn(any());
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(model().attribute("alreadyAddedLicences", Collections.emptyList()));
+  }
+
+  @Test
+  void getNominatedInstallationDetail_whenAlreadyAddedLicencesEmpty_assertEmptyList() throws Exception {
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .withLicences(Collections.emptyList())
+        .build();
+
+    var firstLicence = LicenceDtoTestUtil.builder()
+        .withLicenceId(1)
+        .withLicenceReference("reference 1")
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    when(licenceQueryService.getLicencesByIdIn(List.of(firstLicence.licenceId().id())))
+        .thenReturn(List.of(firstLicence));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(model().attribute("alreadyAddedLicences", Collections.emptyList()));
   }
 
   @Test

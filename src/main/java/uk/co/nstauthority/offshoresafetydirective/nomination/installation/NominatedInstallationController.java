@@ -22,6 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHel
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -58,6 +60,7 @@ public class NominatedInstallationController {
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final InstallationQueryService installationQueryService;
+  private final LicenceQueryService licenceQueryService;
   private final NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
@@ -67,13 +70,14 @@ public class NominatedInstallationController {
                                              nominatedInstallationDetailPersistenceService,
                                          NominationDetailService nominationDetailService,
                                          InstallationQueryService installationQueryService,
-                                         NominatedInstallationDetailFormService
+                                         LicenceQueryService licenceQueryService, NominatedInstallationDetailFormService
                                              nominatedInstallationDetailFormService,
                                          AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.controllerHelperService = controllerHelperService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.installationQueryService = installationQueryService;
+    this.licenceQueryService = licenceQueryService;
     this.nominatedInstallationDetailFormService = nominatedInstallationDetailFormService;
     this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
@@ -121,7 +125,12 @@ public class NominatedInstallationController {
             RestApiUtil.route(on(InstallationRestController.class)
                 .searchInstallationsByNameAndType(null, PERMITTED_INSTALLATION_TYPES))
         )
-        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
+        .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties)
+        .addObject("alreadyAddedLicences", getLicences(form))
+        .addObject(
+            "licencesRestUrl", RestApiUtil.route(on(LicenceRestController.class)
+                .searchLicences(null))
+        );
   }
 
   private List<InstallationAddToListView> getInstallationViews(NominatedInstallationDetailForm form) {
@@ -133,6 +142,18 @@ public class NominatedInstallationController {
         .stream()
         .map(InstallationAddToListView::new)
         .sorted(Comparator.comparing(InstallationAddToListView::getName))
+        .toList();
+  }
+
+  private List<LicenceAddToListView> getLicences(NominatedInstallationDetailForm form) {
+    if (form.getLicences() == null || form.getLicences().isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return licenceQueryService.getLicencesByIdIn(form.getLicences())
+        .stream()
+        .map(LicenceAddToListView::new)
+        .sorted(Comparator.comparing(LicenceAddToListView::getName))
         .toList();
   }
 }

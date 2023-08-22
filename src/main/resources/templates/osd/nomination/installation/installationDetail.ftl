@@ -7,6 +7,8 @@
 <#-- @ftlvariable name="installationPhases" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="alreadyAddedInstallations" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationAddToListView>" -->
 <#-- @ftlvariable name="installationsRestUrl" type="String" -->
+<#-- @ftlvariable name="alreadyAddedLicences" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationAddToListView>" -->
+<#-- @ftlvariable name="licencesRestUrl" type="String" -->
 <#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
 
 <@defaultPage
@@ -32,6 +34,26 @@
       restUrl=springUrl(installationsRestUrl)
       selectorMinInputLength=3
     />
+    <@fdsFieldset.fieldset
+      legendHeadingSize="h2"
+      legendHeadingClass="govuk-fieldset__legend--m"
+      legendHeading="Licences relevant to this nomination"
+    >
+      <@fdsAddToList.addToList
+        pathForList="form.licences"
+        pathForSelector="form.licencesSelect"
+        alreadyAdded=alreadyAddedLicences
+        title=""
+        itemName="Licence"
+        noItemText="No licences added"
+        invalidItemText="This licene is not a valid selection and must be removed"
+        addToListId="licence-table"
+        selectorLabelText="Select a licence relevant to the installations on this nomination"
+        restUrl=springUrl(licencesRestUrl)
+        selectorMinInputLength=2
+        selectorInputClass="govuk-!-width-one-third"
+      />
+    </@fdsFieldset.fieldset>
     <@fdsRadio.radioGroup
       path="form.forAllInstallationPhases"
       labelText="Is this nomination for all installation activity phases?"

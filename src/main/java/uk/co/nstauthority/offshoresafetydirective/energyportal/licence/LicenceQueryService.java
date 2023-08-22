@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,25 @@ public class LicenceQueryService {
         .stream()
         .map(LicenceDto::fromPortalLicence)
         .findFirst();
+  }
+
+  public List<LicenceDto> getLicencesByIdIn(Collection<Integer> idList) {
+
+    if (idList == null || idList.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+        licenceApi.searchLicencesById(
+            idList.stream().toList(),
+            MULTI_LICENCE_PROJECTION_ROOT,
+            requestPurpose,
+            logCorrelationId
+        )
+            .stream()
+            .map(LicenceDto::fromPortalLicence)
+            .toList()
+        );
   }
 
   List<LicenceDto> searchLicences(LicenceSearchFilter licenceSearchFilter) {

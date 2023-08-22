@@ -22,6 +22,10 @@ public class NominatedInstallationDetailForm {
   
   private Boolean decommissioningPhase;
 
+  private List<Integer> licences;
+
+  private String licencesSelect;
+
   public List<Integer> getInstallations() {
     return installations;
   }
@@ -100,6 +104,24 @@ public class NominatedInstallationDetailForm {
 
   public NominatedInstallationDetailForm setDecommissioningPhase(Boolean decommissioningPhase) {
     this.decommissioningPhase = decommissioningPhase;
+    return this;
+  }
+
+  public List<Integer> getLicences() {
+    return licences;
+  }
+
+  public NominatedInstallationDetailForm setLicences(List<Integer> licences) {
+    this.licences = licences;
+    return this;
+  }
+
+  public String getLicencesSelect() {
+    return licencesSelect;
+  }
+
+  public NominatedInstallationDetailForm setLicencesSelect(String licencesSelect) {
+    this.licencesSelect = licencesSelect;
     return this;
   }
 

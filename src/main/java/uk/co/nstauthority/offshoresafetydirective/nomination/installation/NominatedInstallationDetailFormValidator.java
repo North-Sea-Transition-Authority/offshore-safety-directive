@@ -8,12 +8,15 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 
 @Service
 class NominatedInstallationDetailFormValidator implements SmartValidator {
 
   private static final String INSTALLATION_SELECT_FIELD_NAME = "installationsSelect";
+
+  private static final String LICENCE_SELECT_FIELD_NAME = "licencesSelect";
 
   private static final String ALL_PHASES_FIELD_NAME = "forAllInstallationPhases";
 
@@ -37,6 +40,18 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
       "You must select valid installations"
   );
 
+  static final FrontEndErrorMessage LICENCE_REQUIRED_ERROR = new FrontEndErrorMessage(
+      LICENCE_SELECT_FIELD_NAME,
+      "%s.notEmpty".formatted(LICENCE_SELECT_FIELD_NAME),
+      "You must select at least one licence"
+  );
+
+  static final FrontEndErrorMessage LICENCE_NOT_FOUND_IN_PORTAL_ERROR = new FrontEndErrorMessage(
+      LICENCE_SELECT_FIELD_NAME,
+      "%s.notFound".formatted(LICENCE_SELECT_FIELD_NAME),
+      "You must select valid licences"
+  );
+
   static final FrontEndErrorMessage ALL_PHASES_REQUIRED_ERROR = new FrontEndErrorMessage(
       ALL_PHASES_FIELD_NAME,
       "%s.required".formatted(ALL_PHASES_FIELD_NAME),
@@ -50,10 +65,13 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
   );
 
   private final InstallationQueryService installationQueryService;
+  private final LicenceQueryService licenceQueryService;
 
   @Autowired
-  NominatedInstallationDetailFormValidator(InstallationQueryService installationQueryService) {
+  NominatedInstallationDetailFormValidator(InstallationQueryService installationQueryService,
+                                           LicenceQueryService licenceQueryService) {
     this.installationQueryService = installationQueryService;
+    this.licenceQueryService = licenceQueryService;
   }
 
   @Override
@@ -84,6 +102,17 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
         }
       }
     }
+    var numberOfLicencesInForm = numberOfLicencesSelected(form);
+
+    if (numberOfLicencesInForm == 0) {
+      rejectValue(errors, LICENCE_REQUIRED_ERROR);
+    } else {
+      var licencesInPortal = licenceQueryService.getLicencesByIdIn(form.getLicences());
+
+      if (licencesInPortal.size() != numberOfLicencesInForm) {
+        rejectValue(errors, LICENCE_NOT_FOUND_IN_PORTAL_ERROR);
+      }
+    }
 
     if (isForAllPhasesNotAnswered(form)) {
       rejectValue(errors, ALL_PHASES_REQUIRED_ERROR);
@@ -108,6 +137,13 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
 
   private boolean noInstallationsSelected(NominatedInstallationDetailForm form) {
     return form.getInstallations() == null || form.getInstallations().isEmpty();
+  }
+
+  private int numberOfLicencesSelected(NominatedInstallationDetailForm form) {
+    if (form.getLicences() == null || form.getLicences().isEmpty()) {
+      return 0;
+    }
+    return form.getLicences().size();
   }
 
   private boolean isForAllPhasesNotAnswered(NominatedInstallationDetailForm form) {
