@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeRemoveMemberController;
@@ -38,6 +39,21 @@ class TeamMemberViewTest {
     assertThat(teamMemberView)
         .extracting(TeamMemberView::removeUrl)
         .isEqualTo(ReverseRouter.route(on(ConsulteeRemoveMemberController.class).renderRemoveMember(
+            team.toTeamId(),
+            teamMemberView.wuaId()
+        )));
+  }
+
+  @Test
+  void removeUrl_whenIndustryTeam() {
+    var team = TeamTestUtil.Builder().build();
+    var teamMemberView = TeamMemberViewTestUtil.Builder()
+        .withTeamId(team.toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+    assertThat(teamMemberView)
+        .extracting(TeamMemberView::removeUrl)
+        .isEqualTo(ReverseRouter.route(on(IndustryRemoveMemberController.class).renderRemoveMember(
             team.toTeamId(),
             teamMemberView.wuaId()
         )));

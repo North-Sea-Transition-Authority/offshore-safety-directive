@@ -8,6 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeRemoveMemberController;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorEditMemberController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorRemoveMemberController;
 import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
@@ -26,8 +27,8 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
           .renderRemoveMember(teamView.teamId(), wuaId));
       case CONSULTEE -> ReverseRouter.route(on(ConsulteeRemoveMemberController.class)
           .renderRemoveMember(teamView.teamId(), wuaId));
-      // TODO OSDOP-533 - Remove member from industry team
-      case INDUSTRY -> throw new IllegalStateException("Removing member of industry team is not supported");
+      case INDUSTRY -> ReverseRouter.route(on(IndustryRemoveMemberController.class)
+          .renderRemoveMember(teamView.teamId(), wuaId));
     };
   }
 

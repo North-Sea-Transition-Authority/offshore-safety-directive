@@ -173,6 +173,7 @@ class IndustryTeamManagementControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(IndustryAddMemberController.class).renderAddTeamMember(teamId))
         ))
         .andExpect(model().attribute("canRemoveUsers", canRemoveUsers))
+        .andExpect(model().attribute("canEditUsers", false))
         .andExpect(model().attribute("teamMembers", List.of(teamMemberView)));
   }
 
