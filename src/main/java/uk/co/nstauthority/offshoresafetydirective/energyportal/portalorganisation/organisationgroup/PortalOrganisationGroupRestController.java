@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup;
 
+import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ public class PortalOrganisationGroupRestController {
   public RestSearchResult searchPortalOrganisationGroups(@RequestParam("term") String searchTerm) {
     var results = portalOrganisationGroupQueryService.queryOrganisationByName(searchTerm)
         .stream()
+        .sorted(Comparator.comparing(PortalOrganisationGroupDto::name, String.CASE_INSENSITIVE_ORDER))
         .map(dto -> new RestSearchItem(dto.organisationGroupId(), dto.name()))
         .toList();
 

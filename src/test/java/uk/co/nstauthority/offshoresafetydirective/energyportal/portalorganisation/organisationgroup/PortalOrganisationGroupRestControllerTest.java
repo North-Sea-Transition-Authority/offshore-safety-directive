@@ -52,15 +52,24 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
   @Test
   void searchPortalOrganisationGroups_whenResults_thenAssertResult() throws Exception {
     var term = "term";
-    var expectedId = "123";
-    var expectedName = "Org name";
-    var expectedDto = PortalOrganisationGroupDtoTestUtil.builder()
-        .withOrganisationGroupId(expectedId)
-        .withName(expectedName)
+
+    var firstExpectedId = "123";
+    var firstExpectedName = "Org name 1";
+    var firstDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(firstExpectedId)
+        .withName(firstExpectedName)
         .build();
 
+    var secondExpectedId = "124";
+    var secondExpectedName = "Org name 2";
+    var secondDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(secondExpectedId)
+        .withName(secondExpectedName)
+        .build();
+
+    // Return the results in the incorrect order
     when(portalOrganisationGroupQueryService.queryOrganisationByName(term))
-        .thenReturn(List.of(expectedDto));
+        .thenReturn(List.of(secondDto, firstDto));
 
     var result = mockMvc.perform(get(
             RestApiUtil.route(on(PortalOrganisationGroupRestController.class)
@@ -72,14 +81,15 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
     var encodedResponse = result.getResponse().getContentAsString();
     var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
 
+    // Assert results content and order
     assertThat(searchResult.getResults())
-        .hasSize(1)
         .extracting(
             RestSearchItem::id,
             RestSearchItem::text
         )
         .containsExactly(
-            Tuple.tuple(expectedId, expectedName)
+            Tuple.tuple(firstExpectedId, firstExpectedName),
+            Tuple.tuple(secondExpectedId, secondExpectedName)
         );
   }
 
@@ -101,6 +111,37 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
     var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
 
     assertThat(searchResult.getResults()).isEmpty();
+  }
+
+  @Test
+  void searchPortalOrganisationGroups_verifyCaseInsensitiveSorting() throws Exception {
+    var term = "term";
+
+    var lowercaseDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withName("org/a")
+        .build();
+    var uppercaseDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withName("org/B")
+        .build();
+    when(portalOrganisationGroupQueryService.queryOrganisationByName(term))
+        .thenReturn(List.of(lowercaseDto, uppercaseDto));
+
+    var result = mockMvc.perform(get(
+            RestApiUtil.route(on(PortalOrganisationGroupRestController.class)
+                .searchPortalOrganisationGroups(null)))
+            .param("term", term))
+        .andExpect(status().isOk())
+        .andReturn();
+
+    var encodedResponse = result.getResponse().getContentAsString();
+    var searchResult = OBJECT_MAPPER.readValue(encodedResponse, RestSearchResult.class);
+
+    assertThat(searchResult.getResults())
+        .extracting(RestSearchItem::text)
+        .containsExactly(
+            lowercaseDto.name(),
+            uppercaseDto.name()
+        );
   }
 
 }
