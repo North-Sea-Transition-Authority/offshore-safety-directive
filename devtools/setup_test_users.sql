@@ -3,6 +3,7 @@ DO $$
 
     l_regulator_team_id uuid;
     l_consultee_team_id uuid;
+    l_shell_industry_team uuid;
 
   BEGIN
 
@@ -79,6 +80,45 @@ DO $$
       l_consultee_team_id,
       'CONSULTEE'
     );
+
+    INSERT INTO osd.teams (uuid, type, display_name)
+    VALUES (gen_random_uuid(), 'INDUSTRY', 'ROYAL DUTCH SHELL')
+    RETURNING uuid INTO l_shell_industry_team;
+
+    INSERT INTO osd.team_scopes (id, team_id, portal_id, portal_team_type)
+    VALUES (gen_random_uuid(), l_shell_industry_team, '116', 'ORGANISATION_GROUP');
+
+    /* access.manager.shell@wios.co.uk */
+    INSERT INTO osd.team_member_roles VALUES (
+         gen_random_uuid(),
+         53640,
+         l_shell_industry_team,
+         'ACCESS_MANAGER'
+     );
+
+    /* nomination.editor.shell@wios.co.uk */
+    INSERT INTO osd.team_member_roles VALUES (
+         gen_random_uuid(),
+         53642,
+         l_shell_industry_team,
+         'NOMINATION_EDITOR'
+     );
+
+    /* nomination.submitter.shell@wios.co.uk */
+    INSERT INTO osd.team_member_roles VALUES (
+         gen_random_uuid(),
+         53641,
+         l_shell_industry_team,
+         'NOMINATION_SUBMITTER'
+     );
+
+    /* nomination.viewer.shell@wios.co.uk */
+    INSERT INTO osd.team_member_roles VALUES (
+         gen_random_uuid(),
+         53643,
+         l_shell_industry_team,
+         'NOMINATION_VIEWER'
+     );
 
   END;
 $$
