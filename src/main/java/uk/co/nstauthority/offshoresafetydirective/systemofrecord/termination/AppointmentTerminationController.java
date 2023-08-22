@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,10 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
@@ -41,14 +46,19 @@ public class AppointmentTerminationController {
   private final AppointmentTerminationService appointmentTerminationService;
   private final AppointmentTerminationValidator appointmentTerminationValidator;
   private final ControllerHelperService controllerHelperService;
+  private final FileUploadConfig fileUploadConfig;
+  private final FileUploadService fileUploadService;
 
   @Autowired
   public AppointmentTerminationController(AppointmentTerminationService appointmentTerminationService,
                                           AppointmentTerminationValidator appointmentTerminationValidator,
-                                          ControllerHelperService controllerHelperService) {
+                                          ControllerHelperService controllerHelperService, FileUploadConfig fileUploadConfig,
+                                          FileUploadService fileUploadService) {
     this.appointmentTerminationService = appointmentTerminationService;
     this.appointmentTerminationValidator = appointmentTerminationValidator;
     this.controllerHelperService = controllerHelperService;
+    this.fileUploadConfig = fileUploadConfig;
+    this.fileUploadService = fileUploadService;
   }
 
   @GetMapping
@@ -75,6 +85,16 @@ public class AppointmentTerminationController {
                 appointmentId.id()
             )
         ));
+
+    List<UploadedFileView> uploadedFiles = List.of();
+    var modelAndView = getModelAndView(appointment, form);
+
+    if (!Objects.requireNonNull(form).getTerminationDocuments().isEmpty()) {
+      uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getTerminationDocuments());
+    }
+
+    modelAndView.addObject("uploadedFiles", uploadedFiles);
+
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var validatorHint = new AppointmentTerminationValidatorHint(appointmentDto);
 
@@ -86,7 +106,7 @@ public class AppointmentTerminationController {
 
     return controllerHelperService.checkErrorsAndRedirect(
         Objects.requireNonNull(bindingResult),
-        getModelAndView(appointment, form),
+        modelAndView,
         form,
         () -> {
           appointmentTerminationService.terminateAppointment(appointment, form);
@@ -118,7 +138,8 @@ public class AppointmentTerminationController {
         .addObject("submitUrl",
             ReverseRouter.route(on(AppointmentTerminationController.class)
                 .submitTermination(new AppointmentId(appointment.getId()), null, null, null)))
-        .addObject("timelineUrl", getTimelineRoute(appointmentDto));
+        .addObject("timelineUrl", getTimelineRoute(appointmentDto))
+        .addObject("fileUploadTemplate", buildFileUploadTemplate(new AppointmentId(appointment.getId())));
   }
 
   ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {
@@ -147,5 +168,18 @@ public class AppointmentTerminationController {
           ReverseRouter.route(on(AssetTimelineController.class)
               .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
     };
+  }
+
+  private FileUploadTemplate buildFileUploadTemplate(AppointmentId appointmentId) {
+    return new FileUploadTemplate(
+        ReverseRouter.route(
+            on(AppointmentTerminationFileController.class).download(appointmentId, null)),
+        ReverseRouter.route(
+            on(AppointmentTerminationFileController.class).upload(appointmentId, null)),
+        ReverseRouter.route(
+            on(AppointmentTerminationFileController.class).delete(appointmentId, null)),
+        fileUploadConfig.getMaxFileUploadBytes().toString(),
+        String.join(",", fileUploadConfig.getAllowedFileExtensions())
+    );
   }
 }

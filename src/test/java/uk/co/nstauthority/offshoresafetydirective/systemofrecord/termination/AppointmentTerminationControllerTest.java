@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -27,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
@@ -38,9 +39,16 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
@@ -67,7 +75,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
       .build();
 
   private static final AssetName ASSET_NAME = new AssetName("asset name");
-  private static final List<AssetAppointmentPhase> ASSET_APPOINTMENT_PHASES =  List.of(new AssetAppointmentPhase("Development"));
+  private static final List<AssetAppointmentPhase> ASSET_APPOINTMENT_PHASES = List.of(new AssetAppointmentPhase("Development"));
   private static final String APPOINTED_OPERATOR_NAME = "appointed org name";
   private static final String RESPONSIBLE_FROM_DATE = "4 August 2023";
   private static final String CREATED_BY_DEEMED_APPOINTMENT = "Deemed appointment";
@@ -75,8 +83,11 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   @MockBean
   private AppointmentTerminationValidator appointmentTerminationValidator;
 
-  @Autowired
-  private AppointmentAccessService appointmentAccessService;
+  @MockBean
+  private FileUploadConfig fileUploadConfig;
+
+  @MockBean
+  private FileUploadService fileUploadService;
 
   @BeforeEach
   void setUp() {
@@ -152,7 +163,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   void renderTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
-         .withId(APPOINTMENT_ID.id())
+        .withId(APPOINTMENT_ID.id())
         .build();
     var currentAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
 
@@ -273,7 +284,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
 
-    mockMvc.perform(get(
+    var modelAndView = mockMvc.perform(get(
             ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
             .with(user(USER)))
         .andExpect(status().isOk())
@@ -285,7 +296,30 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("createdBy", CREATED_BY_DEEMED_APPOINTMENT))
         .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(AppointmentTerminationController.class)
             .submitTermination(APPOINTMENT_ID, null, null, null))))
-        .andExpect(model().attribute("timelineUrl", getExpectedRedirect(appointmentDto, portalAssetType)));
+        .andExpect(model().attribute("timelineUrl", getExpectedRedirect(appointmentDto, portalAssetType)))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+    var fileUploadTemplate = (FileUploadTemplate) modelAndView.getModel().get("fileUploadTemplate");
+    assertThat(fileUploadTemplate)
+        .extracting(
+            FileUploadTemplate::downloadUrl,
+            FileUploadTemplate::uploadUrl,
+            FileUploadTemplate::deleteUrl,
+            FileUploadTemplate::maxAllowedSize,
+            FileUploadTemplate::allowedExtensions
+        ).containsExactly(
+            ReverseRouter.route(
+                on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, null)),
+            ReverseRouter.route(
+                on(AppointmentTerminationFileController.class).upload(APPOINTMENT_ID, null)),
+            ReverseRouter.route(
+                on(AppointmentTerminationFileController.class).delete(APPOINTMENT_ID, null)),
+            fileUploadConfig.getMaxFileUploadBytes().toString(),
+            String.join(",", fileUploadConfig.getAllowedFileExtensions())
+
+        );
   }
 
   @SecurityTest
@@ -388,6 +422,53 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/termination/terminateAppointment"));
+  }
+
+  @Test
+  void submitTermination_whenHasExistingFiles_thenAssertProperties() throws Exception {
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var uploadedFileId = new UploadedFileId(UUID.randomUUID());
+    var uploadedFile = UploadedFileTestUtil.builder()
+        .withId(uploadedFileId.uuid())
+        .build();
+    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<FileUploadForm>> fileUploadFormListCaptor = ArgumentCaptor.forClass(List.class);
+    when(fileUploadService.getUploadedFileViewListFromForms(fileUploadFormListCaptor.capture()))
+        .thenReturn(List.of(uploadedFileView));
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("object", "field", "message"));
+      return invocation;
+    }).when(appointmentTerminationValidator).validate(any(AppointmentTerminationForm.class), any(), any());
+
+    when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(true);
+
+    var files = FileUploadFormTestUtil.builder()
+        .withUploadedFileId(uploadedFileId.uuid())
+        .build();
+    var form = AppointmentTerminationFormTestUtil.builder()
+        .withTerminationDocuments(List.of(files))
+        .build();
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).submitTermination(APPOINTMENT_ID, null, null, null)))
+            .with(csrf())
+            .with(user(USER))
+            .flashAttr("form", form))
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/systemofrecord/termination/terminateAppointment"))
+        .andExpect(model().attribute("uploadedFiles", List.of(uploadedFileView)));
+
+    assertThat(fileUploadFormListCaptor.getValue())
+        .extracting(FileUploadForm::getUploadedFileId)
+        .containsExactly(uploadedFileId.uuid());
   }
 
   @ParameterizedTest

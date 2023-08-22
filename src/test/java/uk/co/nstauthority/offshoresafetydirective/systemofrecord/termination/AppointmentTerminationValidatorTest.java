@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
@@ -64,7 +66,8 @@ class AppointmentTerminationValidatorTest {
         entry("terminationDate.dayInput.inputValue", Set.of("Enter a complete Termination date")),
         entry("terminationDate.monthInput.inputValue", Set.of("")),
         entry("terminationDate.yearInput.inputValue", Set.of("")),
-        entry("reason.inputValue", Set.of("Enter a reason for the termination"))
+        entry("reason.inputValue", Set.of("Enter a reason for the termination")),
+        entry("terminationDocuments", Set.of("Upload a document"))
     );
   }
 
@@ -73,8 +76,13 @@ class AppointmentTerminationValidatorTest {
     var form = new AppointmentTerminationForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
+    var fileUploadForm = FileUploadFormTestUtil.builder()
+        .withUploadedFileDescription("test")
+        .build();
+
     form.getTerminationDate().setDate(LocalDate.now());
     form.getReason().setInputValue("reason");
+    form.setTerminationDocuments(List.of(fileUploadForm));
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
     assertFalse(bindingResult.hasErrors());
@@ -244,6 +252,24 @@ class AppointmentTerminationValidatorTest {
         "reason.inputValue"
     ).containsExactly(
         Set.of("Enter a reason for the termination")
+    );
+  }
+
+  @Test
+  void validate_whenNoFileDescription_thenValidationErrors() {
+    var fileUploadForm = FileUploadFormTestUtil.builder()
+        .withUploadedFileDescription(null)
+        .build();
+    var form = AppointmentTerminationFormTestUtil.builder()
+        .withTerminationDocuments(List.of(fileUploadForm))
+        .build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    assertThat(extractedErrors).containsExactly(
+        entry("terminationDocuments[0].uploadedFileDescription", Set.of("terminationDocuments[0].uploadedFileDescription.required"))
     );
   }
 

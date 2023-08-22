@@ -1,7 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import java.time.LocalDate;
+import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
 
 class AppointmentTerminationFormTestUtil {
 
@@ -17,15 +20,20 @@ class AppointmentTerminationFormTestUtil {
     private String reason = "reason";
     private LocalDate terminationDate = LocalDate.now();
 
+    private List<FileUploadForm> terminationDocuments = List.of(FileUploadFormTestUtil.builder().build());
+
     Builder withTerminationDate(LocalDate terminationDate) {
       this.terminationDate = terminationDate;
       return this;
     }
 
-
-
     Builder withReason(String reason) {
       this.reason = reason;
+      return this;
+    }
+
+    Builder withTerminationDocuments(List<FileUploadForm> terminationDocuments) {
+      this.terminationDocuments = terminationDocuments;
       return this;
     }
 
@@ -33,6 +41,7 @@ class AppointmentTerminationFormTestUtil {
       var form = new AppointmentTerminationForm();
       form.getTerminationDate().setDate(terminationDate);
       form.getReason().setInputValue(reason);
+      form.setTerminationDocuments(terminationDocuments);
       return form;
     }
   }

@@ -9,9 +9,12 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
 class AppointmentTerminationValidator implements SmartValidator {
+
+  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "Upload a document";
 
   @Override
   public boolean supports(@NonNull Class<?> clazz) {
@@ -36,5 +39,9 @@ class AppointmentTerminationValidator implements SmartValidator {
 
     StringInputValidator.builder()
         .validate(form.getReason(), bindingResult);
+
+    FileValidationUtil.validator()
+        .withMinimumNumberOfFiles(1, TERMINATION_DOCUMENT_ERROR_MESSAGE)
+        .validate(errors, form.getTerminationDocuments(), "terminationDocuments");
   }
 }

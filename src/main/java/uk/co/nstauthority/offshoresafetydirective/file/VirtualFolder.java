@@ -6,6 +6,7 @@ public enum VirtualFolder {
   CASE_NOTES("case-events/case-notes"),
   CONSULTATIONS("case-processing/consultations"),
   APPENDIX_C("nomination/appendix-c"),
+  TERMINATIONS("appointment/terminations")
   ;
 
   private final String folderPath;

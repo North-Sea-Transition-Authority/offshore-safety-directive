@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
@@ -69,6 +70,9 @@ class AppointmentTerminationServiceTest {
 
   @Mock
   private AppointmentTerminationRepository appointmentTerminationRepository;
+
+  @Mock
+  private FileAssociationService fileAssociationService;
 
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
@@ -281,7 +285,7 @@ class AppointmentTerminationServiceTest {
   }
 
   @Test
-  void updateTermination_whenInvalidTerminationDate_thenThrowException() {
+  void terminateAppointment_whenInvalidTerminationDate_thenThrowException() {
     var appointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
         .build();
@@ -296,7 +300,7 @@ class AppointmentTerminationServiceTest {
   }
 
   @Test
-  void updateTermination_whenValid_thenVerifyAppointmentIsUpdated() {
+  void terminateAppointment_whenValid_thenVerifyAppointmentIsUpdated() {
     var appointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
         .build();
@@ -316,7 +320,6 @@ class AppointmentTerminationServiceTest {
 
     var appointmentTerminationArgumentCaptor = ArgumentCaptor.forClass(AppointmentTermination.class);
     verify(appointmentTerminationRepository).save(appointmentTerminationArgumentCaptor.capture());
-
 
     var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(appointmentDtoArgumentCaptor.capture());
@@ -338,5 +341,8 @@ class AppointmentTerminationServiceTest {
     assertThat(appointmentDtoArgumentCaptor.getValue())
         .extracting(appointmentDto -> appointmentDto.appointmentToDate().value())
         .isEqualTo(terminationDate);
+
+    verify(fileAssociationService).submitFiles(form.getTerminationDocuments());
+
   }
 }

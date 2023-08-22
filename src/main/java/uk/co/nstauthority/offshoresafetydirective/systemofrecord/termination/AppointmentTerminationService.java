@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
@@ -35,7 +36,7 @@ public class AppointmentTerminationService {
   private final AppointmentTerminationRepository appointmentTerminationRepository;
   private final UserDetailService userDetailService;
   private final AppointmentPhasesService appointmentPhasesService;
-
+  private final FileAssociationService fileAssociationService;
 
   @Autowired
   public AppointmentTerminationService(PortalAssetNameService portalAssetNameService,
@@ -46,7 +47,8 @@ public class AppointmentTerminationService {
                                        AppointmentUpdateService appointmentUpdateService,
                                        AppointmentTerminationRepository appointmentTerminationRepository,
                                        UserDetailService userDetailService,
-                                       AppointmentPhasesService appointmentPhasesService) {
+                                       AppointmentPhasesService appointmentPhasesService,
+                                       FileAssociationService fileAssociationService) {
     this.portalAssetNameService = portalAssetNameService;
     this.appointmentAccessService = appointmentAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -56,6 +58,7 @@ public class AppointmentTerminationService {
     this.appointmentTerminationRepository = appointmentTerminationRepository;
     this.userDetailService = userDetailService;
     this.appointmentPhasesService = appointmentPhasesService;
+    this.fileAssociationService = fileAssociationService;
   }
 
   @Transactional
@@ -79,6 +82,8 @@ public class AppointmentTerminationService {
     appointment.setResponsibleToDate(terminationDate);
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     appointmentUpdateService.updateAppointment(appointmentDto);
+
+    fileAssociationService.submitFiles(form.getTerminationDocuments());
   }
 
   public boolean hasNotBeenTerminated(AppointmentId appointmentId) {
