@@ -42,5 +42,15 @@
         </#if>
       </#if>
 
+      <#if installationSummaryView.relatedLicenceReferences()?has_content>
+          <@fdsSummaryList.summaryListRowNoAction keyText="Licences relevant to this nomination">
+              <ol class="govuk-list">
+                  <#list installationSummaryView.relatedLicenceReferences() as licence>
+                      <li>${licence}</li>
+                  </#list>
+              </ol>
+          </@fdsSummaryList.summaryListRowNoAction>
+      </#if>
+
   </@fdsSummaryList.summaryListCard>
 </#macro>

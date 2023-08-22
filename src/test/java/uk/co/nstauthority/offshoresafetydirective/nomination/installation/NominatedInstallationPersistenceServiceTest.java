@@ -57,8 +57,8 @@ class NominatedInstallationPersistenceServiceTest {
     ArgumentCaptor<List<NominatedInstallation>> installationArgumentCaptor = ArgumentCaptor.forClass(List.class);
     verify(nominatedInstallationRepository, times(1)).saveAll(installationArgumentCaptor.capture());
 
-    var savedWells = installationArgumentCaptor.getValue();
-    assertThat(savedWells).extracting(
+    var savedInstallations = installationArgumentCaptor.getValue();
+    assertThat(savedInstallations).extracting(
         NominatedInstallation::getInstallationId,
         NominatedInstallation::getNominationDetail
     ).containsExactly(

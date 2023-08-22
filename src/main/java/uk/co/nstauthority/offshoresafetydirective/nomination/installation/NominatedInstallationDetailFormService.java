@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicence;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
 
 @Service
 class NominatedInstallationDetailFormService {
@@ -12,15 +14,18 @@ class NominatedInstallationDetailFormService {
   private final NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
   private final NominatedInstallationAccessService nominatedInstallationAccessService;
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
+  private final NominationLicenceService nominationLicenceService;
 
   @Autowired
   NominatedInstallationDetailFormService(
       NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator,
       NominatedInstallationAccessService nominatedInstallationAccessService,
-      NominatedInstallationDetailRepository nominatedInstallationDetailRepository) {
+      NominatedInstallationDetailRepository nominatedInstallationDetailRepository,
+      NominationLicenceService nominationLicenceService) {
     this.nominatedInstallationDetailFormValidator = nominatedInstallationDetailFormValidator;
     this.nominatedInstallationAccessService = nominatedInstallationAccessService;
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
+    this.nominationLicenceService = nominationLicenceService;
   }
 
   NominatedInstallationDetailForm getForm(NominationDetail nominationDetail) {
@@ -49,6 +54,12 @@ class NominatedInstallationDetailFormService {
             .map(NominatedInstallation::getInstallationId)
             .toList();
     form.setInstallations(installationIds);
+
+    var licenceIds = nominationLicenceService.getRelatedLicences(installationDetail.getNominationDetail())
+        .stream()
+        .map(NominationLicence::getLicenceId)
+        .toList();
+    form.setLicences(licenceIds);
     return form;
   }
 }

@@ -30,6 +30,16 @@
           </#list>
         </@fdsSummaryList.summaryListRowNoAction>
       </#if>
+
+      <#if nominatedInstallationDetailView.licences?has_content>
+       <@fdsSummaryList.summaryListRowNoAction keyText="Licences relevant to this nomination">
+          <ol class="govuk-list">
+              <#list nominatedInstallationDetailView.licences as licence>
+                  <li>${licence.licenceReference().value()}</li>
+              </#list>
+          </ol>
+        </@fdsSummaryList.summaryListRowNoAction>
+      </#if>
     </@fdsSummaryList.summaryList>
   </@fdsSummaryList.summaryListWrapper>
 </#macro>

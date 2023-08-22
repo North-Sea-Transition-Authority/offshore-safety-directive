@@ -6,18 +6,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
 
 @Service
 class NominatedInstallationDetailPersistenceService {
 
   private final NominatedInstallationDetailRepository nominatedInstallationDetailRepository;
   private final NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+  private final NominationLicenceService nominationLicenceService;
 
   @Autowired
   NominatedInstallationDetailPersistenceService(NominatedInstallationDetailRepository nominatedInstallationDetailRepository,
-                                                NominatedInstallationPersistenceService nominatedInstallationPersistenceService) {
+                                                NominatedInstallationPersistenceService nominatedInstallationPersistenceService,
+                                                NominationLicenceService nominationLicenceService) {
     this.nominatedInstallationDetailRepository = nominatedInstallationDetailRepository;
     this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
+    this.nominationLicenceService = nominationLicenceService;
   }
 
   @Transactional
@@ -33,6 +37,7 @@ class NominatedInstallationDetailPersistenceService {
         .orElse(newNominatedInstallationDetailFromForm(nominationDetail, form));
     nominatedInstallationPersistenceService.saveNominatedInstallations(nominationDetail, form);
     nominatedInstallationDetailRepository.save(nominatedInstallationDetail);
+    nominationLicenceService.saveNominationLicence(nominationDetail, form);
   }
 
   @Transactional

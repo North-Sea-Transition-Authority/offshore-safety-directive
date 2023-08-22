@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 import java.util.ArrayList;
 import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class NominatedInstallationDetailViewTestUtil {
@@ -20,6 +21,7 @@ public class NominatedInstallationDetailViewTestUtil {
     private List<InstallationDto> installations = new ArrayList<>();
     private Boolean forAllInstallationPhases = true;
     private List<InstallationPhase> installationPhases = new ArrayList<>();
+    private List<LicenceDto> licences = new ArrayList<>();
 
     public Builder withInstallations(List<InstallationDto> installations) {
       this.installations = installations;
@@ -56,11 +58,16 @@ public class NominatedInstallationDetailViewTestUtil {
       return this;
     }
 
+    public Builder withLicences(List<LicenceDto> licences) {
+      this.licences = licences;
+      return this;
+    }
+
     private Builder() {
     }
 
     public NominatedInstallationDetailView build() {
-      return new NominatedInstallationDetailView(installations, forAllInstallationPhases, installationPhases);
+      return new NominatedInstallationDetailView(installations, forAllInstallationPhases, installationPhases, licences);
     }
   }
 }

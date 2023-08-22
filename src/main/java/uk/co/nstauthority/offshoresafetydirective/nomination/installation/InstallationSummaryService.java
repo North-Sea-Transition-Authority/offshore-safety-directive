@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -9,7 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicence;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -20,6 +25,8 @@ public class InstallationSummaryService {
   private final InstallationSubmissionService installationSubmissionService;
   private final InstallationInclusionAccessService installationInclusionAccessService;
   private final InstallationQueryService installationQueryService;
+  private final NominationLicenceService nominationLicenceService;
+  private final LicenceQueryService licenceQueryService;
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
 
   @Autowired
@@ -28,11 +35,14 @@ public class InstallationSummaryService {
       InstallationSubmissionService installationSubmissionService,
       InstallationInclusionAccessService installationInclusionAccessService,
       InstallationQueryService installationQueryService,
+      NominationLicenceService nominationLicenceService, LicenceQueryService licenceQueryService,
       NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService) {
     this.nominatedInstallationAccessService = nominatedInstallationAccessService;
     this.installationSubmissionService = installationSubmissionService;
     this.installationInclusionAccessService = installationInclusionAccessService;
     this.installationQueryService = installationQueryService;
+    this.nominationLicenceService = nominationLicenceService;
+    this.licenceQueryService = licenceQueryService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
   }
 
@@ -48,11 +58,13 @@ public class InstallationSummaryService {
     return installationInclusionAccessService.getInstallationInclusion(nominationDetail)
         .map(relatedInformation -> {
           var installationRelatedToNomination = getInstallationRelatedToNomination(relatedInformation);
-          var relatedToPearsApplications = getInstallationForAllPhases(relatedInformation);
+          var installationForAllPhases = getInstallationForAllPhases(relatedInformation);
+          var licencesForNomination = getLicencesForNomination(relatedInformation);
           return new InstallationSummaryView(
               installationRelatedToNomination,
-              relatedToPearsApplications,
-              summarySectionError
+              installationForAllPhases,
+              summarySectionError,
+              licencesForNomination
           );
         })
         .orElseGet(() -> new InstallationSummaryView(summarySectionError));
@@ -80,6 +92,25 @@ public class InstallationSummaryService {
         .sorted()
         .toList();
     return new InstallationRelatedToNomination(true, installationNames);
+  }
+
+  private List<String> getLicencesForNomination(
+      InstallationInclusion installationInclusion) {
+
+    if (BooleanUtils.isTrue(installationInclusion.getIncludeInstallationsInNomination())) {
+      var nominationLicences = nominationLicenceService.getRelatedLicences(installationInclusion.getNominationDetail());
+
+      var licenceIds = nominationLicences.stream()
+          .map(NominationLicence::getLicenceId)
+          .toList();
+
+      return licenceQueryService.getLicencesByIdIn(licenceIds)
+          .stream()
+          .sorted(LicenceDto.sort())
+          .map(licenceDto -> licenceDto.licenceReference().value())
+          .toList();
+    }
+    return Collections.emptyList();
   }
 
   @Nullable

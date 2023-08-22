@@ -5,6 +5,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -19,8 +20,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
 
@@ -43,6 +48,12 @@ class InstallationSummaryServiceTest {
 
   @Mock
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
+
+  @Mock
+  private NominationLicenceService nominationLicenceService;
+
+  @Mock
+  private LicenceQueryService licenceQueryService;
 
   @InjectMocks
   private InstallationSummaryService installationSummaryService;
@@ -96,6 +107,36 @@ class InstallationSummaryServiceTest {
   }
 
   @Test
+  void getInstallationSummaryView_whenRelated_andLicencesExistForNomination_thenAssertFields() {
+    var licenceReference = "Licence 1";
+
+    var licenceDto = LicenceDtoTestUtil.builder()
+        .withLicenceReference(licenceReference)
+        .build();
+
+    var installationInclusion = InstallationInclusionTestUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .includeInstallationsInNomination(true)
+        .build();
+
+    var nominationLicence = NominationLicenceTestUtil.builder()
+        .withNominationDetail(nominationDetail)
+        .build();
+
+    when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
+        .thenReturn(Optional.of(installationInclusion));
+    when(licenceQueryService.getLicencesByIdIn(List.of(nominationLicence.getLicenceId())))
+        .thenReturn(List.of(licenceDto));
+    when(nominationLicenceService.getRelatedLicences(installationInclusion.getNominationDetail()))
+        .thenReturn(List.of(nominationLicence));
+
+    var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
+    assertThat(result)
+        .extracting(InstallationSummaryView::relatedLicenceReferences)
+        .isEqualTo(List.of(licenceReference));
+  }
+
+    @Test
   void getInstallationSummaryView_whenRelated_andRelatedToAllPhases_thenAssertFields() {
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
@@ -222,10 +263,12 @@ class InstallationSummaryServiceTest {
     assertThat(result)
         .extracting(
             InstallationSummaryView::installationRelatedToNomination,
-            InstallationSummaryView::installationForAllPhases
+            InstallationSummaryView::installationForAllPhases,
+            InstallationSummaryView::relatedLicenceReferences
         ).containsExactly(
             new InstallationRelatedToNomination(false, List.of()),
-            null
+            null,
+            Collections.emptyList()
         );
   }
 

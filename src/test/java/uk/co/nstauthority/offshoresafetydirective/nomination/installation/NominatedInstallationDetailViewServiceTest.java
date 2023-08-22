@@ -13,8 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailViewServiceTest {
@@ -31,8 +35,15 @@ class NominatedInstallationDetailViewServiceTest {
   @Mock
   private InstallationQueryService installationQueryService;
 
+  @Mock
+  private LicenceQueryService licenceQueryService;
+
+  @Mock
+  private NominationLicenceService nominationLicenceService;
+
   @InjectMocks
   private NominatedInstallationDetailViewService nominatedInstallationDetailViewService;
+
 
   @Test
   void getNominatedInstallationDetailView_whenEntityExist_assertViewFields() {
@@ -53,12 +64,34 @@ class NominatedInstallationDetailViewServiceTest {
         .withInstallationId(2)
         .build();
 
+    var nominationLicence1 = NominationLicenceTestUtil.builder()
+        .withLicenceId(200)
+        .build();
+
+    var nominationLicence2 = NominationLicenceTestUtil.builder()
+        .withLicenceId(100)
+        .build();
+
     var installationDto1 = InstallationDtoTestUtil.builder()
         .withId(nominatedInstallation1.getInstallationId())
         .build();
 
     var installationDto2 = InstallationDtoTestUtil.builder()
         .withId(nominatedInstallation2.getInstallationId())
+        .build();
+
+    var licenceDto1 = LicenceDtoTestUtil.builder()
+        .withLicenceId(nominationLicence1.getLicenceId())
+        .withLicenceType("B")
+        .withLicenceNumber(20)
+        .withLicenceReference("second")
+        .build();
+
+    var licenceDto2 = LicenceDtoTestUtil.builder()
+        .withLicenceId(nominationLicence2.getLicenceId())
+        .withLicenceType("A")
+        .withLicenceNumber(10)
+        .withLicenceReference("first")
         .build();
 
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
@@ -69,6 +102,12 @@ class NominatedInstallationDetailViewServiceTest {
         List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId())
     )).thenReturn(List.of(installationDto1, installationDto2));
 
+    when(nominationLicenceService.getRelatedLicences(NOMINATION_DETAIL))
+        .thenReturn(List.of(nominationLicence1, nominationLicence2));
+    when(licenceQueryService.getLicencesByIdIn(
+        List.of(nominationLicence1.getLicenceId(), nominationLicence2.getLicenceId())))
+        .thenReturn(List.of(licenceDto1, licenceDto2));
+
     var nominatedInstallationDetailView =
         nominatedInstallationDetailViewService.getNominatedInstallationDetailView(NOMINATION_DETAIL);
 
@@ -77,7 +116,8 @@ class NominatedInstallationDetailViewServiceTest {
         .extracting(
             NominatedInstallationDetailView::getInstallations,
             NominatedInstallationDetailView::getForAllInstallationPhases,
-            NominatedInstallationDetailView::getInstallationPhases
+            NominatedInstallationDetailView::getInstallationPhases,
+            NominatedInstallationDetailView::getLicences
         )
         .containsExactly(
             List.of(installationDto1, installationDto2),
@@ -89,7 +129,8 @@ class NominatedInstallationDetailViewServiceTest {
                 InstallationPhase.DEVELOPMENT_COMMISSIONING,
                 InstallationPhase.DEVELOPMENT_PRODUCTION,
                 InstallationPhase.DECOMMISSIONING
-            )
+            ),
+            List.of(licenceDto2, licenceDto1)
         );
   }
 

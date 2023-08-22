@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionDetails;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionId;
@@ -9,7 +10,8 @@ public record InstallationSummaryView(
     InstallationRelatedToNomination installationRelatedToNomination,
     InstallationForAllPhases installationForAllPhases,
     SummarySectionError summarySectionError,
-    SummarySectionDetails summarySectionDetails
+    SummarySectionDetails summarySectionDetails,
+    List<String> relatedLicenceReferences
 ) {
 
   private static final String SUMMARY_ID = "installations-summary";
@@ -17,13 +19,14 @@ public record InstallationSummaryView(
 
   public InstallationSummaryView(InstallationRelatedToNomination installationRelatedToNomination,
                                  InstallationForAllPhases installationForAllPhases,
-                                 SummarySectionError summarySectionError) {
+                                 SummarySectionError summarySectionError, List<String> licenceForNomination) {
     this(installationRelatedToNomination, installationForAllPhases, summarySectionError,
-        new SummarySectionDetails(new SummarySectionId(SUMMARY_ID), new SummarySectionName(SUMMARY_NAME)));
+        new SummarySectionDetails(new SummarySectionId(SUMMARY_ID), new SummarySectionName(SUMMARY_NAME)),
+        licenceForNomination);
   }
 
   public InstallationSummaryView(SummarySectionError summarySectionError) {
-    this(null, null, summarySectionError);
+    this(null, null, summarySectionError, null);
   }
 
 }

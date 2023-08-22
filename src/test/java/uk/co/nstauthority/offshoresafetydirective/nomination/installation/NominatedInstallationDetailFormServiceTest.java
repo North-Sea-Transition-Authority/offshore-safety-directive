@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailFormServiceTest {
@@ -30,6 +32,9 @@ class NominatedInstallationDetailFormServiceTest {
 
   @Mock
   private NominatedInstallationDetailFormValidator nominatedInstallationDetailFormValidator;
+
+  @Mock
+  private NominationLicenceService nominationLicenceService;
 
   @InjectMocks
   private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
@@ -53,10 +58,17 @@ class NominatedInstallationDetailFormServiceTest {
         .withDecommissioningPhase(true)
         .build();
 
+    var nominationLicence = NominationLicenceTestUtil.builder()
+        .withNominationDetail(NOMINATION_DETAIL)
+        .withLicenceId(100)
+        .build();
+
     when(nominatedInstallationDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedInstallationDetail));
     when(nominatedInstallationAccessService.getNominatedInstallations(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedInstallation1, nominatedInstallation2));
+    when(nominationLicenceService.getRelatedLicences(NOMINATION_DETAIL))
+        .thenReturn(List.of(nominationLicence));
 
     var form = nominatedInstallationDetailFormService.getForm(NOMINATION_DETAIL);
 
@@ -69,7 +81,8 @@ class NominatedInstallationDetailFormServiceTest {
             NominatedInstallationDetailForm::getDevelopmentInstallationPhase,
             NominatedInstallationDetailForm::getDevelopmentCommissioningPhase,
             NominatedInstallationDetailForm::getDevelopmentProductionPhase,
-            NominatedInstallationDetailForm::getDecommissioningPhase
+            NominatedInstallationDetailForm::getDecommissioningPhase,
+            NominatedInstallationDetailForm::getLicences
         )
         .containsExactly(
             List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId()),
@@ -79,7 +92,8 @@ class NominatedInstallationDetailFormServiceTest {
             nominatedInstallationDetail.getDevelopmentInstallationPhase(),
             nominatedInstallationDetail.getDevelopmentCommissioningPhase(),
             nominatedInstallationDetail.getDevelopmentProductionPhase(),
-            nominatedInstallationDetail.getDecommissioningPhase()
+            nominatedInstallationDetail.getDecommissioningPhase(),
+            List.of(nominationLicence.getLicenceId())
         );
   }
 

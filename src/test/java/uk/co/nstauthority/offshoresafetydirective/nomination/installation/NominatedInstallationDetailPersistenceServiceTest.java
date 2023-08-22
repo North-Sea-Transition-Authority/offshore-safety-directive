@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailPersistenceServiceTest {
@@ -24,6 +25,9 @@ class NominatedInstallationDetailPersistenceServiceTest {
 
   @Mock
   private NominatedInstallationPersistenceService nominatedInstallationPersistenceService;
+
+  @Mock
+  private NominationLicenceService nominationLicenceService;
 
   @InjectMocks
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
@@ -86,6 +90,7 @@ class NominatedInstallationDetailPersistenceServiceTest {
 
     var nominatedInstallationsDetailCaptor = ArgumentCaptor.forClass(NominatedInstallationDetail.class);
     verify(nominatedInstallationPersistenceService, times(1)).saveNominatedInstallations(NOMINATION_DETAIL, form);
+    verify(nominationLicenceService, times(1)).saveNominationLicence(NOMINATION_DETAIL, form);
     verify(nominatedInstallationDetailRepository, times(1)).save(nominatedInstallationsDetailCaptor.capture());
 
     var savedEntity = nominatedInstallationsDetailCaptor.getValue();

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
+package uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences;
 
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.fds.addtolist.AddToListItem;

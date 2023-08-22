@@ -72,7 +72,8 @@ public class NominationSummaryViewTestUtil {
     private InstallationSummaryView installationSummaryView = new InstallationSummaryView(
         new InstallationRelatedToNomination(true, List.of("Installation 1")),
         new InstallationForAllPhases(true, List.of()),
-        null
+        null,
+        List.of("Licence 1")
     );
 
     private WellSummaryView wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();

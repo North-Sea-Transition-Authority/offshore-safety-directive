@@ -34,7 +34,7 @@ public class LicenceDtoTestUtil {
       return this;
     }
 
-    Builder withLicenceNumber(Integer licenceNumber) {
+    public Builder withLicenceNumber(Integer licenceNumber) {
       this.licenceNumber = licenceNumber;
       return this;
     }
