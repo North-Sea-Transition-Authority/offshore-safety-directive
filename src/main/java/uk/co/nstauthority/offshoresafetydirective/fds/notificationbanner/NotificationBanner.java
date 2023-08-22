@@ -1,8 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner;
 
+import java.io.Serializable;
 import org.apache.commons.lang3.StringUtils;
 
-public class NotificationBanner {
+public class NotificationBanner implements Serializable {
 
   private final String title;
   private final String heading;
