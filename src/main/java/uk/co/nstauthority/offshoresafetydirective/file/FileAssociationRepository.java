@@ -15,6 +15,10 @@ interface FileAssociationRepository extends CrudRepository<FileAssociation, UUID
   List<FileAssociation> findAllByReferenceTypeAndReferenceIdIn(FileAssociationType fileAssociationType,
                                                                Collection<String> referenceIds);
 
+  List<FileAssociation> findAllByReferenceTypeAndFileStatusAndReferenceIdIn(FileAssociationType fileAssociationType,
+                                                                            FileStatus fileStatus,
+                                                                            Collection<String> referenceIds);
+
   List<FileAssociation> findAllByReferenceTypeAndReferenceIdInAndPurposeIn(FileAssociationType fileAssociationType,
                                                                            Collection<String> referenceIds,
                                                                            Collection<String> purposes);

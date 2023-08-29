@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
@@ -50,7 +51,7 @@ class CaseEventQueryServiceTest {
   @InjectMocks
   private CaseEventQueryService caseEventQueryService;
 
-  private CaseEventFileView caseEventFileView;
+  private FileSummaryView fileView;
   private NominationDetail nominationDetail;
   private CaseEventTestUtil.Builder caseEventBuilder;
   private EnergyPortalUserDto caseEventCreator;
@@ -58,7 +59,7 @@ class CaseEventQueryServiceTest {
   @BeforeEach
   void setUp() {
     var uploadedFileView = new UploadedFileView("fileid", "filename", "filesize", "fileDescription", Instant.now());
-    caseEventFileView = new CaseEventFileView(uploadedFileView, "/");
+    fileView = new FileSummaryView(uploadedFileView, "/");
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(NOMINATION_DETAIL_VERSION)
@@ -217,7 +218,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -236,7 +237,7 @@ class CaseEventQueryServiceTest {
         .hasFieldOrPropertyWithValue("customVersionPrompt", null)
         .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
         .hasFieldOrPropertyWithValue("customBodyPrompt", "Decision comment")
-        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileView))
         .hasFieldOrPropertyWithValue("customFilePrompt", "Decision document")
         .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
         .hasAssertedAllProperties();
@@ -256,7 +257,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -294,7 +295,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -313,7 +314,7 @@ class CaseEventQueryServiceTest {
         .hasFieldOrPropertyWithValue("customVersionPrompt", null)
         .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
         .hasFieldOrPropertyWithValue("customBodyPrompt", "Appointment comments")
-        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileView))
         .hasFieldOrPropertyWithValue("customFilePrompt", "Appointment documents")
         .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
         .hasAssertedAllProperties();
@@ -333,7 +334,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -352,7 +353,7 @@ class CaseEventQueryServiceTest {
         .hasFieldOrPropertyWithValue("customVersionPrompt", null)
         .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
         .hasFieldOrPropertyWithValue("customBodyPrompt", "Case note text")
-        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileView))
         .hasFieldOrPropertyWithValue("customFilePrompt", "Case note documents")
         .hasAssertedAllPropertiesExcept("formattedEventTime");
   }
@@ -442,7 +443,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -461,7 +462,7 @@ class CaseEventQueryServiceTest {
         .hasFieldOrPropertyWithValue("customVersionPrompt", null)
         .hasFieldOrPropertyWithValue("body", caseEvent.getComment())
         .hasFieldOrPropertyWithValue("customBodyPrompt", "Consultation response")
-        .hasFieldOrPropertyWithValue("fileViews", List.of(caseEventFileView))
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileView))
         .hasFieldOrPropertyWithValue("customFilePrompt", "Consultation response documents")
         .hasAssertedAllPropertiesExcept("formattedEventTime");
   }
@@ -481,7 +482,7 @@ class CaseEventQueryServiceTest {
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
-        .thenReturn(Map.of(caseEvent, List.of(caseEventFileView)));
+        .thenReturn(Map.of(caseEvent, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 
@@ -526,7 +527,7 @@ class CaseEventQueryServiceTest {
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(
         List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate)))
-        .thenReturn(Map.of(firstCaseEventByCreatedDate, List.of(caseEventFileView)));
+        .thenReturn(Map.of(firstCaseEventByCreatedDate, List.of(fileView)));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
 

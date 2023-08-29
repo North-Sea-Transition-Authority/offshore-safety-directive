@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
@@ -82,7 +83,7 @@ public class CaseEventFileService {
     fileAssociationService.updateFileReferences(submittedDecisionFiles, new CaseEventFileReference(caseEvent));
   }
 
-  public Map<CaseEvent, List<CaseEventFileView>> getFileViewMapFromCaseEvents(Collection<CaseEvent> caseEvents) {
+  public Map<CaseEvent, List<FileSummaryView>> getFileViewMapFromCaseEvents(Collection<CaseEvent> caseEvents) {
     Map<String, CaseEvent> caseEventIdMap = caseEvents.stream()
         .collect(Collectors.toMap(
             caseEvent -> new CaseEventFileReference(caseEvent).getReferenceId(),
@@ -104,7 +105,7 @@ public class CaseEventFileService {
 
     var uploadedFileViews = fileUploadService.getUploadedFileViewList(uploadedFileIds);
 
-    Map<CaseEvent, List<CaseEventFileView>> caseEventAndFileViewMap = caseEventReferenceAndLinkedFileMap.entrySet()
+    Map<CaseEvent, List<FileSummaryView>> caseEventAndFileViewMap = caseEventReferenceAndLinkedFileMap.entrySet()
         .stream()
         .collect(Collectors.toMap(
             entry -> caseEventIdMap.get(entry.getKey()),
@@ -124,7 +125,7 @@ public class CaseEventFileService {
 
   }
 
-  private List<CaseEventFileView> getCaseEventFileViewsLinkedToCaseEvent(
+  private List<FileSummaryView> getCaseEventFileViewsLinkedToCaseEvent(
       CaseEvent caseEvent,
       Collection<FileAssociationDto> fileAssociationDtos,
       Collection<UploadedFileView> uploadedFileViews
@@ -141,7 +142,7 @@ public class CaseEventFileService {
         .toList();
 
     return relevantUploadedFileViews.stream()
-        .map(fileView -> new CaseEventFileView(
+        .map(fileView -> new FileSummaryView(
             fileView,
             ReverseRouter.route(on(CaseEventFileDownloadController.class)
                 .download(

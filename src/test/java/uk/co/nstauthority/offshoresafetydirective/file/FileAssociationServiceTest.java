@@ -231,6 +231,26 @@ class FileAssociationServiceTest {
   }
 
   @Test
+  void getSubmittedUploadedFileAssociations() {
+    var referenceIds = List.of("123");
+
+    var fileAssociation = FileAssociationTestUtil.builder()
+        .withUploadedFile(UploadedFileTestUtil.builder().build())
+        .build();
+
+    when(fileAssociationRepository
+        .findAllByReferenceTypeAndFileStatusAndReferenceIdIn(FileAssociationType.APPOINTMENT, FileStatus.SUBMITTED, referenceIds))
+        .thenReturn(List.of(fileAssociation));
+
+    var result = fileAssociationService.getSubmittedUploadedFileAssociations(
+        FileAssociationType.APPOINTMENT,
+        referenceIds
+    );
+
+    assertThat(result).containsExactly(FileAssociationDto.from(fileAssociation));
+  }
+
+  @Test
   void getAllByFileReferenceAndUploadedFileIds() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var nominationDetailReference = new TestFileAssociationReference(nominationDetail);

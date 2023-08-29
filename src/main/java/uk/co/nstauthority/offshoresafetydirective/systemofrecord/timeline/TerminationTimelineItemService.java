@@ -1,8 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,35 +15,44 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 
 @Service
 class TerminationTimelineItemService {
 
   private final EnergyPortalUserService energyPortalUserService;
+  private final FileAssociationService fileAssociationService;
+  private final FileUploadService fileUploadService;
   private final AppointmentTerminationService appointmentTerminationService;
 
   @Autowired
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
-                                 AppointmentTerminationService appointmentTerminationService) {
+                                 AppointmentTerminationService appointmentTerminationService,
+                                 FileAssociationService fileAssociationService,
+                                 FileUploadService fileUploadService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
+    this.fileAssociationService = fileAssociationService;
+    this.fileUploadService = fileUploadService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments) {
 
     var terminations = appointmentTerminationService.getTerminations(appointments);
-
-    var wuaIds = terminations.stream()
-        .map(AppointmentTermination::getTerminatedByWuaId)
-        .map(WebUserAccountId::new)
-        .collect(Collectors.toSet());
-
-    Map<Long, EnergyPortalUserDto> users = energyPortalUserService.findByWuaIds(wuaIds)
-        .stream()
-        .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
+    var users = getUsers(terminations);
+    var uploadedFileViewsMap = getFilesAssociatedWithAppointments(appointments);
 
     return terminations.stream()
         .map(termination -> {
@@ -47,19 +60,33 @@ class TerminationTimelineItemService {
               .map(EnergyPortalUserDto::displayName)
               .orElse("Unknown");
 
-          return convertToTimelineItemView(termination, terminatedByUserName);
+          var files = uploadedFileViewsMap.getOrDefault(termination.getAppointment().getId().toString(), List.of())
+              .stream()
+              .map(fileView -> new FileSummaryView(
+                  fileView,
+                  ReverseRouter.route(on(AppointmentTerminationFileController.class)
+                      .download(
+                          new AppointmentId(termination.getAppointment().getId()),
+                          new UploadedFileId(UUID.fromString(fileView.fileId()))))))
+              .sorted(
+                  Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
+              .toList();
+
+          return convertToTimelineItemView(termination, terminatedByUserName, files);
         })
         .toList();
 
   }
 
   private AssetTimelineItemView convertToTimelineItemView(AppointmentTermination termination,
-                                                          String terminatedByUserName) {
+                                                          String terminatedByUserName,
+                                                          List<FileSummaryView> files) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("terminationDate", DateUtil.formatLongDate(termination.getTerminationDate()))
         .addProperty("reasonForTermination", termination.getReasonForTermination())
-        .addProperty("terminatedBy", terminatedByUserName);
+        .addProperty("terminatedBy", terminatedByUserName)
+        .addProperty("terminationFiles", files);
 
     return new AssetTimelineItemView(
         TimelineEventType.TERMINATION,
@@ -68,5 +95,55 @@ class TerminationTimelineItemService {
         termination.getCreatedTimestamp(),
         termination.getTerminationDate()
     );
+  }
+
+  private Map<Long, EnergyPortalUserDto> getUsers(List<AppointmentTermination> terminations) {
+
+    var wuaIds = terminations.stream()
+        .map(AppointmentTermination::getTerminatedByWuaId)
+        .map(WebUserAccountId::new)
+        .collect(Collectors.toSet());
+
+    return energyPortalUserService.findByWuaIds(wuaIds)
+        .stream()
+        .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
+  }
+
+  private Map<String, List<UploadedFileView>> getFilesAssociatedWithAppointments(List<Appointment> appointments) {
+    Map<String, Appointment> appointmentIdMap = appointments.stream()
+        .collect(Collectors.toMap(
+            appointment -> appointment.getId().toString(),
+            Function.identity()
+        ));
+
+    List<FileAssociationDto> linkedFileAssociationDtos =
+        fileAssociationService.getSubmittedUploadedFileAssociations(
+            FileAssociationType.APPOINTMENT,
+            appointmentIdMap.keySet()
+        );
+
+    var uploadedFileIds = linkedFileAssociationDtos.stream()
+        .map(FileAssociationDto::uploadedFileId)
+        .toList();
+
+    var uploadedFileViews = fileUploadService.getUploadedFileViewList(uploadedFileIds);
+
+    Map<String, List<FileAssociationDto>> referenceAndFilesMap = linkedFileAssociationDtos.stream()
+        .collect(Collectors.groupingBy(FileAssociationDto::referenceId));
+
+    return referenceAndFilesMap.entrySet().stream()
+        .collect(Collectors.toMap(
+            Map.Entry::getKey,
+            entry -> getUploadedFileViews(entry.getValue(), uploadedFileViews)
+        ));
+  }
+
+  private List<UploadedFileView> getUploadedFileViews(List<FileAssociationDto> fileAssociationDtos,
+                                                      List<UploadedFileView> uploadedFileViews) {
+    return uploadedFileViews.stream()
+        .filter(
+            uploadedFileView -> fileAssociationDtos.stream()
+                .anyMatch(dto -> dto.uploadedFileId().toString().equals(uploadedFileView.getFileId())))
+        .toList();
   }
 }

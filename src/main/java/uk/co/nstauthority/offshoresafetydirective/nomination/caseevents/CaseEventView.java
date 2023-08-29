@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 import java.time.Instant;
 import java.util.List;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 
 public class CaseEventView {
 
@@ -17,14 +18,14 @@ public class CaseEventView {
   private final Instant eventInstant;
   private final String formattedEventTime;
   private final String customDatePrompt;
-  private final List<CaseEventFileView> fileViews;
+  private final List<FileSummaryView> fileViews;
   private final String customFilePrompt;
 
   private CaseEventView(int nominationVersion, String customVersionPrompt, String title, String body,
                         String customBodyPrompt,
                         String createdBy, String customCreatorPrompt, Instant createdInstant,
                         Instant eventInstant, String formattedEventTime,
-                        String customDatePrompt, List<CaseEventFileView> fileViews, String customFilePrompt) {
+                        String customDatePrompt, List<FileSummaryView> fileViews, String customFilePrompt) {
     this.nominationVersion = nominationVersion;
     this.customVersionPrompt = customVersionPrompt;
     this.title = title;
@@ -84,7 +85,7 @@ public class CaseEventView {
     return customDatePrompt;
   }
 
-  public List<CaseEventFileView> getFileViews() {
+  public List<FileSummaryView> getFileViews() {
     return fileViews;
   }
 
@@ -110,7 +111,7 @@ public class CaseEventView {
     private final Instant createdInstant;
     private String formattedEventTime;
     private String customDatePrompt;
-    private List<CaseEventFileView> fileViews;
+    private List<FileSummaryView> fileViews;
     private String customFilePrompt;
 
     private Builder(String title, int nominationVersion, Instant createdInstant, Instant eventInstant,
@@ -154,7 +155,7 @@ public class CaseEventView {
       return this;
     }
 
-    public Builder withFileViews(List<CaseEventFileView> fileViews) {
+    public Builder withFileViews(List<FileSummaryView> fileViews) {
       this.fileViews = fileViews;
       return this;
     }

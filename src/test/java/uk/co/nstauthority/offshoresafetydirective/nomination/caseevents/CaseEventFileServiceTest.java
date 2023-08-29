@@ -17,6 +17,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
@@ -24,13 +29,9 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {
@@ -164,7 +165,7 @@ class CaseEventFileServiceTest {
 
     var result = caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent));
 
-    var expectedFirstFileView = new CaseEventFileView(
+    var expectedFirstFileView = new FileSummaryView(
         firstUploadedFileView,
         ReverseRouter.route(on(CaseEventFileDownloadController.class)
             .download(
@@ -173,7 +174,7 @@ class CaseEventFileServiceTest {
                 new UploadedFileId(UUID.fromString(firstUploadedFileView.fileId()))
             ))
     );
-    var expectedSecondFileView = new CaseEventFileView(
+    var expectedSecondFileView = new FileSummaryView(
         secondUploadedFileView,
         ReverseRouter.route(on(CaseEventFileDownloadController.class)
             .download(
@@ -182,7 +183,7 @@ class CaseEventFileServiceTest {
                 new UploadedFileId(UUID.fromString(secondUploadedFileView.fileId()))
             ))
     );
-    var expectedThirdFileView = new CaseEventFileView(
+    var expectedThirdFileView = new FileSummaryView(
         thirdUploadedFileView,
         ReverseRouter.route(on(CaseEventFileDownloadController.class)
             .download(

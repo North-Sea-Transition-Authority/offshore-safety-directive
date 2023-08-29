@@ -27,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/appointment/{appointmentId}/termination")
 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+// TODO OSDOP-132/ BRANCH 3 allow all nsta users to download files
 public class AppointmentTerminationFileController {
 
   public static final String PURPOSE = "APPOINTMENT_TERMINATION_DOCUMENT";

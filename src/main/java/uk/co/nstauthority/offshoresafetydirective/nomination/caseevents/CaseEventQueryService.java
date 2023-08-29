@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
@@ -116,7 +117,7 @@ public class CaseEventQueryService {
   }
 
   private Function<CaseEvent, CaseEventView> buildCaseEventView(Map<Integer, EnergyPortalUserDto> userIdAndNameMap,
-                                                                List<CaseEventFileView> uploadedFileViews) {
+                                                                List<FileSummaryView> uploadedFileViews) {
     return caseEvent -> {
       var caseEventBuilder = CaseEventView.builder(
           Optional.ofNullable(caseEvent.getTitle()).orElse(caseEvent.getCaseEventType().getScreenDisplayText()),

@@ -62,6 +62,17 @@ public class FileAssociationService {
         .toList();
   }
 
+  public List<FileAssociationDto> getSubmittedUploadedFileAssociations(
+      FileAssociationType referenceType,
+      Collection<String> referenceIds
+  ) {
+    return fileAssociationRepository
+        .findAllByReferenceTypeAndFileStatusAndReferenceIdIn(referenceType, FileStatus.SUBMITTED, referenceIds)
+        .stream()
+        .map(FileAssociationDto::from)
+        .toList();
+  }
+
   public List<FileAssociation> getFileAssociationByFileAssociationReference(
       FileAssociationReference fileAssociationReference) {
     return fileAssociationRepository.findAllByReferenceTypeAndReferenceIdIn(
