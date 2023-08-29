@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointment;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDeleteResult;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
@@ -22,12 +23,12 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.VirtualFolder;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFileReference;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/appointment/{appointmentId}/termination")
-@HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
-// TODO OSDOP-132/ BRANCH 3 allow all nsta users to download files
+@IsMemberOfTeamType(TeamType.REGULATOR)
 public class AppointmentTerminationFileController {
 
   public static final String PURPOSE = "APPOINTMENT_TERMINATION_DOCUMENT";
@@ -47,6 +48,7 @@ public class AppointmentTerminationFileController {
   @PostMapping("/upload")
   @IsCurrentAppointment
   @HasNotBeenTerminated
+  @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
   public FileUploadResult upload(@PathVariable("appointmentId") AppointmentId appointmentId,
                                  @RequestParam("file") MultipartFile multipartFile) {
     var fileReference = new AppointmentFileReference(appointmentId);
@@ -58,6 +60,7 @@ public class AppointmentTerminationFileController {
   @PostMapping("/delete/{uploadedFileId}")
   @IsCurrentAppointment
   @HasNotBeenTerminated
+  @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
   public FileDeleteResult delete(@PathVariable("appointmentId") AppointmentId appointmentId,
                                  @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
     var fileReference = new AppointmentFileReference(appointmentId);

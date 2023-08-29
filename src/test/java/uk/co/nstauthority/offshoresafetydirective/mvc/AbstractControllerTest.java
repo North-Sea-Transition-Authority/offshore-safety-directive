@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTermin
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
@@ -36,6 +37,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamService;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
 @ActiveProfiles({"test", "development"})
@@ -56,6 +60,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     HasNotBeenTerminatedInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
+    IsMemberOfTeamTypeInterceptor.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -89,6 +94,15 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected AppointmentTerminationService appointmentTerminationService;
+
+  @MockBean
+  protected RegulatorTeamService regulatorTeamService;
+
+  @MockBean
+  protected ConsulteeTeamService consulteeTeamService;
+
+  @MockBean
+  protected IndustryTeamService teamService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

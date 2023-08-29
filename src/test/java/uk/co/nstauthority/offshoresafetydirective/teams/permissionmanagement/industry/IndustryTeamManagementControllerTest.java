@@ -36,9 +36,6 @@ class IndustryTeamManagementControllerTest extends AbstractControllerTest {
   private TeamMemberViewService teamMemberViewService;
 
   @MockBean
-  private IndustryTeamService industryTeamService;
-
-  @MockBean
   protected PermissionService permissionService;
 
   @MockBean

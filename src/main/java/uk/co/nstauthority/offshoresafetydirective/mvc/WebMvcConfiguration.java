@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTermin
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
@@ -38,6 +39,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final UpdateRequestInterceptor updateRequestInterceptor;
   private final IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor;
   private final HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor;
+  private final IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
@@ -46,7 +48,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       HasTeamPermissionInterceptor hasTeamPermissionInterceptor,
                       UpdateRequestInterceptor updateRequestInterceptor,
                       IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor,
-                      HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor) {
+                      HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor,
+                      IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
@@ -54,6 +57,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.updateRequestInterceptor = updateRequestInterceptor;
     this.isCurrentAppointmentInterceptor = isCurrentAppointmentInterceptor;
     this.hasNotBeenTerminatedInterceptor = hasNotBeenTerminatedInterceptor;
+    this.isMemberOfTeamTypeInterceptor = isMemberOfTeamTypeInterceptor;
   }
 
   @Override
@@ -82,6 +86,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(isCurrentAppointmentInterceptor)
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(hasNotBeenTerminatedInterceptor)
+        .addPathPatterns("/appointment/**");
+    registry.addInterceptor(isMemberOfTeamTypeInterceptor)
         .addPathPatterns("/appointment/**");
   }
 

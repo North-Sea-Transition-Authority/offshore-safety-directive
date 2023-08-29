@@ -77,6 +77,8 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         fileUploadConfig.getAllowedFileExtensions()
     )).thenReturn(validUploadResult);
 
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
@@ -165,12 +167,46 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
+  @SecurityTest
+  void upload_whenNotMemberOfRegulatorTeam_thenForbidden() throws Exception {
+    when(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .thenReturn(Optional.ofNullable(AppointmentDtoTestUtil.builder().build()));
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER))
+        .thenReturn(false);
+
+    var fileId = UUID.randomUUID();
+    var fileName = "file name";
+
+    MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
+    var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
+    var validUploadResult = FileUploadResult.valid(fileId.toString(), fileName, mockMultipartFile);
+
+    when(fileControllerHelperService.processFileUpload(
+        fileReference,
+        AppointmentTerminationFileController.PURPOSE,
+        AppointmentTerminationFileController.VIRTUAL_FOLDER,
+        mockMultipartFile,
+        fileUploadConfig.getAllowedFileExtensions()
+    )).thenReturn(validUploadResult);
+
+    mockMvc.perform(multipart(ReverseRouter.route(
+            on(AppointmentTerminationFileController.class).upload(APPOINTMENT_ID, null)))
+            .file(mockMultipartFile)
+            .with(user(USER))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void upload_verifyCalls_whenAppointmentIsCurrent_andHasNotBeenTerminated() throws Exception {
     var fileId = UUID.randomUUID();
     var fileName = "file name";
 
     givenAppointmentIsCurrentAndHasNotBeenTerminated();
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
 
     MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
     var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
@@ -203,6 +239,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
 
     when(fileControllerHelperService.deleteFile(fileReference, new UploadedFileId(fileId)))
         .thenReturn(fileDeleteResult);
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withUser(USER)
@@ -274,11 +311,17 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void delete_verifyCalls_whenAppointmentIsCurrent_andHasNotBeenTerminated() throws Exception {
-    givenAppointmentIsCurrentAndHasNotBeenTerminated();
+  @SecurityTest
+  void delete_whenUserIsNotMemberOfRegulatorTeam_thenForbidden() throws Exception {
+    when(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .thenReturn(Optional.ofNullable(AppointmentDtoTestUtil.builder().build()));
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(false);
 
     var fileId = UUID.randomUUID();
+
     var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
     var fileDeleteResult = FileDeleteResult.success(fileId.toString());
 
@@ -289,13 +332,30 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
             on(AppointmentTerminationFileController.class).delete(APPOINTMENT_ID, new UploadedFileId(fileId))))
             .with(user(USER))
             .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void delete_verifyCalls_whenAppointmentIsCurrent_andHasNotBeenTerminated() throws Exception {
+    givenAppointmentIsCurrentAndHasNotBeenTerminated();
+
+    var fileId = UUID.randomUUID();
+    var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
+    var fileDeleteResult = FileDeleteResult.success(fileId.toString());
+
+    when(fileControllerHelperService.deleteFile(fileReference, new UploadedFileId(fileId)))
+        .thenReturn(fileDeleteResult);
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(AppointmentTerminationFileController.class).delete(APPOINTMENT_ID, new UploadedFileId(fileId))))
+            .with(user(USER))
+            .with(csrf()))
         .andExpect(status().isOk());
   }
 
   @SecurityTest
   void download_onlyManageAppointmentPermitted_whenAppointmentIsCurrent_andHasNotBeenTerminated() throws UnsupportedEncodingException {
-    givenAppointmentIsCurrentAndHasNotBeenTerminated();
-
     var fileId = UUID.randomUUID();
 
     var streamContent = "abc";
@@ -308,7 +368,6 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withUser(USER)
-        .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
         .withGetEndpoint(
             ReverseRouter.route(
                 on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, new UploadedFileId(fileId))),
@@ -327,7 +386,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void download_whenAppointmentIsNotCurrent_thenAssertOk() throws Exception {
+  void download_whenIsNotMemberOfRegulatorTeam_thenAssertForbidden() throws Exception {
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentToDate(LocalDate.now())
         .build();
@@ -336,6 +395,8 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.ofNullable(appointmentDto));
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(false);
     var fileId = UUID.randomUUID();
 
     var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
@@ -347,36 +408,11 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     mockMvc.perform(get(ReverseRouter.route(
             on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, new UploadedFileId(fileId))))
             .with(user(USER)))
-        .andExpect(status().isOk());
+        .andExpect(status().isForbidden());
   }
-
-  @SecurityTest
-  void download_whenAppointmentHasBeenTerminated_thenAssertOk() throws Exception {
-    when(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
-        .thenReturn(Optional.ofNullable(AppointmentDtoTestUtil.builder().build()));
-    when(teamMemberService.getUserAsTeamMembers(USER))
-        .thenReturn(List.of(APPOINTMENT_MANAGER));
-
-    when(appointmentTerminationService.hasBeenTerminated(APPOINTMENT_ID))
-        .thenReturn(true);
-
-    var fileId = UUID.randomUUID();
-
-    var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
-    var fileDeleteResult = FileDeleteResult.success(fileId.toString());
-
-    when(fileControllerHelperService.deleteFile(fileReference, new UploadedFileId(fileId)))
-        .thenReturn(fileDeleteResult);
-
-    mockMvc.perform(get(ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, new UploadedFileId(fileId))))
-            .with(user(USER)))
-        .andExpect(status().isOk());
-  }
-
 
   @Test
-  void download_verifyCalls_whenAppointmentIsCurrent_andHasBeenTerminated() throws Exception {
+  void download_verifyCalls() throws Exception {
     givenAppointmentIsCurrentAndHasNotBeenTerminated();
 
     var fileId = UUID.randomUUID();
@@ -386,6 +422,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
 
     when(fileControllerHelperService.deleteFile(fileReference, new UploadedFileId(fileId)))
         .thenReturn(fileDeleteResult);
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(
             on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, new UploadedFileId(fileId))))

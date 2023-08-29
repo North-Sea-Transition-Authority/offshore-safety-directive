@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.assertj.core.api.AssertionsForClassTypes.entry;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
@@ -17,6 +18,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
@@ -37,6 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTest
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
 class TerminationTimelineItemServiceTest {
@@ -53,11 +58,17 @@ class TerminationTimelineItemServiceTest {
   @Mock
   private FileUploadService fileUploadService;
 
+  @Mock
+  private UserDetailService userDetailService;
+
+  @Mock
+  private RegulatorTeamService regulatorTeamService;
+
   @InjectMocks
   private TerminationTimelineItemService terminationTimelineItemService;
 
   @Test
-  void getTimelineItemViews_whenTermination_thenPopulatedTerminationViewList() {
+  void getTimelineItemViews_whenTermination_andRegulator_thenPopulatedTerminationViewList() {
     var wuaId = 1L;
     var termination = AppointmentTerminationTestUtil.builder()
         .withCreatedTimestamp(Instant.now())
@@ -69,6 +80,11 @@ class TerminationTimelineItemServiceTest {
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(wuaId)
         .build();
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
 
     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
         .willReturn(List.of(energyPortalUser));
@@ -178,6 +194,11 @@ class TerminationTimelineItemServiceTest {
     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
         .willReturn(List.of(energyPortalUser));
 
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
+
     var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(appointments);
 
     assertThat(resultingTerminationViewList)
@@ -220,6 +241,71 @@ class TerminationTimelineItemServiceTest {
   }
 
   @Test
+  void getTimelineItemViews_whenTermination_andUserIsNotRegulator_thenOnlyDateField() {
+    var wuaId = 1L;
+    var termination = AppointmentTerminationTestUtil.builder()
+        .withCreatedTimestamp(Instant.now())
+        .withCorrectedByWuaId(wuaId)
+        .withReasonForTermination("reason")
+        .withTerminationDate(LocalDate.of(2023, 8, 15))
+        .build();
+    var appointments = List.of(termination.getAppointment());
+
+    var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(wuaId)
+        .build();
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(false);
+    given(appointmentTerminationService.getTerminations(appointments))
+        .willReturn(List.of(termination));
+
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+        .willReturn(List.of(energyPortalUser));
+
+    var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(List.of(termination.getAppointment()));
+    var resultingModelProperties = resultingTerminationViewList.get(0).assetTimelineModelProperties().getModelProperties();
+
+    assertThat(resultingModelProperties)
+        .containsExactly(
+            entry("terminationDate", DateUtil.formatLongDate(termination.getTerminationDate()))
+        );
+  }
+
+  @Test
+  void getTimelineItemViews_whenTermination_andUserIsNotLoggedIn_thenOnlyDateField() {
+    var wuaId = 1L;
+    var termination = AppointmentTerminationTestUtil.builder()
+        .withCreatedTimestamp(Instant.now())
+        .withCorrectedByWuaId(wuaId)
+        .withReasonForTermination("reason")
+        .withTerminationDate(LocalDate.of(2023, 8, 15))
+        .build();
+    var appointments = List.of(termination.getAppointment());
+
+    var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(wuaId)
+        .build();
+
+    given(userDetailService.getUserDetail()).willThrow(InvalidAuthenticationException.class);
+    given(appointmentTerminationService.getTerminations(appointments))
+        .willReturn(List.of(termination));
+
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+        .willReturn(List.of(energyPortalUser));
+
+    var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(List.of(termination.getAppointment()));
+    var resultingModelProperties = resultingTerminationViewList.get(0).assetTimelineModelProperties().getModelProperties();
+
+    assertThat(resultingModelProperties)
+        .containsExactly(
+            entry("terminationDate", DateUtil.formatLongDate(termination.getTerminationDate()))
+        );
+  }
+
+  @Test
   void getTimelineItemViews_whenWuaIdNotInEnergyPortal_thenThrow() {
      var wuaId = 1L;
      var terminations = List.of(AppointmentTerminationTestUtil.builder().withCorrectedByWuaId(wuaId).build());
@@ -230,6 +316,11 @@ class TerminationTimelineItemServiceTest {
 
      given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
          .willReturn(Collections.emptyList());
+
+    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
 
      var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(appointments);
 

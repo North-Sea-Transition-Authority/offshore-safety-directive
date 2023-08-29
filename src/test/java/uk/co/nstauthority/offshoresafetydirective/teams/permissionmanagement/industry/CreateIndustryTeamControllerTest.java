@@ -50,9 +50,6 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
   private CreateIndustryTeamValidator createIndustryTeamValidator;
 
   @MockBean
-  private IndustryTeamService industryTeamService;
-
-  @MockBean
   private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @SecurityTest
@@ -71,7 +68,7 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(orgGroupDto));
 
     var team = TeamTestUtil.Builder().build();
-    when(industryTeamService.findIndustryTeamForOrganisationGroup(orgGroupDto))
+    when(teamService.findIndustryTeamForOrganisationGroup(orgGroupDto))
         .thenReturn(Optional.of(team));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
@@ -150,7 +147,7 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
     when(portalOrganisationGroupQueryService.findOrganisationById(orgGroupId))
         .thenReturn(Optional.of(portalOrganisationGroupDto));
 
-    when(industryTeamService.createIndustryTeam(portalOrganisationGroupDto))
+    when(teamService.createIndustryTeam(portalOrganisationGroupDto))
         .thenReturn(createdTeam);
 
     mockMvc.perform(post(ReverseRouter.route(on(CreateIndustryTeamController.class)

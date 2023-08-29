@@ -35,6 +35,10 @@ public class ConsulteeTeamService {
     return teamMemberService.isMemberOfTeamWithAnyRoleOf(teamId, user, Set.of(ConsulteeTeamRole.ACCESS_MANAGER.name()));
   }
 
+  public boolean isMemberOfConsulteeTeam(ServiceUserDetail user) {
+    return !getTeamsForUser(user).isEmpty();
+  }
+
   Optional<Team> getTeam(TeamId teamId) {
     return teamService.getTeam(teamId, TeamType.CONSULTEE);
   }

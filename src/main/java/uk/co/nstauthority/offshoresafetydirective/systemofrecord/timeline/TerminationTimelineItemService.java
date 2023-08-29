@@ -11,6 +11,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -28,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 class TerminationTimelineItemService {
@@ -35,17 +39,23 @@ class TerminationTimelineItemService {
   private final EnergyPortalUserService energyPortalUserService;
   private final FileAssociationService fileAssociationService;
   private final FileUploadService fileUploadService;
+  private final UserDetailService userDetailService;
+  private final RegulatorTeamService regulatorTeamService;
   private final AppointmentTerminationService appointmentTerminationService;
 
   @Autowired
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
                                  AppointmentTerminationService appointmentTerminationService,
                                  FileAssociationService fileAssociationService,
-                                 FileUploadService fileUploadService) {
+                                 FileUploadService fileUploadService,
+                                 UserDetailService userDetailService,
+                                 RegulatorTeamService regulatorTeamService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
     this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
+    this.userDetailService = userDetailService;
+    this.regulatorTeamService = regulatorTeamService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments) {
@@ -83,10 +93,13 @@ class TerminationTimelineItemService {
                                                           List<FileSummaryView> files) {
 
     var modelProperties = new AssetTimelineModelProperties()
-        .addProperty("terminationDate", DateUtil.formatLongDate(termination.getTerminationDate()))
-        .addProperty("reasonForTermination", termination.getReasonForTermination())
-        .addProperty("terminatedBy", terminatedByUserName)
-        .addProperty("terminationFiles", files);
+        .addProperty("terminationDate", DateUtil.formatLongDate(termination.getTerminationDate()));
+
+    if (isMemberOfRegulatorTeam()) {
+      modelProperties.addProperty("reasonForTermination", termination.getReasonForTermination())
+          .addProperty("terminatedBy", terminatedByUserName)
+          .addProperty("terminationFiles", files);
+    }
 
     return new AssetTimelineItemView(
         TimelineEventType.TERMINATION,
@@ -145,5 +158,18 @@ class TerminationTimelineItemService {
             uploadedFileView -> fileAssociationDtos.stream()
                 .anyMatch(dto -> dto.uploadedFileId().toString().equals(uploadedFileView.getFileId())))
         .toList();
+  }
+
+  private boolean isMemberOfRegulatorTeam() {
+
+    Optional<ServiceUserDetail> loggedInUser;
+
+    try {
+      loggedInUser = Optional.of(userDetailService.getUserDetail());
+    } catch (InvalidAuthenticationException exception) {
+      loggedInUser = Optional.empty();
+    }
+
+    return loggedInUser.filter(regulatorTeamService::isMemberOfRegulatorTeam).isPresent();
   }
 }

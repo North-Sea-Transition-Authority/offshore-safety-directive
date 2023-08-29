@@ -51,9 +51,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 class RegulatorEditMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
-  RegulatorTeamService regulatorTeamService;
-
-  @MockBean
   private TeamService teamService;
 
   @MockBean

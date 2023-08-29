@@ -36,9 +36,6 @@ class ConsulteeTeamManagementControllerTest extends AbstractControllerTest {
   private TeamMemberViewService teamMemberViewService;
 
   @MockBean
-  private ConsulteeTeamService consulteeTeamService;
-
-  @MockBean
   protected PermissionService permissionService;
 
   @MockBean

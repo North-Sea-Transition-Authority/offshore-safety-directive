@@ -132,4 +132,26 @@ class ConsulteeTeamServiceTest {
         .containsExactly(team);
   }
 
+  @Test
+  void isMemberOfConsulteeTeam_isPresent() {
+      var user = ServiceUserDetailTestUtil.Builder().build();
+      var team = TeamTestUtil.Builder().build();
+
+      when(teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.CONSULTEE))
+          .thenReturn(List.of(team));
+
+      var memberOfConsulteeTeam = consulteeTeamService.isMemberOfConsulteeTeam(user);
+      assertTrue(memberOfConsulteeTeam);
+  }
+
+  @Test
+  void isMemberOfConsulteeTeam_isEmpty() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(teamService.getTeamsOfTypeThatUserBelongsTo(user, TeamType.CONSULTEE))
+        .thenReturn(List.of());
+
+    var memberOfConsulteeTeam = consulteeTeamService.isMemberOfConsulteeTeam(user);
+    assertFalse(memberOfConsulteeTeam);
+  }
 }

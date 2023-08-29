@@ -56,9 +56,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Add
 class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
   @MockBean
-  RegulatorTeamService regulatorTeamService;
-
-  @MockBean
   private EnergyPortalUserService energyPortalUserService;
 
   @MockBean
