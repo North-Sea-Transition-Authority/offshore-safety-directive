@@ -38,6 +38,7 @@ public class AppointmentAssetTimelineItemViewTestUtil {
         );
 
     private Instant createdInstant = Instant.now();
+    private LocalDate eventDate = LocalDate.now();
 
     private Builder() {
     }
@@ -88,12 +89,18 @@ public class AppointmentAssetTimelineItemViewTestUtil {
       return this;
     }
 
+    public Builder withEventDate(LocalDate eventDate) {
+      this.eventDate = eventDate;
+      return this;
+    }
+
     public AssetTimelineItemView build() {
       return new AssetTimelineItemView(
           TimelineEventType.APPOINTMENT,
           title,
           assetTimelineModelProperties,
-          createdInstant
+          createdInstant,
+          eventDate
       );
     }
 

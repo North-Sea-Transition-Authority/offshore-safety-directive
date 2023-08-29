@@ -1,5 +1,5 @@
-<#import '../../../fds/objects/layouts/generic.ftl' as fdsGeneric>
-<#import '../../../fds/components/button/button.ftl' as fdsButton>
+<#import '../../fds/objects/layouts/generic.ftl' as fdsGeneric>
+<#import '../../fds/components/button/button.ftl' as fdsButton>
 
 <#macro _fileDisplay file>
     <@fdsButton.link

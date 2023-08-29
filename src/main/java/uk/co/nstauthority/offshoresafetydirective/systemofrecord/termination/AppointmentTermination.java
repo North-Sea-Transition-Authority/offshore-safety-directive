@@ -15,7 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 
 @Entity
 @Table(name = "appointment_terminations")
-class AppointmentTermination {
+public class AppointmentTermination {
 
   @Id
   @GeneratedValue(generator = "uuid")
@@ -28,7 +28,7 @@ class AppointmentTermination {
 
   private Instant createdTimestamp;
 
-  private Long correctedByWuaId;
+  private Long terminatedByWuaId;
 
   private String reasonForTermination;
 
@@ -58,7 +58,7 @@ class AppointmentTermination {
     this.appointment = appointment;
   }
 
-  Instant getCreatedTimestamp() {
+  public Instant getCreatedTimestamp() {
     return createdTimestamp;
   }
 
@@ -66,15 +66,15 @@ class AppointmentTermination {
     this.createdTimestamp = createdTimestamp;
   }
 
-  Long getCorrectedByWuaId() {
-    return correctedByWuaId;
+  public Long getTerminatedByWuaId() {
+    return terminatedByWuaId;
   }
 
-  void setCorrectedByWuaId(Long correctedByWuaId) {
-    this.correctedByWuaId = correctedByWuaId;
+  void setTerminatedByWuaId(Long correctedByWuaId) {
+    this.terminatedByWuaId = correctedByWuaId;
   }
 
-  String getReasonForTermination() {
+  public String getReasonForTermination() {
     return reasonForTermination;
   }
 
@@ -82,7 +82,7 @@ class AppointmentTermination {
     this.reasonForTermination = reasonForTermination;
   }
 
-  LocalDate getTerminationDate() {
+  public LocalDate getTerminationDate() {
     return terminationDate;
   }
 

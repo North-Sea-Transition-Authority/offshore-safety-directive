@@ -175,6 +175,23 @@ class AppointmentTerminationServiceTest {
   }
 
   @Test
+  void getTermination_whenTerminationFound_thenReturn() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    var termination = AppointmentTerminationTestUtil.builder().build();
+
+    when(appointmentTerminationRepository.findByAppointmentIn(List.of(appointment)))
+        .thenReturn(List.of(termination));
+
+    var resultingTermination = appointmentTerminationService.getTerminations(List.of(appointment));
+
+    assertThat(resultingTermination).containsExactly(termination);
+  }
+
+  @Test
   void getCreatedByDisplayString_whenDeemedAppointmentType_thenReturnString() {
     var deemedAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentType(AppointmentType.DEEMED)
@@ -328,7 +345,7 @@ class AppointmentTerminationServiceTest {
         .extracting(
             AppointmentTermination::getTerminationDate,
             AppointmentTermination::getReasonForTermination,
-            AppointmentTermination::getCorrectedByWuaId,
+            AppointmentTermination::getTerminatedByWuaId,
             AppointmentTermination::getAppointment
         )
         .containsExactly(

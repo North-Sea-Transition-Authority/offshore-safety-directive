@@ -75,7 +75,7 @@ public class AppointmentTerminationService {
     termination.setTerminationDate(terminationDate);
     termination.setReasonForTermination(form.getReason().getInputValue());
     termination.setCreatedTimestamp(Instant.now());
-    termination.setCorrectedByWuaId(userDetailService.getUserDetail().wuaId());
+    termination.setTerminatedByWuaId(userDetailService.getUserDetail().wuaId());
 
     appointmentTerminationRepository.save(termination);
 
@@ -91,6 +91,10 @@ public class AppointmentTerminationService {
         .orElseThrow(() -> new IllegalStateException(
             "No appointment found for AppointmentId [%s].".formatted(appointmentId.id())));
     return appointmentTerminationRepository.findTerminationByAppointment(appointment).isEmpty();
+  }
+
+  public List<AppointmentTermination> getTerminations(List<Appointment> appointments) {
+    return appointmentTerminationRepository.findByAppointmentIn(appointments);
   }
 
   public boolean hasBeenTerminated(AppointmentId appointmentId) {

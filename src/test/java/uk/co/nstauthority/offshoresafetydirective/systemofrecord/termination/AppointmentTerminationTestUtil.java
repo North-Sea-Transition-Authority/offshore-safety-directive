@@ -64,7 +64,7 @@ public class AppointmentTerminationTestUtil {
       termination.setId(id);
       termination.setAppointment(appointment);
       termination.setCreatedTimestamp(createdTimestamp);
-      termination.setCorrectedByWuaId(correctedByWuaId);
+      termination.setTerminatedByWuaId(correctedByWuaId);
       termination.setReasonForTermination(reasonForTermination);
       termination.setTerminationDate(terminationDate);
       return termination;

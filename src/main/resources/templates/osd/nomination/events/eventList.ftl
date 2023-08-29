@@ -2,7 +2,7 @@
 <#import "../../../fds/components/dataItems/dataItems.ftl" as fdsDataItems/>
 <#import "../../../fds/components/button/button.ftl" as fdsButton/>
 <#import "../../../fds/objects/layouts/generic.ftl" as fdsGeneric/>
-<#import '../files/fileSummary.ftl' as fileSummary>
+<#import '../../files/fileSummary.ftl' as fileSummary>
 
 <#-- @ftlvariable name="events" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView>" -->
 

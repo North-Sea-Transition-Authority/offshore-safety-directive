@@ -5,15 +5,12 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -172,108 +169,6 @@ class AppointmentTimelineItemServiceTest {
     assertThat(resultingAppointmentTimelineHistoryItems)
         .extracting(AssetTimelineItemView::title)
         .containsExactly("Unknown operator");
-  }
-
-  @Test
-  void getTimelineItemViews_whenMultipleAppointments_thenOrderedByDescendingStartDate() {
-
-    var assetInSystemOfRecord = AssetDtoTestUtil.builder()
-        .withAssetName("from system of record")
-        .build();
-
-    var appointedOperatorId = new PortalOrganisationUnitId(100);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    // given multiple timelineItemViews on different start dates
-
-    var earliestAppointmentByStartDate = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
-        .withAppointmentToDate(LocalDate.of(2022, 12, 1))
-        .withAppointedOperatorId(appointedOperatorId.id())
-        .withAppointmentId(UUID.randomUUID())
-        .build();
-
-    var latestAppointmentByStartDate = AppointmentDtoTestUtil.builder()
-        .withAppointmentFromDate(LocalDate.of(2023, 1, 1))
-        .withAppointmentToDate(LocalDate.of(2023, 2, 1))
-        .withAppointedOperatorId(appointedOperatorId.id())
-        .withAppointmentId(UUID.randomUUID())
-        .build();
-
-    given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    given(userDetailService.getUserDetail())
-        .willThrow(InvalidAuthenticationException.class);
-
-    // when we request the timeline history
-    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(earliestAppointmentByStartDate, latestAppointmentByStartDate),
-        assetInSystemOfRecord
-    );
-
-    // then the appointments are sorted by start date descending
-    assertThat(resultingAppointmentTimelineHistoryItems)
-        .extracting(view -> view.assetTimelineModelProperties().getModelProperties().get("appointmentId"))
-        .containsExactly(
-            new AppointmentId(latestAppointmentByStartDate.appointmentId().id()),
-            new AppointmentId(earliestAppointmentByStartDate.appointmentId().id())
-        );
-
-  }
-
-  @Test
-  void getTimelineItemViews_whenMultipleAppointmentsWithSameStartDate_thenOrderedByDescendingCreationDatetime() {
-
-    var assetInSystemOfRecord = AssetDtoTestUtil.builder()
-        .withAssetName("from system of record")
-        .build();
-
-    var appointedOperatorId = new PortalOrganisationUnitId(100);
-
-    var appointedOperator = PortalOrganisationDtoTestUtil.builder()
-        .withId(appointedOperatorId.id())
-        .build();
-
-    // given multiple timelineItemViews with the same start date
-
-    var earliestAppointmentByCreationTime = AppointmentDtoTestUtil.builder()
-        .withAppointmentCreatedDatetime(Instant.now().minus(1, ChronoUnit.DAYS))
-        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
-        .withAppointedOperatorId(appointedOperatorId.id())
-        .withAppointmentId(UUID.randomUUID())
-        .build();
-
-    var latestAppointmentByCreationTime = AppointmentDtoTestUtil.builder()
-        .withAppointmentCreatedDatetime(Instant.now())
-        .withAppointmentFromDate(LocalDate.of(2022, 1, 1))
-        .withAppointedOperatorId(appointedOperatorId.id())
-        .withAppointmentId(UUID.randomUUID())
-        .build();
-
-    given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
-        .willReturn(List.of(appointedOperator));
-
-    given(userDetailService.getUserDetail())
-        .willThrow(InvalidAuthenticationException.class);
-
-    // when we request the timeline history
-    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(earliestAppointmentByCreationTime, latestAppointmentByCreationTime),
-        assetInSystemOfRecord
-    );
-
-    // then the timelineItemViews are sorted by creation date descending
-    assertThat(resultingAppointmentTimelineHistoryItems)
-        .map(assetTimelineItemView -> assetTimelineItemView.assetTimelineModelProperties().getModelProperties())
-        .map(stringObjectMap -> (AppointmentId) stringObjectMap.get("appointmentId"))
-        .containsExactly(
-            new AppointmentId(latestAppointmentByCreationTime.appointmentId().id()),
-            new AppointmentId(earliestAppointmentByCreationTime.appointmentId().id())
-        );
   }
 
   @Test

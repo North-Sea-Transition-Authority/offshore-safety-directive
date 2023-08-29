@@ -4,7 +4,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,15 +125,6 @@ public class AppointmentTimelineItemService {
       }
     }
 
-    appointments = appointments
-        .stream()
-        .sorted(
-            Comparator.comparing(appointment -> ((AppointmentDto) appointment).appointmentFromDate().value())
-                .thenComparing(appointment -> ((AppointmentDto) appointment).appointmentCreatedDate())
-                .reversed()
-        )
-        .toList();
-
     for (AppointmentDto appointment: appointments) {
 
       var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
@@ -222,7 +212,8 @@ public class AppointmentTimelineItemService {
         TimelineEventType.APPOINTMENT,
         operatorName,
         modelProperties,
-        appointmentDto.appointmentCreatedDate()
+        appointmentDto.appointmentCreatedDate(),
+        appointmentDto.appointmentFromDate().value()
     );
   }
 

@@ -3,8 +3,8 @@
 <#import '../../../../fds/components/details/details.ftl' as fdsDetails>
 <#import '../../../../fds/components/timeline/timeline.ftl' as fdsTimeline>
 <#import '../../../../fds/components/button/button.ftl' as fdsAction>
-<#import '../../../nomination/files/fileSummary.ftl' as fileSummary>
 <#import '../../correction/correctionHistoryTimeline.ftl' as correctionHistoryTimeline>
+<#import '../../../files/fileSummary.ftl' as fileSummary>
 
 <#-- @ftlvariable name="item" type="uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineItemView" -->
 

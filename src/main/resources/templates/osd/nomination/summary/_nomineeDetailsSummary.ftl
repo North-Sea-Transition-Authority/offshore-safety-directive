@@ -1,5 +1,5 @@
 <#import "../../../fds/components/summaryList/summaryList.ftl" as fdsSummaryList/>
-<#import '../files/fileSummary.ftl' as fileSummary>
+<#import '../../files/fileSummary.ftl' as fileSummary>
 
 <#macro nomineeDetailsSummary nomineeDetailSummaryView>
   <@fdsSummaryList.summaryListCard
