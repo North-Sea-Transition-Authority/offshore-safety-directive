@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;

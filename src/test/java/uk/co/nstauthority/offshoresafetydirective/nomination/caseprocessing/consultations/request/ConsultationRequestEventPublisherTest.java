@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 

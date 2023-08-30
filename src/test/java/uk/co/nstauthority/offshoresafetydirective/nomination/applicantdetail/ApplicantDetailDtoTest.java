@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 

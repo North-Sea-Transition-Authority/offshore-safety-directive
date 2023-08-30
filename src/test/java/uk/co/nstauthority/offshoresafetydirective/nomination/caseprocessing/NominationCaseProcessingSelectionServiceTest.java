@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.assertj.core.api.AssertionsForClassTypes.entry;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
