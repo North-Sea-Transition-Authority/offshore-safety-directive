@@ -8,10 +8,11 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,12 +48,15 @@ class DefaultPageControllerAdviceTest extends AbstractControllerTest {
   static class TestApplication {
   }
 
+  @Controller
   @RequestMapping("/endpoint")
   static class TestController {
 
+    private static final String VIEW_NAME = "test-template";
+
     @GetMapping()
     ModelAndView testEndpoint() {
-      return new ModelAndView();
+      return new ModelAndView(VIEW_NAME);
     }
   }
 

@@ -83,10 +83,6 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_SESSION_TIMEOUT_MINUTES                | The time in minutes before a session timeouts. This should be the same as the Energy Portal, e.g 180                           |
 | OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)                                |
 | OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                                          |
-| OSD_NOTIFY_API_KEY                         | The GOV.UK Notify key                                                                                                          |
-| OSD_NOTIFY_CALLBACK_TOKEN                  | The GOV.UK Notify callback token                                                                                               |
-| OSD_NOTIFY_PROXY_HOST                      | The proxy host to allow calls to GOV.UK Notify (optional depending on if environment requires proxy for outbound request)      |
-| OSD_NOTIFY_PROXY_PORT                      | The proxy host port to allow calls to GOV.UK Notify (optional depending on if environment requires proxy for outbound request) |
 | OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                                          |
 | OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                                                      |
 | OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod                                        |

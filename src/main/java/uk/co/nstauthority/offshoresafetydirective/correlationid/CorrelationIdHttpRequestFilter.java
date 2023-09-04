@@ -1,12 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.correlationid;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 class CorrelationIdHttpRequestFilter extends OncePerRequestFilter {
@@ -14,7 +15,8 @@ class CorrelationIdHttpRequestFilter extends OncePerRequestFilter {
   private static final Logger LOGGER = LoggerFactory.getLogger(CorrelationIdHttpRequestFilter.class);
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+  protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                  @NonNull HttpServletResponse response,
                                   FilterChain filterChain) throws ServletException, IOException {
     try {
       String correlationId = CorrelationIdUtil.getOrCreateCorrelationId(request);

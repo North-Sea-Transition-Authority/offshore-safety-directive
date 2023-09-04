@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.correlationid;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.UUID;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

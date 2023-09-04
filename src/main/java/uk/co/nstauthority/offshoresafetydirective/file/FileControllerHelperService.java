@@ -1,8 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
+import jakarta.transaction.Transactional;
 import java.util.Collection;
 import java.util.Objects;
-import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

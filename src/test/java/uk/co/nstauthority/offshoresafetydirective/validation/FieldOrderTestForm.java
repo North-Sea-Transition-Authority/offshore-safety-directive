@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.validation;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 class FieldOrderTestForm {
 

@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator;
 
+import jakarta.transaction.Transactional;
 import java.util.Set;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
@@ -20,7 +20,7 @@ class RegulatorTeamMemberEditService {
   }
 
   @Transactional
-  void updateRoles(Team team, TeamMember teamMember, Set<String> newRoles) {
+  public void updateRoles(Team team, TeamMember teamMember, Set<String> newRoles) {
     teamMemberRoleService.updateUserTeamRoles(team, teamMember.wuaId(), newRoles);
   }
 }

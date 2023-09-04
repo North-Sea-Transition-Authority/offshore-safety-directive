@@ -1,10 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.configuration;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,20 +32,16 @@ class ActuatorWebSecurityConfiguration {
     var userDetailsService = new InMemoryUserDetailsManager(user);
 
     httpSecurity
-        .requestMatcher(EndpointRequest.toAnyEndpoint())
-        .authorizeHttpRequests()
-        .mvcMatchers("/actuator/health")
-        .permitAll()
-        .mvcMatchers("/*")
-        .hasAuthority("ACTUATOR")
-        .and()
-        .httpBasic()
-        .and()
+        .securityMatcher("/actuator/**")
+        .authorizeHttpRequests(request -> request
+          .requestMatchers("/actuator/health").permitAll()
+          .anyRequest().hasAuthority("ACTUATOR")
+        )
+        .httpBasic(Customizer.withDefaults())
         .userDetailsService(userDetailsService)
-        .csrf()
-        .disable()
-        .sessionManagement()
-        .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .csrf(AbstractHttpConfigurer::disable)
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
     return httpSecurity.build();
   }
 

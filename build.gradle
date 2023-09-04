@@ -1,6 +1,6 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.1'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'org.springframework.boot' version '3.1.2'
+	id 'io.spring.dependency-management' version '1.1.2'
 	id 'java'
 	id "org.sonarqube" version "3.3"
 	id 'checkstyle'
@@ -8,9 +8,9 @@ plugins {
 	id 'maven-publish'
 	id 'nu.studer.jooq' version '8.1'
 	// docker-compose needed to startup a postgres container for Jooq codegen
-	id 'com.avast.gradle.docker-compose' version "0.16.9"
+	id 'com.avast.gradle.docker-compose' version "0.16.11"
 	// Flyway added manually here, as it's used for the Jooq codegen
-	id "org.flywaydb.flyway" version "9.12.0"
+	id "org.flywaydb.flyway" version "9.16.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -38,6 +38,8 @@ sourceSets {
 
 dependencies {
 
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
 	// OpenSAML 4.1+ is required for most SAML functionality
 	// See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
 	constraints {
@@ -46,6 +48,7 @@ dependencies {
 		implementation "org.opensaml:opensaml-saml-impl:4.2.0"
 	}
 
+	// spring starters
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -56,25 +59,24 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-saml2-service-provider'
 	implementation 'org.springframework.session:spring-session-core'
 	implementation 'org.springframework.session:spring-session-jdbc'
-
 	implementation 'org.springframework.boot:spring-boot-starter-jooq'
-  	implementation 'org.jooq:jooq-codegen'
+
+	// spring managed
+	implementation 'org.jooq:jooq-codegen'
   	implementation 'org.jooq:jooq-meta'
+	implementation 'org.flywaydb:flyway-core'
 
-	implementation 'com.google.guava:guava:31.1-jre'
-	implementation 'org.apache.commons:commons-lang3:3.12.0'
-	implementation 'org.flywaydb:flyway-core:8.5.13'
+	// external dependencies
+	implementation 'com.google.guava:guava:32.1.2-jre'
+	implementation 'org.apache.commons:commons-lang3:3.13.0'
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.532'
+	implementation 'fi.solita.clamav:clamav-client:1.0.1'
+	implementation 'commons-validator:commons-validator:1.7'
 
+	// fivium managed dependencies
 	implementation 'uk.co.fivium.energyportalapi:client:v6.2.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
-
-	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.307'
-	implementation 'fi.solita.clamav:clamav-client:1.0.1'
-
-	implementation 'uk.co.fivium:fivium-notify-spring-boot-starter:3.17.2-4.2-SNAPSHOT'
-	implementation 'commons-validator:commons-validator:1.7'
-
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:EPMQ-18-add-created-instant-to-epmq-message-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
@@ -82,12 +84,12 @@ dependencies {
 	jooqGenerator 'org.postgresql:postgresql'
 
 	// for test which require a database but not requiring a full postgres database
-	testImplementation 'com.h2database:h2:2.1.214'
+	testImplementation 'com.h2database:h2:2.2.220'
 
 	// for test requiring an actual postgres database be used and the flyway migrations run
 	testImplementation "org.testcontainers:postgresql:1.18.3"
 
-	testImplementation 'com.tngtech.archunit:archunit-junit5:1.0.1'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.1.0'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'

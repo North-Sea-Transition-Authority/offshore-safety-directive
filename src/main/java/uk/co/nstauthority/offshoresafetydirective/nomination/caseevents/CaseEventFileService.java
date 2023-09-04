@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,17 +36,6 @@ public class CaseEventFileService {
                               FileUploadService fileUploadService) {
     this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
-  }
-
-  @Transactional
-  public void finalizeFileUpload(CaseEvent caseEvent, List<FileUploadForm> fileUploadForms) {
-    // TODO OSDOP-184 - Remove all uses of this implementation
-    throw new NotYetImplementedException(
-        "The old file upload format is unsupported. Invoked by case event [%s] of type [%s]".formatted(
-            caseEvent.getUuid(),
-            caseEvent.getCaseEventType().name()
-        )
-    );
   }
 
   @Transactional

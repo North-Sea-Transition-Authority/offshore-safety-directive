@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
-import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;

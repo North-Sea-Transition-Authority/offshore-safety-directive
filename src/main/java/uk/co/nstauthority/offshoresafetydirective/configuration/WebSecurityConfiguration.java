@@ -9,7 +9,9 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
@@ -28,6 +30,14 @@ public class WebSecurityConfiguration {
 
   public static final String IDP_ACCESS_GRANTED_AUTHORITY_NAME = "WIOS_ACCESS_PRIVILEGE";
 
+  private static final String[] NO_AUTH_ENDPOINTS = {
+      "/assets/**",
+      "/system-of-record/**",
+      "/api/public/**",
+      "/accessibility-statement",
+      "error/**"
+  };
+
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
   private final ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
@@ -43,33 +53,23 @@ public class WebSecurityConfiguration {
   }
 
   @Bean
+  @Order(2)
   protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
     var authenticationProvider = new OpenSaml4AuthenticationProvider();
-    authenticationProvider.setResponseAuthenticationConverter(r -> samlResponseParser.parseSamlResponse(r.getResponse()));
+    authenticationProvider.setResponseAuthenticationConverter(
+        responseToken -> samlResponseParser.parseSamlResponse(responseToken.getResponse())
+    );
 
     httpSecurity
-        .csrf()
-          .ignoringAntMatchers("/notify/callback")
-        .and()
-        .authorizeHttpRequests()
-        .mvcMatchers(
-            "/assets/**",
-            "/system-of-record/**",
-            "/api/public/**",
-            "/notify/callback",
-            "/accessibility-statement"
+        .authorizeHttpRequests(request -> request
+            .requestMatchers(NO_AUTH_ENDPOINTS).permitAll()
+            .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
         )
-          .permitAll()
-        .anyRequest()
-          .hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
-        .and()
+        .csrf(Customizer.withDefaults())
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
-        .logout()
-          .logoutSuccessHandler(serviceLogoutSuccessHandler)
-        .and()
-        .exceptionHandling()
-        .accessDeniedHandler(accessDeniedHandler());
+        .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
+        .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedHandler(accessDeniedHandler()));
 
     return httpSecurity.build();
   }

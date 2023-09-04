@@ -1,12 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,7 +30,9 @@ public class IsCurrentAppointmentInterceptor extends AbstractHandlerInterceptor 
   }
 
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+  public boolean preHandle(@NonNull HttpServletRequest request,
+                           @NonNull HttpServletResponse response,
+                           @NonNull Object handler) {
     if (handler instanceof HandlerMethod handlerMethod
         && hasAnnotations(handlerMethod, SUPPORTED_SECURITY_ANNOTATIONS)
     ) {

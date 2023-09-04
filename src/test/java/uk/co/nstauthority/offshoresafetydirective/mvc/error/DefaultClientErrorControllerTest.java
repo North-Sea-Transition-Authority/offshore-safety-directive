@@ -8,9 +8,9 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doReturn;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

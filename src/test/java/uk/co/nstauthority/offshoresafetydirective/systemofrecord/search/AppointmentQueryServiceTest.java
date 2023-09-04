@@ -3,9 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.Set;
-import javax.persistence.EntityManager;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

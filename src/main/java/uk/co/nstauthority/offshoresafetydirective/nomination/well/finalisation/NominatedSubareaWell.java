@@ -1,15 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.util.UUID;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+
 
 @Entity
 @Immutable
@@ -17,8 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 final class NominatedSubareaWell {
 
   @Id
-  @GeneratedValue(generator = "uuid")
-  @GenericGenerator(name = "uuid", strategy = "uuid2")
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID uuid;
 
   @ManyToOne

@@ -108,7 +108,7 @@ class ReverseRouterTest extends AbstractControllerTest {
         urlQueryParams
     );
 
-    assertThat(resultingRoute).isEqualTo("/test/?param=value");
+    assertThat(resultingRoute).isEqualTo("/test?param=value");
   }
 
   @Test
@@ -123,7 +123,7 @@ class ReverseRouterTest extends AbstractControllerTest {
         urlQueryParams
     );
 
-    assertThat(resultingRoute).isEqualTo("/test/");
+    assertThat(resultingRoute).isEqualTo("/test");
   }
 
   @Test
@@ -166,7 +166,7 @@ class ReverseRouterTest extends AbstractControllerTest {
     );
 
     assertThat(resultingModelAndView.getViewName())
-        .isEqualTo("redirect:/test/?param=value");
+        .isEqualTo("redirect:/test?param=value");
   }
 
   @Test
