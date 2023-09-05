@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.access;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -8,7 +10,6 @@ import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAcces
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
 import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEvent;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEvent;
 
@@ -19,6 +20,8 @@ class EnergyPortalAccessEventListener {
 
   private final EnergyPortalAccessService energyPortalAccessService;
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(EnergyPortalAccessEventListener.class);
+
   @Autowired
   EnergyPortalAccessEventListener(EnergyPortalAccessService energyPortalAccessService) {
     this.energyPortalAccessService = energyPortalAccessService;
@@ -27,7 +30,7 @@ class EnergyPortalAccessEventListener {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleUserAddedToTeam(AddedToTeamEvent event) {
 
-    LoggerUtil.info("Adding user with WUA_ID %s to %s"
+    LOGGER.info("Adding user with WUA_ID %s to %s"
         .formatted(event.getAddedUserWebUserAccountId(), RESOURCE_TYPE_NAME));
 
     energyPortalAccessService.addUserToAccessTeam(
@@ -39,8 +42,7 @@ class EnergyPortalAccessEventListener {
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleUserRemovedFromTeam(TeamMemberRemovedEvent event) {
-
-    LoggerUtil.info("Removing user with WUA_ID %s from %s"
+    LOGGER.info("Removing user with WUA_ID %s from %s"
         .formatted(event.getTeamMember().wuaId(), RESOURCE_TYPE_NAME));
 
     energyPortalAccessService.removeUserFromAccessTeam(

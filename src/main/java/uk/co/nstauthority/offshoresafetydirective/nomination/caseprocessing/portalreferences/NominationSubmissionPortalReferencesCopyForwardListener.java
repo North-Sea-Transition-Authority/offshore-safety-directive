@@ -3,11 +3,12 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.por
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationAccessService;
@@ -20,6 +21,8 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
       PortalReferenceType.PEARS,
       PortalReferenceType.WONS
   );
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(NominationSubmissionPortalReferencesCopyForwardListener.class);
 
   private final RelatedInformationAccessService relatedInformationAccessService;
   private final NominationPortalReferenceRepository nominationPortalReferenceRepository;
@@ -52,7 +55,7 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
 
     COPY_FORWARD_PORTAL_TYPES.forEach(portalReferenceType -> {
 
-      LoggerUtil.info("Copy-forwarding %s references for nomination %s".formatted(
+      LOGGER.info("Copy-forwarding %s references for nomination %s".formatted(
           portalReferenceType.name(),
           event.getNominationDetail().getNomination().getId())
       );

@@ -4,15 +4,18 @@ import static uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInte
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 public class NominationInterceptorUtil {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptorUtil.class);
 
   private NominationInterceptorUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
@@ -25,7 +28,7 @@ public class NominationInterceptorUtil {
 
     if (nominationIdParameter.isEmpty()) {
       var errorMessage = "No path variable of type NominationId found in request";
-      LoggerUtil.warn(errorMessage);
+      LOGGER.warn(errorMessage);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage);
     }
 

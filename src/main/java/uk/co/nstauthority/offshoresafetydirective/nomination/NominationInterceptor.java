@@ -6,6 +6,8 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -14,7 +16,6 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 
 @Component
@@ -23,6 +24,8 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
   private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(
       HasNominationStatus.class
   );
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptor.class);
 
   private final NominationDetailService nominationDetailService;
 
@@ -87,7 +90,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
               StringUtils.join(allowedStatusNames)
           );
 
-      LoggerUtil.warn(errorMessage);
+      LOGGER.warn(errorMessage);
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
     }
   }

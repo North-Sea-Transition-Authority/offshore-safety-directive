@@ -1,18 +1,21 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.api;
 
 import java.util.function.BiFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 
 @Component
 public class EnergyPortalApiWrapper {
 
   private final ServiceConfigurationProperties serviceConfigurationProperties;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(EnergyPortalApiWrapper.class);
 
   @Autowired
   public EnergyPortalApiWrapper(ServiceConfigurationProperties serviceConfigurationProperties) {
@@ -40,7 +43,7 @@ public class EnergyPortalApiWrapper {
   }
 
   private void logEpaRequest(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
-    LoggerUtil.info("%s (%s)".formatted(logCorrelationId.id(), requestPurpose.purpose()));
+    LOGGER.info("%s (%s)".formatted(logCorrelationId.id(), requestPurpose.purpose()));
   }
 
   private String getServiceIdentifier() {

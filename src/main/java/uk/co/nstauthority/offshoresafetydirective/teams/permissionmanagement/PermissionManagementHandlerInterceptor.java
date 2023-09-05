@@ -6,6 +6,8 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -17,7 +19,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeam;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamOrHasRegulatorRole;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
@@ -30,6 +31,8 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
       IsMemberOfTeam.class,
       IsMemberOfTeamOrHasRegulatorRole.class
   );
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(PermissionManagementHandlerInterceptor.class);
 
   private final TeamMemberService teamMemberService;
 
@@ -60,7 +63,7 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
         if (!isMemberOfTeam) {
           var errorMessage = "User with ID %s is not a member of team with ID %s".formatted(user.wuaId(),
               teamId.uuid());
-          LoggerUtil.warn(errorMessage);
+          LOGGER.warn(errorMessage);
           throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
         }
       }
@@ -80,7 +83,7 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
                 teamId.uuid(),
                 isMemberOrRoleAnnotation.value()
             );
-            LoggerUtil.warn(errorMessage);
+            LOGGER.warn(errorMessage);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, errorMessage);
           }
         }
@@ -108,7 +111,7 @@ public class PermissionManagementHandlerInterceptor extends AbstractHandlerInter
 
     if (teamIdParameter.isEmpty()) {
       var errorMessage = "No path variable called teamId found in request";
-      LoggerUtil.warn(errorMessage);
+      LOGGER.warn(errorMessage);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage);
     }
 

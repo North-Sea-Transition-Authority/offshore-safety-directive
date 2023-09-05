@@ -2,16 +2,19 @@ package uk.co.nstauthority.offshoresafetydirective.interceptorutil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
-import uk.co.nstauthority.offshoresafetydirective.logging.LoggerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 
 public class AppointmentInterceptorUtil {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentInterceptorUtil.class);
 
   private AppointmentInterceptorUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
@@ -24,7 +27,7 @@ public class AppointmentInterceptorUtil {
 
     if (appointmentIdParameter.isEmpty()) {
       var errorMessage = "No path variable of type AppointmentId found in request";
-      LoggerUtil.warn(errorMessage);
+      LOGGER.warn(errorMessage);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage);
     }
 
