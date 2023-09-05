@@ -4,11 +4,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.EnumSet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -77,8 +79,13 @@ public class NominationSubmissionController {
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
   public ModelAndView submitNomination(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    nominationSubmissionService.submitNomination(nominationDetail);
-    return ReverseRouter.redirect(on(NominationSubmitConfirmationController.class).getSubmissionConfirmationPage(nominationId));
+
+    if (nominationSubmissionService.canSubmitNomination(nominationDetail)) {
+      nominationSubmissionService.submitNomination(nominationDetail);
+      return ReverseRouter.redirect(on(NominationSubmitConfirmationController.class).getSubmissionConfirmationPage(nominationId));
+    }
+
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Nomination cannot be submitted");
   }
 
   private ModelAndView getModelAndView(NominationId nominationId, NominationDetail nominationDetail) {

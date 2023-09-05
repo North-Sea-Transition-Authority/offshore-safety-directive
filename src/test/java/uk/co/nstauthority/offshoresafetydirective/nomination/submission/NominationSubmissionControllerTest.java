@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -356,7 +355,22 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void submitNomination_whenCannotBeSubmitted_thenForbidden() throws Exception {
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(csrf())
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
   void submitNomination_verifyMethodCallAndRedirection() throws Exception {
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
@@ -367,6 +381,6 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)
             .getSubmissionConfirmationPage(NOMINATION_ID))));
 
-    verify(nominationSubmissionService, times(1)).submitNomination(nominationDetail);
+    verify(nominationSubmissionService).submitNomination(nominationDetail);
   }
 }
