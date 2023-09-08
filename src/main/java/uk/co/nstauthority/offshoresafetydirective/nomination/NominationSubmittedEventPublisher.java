@@ -14,8 +14,8 @@ class NominationSubmittedEventPublisher {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  void publishNominationSubmittedEvent(NominationDetail nominationDetail) {
-    var event = new NominationSubmittedEvent(this, nominationDetail);
+  void publishNominationSubmittedEvent(NominationId nominationId) {
+    var event = new NominationSubmittedEvent(nominationId);
     applicationEventPublisher.publishEvent(event);
   }
 }

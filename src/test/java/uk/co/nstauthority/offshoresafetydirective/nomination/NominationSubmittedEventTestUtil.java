@@ -8,8 +8,8 @@ public class NominationSubmittedEventTestUtil {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  public static NominationSubmittedEvent createEvent(NominationDetail nominationDetail) {
-    return new NominationSubmittedEvent(new Object(), nominationDetail);
+  public static NominationSubmittedEvent createEvent(NominationId nominationId) {
+    return new NominationSubmittedEvent(nominationId);
   }
 
 }

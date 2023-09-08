@@ -38,6 +38,9 @@ class NominationSnsServiceTest {
   @Mock
   private ApplicantDetailAccessService applicantDetailAccessService;
 
+  @Mock
+  private NominationDetailService nominationDetailService;
+
   private final SnsTopicArn nominationsTopicArn = new SnsTopicArn("test-nominations-topic-arn");
 
   private final Instant instant = Instant.now();
@@ -52,44 +55,49 @@ class NominationSnsServiceTest {
         new NominationSnsService(
             snsService,
             applicantDetailAccessService,
-            Clock.fixed(instant, ZoneId.systemDefault())
+            nominationDetailService, Clock.fixed(instant, ZoneId.systemDefault())
         )
     );
   }
 
   @Test
   void handleNominationSubmitted() {
-    var nominationDetail = NominationDetailTestUtil.builder().build();
-    var event = NominationSubmittedEventTestUtil.createEvent(nominationDetail);
+    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(1));
 
-    doNothing().when(nominationSnsService).publishNominationSubmittedMessage(nominationDetail);
+    doNothing().when(nominationSnsService).publishNominationSubmittedMessage(event.getNominationId());
 
     nominationSnsService.handleNominationSubmitted(event);
 
-    verify(nominationSnsService).publishNominationSubmittedMessage(event.getNominationDetail());
+    verify(nominationSnsService).publishNominationSubmittedMessage(event.getNominationId());
   }
 
   @Test
   void publishNominationSubmittedMessage() {
-    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationId = new NominationId(1);
+    var nomination = NominationTestUtil.builder()
+        .withId(nominationId.id())
+        .build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .build();
     var correlationId = UUID.randomUUID().toString();
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
 
     var applicantDetailDto = ApplicantDetailDtoTestUtil.builder().build();
 
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
     when(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.of(applicantDetailDto));
 
-    nominationSnsService.publishNominationSubmittedMessage(nominationDetail);
+    nominationSnsService.publishNominationSubmittedMessage(nominationId);
 
     var epmqMessageArgumentCaptor = ArgumentCaptor.forClass(NominationSubmittedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(nominationsTopicArn), epmqMessageArgumentCaptor.capture());
 
     var epmqMessage = epmqMessageArgumentCaptor.getValue();
-
-    var nomination = nominationDetail.getNomination();
 
     assertThat(epmqMessage.getNominationId()).isEqualTo(nomination.getId());
     assertThat(epmqMessage.getNominationReference()).isEqualTo(nomination.getReference());
@@ -100,14 +108,22 @@ class NominationSnsServiceTest {
 
   @Test
   void publishNominationSubmittedMessage_applicantDetailDtoNotPresent() {
-    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var nominationId = new NominationId(1);
+    var nomination = NominationTestUtil.builder()
+        .withId(nominationId.id())
+        .build();
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
     when(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.empty());
 
     assertThrows(
         IllegalStateException.class,
-        () -> nominationSnsService.publishNominationSubmittedMessage(nominationDetail)
+        () -> nominationSnsService.publishNominationSubmittedMessage(nominationId)
     );
 
     verify(snsService, never()).publishMessage(any(), any());

@@ -16,8 +16,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEventTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationDtoTestUtil;
 
@@ -33,16 +36,26 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
   @Mock
   private NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService;
 
+  @Mock
+  private NominationDetailService nominationDetailService;
+
   @InjectMocks
   private NominationSubmissionPortalReferencesCopyForwardListener nominationSubmissionPortalReferencesCopyForwardListener;
 
   @Test
   void handleSubmission_whenNotFirstVersion_assertNoCalls() {
+    var nominationId = new NominationId(1);
+    var nomination = NominationTestUtil.builder()
+        .withId(nominationId.id())
+        .build();
     var nominationDetail = NominationDetailTestUtil.builder()
-        .withVersion(2)
+        .withNomination(nomination)
+        .withVersion(4)
         .build();
 
-    var event = NominationSubmittedEventTestUtil.createEvent(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
+    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(1));
 
     nominationSubmissionPortalReferencesCopyForwardListener.handleSubmission(event);
 
@@ -51,7 +64,12 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
   @Test
   void handleSubmission_whenFirstVersion_verifySaves() {
+    var nominationId = new NominationId(1);
+    var nomination = NominationTestUtil.builder()
+        .withId(nominationId.id())
+        .build();
     var nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
         .withVersion(1)
         .build();
     var relatedToPearsApplicationsText = "pears/1";
@@ -64,10 +82,12 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
     when(relatedInformationAccessService.getRelatedInformationDto(nominationDetail))
         .thenReturn(Optional.of(relatedInformationDto));
 
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
     when(nominationPortalReferencePersistenceService.createPortalReference(eq(nominationDetail.getNomination()), any()))
         .thenCallRealMethod();
 
-    var event = NominationSubmittedEventTestUtil.createEvent(nominationDetail);
+    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(nomination.getId()));
 
     nominationSubmissionPortalReferencesCopyForwardListener.handleSubmission(event);
 

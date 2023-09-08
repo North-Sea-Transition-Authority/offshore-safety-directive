@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationDto;
@@ -27,27 +28,31 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
   private final RelatedInformationAccessService relatedInformationAccessService;
   private final NominationPortalReferenceRepository nominationPortalReferenceRepository;
   private final NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService;
+  private final NominationDetailService nominationDetailService;
 
   @Autowired
   NominationSubmissionPortalReferencesCopyForwardListener(
       RelatedInformationAccessService relatedInformationAccessService,
       NominationPortalReferenceRepository nominationPortalReferenceRepository,
-      NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService) {
+      NominationPortalReferencePersistenceService nominationPortalReferencePersistenceService,
+      NominationDetailService nominationDetailService) {
     this.relatedInformationAccessService = relatedInformationAccessService;
     this.nominationPortalReferenceRepository = nominationPortalReferenceRepository;
     this.nominationPortalReferencePersistenceService = nominationPortalReferencePersistenceService;
+    this.nominationDetailService = nominationDetailService;
   }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
   public void handleSubmission(NominationSubmittedEvent event) {
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(event.getNominationId());
 
-    var dto = NominationDetailDto.fromNominationDetail(event.getNominationDetail());
+    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
     if (!dto.version().equals(1)) {
       return;
     }
 
-    var relatedInformationDto = relatedInformationAccessService.getRelatedInformationDto(event.getNominationDetail())
+    var relatedInformationDto = relatedInformationAccessService.getRelatedInformationDto(nominationDetail)
         .orElseThrow(() -> new IllegalStateException(
             "No related information found for nomination detail %s".formatted(dto.nominationDetailId().id())));
 
@@ -57,11 +62,11 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
 
       LOGGER.info("Copy-forwarding %s references for nomination %s".formatted(
           portalReferenceType.name(),
-          event.getNominationDetail().getNomination().getId())
+          event.getNominationId().id())
       );
 
       var portalReference = nominationPortalReferencePersistenceService.createPortalReference(
-          event.getNominationDetail().getNomination(),
+          nominationDetail.getNomination(),
           portalReferenceType
       );
 

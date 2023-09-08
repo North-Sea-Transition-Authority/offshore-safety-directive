@@ -88,7 +88,7 @@ class NominationDetailServiceTest {
             INSTANT
         );
 
-    verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
+    verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(new NominationId(savedNominationDetail.getNomination().getId()));
     verify(nominationReferenceService).setNominationReference(savedNominationDetail);
     verify(caseEventService).createSubmissionEvent(savedNominationDetail);
   }
@@ -123,7 +123,7 @@ class NominationDetailServiceTest {
             INSTANT
         );
 
-    verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(savedNominationDetail);
+    verify(nominationSubmittedEventPublisher, times(1)).publishNominationSubmittedEvent(new NominationId(savedNominationDetail.getNomination().getId()));
     verify(caseEventService).createSubmissionEvent(savedNominationDetail);
     verifyNoInteractions(nominationReferenceService);
   }

@@ -15,8 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 @ExtendWith(MockitoExtension.class)
 class NominationSubmittedEventPublisherTest {
 
-  private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
-      .build();
+  private static final NominationId NOMINATION_ID = new NominationId(1);
 
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;
@@ -26,12 +25,12 @@ class NominationSubmittedEventPublisherTest {
 
   @Test
   void publishNominationSubmittedEvent_verifyEventPublished() {
-    nominationSubmittedEventPublisher.publishNominationSubmittedEvent(NOMINATION_DETAIL);
+    nominationSubmittedEventPublisher.publishNominationSubmittedEvent(NOMINATION_ID);
 
     var nominationSubmittedEventCaptor = ArgumentCaptor.forClass(NominationSubmittedEvent.class);
     verify(applicationEventPublisher, times(1)).publishEvent(nominationSubmittedEventCaptor.capture());
 
     var nominationSubmittedEvent = nominationSubmittedEventCaptor.getValue();
-    assertEquals(NOMINATION_DETAIL, nominationSubmittedEvent.getNominationDetail());
+    assertEquals(NOMINATION_ID, nominationSubmittedEvent.getNominationId());
   }
 }

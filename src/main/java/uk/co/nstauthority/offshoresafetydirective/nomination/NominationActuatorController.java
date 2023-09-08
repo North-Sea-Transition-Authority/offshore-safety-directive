@@ -13,22 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 @Profile("!disable-epmq")
 class NominationActuatorController {
 
-  private final NominationDetailService nominationDetailService;
   private final NominationSnsService nominationSnsService;
 
   @Autowired
-  NominationActuatorController(
-      NominationDetailService nominationDetailService,
-      NominationSnsService nominationSnsService
-  ) {
-    this.nominationDetailService = nominationDetailService;
+  NominationActuatorController(NominationSnsService nominationSnsService) {
     this.nominationSnsService = nominationSnsService;
   }
 
   @PostMapping("publish-epmq-message/nomination/{nominationId}")
   ResponseEntity<Void> publishNominationSubmittedMessage(@PathVariable("nominationId") NominationId nominationId) {
-    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    nominationSnsService.publishNominationSubmittedMessage(nominationDetail);
+    nominationSnsService.publishNominationSubmittedMessage(nominationId);
     return ResponseEntity.ok().build();
   }
 }

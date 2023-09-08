@@ -21,28 +21,32 @@ class NominationSnsService {
   private final SnsService snsService;
   private final SnsTopicArn nominationsTopicArn;
   private final ApplicantDetailAccessService applicantDetailAccessService;
+  private final NominationDetailService nominationDetailService;
   private final Clock clock;
 
   @Autowired
-  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService, Clock clock) {
+  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService,
+                       NominationDetailService nominationDetailService, Clock clock) {
     this.snsService = snsService;
     nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
     this.applicantDetailAccessService = applicantDetailAccessService;
+    this.nominationDetailService = nominationDetailService;
     this.clock = clock;
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleNominationSubmitted(NominationSubmittedEvent event) {
-    publishNominationSubmittedMessage(event.getNominationDetail());
+    publishNominationSubmittedMessage(event.getNominationId());
   }
 
-  void publishNominationSubmittedMessage(NominationDetail nominationDetail) {
+  void publishNominationSubmittedMessage(NominationId nominationId) {
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     var nomination = nominationDetail.getNomination();
     var applicantOrganisationId = applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail)
         .orElseThrow(() ->
             new IllegalStateException(
-                "Unable to find ApplicantDetailDto for NominationDetail %s".formatted(nominationDetail.getId())
+                "Unable to find ApplicantDetailDto for NominationDetail %s".formatted(nominationId.id())
             )
         )
         .applicantOrganisationId();
@@ -51,7 +55,7 @@ class NominationSnsService {
     snsService.publishMessage(
         nominationsTopicArn,
         new NominationSubmittedOsdEpmqMessage(
-            nomination.getId(),
+            nominationId.id(),
             nomination.getReference(),
             applicantOrganisationId.id(),
             correlationId,

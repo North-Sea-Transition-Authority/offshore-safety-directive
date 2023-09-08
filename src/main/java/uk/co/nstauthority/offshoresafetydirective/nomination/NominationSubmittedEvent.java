@@ -1,18 +1,20 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.io.Serial;
 import org.springframework.context.ApplicationEvent;
 
 public class NominationSubmittedEvent extends ApplicationEvent {
 
+  @Serial
   private static final long serialVersionUID = 1694652841778510682L;
-  private final NominationDetail nominationDetail;
+  private final NominationId nominationId;
 
-  NominationSubmittedEvent(Object source, NominationDetail nominationDetail) {
-    super(source);
-    this.nominationDetail = nominationDetail;
+  NominationSubmittedEvent(NominationId nominationId) {
+    super(nominationId);
+    this.nominationId = nominationId;
   }
 
-  public NominationDetail getNominationDetail() {
-    return nominationDetail;
+  public NominationId getNominationId() {
+    return nominationId;
   }
 }

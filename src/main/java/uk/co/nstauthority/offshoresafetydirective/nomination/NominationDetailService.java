@@ -52,7 +52,8 @@ public class NominationDetailService {
       nominationReferenceService.setNominationReference(nominationDetail);
     }
     caseEventService.createSubmissionEvent(nominationDetail);
-    nominationSubmittedEventPublisher.publishNominationSubmittedEvent(nominationDetail);
+    var nomination = nominationDetail.getNomination();
+    nominationSubmittedEventPublisher.publishNominationSubmittedEvent(new NominationId(nomination.getId()));
   }
 
   public NominationDetail getLatestNominationDetail(NominationId nominationId) {
