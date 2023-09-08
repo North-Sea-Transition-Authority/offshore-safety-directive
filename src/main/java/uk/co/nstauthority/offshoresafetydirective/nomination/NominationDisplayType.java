@@ -7,7 +7,7 @@ public enum NominationDisplayType {
 
   WELL("Wells"),
   INSTALLATION("Installations"),
-  BOTH("Wells and installations"),
+  WELL_AND_INSTALLATION("Wells and installations"),
   NOT_PROVIDED("Not provided");
 
   private final String displayText;
@@ -30,7 +30,7 @@ public enum NominationDisplayType {
     var expectingInstallations = installationSelection.equals(NominationHasInstallations.YES);
 
     if (expectingWells && expectingInstallations) {
-      return NominationDisplayType.BOTH;
+      return NominationDisplayType.WELL_AND_INSTALLATION;
     } else if (expectingWells) {
       return NominationDisplayType.WELL;
     } else if (expectingInstallations) {

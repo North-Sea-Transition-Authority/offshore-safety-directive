@@ -1,11 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,7 +10,6 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +22,9 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSnsServiceTest {
@@ -36,7 +33,7 @@ class NominationSnsServiceTest {
   private SnsService snsService;
 
   @Mock
-  private ApplicantDetailAccessService applicantDetailAccessService;
+  private NominationSnsQueryService nominationSnsQueryService;
 
   @Mock
   private NominationDetailService nominationDetailService;
@@ -54,8 +51,9 @@ class NominationSnsServiceTest {
     nominationSnsService = spy(
         new NominationSnsService(
             snsService,
-            applicantDetailAccessService,
-            nominationDetailService, Clock.fixed(instant, ZoneId.systemDefault())
+            nominationDetailService,
+            nominationSnsQueryService,
+            Clock.fixed(instant, ZoneId.systemDefault())
         )
     );
   }
@@ -84,12 +82,23 @@ class NominationSnsServiceTest {
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
 
-    var applicantDetailDto = ApplicantDetailDtoTestUtil.builder().build();
+    var nominationDetailId = new NominationDetailId(nominationDetail.getId());
+    var applicantOrgId = 123;
+    var nominatedOrgId = 456;
+    var hasInstallations = true;
+    var wellSelectionType = WellSelectionType.NO_WELLS;
+
+    var snsDto = NominationSnsDtoTestUtil.builder()
+        .withNominationDetailId(nominationDetailId)
+        .withHasInstallations(hasInstallations)
+        .withApplicantOrganisationUnitId(new ApplicantOrganisationId(applicantOrgId))
+        .withNominatedOrganisationUnitId(new NominatedOrganisationId(nominatedOrgId))
+        .withWellSelectionType(wellSelectionType)
+        .build();
+    when(nominationSnsQueryService.getNominationSnsDto(nominationDetail))
+        .thenReturn(snsDto);
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-
-    when(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(applicantDetailDto));
 
     nominationSnsService.publishNominationSubmittedMessage(nominationId);
 
@@ -99,33 +108,25 @@ class NominationSnsServiceTest {
 
     var epmqMessage = epmqMessageArgumentCaptor.getValue();
 
-    assertThat(epmqMessage.getNominationId()).isEqualTo(nomination.getId());
-    assertThat(epmqMessage.getNominationReference()).isEqualTo(nomination.getReference());
-    assertThat(epmqMessage.getApplicantOrganisationUnitId()).isEqualTo(applicantDetailDto.applicantOrganisationId().id());
-    assertThat(epmqMessage.getCorrelationId()).isEqualTo(correlationId);
-    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(instant);
+    assertThat(epmqMessage)
+        .extracting(
+            NominationSubmittedOsdEpmqMessage::getNominationId,
+            NominationSubmittedOsdEpmqMessage::getNominationReference,
+            NominationSubmittedOsdEpmqMessage::getApplicantOrganisationUnitId,
+            NominationSubmittedOsdEpmqMessage::getNominatedOrganisationUnitId,
+            NominationSubmittedOsdEpmqMessage::getNominationAssetType,
+            NominationSubmittedOsdEpmqMessage::getCorrelationId,
+            NominationSubmittedOsdEpmqMessage::getCreatedInstant
+        )
+        .containsExactly(
+            nomination.getId(),
+            nomination.getReference(),
+            applicantOrgId,
+            nominatedOrgId,
+            NominationDisplayType.INSTALLATION,
+            correlationId,
+            instant
+        );
   }
 
-  @Test
-  void publishNominationSubmittedMessage_applicantDetailDtoNotPresent() {
-    var nominationId = new NominationId(1);
-    var nomination = NominationTestUtil.builder()
-        .withId(nominationId.id())
-        .build();
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withNomination(nomination)
-        .build();
-
-    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-
-    when(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-        .thenReturn(Optional.empty());
-
-    assertThrows(
-        IllegalStateException.class,
-        () -> nominationSnsService.publishNominationSubmittedMessage(nominationId)
-    );
-
-    verify(snsService, never()).publishMessage(any(), any());
-  }
 }

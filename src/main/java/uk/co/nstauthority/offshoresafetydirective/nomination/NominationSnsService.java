@@ -12,7 +12,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 
 @Service
 @Profile("!disable-epmq")
@@ -20,17 +20,17 @@ class NominationSnsService {
 
   private final SnsService snsService;
   private final SnsTopicArn nominationsTopicArn;
-  private final ApplicantDetailAccessService applicantDetailAccessService;
   private final NominationDetailService nominationDetailService;
+  private final NominationSnsQueryService nominationSnsQueryService;
   private final Clock clock;
 
   @Autowired
-  NominationSnsService(SnsService snsService, ApplicantDetailAccessService applicantDetailAccessService,
-                       NominationDetailService nominationDetailService, Clock clock) {
+  NominationSnsService(SnsService snsService, NominationDetailService nominationDetailService,
+                       NominationSnsQueryService nominationSnsQueryService, Clock clock) {
     this.snsService = snsService;
     nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
-    this.applicantDetailAccessService = applicantDetailAccessService;
     this.nominationDetailService = nominationDetailService;
+    this.nominationSnsQueryService = nominationSnsQueryService;
     this.clock = clock;
   }
 
@@ -43,24 +43,25 @@ class NominationSnsService {
   void publishNominationSubmittedMessage(NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     var nomination = nominationDetail.getNomination();
-    var applicantOrganisationId = applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail)
-        .orElseThrow(() ->
-            new IllegalStateException(
-                "Unable to find ApplicantDetailDto for NominationDetail %s".formatted(nominationId.id())
-            )
-        )
-        .applicantOrganisationId();
+
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    var snsDto = nominationSnsQueryService.getNominationSnsDto(nominationDetail);
+
+    var empqMessage = NominationSubmittedOsdEpmqMessage.builder(correlationId, clock.instant())
+        .withNominationId(nomination.getId())
+        .withNominationReference(nomination.getReference())
+        .withApplicantOrganisationUnitId(snsDto.applicantOrganisationUnitId())
+        .withNominatedOrganisationUnitId(snsDto.nominatedOrganisationUnitId())
+        .withNominationAssetType(NominationDisplayType.getByWellSelectionTypeAndHasInstallations(
+            snsDto.wellSelectionType(),
+            NominationHasInstallations.fromBoolean(snsDto.hasInstallations())
+        ))
+        .build();
 
     snsService.publishMessage(
         nominationsTopicArn,
-        new NominationSubmittedOsdEpmqMessage(
-            nominationId.id(),
-            nomination.getReference(),
-            applicantOrganisationId.id(),
-            correlationId,
-            clock.instant()
-        )
+        empqMessage
     );
   }
 }

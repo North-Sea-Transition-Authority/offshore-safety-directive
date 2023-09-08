@@ -219,6 +219,11 @@ jacocoTestReport {
 tasks.register('epmqMessagesJar', Jar) {
 	from sourceSets.main.output
 	include 'uk/co/nstauthority/offshoresafetydirective/epmqmessage/**'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/NominationDisplayType.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/well/WellSelectionType.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/well/DisplayableEnumOption.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/installation/NominationHasInstallations.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/fds/DisplayableEnumOption.class'
 	archiveBaseName = 'offshore-safety-directive-epmq-messages'
 }
 

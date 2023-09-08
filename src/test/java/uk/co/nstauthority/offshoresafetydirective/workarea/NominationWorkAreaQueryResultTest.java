@@ -24,7 +24,7 @@ class NominationWorkAreaQueryResultTest {
 
     switch (selectionType) {
       case SPECIFIC_WELLS, LICENCE_BLOCK_SUBAREA ->
-          assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.BOTH);
+          assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.WELL_AND_INSTALLATION);
       case NO_WELLS ->
           assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.INSTALLATION);
     }
@@ -59,7 +59,7 @@ class NominationWorkAreaQueryResultTest {
         .build();
 
     if (installationsIncluded) {
-      assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.BOTH);
+      assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.WELL_AND_INSTALLATION);
     } else {
       assertThat(transformer.getNominationDisplayType()).isEqualTo(NominationDisplayType.WELL);
     }
