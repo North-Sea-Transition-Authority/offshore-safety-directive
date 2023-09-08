@@ -147,7 +147,7 @@ class TeamMemberRoleServiceTest {
 
     verify(teamMemberRemovedEventPublisher, times(1)).publish(
         teamMember,
-        instigatingUser
+        new WebUserAccountId(instigatingUser.wuaId())
     );
   }
 

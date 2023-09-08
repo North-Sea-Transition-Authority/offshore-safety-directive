@@ -13,10 +13,8 @@ public class TeamMemberRemovedEvent extends ApplicationEvent {
 
   private final WebUserAccountId instigatingUserWebUserAccountId;
 
-  public TeamMemberRemovedEvent(Object source,
-                                TeamMember teamMember,
-                                WebUserAccountId instigatingUserWebUserAccountId) {
-    super(source);
+  public TeamMemberRemovedEvent(TeamMember teamMember, WebUserAccountId instigatingUserWebUserAccountId) {
+    super(teamMember.wuaId());
     this.teamMember = teamMember;
     this.instigatingUserWebUserAccountId = instigatingUserWebUserAccountId;
   }

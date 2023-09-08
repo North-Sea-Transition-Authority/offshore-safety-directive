@@ -67,7 +67,7 @@ public class TeamMemberRoleService {
   @Transactional
   public void removeMemberFromTeam(Team team, TeamMember teamMember) {
     teamMemberRoleRepository.deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
-    teamMemberRemovedEventPublisher.publish(teamMember, userDetailService.getUserDetail());
+    teamMemberRemovedEventPublisher.publish(teamMember, new WebUserAccountId(userDetailService.getUserDetail().wuaId()));
   }
 
 }

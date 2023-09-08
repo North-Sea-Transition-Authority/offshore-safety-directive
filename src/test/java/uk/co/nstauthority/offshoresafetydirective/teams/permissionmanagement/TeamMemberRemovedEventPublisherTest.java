@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +32,7 @@ class TeamMemberRemovedEventPublisherTest {
 
     var eventArgumentCaptor = ArgumentCaptor.forClass(TeamMemberRemovedEvent.class);
 
-    teamMemberRemovedEventPublisher.publish(removedTeamMember, instigatingUser);
+    teamMemberRemovedEventPublisher.publish(removedTeamMember, new WebUserAccountId(instigatingUser.wuaId()));
 
     verify(applicationEventPublisher, times(1)).publishEvent(eventArgumentCaptor.capture());
 
