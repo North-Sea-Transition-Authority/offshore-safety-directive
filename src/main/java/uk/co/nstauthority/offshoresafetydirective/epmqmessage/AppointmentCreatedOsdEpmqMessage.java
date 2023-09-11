@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
 
-  private static final String TYPE = "APPOINTMENT_CREATED";
+  public static final String TYPE = "APPOINTMENT_CREATED";
 
   private UUID appointmentId;
   private String portalAssetId;

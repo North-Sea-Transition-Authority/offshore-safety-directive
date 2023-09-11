@@ -74,6 +74,9 @@ class AppointmentTerminationServiceTest {
   @Mock
   private FileAssociationService fileAssociationService;
 
+  @Mock
+  private AppointmentTerminationEventPublisher appointmentTerminationEventPublisher;
+
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
 
@@ -318,8 +321,9 @@ class AppointmentTerminationServiceTest {
 
   @Test
   void terminateAppointment_whenValid_thenVerifyAppointmentIsUpdated() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
     var appointment = AppointmentTestUtil.builder()
-        .withId(UUID.randomUUID())
+        .withId(appointmentId.id())
         .build();
 
     var terminationDate = LocalDate.now().minusDays(1);
@@ -340,6 +344,7 @@ class AppointmentTerminationServiceTest {
 
     var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(appointmentDtoArgumentCaptor.capture());
+    verify(appointmentTerminationEventPublisher).publish(appointmentId);
 
     assertThat(appointmentTerminationArgumentCaptor.getValue())
         .extracting(

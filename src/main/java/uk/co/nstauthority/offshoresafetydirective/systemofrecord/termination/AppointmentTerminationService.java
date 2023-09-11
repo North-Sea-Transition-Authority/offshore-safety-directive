@@ -37,6 +37,7 @@ public class AppointmentTerminationService {
   private final UserDetailService userDetailService;
   private final AppointmentPhasesService appointmentPhasesService;
   private final FileAssociationService fileAssociationService;
+  private final AppointmentTerminationEventPublisher appointmentTerminationEventPublisher;
 
   @Autowired
   public AppointmentTerminationService(PortalAssetNameService portalAssetNameService,
@@ -48,7 +49,8 @@ public class AppointmentTerminationService {
                                        AppointmentTerminationRepository appointmentTerminationRepository,
                                        UserDetailService userDetailService,
                                        AppointmentPhasesService appointmentPhasesService,
-                                       FileAssociationService fileAssociationService) {
+                                       FileAssociationService fileAssociationService,
+                                       AppointmentTerminationEventPublisher appointmentTerminationEventPublisher) {
     this.portalAssetNameService = portalAssetNameService;
     this.appointmentAccessService = appointmentAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -59,6 +61,7 @@ public class AppointmentTerminationService {
     this.userDetailService = userDetailService;
     this.appointmentPhasesService = appointmentPhasesService;
     this.fileAssociationService = fileAssociationService;
+    this.appointmentTerminationEventPublisher = appointmentTerminationEventPublisher;
   }
 
   @Transactional
@@ -84,6 +87,7 @@ public class AppointmentTerminationService {
     appointmentUpdateService.updateAppointment(appointmentDto);
 
     fileAssociationService.submitFiles(form.getTerminationDocuments());
+    appointmentTerminationEventPublisher.publish(new AppointmentId(appointment.getId()));
   }
 
   public boolean hasNotBeenTerminated(AppointmentId appointmentId) {

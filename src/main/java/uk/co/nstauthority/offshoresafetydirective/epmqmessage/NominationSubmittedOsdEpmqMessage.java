@@ -6,7 +6,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayTy
 
 public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
-  private static final String TYPE = "NOMINATION_SUBMITTED";
+  public static final String TYPE = "NOMINATION_SUBMITTED";
 
   private int nominationId;
   private String nominationReference;

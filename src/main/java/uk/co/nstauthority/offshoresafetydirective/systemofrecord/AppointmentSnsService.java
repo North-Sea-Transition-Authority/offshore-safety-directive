@@ -14,9 +14,11 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentTerminationOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationEvent;
 
 @Service
 @Profile("!disable-epmq")
@@ -48,6 +50,17 @@ class AppointmentSnsService {
     publishAppointmentConfirmedSnsMessages(event.getNominationId());
   }
 
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleAppointmentTermination(AppointmentTerminationEvent event) {
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    snsService.publishMessage(
+        appointmentsTopicArn,
+        new AppointmentTerminationOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
+    );
+  }
+
   void publishAppointmentConfirmedSnsMessages(NominationId nominationId) {
     var appointments = appointmentRepository.findAllByCreatedByNominationId(nominationId.id());
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
@@ -62,13 +75,6 @@ class AppointmentSnsService {
 
       publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
     });
-  }
-
-  void publishAppointmentConfirmedSnsMessage(Appointment appointment) {
-    var assetPhases = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId());
-    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
-
-    publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
   }
 
   void publishAppointmentConfirmedSnsMessage(
@@ -90,5 +96,12 @@ class AppointmentSnsService {
             clock.instant()
         )
     );
+  }
+
+  void publishAppointmentConfirmedSnsMessage(Appointment appointment) {
+    var assetPhases = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId());
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
   }
 }
