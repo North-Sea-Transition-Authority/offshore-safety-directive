@@ -174,8 +174,8 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(USER))
-        .thenReturn(false);
+    when(consulteeTeamService.isMemberOfConsulteeTeam(USER))
+        .thenReturn(true);
 
     var fileId = UUID.randomUUID();
     var fileName = "file name";
@@ -318,7 +318,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(false);
+    when(consulteeTeamService.isMemberOfConsulteeTeam(USER)).thenReturn(true);
 
     var fileId = UUID.randomUUID();
 
@@ -396,9 +396,9 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(false);
-    var fileId = UUID.randomUUID();
+    when(consulteeTeamService.isMemberOfConsulteeTeam(USER)).thenReturn(true);
 
+    var fileId = UUID.randomUUID();
     var fileReference = new AppointmentFileReference(APPOINTMENT_ID);
     var fileDeleteResult = FileDeleteResult.success(fileId.toString());
 

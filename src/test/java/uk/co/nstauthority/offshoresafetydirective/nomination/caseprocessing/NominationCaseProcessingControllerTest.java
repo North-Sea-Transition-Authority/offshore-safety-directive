@@ -98,6 +98,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
 
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatuses(
             NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
@@ -117,7 +119,20 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
+  void renderCaseProcessing_whenIsNotAMemberOfIndustryOrRegulatorTeams_thenForbidden() throws Exception {
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
   void smokeTestPermissions_onlyManageNominationAndViewPermissionsAllowed() {
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
@@ -136,6 +151,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @Test
   void renderCaseProcessing_verifyReturn() throws Exception {
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     var viewName = "test_view";
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
@@ -171,6 +188,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   @Test
   void renderCaseProcessing_whenVersionNumberProvided_ensureSpecificVersionUsed() throws Exception {
 
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
+
     Integer version = 5;
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
@@ -201,6 +220,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @Test
   void renderCaseProcessing_whenVersionNumberProvidedAndDoesNotExist_verifyError() throws Exception {
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     Integer version = 5;
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
@@ -241,6 +262,8 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
   @Test
   void changeCaseProcessingVersion_verifyRedirect() throws Exception {
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,

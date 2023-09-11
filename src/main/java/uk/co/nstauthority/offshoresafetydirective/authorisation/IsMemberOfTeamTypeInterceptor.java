@@ -3,7 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.authorisation;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
@@ -12,6 +14,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
@@ -19,22 +22,20 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @Component
 public class IsMemberOfTeamTypeInterceptor extends AbstractHandlerInterceptor {
 
-  private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(
-      IsMemberOfTeamType.class
-  );
+  private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(IsMemberOfTeamType.class);
 
   private final UserDetailService userDetailService;
   private final RegulatorTeamService regulatorTeamService;
   private final ConsulteeTeamService consulteeTeamService;
-  private final IndustryTeamService teamService;
+  private final IndustryTeamService industryTeamService;
 
   @Autowired
   public IsMemberOfTeamTypeInterceptor(UserDetailService userDetailService, RegulatorTeamService regulatorTeamService,
-                                       ConsulteeTeamService consulteeTeamService, IndustryTeamService teamService) {
+                                       ConsulteeTeamService consulteeTeamService, IndustryTeamService industryTeamService) {
     this.userDetailService = userDetailService;
     this.regulatorTeamService = regulatorTeamService;
     this.consulteeTeamService = consulteeTeamService;
-    this.teamService = teamService;
+    this.industryTeamService = industryTeamService;
   }
 
   @Override
@@ -46,22 +47,33 @@ public class IsMemberOfTeamTypeInterceptor extends AbstractHandlerInterceptor {
         && hasAnnotations(handlerMethod, SUPPORTED_SECURITY_ANNOTATIONS)
     ) {
       var isMemberOfTeamTypeAnnotation = (IsMemberOfTeamType) getAnnotation(handlerMethod, IsMemberOfTeamType.class);
-      var teamType = isMemberOfTeamTypeAnnotation.value();
-      var user = userDetailService.getUserDetail();
+      var teamTypes = isMemberOfTeamTypeAnnotation.value();
 
-      var isMemberOfTeamType =  switch (teamType) {
-        case REGULATOR ->  regulatorTeamService.isMemberOfRegulatorTeam(user);
-        case CONSULTEE -> consulteeTeamService.isMemberOfConsulteeTeam(user);
-        case INDUSTRY -> teamService.isMemberOfIndustryTeam(user);
-      };
+      var isMemberOfTeam = Arrays.stream(teamTypes)
+          .anyMatch(this::isMemberOfTeamType);
 
-      if (!isMemberOfTeamType) {
+      if (!isMemberOfTeam) {
+        var teamTypeDisplayNames = Arrays.stream(teamTypes)
+            .map(TeamType::getDisplayText)
+            .collect(Collectors.joining(","));
+
         throw new ResponseStatusException(
             HttpStatus.FORBIDDEN,
-            "User is not a member of team [%s]".formatted(teamType.getDisplayText())
+            "User is not a member of any teams of type [%s]"
+                .formatted(teamTypeDisplayNames)
         );
       }
     }
     return true;
+  }
+
+  private boolean isMemberOfTeamType(TeamType teamType) {
+    var user = userDetailService.getUserDetail();
+
+    return switch (teamType) {
+      case REGULATOR ->  regulatorTeamService.isMemberOfRegulatorTeam(user);
+      case CONSULTEE -> consulteeTeamService.isMemberOfConsulteeTeam(user);
+      case INDUSTRY -> industryTeamService.isMemberOfIndustryTeam(user);
+    };
   }
 }

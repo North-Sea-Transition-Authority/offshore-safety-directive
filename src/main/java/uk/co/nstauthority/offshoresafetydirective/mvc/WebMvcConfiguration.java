@@ -88,7 +88,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(hasNotBeenTerminatedInterceptor)
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(isMemberOfTeamTypeInterceptor)
-        .addPathPatterns("/appointment/**");
+        .addPathPatterns("/appointment/**", "/nomination/**");
   }
 
   @Bean

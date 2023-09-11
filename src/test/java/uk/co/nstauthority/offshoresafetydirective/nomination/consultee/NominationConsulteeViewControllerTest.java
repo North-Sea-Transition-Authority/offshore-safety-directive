@@ -89,6 +89,8 @@ class NominationConsulteeViewControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
+    when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(true);
+
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatuses(
             NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
@@ -103,8 +105,10 @@ class NominationConsulteeViewControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void smokeTestPermissions_onlyConsulteeViewPermissionsAllowed() {
+    when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(true);
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.CONSULTEE_VIEW_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.VIEW_NOMINATIONS))
         .withUser(CONSULTEE_NOMINATION_VIEW_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))
@@ -112,8 +116,21 @@ class NominationConsulteeViewControllerTest extends AbstractControllerTest {
         .test();
   }
 
+  @SecurityTest
+  void renderNominationView_whenIsNotMemberOfConsulteeTeam_thenForbidden() throws Exception {
+    when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(false);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID)))
+                .with(user(CONSULTEE_NOMINATION_VIEW_USER))
+        )
+        .andExpect(status().isForbidden());
+  }
+
   @Test
   void renderNominationView_verifyReturn() throws Exception {
+    when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(true);
+
     var viewName = "test_view";
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         eq(nominationDetail),

@@ -12,5 +12,5 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 @Security
 public @interface IsMemberOfTeamType {
 
-  TeamType value();
+  TeamType[] value();
 }

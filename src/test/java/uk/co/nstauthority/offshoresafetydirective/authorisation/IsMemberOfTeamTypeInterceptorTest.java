@@ -102,10 +102,13 @@ class IsMemberOfTeamTypeInterceptorTest extends AbstractControllerTest {
   void preHandle_whenNotMemberOfConsulteeTeam_thenForbidden() throws Exception {
     var route = ReverseRouter.route(
         on(IsMemberOfTeamTypeInterceptorTest.IsMemberOfTeamTypeInterceptorTestController.class)
-            .hasSupportedAnnotationWithConsulteeTeam(APPOINTMENT_ID)
+            .hasSupportedAnnotationWithConsulteeAndIndustryTeam(APPOINTMENT_ID)
     );
 
     when(consulteeTeamService.isMemberOfConsulteeTeam(USER))
+        .thenReturn(false);
+
+    when(industryTeamService.isMemberOfIndustryTeam(USER))
         .thenReturn(false);
 
     mockMvc.perform(
@@ -119,7 +122,7 @@ class IsMemberOfTeamTypeInterceptorTest extends AbstractControllerTest {
   void preHandle_whenUserIsMemberOfConsulteeTeam_thenOk() throws Exception {
     var route = ReverseRouter.route(
         on(IsMemberOfTeamTypeInterceptorTest.IsMemberOfTeamTypeInterceptorTestController.class)
-            .hasSupportedAnnotationWithConsulteeTeam(APPOINTMENT_ID)
+            .hasSupportedAnnotationWithConsulteeAndIndustryTeam(APPOINTMENT_ID)
     );
 
     when(consulteeTeamService.isMemberOfConsulteeTeam(USER))
@@ -134,30 +137,13 @@ class IsMemberOfTeamTypeInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenNotMemberOfIndustryTeam_thenForbidden() throws Exception {
-    var route = ReverseRouter.route(
-        on(IsMemberOfTeamTypeInterceptorTest.IsMemberOfTeamTypeInterceptorTestController.class)
-            .hasSupportedAnnotationWithIndustryTeam(APPOINTMENT_ID)
-    );
-
-    when(teamService.isMemberOfIndustryTeam(USER))
-        .thenReturn(false);
-
-    mockMvc.perform(
-            get(route)
-                .with(user(USER))
-        )
-        .andExpect(status().isForbidden());
-  }
-
-  @Test
   void preHandle_whenUserIsMemberOfIndustryTeam_thenOk() throws Exception {
     var route = ReverseRouter.route(
         on(IsMemberOfTeamTypeInterceptorTest.IsMemberOfTeamTypeInterceptorTestController.class)
-            .hasSupportedAnnotationWithIndustryTeam(APPOINTMENT_ID)
+            .hasSupportedAnnotationWithConsulteeAndIndustryTeam(APPOINTMENT_ID)
     );
 
-    when(teamService.isMemberOfIndustryTeam(USER))
+    when(industryTeamService.isMemberOfIndustryTeam(USER))
         .thenReturn(true);
 
     mockMvc.perform(
@@ -166,6 +152,23 @@ class IsMemberOfTeamTypeInterceptorTest extends AbstractControllerTest {
         )
         .andExpect(status().isOk())
         .andExpect(view().name(IsMemberOfTeamTypeInterceptorTestController.VIEW_NAME));
+  }
+
+  @Test
+  void preHandle_whenUserIsNotMemberOfTeam() throws Exception {
+    var route = ReverseRouter.route(
+        on(IsMemberOfTeamTypeInterceptorTest.IsMemberOfTeamTypeInterceptorTestController.class)
+            .hasSupportedAnnotationWithConsulteeAndIndustryTeam(APPOINTMENT_ID)
+    );
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(USER))
+        .thenReturn(false);
+
+    mockMvc.perform(
+            get(route)
+                .with(user(USER))
+        )
+        .andExpect(status().isForbidden());
   }
 
   @Controller
@@ -193,14 +196,8 @@ class IsMemberOfTeamTypeInterceptorTest extends AbstractControllerTest {
     }
 
     @GetMapping("/appointment/{appointmentId}/has-supported-annotation-consultee")
-    @IsMemberOfTeamType(TeamType.CONSULTEE)
-    public ModelAndView hasSupportedAnnotationWithConsulteeTeam(@PathVariable("appointmentId") AppointmentId appointmentId) {
-      return new ModelAndView(VIEW_NAME);
-    }
-
-    @GetMapping("/appointment/{appointmentId}/has-supported-annotation-industry")
-    @IsMemberOfTeamType(TeamType.INDUSTRY)
-    public ModelAndView hasSupportedAnnotationWithIndustryTeam(@PathVariable("appointmentId") AppointmentId appointmentId) {
+    @IsMemberOfTeamType(value = {TeamType.CONSULTEE, TeamType.INDUSTRY})
+    public ModelAndView hasSupportedAnnotationWithConsulteeAndIndustryTeam(@PathVariable("appointmentId") AppointmentId appointmentId) {
       return new ModelAndView(VIEW_NAME);
     }
   }

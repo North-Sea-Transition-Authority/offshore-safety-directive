@@ -102,7 +102,7 @@ public abstract class AbstractControllerTest {
   protected ConsulteeTeamService consulteeTeamService;
 
   @MockBean
-  protected IndustryTeamService teamService;
+  protected IndustryTeamService industryTeamService;
 
   @BeforeEach
   void setupAbstractControllerTest() {
