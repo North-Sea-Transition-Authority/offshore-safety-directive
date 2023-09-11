@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicence;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +38,9 @@ class InstallationDuplicationServiceTest {
 
   @Mock
   private NominatedInstallationAccessService nominatedInstallationAccessService;
+
+  @Mock
+  private NominationLicenceService nominationLicenceService;
 
   @InjectMocks
   private InstallationDuplicationService installationDuplicationService;
@@ -57,6 +64,7 @@ class InstallationDuplicationServiceTest {
     // Verify duplication of other areas continues as expected
     verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
 
   @Test
@@ -96,6 +104,7 @@ class InstallationDuplicationServiceTest {
 
     verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
 
 
@@ -118,6 +127,7 @@ class InstallationDuplicationServiceTest {
     // Verify duplication of other areas continues as expected
     verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
 
   @Test
@@ -160,6 +170,7 @@ class InstallationDuplicationServiceTest {
     // Verify duplication of other areas continues as expected
     verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
 
   @Test
@@ -181,6 +192,7 @@ class InstallationDuplicationServiceTest {
     // Verify duplication of other areas continues as expected
     verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
 
   @Test
@@ -242,5 +254,72 @@ class InstallationDuplicationServiceTest {
     // Verify duplication of other areas continues as expected
     verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
     verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
+    verify(nominationLicenceService).getRelatedLicences(sourceNominationDetail);
   }
+
+  @Test
+  void duplicate_nominatedLicences_whenNoLinkedLicences_thenVerifyNoDuplication() {
+    var sourceNominationDetail = NominationDetailTestUtil.builder()
+        .withId(100)
+        .build();
+    var targetNominationDetail = NominationDetailTestUtil.builder()
+        .withId(200)
+        .build();
+
+    when(nominationLicenceService.getRelatedLicences(sourceNominationDetail))
+        .thenReturn(List.of());
+
+    installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
+
+    verify(nominationLicenceService, never()).saveAllNominationLicences(any());
+
+    // Verify duplication of other areas continues as expected
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
+    verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+  }
+
+  @Test
+  void duplicate_nominatedLicences_whenLinkedLicences_thenVerifyLinksDuplicated() {
+    var sourceNominationDetail = NominationDetailTestUtil.builder()
+        .withId(100)
+        .build();
+    var targetNominationDetail = NominationDetailTestUtil.builder()
+        .withId(200)
+        .build();
+
+    var nominationLicence = NominationLicenceTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withLicenceId(255)
+        .withNominationDetail(sourceNominationDetail)
+        .build();
+
+    when(nominationLicenceService.getRelatedLicences(sourceNominationDetail))
+        .thenReturn(List.of(nominationLicence));
+
+    installationDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<NominationLicence>> captor = ArgumentCaptor.forClass(List.class);
+    verify(nominationLicenceService).saveAllNominationLicences(captor.capture());
+
+    var capturedNominationLicenceAssertion = assertThat(captor.getValue())
+        .hasSize(1)
+        .first();
+
+    new PropertyObjectAssert(capturedNominationLicenceAssertion)
+        .hasFieldOrPropertyWithValue("nominationDetail", targetNominationDetail)
+        .hasFieldOrPropertyWithValue("licenceId", nominationLicence.getLicenceId())
+        .hasAssertedAllPropertiesExcept("id");
+
+    capturedNominationLicenceAssertion
+        .extracting(NominationLicence::getId)
+        .isNotEqualTo(nominationLicence.getId());
+
+    // Verify duplication of other areas continues as expected
+    verify(installationInclusionAccessService).getInstallationInclusion(sourceNominationDetail);
+    verify(nominatedInstallationDetailPersistenceService).findNominatedInstallationDetail(sourceNominationDetail);
+    verify(nominatedInstallationAccessService).getNominatedInstallations(sourceNominationDetail);
+  }
+
 }

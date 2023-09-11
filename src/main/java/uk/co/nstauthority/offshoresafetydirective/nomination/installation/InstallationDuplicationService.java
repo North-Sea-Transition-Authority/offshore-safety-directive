@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.duplication.DuplicatableNominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.duplication.DuplicationUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicence;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.NominationLicenceService;
 
 @Service
 class InstallationDuplicationService implements DuplicatableNominationService {
@@ -16,6 +18,7 @@ class InstallationDuplicationService implements DuplicatableNominationService {
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
   private final InstallationInclusionAccessService installationInclusionAccessService;
   private final NominatedInstallationAccessService nominatedInstallationAccessService;
+  private final NominationLicenceService nominationLicenceService;
 
   @Autowired
   InstallationDuplicationService(
@@ -23,12 +26,13 @@ class InstallationDuplicationService implements DuplicatableNominationService {
       NominatedInstallationPersistenceService nominatedInstallationPersistenceService,
       InstallationInclusionPersistenceService installationInclusionPersistenceService,
       InstallationInclusionAccessService installationInclusionAccessService,
-      NominatedInstallationAccessService nominatedInstallationAccessService) {
+      NominatedInstallationAccessService nominatedInstallationAccessService, NominationLicenceService nominationLicenceService) {
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominatedInstallationPersistenceService = nominatedInstallationPersistenceService;
     this.installationInclusionPersistenceService = installationInclusionPersistenceService;
     this.installationInclusionAccessService = installationInclusionAccessService;
     this.nominatedInstallationAccessService = nominatedInstallationAccessService;
+    this.nominationLicenceService = nominationLicenceService;
   }
 
   @Override
@@ -63,5 +67,18 @@ class InstallationDuplicationService implements DuplicatableNominationService {
           newInstallationDetail.setNominationDetail(newNominationDetail);
           nominatedInstallationDetailPersistenceService.saveNominatedInstallationDetail(newInstallationDetail);
         });
+
+    var licencesToSave = new ArrayList<NominationLicence>();
+    nominationLicenceService.getRelatedLicences(oldNominationDetail)
+        .forEach(nominationLicence -> {
+          var newLicence = DuplicationUtil.instantiateBlankInstance(NominationLicence.class);
+          DuplicationUtil.copyProperties(nominationLicence, newLicence, "id");
+          newLicence.setNominationDetail(newNominationDetail);
+          licencesToSave.add(newLicence);
+        });
+
+    if (!licencesToSave.isEmpty()) {
+      nominationLicenceService.saveAllNominationLicences(licencesToSave);
+    }
   }
 }

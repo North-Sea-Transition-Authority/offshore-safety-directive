@@ -41,6 +41,11 @@ public class NominationLicenceService {
     nominationLicenceRepository.saveAll(nominationLicences);
   }
 
+  @Transactional
+  public void saveAllNominationLicences(List<NominationLicence> nominationLicences) {
+    nominationLicenceRepository.saveAll(nominationLicences);
+  }
+
   public List<NominationLicence> getRelatedLicences(NominationDetail nominationDetail) {
     return nominationLicenceRepository.findAllByNominationDetail(nominationDetail);
   }

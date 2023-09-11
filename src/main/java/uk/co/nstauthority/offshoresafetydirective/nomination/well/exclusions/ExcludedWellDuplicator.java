@@ -1,8 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
@@ -19,10 +22,12 @@ public class ExcludedWellDuplicator {
   }
 
   public void duplicate(NominationDetail sourceNominationDetail, NominationDetail targetNominationDetail) {
-    var wellIds = excludedWellAccessService.getExcludedWellIds(sourceNominationDetail);
-    if (!wellIds.isEmpty()) {
-      var hasWellsToExclude = BooleanUtils.isTrue(excludedWellAccessService.hasWellsToExclude(sourceNominationDetail));
-      excludedWellPersistenceService.saveWellsToExclude(targetNominationDetail, wellIds, hasWellsToExclude);
+    var hasWellsToExclude = BooleanUtils.isTrue(excludedWellAccessService.hasWellsToExclude(sourceNominationDetail));
+    Set<WellboreId> wellIds = new HashSet<>();
+
+    if (hasWellsToExclude) {
+      wellIds = excludedWellAccessService.getExcludedWellIds(sourceNominationDetail);
     }
+    excludedWellPersistenceService.saveWellsToExclude(targetNominationDetail, wellIds, hasWellsToExclude);
   }
 }

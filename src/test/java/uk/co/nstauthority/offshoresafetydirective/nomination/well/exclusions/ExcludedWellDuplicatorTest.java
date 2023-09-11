@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,11 +55,14 @@ class ExcludedWellDuplicatorTest {
     var targetNominationDetail = NominationDetailTestUtil.builder()
         .withId(200)
         .build();
-    when(excludedWellAccessService.getExcludedWellIds(sourceNominationDetail))
-        .thenReturn(Set.of());
+    when(excludedWellAccessService.hasWellsToExclude(sourceNominationDetail))
+        .thenReturn(false);
+
     excludedWellDuplicator.duplicate(sourceNominationDetail, targetNominationDetail);
 
-    verify(excludedWellAccessService, never()).hasWellsToExclude(any());
-    verify(excludedWellPersistenceService, never()).saveWellsToExclude(any(), any(), anyBoolean());
+    verify(excludedWellPersistenceService)
+        .saveWellsToExclude(targetNominationDetail, Set.of(), false);
+
+    verify(excludedWellAccessService, never()).getExcludedWells(any());
   }
 }
