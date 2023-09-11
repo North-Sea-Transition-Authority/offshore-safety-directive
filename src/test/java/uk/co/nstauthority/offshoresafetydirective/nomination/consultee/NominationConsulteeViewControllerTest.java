@@ -117,6 +117,17 @@ class NominationConsulteeViewControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
+  void renderNominationView_whenIsMemberOfRegulatorTeam_thenForbidden() throws Exception {
+    when(regulatorTeamService.isMemberOfRegulatorTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(true);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID)))
+                .with(user(CONSULTEE_NOMINATION_VIEW_USER))
+        )
+        .andExpect(status().isForbidden());
+  }
+
+  @SecurityTest
   void renderNominationView_whenIsNotMemberOfConsulteeTeam_thenForbidden() throws Exception {
     when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(false);
 

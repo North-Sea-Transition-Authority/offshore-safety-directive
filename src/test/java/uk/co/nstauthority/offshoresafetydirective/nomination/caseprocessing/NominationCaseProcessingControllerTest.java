@@ -119,7 +119,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void renderCaseProcessing_whenIsNotAMemberOfIndustryOrRegulatorTeams_thenForbidden() throws Exception {
+  void renderCaseProcessing_whenIsNotAMemberOfRegulatorTeams_thenForbidden() throws Exception {
     when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(false);
 
     mockMvc.perform(

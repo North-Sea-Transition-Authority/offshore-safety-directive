@@ -32,7 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
     },
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
 )
-class NominationConsulteeViewController {
+public class NominationConsulteeViewController {
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final NominationDetailService nominationDetailService;

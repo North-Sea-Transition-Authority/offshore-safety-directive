@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -17,8 +18,11 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ExtendWith(MockitoExtension.class)
 class PermissionServiceTest {
@@ -71,14 +75,16 @@ class PermissionServiceTest {
   void hasTeamPermission_whenTeamMemberNull_thenFalse() {
     var team = TeamTestUtil.Builder().build();
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(null);
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+    assertFalse(
+        permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
   }
 
   @Test
   void hasTeamPermission_whenTeamMemberEmpty_thenFalse() {
     var team = TeamTestUtil.Builder().build();
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(Collections.emptyList());
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+    assertFalse(
+        permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
   }
 
   @Test
@@ -91,7 +97,8 @@ class PermissionServiceTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+    assertFalse(
+        permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
   }
 
   @Test
@@ -116,7 +123,49 @@ class PermissionServiceTest {
 
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMember));
 
-    assertFalse(permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+    assertFalse(
+        permissionService.hasPermissionForTeam(team.toTeamId(), USER, Set.of(RolePermission.CREATE_NOMINATION)));
+  }
+
+  @Test
+  void getTeamTypePermissionMap_whenInMultipleTeams() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var regulatorTeamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .withRole(RegulatorTeamRole.VIEW_NOMINATION)
+        .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+        .build();
+
+    var industryTeamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .withRole(IndustryTeamRole.ACCESS_MANAGER)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of(regulatorTeamMember, industryTeamMember));
+
+    var result = permissionService.getTeamTypePermissionMap(user);
+
+    assertThat(result)
+        .containsOnlyKeys(TeamType.REGULATOR, TeamType.INDUSTRY)
+        .containsEntry(TeamType.REGULATOR, Set.of(
+            RolePermission.VIEW_NOMINATIONS,
+            RolePermission.MANAGE_NOMINATIONS,
+            RolePermission.CREATE_NOMINATION
+        ))
+        .containsEntry(TeamType.INDUSTRY, Set.of(RolePermission.GRANT_ROLES));
+  }
+
+  @Test
+  void getTeamTypePermissionMap_whenNotInAnyTeams() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(List.of());
+
+    var result = permissionService.getTeamTypePermissionMap(user);
+
+    assertThat(result).isEmpty();
   }
 
   enum TestTeamRole implements TeamRole {

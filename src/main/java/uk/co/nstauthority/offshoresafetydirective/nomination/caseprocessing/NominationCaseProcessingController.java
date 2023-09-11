@@ -35,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Controller
 @RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
-@IsMemberOfTeamType(value = {TeamType.REGULATOR})
+@IsMemberOfTeamType(value = {TeamType.INDUSTRY, TeamType.REGULATOR})
 @HasNominationStatus(
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION,
     statuses = {

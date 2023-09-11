@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
@@ -31,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.consultee.NominationConsulteeViewController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
@@ -46,8 +49,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentTimelineItemServiceTest {
@@ -68,9 +71,6 @@ class AppointmentTimelineItemServiceTest {
   private NominationAccessService nominationAccessService;
 
   @Mock
-  private RegulatorTeamService regulatorTeamService;
-
-  @Mock
   private AppointmentCorrectionService appointmentCorrectionService;
 
   @Mock
@@ -81,6 +81,13 @@ class AppointmentTimelineItemServiceTest {
 
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
+
+  private ServiceUserDetail loggedInUser;
+
+  @BeforeEach
+  void setUp() {
+    loggedInUser = ServiceUserDetailTestUtil.Builder().build();
+  }
 
   @Test
   void getTimelineItemViews_whenAppointment_thenPopulatedAppointmentViewList() {
@@ -751,16 +758,12 @@ class AppointmentTimelineItemServiceTest {
         .withNominationId(new NominationId(100))
         .build();
 
-    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.MANAGE_APPOINTMENTS))
-    )
-        .willReturn(false);
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of());
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointmentDto),
@@ -775,8 +778,11 @@ class AppointmentTimelineItemServiceTest {
         .doesNotContainKey("nominationUrl");
   }
 
-  @Test
-  void getTimelineItemViews_whenUserLoggedAndHasPermissionOnNomination_thenNominationUrlIsNotNull() {
+  @ParameterizedTest
+  @EnumSource(value = RolePermission.class, names = {"VIEW_NOMINATIONS", "MANAGE_NOMINATIONS"})
+  void getTimelineItemViews_whenUserLoggedAndCanViewNominations_thenNominationUrlIsNotNull(
+      RolePermission rolePermission
+  ) {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
     var nominationId = new NominationId(100);
@@ -785,22 +791,12 @@ class AppointmentTimelineItemServiceTest {
         .withNominationId(nominationId)
         .build();
 
-    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.MANAGE_APPOINTMENTS))
-    )
-        .willReturn(false);
-
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
-    )
-        .willReturn(true);
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(rolePermission)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointmentDto),
@@ -819,6 +815,77 @@ class AppointmentTimelineItemServiceTest {
         );
   }
 
+  @ParameterizedTest
+  @EnumSource(
+      value = RolePermission.class,
+      names = {"VIEW_NOMINATIONS", "MANAGE_NOMINATIONS"},
+      mode = EnumSource.Mode.EXCLUDE
+  )
+  void getTimelineItemViews_whenUserLoggedAndCannotViewNominations_thenNominationUrlIsNull(
+      RolePermission rolePermission
+  ) {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+    var nominationId = new NominationId(100);
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(nominationId)
+        .build();
+
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(rolePermission)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainKey("nominationUrl");
+  }
+
+  @Test
+  void getTimelineItemViews_whenUserLoggedAndCanConsultOnNominations_thenNominationUrlIsNotNull() {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+    var nominationId = new NominationId(100);
+
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withNominationId(nominationId)
+        .build();
+
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.CONSULTEE, Set.of(RolePermission.VIEW_NOMINATIONS)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointmentDto),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry(
+            "nominationUrl",
+            ReverseRouter.route(on(NominationConsulteeViewController.class)
+                .renderNominationView(nominationId))
+        );
+  }
+
   @Test
   void getTimelineItemViews_whenUserLoggedAndHasPermissionToManageAppointments_thenCanManageAppointment() {
 
@@ -829,22 +896,12 @@ class AppointmentTimelineItemServiceTest {
         .withAppointmentToDate(new AppointmentToDate(null))
         .build();
 
-    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
 
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
-    )
-        .willReturn(true);
-
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.MANAGE_APPOINTMENTS)
-    ))
-        .willReturn(true);
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
 
     given(appointmentTerminationService.hasNotBeenTerminated(appointmentDto.appointmentId()))
         .willReturn(true);
@@ -881,21 +938,11 @@ class AppointmentTimelineItemServiceTest {
         .withAppointmentToDate(new AppointmentToDate(LocalDate.now()))
         .build();
 
-    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
-    )
-        .willReturn(true);
-
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.MANAGE_APPOINTMENTS)
-    ))
-        .willReturn(false);
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.INDUSTRY, Set.of(RolePermission.VIEW_NOMINATIONS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointmentDto),
@@ -1035,24 +1082,11 @@ class AppointmentTimelineItemServiceTest {
         .withNominationId(new NominationId(100))
         .build();
 
-    var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
     given(userDetailService.getUserDetail())
         .willReturn(loggedInUser);
 
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.MANAGE_APPOINTMENTS))
-    )
-        .willReturn(false);
-
-    given(permissionService.hasPermission(
-        loggedInUser,
-        Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS))
-    )
-        .willReturn(true);
-
-    given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser))
-        .willReturn(true);
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.GRANT_ROLES)));
 
     var appointmentCorrectionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder()
         .withAppointmentId(appointmentDto.appointmentId())

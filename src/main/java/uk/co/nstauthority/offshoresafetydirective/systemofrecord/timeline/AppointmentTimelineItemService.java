@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.consultee.NominationConsulteeViewController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
@@ -38,8 +40,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 public class AppointmentTimelineItemService {
@@ -56,8 +58,6 @@ public class AppointmentTimelineItemService {
 
   private final AppointmentCorrectionService appointmentCorrectionService;
 
-  private final RegulatorTeamService regulatorTeamService;
-
   private final AppointmentPhasesService appointmentPhasesService;
 
   private final AppointmentTerminationService appointmentTerminationService;
@@ -70,7 +70,7 @@ public class AppointmentTimelineItemService {
                                  UserDetailService userDetailService,
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
-                                 RegulatorTeamService regulatorTeamService, AppointmentPhasesService appointmentPhasesService,
+                                 AppointmentPhasesService appointmentPhasesService,
                                  AppointmentTerminationService appointmentTerminationService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
@@ -78,7 +78,6 @@ public class AppointmentTimelineItemService {
     this.userDetailService = userDetailService;
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
-    this.regulatorTeamService = regulatorTeamService;
     this.appointmentPhasesService = appointmentPhasesService;
     this.appointmentTerminationService = appointmentTerminationService;
   }
@@ -102,17 +101,27 @@ public class AppointmentTimelineItemService {
 
     var canManageAppointments = false;
     var isMemberOfRegulatorTeam = false;
+    var canViewNominations = false;
+    var canViewConsultations = false;
 
     Map<AppointmentId, List<AppointmentCorrectionHistoryView>> appointmentCorrectionMap = new HashMap<>();
 
     if (loggedInUser.isPresent()) {
 
-      canManageAppointments = permissionService.hasPermission(
-          loggedInUser.get(),
-          Set.of(RolePermission.MANAGE_APPOINTMENTS)
-      );
+      Map<TeamType, Collection<RolePermission>> teamTypePermissionMap =
+          permissionService.getTeamTypePermissionMap(loggedInUser.get());
 
-      isMemberOfRegulatorTeam = regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser.get());
+      var regulatorRolePermissions = teamTypePermissionMap.getOrDefault(TeamType.REGULATOR, Set.of());
+
+      canManageAppointments = regulatorRolePermissions.contains(RolePermission.MANAGE_APPOINTMENTS);
+      isMemberOfRegulatorTeam = teamTypePermissionMap.containsKey(TeamType.REGULATOR);
+
+      canViewNominations = Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
+          .stream()
+          .anyMatch(regulatorRolePermissions::contains);
+
+      canViewConsultations = teamTypePermissionMap.getOrDefault(TeamType.CONSULTEE, Set.of())
+          .contains(RolePermission.VIEW_NOMINATIONS);
 
       if (isMemberOfRegulatorTeam) {
 
@@ -125,7 +134,14 @@ public class AppointmentTimelineItemService {
       }
     }
 
-    for (AppointmentDto appointment: appointments) {
+    var appointmentTimelineItemDto = AppointmentTimelineItemDto.builder()
+        .withCanManageAppointments(canManageAppointments)
+        .withMemberOfRegulatorTeam(isMemberOfRegulatorTeam)
+        .withCanViewNominations(canViewNominations)
+        .withCanViewConsultations(canViewConsultations)
+        .build();
+
+    for (AppointmentDto appointment : appointments) {
 
       var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
           .map(PortalOrganisationDto::name)
@@ -140,7 +156,11 @@ public class AppointmentTimelineItemService {
           .orElse(Collections.emptyList());
 
       var appointmentView = convertToTimelineItemView(
-          appointment, operatorName, phases, canManageAppointments, corrections, isMemberOfRegulatorTeam
+          appointment,
+          operatorName,
+          phases,
+          corrections,
+          appointmentTimelineItemDto
       );
 
       timelineItemViews.add(appointmentView);
@@ -169,9 +189,8 @@ public class AppointmentTimelineItemService {
   private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
                                                           String operatorName,
                                                           List<AssetAppointmentPhase> phases,
-                                                          boolean canManageAppointments,
                                                           List<AppointmentCorrectionHistoryView> corrections,
-                                                          boolean isRegulator) {
+                                                          AppointmentTimelineItemDto appointmentTimelineItemDto) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", appointmentDto.appointmentId())
@@ -180,12 +199,16 @@ public class AppointmentTimelineItemService {
         .addProperty("phases", phases)
         .addProperty("assetDto", appointmentDto.assetDto());
 
-    if (isRegulator) {
+    if (appointmentTimelineItemDto.isMemberOfRegulatorTeam()) {
       modelProperties.addProperty("corrections", corrections);
     }
 
     switch (appointmentDto.appointmentType()) {
-      case ONLINE_NOMINATION -> addOnlineNominationModelProperties(modelProperties, appointmentDto);
+      case ONLINE_NOMINATION -> addOnlineNominationModelProperties(
+          modelProperties,
+          appointmentDto,
+          appointmentTimelineItemDto
+      );
       case OFFLINE_NOMINATION -> addOfflineNominationModelProperties(modelProperties, appointmentDto);
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
@@ -193,7 +216,7 @@ public class AppointmentTimelineItemService {
     var hasNotBeenTerminated =
         appointmentTerminationService.hasNotBeenTerminated(new AppointmentId(appointmentDto.appointmentId().id()));
 
-    if (canManageAppointments && hasNotBeenTerminated) {
+    if (appointmentTimelineItemDto.canManageAppointments() && hasNotBeenTerminated) {
       modelProperties.addProperty(
           "updateUrl",
           ReverseRouter.route(
@@ -203,7 +226,8 @@ public class AppointmentTimelineItemService {
       if (AppointmentDto.isCurrentAppointment(appointmentDto)) {
         modelProperties.addProperty(
             "terminateUrl",
-            ReverseRouter.route(on(AppointmentTerminationController.class).renderTermination(appointmentDto.appointmentId()))
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).renderTermination(appointmentDto.appointmentId()))
         );
       }
     }
@@ -218,8 +242,9 @@ public class AppointmentTimelineItemService {
   }
 
   private void addOnlineNominationModelProperties(AssetTimelineModelProperties modelProperties,
-                                                  AppointmentDto appointmentDto) {
-    Optional.ofNullable(getNominationUrl(appointmentDto))
+                                                  AppointmentDto appointmentDto,
+                                                  AppointmentTimelineItemDto appointmentTimelineItemDto) {
+    Optional.ofNullable(getNominationUrl(appointmentDto, appointmentTimelineItemDto))
         .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
 
     var nominationReference = nominationAccessService
@@ -255,26 +280,20 @@ public class AppointmentTimelineItemService {
 
   }
 
-  private String getNominationUrl(AppointmentDto appointmentDto) {
+  private String getNominationUrl(AppointmentDto appointmentDto,
+                                  AppointmentTimelineItemDto appointmentTimelineItemDto) {
 
     if (appointmentDto.nominationId() == null) {
       return null;
     }
 
-    try {
-      var loggedInUser = userDetailService.getUserDetail();
-
-      var canAccessNomination = permissionService.hasPermission(
-          loggedInUser,
-          Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
-      );
-      return canAccessNomination
-          ? ReverseRouter.route(
-          on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId(), null))
-          : null;
-    } catch (InvalidAuthenticationException exception) {
-      // catches when no user is logged in
-      return null;
+    if (appointmentTimelineItemDto.canViewNominations()) {
+      return ReverseRouter.route(
+          on(NominationCaseProcessingController.class).renderCaseProcessing(appointmentDto.nominationId(), null));
+    } else if (appointmentTimelineItemDto.canViewConsultations()) {
+      return ReverseRouter.route(
+          on(NominationConsulteeViewController.class).renderNominationView(appointmentDto.nominationId()));
     }
+    return null;
   }
 }
