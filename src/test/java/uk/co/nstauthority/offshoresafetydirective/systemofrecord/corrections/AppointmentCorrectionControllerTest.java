@@ -399,12 +399,13 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         );
   }
 
-  @Test
-  void renderCorrection_whenSubareaAsset() throws Exception {
+  @ParameterizedTest
+  @EnumSource(PortalAssetType.class)
+  void renderCorrection_assertModelProperties(PortalAssetType portalAssetType) throws Exception {
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
     var asset = AssetTestUtil.builder()
-        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withPortalAssetType(portalAssetType)
         .build();
     var appointment = AppointmentTestUtil.builder()
         .withAsset(asset)
@@ -448,7 +449,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment))
         .thenReturn(List.of(correctionHistoryView));
 
-    var modelAndView = mockMvc.perform(get(
+    var modelAndViewAssertions = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
@@ -472,9 +473,14 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
-        .andExpect(
-            model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."))
-        .andReturn()
+        .andExpect(model().attribute("cancelUrl", getExpectedRedirect(appointmentDto, portalAssetType)));
+
+    if (PortalAssetType.SUBAREA.equals(portalAssetType)) {
+      modelAndViewAssertions.andExpect(
+          model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."));
+    }
+
+    var modelAndView = modelAndViewAssertions.andReturn()
         .getModelAndView();
 
     assertThat(modelAndView).isNotNull();
@@ -808,5 +814,16 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(expectedRedirect))
         .andExpect(notificationBanner(expectedNotificationBanner));
+  }
+
+  private String getExpectedRedirect(AppointmentDto appointmentDto, PortalAssetType portalAssetType) {
+    return switch (portalAssetType) {
+      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
+    };
   }
 }

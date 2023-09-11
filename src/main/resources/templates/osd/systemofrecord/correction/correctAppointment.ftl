@@ -145,7 +145,7 @@
             primaryButtonText="Submit"
             secondaryLinkText="Cancel"
             linkSecondaryAction=true
-            linkSecondaryActionUrl="javascript:history.back()"
+            linkSecondaryActionUrl=springUrl(cancelUrl)
         />
     </@fdsForm.htmlForm>
 

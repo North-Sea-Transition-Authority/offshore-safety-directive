@@ -126,6 +126,20 @@ public class AppointmentCorrectionController {
     };
   }
 
+  String getTimelineRoute(AppointmentDto appointmentDto) {
+    return switch (appointmentDto.assetDto().portalAssetType()) {
+      case WELLBORE ->
+          ReverseRouter.route(on(AssetTimelineController.class)
+              .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case INSTALLATION ->
+          ReverseRouter.route(on(AssetTimelineController.class)
+              .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA ->
+          ReverseRouter.route(on(AssetTimelineController.class)
+              .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
+    };
+  }
+
   private ModelAndView getModelAndView(Appointment appointment,
                                        AppointmentCorrectionForm form) {
 
@@ -149,6 +163,7 @@ public class AppointmentCorrectionController {
         .addObject("appointmentTypes", appointmentTypes)
         .addObject("correctionHistoryViews", correctionHistoryViews)
         .addObject("form", form)
+        .addObject("cancelUrl", getTimelineRoute(appointmentDto))
         .addObject(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
@@ -197,6 +212,4 @@ public class AppointmentCorrectionController {
             )
         ));
   }
-
-
 }
