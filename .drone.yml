@@ -30,7 +30,7 @@ steps:
         from_secret: bitbucket_ssh_key
 
   - name: build-frontend
-    image: node:10
+    image: node:18
     commands:
       - cd fivium-design-system-core && npm install && npx gulp build && cd ..
       - npm install
