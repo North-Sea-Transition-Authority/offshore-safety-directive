@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.time.Period;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,19 +41,22 @@ class NominationWorkAreaItemTransformerServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getApplicantOrganisationId().id()))
-        .thenReturn(Optional.of(
-            PortalOrganisationDtoTestUtil.builder()
-                .withId(queryResult.getApplicantOrganisationId().id())
-                .build()
-        ));
+    var applicantOrganisationId = queryResult.getApplicantOrganisationId().id();
+    var nominatedOrganisationId = queryResult.getNominatedOrganisationId().id();
+    var ids = Stream.of(applicantOrganisationId, nominatedOrganisationId)
+        .map(PortalOrganisationUnitId::new)
+        .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getNominatedOrganisationId().id()))
-        .thenReturn(Optional.of(
-            PortalOrganisationDtoTestUtil.builder()
-                .withId(queryResult.getNominatedOrganisationId().id())
-                .build()
-        ));
+    var portalApplicationOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(applicantOrganisationId)
+        .build();
+
+    var portalNominatedOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+        .withId(nominatedOrganisationId)
+        .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+        .thenReturn(List.of(portalApplicationOrganisationDto, portalNominatedOrganisationDto));
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();
 
@@ -97,11 +101,14 @@ class NominationWorkAreaItemTransformerServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getApplicantOrganisationId().id()))
-        .thenReturn(Optional.empty());
+    var applicantOrganisationId = queryResult.getApplicantOrganisationId().id();
+    var nominatedOrganisationId = queryResult.getNominatedOrganisationId().id();
+    var ids = Stream.of(applicantOrganisationId, nominatedOrganisationId)
+        .map(PortalOrganisationUnitId::new)
+        .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(queryResult.getNominatedOrganisationId().id()))
-        .thenReturn(Optional.empty());
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+        .thenReturn(List.of());
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();
 

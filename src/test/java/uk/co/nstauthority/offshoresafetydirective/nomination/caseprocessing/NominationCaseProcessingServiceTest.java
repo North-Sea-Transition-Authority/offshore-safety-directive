@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailCaseProcessingService;
@@ -87,23 +90,24 @@ class NominationCaseProcessingServiceTest {
     when(nominationDetailCaseProcessingService.findCaseProcessingHeaderDto(nominationDetail))
         .thenReturn(Optional.of(headerDto));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(applicantOrgUnitId))
-        .thenReturn(Optional.of(
-            PortalOrganisationDtoTestUtil.builder()
-                .withId(applicantOrgUnitId)
-                .withName(applicantOrgUnitName)
-                .withRegisteredNumber(applicantCompanyNumber)
-                .build()
-        ));
+    var ids = Stream.of(nominatedOrgUnitId, applicantOrgUnitId)
+        .map(PortalOrganisationUnitId::new)
+        .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(nominatedOrgUnitId))
-        .thenReturn(Optional.of(
-            PortalOrganisationDtoTestUtil.builder()
-                .withId(nominatedOrgUnitId)
-                .withName(nominatedOrgUnitName)
-                .withRegisteredNumber(nomineeCompanyNumber)
-                .build()
-        ));
+    var portalApplicationOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+            .withId(applicantOrgUnitId)
+            .withName(applicantOrgUnitName)
+            .withRegisteredNumber(applicantCompanyNumber)
+            .build();
+
+    var portalNominatedOrganisationDto = PortalOrganisationDtoTestUtil.builder()
+            .withId(nominatedOrgUnitId)
+            .withName(nominatedOrgUnitName)
+            .withRegisteredNumber(nomineeCompanyNumber)
+            .build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+        .thenReturn(List.of(portalNominatedOrganisationDto, portalApplicationOrganisationDto));
 
     when(caseEventService.getNominationDecisionForNominationDetail(nominationDetail))
         .thenReturn(Optional.of(nominationDecision));
@@ -160,11 +164,12 @@ class NominationCaseProcessingServiceTest {
     when(nominationDetailCaseProcessingService.findCaseProcessingHeaderDto(nominationDetail))
         .thenReturn(Optional.of(headerDto));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(applicantOrgUnitId))
-        .thenReturn(Optional.empty());
+    var ids = Stream.of(nominatedOrgUnitId, applicantOrgUnitId)
+        .map(PortalOrganisationUnitId::new)
+        .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(nominatedOrgUnitId))
-        .thenReturn(Optional.empty());
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+        .thenReturn(List.of());
 
     var result = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail);
     assertThat(result).isPresent();
@@ -191,13 +196,13 @@ class NominationCaseProcessingServiceTest {
   @Test
   void getNominationCaseProcessingHeader_whenDuplicateOrgUnits_thenEnsureNoError() {
 
-    var orgId = 1;
+    var orgId = new PortalOrganisationUnitId(1);
     var orgName = "applicantOrg";
 
     var headerDto = NominationCaseProcessingHeaderDtoUtil.builder()
         .withNominationReference("reference")
-        .withApplicantOrganisationId(orgId)
-        .withNominatedOrganisationId(orgId)
+        .withApplicantOrganisationId(orgId.id())
+        .withNominatedOrganisationId(orgId.id())
         .withSelectionType(WellSelectionType.NO_WELLS)
         .withIncludeInstallationsInNomination(true)
         .withStatus(NominationStatus.DRAFT)
@@ -207,12 +212,12 @@ class NominationCaseProcessingServiceTest {
         .thenReturn(Optional.of(headerDto));
 
     var portalOrganisation = PortalOrganisationDtoTestUtil.builder()
-        .withId(orgId)
+        .withId(orgId.id())
         .withName(orgName)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(orgId))
-        .thenReturn(Optional.of(portalOrganisation));
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(List.of(orgId)))
+        .thenReturn(List.of(portalOrganisation));
 
     assertDoesNotThrow(() -> nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail));
 

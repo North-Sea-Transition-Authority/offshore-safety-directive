@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 
 @Service
@@ -67,12 +67,14 @@ class NominationWorkAreaItemTransformerService {
         .map(result -> result.getNominatedOrganisationId().id())
         .toList();
 
-    // TODO OSDOP-231 - Replace .map call with grouped ID lookup.
-    return Stream.of(applicantOrganisationIds, nominatedOrganisationIds)
+    var ids = Stream.of(applicantOrganisationIds, nominatedOrganisationIds)
         .flatMap(Collection::stream)
         .distinct()
-        .map(portalOrganisationUnitQueryService::getOrganisationById)
-        .flatMap(Optional::stream)
+        .map(PortalOrganisationUnitId::new)
+        .toList();
+
+    return portalOrganisationUnitQueryService.getOrganisationByIds(ids)
+        .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
   }

@@ -13,7 +13,7 @@ import java.time.Period;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Stream;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -85,8 +86,11 @@ class NominationWorkAreaItemServiceTest {
         .withName("Nominated org")
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(1)).thenReturn(Optional.of(applicantOrganisation));
-    when(portalOrganisationUnitQueryService.getOrganisationById(2)).thenReturn(Optional.of(nominatedOrganisation));
+    var ids = Stream.of(applicantOrganisation.id(), nominatedOrganisation.id())
+            .map(PortalOrganisationUnitId::new)
+            .toList();
+
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids)).thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 
@@ -149,9 +153,6 @@ class NominationWorkAreaItemServiceTest {
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
-
-    when(portalOrganisationUnitQueryService.getOrganisationById(1)).thenReturn(Optional.empty());
-    when(portalOrganisationUnitQueryService.getOrganisationById(2)).thenReturn(Optional.empty());
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 

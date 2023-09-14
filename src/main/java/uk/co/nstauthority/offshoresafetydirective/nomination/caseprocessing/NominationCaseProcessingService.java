@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailCaseProcessingService;
@@ -98,12 +99,11 @@ class NominationCaseProcessingService {
     var ids = Stream.of(dto.nominatedOrganisationId(), dto.applicantOrganisationId())
         .filter(Objects::nonNull)
         .distinct()
+        .map(PortalOrganisationUnitId::new)
         .toList();
 
-    // TODO OSDOP-231 - Change method to get organisation units in bulk
-    return ids.stream()
-        .map(portalOrganisationUnitQueryService::getOrganisationById)
-        .flatMap(Optional::stream)
+    return portalOrganisationUnitQueryService.getOrganisationByIds(ids)
+        .stream()
         .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
   }
 
