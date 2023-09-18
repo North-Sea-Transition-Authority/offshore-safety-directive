@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,11 +128,11 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -228,12 +229,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .withStatus(nominationStatus)
         .build();
 
@@ -324,12 +325,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
@@ -448,12 +449,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
@@ -579,12 +580,12 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
     nominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
 

@@ -63,7 +63,7 @@ public class NominationStartUpdateController {
       return ReverseRouter.redirect(on(NominationStartUpdateController.class).renderStartUpdate(nominationId));
     } else {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, """
-          NominationDetail [%d] with status [%s] and version [%d] expected conditions with one of the following:
+          NominationDetail [%s] with status [%s] and version [%d] expected conditions with one of the following:
           1. Status is draft and nomination version is greater than [1]
           2. Status is submitted""".formatted(
             nominationDetailDto.nominationDetailId().id(),
@@ -82,7 +82,7 @@ public class NominationStartUpdateController {
     var updateReason = caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.FORBIDDEN,
-            "No update reason found for NominationDetail [%d]".formatted(
+            "No update reason found for NominationDetail [%s]".formatted(
                 NominationDetailDto.fromNominationDetail(nominationDetail).nominationDetailId().id()
             )
         ));

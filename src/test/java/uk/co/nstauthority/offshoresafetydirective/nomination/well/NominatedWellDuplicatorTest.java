@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,10 +39,10 @@ class NominatedWellDuplicatorTest {
   @Test
   void duplicate_nominatedWell_whenNoExistingWell_thenVerifyNotDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedWellAccessService.getNominatedWells(sourceNominationDetail))
@@ -56,10 +57,10 @@ class NominatedWellDuplicatorTest {
   @Test
   void duplicate_nominatedWell_whenExistingWell_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var existingWell = NominatedWellTestUtil.builder()
@@ -96,10 +97,10 @@ class NominatedWellDuplicatorTest {
   @Test
   void duplicate_nominatedWellDetail_whenNoExistingWellDetail_thenVerifyNotDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedWellDetailAccessService.getNominatedWellDetails(sourceNominationDetail))
@@ -114,10 +115,10 @@ class NominatedWellDuplicatorTest {
   @Test
   void duplicate_nominatedWellDetail_whenHasExistingWellDetail_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var existingWellDetail = NominatedWellDetailTestUtil.builder()

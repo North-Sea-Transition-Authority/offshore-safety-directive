@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -43,10 +44,10 @@ class NomineeDetailDuplicationServiceTest {
   @Test
   void verifyCopied() {
     var oldNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var newNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     var nomineeDetail = NomineeDetailTestingUtil.builder()
         .withNominationDetail(oldNominationDetail)

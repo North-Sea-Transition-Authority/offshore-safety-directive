@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,10 +29,10 @@ class WellSelectionSetupDuplicatorTest {
   @Test
   void duplicate_wellSelection_whenNoExistingSetup_thenVerifyNotDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(wellSelectionSetupPersistenceService.findByNominationDetail(sourceNominationDetail))
@@ -45,10 +46,10 @@ class WellSelectionSetupDuplicatorTest {
   @Test
   void duplicate_wellSelection_whenExistingSetup_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     var existingSelectionSetup = WellSelectionSetupTestUtil.builder()
         .withId(250)

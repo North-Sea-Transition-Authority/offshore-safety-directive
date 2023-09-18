@@ -43,7 +43,7 @@ class FileAssociationServiceTest {
 
   @Test
   void createDraftDetail() {
-    var nominationDetailId = 123;
+    var nominationDetailId = UUID.randomUUID();
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
@@ -84,7 +84,7 @@ class FileAssociationServiceTest {
 
   @Test
   void findFileAssociation() {
-    var nominationDetailId = 123;
+    var nominationDetailId = UUID.randomUUID();
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
@@ -108,7 +108,7 @@ class FileAssociationServiceTest {
 
   @Test
   void getFileAssociationsByFileAssociationReference() {
-    var nominationDetailId = 123;
+    var nominationDetailId = UUID.randomUUID();
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();
@@ -130,7 +130,7 @@ class FileAssociationServiceTest {
 
   @Test
   void getFileAssociationsByFileReference_whenNoMatch_thenEmptyList() {
-    var nominationDetailId = 123;
+    var nominationDetailId = UUID.randomUUID();
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId)
         .build();

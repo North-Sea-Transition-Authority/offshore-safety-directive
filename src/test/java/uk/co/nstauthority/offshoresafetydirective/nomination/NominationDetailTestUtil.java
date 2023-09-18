@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class NominationDetailTestUtil {
 
@@ -14,14 +15,14 @@ public class NominationDetailTestUtil {
 
   public static class NominationDetailBuilder {
 
-    private Integer id = 1;
+    private UUID id = UUID.randomUUID();
     private Nomination nomination = new NominationTestUtil.NominationBuilder().build();
     private Instant createdInstant = Instant.now();
     private Instant submittedInstant = null;
     private int version = 10;
     private NominationStatus nominationStatus = NominationStatus.DRAFT;
 
-    public NominationDetailBuilder withId(Integer id) {
+    public NominationDetailBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

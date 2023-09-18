@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,10 +29,10 @@ class ApplicantDetailDuplicationServiceTest {
   @Test
   void duplicate_whenNoApplicantDetail() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     when(applicantDetailPersistenceService.getApplicantDetail(sourceNominationDetail))
         .thenReturn(Optional.empty());
@@ -44,10 +45,10 @@ class ApplicantDetailDuplicationServiceTest {
   @Test
   void duplicate() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     var applicantDetail = ApplicantDetailTestUtil.builder()
         .withNominationDetail(sourceNominationDetail)

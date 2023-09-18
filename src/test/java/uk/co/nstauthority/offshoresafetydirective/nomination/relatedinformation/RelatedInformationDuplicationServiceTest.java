@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -33,10 +34,10 @@ class RelatedInformationDuplicationServiceTest {
   @Test
   void duplicate_whenNoRelatedInformation() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(relatedInformationPersistenceService.getRelatedInformation(sourceNominationDetail))
@@ -50,10 +51,10 @@ class RelatedInformationDuplicationServiceTest {
   @Test
   void duplicate() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var oldRelatedInformation = RelatedInformationTestUtil.builder()
@@ -122,10 +123,10 @@ class RelatedInformationDuplicationServiceTest {
   @Test
   void duplicate_whenNoRelatedInformationFields_thenVerifyNoFieldRepositoryInteractions() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var oldRelatedInformation = RelatedInformationTestUtil.builder()

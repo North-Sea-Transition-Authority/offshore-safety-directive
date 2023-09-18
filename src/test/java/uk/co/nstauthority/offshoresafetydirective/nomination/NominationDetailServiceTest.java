@@ -240,7 +240,7 @@ class NominationDetailServiceTest {
 
     assertThatThrownBy(
         () -> nominationDetailService.updateNominationDetailStatusByDecision(detail, NominationDecision.NO_OBJECTION),
-        "Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
+        "Cannot set decision for NominationDetail [%s] as NominationStatus is not %s"
             .formatted(detail.getId(), NominationStatus.SUBMITTED));
   }
 
@@ -315,13 +315,13 @@ class NominationDetailServiceTest {
     var nominationDetailToWithdraw = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
         .withVersion(1)
-        .withId(10)
+        .withId(UUID.randomUUID())
         .build();
 
     var draftNominationDetailUpdate = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.DRAFT)
         .withVersion(2)
-        .withId(20)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
@@ -404,7 +404,7 @@ class NominationDetailServiceTest {
 
   @Test
   void getNominationDetail() {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder().build();
     when(nominationDetailRepository.findById(nominationDetailId.id()))
         .thenReturn(Optional.of(nominationDetail));
@@ -472,10 +472,10 @@ class NominationDetailServiceTest {
     var nomination = NominationTestUtil.builder().build();
 
     var firstNominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .build();
     var secondNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationDetailRepository.findAllByNominationAndStatusIn(

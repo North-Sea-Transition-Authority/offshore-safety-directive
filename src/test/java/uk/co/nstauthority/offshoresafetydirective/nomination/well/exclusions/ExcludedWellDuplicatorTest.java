@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,10 +30,10 @@ class ExcludedWellDuplicatorTest {
   @Test
   void duplicate_whenHasExcludedWells() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var wellboreId = new WellboreId(123);
@@ -50,10 +51,10 @@ class ExcludedWellDuplicatorTest {
   @Test
   void duplicate_whenNoExcludedWells_thenVerifyNoDuplication() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     when(excludedWellAccessService.hasWellsToExclude(sourceNominationDetail))
         .thenReturn(false);

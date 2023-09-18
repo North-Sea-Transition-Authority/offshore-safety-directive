@@ -1,6 +1,6 @@
 CREATE TABLE nominee_details (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
-, nomination_detail_id INT NOT NULL
+, nomination_detail_id UUID NOT NULL
 , nominated_organisation_id INT
 , reason_for_nomination TEXT
 , planned_start_date DATE

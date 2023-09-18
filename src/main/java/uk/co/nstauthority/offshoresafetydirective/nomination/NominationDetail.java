@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "nomination_details")
@@ -22,8 +23,8 @@ public class NominationDetail implements Serializable {
   private static final long serialVersionUID = 6126656191548621905L;
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "nomination_id")
@@ -40,11 +41,11 @@ public class NominationDetail implements Serializable {
   @Column(name = "submitted_datetime")
   private Instant submittedInstant;
 
-  public Integer getId() {
+  public UUID getId() {
     return id;
   }
 
-  NominationDetail setId(Integer id) {
+  NominationDetail setId(UUID id) {
     this.id = id;
     return this;
   }

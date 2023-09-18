@@ -21,7 +21,7 @@ class NominationReferenceService {
   public void setNominationReference(NominationDetail nominationDetail) {
     if (!nominationDetail.getVersion().equals(1) || !nominationDetail.getStatus().equals(NominationStatus.SUBMITTED)) {
       throw new IllegalArgumentException(
-          "Nomination detail [%d] has version number [%d] and status [%s]. Expected [1] and [%s]"
+          "Nomination detail [%s] has version number [%d] and status [%s]. Expected [1] and [%s]"
               .formatted(
                   nominationDetail.getId(), nominationDetail.getVersion(), nominationDetail.getStatus().name(),
                   NominationStatus.SUBMITTED.name()

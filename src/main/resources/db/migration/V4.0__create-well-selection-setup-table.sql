@@ -1,6 +1,6 @@
 CREATE TABLE well_selection_setup (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
-, nomination_detail_id INT NOT NULL
+, nomination_detail_id UUID NOT NULL
 , selection_type VARCHAR(255)
 , CONSTRAINT well_selection_setup_nomination_detail_id_fk
     FOREIGN KEY (nomination_detail_id) REFERENCES nomination_details (id)

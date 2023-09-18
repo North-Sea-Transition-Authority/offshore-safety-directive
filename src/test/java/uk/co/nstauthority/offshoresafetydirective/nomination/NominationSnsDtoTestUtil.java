@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Random;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
@@ -18,7 +19,7 @@ public class NominationSnsDtoTestUtil {
 
   public static class Builder {
 
-    private NominationDetailId nominationDetailId = new NominationDetailId(new Random().nextInt(Integer.MAX_VALUE));
+    private NominationDetailId nominationDetailId = new NominationDetailId(UUID.randomUUID());
     private WellSelectionType wellSelectionType = WellSelectionType.NO_WELLS;
     private boolean hasInstallations = true;
     private ApplicantOrganisationId applicantOrganisationUnitId = new ApplicantOrganisationId(

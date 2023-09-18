@@ -178,10 +178,11 @@ class AppointmentCorrectionServiceTest {
     var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
+    var onlineNominationReference = UUID.randomUUID().toString();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(123)
         .withAppointmentType(newAppointmentType)
-        .withOnlineNominationReference(nominationId.toString())
+        .withOnlineNominationReference(onlineNominationReference)
         .withHasEndDate(true)
         .build();
 
@@ -345,7 +346,8 @@ class AppointmentCorrectionServiceTest {
     var endDate = LocalDate.now();
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
-    
+
+    form.setOnlineNominationReference(UUID.randomUUID().toString());
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 

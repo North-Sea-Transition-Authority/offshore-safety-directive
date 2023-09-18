@@ -230,7 +230,7 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
 
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(111)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -285,7 +285,7 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
 
 
     var latestNominationDetail = NominationDetailTestUtil.builder()
-        .withId(111)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(

@@ -108,9 +108,7 @@ class NominationDetailCaseProcessingRepositoryIntegrationTest {
   @Test
   void findCaseProcessingHeaderDto_whenNoNominationDetail_thenEmptyOptional() {
 
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withId(-1)
-        .build();
+    var nominationDetail = NominationDetailTestUtil.builder().build();
 
     var result = nominationDetailCaseProcessingRepository.findCaseProcessingHeaderDto(nominationDetail);
 

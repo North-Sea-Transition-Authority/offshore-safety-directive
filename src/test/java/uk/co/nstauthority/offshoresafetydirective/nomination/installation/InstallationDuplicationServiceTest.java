@@ -48,10 +48,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_installationInclusion_whenNoInclusion_thenVerifyNoDuplication() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(installationInclusionAccessService.getInstallationInclusion(sourceNominationDetail))
@@ -70,10 +70,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_installationInclusion_whenInclusion_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
@@ -111,10 +111,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedInstallations_whenNoLinkedInstallations_thenVerifyNoDuplication() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedInstallationAccessService.getNominatedInstallations(sourceNominationDetail))
@@ -133,10 +133,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedInstallations_whenLinkedInstallations_thenVerifyLinksDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var nominatedInstallation = NominatedInstallationTestUtil.builder()
@@ -176,10 +176,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedInstallationDetail_whenNoInstallationDetail_thenVerifyNoDuplication() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedInstallationDetailPersistenceService.findNominatedInstallationDetail(sourceNominationDetail))
@@ -198,10 +198,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedInstallationDetail_whenInstallationDetailExists_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var installationDetail = NominatedInstallationDetailTestUtil.builder()
@@ -260,10 +260,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedLicences_whenNoLinkedLicences_thenVerifyNoDuplication() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominationLicenceService.getRelatedLicences(sourceNominationDetail))
@@ -282,10 +282,10 @@ class InstallationDuplicationServiceTest {
   @Test
   void duplicate_nominatedLicences_whenLinkedLicences_thenVerifyLinksDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var nominationLicence = NominationLicenceTestUtil.builder()

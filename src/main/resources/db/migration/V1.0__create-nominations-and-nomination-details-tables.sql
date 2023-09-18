@@ -5,7 +5,7 @@ CREATE TABLE nominations (
 );
 
 CREATE TABLE nomination_details (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , nomination_id UUID NOT NULL
 , created_datetime TIMESTAMP NOT NULL
 , version INT

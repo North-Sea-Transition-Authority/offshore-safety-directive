@@ -1,12 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
-import static org.assertj.core.api.AssertionsForClassTypes.entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.entry;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.Period;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,12 +50,12 @@ class NominationCaseProcessingSelectionServiceTest {
     Integer secondVersion = 5;
 
     var firstNominationDetail = NominationDetailTestUtil.builder()
-        .withId(1)
+        .withId(UUID.randomUUID())
         .withVersion(firstVersion)
         .withSubmittedInstant(firstSubmissionDate)
         .build();
     var secondNominationDetail = NominationDetailTestUtil.builder()
-        .withId(2)
+        .withId(UUID.randomUUID())
         .withVersion(secondVersion)
         .withSubmittedInstant(secondSubmissionDate)
         .build();

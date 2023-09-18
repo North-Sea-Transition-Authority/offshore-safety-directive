@@ -133,7 +133,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void upload_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)
@@ -248,7 +248,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)
@@ -359,7 +359,7 @@ class NominationDecisionFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.SUBMITTED)

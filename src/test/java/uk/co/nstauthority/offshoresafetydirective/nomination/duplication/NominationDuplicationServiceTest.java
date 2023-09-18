@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.duplication;
 
 import static org.mockito.Mockito.verify;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +35,10 @@ class NominationDuplicationServiceTest {
   @Test
   void duplicateNominationDetailSections() {
     var oldNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var newNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
     nominationDuplicationService.duplicateNominationDetailSections(oldNominationDetail, newNominationDetail);
 

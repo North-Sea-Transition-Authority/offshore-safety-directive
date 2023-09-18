@@ -76,7 +76,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void upload_assertStatusesPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -105,7 +105,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void upload_assertPermissionsPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -132,7 +132,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
 
   @Test
   void upload_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -175,7 +175,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void delete_assertStatusesPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withNominationId(NOMINATION_ID)
@@ -203,7 +203,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void delete_assertPermissionsPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -230,7 +230,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -269,7 +269,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void download_assertStatusesPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withNominationId(NOMINATION_ID)
@@ -297,7 +297,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void download_assertPermissionsPermitted() {
 
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)
@@ -324,7 +324,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_verifyCalls() throws Exception {
-    var nominationDetailId = new NominationDetailId(123);
+    var nominationDetailId = new NominationDetailId(UUID.randomUUID());
     var nominationDetail = NominationDetailTestUtil.builder()
         .withId(nominationDetailId.id())
         .withStatus(NominationStatus.DRAFT)

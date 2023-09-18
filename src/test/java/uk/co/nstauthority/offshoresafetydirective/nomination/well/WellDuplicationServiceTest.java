@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.mockito.Mockito.verify;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,10 +32,10 @@ class WellDuplicationServiceTest {
   @Test
   void duplicate_verifyCalls() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     wellDuplicationService.duplicate(sourceNominationDetail, targetNominationDetail);

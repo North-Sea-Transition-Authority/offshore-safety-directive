@@ -1,6 +1,6 @@
 CREATE TABLE related_information (
   id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
-, nomination_detail_id INT NOT NULL
+, nomination_detail_id UUID NOT NULL
 , related_to_fields BOOLEAN
 , related_to_licence_applications BOOLEAN
 , related_licence_applications TEXT

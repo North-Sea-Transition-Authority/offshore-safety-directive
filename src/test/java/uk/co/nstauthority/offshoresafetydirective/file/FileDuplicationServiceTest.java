@@ -35,8 +35,8 @@ class FileDuplicationServiceTest {
 
   @Test
   void duplicateFiles() {
-    var sourceNominationDetailId = 100;
-    var targetNominationDetailId = 200;
+    var sourceNominationDetailId = UUID.randomUUID();
+    var targetNominationDetailId = UUID.randomUUID();
     var sourceNominationDetail = NominationDetailTestUtil.builder()
         .withId(sourceNominationDetailId)
         .build();

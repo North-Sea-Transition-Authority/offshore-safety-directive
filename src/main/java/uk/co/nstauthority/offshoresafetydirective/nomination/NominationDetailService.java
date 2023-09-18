@@ -112,7 +112,7 @@ public class NominationDetailService {
       nominationDetail.setVersion(null);
       nominationDetailRepository.save(nominationDetail);
     } else {
-      throw new IllegalArgumentException("Cannot delete NominationDetail [%d] as NominationStatus is not %s"
+      throw new IllegalArgumentException("Cannot delete NominationDetail [%s] as NominationStatus is not %s"
           .formatted(nominationDetail.getId(), NominationStatus.DRAFT));
     }
   }
@@ -121,7 +121,7 @@ public class NominationDetailService {
   public void updateNominationDetailStatusByDecision(NominationDetail nominationDetail,
                                                      @NotNull NominationDecision nominationDecision) {
     if (nominationDetail.getStatus() != NominationStatus.SUBMITTED) {
-      throw new IllegalArgumentException("Cannot set decision for NominationDetail [%d] as NominationStatus is not %s"
+      throw new IllegalArgumentException("Cannot set decision for NominationDetail [%s] as NominationStatus is not %s"
           .formatted(nominationDetail.getId(), NominationStatus.SUBMITTED));
     }
     if (nominationDecision.equals(NominationDecision.OBJECTION)) {
@@ -144,7 +144,7 @@ public class NominationDetailService {
       var statuses = allowedStatuses.stream()
           .map(Enum::name)
           .collect(Collectors.joining(","));
-      throw new IllegalArgumentException("Cannot withdrawn NominationDetail [%d] as NominationStatus is not one of [%s]"
+      throw new IllegalArgumentException("Cannot withdrawn NominationDetail [%s] as NominationStatus is not one of [%s]"
           .formatted(nominationDetailToWithdraw.getId(), statuses));
     }
 

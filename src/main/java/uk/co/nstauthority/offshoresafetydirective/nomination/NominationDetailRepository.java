@@ -8,7 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface NominationDetailRepository extends CrudRepository<NominationDetail, Integer> {
+interface NominationDetailRepository extends CrudRepository<NominationDetail, UUID> {
 
   Optional<NominationDetail> findFirstByNominationAndVersion(Nomination nomination, int version);
 

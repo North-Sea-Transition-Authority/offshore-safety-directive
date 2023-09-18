@@ -1,9 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
 record NominationSnsDto(
-    int nominationDetailId,
+    UUID nominationDetailId,
     WellSelectionType wellSelectionType,
     boolean hasInstallations,
     int applicantOrganisationUnitId,

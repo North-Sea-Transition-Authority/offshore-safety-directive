@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -32,10 +33,10 @@ class NominatedBlockSubareaDuplicatorTest {
   @Test
   void duplicate_subarea_whenNoSubareas_thenVerifyNotDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(sourceNominationDetail))
@@ -50,10 +51,10 @@ class NominatedBlockSubareaDuplicatorTest {
   @Test
   void duplicate_subarea_whenHasSubareas_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var existingSubarea = NominatedBlockSubareaTestUtil.builder()
@@ -90,10 +91,10 @@ class NominatedBlockSubareaDuplicatorTest {
   @Test
   void duplicate_subareaDetail_whenNoSubarea_thenVerifyNotDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(sourceNominationDetail))
@@ -108,10 +109,10 @@ class NominatedBlockSubareaDuplicatorTest {
   @Test
   void duplicate_subareaDetail_whenHasSubarea_thenVerifyDuplicated() {
     var sourceNominationDetail = NominationDetailTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .build();
     var targetNominationDetail = NominationDetailTestUtil.builder()
-        .withId(200)
+        .withId(UUID.randomUUID())
         .build();
 
     var expectedSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder()

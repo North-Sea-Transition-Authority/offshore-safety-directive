@@ -1,9 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
-public record NominationDetailId(int id) {
+import java.util.UUID;
+
+public record NominationDetailId(UUID id) {
 
   public static NominationDetailId valueOf(String value) {
-    return new NominationDetailId(Integer.parseInt(value));
+    return new NominationDetailId(UUID.fromString(value));
   }
 
   public static NominationDetailId fromNominationDetail(NominationDetail nominationDetail) {
