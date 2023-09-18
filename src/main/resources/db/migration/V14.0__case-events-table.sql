@@ -4,8 +4,8 @@ CREATE TABLE case_events (
 , nomination_id UUID NOT NULL
 , nomination_version INT NOT NULL
 , created_by INT NOT NULL
-, event_timestamp TIMESTAMP NOT NULL
-, created_timestamp TIMESTAMP NOT NULL
+, event_timestamp TIMESTAMPTZ NOT NULL
+, created_timestamp TIMESTAMPTZ NOT NULL
 , comment TEXT
 , title TEXT
 , CONSTRAINT case_events_nomination_id_fk FOREIGN KEY(nomination_id) REFERENCES nominations(id)

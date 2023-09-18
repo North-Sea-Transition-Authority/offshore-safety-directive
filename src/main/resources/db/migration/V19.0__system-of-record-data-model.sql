@@ -21,7 +21,7 @@ CREATE TABLE appointments (
 , created_by_nomination_id UUID
 , created_by_legacy_nomination_reference TEXT
 , created_by_appointment_id UUID
-, created_datetime TIMESTAMP NOT NULL
+, created_datetime TIMESTAMPTZ NOT NULL
 , CONSTRAINT appointment_asset_id_fk
     FOREIGN KEY (asset_id) REFERENCES assets (id)
 );

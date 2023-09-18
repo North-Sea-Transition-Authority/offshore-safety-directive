@@ -6,7 +6,7 @@ CREATE TABLE uploaded_files (
     filename TEXT,
     file_content_type TEXT,
     file_size_bytes NUMERIC,
-    uploaded_time_stamp TIMESTAMP NOT NULL,
+    uploaded_time_stamp TIMESTAMPTZ NOT NULL,
     description TEXT
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE file_associations (
     reference_type TEXT NOT NULL,
     reference_id TEXT NOT NULL,
     purpose TEXT NOT NULL,
-    uploaded_timestamp TIMESTAMP NOT NULL,
+    uploaded_timestamp TIMESTAMPTZ NOT NULL,
     CONSTRAINT file_associations_file_uuid_fk FOREIGN KEY (file_uuid) REFERENCES uploaded_files (id)
 );
 
