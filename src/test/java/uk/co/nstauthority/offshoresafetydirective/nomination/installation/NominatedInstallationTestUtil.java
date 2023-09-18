@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -16,11 +17,11 @@ public class NominatedInstallationTestUtil {
 
   public static class NominatedInstallationBuilder {
 
-    private Integer id = 925;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Integer installationId = 1;
 
-    public NominatedInstallationBuilder withId(Integer id) {
+    public NominatedInstallationBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

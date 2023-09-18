@@ -140,7 +140,7 @@ class InstallationDuplicationServiceTest {
         .build();
 
     var nominatedInstallation = NominatedInstallationTestUtil.builder()
-        .withId(100)
+        .withId(UUID.randomUUID())
         .withInstallationId(255)
         .withNominationDetail(sourceNominationDetail)
         .build();
