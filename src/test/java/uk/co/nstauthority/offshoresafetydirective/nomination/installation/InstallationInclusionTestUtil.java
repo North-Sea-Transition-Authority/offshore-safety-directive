@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -14,7 +15,7 @@ public class InstallationInclusionTestUtil {
   }
 
   public static class InstallationInclusionBuilder {
-    private Integer id = 1201;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean includeInstallationsInNomination = true;
 
@@ -28,7 +29,7 @@ public class InstallationInclusionTestUtil {
       return this;
     }
 
-    public InstallationInclusionBuilder withId(Integer id) {
+    public InstallationInclusionBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

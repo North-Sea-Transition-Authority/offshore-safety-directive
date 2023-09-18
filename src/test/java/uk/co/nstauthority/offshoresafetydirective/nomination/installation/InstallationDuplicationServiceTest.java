@@ -77,7 +77,7 @@ class InstallationDuplicationServiceTest {
         .build();
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
-        .withId(1234)
+        .withId(UUID.randomUUID())
         .withNominationDetail(sourceNominationDetail)
         .includeInstallationsInNomination(true)
         .build();
@@ -205,7 +205,7 @@ class InstallationDuplicationServiceTest {
         .build();
 
     var installationDetail = NominatedInstallationDetailTestUtil.builder()
-        .withId(123)
+        .withId(UUID.randomUUID())
         .withNominationDetail(sourceNominationDetail)
         .withForAllInstallationPhases(true)
         .withDevelopmentDesignPhase(true)

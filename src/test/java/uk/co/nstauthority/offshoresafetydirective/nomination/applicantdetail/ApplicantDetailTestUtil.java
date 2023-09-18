@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -22,7 +23,7 @@ public class ApplicantDetailTestUtil {
 
   public static class Builder {
 
-    private Integer id = 100;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = NominationDetailTestUtil.builder().build();
     private Integer portalOrganisationId = 200;
     private String applicantReference = "applicant reference";
@@ -30,7 +31,7 @@ public class ApplicantDetailTestUtil {
     private Builder() {
     }
 
-    public Builder withId(Integer id) {
+    public Builder withId(UUID id) {
       this.id = id;
       return this;
     }

@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
@@ -16,8 +17,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NomineeDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
@@ -39,7 +40,7 @@ class NomineeDetail {
   }
 
   @VisibleForTesting
-  NomineeDetail(Integer id) {
+  NomineeDetail(UUID id) {
     this.id = id;
   }
 
@@ -59,7 +60,7 @@ class NomineeDetail {
     this.licenseeAcknowledgeOperatorRequirements = licenseeAcknowledgeOperatorRequirements;
   }
 
-  Integer getId() {
+  UUID getId() {
     return id;
   }
 

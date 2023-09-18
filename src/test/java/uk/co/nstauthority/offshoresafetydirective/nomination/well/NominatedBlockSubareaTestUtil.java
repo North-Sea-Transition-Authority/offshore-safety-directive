@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -14,13 +15,13 @@ class NominatedBlockSubareaTestUtil {
   }
 
   static class NominatedBlockSubareaBuilder {
-    private Integer id = 123;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private String blockSubareaId = "subarea-id";
 
     private NominatedBlockSubareaBuilder() {}
 
-    NominatedBlockSubareaBuilder withId(Integer id) {
+    NominatedBlockSubareaBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

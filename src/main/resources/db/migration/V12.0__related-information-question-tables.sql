@@ -1,5 +1,5 @@
 CREATE TABLE related_information (
-  id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
+  id UUID PRIMARY KEY
 , nomination_detail_id UUID NOT NULL
 , related_to_fields BOOLEAN
 , related_to_licence_applications BOOLEAN
@@ -13,8 +13,8 @@ CREATE TABLE related_information (
 CREATE INDEX related_information_nomination_detail_id_idx ON related_information (nomination_detail_id);
 
 CREATE TABLE related_information_fields (
-  id INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY
-, related_information_id INT NOT NULL
+  id UUID PRIMARY KEY
+, related_information_id UUID NOT NULL
 , field_id INT NOT NULL
 , field_name TEXT NOT NULL
 , CONSTRAINT related_information_fields_related_information_fk

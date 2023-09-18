@@ -64,7 +64,7 @@ class NominatedWellDuplicatorTest {
         .build();
 
     var existingWell = NominatedWellTestUtil.builder()
-        .withId(123)
+        .withId(UUID.randomUUID())
         .withNominationDetail(sourceNominationDetail)
         .withWellboreId(456)
         .build();
@@ -122,7 +122,7 @@ class NominatedWellDuplicatorTest {
         .build();
 
     var existingWellDetail = NominatedWellDetailTestUtil.builder()
-        .withId(256)
+        .withId(UUID.randomUUID())
         .withNominationDetail(sourceNominationDetail)
         .withDecommissioningPhase(true)
         .withDevelopmentPhase(true)

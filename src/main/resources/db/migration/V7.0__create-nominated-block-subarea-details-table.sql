@@ -1,5 +1,5 @@
 CREATE TABLE nominated_block_subarea_details (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , nomination_detail_id UUID NOT NULL
 , valid_for_future_wells_in_subarea BOOLEAN
 , for_all_well_phases BOOLEAN

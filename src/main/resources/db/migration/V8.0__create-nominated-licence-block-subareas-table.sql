@@ -1,5 +1,5 @@
 CREATE TABLE nominated_licence_block_subareas (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , nomination_detail_id UUID NOT NULL
 , block_subarea_id TEXT
 , CONSTRAINT nominated_licence_block_subareas_nomination_detail_id_fk

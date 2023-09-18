@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -16,7 +17,7 @@ public class RelatedInformationTestUtil {
 
   public static class Builder {
 
-    private Integer id = 150;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean relatedToAnyFields = null;
 
@@ -31,7 +32,7 @@ public class RelatedInformationTestUtil {
     private Builder() {
     }
 
-    public Builder withId(Integer id) {
+    public Builder withId(UUID id) {
       this.id = id;
       return this;
     }

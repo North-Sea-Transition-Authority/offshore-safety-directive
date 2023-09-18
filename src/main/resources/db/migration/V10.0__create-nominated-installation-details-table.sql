@@ -1,5 +1,5 @@
 CREATE TABLE nominated_installation_details (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , nomination_detail_id UUID NOT NULL
 , for_all_installation_phases BOOLEAN
 , development_design_phase BOOLEAN

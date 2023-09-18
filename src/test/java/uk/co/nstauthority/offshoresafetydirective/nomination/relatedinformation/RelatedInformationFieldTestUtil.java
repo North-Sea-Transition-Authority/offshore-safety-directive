@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class RelatedInformationFieldTestUtil {
@@ -14,7 +15,7 @@ public class RelatedInformationFieldTestUtil {
 
   public static class Builder {
 
-    private int id = 1111;
+    private UUID id = UUID.randomUUID();
     private RelatedInformation relatedInformation = RelatedInformationTestUtil.builder().build();
     private int fieldId = 1010;
     private String fieldName = "field name";
@@ -22,7 +23,7 @@ public class RelatedInformationFieldTestUtil {
     private Builder() {
     }
 
-    public Builder withId(int id) {
+    public Builder withId(UUID id) {
       this.id = id;
       return this;
     }

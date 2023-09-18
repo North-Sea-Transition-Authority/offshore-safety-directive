@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
@@ -15,8 +16,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedWellDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
@@ -34,7 +35,7 @@ class NominatedWellDetail {
   }
 
   @VisibleForTesting
-  NominatedWellDetail(Integer id) {
+  NominatedWellDetail(UUID id) {
     this.id = id;
   }
 
@@ -44,7 +45,7 @@ class NominatedWellDetail {
     this.forAllWellPhases = forAllWellPhases;
   }
 
-  Integer getId() {
+  UUID getId() {
     return id;
   }
 

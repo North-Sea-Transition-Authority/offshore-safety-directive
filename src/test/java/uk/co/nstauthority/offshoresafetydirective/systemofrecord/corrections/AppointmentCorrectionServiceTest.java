@@ -348,6 +348,7 @@ class AppointmentCorrectionServiceTest {
     form.getEndDate().setDate(endDate);
 
     form.setOnlineNominationReference(UUID.randomUUID().toString());
+
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 

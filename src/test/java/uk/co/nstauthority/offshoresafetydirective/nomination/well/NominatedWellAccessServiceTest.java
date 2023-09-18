@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,11 +41,11 @@ class NominatedWellAccessServiceTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     var firstNominatedWell = NominatedWellTestUtil.builder()
-        .withId(10)
+        .withId(UUID.randomUUID())
         .build();
 
     var secondNominatedWell = NominatedWellTestUtil.builder()
-        .withId(20)
+        .withId(UUID.randomUUID())
         .build();
 
     given(nominatedWellRepository.findAllByNominationDetail(nominationDetail))

@@ -176,7 +176,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   @Test
   void createApplicantDetails_whenValidForm_assertRedirection() throws Exception {
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
-    var applicationDetail = new ApplicantDetail(1);
+    var applicationDetail = new ApplicantDetail(UUID.randomUUID());
     applicationDetail.setPortalOrganisationId(form.getPortalOrganisationId());
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -270,7 +270,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   @Test
   void updateApplicantDetails_whenValidForm_assertRedirection() throws Exception {
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
-    var applicationDetail = new ApplicantDetail(1);
+    var applicationDetail = new ApplicantDetail(UUID.randomUUID());
     applicationDetail.setPortalOrganisationId(form.getPortalOrganisationId());
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");

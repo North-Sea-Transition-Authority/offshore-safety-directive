@@ -52,7 +52,7 @@ class WellSelectionSetupDuplicatorTest {
         .withId(UUID.randomUUID())
         .build();
     var existingSelectionSetup = WellSelectionSetupTestUtil.builder()
-        .withId(250)
+        .withId(UUID.randomUUID())
         .withWellSelectionType(WellSelectionType.SPECIFIC_WELLS)
         .withNominationDetail(sourceNominationDetail)
         .build();

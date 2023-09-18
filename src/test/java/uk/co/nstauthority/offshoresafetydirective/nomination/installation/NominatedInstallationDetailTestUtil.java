@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -16,7 +17,7 @@ class NominatedInstallationDetailTestUtil {
   
   public static class NominatedInstallationDetailBuilder {
 
-    private Integer id = 851;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
@@ -26,7 +27,7 @@ class NominatedInstallationDetailTestUtil {
     private Boolean developmentProductionPhase;
     private Boolean decommissioningPhase;
 
-    public NominatedInstallationDetailBuilder withId(Integer id) {
+    public NominatedInstallationDetailBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

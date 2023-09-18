@@ -1,5 +1,5 @@
 CREATE TABLE installation_inclusion (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , nomination_detail_id UUID NOT NULL
 , include_installations_in_nomination BOOLEAN
 , CONSTRAINT installation_inclusion_nomination_detail_id_fk

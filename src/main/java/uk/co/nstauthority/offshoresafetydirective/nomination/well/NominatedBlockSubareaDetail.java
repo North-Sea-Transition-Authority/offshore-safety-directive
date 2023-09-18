@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
@@ -15,8 +16,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 class NominatedBlockSubareaDetail {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
@@ -36,11 +37,11 @@ class NominatedBlockSubareaDetail {
   }
 
   @VisibleForTesting
-  NominatedBlockSubareaDetail(Integer id) {
+  NominatedBlockSubareaDetail(UUID id) {
     this.id = id;
   }
 
-  public Integer getId() {
+  public UUID getId() {
     return id;
   }
 

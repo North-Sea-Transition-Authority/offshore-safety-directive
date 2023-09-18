@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -20,13 +21,13 @@ public class NominatedWellTestUtil {
 
   public static class Builder {
 
-    private Integer id = 300;
+    private UUID id = UUID.randomUUID();
 
     private NominationDetail nominationDetail = NominationDetailTestUtil.builder().build();
 
     private Integer wellboreId = 34;
 
-    public Builder withId(Integer id) {
+    public Builder withId(UUID id) {
       this.id = id;
       return this;
     }

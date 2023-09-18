@@ -59,7 +59,7 @@ class NominatedBlockSubareaDuplicatorTest {
 
     var existingSubarea = NominatedBlockSubareaTestUtil.builder()
         .withNominationDetail(sourceNominationDetail)
-        .withId(567)
+        .withId(UUID.randomUUID())
         .withBlockSubareaId("890")
         .build();
 

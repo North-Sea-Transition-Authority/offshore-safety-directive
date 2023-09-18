@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -14,14 +15,14 @@ public class NominatedWellDetailTestUtil {
   }
 
   static class NominatedWellDetailBuilder {
-    private Integer id = 168;
+    private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private Boolean forAllWellPhases = true;
     private Boolean explorationAndAppraisalPhase;
     private Boolean developmentPhase;
     private Boolean decommissioningPhase;
 
-    NominatedWellDetailBuilder withId(Integer id) {
+    NominatedWellDetailBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

@@ -53,7 +53,7 @@ class ApplicantDetailDuplicationServiceTest {
     var applicantDetail = ApplicantDetailTestUtil.builder()
         .withNominationDetail(sourceNominationDetail)
         .withApplicantReference("app/ref/1")
-        .withId(123)
+        .withId(UUID.randomUUID())
         .withPortalOrganisationId(456)
         .build();
     when(applicantDetailPersistenceService.getApplicantDetail(sourceNominationDetail))
