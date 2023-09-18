@@ -112,7 +112,7 @@
   </#local>
 
   <#assign osdFooter>
-    <@fdsFooter.footer wrapperWidth=isFullPageWidth footerMetaContent=footerMetaContent metaLinks=true/>
+    <@fdsNstaFooter.nstaFooter wrapperWidth=isFullPageWidth metaLinks=true footerMetaContent=footerMetaContent/>
   </#assign>
 
   <@fdsDefaultPageTemplate
