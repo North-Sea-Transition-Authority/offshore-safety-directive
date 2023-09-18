@@ -2,14 +2,16 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class NominationDtoTest {
 
   @Test
   void fromNomination_verifyMappings() {
+    var nominationId = UUID.randomUUID();
     var nomination = NominationTestUtil.builder()
-        .withId(200)
+        .withId(nominationId)
         .withReference("reference")
         .build();
 
@@ -21,7 +23,7 @@ class NominationDtoTest {
             NominationDto::nominationReference
         )
         .containsExactly(
-            200,
+            nominationId,
             "reference"
         );
   }

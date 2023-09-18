@@ -155,7 +155,7 @@ class NominationWorkAreaItemService {
   }
 
   private IllegalStateException getDeletedNominationInWorkAreaException(NominationWorkAreaItemDto dto) {
-    return new IllegalStateException("Nomination with ID [%d] should not appear in work area as status is [%s]"
+    return new IllegalStateException("Nomination with ID [%s] should not appear in work area as status is [%s]"
         .formatted(
             dto.nominationId().id(),
             dto.nominationStatus()

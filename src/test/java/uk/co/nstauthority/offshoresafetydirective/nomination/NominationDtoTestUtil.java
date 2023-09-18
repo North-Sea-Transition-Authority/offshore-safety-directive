@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class NominationDtoTestUtil {
@@ -14,7 +15,7 @@ public class NominationDtoTestUtil {
 
   public static class Builder {
 
-    private NominationId nominationId = new NominationId(150);
+    private NominationId nominationId = new NominationId(UUID.randomUUID());
 
     private String nominationReference = "nomination reference";
 
@@ -23,7 +24,7 @@ public class NominationDtoTestUtil {
       return this;
     }
 
-    public Builder withNominationId(Integer nominationId) {
+    public Builder withNominationId(UUID nominationId) {
       return withNominationId(new NominationId(nominationId));
     }
 

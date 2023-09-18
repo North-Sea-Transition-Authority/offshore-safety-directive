@@ -36,7 +36,7 @@ public class AppointmentDtoTestUtil {
 
     private String legacyNominationReference = "";
 
-    private NominationId nominationId = new NominationId(123);
+    private NominationId nominationId = new NominationId(UUID.randomUUID());
 
     private AssetDto assetDto = AssetDtoTestUtil.builder().build();
 

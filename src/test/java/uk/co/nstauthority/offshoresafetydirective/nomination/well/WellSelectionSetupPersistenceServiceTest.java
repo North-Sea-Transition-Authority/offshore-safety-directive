@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,7 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 @ExtendWith(MockitoExtension.class)
 class WellSelectionSetupPersistenceServiceTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .withNominationId(NOMINATION_ID)
       .build();

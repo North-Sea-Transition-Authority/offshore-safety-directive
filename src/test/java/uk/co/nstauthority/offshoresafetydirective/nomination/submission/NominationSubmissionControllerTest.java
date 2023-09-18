@@ -17,6 +17,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOn
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -46,7 +47,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @ContextConfiguration(classes = NominationSubmissionController.class)
 class NominationSubmissionControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
 

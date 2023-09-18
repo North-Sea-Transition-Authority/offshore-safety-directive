@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "nominations")
@@ -18,19 +19,19 @@ public class Nomination implements Serializable {
   private static final long serialVersionUID = -1465606964869645933L;
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Integer id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
   @Column(name = "created_datetime")
   private Instant createdInstant;
 
   private String reference;
 
-  public Integer getId() {
+  public UUID getId() {
     return id;
   }
 
-  Nomination setId(Integer id) {
+  Nomination setId(UUID id) {
     this.id = id;
     return this;
   }

@@ -96,7 +96,7 @@ class AppointmentSnsServiceTest {
 
   @Test
   void handleAppointmentConfirmed() {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
     var event = new AppointmentConfirmedEvent(nominationId);
 
     doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessages(nominationId);
@@ -147,7 +147,7 @@ class AppointmentSnsServiceTest {
 
   @Test
   void publishAppointmentConfirmedSnsMessages() {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var correlationId = UUID.randomUUID().toString();
 

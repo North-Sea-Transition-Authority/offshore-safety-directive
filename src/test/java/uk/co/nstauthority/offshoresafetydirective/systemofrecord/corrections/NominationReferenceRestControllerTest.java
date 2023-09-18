@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
@@ -75,14 +76,14 @@ class NominationReferenceRestControllerTest extends AbstractControllerTest {
   void searchPostSubmissionNominations() throws Exception {
     var searchTerm = "search";
 
-    var firstNominationId = new NominationId(123);
+    var firstNominationId = new NominationId(UUID.randomUUID());
     var firstNominationReference = "NOM/REF/1";
     var firstNominationDto = NominationDtoTestUtil.builder()
         .withNominationId(firstNominationId)
         .withNominationReference(firstNominationReference)
         .build();
 
-    var secondNominationId = new NominationId(124);
+    var secondNominationId = new NominationId(UUID.randomUUID());
     var secondNominationReference = "NOM/REF/2";
     var secondNominationDto = NominationDtoTestUtil.builder()
         .withNominationId(secondNominationId)

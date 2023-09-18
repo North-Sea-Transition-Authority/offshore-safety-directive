@@ -21,6 +21,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -56,7 +57,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @IncludeAccidentRegulatorConfigurationProperties
 class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
 

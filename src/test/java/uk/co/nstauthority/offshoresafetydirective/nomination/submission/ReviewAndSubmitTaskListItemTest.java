@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -16,7 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.ReviewAndS
 
 class ReviewAndSubmitTaskListItemTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final NominationDetail NOMINATION_DETAIL = new NominationDetailTestUtil.NominationDetailBuilder()
       .withNominationId(NOMINATION_ID)

@@ -543,13 +543,13 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    var onlineReference = 1234;
+    var onlineReference = UUID.randomUUID().toString();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withOnlineNominationReference(onlineReference)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailOptional(
-        new NominationId(form.getOnlineNominationReference())
+        new NominationId(UUID.fromString(form.getOnlineNominationReference()))
     ))
         .thenReturn(Optional.empty());
 
@@ -583,7 +583,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
-    var onlineReference = 1234;
+    var onlineReference = UUID.randomUUID().toString();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withOnlineNominationReference(onlineReference)
         .build();
@@ -591,7 +591,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(nominationDetailService.getLatestNominationDetailOptional(
-        new NominationId(form.getOnlineNominationReference())
+        new NominationId(UUID.fromString(form.getOnlineNominationReference()))
     ))
         .thenReturn(Optional.of(nominationDetail));
 

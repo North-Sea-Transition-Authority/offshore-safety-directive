@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 @ExtendWith(MockitoExtension.class)
 class RelatedInformationTaskListItemTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
   private static final String EXPECTED_TEXT = "Related information";
   private static final int EXPECTED_DISPLAY_ORDER = 20;
 

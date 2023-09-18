@@ -83,14 +83,14 @@ public class UpdateRequestInterceptor extends AbstractHandlerInterceptor {
       if (requiresUpdateRequest && !hasUpdateRequest) {
         throw new ResponseStatusException(
             HttpStatus.FORBIDDEN,
-            "Update request was expected for nomination with ID [%d]".formatted(nominationId.id())
+            "Update request was expected for nomination with ID [%s]".formatted(nominationId.id())
         );
       }
 
       if (requiresNoUpdateRequest && hasUpdateRequest) {
         throw new ResponseStatusException(
             HttpStatus.FORBIDDEN,
-            "No update request was expected for NominationDetail [%d]".formatted(
+            "No update request was expected for NominationDetail [%s]".formatted(
                 NominationDetailDto.fromNominationDetail(nominationDetail).nominationId().id()
             )
         );

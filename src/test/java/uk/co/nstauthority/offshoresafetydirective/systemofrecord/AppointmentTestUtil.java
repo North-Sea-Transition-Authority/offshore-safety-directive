@@ -23,7 +23,7 @@ public class AppointmentTestUtil {
     private LocalDate responsibleFromDate = LocalDate.now();
     private LocalDate responsibleToDate;
     private AppointmentType appointmentType = AppointmentType.ONLINE_NOMINATION;
-    private Integer createdByNominationId = 12321;
+    private UUID createdByNominationId = UUID.randomUUID();
     private String createdByLegacyNominationReference;
     private UUID createdByAppointmentId;
     private Instant createdDatetime = Instant.now();
@@ -59,7 +59,7 @@ public class AppointmentTestUtil {
       return this;
     }
 
-    public Builder withCreatedByNominationId(Integer createdByNominationId) {
+    public Builder withCreatedByNominationId(UUID createdByNominationId) {
       this.createdByNominationId = createdByNominationId;
       return this;
     }

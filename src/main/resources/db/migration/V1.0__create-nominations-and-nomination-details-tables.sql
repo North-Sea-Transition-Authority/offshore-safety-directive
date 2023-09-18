@@ -1,12 +1,12 @@
 CREATE TABLE nominations (
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+  id UUID PRIMARY KEY
 , created_datetime TIMESTAMP
 , reference TEXT UNIQUE
 );
 
 CREATE TABLE nomination_details (
   id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
-, nomination_id INT NOT NULL
+, nomination_id UUID NOT NULL
 , created_datetime TIMESTAMP NOT NULL
 , version INT
 , status TEXT NOT NULL

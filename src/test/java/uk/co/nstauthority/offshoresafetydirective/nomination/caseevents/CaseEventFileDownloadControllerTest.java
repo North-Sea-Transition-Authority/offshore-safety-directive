@@ -43,7 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
   private static final TeamMember NOMINATION_MANAGER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();

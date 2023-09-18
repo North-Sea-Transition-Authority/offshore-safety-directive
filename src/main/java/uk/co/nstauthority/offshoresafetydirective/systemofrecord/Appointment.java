@@ -35,7 +35,7 @@ public class Appointment {
   @Enumerated(EnumType.STRING)
   private AppointmentType appointmentType;
 
-  private Integer createdByNominationId;
+  private UUID createdByNominationId;
   private String createdByLegacyNominationReference;
   private UUID createdByAppointmentId;
 
@@ -93,11 +93,11 @@ public class Appointment {
     this.appointmentType = appointmentType;
   }
 
-  Integer getCreatedByNominationId() {
+  UUID getCreatedByNominationId() {
     return createdByNominationId;
   }
 
-  void setCreatedByNominationId(Integer createdByNominationId) {
+  void setCreatedByNominationId(UUID createdByNominationId) {
     this.createdByNominationId = createdByNominationId;
   }
 

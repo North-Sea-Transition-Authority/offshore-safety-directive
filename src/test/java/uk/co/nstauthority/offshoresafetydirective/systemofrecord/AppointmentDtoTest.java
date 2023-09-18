@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
@@ -61,16 +62,17 @@ class AppointmentDtoTest {
 
   @Test
   void fromAppointment_whenNominationId_thenVerifyMapping() {
+    var nominationId = UUID.randomUUID();
 
     var appointment = AppointmentTestUtil.builder()
-        .withCreatedByNominationId(100)
+        .withCreatedByNominationId(nominationId)
         .build();
 
     var resultingAppointmentDto = AppointmentDto.fromAppointment(appointment);
 
     assertThat(resultingAppointmentDto)
         .extracting(AppointmentDto::nominationId)
-        .isEqualTo(new NominationId(100));
+        .isEqualTo(new NominationId(nominationId));
   }
 
   @Test

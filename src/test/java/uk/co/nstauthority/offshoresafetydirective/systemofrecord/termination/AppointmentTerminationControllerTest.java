@@ -95,13 +95,14 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .withAssetName(ASSET_NAME.value())
         .build();
     var assetDto = AssetDto.fromAsset(asset);
+    var nominationId = UUID.randomUUID();
 
     var appointment = AppointmentTestUtil.builder()
         .withId(APPOINTMENT_ID.id())
         .withAsset(asset)
         .withAppointedPortalOperatorId(10)
         .withResponsibleFromDate(LocalDate.of(2023, 8, 4))
-        .withCreatedByNominationId(20)
+        .withCreatedByNominationId(nominationId)
         .build();
 
     when(appointmentTerminationService.getAppointment(APPOINTMENT_ID))

@@ -57,7 +57,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @ContextConfiguration(classes = NominationDecisionController.class)
 class NominationDecisionControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_MANAGER_USER = ServiceUserDetailTestUtil.Builder().build();
 

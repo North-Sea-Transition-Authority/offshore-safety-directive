@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.breadcrumb;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,7 +17,7 @@ class NominationBreadcrumbUtilTest {
   @Test
   void getNominationTaskListBreadcrumb_assertExpectedBreadcrumbItem() {
 
-    var nominationId = new NominationId(100);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var resultingBreadcrumbItem = NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId);
 

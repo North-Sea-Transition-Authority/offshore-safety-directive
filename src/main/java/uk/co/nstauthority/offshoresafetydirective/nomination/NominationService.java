@@ -45,7 +45,7 @@ public class NominationService {
   public NominationDetail startNominationUpdate(NominationDetail nominationDetail) {
     if (NominationStatus.DRAFT.equals(nominationDetail.getStatus())) {
       throw new IllegalStateException(
-          "Cannot start an update on a draft nomination [%d]".formatted(
+          "Cannot start an update on a draft nomination [%s]".formatted(
               nominationDetail.getNomination().getId()
           ));
     }

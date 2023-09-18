@@ -2,13 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.epmqmessage;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 
 public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
   public static final String TYPE = "NOMINATION_SUBMITTED";
 
-  private int nominationId;
+  private UUID nominationId;
   private String nominationReference;
   private int applicantOrganisationUnitId;
   private int nominatedOrganisationUnitId;
@@ -19,7 +20,7 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
   }
 
   private NominationSubmittedOsdEpmqMessage(
-      int nominationId,
+      UUID nominationId,
       String nominationReference,
       int applicantOrganisationUnitId,
       int nominatedOrganisationUnitId,
@@ -50,7 +51,7 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
     );
   }
 
-  public int getNominationId() {
+  public UUID getNominationId() {
     return nominationId;
   }
 
@@ -84,7 +85,7 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
 
     private final String correlationId;
     private final Instant createdInstant;
-    private int nominationId;
+    private UUID nominationId;
     private String nominationReference;
     private int applicantOrganisationUnitId;
     private int nominatedOrganisationUnitId;
@@ -96,7 +97,7 @@ public class NominationSubmittedOsdEpmqMessage extends OsdEpmqMessage {
       this.createdInstant = createdInstant;
     }
 
-    public Builder withNominationId(int nominationId) {
+    public Builder withNominationId(UUID nominationId) {
       this.nominationId = nominationId;
       return this;
     }

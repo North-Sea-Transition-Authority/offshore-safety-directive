@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,7 +23,7 @@ class NominationAccessServiceTest {
   @Test
   void getNomination_whenNotFound_thenEmptyOptionalReturned() {
 
-    var unknownNominationId = new NominationId(-1);
+    var unknownNominationId = new NominationId(UUID.randomUUID());
 
     given(nominationRepository.findById(unknownNominationId.id()))
         .willReturn(Optional.empty());
@@ -35,7 +36,7 @@ class NominationAccessServiceTest {
   @Test
   void getNomination_whenFound_thenPopulatedOptionalReturned() {
 
-    var knownNominationId = new NominationId(1);
+    var knownNominationId = new NominationId(UUID.randomUUID());
 
     var expectedNomination = NominationTestUtil.builder()
         .withId(knownNominationId.id())

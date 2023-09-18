@@ -38,7 +38,7 @@ class AppointmentUpdateServiceTest {
     var toDate = LocalDate.now();
 
     var offlineNominationReference = "OFFLINE/REF/1";
-    var onlineNominationReference = new NominationId(150);
+    var onlineNominationReference = new NominationId(UUID.randomUUID());
 
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
@@ -80,7 +80,7 @@ class AppointmentUpdateServiceTest {
     var toDate = LocalDate.now();
 
     var offlineNominationReference = "OFFLINE/REF/1";
-    var onlineNominationReference = new NominationId(150);
+    var onlineNominationReference = new NominationId(UUID.randomUUID());
 
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
@@ -122,7 +122,7 @@ class AppointmentUpdateServiceTest {
     var toDate = LocalDate.now();
 
     var offlineNominationReference = "OFFLINE/REF/1";
-    var onlineNominationReference = new NominationId(150);
+    var onlineNominationReference = new NominationId(UUID.randomUUID());
 
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()

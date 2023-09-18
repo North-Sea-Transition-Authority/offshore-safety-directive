@@ -86,7 +86,7 @@ public class FileDuplicationService {
             uploadedFile.getFileKey().equals(fileAssociation.getUploadedFile().getFileKey()))
         .findFirst()
         .orElseThrow(() -> new IllegalStateException(
-            "No file key [%s] found for uploaded files of nomination [%d]".formatted(
+            "No file key [%s] found for uploaded files of nomination [%s]".formatted(
                 fileAssociation.getUploadedFile().getFileKey(),
                 new NominationId(nominationDetail).id()
             )));

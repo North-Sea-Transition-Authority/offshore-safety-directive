@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 
@@ -14,7 +15,7 @@ class NominationWorkAreaQueryResultTestUtil {
 
   public static class Builder {
 
-    private Integer nominationId = 100;
+    private UUID nominationId = UUID.randomUUID();
     private Integer applicantOrganisationId = 876;
     private String nominationReference = "nomination reference";
     private String applicantReference = "applicant reference";
@@ -32,7 +33,7 @@ class NominationWorkAreaQueryResultTestUtil {
 
     }
 
-    public Builder withNominationId(Integer nominationId) {
+    public Builder withNominationId(UUID nominationId) {
       this.nominationId = nominationId;
       return this;
     }

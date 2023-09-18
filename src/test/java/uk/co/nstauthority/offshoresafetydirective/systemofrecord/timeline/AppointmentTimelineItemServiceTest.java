@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -638,7 +639,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var nominationDto = NominationDtoTestUtil.builder()
-        .withNominationId(200)
+        .withNominationId(UUID.randomUUID())
         .withNominationReference("nomination reference")
         .build();
 
@@ -672,7 +673,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
-    var unknownNominationId = new NominationId(-1);
+    var unknownNominationId = new NominationId(UUID.randomUUID());
 
     var unknownNominationAppointment = AppointmentDtoTestUtil.builder()
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
@@ -730,7 +731,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .build();
 
     given(userDetailService.getUserDetail())
@@ -755,7 +756,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .build();
 
 
@@ -785,7 +786,7 @@ class AppointmentTimelineItemServiceTest {
   ) {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
-    var nominationId = new NominationId(100);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(nominationId)
@@ -826,7 +827,7 @@ class AppointmentTimelineItemServiceTest {
   ) {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
-    var nominationId = new NominationId(100);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(nominationId)
@@ -856,7 +857,7 @@ class AppointmentTimelineItemServiceTest {
   void getTimelineItemViews_whenUserLoggedAndCanConsultOnNominations_thenNominationUrlIsNotNull() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
-    var nominationId = new NominationId(100);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withNominationId(nominationId)
@@ -892,7 +893,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .withAppointmentToDate(new AppointmentToDate(null))
         .build();
 
@@ -934,7 +935,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .withAppointmentToDate(new AppointmentToDate(LocalDate.now()))
         .build();
 
@@ -965,7 +966,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .withAppointmentType(appointmentType)
         .build();
 
@@ -991,7 +992,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .withAppointmentType(AppointmentType.DEEMED)
         .build();
 
@@ -1028,7 +1029,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .withAppointmentType(appointmentType)
         .build();
 
@@ -1054,7 +1055,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .build();
 
     given(userDetailService.getUserDetail())
@@ -1079,7 +1080,7 @@ class AppointmentTimelineItemServiceTest {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder()
-        .withNominationId(new NominationId(100))
+        .withNominationId(new NominationId(UUID.randomUUID()))
         .build();
 
     given(userDetailService.getUserDetail())

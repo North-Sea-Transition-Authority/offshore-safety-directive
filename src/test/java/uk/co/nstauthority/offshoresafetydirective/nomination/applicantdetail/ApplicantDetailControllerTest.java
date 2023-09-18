@@ -18,6 +18,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -58,7 +59,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final NominationId nominationId = new NominationId(10);
+  private static final NominationId nominationId = new NominationId(UUID.randomUUID());
 
   private final NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
       .withNominationId(nominationId)

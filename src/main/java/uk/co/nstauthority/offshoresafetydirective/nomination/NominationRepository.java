@@ -1,11 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface NominationRepository extends CrudRepository<Nomination, Integer> {
+interface NominationRepository extends CrudRepository<Nomination, UUID> {
 
   @Query("""
        SELECT COUNT(DISTINCT n)

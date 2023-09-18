@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.hibernate.AssertionFailure;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -166,7 +167,7 @@ class NominationDetailServiceTest {
 
   @Test
   void getLatestNominationDetail_whenExists_thenReturnEntity() {
-    var nominationId = new NominationId(42);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(nominationId)
@@ -181,7 +182,7 @@ class NominationDetailServiceTest {
 
   @Test
   void getLatestNominationDetail_whenDoesNotExist_thenThrowError() {
-    var nominationId = new NominationId(42);
+    var nominationId = new NominationId(UUID.randomUUID());
     when(nominationService.getNominationByIdOrError(nominationId)).thenReturn(NOMINATION);
     when(nominationDetailRepository.findFirstByNominationOrderByVersionDesc(NOMINATION)).thenReturn(Optional.empty());
 

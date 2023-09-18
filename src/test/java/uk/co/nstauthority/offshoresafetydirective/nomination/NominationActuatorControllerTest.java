@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,7 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractActuatorController
 class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
 
   private static final String PUBLISH_NOMINATION_SUBMITTED_MESSAGE_URL_FORMAT =
-      "/actuator/nominations/publish-epmq-message/nomination/%d";
+      "/actuator/nominations/publish-epmq-message/nomination/%s";
 
   @MockBean
   private NominationSnsService nominationSnsService;
@@ -25,7 +26,7 @@ class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
 
   @Test
   void publishNominationSubmittedMessage() throws Exception {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     mockMvc
         .perform(
@@ -39,7 +40,7 @@ class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
 
   @SecurityTest
   void publishNominationSubmittedMessage_notAuthorised() throws Exception {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     mockMvc
         .perform(

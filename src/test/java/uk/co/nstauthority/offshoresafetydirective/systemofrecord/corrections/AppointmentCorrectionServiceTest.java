@@ -91,6 +91,8 @@ class AppointmentCorrectionServiceTest {
         .withPortalAssetId("portal/asset/id")
         .build();
 
+    var nominationId = UUID.randomUUID();
+
     var originalAppointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
         .withAsset(asset)
@@ -100,7 +102,7 @@ class AppointmentCorrectionServiceTest {
         .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withCreatedByLegacyNominationReference("legacy/ref")
-        .withCreatedByNominationId(789)
+        .withCreatedByNominationId(nominationId)
         .build();
 
     var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
@@ -155,6 +157,7 @@ class AppointmentCorrectionServiceTest {
 
   @Test
   void updateCorrection_whenOnlineNomination() {
+    var nominationId = UUID.randomUUID();
 
     var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
@@ -169,17 +172,16 @@ class AppointmentCorrectionServiceTest {
         .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .withCreatedByLegacyNominationReference("legacy/ref")
-        .withCreatedByNominationId(789)
+        .withCreatedByNominationId(nominationId)
         .build();
 
     var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
 
     var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
-    var onlineNominationReference = 123;
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(123)
         .withAppointmentType(newAppointmentType)
-        .withOnlineNominationReference(onlineNominationReference)
+        .withOnlineNominationReference(nominationId.toString())
         .withHasEndDate(true)
         .build();
 
@@ -195,6 +197,7 @@ class AppointmentCorrectionServiceTest {
     var endDate = LocalDate.now();
     form.getOnlineAppointmentStartDate().setDate(startDate);
     form.getEndDate().setDate(endDate);
+    form.setOnlineNominationReference(nominationId.toString());
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -215,7 +218,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("appointmentCreatedDate", originalAppointmentDto.appointmentCreatedDate())
         .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
-        .hasFieldOrPropertyWithValue("nominationId", new NominationId(onlineNominationReference))
+        .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
         .hasFieldOrPropertyWithValue("legacyNominationReference", null)
         .hasAssertedAllProperties();
 
@@ -224,6 +227,7 @@ class AppointmentCorrectionServiceTest {
 
   @Test
   void updateCorrection_whenDeemedNomination() {
+    var nominationId = UUID.randomUUID();
 
     var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
@@ -238,7 +242,7 @@ class AppointmentCorrectionServiceTest {
         .withCreatedDatetime(Instant.now())
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .withCreatedByLegacyNominationReference("legacy/ref")
-        .withCreatedByNominationId(789)
+        .withCreatedByNominationId(nominationId)
         .build();
 
     var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
@@ -341,7 +345,7 @@ class AppointmentCorrectionServiceTest {
     var endDate = LocalDate.now();
     form.setHasEndDate(true);
     form.getEndDate().setDate(endDate);
-
+    
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 

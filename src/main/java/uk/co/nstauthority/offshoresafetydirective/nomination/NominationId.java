@@ -2,8 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 
-public record NominationId(int id) implements Serializable {
+public record NominationId(UUID id) implements Serializable {
 
   @Serial
   private static final long serialVersionUID = 1694635038292197507L;
@@ -20,7 +21,7 @@ public record NominationId(int id) implements Serializable {
    * @return a NominationId object converted from the string representation
    */
   public static NominationId valueOf(String value) {
-    return new NominationId(Integer.parseInt(value));
+    return new NominationId(UUID.fromString(value));
   }
 
   @Override

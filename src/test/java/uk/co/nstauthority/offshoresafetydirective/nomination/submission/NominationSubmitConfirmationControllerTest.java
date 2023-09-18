@@ -9,6 +9,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
@@ -34,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @ContextConfiguration(classes = NominationSubmitConfirmationController.class)
 class NominationSubmitConfirmationControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
 

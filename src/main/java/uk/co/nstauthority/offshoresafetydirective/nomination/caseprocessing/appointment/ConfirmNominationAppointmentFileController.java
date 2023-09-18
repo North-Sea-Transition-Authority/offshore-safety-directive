@@ -86,7 +86,7 @@ public class ConfirmNominationAppointmentFileController {
     return nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
         Set.of(NominationStatus.AWAITING_CONFIRMATION)
-    ).orElseThrow(() -> new OsdEntityNotFoundException("No latest detail found for Nomination [%d]".formatted(
+    ).orElseThrow(() -> new OsdEntityNotFoundException("No latest detail found for Nomination [%s]".formatted(
             nominationId.id()
         ))
     );

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,13 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListItemType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationDetailsTaskListSection;
+import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListItemType;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailTaskListItemTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   @Mock
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;

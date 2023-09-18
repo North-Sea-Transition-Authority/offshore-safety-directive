@@ -17,6 +17,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -43,7 +44,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @ContextConfiguration(classes = InstallationInclusionController.class)
 class InstallationInclusionControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
 

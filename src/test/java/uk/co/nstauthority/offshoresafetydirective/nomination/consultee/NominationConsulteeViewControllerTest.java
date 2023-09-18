@@ -12,6 +12,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,7 +46,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.con
 @EnableConfigurationProperties(FileUploadConfig.class)
 class NominationConsulteeViewControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(42);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
   private static final ServiceUserDetail CONSULTEE_NOMINATION_VIEW_USER = ServiceUserDetailTestUtil.Builder()
       .withWuaId(200L)
       .build();

@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +72,7 @@ class NominationServiceTest {
   @Test
   void getNomination_whenNotFound_thenEmptyOptional() {
 
-    var nominationId = new NominationId(123);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     when(nominationRepository.findById(nominationId.id())).thenReturn(Optional.empty());
 
@@ -83,7 +84,7 @@ class NominationServiceTest {
   @Test
   void getNomination_whenFound_thenPopulatedOptional() {
 
-    var nominationId = new NominationId(123);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var expectedNomination = NominationTestUtil.builder()
         .withId(nominationId.id())
@@ -143,8 +144,8 @@ class NominationServiceTest {
 
     assertThatThrownBy(() -> nominationService.startNominationUpdate(nominationDetail))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Cannot start an update on a draft nomination [%d]".formatted(
-            nominationDetail.getNomination().getId()
+        .hasMessage("Cannot start an update on a draft nomination [%s]".formatted(
+            nominationDetail.getNomination().getId().toString()
         ));
 
     verifyNoInteractions(nominationDetailRepository);

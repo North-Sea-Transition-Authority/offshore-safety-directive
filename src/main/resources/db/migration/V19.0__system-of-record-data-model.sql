@@ -18,7 +18,7 @@ CREATE TABLE appointments (
 , responsible_from_date DATE NOT NULL
 , responsible_to_date DATE
 , type VARCHAR(255) NOT NULL
-, created_by_nomination_id INT
+, created_by_nomination_id UUID
 , created_by_legacy_nomination_reference TEXT
 , created_by_appointment_id UUID
 , created_datetime TIMESTAMP NOT NULL

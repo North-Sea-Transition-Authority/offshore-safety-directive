@@ -91,7 +91,7 @@ public class NominationConsultationResponseFileController {
             EnumSet.of(NominationStatus.SUBMITTED)
         )
         .orElseThrow(() -> new OsdEntityNotFoundException(String.format(
-            "Cannot find latest NominationDetail with ID: %d and status: %s",
+            "Cannot find latest NominationDetail with nomination ID: %s and status: %s",
             nominationId.id(), NominationStatus.SUBMITTED.name()
         )));
   }

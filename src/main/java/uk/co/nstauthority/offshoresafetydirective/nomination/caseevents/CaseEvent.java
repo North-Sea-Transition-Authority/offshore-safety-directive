@@ -33,7 +33,6 @@ class CaseEvent {
   @JoinColumn(name = "nomination_id")
   private Nomination nomination;
 
-
   private int nominationVersion;
 
   private Long createdBy;

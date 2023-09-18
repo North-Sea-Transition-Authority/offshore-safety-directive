@@ -107,7 +107,7 @@ public class NominationStartUpdateController {
     return nominationDetailService
         .getLatestNominationDetailOptional(nominationId)
         .orElseThrow(() -> new OsdEntityNotFoundException(
-            "No NominationDetail found for Nomination with ID [%d]".formatted(nominationId.id())
+            "No NominationDetail found for Nomination with ID [%s]".formatted(nominationId.id())
         ));
   }
 }

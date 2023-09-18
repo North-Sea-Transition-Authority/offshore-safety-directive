@@ -120,7 +120,7 @@ public class NominationCaseProcessingController {
         nominationId,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
     ).orElseThrow(() -> new OsdEntityNotFoundException(
-        "No NominationDetail found with Nomination ID [%d] in a post submission status".formatted(
+        "No NominationDetail found with Nomination ID [%s] in a post submission status".formatted(
             nominationId.id()
         )
     ));

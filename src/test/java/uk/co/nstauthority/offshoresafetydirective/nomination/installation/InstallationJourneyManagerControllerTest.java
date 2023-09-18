@@ -10,6 +10,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -34,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @ContextConfiguration(classes = InstallationJourneyManagerController.class)
 class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(123);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 

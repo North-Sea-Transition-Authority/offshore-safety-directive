@@ -272,7 +272,7 @@ class NominationWorkAreaItemServiceTest {
     if (status == NominationStatus.DELETED) {
       assertThatThrownBy(() -> nominationWorkAreaItemService.getNominationWorkAreaItems())
           .isExactlyInstanceOf(IllegalStateException.class)
-          .hasMessage("Nomination with ID [%d] should not appear in work area as status is [%s]"
+          .hasMessage("Nomination with ID [%s] should not appear in work area as status is [%s]"
               .formatted(
                   nomination.getNominationId().id(),
                   nomination.getNominationStatus().name()

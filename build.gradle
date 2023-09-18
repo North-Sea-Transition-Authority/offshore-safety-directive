@@ -77,8 +77,8 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalapi:client:v6.2.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
-	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:OSDOP-541-appointment-terminations-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
-	implementation 'uk.co.fivium.energyportalmessagequeue:messages:OSDOP-541-appointment-terminations-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:OSDOP-225-nomination-id-converted-to-uuid-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:OSDOP-225-nomination-id-converted-to-uuid-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'

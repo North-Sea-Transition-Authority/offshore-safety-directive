@@ -19,7 +19,7 @@ interface CaseEventRepository extends CrudRepository<CaseEvent, UUID> {
 
   Optional<CaseEvent> findFirstByCaseEventTypeInAndNomination_IdAndNominationVersion(
       Collection<CaseEventType> caseEventTypes,
-      int nominationId,
+      UUID nominationId,
       int nominationVersion
   );
 

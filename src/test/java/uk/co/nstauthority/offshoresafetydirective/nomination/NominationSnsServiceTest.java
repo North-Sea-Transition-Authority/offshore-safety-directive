@@ -60,7 +60,7 @@ class NominationSnsServiceTest {
 
   @Test
   void handleNominationSubmitted() {
-    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(1));
+    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(UUID.randomUUID()));
 
     doNothing().when(nominationSnsService).publishNominationSubmittedMessage(event.getNominationId());
 
@@ -71,7 +71,7 @@ class NominationSnsServiceTest {
 
   @Test
   void publishNominationSubmittedMessage() {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
     var nomination = NominationTestUtil.builder()
         .withId(nominationId.id())
         .build();

@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
@@ -176,7 +177,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
       );
       if (!bindingResult.hasFieldErrors(ONLINE_REFERENCE_FIELD_NAME)) {
         var appointedNominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
-            new NominationId(form.getOnlineNominationReference()),
+            new NominationId(UUID.fromString(form.getOnlineNominationReference())),
             EnumSet.of(NominationStatus.APPOINTED)
         );
         if (appointedNominationDetail.isEmpty()) {

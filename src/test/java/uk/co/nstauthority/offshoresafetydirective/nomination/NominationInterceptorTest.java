@@ -8,6 +8,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
@@ -26,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 class NominationInterceptorTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   @Test
   void preHandle_whenMethodHasNoSupportedAnnotations_thenOkResponse() throws Exception {
@@ -48,7 +50,7 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationAndStatusMatches_thenOkRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
+    var nominationId = new NominationId(UUID.randomUUID());
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.DRAFT)
@@ -66,16 +68,14 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationAndStatusNotMatch_thenForbidden() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withDraftNominationStatus(nominationId)
+            .withDraftNominationStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isForbidden());
@@ -84,10 +84,8 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationAndNominationDetailIsNull_thenBadRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withDraftNominationStatus(nominationId)
+            .withDraftNominationStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isBadRequest());
@@ -96,16 +94,14 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andCorrectStatus_thenOkRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withLatestAndSubmittedStatus(nominationId)
+            .withLatestAndSubmittedStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isOk());
@@ -114,16 +110,14 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withLatestAndSubmittedStatus(nominationId)
+            .withLatestAndSubmittedStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isForbidden());
@@ -132,19 +126,17 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andSubmitted_thenOkRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        nominationId,
+        NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
     )).thenReturn(Optional.of(nominationDetail));
 
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withLatestPostSubmissionAndSubmittedStatus(nominationId)
+            .withLatestPostSubmissionAndSubmittedStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isOk());
@@ -153,19 +145,17 @@ class NominationInterceptorTest extends AbstractControllerTest {
   @Test
   void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
 
-    var nominationId = new NominationId(123);
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        nominationId,
+        NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
     )).thenReturn(Optional.of(nominationDetail));
 
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-            .withLatestPostSubmissionAndSubmittedStatus(nominationId)
+            .withLatestPostSubmissionAndSubmittedStatus(NOMINATION_ID)
         ))
             .with(user(USER)))
         .andExpect(status().isForbidden());

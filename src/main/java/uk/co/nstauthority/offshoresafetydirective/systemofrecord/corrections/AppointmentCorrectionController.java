@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -172,7 +173,7 @@ public class AppointmentCorrectionController {
     if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
         && form.getOnlineNominationReference() != null) {
       nominationDetailService.getLatestNominationDetailOptional(
-          new NominationId(form.getOnlineNominationReference())
+          new NominationId(UUID.fromString(form.getOnlineNominationReference()))
       ).ifPresent(nominationDetail -> {
         var nomination = nominationDetail.getNomination();
         modelAndView.addObject("preselectedNominationReference", Map.of(

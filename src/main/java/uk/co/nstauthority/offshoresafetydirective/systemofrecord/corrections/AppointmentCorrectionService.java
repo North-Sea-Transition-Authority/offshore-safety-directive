@@ -88,7 +88,12 @@ public class AppointmentCorrectionService {
 
     if (AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
-      var onlineNominationId = Optional.ofNullable(appointmentDto.nominationId()).map(NominationId::id).orElse(null);
+
+      var onlineNominationId = Optional.ofNullable(appointmentDto.nominationId())
+          .map(NominationId::id)
+          .map(String::valueOf)
+          .orElse(null);
+
       form.setOnlineNominationReference(onlineNominationId);
     } else if (
         AppointmentType.OFFLINE_NOMINATION.equals(appointmentDto.appointmentType())
@@ -150,14 +155,11 @@ public class AppointmentCorrectionService {
     );
 
     switch (appointmentType) {
-      case OFFLINE_NOMINATION -> {
-        updateDtoBuilder
-            .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
-      }
+      case OFFLINE_NOMINATION -> updateDtoBuilder
+          .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
       case ONLINE_NOMINATION -> {
-        var onlineNominationReferenceId = Optional.ofNullable(
-                appointmentCorrectionForm.getOnlineNominationReference())
-            .map(NominationId::new)
+        var onlineNominationReferenceId = Optional.ofNullable(appointmentCorrectionForm.getOnlineNominationReference())
+            .map(nominationId -> new NominationId(UUID.fromString(nominationId)))
             .orElse(null);
 
         updateDtoBuilder

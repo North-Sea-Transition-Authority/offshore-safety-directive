@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
@@ -26,7 +27,7 @@ class AppointmentCorrectionFormTestUtil {
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
     private Boolean hasEndDate = false;
     private String offlineNominationReference = null;
-    private Integer onlineNominationReference = 321;
+    private String onlineNominationReference = UUID.randomUUID().toString();
     private LocalDate offlineStartDate = LocalDate.now();
     private LocalDate onlineStartDate = LocalDate.now();
     private LocalDate endDate = null;
@@ -76,7 +77,7 @@ class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
-    Builder withOnlineNominationReference(Integer onlineNominationReference) {
+    Builder withOnlineNominationReference(String onlineNominationReference) {
       this.onlineNominationReference = onlineNominationReference;
       return this;
     }

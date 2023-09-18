@@ -15,11 +15,11 @@ public class NominationTestUtil {
 
   public static class NominationBuilder {
 
-    private Integer id = 10;
+    private UUID id = UUID.randomUUID();
     private Instant createdInstant = Instant.now();
     private String reference = "reference/%s".formatted(UUID.randomUUID());
 
-    public NominationBuilder withId(Integer id) {
+    public NominationBuilder withId(UUID id) {
       this.id = id;
       return this;
     }

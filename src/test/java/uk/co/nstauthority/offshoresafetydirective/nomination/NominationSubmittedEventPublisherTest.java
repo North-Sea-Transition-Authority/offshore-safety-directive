@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,7 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 @ExtendWith(MockitoExtension.class)
 class NominationSubmittedEventPublisherTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(1);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   @Mock
   private ApplicationEventPublisher applicationEventPublisher;

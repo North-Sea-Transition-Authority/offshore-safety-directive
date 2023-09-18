@@ -95,7 +95,7 @@ public class NomineeDetailAppendixFileController {
     return nominationDetailService.getNominationDetail(nominationDetailId)
         .filter(nominationDetail -> nominationDetail.getNomination().getId().equals(nominationId.id()))
         .orElseThrow(() -> new OsdEntityNotFoundException(
-            "Cannot find latest NominationDetail with ID [%d] for Nomination [%d]".formatted(
+            "Cannot find latest NominationDetail with ID [%d] for Nomination [%s]".formatted(
                 nominationDetailId.id(),
                 nominationId.id()
             )));

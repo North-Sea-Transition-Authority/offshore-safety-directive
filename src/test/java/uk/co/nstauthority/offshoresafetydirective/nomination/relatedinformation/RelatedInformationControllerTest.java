@@ -21,6 +21,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @ContextConfiguration(classes = RelatedInformationController.class)
 class RelatedInformationControllerTest extends AbstractControllerTest {
 
-  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private NominationDetail nominationDetail;
 

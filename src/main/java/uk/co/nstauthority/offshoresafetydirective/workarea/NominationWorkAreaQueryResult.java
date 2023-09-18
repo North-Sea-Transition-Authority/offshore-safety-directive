@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import java.sql.Timestamp;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
@@ -31,7 +32,7 @@ class NominationWorkAreaQueryResult {
   private final PearsReferences pearsReferences;
   private final NominationHasUpdateRequest nominationHasUpdateRequest;
 
-  NominationWorkAreaQueryResult(Integer nominationId, Integer applicantOrganisationId, String nominationReference,
+  NominationWorkAreaQueryResult(UUID nominationId, Integer applicantOrganisationId, String nominationReference,
                                 String applicantReference, Integer nominatedOrganisationId, String wellsSelectionType,
                                 boolean hasInstallations, String nominationStatus, Timestamp createdTime,
                                 Timestamp submittedTime, Integer nominationVersion,

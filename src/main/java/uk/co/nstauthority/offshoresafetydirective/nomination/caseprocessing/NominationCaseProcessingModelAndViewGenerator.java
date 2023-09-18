@@ -97,7 +97,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
         nominationCaseProcessingService.getNominationCaseProcessingHeader(latestPostSubmissionNominationDetail)
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
-                "Unable to find %s for nomination with ID: [%d]".formatted(
+                "Unable to find %s for nomination with ID: [%s]".formatted(
                     NominationCaseProcessingHeader.class.getSimpleName(),
                     nominationDetail.getNomination().getId()
                 )

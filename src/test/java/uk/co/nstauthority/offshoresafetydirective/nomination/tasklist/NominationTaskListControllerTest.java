@@ -21,6 +21,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -57,7 +58,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
       .build();
 
-  private static final NominationId NOMINATION_ID = new NominationId(100);
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private NominationDetail nominationDetail;
 

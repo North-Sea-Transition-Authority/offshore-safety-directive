@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -44,7 +45,7 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
   @Test
   void handleSubmission_whenNotFirstVersion_assertNoCalls() {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
     var nomination = NominationTestUtil.builder()
         .withId(nominationId.id())
         .build();
@@ -55,7 +56,7 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
-    var event = NominationSubmittedEventTestUtil.createEvent(new NominationId(1));
+    var event = NominationSubmittedEventTestUtil.createEvent(nominationId);
 
     nominationSubmissionPortalReferencesCopyForwardListener.handleSubmission(event);
 
@@ -64,7 +65,7 @@ class NominationSubmissionPortalReferencesCopyForwardListenerTest {
 
   @Test
   void handleSubmission_whenFirstVersion_verifySaves() {
-    var nominationId = new NominationId(1);
+    var nominationId = new NominationId(UUID.randomUUID());
     var nomination = NominationTestUtil.builder()
         .withId(nominationId.id())
         .build();

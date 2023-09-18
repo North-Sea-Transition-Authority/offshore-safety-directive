@@ -140,12 +140,12 @@ class AppointmentCorrectionValidatorTest {
 
   @Test
   void validate_whenFullyPopulatedForm_andOnlineNominationAppointmentType_thenNoErrors() {
-    var onlineReference = 110;
+    var onlineReference = UUID.randomUUID();
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
         .withAppointmentType(appointmentType)
-        .withOnlineNominationReference(onlineReference)
+        .withOnlineNominationReference(onlineReference.toString())
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -409,7 +409,7 @@ class AppointmentCorrectionValidatorTest {
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    var nominationId = new NominationId(form.getOnlineNominationReference());
+    var nominationId = new NominationId(UUID.fromString(form.getOnlineNominationReference()));
     var nominationDetail = NominationDetailTestUtil.builder()
         .build();
 
@@ -547,7 +547,7 @@ class AppointmentCorrectionValidatorTest {
     when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
-    var nominationId = new NominationId(form.getOnlineNominationReference());
+    var nominationId = new NominationId(UUID.fromString(form.getOnlineNominationReference()));
     var nominationDetail = NominationDetailTestUtil.builder()
         .build();
 
@@ -851,11 +851,11 @@ class AppointmentCorrectionValidatorTest {
   @Test
   void validate_whenOnlineAppointmentType_andNoAppointedNomination_thenHasError() {
 
-    var nominationId = new NominationId(123);
+    var nominationId = new NominationId(UUID.randomUUID());
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withOnlineNominationReference(null)
-        .withOnlineNominationReference(nominationId.id())
+        .withOnlineNominationReference(nominationId.id().toString())
         .build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
