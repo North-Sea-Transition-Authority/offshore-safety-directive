@@ -30,6 +30,8 @@ import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
+import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
@@ -60,7 +62,9 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     HasNotBeenTerminatedInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
-    IsMemberOfTeamTypeInterceptor.class
+    IsMemberOfTeamTypeInterceptor.class,
+    RequestLogFilter.class,
+    PostAuthenticationRequestMdcFilter.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -104,6 +108,9 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected IndustryTeamService industryTeamService;
 
+  @MockBean
+  protected JooqStatisticsListener jooqStatisticsListener;
+
   @BeforeEach
   void setupAbstractControllerTest() {
     doCallRealMethod().when(userDetailService).getUserDetail();
@@ -127,6 +134,11 @@ public abstract class AbstractControllerTest {
       messageSource.setBasename("messages");
       messageSource.setDefaultEncoding("UTF-8");
       return messageSource;
+    }
+
+    @Bean
+    public HibernateQueryCounterImpl hibernateQueryInterceptor() {
+      return new HibernateQueryCounterImpl();
     }
   }
 }

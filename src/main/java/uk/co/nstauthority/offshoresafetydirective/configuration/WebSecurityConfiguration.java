@@ -21,9 +21,12 @@ import org.springframework.security.saml2.provider.service.registration.RelyingP
 import org.springframework.security.saml2.provider.service.registration.Saml2MessageBinding;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.ServiceAccessDeniedHandler;
+import uk.co.nstauthority.offshoresafetydirective.mvc.PostAuthenticationRequestMdcFilter;
+import uk.co.nstauthority.offshoresafetydirective.mvc.RequestLogFilter;
 
 @Configuration
 public class WebSecurityConfiguration {
@@ -41,15 +44,20 @@ public class WebSecurityConfiguration {
   private final SamlProperties samlProperties;
   private final SamlResponseParser samlResponseParser;
   private final ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
+  private final RequestLogFilter requestLogFilter;
+  private final PostAuthenticationRequestMdcFilter postAuthenticationRequestMdcFilter;
 
 
   @Autowired
   public WebSecurityConfiguration(SamlProperties samlProperties,
                                   SamlResponseParser samlResponseParser,
-                                  ServiceLogoutSuccessHandler serviceLogoutSuccessHandler) {
+                                  ServiceLogoutSuccessHandler serviceLogoutSuccessHandler, RequestLogFilter requestLogFilter,
+                                  PostAuthenticationRequestMdcFilter postAuthenticationRequestMdcFilter) {
     this.samlProperties = samlProperties;
     this.samlResponseParser = samlResponseParser;
     this.serviceLogoutSuccessHandler = serviceLogoutSuccessHandler;
+    this.requestLogFilter = requestLogFilter;
+    this.postAuthenticationRequestMdcFilter = postAuthenticationRequestMdcFilter;
   }
 
   @Bean
@@ -71,6 +79,8 @@ public class WebSecurityConfiguration {
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
         .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedHandler(accessDeniedHandler()));
 
+    httpSecurity.addFilterBefore(requestLogFilter, SecurityContextHolderFilter.class);
+    httpSecurity.addFilterAfter(postAuthenticationRequestMdcFilter, SecurityContextHolderFilter.class);
     return httpSecurity.build();
   }
 

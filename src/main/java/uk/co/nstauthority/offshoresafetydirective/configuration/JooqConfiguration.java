@@ -9,19 +9,23 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.DataSourceConnectionProvider;
 import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultDSLContext;
+import org.jooq.impl.DefaultExecuteListenerProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
+import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 
 @Configuration
 class JooqConfiguration {
 
   private final DataSource dataSource;
+  private final JooqStatisticsListener jooqStatisticsListener;
 
   @Autowired
-  JooqConfiguration(DataSource dataSource) {
+  JooqConfiguration(DataSource dataSource, JooqStatisticsListener jooqStatisticsListener) {
     this.dataSource = dataSource;
+    this.jooqStatisticsListener = jooqStatisticsListener;
   }
 
   @Bean
@@ -39,6 +43,7 @@ class JooqConfiguration {
     var jooqConfiguration = new DefaultConfiguration();
     jooqConfiguration.setSQLDialect(SQLDialect.POSTGRES);
     jooqConfiguration.set(connectionProvider);
+    jooqConfiguration.set(new DefaultExecuteListenerProvider(jooqStatisticsListener));
 
     var settings  = new Settings()
         .withRenderQuotedNames(RenderQuotedNames.NEVER)
