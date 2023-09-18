@@ -15,7 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 public class NominatedInstallation {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @GeneratedValue(strategy = GenerationType.UUID)
   private Integer id;
 
   @ManyToOne
