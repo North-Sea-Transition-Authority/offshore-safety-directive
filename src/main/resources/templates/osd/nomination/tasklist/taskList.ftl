@@ -16,7 +16,7 @@
 
   <#if reasonForUpdate?has_content>
     <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
-      <pre class="govuk-body">${reasonForUpdate}</pre>
+      <p class="govuk-body govuk-body__preserve-whitespace">${reasonForUpdate}</p>
     </@fdsDetails.summaryDetails>
   </#if>
 

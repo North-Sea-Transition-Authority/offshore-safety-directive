@@ -7,11 +7,15 @@
     >
 
         <@fdsSummaryList.summaryListRowNoAction keyText="Linked PEARS applications">
-            <pre class="govuk-body">${(activePortalReferencesView.pearsReferences().references())!"Not provided"}</pre>
+            <p class="govuk-body govuk-body__preserve-whitespace">
+                ${(activePortalReferencesView.pearsReferences().references())!"Not provided"}
+            </p>
         </@fdsSummaryList.summaryListRowNoAction>
 
         <@fdsSummaryList.summaryListRowNoAction keyText="Linked WONS applications">
-            <pre class="govuk-body">${(activePortalReferencesView.wonsReferences().references())!"Not provided"}</pre>
+            <p class="govuk-body govuk-body__preserve-whitespace">
+                ${(activePortalReferencesView.wonsReferences().references())!"Not provided"}
+            </p>
         </@fdsSummaryList.summaryListRowNoAction>
 
     </@fdsSummaryList.summaryListCard>

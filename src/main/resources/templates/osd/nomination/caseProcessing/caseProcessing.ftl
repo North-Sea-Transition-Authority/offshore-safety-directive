@@ -123,7 +123,7 @@ errorItems=[]
         <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="An update has been requested on this nomination">
             <#assign infoBannerContent>
                 <@fdsDetails.summaryDetails summaryTitle="What information have I been asked to update?">
-                    <pre class="govuk-body">${updateRequestReason}</pre>
+                    <p class="govuk-body govuk-body__preserve-whitespace">${updateRequestReason}</p>
                 </@fdsDetails.summaryDetails>
             </#assign>
             <@fdsNotificationBanner.notificationBannerContent headingText="Update your nomination to provide the information requested" moreContent=infoBannerContent/>

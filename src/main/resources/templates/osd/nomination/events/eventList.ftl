@@ -30,7 +30,7 @@
 
                         <#if event.body?has_content>
                             <h4 class="govuk-heading-s">${event.customBodyPrompt!"Comments"}</h4>
-                            <p class="govuk-body">
+                            <p class="govuk-body govuk-body__preserve-whitespace">
                                 ${event.body}
                             </p>
                         </#if>

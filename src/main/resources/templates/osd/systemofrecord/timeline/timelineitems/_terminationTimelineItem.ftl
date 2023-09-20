@@ -8,7 +8,7 @@
     <#assign modelProperties = timelineItemView.assetTimelineModelProperties().modelProperties/>
     <#assign reason>
         <#if modelProperties["reasonForTermination"]?has_content>
-            <pre class="govuk-body">${modelProperties["reasonForTermination"]}</pre>
+            <p class="govuk-body govuk-body__preserve-whitespace">${modelProperties["reasonForTermination"]}</p>
         </#if>
     </#assign>
 

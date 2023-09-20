@@ -35,7 +35,9 @@
       </@fdsSummaryList.summaryListRowNoAction>
       <#if relatedToPearsApplications && relatedInformationSummaryView.relatedToPearsApplications().related()>
           <@fdsSummaryList.summaryListRowNoAction keyText="Related PEARS applications">
-            <pre class="govuk-body">${relatedInformationSummaryView.relatedToPearsApplications().applications()}</pre>
+              <p class="govuk-body govuk-body__preserve-whitespace">
+                ${relatedInformationSummaryView.relatedToPearsApplications().applications()}
+              </p>
           </@fdsSummaryList.summaryListRowNoAction>
       </#if>
 
@@ -47,7 +49,9 @@
       </@fdsSummaryList.summaryListRowNoAction>
       <#if relatedToWonsApplications && relatedInformationSummaryView.relatedToWonsApplications().related()>
           <@fdsSummaryList.summaryListRowNoAction keyText="Related WONS applications">
-              <pre class="govuk-body">${relatedInformationSummaryView.relatedToWonsApplications().applications()}</pre>
+              <p class="govuk-body govuk-body__preserve-whitespace">
+                  ${relatedInformationSummaryView.relatedToWonsApplications().applications()}
+              </p>
           </@fdsSummaryList.summaryListRowNoAction>
       </#if>
 

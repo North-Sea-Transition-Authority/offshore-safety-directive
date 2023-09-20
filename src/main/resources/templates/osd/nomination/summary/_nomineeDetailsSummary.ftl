@@ -13,7 +13,9 @@
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Reason for the nomination">
-          ${(nomineeDetailSummaryView.nominationReason().reason())!""}
+          <p class="govuk-body govuk-!-margin-top-0 -body__preserve-whitespace">
+              ${(nomineeDetailSummaryView.nominationReason().reason())!""}
+          </p>
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Planned appointment date">
