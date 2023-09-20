@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.authentication;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,8 +25,27 @@ public class SamlResponseParser {
     var forename = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.FORENAME);
     var surname = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.SURNAME);
     var email = getNonEmptyAttribute(parsedAttributes, EnergyPortalSamlAttribute.EMAIL_ADDRESS);
+    var proxyWuaId = parsedAttributes.getOrDefault(
+        EnergyPortalSamlAttribute.PROXY_USER_WUA_ID.getAttributeName(),
+        null
+    );
+    var proxyUserName = parsedAttributes.getOrDefault(
+        EnergyPortalSamlAttribute.PROXY_USER_NAME.getAttributeName(),
+        null
+    );
 
-    var userDetail = new ServiceUserDetail(Long.parseLong(wuaId), Long.parseLong(personId), forename, surname, email);
+    var userDetail = new ServiceUserDetail(
+        Long.parseLong(wuaId),
+        Long.parseLong(personId),
+        forename,
+        surname,
+        email,
+        Optional.ofNullable(proxyWuaId)
+            .filter(StringUtils::isNotBlank)
+            .map(Long::parseLong)
+            .orElse(null),
+        proxyUserName
+    );
 
     var portalPrivileges = getNonNullAttribute(parsedAttributes, EnergyPortalSamlAttribute.PORTAL_PRIVILEGES);
 

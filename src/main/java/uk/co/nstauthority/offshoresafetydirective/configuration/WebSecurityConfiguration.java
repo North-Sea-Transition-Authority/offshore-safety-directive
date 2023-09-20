@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.saml2.core.Saml2X509Credential;
 import org.springframework.security.saml2.provider.service.authentication.OpenSaml4AuthenticationProvider;
@@ -38,7 +37,8 @@ public class WebSecurityConfiguration {
       "/system-of-record/**",
       "/api/public/**",
       "/accessibility-statement",
-      "error/**"
+      "/error/**",
+      "/api/v1/logout/**"
   };
 
   private final SamlProperties samlProperties;
@@ -74,7 +74,7 @@ public class WebSecurityConfiguration {
             .requestMatchers(NO_AUTH_ENDPOINTS).permitAll()
             .anyRequest().hasAuthority(IDP_ACCESS_GRANTED_AUTHORITY_NAME)
         )
-        .csrf(Customizer.withDefaults())
+        .csrf(new CsrfCustomizer(NO_AUTH_ENDPOINTS))
         .saml2Login(saml2 -> saml2.authenticationManager(new ProviderManager(authenticationProvider)))
         .logout(logout -> logout.logoutSuccessHandler(serviceLogoutSuccessHandler))
         .exceptionHandling(exceptionHandling -> exceptionHandling.accessDeniedHandler(accessDeniedHandler()));
