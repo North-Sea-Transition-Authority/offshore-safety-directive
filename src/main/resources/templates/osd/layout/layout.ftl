@@ -103,16 +103,8 @@
     <@_serviceHeader pageSize=pageSize />
   </#assign>
 
-  <#local footerMetaContent>
-    <@fdsFooter.footerMeta footerMetaHiddenHeading="Support links">
-      <#list footerItems as footerItem>
-        <@fdsFooter.footerMetaLink linkText=footerItem.prompt() linkUrl=springUrl(footerItem.url())/>
-      </#list>
-    </@fdsFooter.footerMeta>
-  </#local>
-
-  <#assign osdFooter>
-    <@fdsNstaFooter.nstaFooter wrapperWidth=isFullPageWidth metaLinks=true footerMetaContent=footerMetaContent/>
+  <#assign footer>
+    <@_footer isFullPageWidth=isFullPageWidth/>
   </#assign>
 
   <@fdsDefaultPageTemplate
@@ -135,7 +127,7 @@
     notificationBannerContent=notificationBannerContent
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
-    footerContent=osdFooter
+    footerContent=footer
     noIndex=!allowSearchEngineIndexing
     caption=pageHeadingCaption
     wrapperWidth=isFullPageWidth
@@ -155,6 +147,10 @@
     <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
   </#assign>
 
+  <#assign footer>
+    <@_footer isFullPageWidth=false/>
+  </#assign>
+
   <@fdsLeftSubNavPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=pageHeading
@@ -163,6 +159,7 @@
     logoProductText=CUSTOMER_MNEMONIC
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
+    footerContent=footer
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
@@ -189,4 +186,16 @@
     signOutUrl=springUrl("/logout")
     pageSize=pageSize
   />
+</#macro>
+
+<#macro _footer isFullPageWidth>
+  <#local footerMetaContent>
+    <@fdsFooter.footerMeta footerMetaHiddenHeading="Support links">
+      <#list footerItems as footerItem>
+        <@fdsFooter.footerMetaLink linkText=footerItem.prompt() linkUrl=springUrl(footerItem.url())/>
+      </#list>
+    </@fdsFooter.footerMeta>
+  </#local>
+
+  <@fdsNstaFooter.nstaFooter wrapperWidth=isFullPageWidth metaLinks=true footerMetaContent=footerMetaContent/>
 </#macro>
