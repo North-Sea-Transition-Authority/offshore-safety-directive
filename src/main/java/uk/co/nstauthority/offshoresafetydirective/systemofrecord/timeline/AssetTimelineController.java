@@ -71,10 +71,20 @@ public class AssetTimelineController {
         userDetailService.getUserDetail(),
         Set.of(RolePermission.MANAGE_APPOINTMENTS)
     )) {
-      modelAndView.addObject("newAppointmentUrl", ReverseRouter.route(on(NewAppointmentController.class)
-          .renderNewInstallationAppointment(portalAssetId)));
+      modelAndView.addObject("newAppointmentUrl", getNewAppointmentUrl(portalAssetId, portalAssetType));
     }
 
     return modelAndView;
+  }
+
+  private String getNewAppointmentUrl(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+    return switch (portalAssetType) {
+      case INSTALLATION -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewInstallationAppointment(portalAssetId));
+      case WELLBORE -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewWellboreAppointment(portalAssetId));
+      case SUBAREA -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewSubareaAppointment(portalAssetId));
+    };
   }
 }

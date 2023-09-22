@@ -55,11 +55,10 @@ public class PortalAssetRetrievalService {
   }
 
   public Optional<String> getAssetName(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
-    var portalAssetIdAsInt = Integer.parseInt(portalAssetId.id());
     return switch (portalAssetType) {
-      case INSTALLATION -> getInstallation(new InstallationId(portalAssetIdAsInt))
+      case INSTALLATION -> getInstallation(new InstallationId(Integer.parseInt(portalAssetId.id())))
           .map(InstallationDto::name);
-      case WELLBORE -> getWellbore(new WellboreId(portalAssetIdAsInt))
+      case WELLBORE -> getWellbore(new WellboreId(Integer.parseInt(portalAssetId.id())))
           .map(WellDto::name);
       case SUBAREA -> getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id()))
           .map(LicenceBlockSubareaDto::displayName);

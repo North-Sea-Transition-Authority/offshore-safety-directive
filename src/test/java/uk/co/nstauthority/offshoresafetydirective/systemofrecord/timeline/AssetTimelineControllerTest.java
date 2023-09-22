@@ -1,30 +1,48 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = AssetTimelineController.class)
 class AssetTimelineControllerTest extends AbstractControllerTest {
 
   private static final PortalAssetId PORTAL_ASSET_ID = new PortalAssetId("portal-asset-id");
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
+  private static final TeamMember APPOINTMENT_MANAGER_MEMBER = TeamMemberTestUtil.Builder()
+      .withRole(RegulatorTeamRole.MANAGE_ASSET_APPOINTMENTS)
+      .build();
 
   @MockBean
   private AssetTimelineService assetTimelineService;
+
+  @BeforeEach
+  void setUp() {
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER_MEMBER));
+  }
 
   @SecurityTest
   void renderInstallationTimeline_verifyUnauthenticated() throws Exception {
@@ -104,7 +122,40 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.INSTALLATION.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)))
+        .andExpect(model().attributeDoesNotExist("newAppointmentUrl"));
+  }
+
+  @Test
+  void renderInstallationTimeline_verifyModelPropertiesWhenHasPermission() throws Exception {
+
+    when(userDetailService.isUserLoggedIn()).thenReturn(true);
+
+    var assetName = "asset name";
+
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
+
+    var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
+        .withAssetName(assetName)
+        .withTimelineItemView(appointmentTimelineItemView)
+        .build();
+
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
+        PORTAL_ASSET_ID,
+        PortalAssetType.INSTALLATION
+    ))
+        .willReturn(Optional.of(assetAppointmentHistory));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID)))
+                .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "newAppointmentUrl",
+            ReverseRouter.route(on(NewAppointmentController.class)
+                .renderNewInstallationAppointment(PORTAL_ASSET_ID))
+        ));
   }
 
   @Test
@@ -137,7 +188,40 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.WELLBORE.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)))
+        .andExpect(model().attributeDoesNotExist("newAppointmentUrl"));
+  }
+
+  @Test
+  void renderWellboreTimeline_verifyModelPropertiesWhenHasPermission() throws Exception {
+
+    when(userDetailService.isUserLoggedIn()).thenReturn(true);
+
+    var assetName = "asset name";
+
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
+
+    var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
+        .withAssetName(assetName)
+        .withTimelineItemView(appointmentTimelineItemView)
+        .build();
+
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
+        PORTAL_ASSET_ID,
+        PortalAssetType.WELLBORE
+    ))
+        .willReturn(Optional.of(assetAppointmentHistory));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderWellboreTimeline(PORTAL_ASSET_ID)))
+                .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "newAppointmentUrl",
+            ReverseRouter.route(on(NewAppointmentController.class)
+                .renderNewWellboreAppointment(PORTAL_ASSET_ID))
+        ));
   }
 
   @Test
@@ -170,7 +254,40 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
             "assetTypeDisplayNameSentenceCase",
             PortalAssetType.SUBAREA.getSentenceCaseDisplayName())
         )
-        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)));
+        .andExpect(model().attribute("timelineItemViews", List.of(appointmentTimelineItemView)))
+        .andExpect(model().attributeDoesNotExist("newAppointmentUrl"));
+  }
+
+  @Test
+  void renderSubareaTimeline_verifyModelPropertiesWhenHasPermission() throws Exception {
+
+    when(userDetailService.isUserLoggedIn()).thenReturn(true);
+
+    var assetName = "asset name";
+
+    var appointmentTimelineItemView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
+
+    var assetAppointmentHistory = AssetAppointmentHistoryTestUtil.builder()
+        .withAssetName(assetName)
+        .withTimelineItemView(appointmentTimelineItemView)
+        .build();
+
+    given(assetTimelineService.getAppointmentHistoryForPortalAsset(
+        PORTAL_ASSET_ID,
+        PortalAssetType.SUBAREA
+    ))
+        .willReturn(Optional.of(assetAppointmentHistory));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderSubareaTimeline(PORTAL_ASSET_ID)))
+                .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "newAppointmentUrl",
+            ReverseRouter.route(on(NewAppointmentController.class)
+                .renderNewSubareaAppointment(PORTAL_ASSET_ID))
+        ));
   }
 
   @Test

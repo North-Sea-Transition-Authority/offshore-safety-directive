@@ -6,7 +6,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -80,32 +79,68 @@ public class NewAppointmentController {
     return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
   }
 
+  @GetMapping("/wellbore/{portalAssetId}/appointments/add")
+  public ModelAndView renderNewWellboreAppointment(@PathVariable PortalAssetId portalAssetId) {
+    var assetType = PortalAssetType.WELLBORE;
+    return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
+  }
+
+  @GetMapping("/forward-approval/{portalAssetId}/appointments/add")
+  public ModelAndView renderNewSubareaAppointment(@PathVariable PortalAssetId portalAssetId) {
+    var assetType = PortalAssetType.SUBAREA;
+    return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
+  }
+
   @PostMapping("/installation/{portalAssetId}/appointments/add")
   public ModelAndView createNewInstallationAppointment(@PathVariable PortalAssetId portalAssetId,
                                                        @ModelAttribute("form") AppointmentCorrectionForm form,
                                                        BindingResult bindingResult) {
-    var assetType = PortalAssetType.INSTALLATION;
-    var assetDto = assetPersistenceService.getOrCreateAsset(portalAssetId, assetType);
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+  }
+
+  @PostMapping("/wellbore/{portalAssetId}/appointments/add")
+  public ModelAndView createNewWellboreAppointment(@PathVariable PortalAssetId portalAssetId,
+                                                   @ModelAttribute("form") AppointmentCorrectionForm form,
+                                                   BindingResult bindingResult) {
+    var portalAssetType = PortalAssetType.WELLBORE;
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+  }
+
+  @PostMapping("/forward-approval/{portalAssetId}/appointments/add")
+  public ModelAndView createNewSubareaAppointment(@PathVariable PortalAssetId portalAssetId,
+                                                  @ModelAttribute("form") AppointmentCorrectionForm form,
+                                                  BindingResult bindingResult) {
+    var portalAssetType = PortalAssetType.SUBAREA;
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+  }
+
+  private ModelAndView processCreateNewAppointment(PortalAssetId portalAssetId, PortalAssetType portalAssetType,
+                                                   AppointmentCorrectionForm form, BindingResult bindingResult) {
+
+    var assetDto = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
 
     var validatorHint = new AppointmentCorrectionValidationHint(
         null,
         assetDto.assetId(),
-        assetType
+        portalAssetType
     );
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getNewAppointmentForm(portalAssetId, assetType, form),
+        getNewAppointmentForm(portalAssetId, portalAssetType, form),
         form,
         () -> {
           appointmentService.addManualAppointment(form, assetDto);
-          return switch (assetType) {
+          return switch (portalAssetType) {
             case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
                 .renderInstallationTimeline(portalAssetId));
-            // TODO OSDOP-158 - Redirect to relevant endpoints
-            default -> throw new NotImplementedException();
+            case WELLBORE -> ReverseRouter.redirect(on(AssetTimelineController.class)
+                .renderWellboreTimeline(portalAssetId));
+            case SUBAREA -> ReverseRouter.redirect(on(AssetTimelineController.class)
+                .renderSubareaTimeline(portalAssetId));
           };
         }
     );
@@ -113,6 +148,15 @@ public class NewAppointmentController {
 
   private ModelAndView getNewAppointmentForm(PortalAssetId portalAssetId, PortalAssetType portalAssetType,
                                              AppointmentCorrectionForm form) {
+
+    var submitUrl = switch (portalAssetType) {
+      case INSTALLATION -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewInstallationAppointment(portalAssetId));
+      case WELLBORE -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewWellboreAppointment(portalAssetId));
+      case SUBAREA -> ReverseRouter.route(on(NewAppointmentController.class)
+          .renderNewSubareaAppointment(portalAssetId));
+    };
 
     var assetName = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType)
         .orElseThrow(() -> new ResponseStatusException(
@@ -127,8 +171,7 @@ public class NewAppointmentController {
         .addObject("assetName", assetName)
         .addObject("assetTypeDisplayName", portalAssetType.getDisplayName())
         .addObject("assetTypeSentenceCaseDisplayName", portalAssetType.getSentenceCaseDisplayName())
-        .addObject("submitUrl", ReverseRouter.route(on(NewAppointmentController.class)
-            .createNewInstallationAppointment(portalAssetId, null, null)))
+        .addObject("submitUrl", submitUrl)
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchAllPortalOrganisations(null)))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
