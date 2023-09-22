@@ -6,6 +6,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -27,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
@@ -46,6 +48,7 @@ public class NewAppointmentController {
 
   private final PortalAssetRetrievalService portalAssetRetrievalService;
   private final AppointmentCorrectionService appointmentCorrectionService;
+  private final AppointmentService appointmentService;
   private final AssetPersistenceService assetPersistenceService;
   private final ControllerHelperService controllerHelperService;
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
@@ -55,6 +58,7 @@ public class NewAppointmentController {
   @Autowired
   public NewAppointmentController(PortalAssetRetrievalService portalAssetRetrievalService,
                                   AppointmentCorrectionService appointmentCorrectionService,
+                                  AppointmentService appointmentService,
                                   AssetPersistenceService assetPersistenceService,
                                   ControllerHelperService controllerHelperService,
                                   AppointmentCorrectionValidator appointmentCorrectionValidator,
@@ -62,6 +66,7 @@ public class NewAppointmentController {
                                   NominationDetailService nominationDetailService) {
     this.portalAssetRetrievalService = portalAssetRetrievalService;
     this.appointmentCorrectionService = appointmentCorrectionService;
+    this.appointmentService = appointmentService;
     this.assetPersistenceService = assetPersistenceService;
     this.controllerHelperService = controllerHelperService;
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
@@ -94,7 +99,15 @@ public class NewAppointmentController {
         bindingResult,
         getNewAppointmentForm(portalAssetId, assetType, form),
         form,
-        () -> ReverseRouter.redirect(on(NewAppointmentController.class).renderNewInstallationAppointment(portalAssetId))
+        () -> {
+          appointmentService.addManualAppointment(form, assetDto);
+          return switch (assetType) {
+            case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
+                .renderInstallationTimeline(portalAssetId));
+            // TODO OSDOP-158 - Redirect to relevant endpoints
+            default -> throw new NotImplementedException();
+          };
+        }
     );
   }
 

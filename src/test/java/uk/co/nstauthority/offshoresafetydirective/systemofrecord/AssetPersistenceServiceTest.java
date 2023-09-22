@@ -170,7 +170,7 @@ class AssetPersistenceServiceTest {
 
     doAnswer(invocation -> invocation.getArgument(0))
         .when(assetRepository)
-        .save(any());
+        .save(any(Asset.class));
 
     var result = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
 
@@ -233,7 +233,7 @@ class AssetPersistenceServiceTest {
             assetName
         );
 
-    verify(assetRepository, never()).saveAll(any());
+    verify(assetRepository, never()).save(any());
     verifyNoInteractions(portalAssetRetrievalService);
   }
 

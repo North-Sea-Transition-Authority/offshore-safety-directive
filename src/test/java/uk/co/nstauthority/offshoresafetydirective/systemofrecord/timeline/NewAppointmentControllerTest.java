@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -296,8 +298,11 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NewAppointmentController.class).renderNewInstallationAppointment(portalAssetId))
+            ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(portalAssetId))
         ));
+
+    verify(appointmentService).addManualAppointment(any(), eq(assetDto));
   }
 
   @Test
