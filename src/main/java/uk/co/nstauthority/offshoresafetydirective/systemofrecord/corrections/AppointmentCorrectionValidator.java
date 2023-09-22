@@ -32,7 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
-class AppointmentCorrectionValidator implements SmartValidator {
+public class AppointmentCorrectionValidator implements SmartValidator {
 
   private static final String PHASES_FIELD_NAME = "phases";
   private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
@@ -95,7 +95,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
     optionalAppointmentType.ifPresentOrElse(
         appointmentType -> {
           var appointments = appointmentAccessService.getAppointmentDtosForAsset(
-              hint.appointmentDto().assetDto().assetId()
+              hint.assetId()
           );
 
           validateAppointmentType(bindingResult, form, hint, appointmentType, appointments);
@@ -156,7 +156,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
 
     if (appointmentType.equals(AppointmentType.DEEMED)) {
       var hasExistingDeemedAppointments = appointments.stream()
-          .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentDto().appointmentId()))
+          .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentId()))
           .anyMatch(appointmentDto -> AppointmentType.DEEMED.equals(appointmentDto.appointmentType()));
 
       if (hasExistingDeemedAppointments) {
@@ -214,7 +214,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
             "Select at least one activity phase"
         );
       } else {
-        var clazz = PortalAssetTypeUtil.getEnumPhaseClass(hint.appointmentDto().assetDto().portalAssetType());
+        var clazz = PortalAssetTypeUtil.getEnumPhaseClass(hint.portalAssetType());
         var hasOnlyValidPhaseValues = Arrays.stream(clazz.getEnumConstants())
             .map(DisplayableEnumOption::getFormValue)
             .collect(Collectors.toSet())
@@ -229,7 +229,7 @@ class AppointmentCorrectionValidator implements SmartValidator {
         }
       }
 
-      if (PortalAssetType.SUBAREA.equals(hint.appointmentDto().assetDto().portalAssetType())) {
+      if (PortalAssetType.SUBAREA.equals(hint.portalAssetType())) {
         if (formPhases.size() == 1 && formPhases.contains(WellPhase.DECOMMISSIONING.name())) {
           bindingResult.rejectValue(
               PHASES_FIELD_NAME,

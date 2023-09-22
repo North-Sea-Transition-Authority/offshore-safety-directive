@@ -349,7 +349,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(form);
 
     var phaseMap = Map.of("PHASE_1", "phase 1");
-    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
+    when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
         .thenReturn(phaseMap);
 
     var correctionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder().build();
@@ -442,7 +442,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(true);
 
     var phaseMap = Map.of("PHASE_1", "phase 1");
-    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto))
+    when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
         .thenReturn(phaseMap);
 
     var correctionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder().build();
@@ -455,6 +455,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/correction/correctAppointment"))
+        .andExpect(model().attribute("pageTitle", "Update appointment"))
         .andExpect(model().attribute("assetName", assetName))
         .andExpect(model().attribute("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName()))
         .andExpect(model().attribute("submitUrl",
@@ -473,7 +474,8 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
-        .andExpect(model().attribute("cancelUrl", getExpectedRedirect(appointmentDto, portalAssetType)));
+        .andExpect(model().attribute("cancelUrl", getExpectedRedirect(appointmentDto, portalAssetType)))
+        .andExpect(model().attribute("showCorrectionHistory", true));
 
     if (PortalAssetType.SUBAREA.equals(portalAssetType)) {
       modelAndViewAssertions.andExpect(

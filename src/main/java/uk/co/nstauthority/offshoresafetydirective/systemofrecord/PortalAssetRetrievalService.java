@@ -53,4 +53,18 @@ public class PortalAssetRetrievalService {
   public Optional<LicenceDto> getLicence(LicenceId licenceId) {
     return licenceQueryService.getLicenceById(licenceId);
   }
+
+  public Optional<String> getAssetName(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+    var portalAssetIdAsInt = Integer.parseInt(portalAssetId.id());
+    return switch (portalAssetType) {
+      case INSTALLATION -> getInstallation(new InstallationId(portalAssetIdAsInt))
+          .map(InstallationDto::name);
+      case WELLBORE -> getWellbore(new WellboreId(portalAssetIdAsInt))
+          .map(WellDto::name);
+      case SUBAREA -> getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id()))
+          .map(LicenceBlockSubareaDto::displayName);
+    };
+  }
+
+
 }

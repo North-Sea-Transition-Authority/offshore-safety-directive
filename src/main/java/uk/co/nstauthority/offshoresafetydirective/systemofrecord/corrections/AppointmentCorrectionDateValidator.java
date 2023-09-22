@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDa
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 
 @Service
-class AppointmentCorrectionDateValidator {
+public class AppointmentCorrectionDateValidator {
 
   public static final LocalDate DEEMED_DATE = LocalDate.of(2015, Month.JULY, 19);
 
@@ -45,7 +45,7 @@ class AppointmentCorrectionDateValidator {
         : Optional.empty();
     var endDate = optionalEndDate.orElse(LocalDate.now());
     var otherAppointments = appointments.stream()
-        .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentDto().appointmentId()))
+        .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentId()))
         .toList();
 
     validateAppointmentStartDate(form, appointmentType, bindingResult);

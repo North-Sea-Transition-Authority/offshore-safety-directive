@@ -70,7 +70,11 @@ class AppointmentServiceTest {
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetailDto));
 
-    var appointments = appointmentService.addAppointments(nominationDetail, newAppointmentConfirmationDate, List.of(asset));
+    var appointments = appointmentService.addAppointments(
+        nominationDetail,
+        newAppointmentConfirmationDate,
+        List.of(asset)
+    );
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Appointment>> appointmentsPersisted = ArgumentCaptor.forClass(List.class);

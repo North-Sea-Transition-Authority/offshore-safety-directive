@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
 
 @Service
-class AppointmentService {
+public class AppointmentService {
 
   private final AppointmentRepository appointmentRepository;
   private final NomineeDetailAccessService nomineeDetailAccessService;

@@ -18,6 +18,13 @@
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
 >
+    <#if newAppointmentUrl?has_content>
+      <@fdsAction.link
+        linkText="Add appointment"
+        linkClass="govuk-button"
+        linkUrl=springUrl(newAppointmentUrl)
+      />
+  </#if>
   <#if timelineItemViews?has_content>
     <@fdsTimeline.timeline>
       <@fdsTimeline.timelineSection>

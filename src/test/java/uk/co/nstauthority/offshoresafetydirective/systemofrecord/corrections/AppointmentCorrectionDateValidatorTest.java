@@ -39,7 +39,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -78,7 +82,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -104,7 +112,11 @@ class AppointmentCorrectionDateValidatorTest {
     startDateInput.getDayInput().setInputValue("a");
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -185,7 +197,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(startDate);
     form.getEndDate().setDate(endDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -226,7 +242,11 @@ class AppointmentCorrectionDateValidatorTest {
         .withEndDate(endDate)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -271,7 +291,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(DEEMED_DATE);
     form.getEndDate().setDate(endDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -296,7 +320,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
     form.getEndDate().setDate(endDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -319,7 +347,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(DEEMED_DATE);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -341,7 +373,11 @@ class AppointmentCorrectionDateValidatorTest {
         .withHasEndDate(false)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -367,7 +403,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(date);
     form.getEndDate().setDate(date);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -391,7 +431,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
     form.getEndDate().setDate(DEEMED_DATE);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -415,7 +459,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
     getAssociatedStartDateInput(form, appointmentType).setDate(startDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -474,7 +522,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -516,7 +568,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -556,7 +612,11 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -602,7 +662,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -644,7 +708,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -695,7 +763,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -746,7 +818,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -794,7 +870,11 @@ class AppointmentCorrectionDateValidatorTest {
     getAssociatedStartDateInput(form, appointmentType).setDate(testCaseStartDate);
     form.getEndDate().setDate(testCaseEndDate);
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(testCaseAppointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        testCaseAppointmentDto.appointmentId(),
+        testCaseAppointmentDto.assetDto().assetId(),
+        testCaseAppointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(
         form,
@@ -831,7 +911,11 @@ class AppointmentCorrectionDateValidatorTest {
     form.getOnlineAppointmentStartDate().getDayInput().setInputValue("a");
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(form, bindingResult, hint, appointmentType, List.of());
 
@@ -852,7 +936,11 @@ class AppointmentCorrectionDateValidatorTest {
     form.getOnlineAppointmentStartDate().getDayInput().setInputValue("a");
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(form, bindingResult, hint, appointmentType, List.of());
 
@@ -873,7 +961,11 @@ class AppointmentCorrectionDateValidatorTest {
     form.getOnlineAppointmentStartDate().setDate(LocalDate.now());
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionDateValidator.validateDates(form, bindingResult, hint, appointmentType, List.of());
 

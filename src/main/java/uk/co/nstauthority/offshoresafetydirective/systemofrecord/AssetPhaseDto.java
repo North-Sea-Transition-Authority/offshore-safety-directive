@@ -1,10 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-import java.util.List;
+import java.util.Collection;
 
 record AssetPhaseDto(
     Asset asset,
     Appointment appointment,
-    List<String> phases
+    Collection<String> phases
 ) {
 }

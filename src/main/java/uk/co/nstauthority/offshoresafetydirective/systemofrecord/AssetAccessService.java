@@ -14,8 +14,8 @@ public class AssetAccessService {
     this.assetRepository = assetRepository;
   }
 
-  public Optional<AssetDto> getAsset(PortalAssetId assetId) {
-    return assetRepository.findByPortalAssetId(assetId.id())
+  public Optional<AssetDto> getAsset(PortalAssetId assetId, PortalAssetType portalAssetType) {
+    return assetRepository.findByPortalAssetIdAndPortalAssetType(assetId.id(), portalAssetType)
         .map(AssetDto::fromAsset);
   }
 }

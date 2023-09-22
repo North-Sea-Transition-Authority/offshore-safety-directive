@@ -2,6 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -150,5 +153,55 @@ class PortalAssetRetrievalServiceTest {
     var resultingLicence = portalAssetRetrievalService.getLicence(licenceId);
 
     assertThat(resultingLicence).isEmpty();
+  }
+
+  @Test
+  void getAssetName_whenInstallation_thenInstallationNameReturned() {
+    var portalAssetIdAsInt = 123;
+    var portalAssetId = new PortalAssetId(String.valueOf(portalAssetIdAsInt));
+    var portalAssetType = PortalAssetType.INSTALLATION;
+
+    var expectedName = "asset name";
+    var installationDto = InstallationDtoTestUtil.builder()
+        .withName(expectedName)
+        .build();
+    when(installationQueryService.getInstallation(new InstallationId(portalAssetIdAsInt)))
+        .thenReturn(Optional.of(installationDto));
+
+    var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
+    assertThat(result).contains(expectedName);
+  }
+
+  @Test
+  void getAssetName_whenWellbore_thenWellboreNameReturned() {
+    var portalAssetIdAsInt = 123;
+    var portalAssetId = new PortalAssetId(String.valueOf(portalAssetIdAsInt));
+    var portalAssetType = PortalAssetType.WELLBORE;
+
+    var registrationNumber = "asset name";
+    var wellboreDto = WellDtoTestUtil.builder()
+        .withRegistrationNumber(registrationNumber)
+        .build();
+    when(wellQueryService.getWell(new WellboreId(portalAssetIdAsInt)))
+        .thenReturn(Optional.of(wellboreDto));
+
+    var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
+    assertThat(result).contains(registrationNumber);
+  }
+
+  @Test
+  void getAssetName_whenSubarea_thenSubareaNameReturned() {
+    var portalAssetId = new PortalAssetId("123");
+    var portalAssetType = PortalAssetType.SUBAREA;
+
+    var expectedName = "asset name";
+    var subareaDto = mock(LicenceBlockSubareaDto.class);
+    when(subareaDto.displayName()).thenReturn(expectedName);
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id())))
+        .thenReturn(Optional.of(subareaDto));
+
+    var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
+    assertThat(result).contains(expectedName);
   }
 }

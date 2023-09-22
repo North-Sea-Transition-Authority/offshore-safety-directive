@@ -52,7 +52,7 @@ class AssetTimelineServiceTest {
     given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -72,7 +72,7 @@ class AssetTimelineServiceTest {
     given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
         .willReturn(Optional.of(new AssetName("from portal")));
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -99,7 +99,7 @@ class AssetTimelineServiceTest {
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -118,11 +118,13 @@ class AssetTimelineServiceTest {
 
     var portalAssetId = new PortalAssetId("something from system of record");
 
+    var portalAssetType = PortalAssetType.INSTALLATION;
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -138,11 +140,13 @@ class AssetTimelineServiceTest {
   void getAppointmentHistoryForPortalAsset_whenMultipleItems_thenOrderedByDescendingEventDate() {
     var portalAssetId = new PortalAssetId("something from system of record");
 
+    var portalAssetType = PortalAssetType.INSTALLATION;
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var firstAppointmentByEventDate = AppointmentTestUtil.builder()
@@ -213,11 +217,13 @@ class AssetTimelineServiceTest {
   void getAppointmentHistoryForPortalAsset_whenMultipleItemsWithSameEventDate_thenOrderedByDescendingCreationDateTime() {
     var portalAssetId = new PortalAssetId("something from system of record");
 
+    var portalAssetType = PortalAssetType.INSTALLATION;
     var assetInSystemOfRecord = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId))
+    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     Instant instant = Instant.now();

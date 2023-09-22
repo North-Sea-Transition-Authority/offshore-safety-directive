@@ -9,17 +9,17 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 
-class AppointmentCorrectionFormTestUtil {
+public class AppointmentCorrectionFormTestUtil {
 
   private AppointmentCorrectionFormTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private Integer appointedOperatorId = 123;
     private Boolean forAllPhases = false;
@@ -37,78 +37,78 @@ class AppointmentCorrectionFormTestUtil {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
     }
 
-    Builder withAppointedOperatorId(Integer appointedOperatorId) {
+    public Builder withAppointedOperatorId(Integer appointedOperatorId) {
       this.appointedOperatorId = appointedOperatorId;
       return this;
     }
 
-    Builder withForAllPhases(Boolean forAllPhases) {
+    public Builder withForAllPhases(Boolean forAllPhases) {
       this.forAllPhases = forAllPhases;
       return this;
     }
 
-    Builder withPhase(String phase) {
+    public Builder withPhase(String phase) {
         this.phases.add(phase);
         return this;
     }
 
-    Builder withPhases(Set<String> phases) {
+    public Builder withPhases(Set<String> phases) {
       this.phases = phases;
       return this;
     }
 
-    Builder withAppointmentType(AppointmentType appointmentType) {
+    public Builder withAppointmentType(AppointmentType appointmentType) {
       this.appointmentType = appointmentType.name();
       return this;
     }
 
-    Builder withAppointmentType(String appointmentType) {
+    public Builder withAppointmentType(String appointmentType) {
       this.appointmentType = appointmentType;
       return this;
     }
 
-    Builder withHasEndDate(Boolean hasEndDate) {
+    public Builder withHasEndDate(Boolean hasEndDate) {
       this.hasEndDate = hasEndDate;
       return this;
     }
 
-    Builder withOfflineNominationReference(String offlineNominationReference) {
+    public Builder withOfflineNominationReference(String offlineNominationReference) {
       this.offlineNominationReference = offlineNominationReference;
       return this;
     }
 
-    Builder withOnlineNominationReference(String onlineNominationReference) {
+    public Builder withOnlineNominationReference(String onlineNominationReference) {
       this.onlineNominationReference = onlineNominationReference;
       return this;
     }
 
-    Builder withOfflineStartDate(LocalDate offlineStartDate) {
+    public Builder withOfflineStartDate(LocalDate offlineStartDate) {
       this.offlineStartDate = offlineStartDate;
       return this;
     }
 
-    Builder withOnlineStartDate(LocalDate onlineStartDate) {
+    public Builder withOnlineStartDate(LocalDate onlineStartDate) {
       this.onlineStartDate = onlineStartDate;
       return this;
     }
 
-    Builder withStartDate(LocalDate localDate) {
+    public Builder withStartDate(LocalDate localDate) {
       this.onlineStartDate = localDate;
       this.offlineStartDate = localDate;
       return this;
     }
 
-    Builder withEndDate(LocalDate localDate) {
+    public Builder withEndDate(LocalDate localDate) {
       this.endDate = localDate;
       return this;
     }
 
-    Builder withCorrectionReason(String correctionReason) {
+    public Builder withCorrectionReason(String correctionReason) {
       this.correctionReason = correctionReason;
       return this;
     }
 
-    AppointmentCorrectionForm build() {
+    public AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
       form.setForAllPhases(forAllPhases);

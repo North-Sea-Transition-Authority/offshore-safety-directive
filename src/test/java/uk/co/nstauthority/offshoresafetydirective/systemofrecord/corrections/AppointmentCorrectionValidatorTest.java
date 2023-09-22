@@ -116,7 +116,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -157,7 +161,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -198,7 +206,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
@@ -235,7 +247,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     when(portalOrganisationUnitQueryService.getOrganisationById(100))
         .thenReturn(Optional.empty());
@@ -275,7 +291,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -319,7 +339,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -364,7 +388,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -405,7 +433,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -454,7 +486,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -499,7 +535,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -537,7 +577,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -593,7 +637,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -629,7 +677,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var duplicatePortalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
         .isDuplicate(true)
@@ -674,7 +726,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -713,7 +769,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -747,7 +807,11 @@ class AppointmentCorrectionValidatorTest {
         .withAppointmentType(appointmentType)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -794,7 +858,11 @@ class AppointmentCorrectionValidatorTest {
         .withAppointmentType(appointmentType)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
@@ -830,7 +898,11 @@ class AppointmentCorrectionValidatorTest {
 
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionValidator.validate(
         form,
@@ -860,7 +932,11 @@ class AppointmentCorrectionValidatorTest {
 
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
@@ -898,7 +974,11 @@ class AppointmentCorrectionValidatorTest {
         .withAssetDto(assetDto)
         .build();
 
-    var hint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        assetDto.assetId(),
+        assetDto.portalAssetType()
+    );
 
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 

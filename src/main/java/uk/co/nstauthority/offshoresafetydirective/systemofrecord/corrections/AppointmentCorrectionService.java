@@ -34,8 +34,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
@@ -112,15 +112,15 @@ public class AppointmentCorrectionService {
             () -> form.setHasEndDate(false)
         );
 
-    var selectablePhases = getSelectablePhaseMap(appointmentDto.assetDto());
+    var selectablePhases = getSelectablePhaseMap(appointmentDto.assetDto().portalAssetType());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
     form.setForAllPhases(allPhasesSelected);
 
     return form;
   }
 
-  Map<String, String> getSelectablePhaseMap(AssetDto assetDto) {
-    var phaseClass = PortalAssetTypeUtil.getEnumPhaseClass(assetDto.portalAssetType());
+  public Map<String, String> getSelectablePhaseMap(PortalAssetType portalAssetType) {
+    var phaseClass = PortalAssetTypeUtil.getEnumPhaseClass(portalAssetType);
     return DisplayableEnumOptionUtil.getDisplayableOptions(phaseClass);
   }
 

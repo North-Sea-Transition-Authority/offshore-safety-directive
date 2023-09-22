@@ -1,11 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.Collection;
 import java.util.List;
 
-record NominatedAssetDto(
+public record NominatedAssetDto(
     PortalAssetId portalAssetId,
     PortalAssetType portalAssetType,
     AssetName portalAssetName,
-    List<String> phases
+    Collection<String> phases
 ) {
+
+  public NominatedAssetDto(PortalAssetId portalAssetId, PortalAssetType portalAssetType, AssetName portalAssetName) {
+    this(portalAssetId, portalAssetType, portalAssetName, List.of());
+  }
 }

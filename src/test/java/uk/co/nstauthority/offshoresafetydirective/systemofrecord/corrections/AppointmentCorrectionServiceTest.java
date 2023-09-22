@@ -835,7 +835,7 @@ class AppointmentCorrectionServiceTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .build();
-    var result = appointmentCorrectionService.getSelectablePhaseMap(assetDto);
+    var result = appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType());
     assertThat(result.entrySet())
         .containsExactly(
             Map.entry(
@@ -865,7 +865,7 @@ class AppointmentCorrectionServiceTest {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    var result = appointmentCorrectionService.getSelectablePhaseMap(assetDto);
+    var result = appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType());
     assertThat(result.entrySet())
         .containsExactly(
             Map.entry(

@@ -9,13 +9,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class AssetPersistenceService {
+public class AssetPersistenceService {
 
   private final AssetRepository assetRepository;
+  private final PortalAssetRetrievalService portalAssetRetrievalService;
+  private final AssetAccessService assetAccessService;
 
   @Autowired
-  AssetPersistenceService(AssetRepository assetRepository) {
+  AssetPersistenceService(AssetRepository assetRepository, PortalAssetRetrievalService portalAssetRetrievalService,
+                          AssetAccessService assetAccessService) {
     this.assetRepository = assetRepository;
+    this.portalAssetRetrievalService = portalAssetRetrievalService;
+    this.assetAccessService = assetAccessService;
   }
 
   @Transactional
@@ -30,6 +35,40 @@ class AssetPersistenceService {
     }
 
     return Stream.concat(existingAssets.stream(), savedAssets).toList();
+  }
+
+  @Transactional
+  public Asset persistNominatedAsset(NominatedAssetDto nominatedAssetDto) {
+    var asset = createAssetEntity(nominatedAssetDto);
+    return assetRepository.save(asset);
+  }
+
+  @Transactional
+  public AssetDto getOrCreateAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+
+    var existingAsset = assetAccessService.getAsset(portalAssetId, portalAssetType);
+
+    var assetName = existingAsset
+        .map(AssetDto::assetName)
+        .map(AssetName::value)
+        .or(() -> portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+        .orElseThrow(() -> new IllegalStateException(
+            "No portal asset of type [%s] found with ID [%s]".formatted(
+                portalAssetType,
+                portalAssetId.id()
+            )
+        ));
+
+    return existingAsset.orElseGet(() -> {
+      var nominatedAssetDto = new NominatedAssetDto(
+          portalAssetId,
+          portalAssetType,
+          new AssetName(assetName)
+      );
+
+      var persistedAsset = persistNominatedAsset(nominatedAssetDto);
+      return AssetDto.fromAsset(persistedAsset);
+    });
   }
 
   private List<Asset> getExistingAssets(Collection<NominatedAssetDto> nominatedAssetDtos) {

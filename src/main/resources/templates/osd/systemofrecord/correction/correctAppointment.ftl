@@ -11,9 +11,11 @@
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="correctionHistoryViews" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView>" -->
+<#-- @ftlvariable name="pageTitle" type="String" -->
+<#-- @ftlvariable name="showCorrectionHistory" type="Boolean" -->
 
 <@defaultPage
-    pageHeading="Update appointment"
+    pageHeading=pageTitle
     pageHeadingCaption="${assetName} - ${assetTypeDisplayName}"
     errorItems=errorList
     pageSize=PageSize.TWO_THIRDS_COLUMN
@@ -137,9 +139,11 @@
             </ul>
         </@fdsDetails.summaryDetails>
 
-        <@fdsDetails.summaryDetails summaryTitle="View correction history">
-            <@correctionHistoryTimeline.correctionHistory correctionHistoryViews=correctionHistoryViews />
-        </@fdsDetails.summaryDetails>
+        <#if showCorrectionHistory!false>
+            <@fdsDetails.summaryDetails summaryTitle="View correction history">
+                <@correctionHistoryTimeline.correctionHistory correctionHistoryViews=correctionHistoryViews![] />
+            </@fdsDetails.summaryDetails>
+        </#if>
 
         <@fdsAction.submitButtons
             primaryButtonText="Submit"

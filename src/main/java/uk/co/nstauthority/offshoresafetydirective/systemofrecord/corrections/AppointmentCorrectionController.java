@@ -93,7 +93,11 @@ public class AppointmentCorrectionController {
 
     var appointment = getAppointment(appointmentId);
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
-    var validatorHint = new AppointmentCorrectionValidationHint(appointmentDto);
+    var validatorHint = new AppointmentCorrectionValidationHint(
+        appointmentId,
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
@@ -152,6 +156,7 @@ public class AppointmentCorrectionController {
     var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
 
     var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
+        .addObject("pageTitle", "Update appointment")
         .addObject("assetName", assetName.value())
         .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
         .addObject("assetTypeSentenceCaseDisplayName", assetDto.portalAssetType().getSentenceCaseDisplayName())
@@ -160,7 +165,7 @@ public class AppointmentCorrectionController {
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchAllPortalOrganisations(null)))
         .addObject("preselectedOperator", getPreselectedOperator(form))
-        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto))
+        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
         .addObject("appointmentTypes", appointmentTypes)
         .addObject("correctionHistoryViews", correctionHistoryViews)
         .addObject("form", form)
@@ -168,7 +173,8 @@ public class AppointmentCorrectionController {
         .addObject(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
-        );
+        )
+        .addObject("showCorrectionHistory", true);
 
     if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
         && form.getOnlineNominationReference() != null) {
