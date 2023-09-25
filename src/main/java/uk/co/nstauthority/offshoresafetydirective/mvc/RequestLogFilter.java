@@ -57,7 +57,6 @@ public class RequestLogFilter extends OncePerRequestFilter {
       String queryString = StringUtils.defaultString(request.getQueryString());
       if (queryString.length() > 0) {
         queryString = "?" + queryString;
-
       }
 
       Long hibernateQueryCount = hibernateQueryCounter.getQueryCount();

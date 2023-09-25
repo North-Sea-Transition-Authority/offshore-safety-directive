@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,11 +25,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.consultee.NominationConsulteeViewController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
@@ -82,11 +86,30 @@ public class AppointmentTimelineItemService {
     this.appointmentTerminationService = appointmentTerminationService;
   }
 
-  public List<AssetTimelineItemView> getTimelineItemViews(List<AppointmentDto> appointments, AssetDto assetDto) {
+  public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
 
     List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
 
-    Map<AppointedOperatorId, PortalOrganisationDto> organisationUnitLookup = getAppointedOperators(appointments);
+    var terminations = appointmentTerminationService.getTerminations(appointments);
+
+    var appointmentDtos = appointments.stream()
+        .map(AppointmentDto::fromAppointment)
+        .toList();
+
+    var nominationIds = appointmentDtos.stream()
+        .map(AppointmentDto::nominationId)
+        .filter(Objects::nonNull)
+        .map(NominationId::id)
+        .toList();
+
+    var nominationIdToReferenceMap = nominationAccessService.getNominations(nominationIds)
+        .stream()
+        .collect(Collectors.toMap(
+            Nomination::getId,
+            nomination -> Optional.ofNullable(nomination.getReference()).orElse("Unknown")
+        ));
+
+    Map<AppointedOperatorId, PortalOrganisationDto> organisationUnitLookup = getAppointedOperators(appointmentDtos);
 
     Map<AppointmentId, List<AssetAppointmentPhase>> appointmentPhases = assetAppointmentPhaseAccessService
         .getAppointmentPhases(assetDto);
@@ -125,7 +148,7 @@ public class AppointmentTimelineItemService {
 
       if (isMemberOfRegulatorTeam) {
 
-        var appointmentIds = appointments.stream().map(AppointmentDto::appointmentId).toList();
+        var appointmentIds = appointmentDtos.stream().map(AppointmentDto::appointmentId).toList();
 
         appointmentCorrectionMap = appointmentCorrectionService
             .getAppointmentCorrectionHistoryViews(appointmentIds)
@@ -134,14 +157,13 @@ public class AppointmentTimelineItemService {
       }
     }
 
-    var appointmentTimelineItemDto = AppointmentTimelineItemDto.builder()
+    var appointmentTimelineItemDtoBuilder = AppointmentTimelineItemDto.builder()
         .withCanManageAppointments(canManageAppointments)
         .withMemberOfRegulatorTeam(isMemberOfRegulatorTeam)
         .withCanViewNominations(canViewNominations)
-        .withCanViewConsultations(canViewConsultations)
-        .build();
+        .withCanViewConsultations(canViewConsultations);
 
-    for (AppointmentDto appointment : appointments) {
+    for (AppointmentDto appointment : appointmentDtos) {
 
       var operatorName = Optional.ofNullable(organisationUnitLookup.get(appointment.appointedOperatorId()))
           .map(PortalOrganisationDto::name)
@@ -155,12 +177,20 @@ public class AppointmentTimelineItemService {
       var corrections = Optional.ofNullable(appointmentCorrectionMap.getOrDefault(appointment.appointmentId(), null))
           .orElse(Collections.emptyList());
 
+      var isTerminated = terminations.stream()
+          .anyMatch(termination ->
+              termination.getAppointment().getId()
+                  .equals(appointment.appointmentId().id()));
+
+      var appointmentTimelineItemDto = appointmentTimelineItemDtoBuilder.isTerminated(isTerminated).build();
+
       var appointmentView = convertToTimelineItemView(
           appointment,
           operatorName,
           phases,
           corrections,
-          appointmentTimelineItemDto
+          appointmentTimelineItemDto,
+          nominationIdToReferenceMap
       );
 
       timelineItemViews.add(appointmentView);
@@ -190,7 +220,8 @@ public class AppointmentTimelineItemService {
                                                           String operatorName,
                                                           List<AssetAppointmentPhase> phases,
                                                           List<AppointmentCorrectionHistoryView> corrections,
-                                                          AppointmentTimelineItemDto appointmentTimelineItemDto) {
+                                                          AppointmentTimelineItemDto appointmentTimelineItemDto,
+                                                          Map<UUID, String> nominationIdToReferenceMap) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", appointmentDto.appointmentId())
@@ -207,16 +238,14 @@ public class AppointmentTimelineItemService {
       case ONLINE_NOMINATION -> addOnlineNominationModelProperties(
           modelProperties,
           appointmentDto,
-          appointmentTimelineItemDto
+          appointmentTimelineItemDto,
+          nominationIdToReferenceMap
       );
       case OFFLINE_NOMINATION -> addOfflineNominationModelProperties(modelProperties, appointmentDto);
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
-    var hasNotBeenTerminated =
-        appointmentTerminationService.hasNotBeenTerminated(new AppointmentId(appointmentDto.appointmentId().id()));
-
-    if (appointmentTimelineItemDto.canManageAppointments() && hasNotBeenTerminated) {
+    if (appointmentTimelineItemDto.canManageAppointments() && !appointmentTimelineItemDto.isTerminated()) {
       modelProperties.addProperty(
           "updateUrl",
           ReverseRouter.route(
@@ -243,14 +272,19 @@ public class AppointmentTimelineItemService {
 
   private void addOnlineNominationModelProperties(AssetTimelineModelProperties modelProperties,
                                                   AppointmentDto appointmentDto,
-                                                  AppointmentTimelineItemDto appointmentTimelineItemDto) {
+                                                  AppointmentTimelineItemDto appointmentTimelineItemDto,
+                                                  Map<UUID, String> nominationIdToReferenceMap) {
     Optional.ofNullable(getNominationUrl(appointmentDto, appointmentTimelineItemDto))
         .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
 
-    var nominationReference = nominationAccessService
-        .getNomination(appointmentDto.nominationId())
-        .map(NominationDto::nominationReference)
-        .orElse("Unknown");
+    String nominationReference;
+
+    if (appointmentDto.nominationId() == null) {
+      nominationReference = "Unknown";
+    } else {
+      nominationReference = nominationIdToReferenceMap
+          .getOrDefault(appointmentDto.nominationId().id(), "Unknown");
+    }
 
     modelProperties.addProperty("createdByReference", nominationReference);
   }

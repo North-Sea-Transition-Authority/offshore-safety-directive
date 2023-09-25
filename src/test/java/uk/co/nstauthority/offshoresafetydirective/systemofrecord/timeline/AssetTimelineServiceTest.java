@@ -14,7 +14,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
@@ -159,13 +158,10 @@ class AssetTimelineServiceTest {
         .withResponsibleFromDate(LocalDate.of(2023, 8, 18))
         .build();
 
-    var appointmentDto1 = AppointmentDto.fromAppointment(firstAppointmentByEventDate);
-    var appointmentDto2 = AppointmentDto.fromAppointment(secondAppointmentByEventDate);
-
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(firstAppointmentByEventDate, secondAppointmentByEventDate));
 
-    given(appointmentTimelineItemService.getTimelineItemViews(List.of(appointmentDto1, appointmentDto2), assetInSystemOfRecord))
+    given(appointmentTimelineItemService.getTimelineItemViews(List.of(firstAppointmentByEventDate, secondAppointmentByEventDate), assetInSystemOfRecord))
         .willReturn(
             List.of(
                 new AssetTimelineItemView(
@@ -173,14 +169,14 @@ class AssetTimelineServiceTest {
                     "appointment 1",
                     new AssetTimelineModelProperties(),
                     Instant.now(),
-                    appointmentDto1.appointmentFromDate().value()
+                    firstAppointmentByEventDate.getResponsibleFromDate()
                 ),
                 new AssetTimelineItemView(
                     TimelineEventType.APPOINTMENT,
                     "appointment 2",
                     new AssetTimelineModelProperties(),
                     Instant.now(),
-                    appointmentDto2.appointmentFromDate().value()
+                    secondAppointmentByEventDate.getResponsibleFromDate()
                 )
             )
         );
@@ -207,9 +203,9 @@ class AssetTimelineServiceTest {
     assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
         .extracting(AssetTimelineItemView::eventDate)
         .containsExactly(
-            appointmentDto2.appointmentFromDate().value(),
+            secondAppointmentByEventDate.getResponsibleFromDate(),
             terminationOfFirstAppointment.getTerminationDate(),
-            appointmentDto1.appointmentFromDate().value()
+            firstAppointmentByEventDate.getResponsibleFromDate()
         );
   }
 
@@ -253,13 +249,10 @@ class AssetTimelineServiceTest {
         .withCreatedDatetime(secondAppointmentInstant)
         .build();
 
-    var appointmentDto1 = AppointmentDto.fromAppointment(firstAppointmentByCreatedTimestamp);
-    var appointmentDto2 = AppointmentDto.fromAppointment(secondAppointmentByCreatedTimestamp);
-
     given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(firstAppointmentByCreatedTimestamp, secondAppointmentByCreatedTimestamp));
 
-    given(appointmentTimelineItemService.getTimelineItemViews(List.of(appointmentDto1, appointmentDto2), assetInSystemOfRecord))
+    given(appointmentTimelineItemService.getTimelineItemViews(List.of(firstAppointmentByCreatedTimestamp, secondAppointmentByCreatedTimestamp), assetInSystemOfRecord))
         .willReturn(
             List.of(
                 new AssetTimelineItemView(
@@ -301,9 +294,9 @@ class AssetTimelineServiceTest {
     assertThat(resultingAppointmentTimelineHistory.get().timelineItemViews())
         .extracting(AssetTimelineItemView::createdInstant)
         .containsExactly(
-            appointmentDto2.appointmentCreatedDate(),
+            secondAppointmentByCreatedTimestamp.getCreatedDatetime(),
             terminationOfFirstAppointment.getCreatedTimestamp(),
-            appointmentDto1.appointmentCreatedDate()
+            firstAppointmentByCreatedTimestamp.getCreatedDatetime()
         );
   }
 }

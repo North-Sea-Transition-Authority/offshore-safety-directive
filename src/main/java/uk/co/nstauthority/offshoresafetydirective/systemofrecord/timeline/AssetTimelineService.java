@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
@@ -55,15 +54,9 @@ class AssetTimelineService {
       var assetDto = assetOptional.get();
 
       var appointments = appointmentAccessService.getAppointmentsForAsset(assetDto.assetId());
-      var appointmentDtos = appointments.stream()
-          .map(AppointmentDto::fromAppointment)
-          .toList();
-
-      if (!appointmentDtos.isEmpty()) {
-        timelineItemViews.addAll(appointmentTimelineItemService.getTimelineItemViews(appointmentDtos, assetDto));
-      }
 
       if (!CollectionUtils.isEmpty(appointments)) {
+        timelineItemViews.addAll(appointmentTimelineItemService.getTimelineItemViews(appointments, assetDto));
         timelineItemViews.addAll(terminationTimelineItemService.getTimelineItemViews(appointments));
       }
 

@@ -69,7 +69,7 @@ public class Appointment {
     this.appointedPortalOperatorId = appointedPortalOperatorId;
   }
 
-  LocalDate getResponsibleFromDate() {
+  public LocalDate getResponsibleFromDate() {
     return responsibleFromDate;
   }
 
@@ -93,7 +93,7 @@ public class Appointment {
     this.appointmentType = appointmentType;
   }
 
-  UUID getCreatedByNominationId() {
+  public UUID getCreatedByNominationId() {
     return createdByNominationId;
   }
 
@@ -117,7 +117,7 @@ public class Appointment {
     this.createdByAppointmentId = createdByAppointmentId;
   }
 
-  Instant getCreatedDatetime() {
+  public Instant getCreatedDatetime() {
     return createdDatetime;
   }
 

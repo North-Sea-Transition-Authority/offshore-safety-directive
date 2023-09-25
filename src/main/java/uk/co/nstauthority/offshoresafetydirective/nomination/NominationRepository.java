@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -17,5 +19,7 @@ interface NominationRepository extends CrudRepository<Nomination, UUID> {
        AND YEAR(nd.submittedInstant) = :year
       """)
   Integer getTotalSubmissionsForYear(int year);
+
+  List<Nomination> findByIdIn(Collection<UUID> nominationIds);
 
 }
