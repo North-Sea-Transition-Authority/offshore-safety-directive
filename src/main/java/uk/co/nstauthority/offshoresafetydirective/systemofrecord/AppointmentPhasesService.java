@@ -11,7 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 public class AppointmentPhasesService {
 
   public List<AssetAppointmentPhase> getDisplayTextAppointmentPhases(AssetDto assetDto,
-                                                              List<AssetAppointmentPhase> assetPhases) {
+                                                                     List<AssetAppointmentPhase> assetPhases) {
     return switch (assetDto.portalAssetType()) {
       case INSTALLATION -> assetPhases
           .stream()

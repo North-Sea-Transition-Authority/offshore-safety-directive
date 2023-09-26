@@ -6,19 +6,16 @@ public class AppointmentTimelineItemDto {
   private final boolean isMemberOfRegulatorTeam;
   private final boolean canViewNominations;
   private final boolean canViewConsultations;
-  private final boolean isTerminated;
 
   private AppointmentTimelineItemDto(boolean canManageAppointments,
                                      boolean isMemberOfRegulatorTeam,
                                      boolean canViewNominations,
-                                     boolean canViewConsultations,
-                                     boolean isTerminated) {
+                                     boolean canViewConsultations) {
 
     this.canManageAppointments = canManageAppointments;
     this.isMemberOfRegulatorTeam = isMemberOfRegulatorTeam;
     this.canViewNominations = canViewNominations;
     this.canViewConsultations = canViewConsultations;
-    this.isTerminated = isTerminated;
   }
 
   public boolean canManageAppointments() {
@@ -37,10 +34,6 @@ public class AppointmentTimelineItemDto {
     return canViewConsultations;
   }
 
-  public boolean isTerminated() {
-    return isTerminated;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
@@ -51,7 +44,6 @@ public class AppointmentTimelineItemDto {
     private boolean isMemberOfRegulatorTeam;
     private boolean canViewNominations;
     private boolean canViewConsultations;
-    private boolean isTerminated;
 
     private Builder() {
     }
@@ -76,18 +68,12 @@ public class AppointmentTimelineItemDto {
       return this;
     }
 
-    public Builder isTerminated(boolean isTerminated) {
-      this.isTerminated = isTerminated;
-      return this;
-    }
-
     public AppointmentTimelineItemDto build() {
       return new AppointmentTimelineItemDto(
           canManageAppointments,
           isMemberOfRegulatorTeam,
           canViewNominations,
-          canViewConsultations,
-          isTerminated
+          canViewConsultations
       );
     }
   }

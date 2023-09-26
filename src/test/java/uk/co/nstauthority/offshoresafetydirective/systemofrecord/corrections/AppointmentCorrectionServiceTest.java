@@ -40,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperat
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
@@ -150,6 +151,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
         .hasFieldOrPropertyWithValue("legacyNominationReference", offlineNominationReference)
         .hasFieldOrPropertyWithValue("nominationId", null)
+        .hasFieldOrPropertyWithValue("appointmentStatus", originalAppointmentDto.appointmentStatus())
         .hasAssertedAllProperties();
 
     verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);
@@ -221,6 +223,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
         .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
         .hasFieldOrPropertyWithValue("legacyNominationReference", null)
+        .hasFieldOrPropertyWithValue("appointmentStatus", originalAppointmentDto.appointmentStatus())
         .hasAssertedAllProperties();
 
     verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);
@@ -244,6 +247,7 @@ class AppointmentCorrectionServiceTest {
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .withCreatedByLegacyNominationReference("legacy/ref")
         .withCreatedByNominationId(nominationId)
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
         .build();
 
     var originalAppointmentDto = AppointmentDto.fromAppointment(originalAppointment);
@@ -287,6 +291,7 @@ class AppointmentCorrectionServiceTest {
         .hasFieldOrPropertyWithValue("assetDto", originalAppointmentDto.assetDto())
         .hasFieldOrPropertyWithValue("nominationId", null)
         .hasFieldOrPropertyWithValue("legacyNominationReference", null)
+        .hasFieldOrPropertyWithValue("appointmentStatus", originalAppointmentDto.appointmentStatus())
         .hasAssertedAllProperties();
 
     verify(assetPhasePersistenceService).updateAssetPhases(originalAppointmentDto, assetAppointmentPhases);

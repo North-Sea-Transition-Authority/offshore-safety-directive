@@ -40,6 +40,8 @@ public class AppointmentDtoTestUtil {
 
     private AssetDto assetDto = AssetDtoTestUtil.builder().build();
 
+    private AppointmentStatus appointmentStatus = AppointmentStatus.EXTANT;
+
     public Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
       return this;
@@ -93,6 +95,11 @@ public class AppointmentDtoTestUtil {
       return this;
     }
 
+    Builder withAppointmentStatus(AppointmentStatus appointmentStatus) {
+      this.appointmentStatus = appointmentStatus;
+      return this;
+    }
+
     public AppointmentDto build() {
       return new AppointmentDto(
           appointmentId,
@@ -103,7 +110,8 @@ public class AppointmentDtoTestUtil {
           appointmentType,
           legacyNominationReference,
           nominationId,
-          assetDto
+          assetDto,
+          appointmentStatus
       );
     }
   }

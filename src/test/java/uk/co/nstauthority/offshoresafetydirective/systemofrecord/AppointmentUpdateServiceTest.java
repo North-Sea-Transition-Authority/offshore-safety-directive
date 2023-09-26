@@ -33,6 +33,7 @@ class AppointmentUpdateServiceTest {
     var appointedOperatorId = 1001;
     var appointmentType = AppointmentType.DEEMED;
     var appointmentId = UUID.randomUUID();
+    var appointmentStatus = AppointmentStatus.EXTANT;
 
     var fromDate = LocalDate.now().minusDays(1);
     var toDate = LocalDate.now();
@@ -49,6 +50,7 @@ class AppointmentUpdateServiceTest {
         .withAppointmentToDate(toDate)
         .withLegacyNominationReference(offlineNominationReference)
         .withNominationId(onlineNominationReference)
+        .withAppointmentStatus(appointmentStatus)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -67,6 +69,7 @@ class AppointmentUpdateServiceTest {
     verify(appointment).setResponsibleToDate(toDate);
     verify(appointment).setCreatedByLegacyNominationReference(null);
     verify(appointment).setCreatedByNominationId(null);
+    verify(appointment).setAppointmentStatus(appointmentStatus);
     verifyNoMoreInteractions(appointment);
   }
 
@@ -75,12 +78,14 @@ class AppointmentUpdateServiceTest {
     var appointedOperatorId = 1001;
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = UUID.randomUUID();
+    var appointmentStatus = AppointmentStatus.EXTANT;
 
     var fromDate = LocalDate.now().minusDays(1);
     var toDate = LocalDate.now();
 
     var offlineNominationReference = "OFFLINE/REF/1";
     var onlineNominationReference = new NominationId(UUID.randomUUID());
+
 
     var appointment = mock(Appointment.class);
     var appointmentDto = AppointmentDtoTestUtil.builder()
@@ -91,6 +96,7 @@ class AppointmentUpdateServiceTest {
         .withAppointmentToDate(toDate)
         .withLegacyNominationReference(offlineNominationReference)
         .withNominationId(onlineNominationReference)
+        .withAppointmentStatus(appointmentStatus)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -109,6 +115,7 @@ class AppointmentUpdateServiceTest {
     verify(appointment).setResponsibleToDate(toDate);
     verify(appointment).setCreatedByLegacyNominationReference(null);
     verify(appointment).setCreatedByNominationId(onlineNominationReference.id());
+    verify(appointment).setAppointmentStatus(appointmentStatus);
     verifyNoMoreInteractions(appointment);
   }
 
@@ -117,6 +124,7 @@ class AppointmentUpdateServiceTest {
     var appointedOperatorId = 1001;
     var appointmentType = AppointmentType.OFFLINE_NOMINATION;
     var appointmentId = UUID.randomUUID();
+    var appointmentStatus = AppointmentStatus.EXTANT;
 
     var fromDate = LocalDate.now().minusDays(1);
     var toDate = LocalDate.now();
@@ -133,6 +141,7 @@ class AppointmentUpdateServiceTest {
         .withAppointmentToDate(toDate)
         .withLegacyNominationReference(offlineNominationReference)
         .withNominationId(onlineNominationReference)
+        .withAppointmentStatus(appointmentStatus)
         .build();
 
     when(appointmentRepository.findById(appointmentId))
@@ -151,6 +160,7 @@ class AppointmentUpdateServiceTest {
     verify(appointment).setResponsibleToDate(toDate);
     verify(appointment).setCreatedByLegacyNominationReference(offlineNominationReference);
     verify(appointment).setCreatedByNominationId(null);
+    verify(appointment).setAppointmentStatus(appointmentStatus);
     verifyNoMoreInteractions(appointment);
   }
 

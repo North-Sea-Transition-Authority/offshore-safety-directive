@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -54,9 +55,9 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AssetTimelineController.class)
-            .renderInstallationTimeline(PORTAL_ASSET_ID))
-        ))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
+            ))
         .andExpect(status().isOk());
   }
 
@@ -70,9 +71,9 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AssetTimelineController.class)
-            .renderWellboreTimeline(PORTAL_ASSET_ID))
-        ))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderWellboreTimeline(PORTAL_ASSET_ID))
+            ))
         .andExpect(status().isOk());
   }
 
@@ -86,9 +87,9 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .willReturn(Optional.of(AssetAppointmentHistoryTestUtil.builder().build()));
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(AssetTimelineController.class)
-            .renderSubareaTimeline(PORTAL_ASSET_ID))
-        ))
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderSubareaTimeline(PORTAL_ASSET_ID))
+            ))
         .andExpect(status().isOk());
   }
 
@@ -336,5 +337,68 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
                 .renderSubareaTimeline(PORTAL_ASSET_ID))
             ))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void determineRouteByPortalAssetType_whenInstallationType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    var result = AssetTimelineController.determineRouteByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result)
+        .isEqualTo(
+            ReverseRouter.route(on(AssetTimelineController.class).renderInstallationTimeline(PORTAL_ASSET_ID))
+        );
+  }
+
+  @Test
+  void determineRouteByPortalAssetType_whenWellboreType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.WELLBORE;
+    var result = AssetTimelineController.determineRouteByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result)
+        .isEqualTo(
+            ReverseRouter.route(on(AssetTimelineController.class).renderWellboreTimeline(PORTAL_ASSET_ID))
+        );
+  }
+
+  @Test
+  void determineRouteByPortalAssetType_whenSubareaType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.SUBAREA;
+    var result = AssetTimelineController.determineRouteByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result)
+        .isEqualTo(
+            ReverseRouter.route(on(AssetTimelineController.class).renderSubareaTimeline(PORTAL_ASSET_ID))
+        );
+  }
+
+  @Test
+  void determineRedirectByPortalAssetType_whenInstallationType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    var result = AssetTimelineController.determineRedirectByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result.getViewName())
+        .isEqualTo(
+            "redirect:" +
+                ReverseRouter.route(on(AssetTimelineController.class).renderInstallationTimeline(PORTAL_ASSET_ID))
+        );
+  }
+
+  @Test
+  void determineRedirectByPortalAssetType_whenWellboreType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.WELLBORE;
+    var result = AssetTimelineController.determineRedirectByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result.getViewName())
+        .isEqualTo(
+            "redirect:" +
+                ReverseRouter.route(on(AssetTimelineController.class).renderWellboreTimeline(PORTAL_ASSET_ID))
+        );
+  }
+
+  @Test
+  void determineRedirectByPortalAssetType_whenSubareaType_thenVerifyRoute() {
+    var portalAssetType = PortalAssetType.SUBAREA;
+    var result = AssetTimelineController.determineRedirectByPortalAssetType(PORTAL_ASSET_ID, portalAssetType);
+    assertThat(result.getViewName())
+        .isEqualTo(
+            "redirect:" +
+                ReverseRouter.route(on(AssetTimelineController.class).renderSubareaTimeline(PORTAL_ASSET_ID))
+        );
   }
 }

@@ -106,6 +106,7 @@ class AppointmentAccessServiceTest {
     var nominationId = UUID.randomUUID();
     var createdDatetime = Instant.now();
     var legacyReference = "legacy reference";
+    var appointmentStatus = AppointmentStatus.EXTANT;
 
     var appointment = AppointmentTestUtil.builder()
         .withId(appointmentId.id())
@@ -118,6 +119,7 @@ class AppointmentAccessServiceTest {
         .withCreatedByLegacyNominationReference(legacyReference)
         .withCreatedByAppointmentId(appointmentId.id())
         .withCreatedDatetime(createdDatetime)
+        .withAppointmentStatus(appointmentStatus)
         .build();
 
     when(appointmentRepository.findById(appointmentId.id()))
@@ -140,6 +142,7 @@ class AppointmentAccessServiceTest {
         .hasFieldOrPropertyWithValue("legacyNominationReference", legacyReference)
         .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
         .hasFieldOrPropertyWithValue("assetDto", AssetDto.fromAsset(asset))
+        .hasFieldOrPropertyWithValue("appointmentStatus", appointmentStatus)
         .hasAssertedAllProperties();
   }
 

@@ -76,6 +76,7 @@ public class AppointmentService {
     appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
     appointment.setCreatedByAppointmentId(null);
     appointment.setCreatedDatetime(clock.instant());
+    appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
 
     var savedAppointment = appointmentRepository.save(appointment);
 
@@ -105,6 +106,7 @@ public class AppointmentService {
       appointment.setAppointmentType(AppointmentType.ONLINE_NOMINATION);
       appointment.setAppointedPortalOperatorId(nomineeDetailDto.nominatedOrganisationId().id());
       appointment.setCreatedDatetime(clock.instant());
+      appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
       newAppointments.add(appointment);
     });
 
@@ -112,6 +114,22 @@ public class AppointmentService {
 
     appointmentRepository.saveAll(appointmentsToSave);
     return newAppointments;
+  }
+
+  @Transactional
+  public void removeAppointment(Appointment appointment) {
+    switch (appointment.getAppointmentStatus()) {
+      case REMOVED -> throw new IllegalStateException(
+          "Appointment with ID [%s] has already been removed".formatted(appointment.getId())
+      );
+      case TERMINATED -> throw new IllegalStateException(
+          "Appointment with ID [%s] cannot be removed as it has been terminated".formatted(appointment.getId())
+      );
+      case EXTANT -> {
+        appointment.setAppointmentStatus(AppointmentStatus.REMOVED);
+        appointmentRepository.save(appointment);
+      }
+    }
   }
 
   private List<Appointment> endExistingAppointments(Collection<Asset> assets, LocalDate endDate) {

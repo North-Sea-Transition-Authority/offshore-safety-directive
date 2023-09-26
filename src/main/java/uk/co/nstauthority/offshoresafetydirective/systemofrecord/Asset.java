@@ -53,7 +53,7 @@ public class Asset {
     this.portalAssetType = portalAssetType;
   }
 
-  String getAssetName() {
+  public String getAssetName() {
     return assetName;
   }
 

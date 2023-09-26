@@ -35,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
@@ -43,7 +44,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -64,8 +64,6 @@ public class AppointmentTimelineItemService {
 
   private final AppointmentPhasesService appointmentPhasesService;
 
-  private final AppointmentTerminationService appointmentTerminationService;
-
 
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
@@ -74,8 +72,7 @@ public class AppointmentTimelineItemService {
                                  UserDetailService userDetailService,
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
-                                 AppointmentPhasesService appointmentPhasesService,
-                                 AppointmentTerminationService appointmentTerminationService) {
+                                 AppointmentPhasesService appointmentPhasesService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -83,14 +80,11 @@ public class AppointmentTimelineItemService {
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentPhasesService = appointmentPhasesService;
-    this.appointmentTerminationService = appointmentTerminationService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
 
     List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
-
-    var terminations = appointmentTerminationService.getTerminations(appointments);
 
     var appointmentDtos = appointments.stream()
         .map(AppointmentDto::fromAppointment)
@@ -177,14 +171,9 @@ public class AppointmentTimelineItemService {
       var corrections = Optional.ofNullable(appointmentCorrectionMap.getOrDefault(appointment.appointmentId(), null))
           .orElse(Collections.emptyList());
 
-      var isTerminated = terminations.stream()
-          .anyMatch(termination ->
-              termination.getAppointment().getId()
-                  .equals(appointment.appointmentId().id()));
+      var appointmentTimelineItemDto = appointmentTimelineItemDtoBuilder.build();
 
-      var appointmentTimelineItemDto = appointmentTimelineItemDtoBuilder.isTerminated(isTerminated).build();
-
-      var appointmentView = convertToTimelineItemView(
+      var appointmentView = createTimelineItemView(
           appointment,
           operatorName,
           phases,
@@ -216,12 +205,12 @@ public class AppointmentTimelineItemService {
         ));
   }
 
-  private AssetTimelineItemView convertToTimelineItemView(AppointmentDto appointmentDto,
-                                                          String operatorName,
-                                                          List<AssetAppointmentPhase> phases,
-                                                          List<AppointmentCorrectionHistoryView> corrections,
-                                                          AppointmentTimelineItemDto appointmentTimelineItemDto,
-                                                          Map<UUID, String> nominationIdToReferenceMap) {
+  public AssetTimelineItemView createTimelineItemView(AppointmentDto appointmentDto,
+                                                      String operatorName,
+                                                      List<AssetAppointmentPhase> phases,
+                                                      List<AppointmentCorrectionHistoryView> corrections,
+                                                      AppointmentTimelineItemDto appointmentTimelineItemDto,
+                                                      Map<UUID, String> nominationIdToReferenceMap) {
 
     var modelProperties = new AssetTimelineModelProperties()
         .addProperty("appointmentId", appointmentDto.appointmentId())
@@ -245,11 +234,21 @@ public class AppointmentTimelineItemService {
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
-    if (appointmentTimelineItemDto.canManageAppointments() && !appointmentTimelineItemDto.isTerminated()) {
+    if (appointmentTimelineItemDto.canManageAppointments()
+        && appointmentDto.appointmentStatus() == AppointmentStatus.EXTANT) {
+
       modelProperties.addProperty(
           "updateUrl",
           ReverseRouter.route(
               on(AppointmentCorrectionController.class).renderCorrection(appointmentDto.appointmentId()))
+      );
+
+      modelProperties.addProperty(
+          "removeUrl",
+          ReverseRouter.route(on(RemoveAppointmentController.class).removeAppointment(
+              appointmentDto.appointmentId(),
+              null
+          ))
       );
       // if appointment is not current, show terminate link
       if (AppointmentDto.isCurrentAppointment(appointmentDto)) {

@@ -26,6 +26,7 @@ public class AppointmentUpdateService {
     appointment.setAppointedPortalOperatorId(operatorId);
     appointment.setAppointmentType(appointmentDto.appointmentType());
     appointment.setResponsibleFromDate(appointmentDto.appointmentFromDate().value());
+    appointment.setAppointmentStatus(appointmentDto.appointmentStatus());
 
     if (AppointmentType.ONLINE_NOMINATION == appointmentDto.appointmentType()) {
       var createdByNominationId = Optional.ofNullable(appointmentDto.nominationId())

@@ -57,7 +57,7 @@ public class Appointment {
     return id;
   }
 
-  Asset getAsset() {
+  public Asset getAsset() {
     return asset;
   }
 
@@ -129,11 +129,11 @@ public class Appointment {
     this.createdDatetime = createdDatetime;
   }
 
-  AppointmentStatus getAppointmentStatus() {
+  public AppointmentStatus getAppointmentStatus() {
     return appointmentStatus;
   }
 
-  void setAppointmentStatus(AppointmentStatus appointmentStatus) {
+  public void setAppointmentStatus(AppointmentStatus appointmentStatus) {
     this.appointmentStatus = appointmentStatus;
   }
 }

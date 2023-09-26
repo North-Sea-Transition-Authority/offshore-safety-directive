@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -83,6 +84,8 @@ public class AppointmentTerminationService {
     appointmentTerminationRepository.save(termination);
 
     appointment.setResponsibleToDate(terminationDate);
+    appointment.setAppointmentStatus(AppointmentStatus.TERMINATED);
+
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     appointmentUpdateService.updateAppointment(appointmentDto);
 

@@ -102,7 +102,8 @@ class AppointmentServiceTest {
             Appointment::getCreatedByNominationId,
             Appointment::getAppointmentType,
             Appointment::getAppointedPortalOperatorId,
-            Appointment::getCreatedDatetime
+            Appointment::getCreatedDatetime,
+            Appointment::getAppointmentStatus
         )
         .containsExactly(
             tuple(
@@ -112,7 +113,8 @@ class AppointmentServiceTest {
                 existingAppointment.getCreatedByNominationId(),
                 existingAppointment.getAppointmentType(),
                 existingAppointment.getAppointedPortalOperatorId(),
-                existingAppointment.getCreatedDatetime()
+                existingAppointment.getCreatedDatetime(),
+                AppointmentStatus.EXTANT
             ),
             tuple(
                 asset,
@@ -121,7 +123,8 @@ class AppointmentServiceTest {
                 nominationDetail.getNomination().getId(),
                 AppointmentType.ONLINE_NOMINATION,
                 nomineeDetailDto.nominatedOrganisationId().id(),
-                FIXED_INSTANT
+                FIXED_INSTANT,
+                AppointmentStatus.EXTANT
             )
         );
 
@@ -227,6 +230,9 @@ class AppointmentServiceTest {
     );
 
     verify(appointmentCorrectionService).updateCorrection(captor.getValue(), form);
+
+    assertThat(captor.getValue().getAppointmentStatus())
+        .isEqualTo(AppointmentStatus.EXTANT);
   }
 
   @Test
@@ -309,5 +315,38 @@ class AppointmentServiceTest {
     assertThat(captor.getValue())
         .extracting(Appointment::getCreatedByNominationId)
         .isNull();
+  }
+
+  @Test
+  void removeAppointment_whenAppointmentIsExtant_thenVerify() {
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+    appointmentService.removeAppointment(appointment);
+
+    assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.REMOVED);
+    verify(appointmentRepository).save(appointment);
+  }
+
+  @Test
+  void removeAppointment_whenAppointmentAlreadyRemoved_thenError() {
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(AppointmentStatus.REMOVED)
+        .build();
+
+    assertThatThrownBy(() -> appointmentService.removeAppointment(appointment))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Appointment with ID [%s] has already been removed".formatted(appointment.getId()));
+  }
+
+  @Test
+  void removeAppointment_whenAppointmentTerminated_thenError() {
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(AppointmentStatus.TERMINATED)
+        .build();
+
+    assertThatThrownBy(() -> appointmentService.removeAppointment(appointment))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Appointment with ID [%s] cannot be removed as it has been terminated".formatted(appointment.getId()));
   }
 }

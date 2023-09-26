@@ -40,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
@@ -50,7 +51,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -297,7 +297,7 @@ class AppointmentTimelineItemServiceTest {
             List.of(
                 new AssetAppointmentPhase(unknownInstallationPhase),
                 new AssetAppointmentPhase(knownInstallationPhase.getScreenDisplayText())
-        ));
+            ));
 
     given(userDetailService.getUserDetail())
         .willThrow(InvalidAuthenticationException.class);
@@ -417,7 +417,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(
             List.of(
                 new AssetAppointmentPhase(expectedWellPhase.getScreenDisplayText())
-        ));
+            ));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -473,7 +473,7 @@ class AppointmentTimelineItemServiceTest {
             new AssetAppointmentPhase(unknownWellPhase),
             new AssetAppointmentPhase(knownWellPhase.name())
         )))
-    .willReturn(List.of(new AssetAppointmentPhase(knownWellPhase.getScreenDisplayText())));
+        .willReturn(List.of(new AssetAppointmentPhase(knownWellPhase.getScreenDisplayText())));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -905,9 +905,6 @@ class AppointmentTimelineItemServiceTest {
     given(permissionService.getTeamTypePermissionMap(loggedInUser))
         .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
 
-    given(appointmentTerminationService.getTerminations(List.of(appointment)))
-        .willReturn(List.of(AppointmentTerminationTestUtil.builder().build()));
-
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
         assetInSystemOfRecord
@@ -928,6 +925,79 @@ class AppointmentTimelineItemServiceTest {
             ReverseRouter.route(on(AppointmentTerminationController.class)
                 .renderTermination(new AppointmentId(appointment.getId())))
         );
+  }
+
+  @Test
+  void getTimelineItemViews_whenCanManageAppointmentsAndAppointmentIsExtant_thenVerifyRemoveUrl() {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withCreatedByNominationId(UUID.randomUUID())
+        .withResponsibleToDate(null)
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry(
+            "removeUrl",
+            ReverseRouter.route(on(RemoveAppointmentController.class).removeAppointment(
+                new AppointmentId(appointment.getId()),
+                null
+        )));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AppointmentStatus.class, names = {"EXTANT"}, mode = EnumSource.Mode.EXCLUDE)
+  void getTimelineItemViews_whenCanManageAppointmentsAndAppointmentIsNotExtant_thenVerifyNoRemoveUrl(
+      AppointmentStatus appointmentStatus
+  ) {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withCreatedByNominationId(UUID.randomUUID())
+        .withResponsibleToDate(null)
+        .withAppointmentStatus(appointmentStatus)
+        .build();
+
+    given(userDetailService.getUserDetail())
+        .willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(appointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .doesNotContainEntry(
+            "removeUrl",
+            ReverseRouter.route(on(RemoveAppointmentController.class).removeAppointment(
+                new AppointmentId(appointment.getId()),
+                null
+            )));
   }
 
   @Test
@@ -1093,7 +1163,8 @@ class AppointmentTimelineItemServiceTest {
     var appointmentCorrectionHistoryView = AppointmentCorrectionHistoryViewTestUtil.builder()
         .withAppointmentId(new AppointmentId(appointment.getId()))
         .build();
-    given(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(List.of(new AppointmentId(appointment.getId()))))
+    given(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(
+        List.of(new AppointmentId(appointment.getId()))))
         .willReturn(List.of(appointmentCorrectionHistoryView));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(

@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-enum AppointmentStatus {
+public enum AppointmentStatus {
 
   EXTANT,
   TERMINATED,

@@ -29,6 +29,7 @@ class AppointmentDtoTest {
         .hasFieldOrPropertyWithValue("appointmentCreatedDate", appointment.getCreatedDatetime())
         .hasFieldOrPropertyWithValue("appointmentType", appointment.getAppointmentType())
         .hasFieldOrPropertyWithValue("assetDto", AssetDto.fromAsset(appointment.getAsset()))
+        .hasFieldOrPropertyWithValue("appointmentStatus", appointment.getAppointmentStatus())
         .hasAssertedAllPropertiesExcept("legacyNominationReference", "nominationId");
   }
 

@@ -17,11 +17,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -94,29 +98,31 @@ public class NewAppointmentController {
   @PostMapping("/installation/{portalAssetId}/appointments/add")
   public ModelAndView createNewInstallationAppointment(@PathVariable PortalAssetId portalAssetId,
                                                        @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                       BindingResult bindingResult) {
+                                                       BindingResult bindingResult,
+                                                       RedirectAttributes redirectAttributes) {
     var portalAssetType = PortalAssetType.INSTALLATION;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
   }
 
   @PostMapping("/wellbore/{portalAssetId}/appointments/add")
   public ModelAndView createNewWellboreAppointment(@PathVariable PortalAssetId portalAssetId,
                                                    @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                   BindingResult bindingResult) {
+                                                   BindingResult bindingResult, RedirectAttributes redirectAttributes) {
     var portalAssetType = PortalAssetType.WELLBORE;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
   }
 
   @PostMapping("/forward-approval/{portalAssetId}/appointments/add")
   public ModelAndView createNewSubareaAppointment(@PathVariable PortalAssetId portalAssetId,
                                                   @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                  BindingResult bindingResult) {
+                                                  BindingResult bindingResult, RedirectAttributes redirectAttributes) {
     var portalAssetType = PortalAssetType.SUBAREA;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult);
+    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
   }
 
   private ModelAndView processCreateNewAppointment(PortalAssetId portalAssetId, PortalAssetType portalAssetType,
-                                                   AppointmentCorrectionForm form, BindingResult bindingResult) {
+                                                   AppointmentCorrectionForm form, BindingResult bindingResult,
+                                                   RedirectAttributes redirectAttributes) {
 
     var assetDto = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
 
@@ -134,6 +140,16 @@ public class NewAppointmentController {
         form,
         () -> {
           appointmentService.addManualAppointment(form, assetDto);
+
+          var notificationBanner = NotificationBanner.builder()
+              .withBannerType(NotificationBannerType.SUCCESS)
+              .withHeading("Added appointment for %s".formatted(
+                  assetDto.assetName().value()
+              ))
+              .build();
+
+          NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+
           return switch (portalAssetType) {
             case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
                 .renderInstallationTimeline(portalAssetId));

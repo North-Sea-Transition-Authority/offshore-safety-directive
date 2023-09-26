@@ -151,7 +151,8 @@ public class AppointmentCorrectionService {
         endDate.map(AppointmentToDate::new).orElse(null),
         appointmentDto.appointmentCreatedDate(),
         appointmentType,
-        appointmentDto.assetDto()
+        appointmentDto.assetDto(),
+        appointmentDto.appointmentStatus()
     );
 
     switch (appointmentType) {

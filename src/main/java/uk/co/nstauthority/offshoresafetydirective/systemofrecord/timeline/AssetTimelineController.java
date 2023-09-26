@@ -36,6 +36,24 @@ public class AssetTimelineController {
     this.userDetailService = userDetailService;
   }
 
+  public static String determineRouteByPortalAssetType(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+    return ReverseRouter.route(getRouteMethodCallByPortalAssetType(portalAssetId, portalAssetType));
+  }
+
+  public static ModelAndView determineRedirectByPortalAssetType(PortalAssetId portalAssetId,
+                                                          PortalAssetType portalAssetType) {
+    return ReverseRouter.redirect(getRouteMethodCallByPortalAssetType(portalAssetId, portalAssetType));
+  }
+
+  private static Object getRouteMethodCallByPortalAssetType(PortalAssetId portalAssetId,
+                                                            PortalAssetType portalAssetType) {
+    return switch (portalAssetType) {
+      case INSTALLATION -> on(AssetTimelineController.class).renderInstallationTimeline(portalAssetId);
+      case WELLBORE -> on(AssetTimelineController.class).renderWellboreTimeline(portalAssetId);
+      case SUBAREA -> on(AssetTimelineController.class).renderSubareaTimeline(portalAssetId);
+    };
+  }
+
   @GetMapping("/installation/{portalAssetId}")
   public ModelAndView renderInstallationTimeline(@PathVariable PortalAssetId portalAssetId) {
     return getAssetTimelineModel(portalAssetId, PortalAssetType.INSTALLATION);

@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
@@ -60,6 +61,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     UpdateRequestInterceptor.class,
     IsCurrentAppointmentInterceptor.class,
     HasNotBeenTerminatedInterceptor.class,
+    HasAppointmentStatusInterceptor.class,
     PermissionService.class,
     WebSecurityConfiguration.class,
     IsMemberOfTeamTypeInterceptor.class,

@@ -27,6 +27,10 @@ public class AppointmentTestUtil {
     private String createdByLegacyNominationReference;
     private UUID createdByAppointmentId;
     private Instant createdDatetime = Instant.now();
+    private AppointmentStatus appointmentStatus = AppointmentStatus.EXTANT;
+
+    private Builder() {
+    }
 
     public Builder withId(UUID id) {
       this.id = id;
@@ -79,7 +83,9 @@ public class AppointmentTestUtil {
       return this;
     }
 
-    private Builder() {
+    public Builder withAppointmentStatus(AppointmentStatus appointmentStatus) {
+      this.appointmentStatus = appointmentStatus;
+      return this;
     }
 
     public Appointment build() {
@@ -93,6 +99,7 @@ public class AppointmentTestUtil {
       appointment.setCreatedByLegacyNominationReference(createdByLegacyNominationReference);
       appointment.setCreatedByAppointmentId(createdByAppointmentId);
       appointment.setCreatedDatetime(createdDatetime);
+      appointment.setAppointmentStatus(appointmentStatus);
       return appointment;
     }
 

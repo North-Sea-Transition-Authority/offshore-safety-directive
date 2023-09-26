@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
+import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
+import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -98,6 +101,14 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   @SecurityTest
   void smokeTestPermissions() {
     var portalAssetId = new PortalAssetId("123");
+
+    when(portalAssetRetrievalService.getAssetName(eq(portalAssetId), any()))
+        .thenReturn(Optional.of("Asset name"));
+
+    var assetDto = AssetDtoTestUtil.builder().build();
+    when(assetPersistenceService.getOrCreateAsset(eq(portalAssetId), any()))
+        .thenReturn(assetDto);
+
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
@@ -115,22 +126,23 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewInstallationAppointment(portalAssetId, null, null)),
-            status().isOk(),
+                .createNewInstallationAppointment(portalAssetId, null, null, null)),
+            status().is3xxRedirection(),
             status().isForbidden()
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewWellboreAppointment(portalAssetId, null, null)),
-            status().isOk(),
+                .createNewWellboreAppointment(portalAssetId, null, null, null)),
+            status().is3xxRedirection(),
             status().isForbidden()
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewSubareaAppointment(portalAssetId, null, null)),
-            status().isOk(),
+                .createNewSubareaAppointment(portalAssetId, null, null, null)),
+            status().is3xxRedirection(),
             status().isForbidden()
-        );
+        )
+        .test();
   }
 
   @ParameterizedTest
@@ -324,11 +336,19 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
         .thenReturn(Optional.of(assetName));
 
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added appointment for %s".formatted(
+            assetName
+        ))
+        .build();
+
     mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(backRouteGenerator.apply(portalAssetId)));
+        .andExpect(redirectedUrl(backRouteGenerator.apply(portalAssetId)))
+        .andExpect(notificationBanner(notificationBanner));
 
     verify(appointmentService).addManualAppointment(any(), eq(assetDto));
   }

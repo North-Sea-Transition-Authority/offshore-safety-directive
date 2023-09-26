@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,7 +26,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
@@ -416,20 +413,8 @@ class AppointmentSearchService {
         new AppointedOperatorName(operatorName),
         appointmentQueryResultItem.getAppointmentDate().toLocalDate(),
         appointmentQueryResultItem.getAppointmentType(),
-        getTimelineUrl(portalAssetId, portalAssetType)
+        AssetTimelineController.determineRouteByPortalAssetType(portalAssetId, portalAssetType)
     );
-  }
-
-  private String getTimelineUrl(PortalAssetId appointedPortalAssetId, PortalAssetType portalAssetType) {
-    PortalAssetId portalAssetId = new PortalAssetId(appointedPortalAssetId.id());
-    return switch (portalAssetType) {
-      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderInstallationTimeline(portalAssetId));
-      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderWellboreTimeline(portalAssetId));
-      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderSubareaTimeline(portalAssetId));
-    };
   }
 
   private AppointmentSearchItemDto createNoAppointedOperatorItem(PortalAssetId portalAssetId,
@@ -441,7 +426,7 @@ class AppointmentSearchService {
         new AppointedOperatorName("No %s operator".formatted(portalAssetType.getSentenceCaseDisplayName())),
         null,
         null,
-        getTimelineUrl(portalAssetId, portalAssetType)
+        AssetTimelineController.determineRouteByPortalAssetType(portalAssetId, portalAssetType)
     );
   }
 }

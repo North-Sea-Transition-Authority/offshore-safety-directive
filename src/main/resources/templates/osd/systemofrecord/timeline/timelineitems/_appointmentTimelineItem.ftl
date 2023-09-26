@@ -75,10 +75,10 @@
     <#assign createdByReference>
         <#if modelProperties["nominationUrl"]?has_content>
             <@fdsAction.link
-            linkText=modelProperties["createdByReference"]
-            linkUrl=springUrl(modelProperties["nominationUrl"])
-            openInNewTab=true
-            linkClass="govuk-link govuk-link--no-visited-state"
+                linkText=modelProperties["createdByReference"]
+                linkUrl=springUrl(modelProperties["nominationUrl"])
+                openInNewTab=true
+                linkClass="govuk-link govuk-link--no-visited-state"
             />
         <#else>
             ${modelProperties["createdByReference"]}
@@ -91,6 +91,9 @@
     <#assign display>
         <#if modelProperties["updateUrl"]?has_content>
             <@fdsAction.link linkText="Update appointment" linkUrl=springUrl(modelProperties["updateUrl"]) linkClass="govuk-link govuk-link--no-visited-state"/>
+        </#if>
+        <#if modelProperties["removeUrl"]?has_content>
+            <@fdsAction.link linkText="Remove appointment" linkUrl=springUrl(modelProperties["removeUrl"])/>
         </#if>
         <#if modelProperties["terminateUrl"]?has_content>
             <@fdsAction.link linkText="Terminate appointment" linkUrl=springUrl(modelProperties["terminateUrl"])/>

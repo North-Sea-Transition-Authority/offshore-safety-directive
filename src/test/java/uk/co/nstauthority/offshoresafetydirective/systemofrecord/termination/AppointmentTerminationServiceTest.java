@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
@@ -361,8 +362,14 @@ class AppointmentTerminationServiceTest {
         );
 
     assertThat(appointmentDtoArgumentCaptor.getValue())
-        .extracting(appointmentDto -> appointmentDto.appointmentToDate().value())
-        .isEqualTo(terminationDate);
+        .extracting(
+            appointmentDto -> appointmentDto.appointmentToDate().value(),
+            AppointmentDto::appointmentStatus
+        )
+        .containsExactly(
+            terminationDate,
+            AppointmentStatus.TERMINATED
+        );
 
     verify(fileAssociationService).submitFiles(form.getTerminationDocuments());
 
