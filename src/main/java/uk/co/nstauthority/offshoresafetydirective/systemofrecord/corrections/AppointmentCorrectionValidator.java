@@ -94,7 +94,7 @@ public class AppointmentCorrectionValidator implements SmartValidator {
     var optionalAppointmentType = getAppointmentType(form);
     optionalAppointmentType.ifPresentOrElse(
         appointmentType -> {
-          var appointments = appointmentAccessService.getAppointmentDtosForAsset(
+          var appointments = appointmentAccessService.getActiveAppointmentDtosForAsset(
               hint.assetId()
           );
 

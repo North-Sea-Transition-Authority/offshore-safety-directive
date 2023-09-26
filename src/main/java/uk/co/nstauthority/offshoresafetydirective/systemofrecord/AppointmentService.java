@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -133,7 +134,11 @@ public class AppointmentService {
   }
 
   private List<Appointment> endExistingAppointments(Collection<Asset> assets, LocalDate endDate) {
-    var existingAppointments = appointmentRepository.findAllByAssetInAndResponsibleToDateIsNull(assets);
+    var existingAppointments =
+        appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+            assets,
+            EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED)
+        );
     if (!existingAppointments.isEmpty()) {
       existingAppointments.forEach(appointment -> appointment.setResponsibleToDate(endDate));
     }

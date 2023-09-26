@@ -12,6 +12,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,10 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetD
 class AppointmentServiceTest {
 
   private static final Instant FIXED_INSTANT = Instant.now();
+  private static final EnumSet<AppointmentStatus> ACTIVE_APPOINTMENT_STATUSES = EnumSet.of(
+      AppointmentStatus.EXTANT,
+      AppointmentStatus.TERMINATED
+  );
 
   @Mock
   private AppointmentRepository appointmentRepository;
@@ -76,7 +81,10 @@ class AppointmentServiceTest {
         .withResponsibleToDate(null)
         .build();
 
-    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNull(List.of(asset)))
+    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+        List.of(asset),
+        ACTIVE_APPOINTMENT_STATUSES
+    ))
         .thenReturn(List.of(existingAppointment));
 
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
@@ -147,7 +155,10 @@ class AppointmentServiceTest {
     var nomineeDetail = NomineeDetailTestingUtil.builder().build();
     var nomineeDetailDto = NomineeDetailDto.fromNomineeDetail(nomineeDetail);
 
-    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNull(List.of(asset)))
+    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+        List.of(asset),
+        ACTIVE_APPOINTMENT_STATUSES
+    ))
         .thenReturn(List.of());
 
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))

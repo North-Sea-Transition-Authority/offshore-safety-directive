@@ -9,9 +9,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 interface AppointmentRepository extends CrudRepository<Appointment, UUID> {
 
-  List<Appointment> findAllByAssetInAndResponsibleToDateIsNull(Collection<Asset> asset);
+  List<Appointment> findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(Collection<Asset> asset,
+                                                                                     Collection<AppointmentStatus> statuses);
 
-  List<Appointment> findAllByAsset_id(UUID assetId);
+  List<Appointment> findAllByAsset_idAndAppointmentStatusIn(UUID assetId, Collection<AppointmentStatus> statuses);
 
   List<Appointment> findAllByCreatedByNominationId(UUID createdByNominationId);
 

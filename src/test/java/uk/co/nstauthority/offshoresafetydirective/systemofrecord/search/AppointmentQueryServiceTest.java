@@ -8,9 +8,12 @@ import java.time.LocalDate;
 import java.util.Set;
 import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -836,6 +839,91 @@ class AppointmentQueryServiceTest {
             tuple(
                 "100",
                 PortalAssetType.SUBAREA
+            )
+        );
+  }
+
+  @Test
+  void search_whenCurrentAppointmentHasRemovedStatus_thenNoResults() {
+
+    var removedAppointmentStatus = AppointmentStatus.REMOVED;
+
+    // given a search form with an installation ID provided
+    var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(123)
+        .build();
+
+    // and an installation asset exists
+    var installationAsset = AssetTestUtil.builder()
+        .withPortalAssetId("123")
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAsset);
+
+    // and a current appointment exists for the installation
+    var installationAppointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(removedAppointmentStatus)
+        .withAsset(installationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        searchFilterWithInstallationId
+    );
+
+    // then search items are still returned
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AppointmentStatus.class, names = "REMOVED", mode = EnumSource.Mode.EXCLUDE)
+  void search_whenCurrentAppointmentHasActiveStatus_thenResultReturned(AppointmentStatus statusThatReturnsAppointment) {
+
+    // given a search form with an installation ID provided
+    var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
+        .withInstallationId(123)
+        .build();
+
+    // and an installation asset exists
+    var installationAsset = AssetTestUtil.builder()
+        .withPortalAssetId("123")
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAsset);
+
+    // and an appointment exists for the installation with one of the active statuses
+    var installationAppointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(statusThatReturnsAppointment)
+        .withAsset(installationAsset)
+        .withResponsibleToDate(null)
+        .withId(null)
+        .build();
+
+    persistAndFlush(installationAppointment);
+
+    var resultingAppointments = appointmentQueryService.search(
+        Set.of(PortalAssetType.INSTALLATION),
+        searchFilterWithInstallationId
+    );
+
+    // then search items are returned
+    assertThat(resultingAppointments)
+        .extracting(
+            appointmentQueryResultItem -> appointmentQueryResultItem.getPortalAssetId().id(),
+            AppointmentQueryResultItemDto::getPortalAssetType
+        )
+        .contains(
+            tuple(
+                "123",
+                PortalAssetType.INSTALLATION
             )
         );
   }

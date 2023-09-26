@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +23,11 @@ import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectA
 @ExtendWith(MockitoExtension.class)
 class AppointmentAccessServiceTest {
 
+  private static final EnumSet<AppointmentStatus> ACTIVE_STATUSES = EnumSet.of(
+      AppointmentStatus.EXTANT,
+      AppointmentStatus.TERMINATED
+  );
+
   @Mock
   private AppointmentRepository appointmentRepository;
 
@@ -29,29 +35,35 @@ class AppointmentAccessServiceTest {
   private AppointmentAccessService appointmentAccessService;
 
   @Test
-  void getAppointmentDtosForAsset_whenNoAppointments_themEmptyListReturned() {
+  void getActiveAppointmentDtosForAsset_whenNoAppointments_themEmptyListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
-    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+    given(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        ACTIVE_STATUSES
+    ))
         .willReturn(Collections.emptyList());
 
-    var resultingAppointmentDtos = appointmentAccessService.getAppointmentDtosForAsset(assetId);
+    var resultingAppointmentDtos = appointmentAccessService.getActiveAppointmentDtosForAsset(assetId);
 
     assertThat(resultingAppointmentDtos).isEmpty();
   }
 
   @Test
-  void getAppointmentDtosForAsset_whenAppointments_thenPopulatedListReturned() {
+  void getActiveAppointmentDtosForAsset_whenAppointments_thenPopulatedListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
     var expectedAppointmentDtos = AppointmentTestUtil.builder().build();
 
-    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+    given(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        ACTIVE_STATUSES
+    ))
         .willReturn(List.of(expectedAppointmentDtos));
 
-    var resultingAppointmentDtos = appointmentAccessService.getAppointmentDtosForAsset(assetId);
+    var resultingAppointmentDtos = appointmentAccessService.getActiveAppointmentDtosForAsset(assetId);
 
     assertThat(resultingAppointmentDtos)
         .extracting(
@@ -159,29 +171,35 @@ class AppointmentAccessServiceTest {
   }
 
   @Test
-  void getAppointmentsForAsset_whenNoAppointments_themEmptyListReturned() {
+  void getActiveAppointmentsForAsset_whenNoAppointments_themEmptyListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
-    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+    given(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        ACTIVE_STATUSES
+    ))
         .willReturn(Collections.emptyList());
 
-    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+    var resultingAppointments = appointmentAccessService.getActiveAppointmentsForAsset(assetId);
 
     assertThat(resultingAppointments).isEmpty();
   }
 
   @Test
-  void getAppointmentsForAsset_whenAppointments_thenPopulatedListReturned() {
+  void getActiveAppointmentsForAsset_whenAppointments_thenPopulatedListReturned() {
 
     var assetId = new AssetId(UUID.randomUUID());
 
     var expectedAppointments = AppointmentTestUtil.builder().build();
 
-    given(appointmentRepository.findAllByAsset_id(assetId.id()))
+    given(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        ACTIVE_STATUSES
+    ))
         .willReturn(List.of(expectedAppointments));
 
-    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
+    var resultingAppointments = appointmentAccessService.getActiveAppointmentsForAsset(assetId);
 
     assertThat(resultingAppointments)
         .extracting(

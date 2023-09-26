@@ -53,7 +53,7 @@ class AssetTimelineService {
 
       var assetDto = assetOptional.get();
 
-      var appointments = appointmentAccessService.getAppointmentsForAsset(assetDto.assetId());
+      var appointments = appointmentAccessService.getActiveAppointmentsForAsset(assetDto.assetId());
 
       if (!CollectionUtils.isEmpty(appointments)) {
         timelineItemViews.addAll(appointmentTimelineItemService.getTimelineItemViews(appointments, assetDto));

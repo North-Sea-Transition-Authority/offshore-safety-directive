@@ -1,12 +1,19 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AppointmentAccessService {
+
+  public static final Set<AppointmentStatus> ACTIVE_STATUSES = EnumSet.of(
+      AppointmentStatus.EXTANT,
+      AppointmentStatus.TERMINATED
+  );
 
   private final AppointmentRepository appointmentRepository;
 
@@ -15,8 +22,8 @@ public class AppointmentAccessService {
     this.appointmentRepository = appointmentRepository;
   }
 
-  public List<AppointmentDto> getAppointmentDtosForAsset(AssetId assetId) {
-    return appointmentRepository.findAllByAsset_id(assetId.id())
+  public List<AppointmentDto> getActiveAppointmentDtosForAsset(AssetId assetId) {
+    return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(assetId.id(), ACTIVE_STATUSES)
         .stream()
         .map(AppointmentDto::fromAppointment)
         .toList();
@@ -31,7 +38,7 @@ public class AppointmentAccessService {
     return appointmentRepository.findById(appointmentId.id());
   }
 
-  public List<Appointment> getAppointmentsForAsset(AssetId assetId) {
-    return appointmentRepository.findAllByAsset_id(assetId.id());
+  public List<Appointment> getActiveAppointmentsForAsset(AssetId assetId) {
+    return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(assetId.id(), ACTIVE_STATUSES);
   }
 }

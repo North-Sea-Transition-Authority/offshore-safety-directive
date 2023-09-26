@@ -127,7 +127,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -172,7 +172,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     var nominationId = new NominationId(onlineReference);
@@ -256,7 +256,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(100))
         .thenReturn(Optional.empty());
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -302,7 +302,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -350,7 +350,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -399,7 +399,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -454,7 +454,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -497,7 +497,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -546,7 +546,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -588,7 +588,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     var nominationId = new NominationId(UUID.fromString(form.getOnlineNominationReference()));
@@ -648,7 +648,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -690,7 +690,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(duplicatePortalOrganisationUnit));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -780,7 +780,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of());
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -818,7 +818,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -869,7 +869,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(existingDeemedAppointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -985,7 +985,7 @@ class AppointmentCorrectionValidatorTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
         .thenReturn(Optional.of(portalOrgDto));
 
-    when(appointmentAccessService.getAppointmentDtosForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
