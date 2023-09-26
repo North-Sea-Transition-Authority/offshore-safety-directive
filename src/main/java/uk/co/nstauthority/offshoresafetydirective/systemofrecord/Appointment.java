@@ -41,6 +41,10 @@ public class Appointment {
 
   private Instant createdDatetime;
 
+  @Column(name = "status")
+  @Enumerated(EnumType.STRING)
+  private AppointmentStatus appointmentStatus;
+
   @VisibleForTesting
   Appointment(UUID id) {
     this.id = id;
@@ -123,5 +127,13 @@ public class Appointment {
 
   void setCreatedDatetime(Instant createdDatetime) {
     this.createdDatetime = createdDatetime;
+  }
+
+  AppointmentStatus getAppointmentStatus() {
+    return appointmentStatus;
+  }
+
+  void setAppointmentStatus(AppointmentStatus appointmentStatus) {
+    this.appointmentStatus = appointmentStatus;
   }
 }
