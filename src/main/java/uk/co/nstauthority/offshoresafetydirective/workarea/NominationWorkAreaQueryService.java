@@ -90,6 +90,7 @@ class NominationWorkAreaQueryService {
           .and(NOMINATION_PORTAL_REFERENCES.PORTAL_REFERENCE_TYPE.eq(val(PortalReferenceType.PEARS.name())))
         .leftJoin(UPDATE_REQUESTS)
           .on(UPDATE_REQUESTS.TYPE.eq(val(CaseEventType.UPDATE_REQUESTED.name())))
+          .and(NOMINATION_DETAILS.STATUS.notEqual(CaseEventType.WITHDRAWN.name()))
           .and(UPDATE_REQUESTS.NOMINATION_ID.eq(NOMINATIONS.ID))
           .and(UPDATE_REQUESTS.NOMINATION_VERSION.eq(NOMINATION_DETAILS.VERSION))
         // Connects all conditions in collections with Condition::and calls

@@ -22,11 +22,20 @@ import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.*;
+import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
-import uk.co.nstauthority.offshoresafetydirective.teams.*;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
@@ -490,7 +499,6 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .setSecurityContext();
 
     // AND there exist a nomination which has a submitted version
-
     var nomination = givenNominationExists();
 
     var nominationDetailVersion = 1;
@@ -502,6 +510,50 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .build();
 
     givenNominationDetailExists(nominationDetail);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the item should not have an update request
+    assertThat(workAreaItems).hasSize(1);
+    assertFalse(workAreaItems.get(0).getNominationHasUpdateRequest().value());
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_whenOutstandingUpdateRequestAndNominationStatusIsWithdrawn_thenNoUpdateRequestFlag() {
+    // GIVEN a user with the manage nominations permission in the regulator team
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has been withdrawn
+    var nomination = givenNominationExists();
+
+    var nominationDetailVersion = 1;
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(nominationDetailVersion)
+        .withStatus(NominationStatus.WITHDRAWN)
+        .build();
+
+    givenNominationDetailExists(nominationDetail);
+
+    // AND there is a case event for the nomination and version of type UPDATE_REQUESTED
+    var updateRequestCaseEvent = CaseEventTestUtil.builder()
+        .withUuid(null)
+        .withCaseEventType(CaseEventType.UPDATE_REQUESTED)
+        .withNomination(nomination)
+        .withNominationVersion(nominationDetailVersion)
+        .build();
+
+    persistAndFlush(updateRequestCaseEvent);
 
     // WHEN we get the work area items for the logged in user
     var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
