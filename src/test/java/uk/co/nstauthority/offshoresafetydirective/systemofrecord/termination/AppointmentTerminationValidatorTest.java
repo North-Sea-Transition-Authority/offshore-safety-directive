@@ -27,6 +27,8 @@ class AppointmentTerminationValidatorTest {
   private AppointmentTerminationValidator appointmentTerminationValidator;
   private AppointmentTerminationValidatorHint validatorHint;
 
+  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a support document";
+
   @BeforeEach
   void setUp() {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
@@ -67,7 +69,7 @@ class AppointmentTerminationValidatorTest {
         entry("terminationDate.monthInput.inputValue", Set.of("")),
         entry("terminationDate.yearInput.inputValue", Set.of("")),
         entry("reason.inputValue", Set.of("Enter a reason for the termination")),
-        entry("terminationDocuments", Set.of("Upload a document"))
+        entry("terminationDocuments", Set.of(TERMINATION_DOCUMENT_ERROR_MESSAGE))
     );
   }
 

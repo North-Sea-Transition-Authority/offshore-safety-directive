@@ -5,26 +5,16 @@ import java.util.List;
 public class NominatedInstallationDetailForm {
 
   private List<Integer> installations;
-
   private String installationsSelect;
-
-  private Boolean forAllInstallationPhases;
-
-  private Boolean developmentDesignPhase;
-  
-  private Boolean developmentConstructionPhase;
-  
-  private Boolean developmentInstallationPhase;
-  
-  private Boolean developmentCommissioningPhase;
-  
-  private Boolean developmentProductionPhase;
-  
-  private Boolean decommissioningPhase;
-
   private List<Integer> licences;
-
   private String licencesSelect;
+  private Boolean forAllInstallationPhases;
+  private Boolean developmentDesignPhase;
+  private Boolean developmentConstructionPhase;
+  private Boolean developmentInstallationPhase;
+  private Boolean developmentCommissioningPhase;
+  private Boolean developmentProductionPhase;
+  private Boolean decommissioningPhase;
 
   public List<Integer> getInstallations() {
     return installations;

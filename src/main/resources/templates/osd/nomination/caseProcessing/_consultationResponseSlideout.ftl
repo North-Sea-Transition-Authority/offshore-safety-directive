@@ -31,7 +31,7 @@
                     multiFile=true
                 />
             </@fdsFieldset.fieldset>
-            <@fdsAction.button buttonText="Send for consultation" buttonName=postParam/>
+            <@fdsAction.button buttonText="Add consultation response" buttonName=postParam/>
         </@fdsForm.htmlForm>
     </@fdsSlideOutPanel.slideOutPanel>
 </#macro>

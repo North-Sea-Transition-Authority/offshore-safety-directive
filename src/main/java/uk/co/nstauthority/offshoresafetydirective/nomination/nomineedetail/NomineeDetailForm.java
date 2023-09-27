@@ -11,10 +11,10 @@ class NomineeDetailForm {
   private String plannedStartDay;
   private String plannedStartMonth;
   private String plannedStartYear;
-  private Boolean operatorHasCapacity;
-  private Boolean operatorHasAuthority;
   private List<FileUploadForm> appendixDocuments = new ArrayList<>();
   private Boolean licenseeAcknowledgeOperatorRequirements;
+  private Boolean operatorHasCapacity;
+  private Boolean operatorHasAuthority;
 
   public Integer getNominatedOrganisationId() {
     return nominatedOrganisationId;

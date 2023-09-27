@@ -16,7 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationU
 class NomineeDetailFormValidator implements SmartValidator {
 
   private static final String NOMINEE_DECLARATIONS_ERROR_MESSAGE = "You must agree to all the licensee declarations";
-  private static final String NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE = "Upload a document";
+  private static final String NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE = "Upload the Appendix C and any associated documents";
 
   static final String NOMINEE_FIELD_NAME = "nominatedOrganisationId";
 

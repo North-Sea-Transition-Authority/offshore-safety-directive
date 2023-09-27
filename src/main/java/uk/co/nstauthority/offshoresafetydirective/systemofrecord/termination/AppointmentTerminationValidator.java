@@ -14,7 +14,7 @@ import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationU
 @Service
 class AppointmentTerminationValidator implements SmartValidator {
 
-  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "Upload a document";
+  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a support document";
 
   @Override
   public boolean supports(@NonNull Class<?> clazz) {
