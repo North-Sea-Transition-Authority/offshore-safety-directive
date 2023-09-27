@@ -118,16 +118,14 @@ public class AppointmentTerminationService {
   }
 
   String getCreatedByDisplayString(AppointmentDto appointmentDto) {
-    var nominationDtoOptional = getNomination(appointmentDto);
-
     return switch (appointmentDto.appointmentType()) {
       case DEEMED -> "Deemed appointment";
       case OFFLINE_NOMINATION -> appointmentDto.legacyNominationReference() == null
           ? AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()
           : appointmentDto.legacyNominationReference();
-      case ONLINE_NOMINATION -> nominationDtoOptional.isPresent()
-          ? nominationDtoOptional.get().nominationReference()
-          : AppointmentType.ONLINE_NOMINATION.getScreenDisplayText();
+      case ONLINE_NOMINATION -> getNomination(appointmentDto)
+          .map(NominationDto::nominationReference)
+          .orElse(AppointmentType.ONLINE_NOMINATION.getScreenDisplayText());
     };
   }
 

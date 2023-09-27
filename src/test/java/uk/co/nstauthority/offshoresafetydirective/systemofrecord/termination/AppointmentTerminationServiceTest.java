@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -256,6 +260,18 @@ class AppointmentTerminationServiceTest {
     var resultingDisplayString = appointmentTerminationService.getCreatedByDisplayString(onlineAppointmentDto);
 
     assertThat(resultingDisplayString).isEqualTo(AppointmentType.ONLINE_NOMINATION.getScreenDisplayText());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AppointmentType.class, names = "ONLINE_NOMINATION", mode = EnumSource.Mode.EXCLUDE)
+  void getCreatedByDisplayString_whenNominationIdIsNull_thenOk(AppointmentType appointmentType) {
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .build();
+
+    appointmentTerminationService.getCreatedByDisplayString(appointmentDto);
+
+    verify(nominationAccessService, never()).getNomination(any());
   }
 
   @Test
