@@ -19,6 +19,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
@@ -97,6 +98,51 @@ class AppointmentCorrectionDateValidatorTest {
     );
 
     assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_appointmentEndDateNull_andNewAppointmentStartsOnCurrentDate_thenAppointmentOverlapDetected() {
+    // This is to prevent the scenario of trying to create an appointment with no end date
+    // when the asset already has a current appointment.
+
+    var existingCurrentAppointment = AppointmentDtoTestUtil.builder()
+        .withAppointmentFromDate(LocalDate.of(2023, 9, 23))
+        .withAppointmentToDate(new AppointmentToDate(null))
+        .build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+
+    var newAppointmentForm = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withStartDate(LocalDate.now())
+        .withEndDate(null)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(newAppointmentForm, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var startDateInput = getAssociatedStartDateInput(newAppointmentForm, AppointmentType.OFFLINE_NOMINATION);
+
+    appointmentCorrectionDateValidator.validateDates(
+        newAppointmentForm,
+        bindingResult,
+        hint,
+        AppointmentType.OFFLINE_NOMINATION,
+        List.of(existingCurrentAppointment)
+    );
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry(
+                "%s.dayInput.inputValue".formatted(startDateInput.getFieldName()),
+                Set.of("Another appointment is active during this appointment period"))
+        );
   }
 
   @ParameterizedTest

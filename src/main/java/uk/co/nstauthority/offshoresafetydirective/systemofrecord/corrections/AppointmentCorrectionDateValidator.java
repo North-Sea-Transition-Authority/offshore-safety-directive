@@ -43,7 +43,8 @@ public class AppointmentCorrectionDateValidator {
     Optional<LocalDate> optionalEndDate = BooleanUtils.isTrue(form.getHasEndDate())
         ? form.getEndDate().getAsLocalDate()
         : Optional.empty();
-    var endDate = optionalEndDate.orElse(LocalDate.now());
+    var endDate = optionalEndDate.orElse(null);
+
     var otherAppointments = appointments.stream()
         .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentId()))
         .toList();
@@ -65,7 +66,6 @@ public class AppointmentCorrectionDateValidator {
           otherAppointments
       );
     }
-
   }
 
   private void validateStartDateInputIsActualDate(AppointmentCorrectionForm form, BindingResult bindingResult,
@@ -128,20 +128,37 @@ public class AppointmentCorrectionDateValidator {
   }
 
   private void validateAppointmentHasNoOverlaps(String startDateInputValueFieldName, BindingResult bindingResult,
-                                                LocalDate currentAppointmentStartDate,
-                                                LocalDate currentAppointmentEndDate,
+                                                LocalDate correctedAppointmentStartDate,
+                                                LocalDate correctedAppointmentEndDate,
                                                 Collection<AppointmentDto> otherAppointments) {
+
+    var multipleActiveAppointmentsExist = false;
+
+    if (correctedAppointmentEndDate == null) {
+      multipleActiveAppointmentsExist = otherAppointments.stream()
+          .anyMatch(appointmentDto ->
+              appointmentDto.appointmentToDate() == null
+                  || appointmentDto.appointmentToDate().value() == null
+          );
+    }
 
     var hasOverlap = otherAppointments.stream()
         .anyMatch(appointmentDto -> {
+          // As appointments cannot end in the future, any null dates are set to be in the future for ease of range validation
           var existingAppointmentToDate = Optional.ofNullable(appointmentDto.appointmentToDate())
               .map(AppointmentToDate::value)
-              .orElse(LocalDate.now());
-          return currentAppointmentStartDate.isBefore(existingAppointmentToDate)
-              && currentAppointmentEndDate.isAfter(appointmentDto.appointmentFromDate().value());
+              .orElse(LocalDate.now().plusDays(1));
+
+          var correctedAppointmentEndDateNotNull =
+              correctedAppointmentEndDate == null
+              ? LocalDate.now()
+              : correctedAppointmentEndDate;
+
+          return correctedAppointmentStartDate.isBefore(existingAppointmentToDate)
+              && correctedAppointmentEndDateNotNull.isAfter(appointmentDto.appointmentFromDate().value());
         });
 
-    if (hasOverlap) {
+    if (hasOverlap || multipleActiveAppointmentsExist) {
       bindingResult.rejectValue(
           startDateInputValueFieldName,
           "%s.overlapsOtherAppointmentPeriod",
