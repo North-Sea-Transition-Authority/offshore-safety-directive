@@ -2,9 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,8 +18,10 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -99,11 +103,71 @@ class AppointmentSnsServiceTest {
     var nominationId = new NominationId(UUID.randomUUID());
     var event = new AppointmentConfirmedEvent(nominationId);
 
-    doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessages(nominationId);
+    doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessages(nominationId);
 
     appointmentSnsService.handleAppointmentConfirmed(event);
 
-    verify(appointmentSnsService).publishAppointmentConfirmedSnsMessages(nominationId);
+    verify(appointmentSnsService).publishAppointmentCreatedSnsMessages(nominationId);
+  }
+
+  @ArchTest
+  final ArchRule handleAppointmentAdded_isAsync = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentAdded")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule handleAppointmentAdded_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentAdded")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void handleAppointmentAdded_whenCurrentAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = Optional.of(
+        AppointmentTestUtil.builder().build()
+    );
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    var event = new ManualAppointmentAddedEvent(appointmentId);
+
+    doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(appointment.get());
+
+    appointmentSnsService.handleAppointmentAdded(event);
+
+    verify(appointmentSnsService).publishAppointmentCreatedSnsMessage(appointment.get());
+  }
+
+  @Test
+  void handleAppointmentAdded_whenNotCurrentAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = Optional.of(
+        AppointmentTestUtil.builder()
+            .withResponsibleToDate(LocalDate.now())
+            .build()
+    );
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    var event = new ManualAppointmentAddedEvent(appointmentId);
+
+    appointmentSnsService.handleAppointmentAdded(event);
+
+    verify(appointmentSnsService, never()).publishAppointmentCreatedSnsMessage(appointment.get());
+  }
+
+  @Test
+  void handleAppointmentAdded_whenNoAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.empty());
+    var event = new ManualAppointmentAddedEvent(appointmentId);
+
+    assertThatThrownBy(() -> appointmentSnsService.handleAppointmentAdded(event))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("No Appointment found with ID [%s]".formatted(appointmentId.id()));
   }
 
   @ArchTest
@@ -174,14 +238,14 @@ class AppointmentSnsServiceTest {
     when(assetPhaseRepository.findByAsset_IdIn(Set.of(appointment1Asset.getId(), appointment2Asset.getId())))
         .thenReturn(Stream.concat(appointment1AssetPhases.stream(), appointment2AssetPhases.stream()).toList());
 
-    doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessage(any(), any(), any());
+    doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(any(), any(), any());
 
-    appointmentSnsService.publishAppointmentConfirmedSnsMessages(nominationId);
+    appointmentSnsService.publishAppointmentCreatedSnsMessages(nominationId);
 
     verify(appointmentSnsService)
-        .publishAppointmentConfirmedSnsMessage(appointment1, appointment1AssetPhases, correlationId);
+        .publishAppointmentCreatedSnsMessage(appointment1, appointment1AssetPhases, correlationId);
     verify(appointmentSnsService)
-        .publishAppointmentConfirmedSnsMessage(appointment2, appointment2AssetPhases, correlationId);
+        .publishAppointmentCreatedSnsMessage(appointment2, appointment2AssetPhases, correlationId);
   }
 
   @Test
@@ -200,12 +264,12 @@ class AppointmentSnsServiceTest {
 
     when(assetPhaseRepository.findByAsset_Id(asset.getId())).thenReturn(assetPhases);
 
-    doNothing().when(appointmentSnsService).publishAppointmentConfirmedSnsMessage(any(), any(), any());
+    doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(any(), any(), any());
 
-    appointmentSnsService.publishAppointmentConfirmedSnsMessage(appointment);
+    appointmentSnsService.publishAppointmentCreatedSnsMessage(appointment);
 
     verify(appointmentSnsService)
-        .publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
+        .publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);
   }
 
   @Test
@@ -217,7 +281,7 @@ class AppointmentSnsServiceTest {
         AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
     );
 
-    appointmentSnsService.publishAppointmentConfirmedSnsMessage(appointment, assetPhases, CORRELATION_ID);
+    appointmentSnsService.publishAppointmentCreatedSnsMessage(appointment, assetPhases, CORRELATION_ID);
 
     var epmqMessageArgumentCaptor = ArgumentCaptor.forClass(AppointmentCreatedOsdEpmqMessage.class);
 

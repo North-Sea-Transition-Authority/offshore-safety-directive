@@ -47,7 +47,7 @@ class AppointmentActuatorControllerTest extends AbstractActuatorControllerTest {
         )
         .andExpect(status().isOk());
 
-    verify(appointmentSnsService).publishAppointmentConfirmedSnsMessage(appointment);
+    verify(appointmentSnsService).publishAppointmentCreatedSnsMessage(appointment);
   }
 
   @Test
@@ -64,7 +64,7 @@ class AppointmentActuatorControllerTest extends AbstractActuatorControllerTest {
         )
         .andExpect(status().isNotFound());
 
-    verify(appointmentSnsService, never()).publishAppointmentConfirmedSnsMessage(any());
+    verify(appointmentSnsService, never()).publishAppointmentCreatedSnsMessage(any());
   }
 
   @SecurityTest

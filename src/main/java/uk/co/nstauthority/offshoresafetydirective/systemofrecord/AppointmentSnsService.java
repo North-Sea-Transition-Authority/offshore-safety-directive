@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Async;
@@ -24,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.App
 @Profile("!disable-epmq")
 class AppointmentSnsService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentSnsService.class);
   private final SnsService snsService;
   private final SnsTopicArn appointmentsTopicArn;
   private final AppointmentRepository appointmentRepository;
@@ -47,7 +50,9 @@ class AppointmentSnsService {
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleAppointmentConfirmed(AppointmentConfirmedEvent event) {
-    publishAppointmentConfirmedSnsMessages(event.getNominationId());
+    LOGGER.info("Received AppointmentConfirmedEvent for nomination {}", event.getNominationId().id());
+
+    publishAppointmentCreatedSnsMessages(event.getNominationId());
   }
 
   @Async
@@ -55,13 +60,34 @@ class AppointmentSnsService {
   public void handleAppointmentTermination(AppointmentTerminationEvent event) {
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
+    LOGGER.info("Received AppointmentTerminationEvent for appointment {}", event.getAppointmentId().id());
+
     snsService.publishMessage(
         appointmentsTopicArn,
         new AppointmentTerminationOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
     );
   }
 
-  void publishAppointmentConfirmedSnsMessages(NominationId nominationId) {
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleAppointmentAdded(ManualAppointmentAddedEvent event) {
+    var appointment = appointmentRepository.findById(event.getAppointment().id())
+        .orElseThrow(() -> new IllegalArgumentException(
+            "No Appointment found with ID [%s]".formatted(
+                event.getAppointment().id()
+            )
+        ));
+
+    LOGGER.info("Received ManualAppointmentAddedEvent for appointment {}", appointment.getId());
+    if (appointment.getResponsibleToDate() == null) {
+      publishAppointmentCreatedSnsMessage(appointment);
+    } else {
+      LOGGER.info("AppointmentCreatedSnsMessage not published for appointment with id {} as is not active",
+          event.getAppointment().id());
+    }
+  }
+
+  void publishAppointmentCreatedSnsMessages(NominationId nominationId) {
     var appointments = appointmentRepository.findAllByCreatedByNominationId(nominationId.id());
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
@@ -73,11 +99,11 @@ class AppointmentSnsService {
       var asset = appointment.getAsset();
       var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList());
 
-      publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
+      publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);
     });
   }
 
-  void publishAppointmentConfirmedSnsMessage(
+  void publishAppointmentCreatedSnsMessage(
       Appointment appointment,
       List<AssetPhase> assetPhases,
       String correlationId
@@ -98,10 +124,10 @@ class AppointmentSnsService {
     );
   }
 
-  void publishAppointmentConfirmedSnsMessage(Appointment appointment) {
+  void publishAppointmentCreatedSnsMessage(Appointment appointment) {
     var assetPhases = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId());
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
-    publishAppointmentConfirmedSnsMessage(appointment, assetPhases, correlationId);
+    publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);
   }
 }

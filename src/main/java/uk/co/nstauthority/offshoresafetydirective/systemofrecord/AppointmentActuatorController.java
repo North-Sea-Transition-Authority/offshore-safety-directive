@@ -30,7 +30,7 @@ class AppointmentActuatorController {
   ResponseEntity<Void> publishAppointmentConfirmedMessage(@PathVariable("appointmentId") AppointmentId appointmentId) {
     var appointment = appointmentAccessService.getAppointment(appointmentId)
         .orElseThrow(() -> new OsdEntityNotFoundException("Cannot find appointment %s".formatted(appointmentId.id())));
-    appointmentSnsService.publishAppointmentConfirmedSnsMessage(appointment);
+    appointmentSnsService.publishAppointmentCreatedSnsMessage(appointment);
     return ResponseEntity.ok().build();
   }
 }

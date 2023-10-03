@@ -51,6 +51,9 @@ class AppointmentServiceTest {
   @Mock
   private AppointmentCorrectionService appointmentCorrectionService;
 
+  @Mock
+  private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+
   private AppointmentService appointmentService;
 
   @BeforeEach
@@ -63,8 +66,8 @@ class AppointmentServiceTest {
         nomineeDetailAccessService,
         assetRepository,
         clock,
-        appointmentCorrectionService
-    );
+        appointmentCorrectionService,
+        appointmentAddedEventPublisher);
   }
 
   @Test
@@ -241,6 +244,7 @@ class AppointmentServiceTest {
     );
 
     verify(appointmentCorrectionService).updateCorrection(captor.getValue(), form);
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(captor.getValue().getId()));
 
     assertThat(captor.getValue().getAppointmentStatus())
         .isEqualTo(AppointmentStatus.EXTANT);
