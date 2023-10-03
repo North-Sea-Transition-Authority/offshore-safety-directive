@@ -70,6 +70,9 @@ GRANT SELECT ON spatialmgr.spatial_instance_periods TO wios_migration
 /
 GRANT SELECT ON spatialmgr.spatial_instance_details TO wios_migration
 /
+GRANT SELECT ON wellmgr.wellbore_details TO wios_migration
+/
+
 CREATE OR REPLACE VIEW wios_migration.wellbore_portal_data AS
   WITH licence_data AS (
     SELECT
@@ -136,7 +139,21 @@ CREATE OR REPLACE VIEW wios_migration.wellbore_portal_data AS
         THEN xwws.td_tvdss
         ELSE NULL
       END * -1 well_total_depth_m
+    , responsible.name responsible_company_name
+    , responsible.organ_id responsible_company_id
+    , responsible_org_grp.name responsible_company_group_name
+    , responsible_org_grp.id responsible_company_group_id
+    , responsible_data.name reporting_company_name
+    , responsible_data.organ_id reporting_company_id
+    , data_org_grp.name reporting_company_group_name
+    , data_org_grp.id reporting_company_group_id
     FROM wellmgr.extant_wellbores_current ewc -- all current wellbores
+    JOIN wellmgr.wellbore_details well_detail ON well_detail.id = ewc.wd_id AND well_detail.status_control = 'C'
+    CROSS JOIN XMLTABLE('WELLBORE'
+      PASSING well_detail.wellbore_xml_data
+      COLUMNS
+        data_reporting_ou_id VARCHAR2(4000) PATH 'WELLBORE_DATA_REPORTING_OPERATOR_OU_ID/text()'
+      ) xt
     JOIN wellmgr.xview_wons_wellbore_search xwws ON xwws.wd_id = ewc.wd_id -- for general well information
     JOIN wellmgr.xview_wons_well_origin_search wo ON wo.wod_id = ewc.wod_id -- for origin information
     LEFT JOIN decmgr.xview_organisation_units xou ON xou.organ_id = xwws.competent_operator_ou_id -- competent operator org name
@@ -145,6 +162,12 @@ CREATE OR REPLACE VIEW wios_migration.wellbore_portal_data AS
     LEFT JOIN licence_data ld -- licence data for spatial location of well
       ON  ld.plm_id = osr.gis_licence_master_id
       AND ld.subarea_id = osr.subarea_id
+    LEFT JOIN decmgr.xview_organisation_units responsible ON responsible.organ_id = xwws.responsible_ou_id
+    LEFT JOIN decmgr.current_org_grp_organisations responsible_org_grp_orgs ON responsible_org_grp_orgs.organ_id = responsible.organ_id AND responsible_org_grp_orgs.org_grp_type = 'REG' -- org group for operator id, REG used in portal, SDK is legacy
+    LEFT JOIN decmgr.current_organisation_groups responsible_org_grp ON responsible_org_grp.id = responsible_org_grp_orgs.org_grp_id AND responsible_org_grp.org_grp_type = responsible_org_grp_orgs.org_grp_type -- org group name
+    LEFT JOIN decmgr.xview_organisation_units responsible_data ON responsible_data.organ_id = xt.data_reporting_ou_id
+    LEFT JOIN decmgr.current_org_grp_organisations data_org_grp_orgs ON data_org_grp_orgs.organ_id = responsible_data.organ_id AND data_org_grp_orgs.org_grp_type = 'REG' -- org group for operator id, REG used in portal, SDK is legacy
+    LEFT JOIN decmgr.current_organisation_groups data_org_grp ON data_org_grp.id = data_org_grp_orgs.org_grp_id AND data_org_grp.org_grp_type = data_org_grp_orgs.org_grp_type -- org group name
     WHERE wo.regulatory_jurisdiction = 'SEAWARD' -- check this with business team, if they want onshore wells then remove
     AND (ld.subarea_status IS NULL OR ld.subarea_status = 'EXTANT') -- orgin subarea relationship includes relinquished subareas, filter these out
   )
@@ -163,6 +186,14 @@ CREATE OR REPLACE VIEW wios_migration.wellbore_portal_data AS
     , wld.wons_competent_operator
     , wld.wons_mechanical_status
     , wld.well_total_depth_m
+    , wld.responsible_company_name
+    , wld.responsible_company_id
+    , wld.responsible_company_group_name
+    , wld.responsible_company_group_id
+    , wld.reporting_company_name
+    , wld.reporting_company_id
+    , wld.reporting_company_group_name
+    , wld.reporting_company_group_id
     , SUM(
         CASE
           WHEN well_total_depth_m BETWEEN wld.strata_low AND wld.strata_high
@@ -183,6 +214,14 @@ CREATE OR REPLACE VIEW wios_migration.wellbore_portal_data AS
     , wld.wons_competent_operator
     , wld.wons_mechanical_status
     , wld.well_total_depth_m
+    , wld.responsible_company_name
+    , wld.responsible_company_id
+    , wld.responsible_company_group_name
+    , wld.responsible_company_group_id
+    , wld.reporting_company_name
+    , wld.reporting_company_id
+    , wld.reporting_company_group_name
+    , wld.reporting_company_group_id
   )
   SELECT
     wsm.*
