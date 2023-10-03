@@ -106,30 +106,39 @@ public class SystemOfRecordSearchForm {
     private String subarea;
 
     Builder withAppointedOperatorId(String appointedOperatorId) {
-      this.appointedOperator = (StringUtils.isNotBlank(appointedOperatorId))
-          ? Integer.parseInt(appointedOperatorId)
-          : null;
+      try {
+        this.appointedOperator = Integer.parseInt(appointedOperatorId);
+      } catch (Exception e) {
+        this.appointedOperator = null;
+      }
       return this;
     }
 
     Builder withWellbore(String wellboreId) {
-      this.wellbore = (StringUtils.isNotBlank(wellboreId))
-          ? Integer.parseInt(wellboreId)
-          : null;
+      try {
+        this.wellbore = Integer.parseInt(wellboreId);
+      } catch (Exception e) {
+        this.wellbore = null;
+      }
+
       return this;
     }
 
     Builder withInstallation(String installationId) {
-      this.installation = (StringUtils.isNotBlank(installationId))
-          ? Integer.parseInt(installationId)
-          : null;
+      try {
+        this.installation = Integer.parseInt(installationId);
+      } catch (Exception e) {
+        this.installation = null;
+      }
       return this;
     }
 
     Builder withLicence(String licenceId) {
-      this.licence = (StringUtils.isNotBlank(licenceId))
-          ? Integer.parseInt(licenceId)
-          : null;
+      try {
+        this.licence = Integer.parseInt(licenceId);
+      } catch (Exception e) {
+        this.licence = null;
+      }
       return this;
     }
 

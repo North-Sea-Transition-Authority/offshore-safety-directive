@@ -81,6 +81,42 @@ class SystemOfRecordSearchFormTest {
     assertTrue(form.isEmptyExcept("NOT_A_FIELD_NAME"));
   }
 
+  @Test
+  void build_whenAppointedOperatorIdIsOfWrongType_thenNull() {
+    var form = SystemOfRecordSearchForm.builder()
+        .withAppointedOperatorId("fish")
+        .build();
+
+    assertThat(form.getAppointedOperatorId()).isNull();
+  }
+
+  @Test
+  void build_whenWellboreIdIsOfWrongType_thenNull() {
+    var form = SystemOfRecordSearchForm.builder()
+        .withWellbore("fish")
+        .build();
+
+    assertThat(form.getWellboreId()).isNull();
+  }
+
+  @Test
+  void build_whenInstallationIdIsOfWrongType_thenNull() {
+    var form = SystemOfRecordSearchForm.builder()
+        .withInstallation("fish")
+        .build();
+
+    assertThat(form.getInstallationId()).isNull();
+  }
+
+  @Test
+  void build_whenLicenceIdIsOfWrongType_thenNull() {
+    var form = SystemOfRecordSearchForm.builder()
+        .withLicence("fish")
+        .build();
+
+    assertThat(form.getLicenceId()).isNull();
+  }
+
   @ParameterizedTest
   @NullAndEmptySource
   void build_whenNullOrEmpty_thenNullReturned(String inputToTest) {
