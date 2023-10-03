@@ -242,6 +242,66 @@ class NominatedInstallationDetailFormValidatorTest {
   }
 
   @Test
+  void validate_whenDuplicateLicenceIds_thenNoError() {
+    var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
+
+    var formWithDuplicates = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallation(installation.id())
+        // duplicate licence ids
+        .withLicence(licence.licenceId().id())
+        .withLicence(licence.licenceId().id())
+        .build();
+
+    var formWithoutDuplicates = NominatedInstallationDetailFormTestUtil.builder()
+        .withLicence(licence.licenceId().id())
+        .withInstallation(installation.id())
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(formWithoutDuplicates.getInstallations()))
+        .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(formWithoutDuplicates.getLicences()))
+        .thenReturn(List.of(licence));
+
+    var bindingResult = new BeanPropertyBindingResult(formWithDuplicates, "form");
+
+    nominatedInstallationDetailFormValidator.validate(formWithDuplicates, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).isEmpty();
+  }
+
+  @Test
+  void validate_whenDuplicateInstallationIds_thenNoError() {
+    var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
+
+    var formWithDuplicates = NominatedInstallationDetailFormTestUtil.builder()
+        // duplicate installation ids
+        .withInstallation(installation.id())
+        .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
+        .build();
+
+    var formWithoutDuplicates = NominatedInstallationDetailFormTestUtil.builder()
+        .withLicence(licence.licenceId().id())
+        .withInstallation(installation.id())
+        .build();
+
+    when(installationQueryService.getInstallationsByIdIn(formWithoutDuplicates.getInstallations()))
+        .thenReturn(List.of(installation));
+    when(licenceQueryService.getLicencesByIdIn(formWithoutDuplicates.getLicences()))
+        .thenReturn(List.of(licence));
+
+    var bindingResult = new BeanPropertyBindingResult(formWithDuplicates, "form");
+
+    nominatedInstallationDetailFormValidator.validate(formWithDuplicates, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).isEmpty();
+  }
+
+  @Test
   void validate_whenLicenceIdsInFormNotInPortal_thenError() {
 
     var installation = InstallationDtoTestUtil.builder().build();
@@ -284,6 +344,7 @@ class NominatedInstallationDetailFormValidatorTest {
   void validate_whenInvalidInstallationIdsInForm_thenError(InstallationDto invalidInstallation) {
 
     var installationWithValidType = InstallationDtoTestUtil.builder()
+        .withId(10)
         .withType(NominatedInstallationController.PERMITTED_INSTALLATION_TYPES.get(0))
         .build();
 

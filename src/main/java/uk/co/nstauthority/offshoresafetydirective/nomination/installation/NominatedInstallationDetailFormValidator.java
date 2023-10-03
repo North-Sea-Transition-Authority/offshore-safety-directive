@@ -86,10 +86,14 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
     if (noInstallationsSelected(form)) {
       rejectValue(errors, INSTALLATIONS_REQUIRED_ERROR);
     } else {
+      var distinctInstallations = form.getInstallations()
+          .stream()
+          .distinct()
+          .toList();
 
-      var installations = installationQueryService.getInstallationsByIdIn(form.getInstallations());
+      var installations = installationQueryService.getInstallationsByIdIn(distinctInstallations);
 
-      if (installations.size() != form.getInstallations().size()) {
+      if (installations.size() != distinctInstallations.size()) {
         rejectValue(errors, INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR);
       } else {
 
@@ -102,14 +106,19 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
         }
       }
     }
-    var numberOfLicencesInForm = numberOfLicencesSelected(form);
 
-    if (numberOfLicencesInForm == 0) {
+    if (noLicencesSelected(form)) {
       rejectValue(errors, LICENCE_REQUIRED_ERROR);
     } else {
-      var licencesInPortal = licenceQueryService.getLicencesByIdIn(form.getLicences());
 
-      if (licencesInPortal.size() != numberOfLicencesInForm) {
+      var distinctLicences = form.getLicences()
+          .stream()
+          .distinct()
+          .toList();
+
+      var licencesInPortal = licenceQueryService.getLicencesByIdIn(distinctLicences);
+
+      if (licencesInPortal.size() != distinctLicences.size()) {
         rejectValue(errors, LICENCE_NOT_FOUND_IN_PORTAL_ERROR);
       }
     }
@@ -139,11 +148,8 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
     return form.getInstallations() == null || form.getInstallations().isEmpty();
   }
 
-  private int numberOfLicencesSelected(NominatedInstallationDetailForm form) {
-    if (form.getLicences() == null || form.getLicences().isEmpty()) {
-      return 0;
-    }
-    return form.getLicences().size();
+  private boolean noLicencesSelected(NominatedInstallationDetailForm form) {
+    return form.getLicences() == null || form.getLicences().isEmpty();
   }
 
   private boolean isForAllPhasesNotAnswered(NominatedInstallationDetailForm form) {
