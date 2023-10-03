@@ -3,19 +3,19 @@ package uk.co.nstauthority.offshoresafetydirective.epmqmessage;
 import java.time.Instant;
 import java.util.UUID;
 
-public class AppointmentTerminationOsdEpmqMessage extends OsdEpmqMessage {
+public class AppointmentDeletedOsdEpmqMessage extends OsdEpmqMessage {
 
-  public static final String TYPE = "APPOINTMENT_TERMINATION";
+  public static final String TYPE = "APPOINTMENT_DELETED";
 
   private UUID appointmentId;
 
-  public AppointmentTerminationOsdEpmqMessage() {
+  public AppointmentDeletedOsdEpmqMessage() {
     super(TYPE, null, null);
   }
 
-  public AppointmentTerminationOsdEpmqMessage(UUID appointmentId,
-                                              String correlationId,
-                                              Instant createdInstant) {
+  public AppointmentDeletedOsdEpmqMessage(UUID appointmentId,
+                                          String correlationId,
+                                          Instant createdInstant) {
     super(TYPE, correlationId, createdInstant);
     this.appointmentId = appointmentId;
   }

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
-import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentTerminationOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
@@ -64,25 +65,39 @@ class AppointmentSnsService {
 
     snsService.publishMessage(
         appointmentsTopicArn,
-        new AppointmentTerminationOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
+        new AppointmentDeletedOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
     );
   }
 
   @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleAppointmentAdded(ManualAppointmentAddedEvent event) {
-    var appointment = appointmentRepository.findById(event.getAppointment().id())
-        .orElseThrow(() -> new IllegalArgumentException(
-            "No Appointment found with ID [%s]".formatted(
-                event.getAppointment().id()
-            )
-        ));
-
+    var appointment = getAppointment(event.getAppointment().id());
     LOGGER.info("Received ManualAppointmentAddedEvent for appointment {}", appointment.getId());
+
     if (appointment.getResponsibleToDate() == null) {
       publishAppointmentCreatedSnsMessage(appointment);
     } else {
       LOGGER.info("AppointmentCreatedSnsMessage not published for appointment with id {} as is not active",
+          event.getAppointment().id());
+    }
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleAppointmentRemoved(AppointmentRemovedEvent event) {
+    var appointment = getAppointment(event.getAppointment().id());
+    LOGGER.info("Received AppointmentRemovedEvent for appointment {}", appointment.getId());
+
+    if (appointment.getResponsibleToDate() == null) {
+      var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+      snsService.publishMessage(
+          appointmentsTopicArn,
+          new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
+      );
+    } else {
+      LOGGER.info("AppointmentDeletedOsdEpmqMessage not published for appointment with id {} as is not active",
           event.getAppointment().id());
     }
   }
@@ -129,5 +144,12 @@ class AppointmentSnsService {
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
     publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);
+  }
+
+  private Appointment getAppointment(UUID appointmentId) {
+    return appointmentRepository.findById(appointmentId)
+        .orElseThrow(() -> new IllegalArgumentException(
+            "No Appointment found with ID [%s]".formatted(appointmentId)
+        ));
   }
 }

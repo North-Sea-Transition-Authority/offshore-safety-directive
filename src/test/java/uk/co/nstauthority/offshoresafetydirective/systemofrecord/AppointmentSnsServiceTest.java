@@ -38,7 +38,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
-import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentTerminationOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
@@ -171,6 +171,81 @@ class AppointmentSnsServiceTest {
   }
 
   @ArchTest
+  final ArchRule handleAppointmentRemoved_isAsync = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentRemoved")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule handleAppointmentRemoved_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentRemoved")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void handleAppointmentRemoved_whenCurrentAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = Optional.of(
+        AppointmentTestUtil.builder()
+            .withId(appointmentId.id())
+            .build()
+    );
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    var event = new AppointmentRemovedEvent(appointmentId);
+
+    appointmentSnsService.handleAppointmentRemoved(event);
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+
+    assertThat(argumentCaptor.getValue())
+        .extracting(
+            AppointmentDeletedOsdEpmqMessage::getAppointmentId,
+            EpmqMessage::getCreatedInstant,
+            EpmqMessage::getCorrelationId
+        )
+        .containsExactly(
+            appointmentId.id(),
+            FIXED_INSTANT,
+            CORRELATION_ID
+        );
+  }
+
+  @Test
+  void handleAppointmentRemoved_whenNotCurrentAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = Optional.of(
+        AppointmentTestUtil.builder()
+            .withId(appointmentId.id())
+            .withResponsibleToDate(LocalDate.now())
+            .build()
+    );
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    var event = new AppointmentRemovedEvent(appointmentId);
+
+    appointmentSnsService.handleAppointmentRemoved(event);
+
+    verify(snsService, never()).publishMessage(any(), any());
+  }
+
+  @Test
+  void handleAppointmentRemoved_whenNoAppointment() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.empty());
+    var event = new AppointmentRemovedEvent(appointmentId);
+
+    assertThatThrownBy(() -> appointmentSnsService.handleAppointmentRemoved(event))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("No Appointment found with ID [%s]".formatted(appointmentId.id()));
+  }
+
+  @ArchTest
   final ArchRule handleAppointmentTermination_isAsync = methods()
       .that()
       .areDeclaredIn(AppointmentSnsService.class)
@@ -192,13 +267,13 @@ class AppointmentSnsServiceTest {
 
     appointmentSnsService.handleAppointmentTermination(event);
 
-    var argumentCaptor = ArgumentCaptor.forClass(AppointmentTerminationOsdEpmqMessage.class);
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
 
     assertThat(argumentCaptor.getValue())
         .extracting(
-            AppointmentTerminationOsdEpmqMessage::getAppointmentId,
+            AppointmentDeletedOsdEpmqMessage::getAppointmentId,
             EpmqMessage::getCreatedInstant,
             EpmqMessage::getCorrelationId
         )

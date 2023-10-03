@@ -13,8 +13,8 @@ public enum OsdEpmqTypeMapping {
       OsdEpmqTopics.APPOINTMENTS
   ),
   APPOINTMENT_TERMINATION(
-      AppointmentTerminationOsdEpmqMessage.TYPE,
-      AppointmentTerminationOsdEpmqMessage.class,
+      AppointmentDeletedOsdEpmqMessage.TYPE,
+      AppointmentDeletedOsdEpmqMessage.class,
       OsdEpmqTopics.APPOINTMENTS
   ),
   NOMINATION_SUBMITTED(

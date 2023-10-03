@@ -27,19 +27,22 @@ public class AppointmentService {
   private final Clock clock;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+  private final AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
                      NomineeDetailAccessService nomineeDetailAccessService,
                      AssetRepository assetRepository,
                      Clock clock, AppointmentCorrectionService appointmentCorrectionService,
-                     AppointmentAddedEventPublisher appointmentAddedEventPublisher) {
+                     AppointmentAddedEventPublisher appointmentAddedEventPublisher,
+                     AppointmentRemovedEventPublisher appointmentRemovedEventPublisher) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
     this.assetRepository = assetRepository;
     this.clock = clock;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
+    this.appointmentRemovedEventPublisher = appointmentRemovedEventPublisher;
   }
 
   @Transactional
@@ -132,6 +135,8 @@ public class AppointmentService {
       case EXTANT -> {
         appointment.setAppointmentStatus(AppointmentStatus.REMOVED);
         appointmentRepository.save(appointment);
+
+        appointmentRemovedEventPublisher.publish(new AppointmentId(appointment.getId()));
       }
     }
   }

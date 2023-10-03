@@ -25,14 +25,14 @@ class OsdEpmqTypeMappingTest {
         .isEqualTo(
           Set.of(
               AppointmentCreatedOsdEpmqMessage.TYPE,
-              AppointmentTerminationOsdEpmqMessage.TYPE
+              AppointmentDeletedOsdEpmqMessage.TYPE
           ));
 
     assertThat(values)
         .isEqualTo(
           Set.of(
               AppointmentCreatedOsdEpmqMessage.class,
-              AppointmentTerminationOsdEpmqMessage.class
+              AppointmentDeletedOsdEpmqMessage.class
           ));
   }
 }

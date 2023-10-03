@@ -54,6 +54,9 @@ class AppointmentServiceTest {
   @Mock
   private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
+  @Mock
+  private AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
+
   private AppointmentService appointmentService;
 
   @BeforeEach
@@ -67,7 +70,8 @@ class AppointmentServiceTest {
         assetRepository,
         clock,
         appointmentCorrectionService,
-        appointmentAddedEventPublisher);
+        appointmentAddedEventPublisher,
+        appointmentRemovedEventPublisher);
   }
 
   @Test
@@ -341,6 +345,7 @@ class AppointmentServiceTest {
 
     assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.REMOVED);
     verify(appointmentRepository).save(appointment);
+    verify(appointmentRemovedEventPublisher).publish(new AppointmentId(appointment.getId()));
   }
 
   @Test
