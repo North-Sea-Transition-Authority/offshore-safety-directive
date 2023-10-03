@@ -3,6 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 public record NominationId(UUID id) implements Serializable {
 
@@ -21,7 +23,14 @@ public record NominationId(UUID id) implements Serializable {
    * @return a NominationId object converted from the string representation
    */
   public static NominationId valueOf(String value) {
-    return new NominationId(UUID.fromString(value));
+    try {
+      return new NominationId(UUID.fromString(value));
+    } catch (Exception e) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          String.format("Cannot find Nomination with ID: %s", value)
+      );
+    }
   }
 
   @Override

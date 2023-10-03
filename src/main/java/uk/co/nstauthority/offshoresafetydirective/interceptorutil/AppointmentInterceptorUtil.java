@@ -36,5 +36,6 @@ public class AppointmentInterceptorUtil {
         .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 
     return AppointmentId.valueOf(pathVariables.get(appointmentIdParameter.get().getName()));
+
   }
 }
