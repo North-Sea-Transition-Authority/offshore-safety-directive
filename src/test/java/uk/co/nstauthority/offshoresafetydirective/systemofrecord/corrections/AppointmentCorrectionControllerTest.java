@@ -757,7 +757,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().is3xxRedirection());
 
-    verify(appointmentCorrectionService).updateCorrection(
+    verify(appointmentCorrectionService).updateAppointment(
         eq(appointment),
         any(AppointmentCorrectionForm.class)
     );

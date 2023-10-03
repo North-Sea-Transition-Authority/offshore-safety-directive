@@ -39,9 +39,11 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentUpdatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationEvent;
 
 @AnalyzeClasses(
@@ -266,6 +268,90 @@ class AppointmentSnsServiceTest {
     var event = new AppointmentTerminationEvent(appointmentId);
 
     appointmentSnsService.handleAppointmentTermination(event);
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+
+    assertThat(argumentCaptor.getValue())
+        .extracting(
+            AppointmentDeletedOsdEpmqMessage::getAppointmentId,
+            EpmqMessage::getCreatedInstant,
+            EpmqMessage::getCorrelationId
+        )
+        .containsExactly(
+            appointmentId.id(),
+            FIXED_INSTANT,
+            CORRELATION_ID
+        );
+  }
+
+  @ArchTest
+  final ArchRule handleAppointmentCorrected_isAsync = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentCorrected")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule handleAppointmentCorrected_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentCorrected")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void handleAppointmentCorrected_whenCurrentAppointment_thenPublishUpdateMessage() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var asset = AssetTestUtil.builder().withId(UUID.randomUUID()).build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
+        .build();
+    var assetPhases = List.of(
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_1").build(),
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
+    );
+
+    when(assetPhaseRepository.findByAsset_Id(asset.getId()))
+        .thenReturn(assetPhases);
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.of(appointment));
+    var event = new AppointmentCorrectionEvent(appointmentId);
+
+    appointmentSnsService.handleAppointmentCorrected(event);
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentUpdatedOsdEpmqMessage.class);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+
+    var epmqMessage = argumentCaptor.getValue();
+
+    assertThat(epmqMessage).isNotNull();
+    assertThat(epmqMessage.getAppointmentId()).isEqualTo(appointment.getId());
+    assertThat(epmqMessage.getPortalAssetId()).isEqualTo(asset.getPortalAssetId());
+    assertThat(epmqMessage.getPortalAssetType()).isEqualTo(asset.getPortalAssetType().name());
+    assertThat(epmqMessage.getAppointedPortalOperatorId()).isEqualTo(appointment.getAppointedPortalOperatorId());
+    assertThat(epmqMessage.getPhases()).isEqualTo(assetPhases.stream().map(AssetPhase::getPhase).toList());
+    assertThat(epmqMessage.getCorrelationId()).isEqualTo(CORRELATION_ID);
+    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(FIXED_INSTANT);
+  }
+
+  @Test
+  void handleAppointmentCorrected_whenEndedAppointment_thenPublishDeleteMessage() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = Optional.of(
+        AppointmentTestUtil.builder()
+            .withId(appointmentId.id())
+            .withResponsibleToDate(LocalDate.now())
+            .build()
+    );
+
+    when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    var event = new AppointmentCorrectionEvent(appointmentId);
+
+    appointmentSnsService.handleAppointmentCorrected(event);
 
     var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
 

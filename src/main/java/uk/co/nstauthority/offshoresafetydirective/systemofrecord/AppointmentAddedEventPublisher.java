@@ -7,18 +7,18 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-class AppointmentAddedEventPublisher {
+public class AppointmentAddedEventPublisher {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentAddedEventPublisher.class);
 
   private final ApplicationEventPublisher applicationEventPublisher;
 
   @Autowired
-  AppointmentAddedEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+  public AppointmentAddedEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  void publish(AppointmentId appointmentId) {
+  public void publish(AppointmentId appointmentId) {
     applicationEventPublisher.publishEvent(
         new ManualAppointmentAddedEvent(appointmentId)
     );

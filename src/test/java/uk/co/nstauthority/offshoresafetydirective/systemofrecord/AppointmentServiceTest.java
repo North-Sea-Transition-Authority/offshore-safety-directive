@@ -52,10 +52,10 @@ class AppointmentServiceTest {
   private AppointmentCorrectionService appointmentCorrectionService;
 
   @Mock
-  private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+  private AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
 
   @Mock
-  private AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
+  private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
   private AppointmentService appointmentService;
 
@@ -70,8 +70,9 @@ class AppointmentServiceTest {
         assetRepository,
         clock,
         appointmentCorrectionService,
-        appointmentAddedEventPublisher,
-        appointmentRemovedEventPublisher);
+        appointmentRemovedEventPublisher,
+        appointmentAddedEventPublisher
+    );
   }
 
   @Test
@@ -247,7 +248,7 @@ class AppointmentServiceTest {
         assetDto
     );
 
-    verify(appointmentCorrectionService).updateCorrection(captor.getValue(), form);
+    verify(appointmentCorrectionService).saveAppointment(captor.getValue(), form);
     verify(appointmentAddedEventPublisher).publish(new AppointmentId(captor.getValue().getId()));
 
     assertThat(captor.getValue().getAppointmentStatus())
@@ -329,7 +330,7 @@ class AppointmentServiceTest {
         assetDto
     );
 
-    verify(appointmentCorrectionService).updateCorrection(captor.getValue(), form);
+    verify(appointmentCorrectionService).saveAppointment(captor.getValue(), form);
 
     assertThat(captor.getValue())
         .extracting(Appointment::getCreatedByNominationId)

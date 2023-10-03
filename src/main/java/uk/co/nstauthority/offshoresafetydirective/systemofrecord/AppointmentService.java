@@ -26,23 +26,24 @@ public class AppointmentService {
   private final AssetRepository assetRepository;
   private final Clock clock;
   private final AppointmentCorrectionService appointmentCorrectionService;
-  private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
   private final AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
+  private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
                      NomineeDetailAccessService nomineeDetailAccessService,
                      AssetRepository assetRepository,
                      Clock clock, AppointmentCorrectionService appointmentCorrectionService,
-                     AppointmentAddedEventPublisher appointmentAddedEventPublisher,
-                     AppointmentRemovedEventPublisher appointmentRemovedEventPublisher) {
+                     AppointmentRemovedEventPublisher appointmentRemovedEventPublisher,
+                     AppointmentAddedEventPublisher appointmentAddedEventPublisher) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
     this.assetRepository = assetRepository;
     this.clock = clock;
     this.appointmentCorrectionService = appointmentCorrectionService;
-    this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
     this.appointmentRemovedEventPublisher = appointmentRemovedEventPublisher;
+    this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
   }
 
   @Transactional
@@ -86,8 +87,8 @@ public class AppointmentService {
     appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
 
     var savedAppointment = appointmentRepository.save(appointment);
-    appointmentCorrectionService.updateCorrection(savedAppointment, form);
-    appointmentAddedEventPublisher.publish(new AppointmentId(appointment.getId()));
+    appointmentCorrectionService.saveAppointment(savedAppointment, form);
+    appointmentAddedEventPublisher.publish(new AppointmentId(savedAppointment.getId()));
   }
 
   @Transactional

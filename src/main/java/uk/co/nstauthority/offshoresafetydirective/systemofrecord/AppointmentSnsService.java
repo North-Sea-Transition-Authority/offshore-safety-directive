@@ -18,9 +18,11 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentUpdatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationEvent;
 
 @Service
@@ -87,7 +89,7 @@ class AppointmentSnsService {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleAppointmentRemoved(AppointmentRemovedEvent event) {
     var appointment = getAppointment(event.getAppointment().id());
-    LOGGER.info("Received AppointmentRemovedEvent for appointment {}", appointment.getId());
+    LOGGER.info("Received AppointmentRemovedEvent for appointment {}", event.getAppointment().id());
 
     if (appointment.getResponsibleToDate() == null) {
       var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
@@ -99,6 +101,40 @@ class AppointmentSnsService {
     } else {
       LOGGER.info("AppointmentDeletedOsdEpmqMessage not published for appointment with id {} as is not active",
           event.getAppointment().id());
+    }
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleAppointmentCorrected(AppointmentCorrectionEvent event) {
+    var appointment = getAppointment(event.getAppointment().id());
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    if (appointment.getResponsibleToDate() == null) {
+
+      var assetPhasesByAssetId = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId()).stream()
+          .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
+
+      var asset = appointment.getAsset();
+      var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList());
+
+      snsService.publishMessage(
+          appointmentsTopicArn,
+          new AppointmentUpdatedOsdEpmqMessage(
+              appointment.getId(),
+              asset.getPortalAssetId(),
+              asset.getPortalAssetType().name(),
+              appointment.getAppointedPortalOperatorId(),
+              assetPhases.stream().map(AssetPhase::getPhase).toList(),
+              correlationId,
+              clock.instant())
+      );
+
+    } else {
+      snsService.publishMessage(
+          appointmentsTopicArn,
+          new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
+      );
     }
   }
 

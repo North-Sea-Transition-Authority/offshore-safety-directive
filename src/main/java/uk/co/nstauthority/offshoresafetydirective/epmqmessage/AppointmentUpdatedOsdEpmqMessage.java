@@ -4,9 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
+public class AppointmentUpdatedOsdEpmqMessage extends OsdEpmqMessage {
 
-  public static final String TYPE = "APPOINTMENT_CREATED";
+  public static final String TYPE = "APPOINTMENT_UPDATED";
 
   private UUID appointmentId;
   private String portalAssetId;
@@ -14,11 +14,11 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
   private int appointedPortalOperatorId;
   private List<String> phases;
 
-  public AppointmentCreatedOsdEpmqMessage() {
+  public AppointmentUpdatedOsdEpmqMessage() {
     super(TYPE, null, null);
   }
 
-  public AppointmentCreatedOsdEpmqMessage(
+  public AppointmentUpdatedOsdEpmqMessage(
       UUID appointmentId,
       String portalAssetId,
       String portalAssetType,
@@ -75,4 +75,3 @@ public class AppointmentCreatedOsdEpmqMessage extends OsdEpmqMessage {
     this.phases = phases;
   }
 }
-

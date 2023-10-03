@@ -106,7 +106,10 @@ public class AppointmentCorrectionController {
         getModelAndView(appointment, form),
         form,
         () -> {
-          appointmentCorrectionService.updateCorrection(appointment, Objects.requireNonNull(form));
+          appointmentCorrectionService.updateAppointment(
+              appointment,
+              Objects.requireNonNull(form)
+          );
 
           var assetName = getAssetName(appointmentDto.assetDto());
           var notificationBanner = NotificationBanner.builder()

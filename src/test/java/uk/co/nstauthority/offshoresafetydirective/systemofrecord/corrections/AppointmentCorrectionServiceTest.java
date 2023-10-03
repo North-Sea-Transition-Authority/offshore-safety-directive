@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,6 +64,7 @@ class AppointmentCorrectionServiceTest {
   private AppointmentCorrectionRepository appointmentCorrectionRepository;
   private AppointmentCorrectionService appointmentCorrectionService;
   private EnergyPortalUserService energyPortalUserService;
+  private AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher;
 
   @BeforeEach
   void setUp() {
@@ -74,6 +75,8 @@ class AppointmentCorrectionServiceTest {
     userDetailService = mock(UserDetailService.class);
     appointmentCorrectionRepository = mock(AppointmentCorrectionRepository.class);
     energyPortalUserService = mock(EnergyPortalUserService.class);
+    appointmentCorrectionEventPublisher = mock(AppointmentCorrectionEventPublisher.class);
+
     appointmentCorrectionService = new AppointmentCorrectionService(
         appointmentUpdateService,
         assetAppointmentPhaseAccessService,
@@ -81,12 +84,12 @@ class AppointmentCorrectionServiceTest {
         clock,
         userDetailService,
         appointmentCorrectionRepository,
-        energyPortalUserService
-    );
+        energyPortalUserService,
+        appointmentCorrectionEventPublisher);
   }
 
   @Test
-  void updateCorrection_whenOfflineNomination() {
+  void saveAppointment_whenOfflineNomination() {
 
     var asset = AssetTestUtil.builder()
         .withPortalAssetId("portal/asset/id")
@@ -133,7 +136,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -158,7 +161,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenOnlineNomination() {
+  void saveAppointment_whenOnlineNomination() {
     var nominationId = UUID.randomUUID();
 
     var asset = AssetTestUtil.builder()
@@ -205,7 +208,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -230,7 +233,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenDeemedNomination() {
+  void saveAppointment_whenDeemedNomination() {
     var nominationId = UUID.randomUUID();
 
     var asset = AssetTestUtil.builder()
@@ -273,7 +276,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -298,7 +301,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenDeemed_thenStartDateIsDeemedDate() {
+  void saveAppointment_whenDeemed_thenStartDateIsDeemedDate() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -320,7 +323,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -332,7 +335,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenOnlineNomination_startDate() {
+  void saveAppointment_whenOnlineNomination_startDate() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -357,7 +360,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -369,7 +372,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenOfflineNomination_startDate() {
+  void saveAppointment_whenOfflineNomination_startDate() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -392,7 +395,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -404,7 +407,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenOfflineNomination_assertOfflineNominationReference() {
+  void saveAppointment_whenOfflineNomination_assertOfflineNominationReference() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -417,6 +420,7 @@ class AppointmentCorrectionServiceTest {
 
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
     form.setAppointmentType(newAppointmentType.name());
+    form.setHasEndDate(false);
     form.getOfflineAppointmentStartDate().setDate(LocalDate.now());
 
     var offlineReference = "OFFLINE/REF/1";
@@ -425,7 +429,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -442,7 +446,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenHasEndDate() {
+  void saveAppointment_whenHasEndDate() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -463,7 +467,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -475,7 +479,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenDoesNotHaveEndDate() {
+  void saveAppointment_whenDoesNotHaveEndDate() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withResponsibleFromDate(LocalDate.now().minusDays(20))
@@ -493,7 +497,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentDto.class);
     verify(appointmentUpdateService).updateAppointment(captor.capture());
@@ -504,7 +508,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenForAllPhases_andInstallationPhaseExpected_thenVerifyAllPhases() {
+  void saveAppointment_whenForAllPhases_andInstallationPhaseExpected_thenVerifyAllPhases() {
 
     var originalAppointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
@@ -516,11 +520,12 @@ class AppointmentCorrectionServiceTest {
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
+    form.setHasEndDate(false);
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var assetAppointmentPhases = EnumSet.allOf(InstallationPhase.class)
         .stream()
@@ -533,7 +538,7 @@ class AppointmentCorrectionServiceTest {
 
   @ParameterizedTest
   @EnumSource(value = PortalAssetType.class, names = {"SUBAREA", "WELLBORE"})
-  void updateCorrection_whenForAllPhases_andWellPhaseExpected_thenVerifyAllPhases(PortalAssetType portalAssetType) {
+  void saveAppointment_whenForAllPhases_andWellPhaseExpected_thenVerifyAllPhases(PortalAssetType portalAssetType) {
 
     var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
@@ -549,11 +554,12 @@ class AppointmentCorrectionServiceTest {
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
+    form.setHasEndDate(false);
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
 
-    appointmentCorrectionService.updateCorrection(originalAppointment, form);
+    appointmentCorrectionService.saveAppointment(originalAppointment, form);
 
     var assetAppointmentPhases = EnumSet.allOf(WellPhase.class)
         .stream()
@@ -565,7 +571,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void updateCorrection_whenInvalidAppointmentType_thenError() {
+  void saveAppointment_whenInvalidAppointmentType_thenError() {
     var originalAppointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
         .build();
@@ -578,7 +584,7 @@ class AppointmentCorrectionServiceTest {
     form.setAppointedOperatorId(123);
     form.setForAllPhases(true);
 
-    assertThatThrownBy(() -> appointmentCorrectionService.updateCorrection(originalAppointment, form))
+    assertThatThrownBy(() -> appointmentCorrectionService.saveAppointment(originalAppointment, form))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to get start date from form with AppointmentType [%s] with appointment ID [%s]"
             .formatted(
@@ -589,7 +595,7 @@ class AppointmentCorrectionServiceTest {
 
   @ParameterizedTest
   @EnumSource(AppointmentType.class)
-  void updateCorrection_verifySavedCorrectionReason(AppointmentType appointmentType) {
+  void saveAppointment_verifySavedCorrectionReason(AppointmentType appointmentType) {
 
     var appointment = AppointmentTestUtil.builder()
         .withId(UUID.randomUUID())
@@ -610,7 +616,7 @@ class AppointmentCorrectionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(user);
 
-    appointmentCorrectionService.updateCorrection(appointment, form);
+    appointmentCorrectionService.saveAppointment(appointment, form);
 
     var captor = ArgumentCaptor.forClass(AppointmentCorrection.class);
     verify(appointmentCorrectionRepository).save(captor.capture());
@@ -628,6 +634,26 @@ class AppointmentCorrectionServiceTest {
             wuaId,
             clock.instant()
         );
+  }
+
+  @Test
+  void updateAppointment_verifyCalls() {
+    var appointment = AppointmentTestUtil.builder().build();
+    var form = AppointmentCorrectionFormTestUtil.builder().build();
+
+    var wuaId = 1000L;
+    var user = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(wuaId)
+        .build();
+    when(userDetailService.getUserDetail())
+        .thenReturn(user);
+
+    appointmentCorrectionService.updateAppointment(
+        appointment,
+        form
+    );
+
+    verify(appointmentCorrectionEventPublisher).publish(new AppointmentId(appointment.getId()));
   }
 
   @Test

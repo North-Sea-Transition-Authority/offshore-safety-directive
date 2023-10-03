@@ -7,14 +7,19 @@ import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 
 public enum OsdEpmqTypeMapping {
 
-  APPOINTMENT_CONFIRMED(
+  APPOINTMENT_CREATED(
       AppointmentCreatedOsdEpmqMessage.TYPE,
       AppointmentCreatedOsdEpmqMessage.class,
       OsdEpmqTopics.APPOINTMENTS
   ),
-  APPOINTMENT_TERMINATION(
+  APPOINTMENT_DELETED(
       AppointmentDeletedOsdEpmqMessage.TYPE,
       AppointmentDeletedOsdEpmqMessage.class,
+      OsdEpmqTopics.APPOINTMENTS
+  ),
+  APPOINTMENT_UPDATED(
+      AppointmentUpdatedOsdEpmqMessage.TYPE,
+      AppointmentUpdatedOsdEpmqMessage.class,
       OsdEpmqTopics.APPOINTMENTS
   ),
   NOMINATION_SUBMITTED(

@@ -48,7 +48,7 @@ public class AppointmentCorrectionService {
   private final UserDetailService userDetailService;
   private final AppointmentCorrectionRepository appointmentCorrectionRepository;
   private final EnergyPortalUserService energyPortalUserService;
-
+  private final AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher;
 
   @Autowired
   AppointmentCorrectionService(AppointmentUpdateService appointmentUpdateService,
@@ -56,7 +56,8 @@ public class AppointmentCorrectionService {
                                AssetPhasePersistenceService assetPhasePersistenceService, Clock clock,
                                UserDetailService userDetailService,
                                AppointmentCorrectionRepository appointmentCorrectionRepository,
-                               EnergyPortalUserService energyPortalUserService) {
+                               EnergyPortalUserService energyPortalUserService,
+                               AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher) {
     this.appointmentUpdateService = appointmentUpdateService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.assetPhasePersistenceService = assetPhasePersistenceService;
@@ -64,6 +65,7 @@ public class AppointmentCorrectionService {
     this.userDetailService = userDetailService;
     this.appointmentCorrectionRepository = appointmentCorrectionRepository;
     this.energyPortalUserService = energyPortalUserService;
+    this.appointmentCorrectionEventPublisher = appointmentCorrectionEventPublisher;
   }
 
   AppointmentCorrectionForm getForm(Appointment appointment) {
@@ -125,8 +127,14 @@ public class AppointmentCorrectionService {
   }
 
   @Transactional
-  public void updateCorrection(Appointment appointment,
-                               AppointmentCorrectionForm appointmentCorrectionForm) {
+  public void updateAppointment(Appointment appointment,
+                                AppointmentCorrectionForm appointmentCorrectionForm) {
+    saveAppointment(appointment, appointmentCorrectionForm);
+    appointmentCorrectionEventPublisher.publish(new AppointmentId(appointment.getId()));
+  }
+
+  @Transactional
+  public void saveAppointment(Appointment appointment, AppointmentCorrectionForm appointmentCorrectionForm) {
 
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
 
