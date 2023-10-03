@@ -46,7 +46,7 @@
               targetting the checkbox.
             -->
             <div class="govuk-checkboxes govuk-checkboxes--small govuk-!-width-full" data-module="govuk-checkboxes">
-              <div class="govuk-checkboxes__item govuk-!-width-full">
+              <div class="govuk-checkboxes__item">
                 <input
                   class="govuk-checkboxes__input"
                   id="${id}"
@@ -55,7 +55,7 @@
                   value="${wellboreId}"
                   <#if isSelected>checked</#if>
                 />
-                <label class="govuk-label govuk-checkboxes__label govuk-!-width-full" for="${id}">
+                <label class="govuk-label govuk-checkboxes__label" for="${id}">
                   <span class="govuk-visually-hidden">Wellbore with registration number </span>
                   ${wellbore.name()}
                 </label>
