@@ -112,11 +112,13 @@ class AppointmentSnsService {
 
     if (appointment.getResponsibleToDate() == null) {
 
-      var assetPhasesByAssetId = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId()).stream()
-          .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
+      var assetPhasesByAssetIdAndAppointment =
+          assetPhaseRepository.findByAppointment(appointment)
+              .stream()
+              .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
 
       var asset = appointment.getAsset();
-      var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList());
+      var assetPhases = assetPhasesByAssetIdAndAppointment.getOrDefault(asset.getId(), Collections.emptyList());
 
       snsService.publishMessage(
           appointmentsTopicArn,
@@ -142,13 +144,13 @@ class AppointmentSnsService {
     var appointments = appointmentRepository.findAllByCreatedByNominationId(nominationId.id());
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
-    var assetIds = appointments.stream().map(appointment -> appointment.getAsset().getId()).collect(Collectors.toSet());
-    var assetPhasesByAssetId = assetPhaseRepository.findByAsset_IdIn(assetIds).stream()
-        .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
+    var assetPhasesByAssetIdAndAppointment =
+        assetPhaseRepository.findByAppointmentIn(appointments).stream()
+            .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
 
     appointments.forEach(appointment -> {
       var asset = appointment.getAsset();
-      var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList());
+      var assetPhases = assetPhasesByAssetIdAndAppointment.getOrDefault(asset.getId(), Collections.emptyList());
 
       publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);
     });
@@ -176,7 +178,13 @@ class AppointmentSnsService {
   }
 
   void publishAppointmentCreatedSnsMessage(Appointment appointment) {
-    var assetPhases = assetPhaseRepository.findByAsset_Id(appointment.getAsset().getId());
+    var assetPhasesByAssetAndAppointment =
+        assetPhaseRepository.findByAppointment(appointment)
+            .stream()
+            .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
+
+    var asset = appointment.getAsset();
+    var assetPhases = assetPhasesByAssetAndAppointment.getOrDefault(asset.getId(), Collections.emptyList());
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
 
     publishAppointmentCreatedSnsMessage(appointment, assetPhases, correlationId);

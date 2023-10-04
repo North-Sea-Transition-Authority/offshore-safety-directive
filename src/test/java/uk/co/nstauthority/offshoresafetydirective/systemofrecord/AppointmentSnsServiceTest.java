@@ -22,7 +22,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -314,7 +313,7 @@ class AppointmentSnsServiceTest {
         AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
     );
 
-    when(assetPhaseRepository.findByAsset_Id(asset.getId()))
+    when(assetPhaseRepository.findByAppointment( appointment))
         .thenReturn(assetPhases);
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.of(appointment));
@@ -371,7 +370,7 @@ class AppointmentSnsServiceTest {
   }
 
   @Test
-  void publishAppointmentConfirmedSnsMessages() {
+  void publishAppointmentCreatedSnsMessages() {
     var nominationId = new NominationId(UUID.randomUUID());
 
     var correlationId = UUID.randomUUID().toString();
@@ -396,7 +395,7 @@ class AppointmentSnsServiceTest {
         AssetPhaseTestUtil.builder().withAsset(appointment2Asset).withPhase("TEST_PHASE_3").build()
     );
 
-    when(assetPhaseRepository.findByAsset_IdIn(Set.of(appointment1Asset.getId(), appointment2Asset.getId())))
+    when(assetPhaseRepository.findByAppointmentIn(List.of(appointment1, appointment2)))
         .thenReturn(Stream.concat(appointment1AssetPhases.stream(), appointment2AssetPhases.stream()).toList());
 
     doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(any(), any(), any());
@@ -410,7 +409,7 @@ class AppointmentSnsServiceTest {
   }
 
   @Test
-  void publishAppointmentConfirmedSnsMessage_withoutAssetPhases() {
+  void publishAppointmentCreatedSnsMessage_withoutAssetPhases() {
     var correlationId = UUID.randomUUID().toString();
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
@@ -423,7 +422,7 @@ class AppointmentSnsServiceTest {
         AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_1").build()
     );
 
-    when(assetPhaseRepository.findByAsset_Id(asset.getId())).thenReturn(assetPhases);
+    when(assetPhaseRepository.findByAppointment(appointment)).thenReturn(assetPhases);
 
     doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(any(), any(), any());
 
@@ -434,7 +433,7 @@ class AppointmentSnsServiceTest {
   }
 
   @Test
-  void publishAppointmentConfirmedSnsMessage_withAssetPhases() {
+  void publishAppointmentCreatedSnsMessage_withAssetPhases() {
     var asset = AssetTestUtil.builder().withId(UUID.randomUUID()).build();
     var appointment = AppointmentTestUtil.builder().withAsset(asset).build();
     var assetPhases = List.of(
