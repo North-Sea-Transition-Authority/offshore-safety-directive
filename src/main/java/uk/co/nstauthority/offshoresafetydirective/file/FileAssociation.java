@@ -13,9 +13,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "file_associations")
+@Audited
 class FileAssociation {
 
   @Id
@@ -24,6 +27,7 @@ class FileAssociation {
 
   @ManyToOne
   @JoinColumn(name = "file_uuid")
+  @NotAudited
   private UploadedFile uploadedFile;
 
   @Enumerated(EnumType.STRING)

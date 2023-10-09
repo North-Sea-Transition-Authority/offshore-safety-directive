@@ -14,9 +14,12 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "appointments")
+@Audited
 public class Appointment {
 
   @Id
@@ -25,6 +28,7 @@ public class Appointment {
 
   @ManyToOne
   @JoinColumn(name = "asset_id")
+  @NotAudited
   private Asset asset;
 
   private Integer appointedPortalOperatorId;

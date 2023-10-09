@@ -10,10 +10,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
 @Table(name = "well_selection_setup")
+@Audited
 class WellSelectionSetup {
 
   @Id
@@ -22,6 +25,7 @@ class WellSelectionSetup {
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
+  @NotAudited
   private NominationDetail nominationDetail;
 
   @Enumerated(EnumType.STRING)

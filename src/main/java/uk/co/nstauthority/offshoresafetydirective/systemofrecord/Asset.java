@@ -9,9 +9,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "assets")
+@Audited
 public class Asset {
 
   @Id

@@ -11,9 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "team_scopes")
+@Audited
 public class TeamScope {
 
   @Id
@@ -22,6 +25,7 @@ public class TeamScope {
 
   @ManyToOne
   @JoinColumn(name = "team_id")
+  @NotAudited
   private Team team;
 
   private String portalId;

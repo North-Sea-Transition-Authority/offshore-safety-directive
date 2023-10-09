@@ -13,10 +13,13 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 
 @Entity
 @Table(name = "case_events")
+@Audited
 class CaseEvent {
 
   @Id
@@ -31,6 +34,7 @@ class CaseEvent {
 
   @ManyToOne
   @JoinColumn(name = "nomination_id")
+  @NotAudited
   private Nomination nomination;
 
   private int nominationVersion;

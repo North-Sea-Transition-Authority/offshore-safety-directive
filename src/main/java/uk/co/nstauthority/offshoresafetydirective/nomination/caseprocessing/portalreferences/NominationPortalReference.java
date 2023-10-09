@@ -11,10 +11,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 
 @Entity
 @Table(name = "nomination_portal_references")
+@Audited
 class NominationPortalReference {
 
   @Id
@@ -23,6 +26,7 @@ class NominationPortalReference {
 
   @ManyToOne
   @JoinColumn(name = "nomination_id")
+  @NotAudited
   private Nomination nomination;
 
   @Enumerated(EnumType.STRING)

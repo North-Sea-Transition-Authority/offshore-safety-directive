@@ -10,10 +10,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 
 @Entity
 @Table(name = "appointment_corrections")
+@Audited
 class AppointmentCorrection {
 
   @Id
@@ -22,6 +25,7 @@ class AppointmentCorrection {
 
   @ManyToOne
   @JoinColumn(name = "appointment_id")
+  @NotAudited
   private Appointment appointment;
 
   private Instant createdTimestamp;

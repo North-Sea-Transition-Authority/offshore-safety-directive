@@ -10,9 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "uploaded_files")
+@Audited
 public class UploadedFile {
 
   @Id

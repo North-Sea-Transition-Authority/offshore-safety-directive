@@ -14,9 +14,12 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "nomination_details")
+@Audited
 public class NominationDetail implements Serializable {
 
   @Serial
@@ -28,6 +31,7 @@ public class NominationDetail implements Serializable {
 
   @ManyToOne
   @JoinColumn(name = "nomination_id")
+  @NotAudited
   private Nomination nomination;
 
   @Column(name = "created_datetime")

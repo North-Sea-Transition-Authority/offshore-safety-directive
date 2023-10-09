@@ -10,10 +10,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
 @Table(name = "nominee_details")
+@Audited
 class NomineeDetail {
 
   @Id
@@ -22,6 +25,7 @@ class NomineeDetail {
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
+  @NotAudited
   private NominationDetail nominationDetail;
 
   private Integer nominatedOrganisationId;

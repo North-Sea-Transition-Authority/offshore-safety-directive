@@ -9,12 +9,15 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 
 @Entity
 @Immutable
 @Table(name = "nominated_subarea_wells")
+@Audited
 final class NominatedSubareaWell {
 
   @Id
@@ -23,6 +26,7 @@ final class NominatedSubareaWell {
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
+  @NotAudited
   private NominationDetail nominationDetail;
 
   private int wellboreId;

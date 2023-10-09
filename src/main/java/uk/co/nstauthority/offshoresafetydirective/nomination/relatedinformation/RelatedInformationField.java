@@ -8,9 +8,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "related_information_fields")
+@Audited
 class RelatedInformationField {
 
   @Id
@@ -19,6 +22,7 @@ class RelatedInformationField {
 
   @ManyToOne
   @JoinColumn(name = "related_information_id")
+  @NotAudited
   private RelatedInformation relatedInformation;
 
   private Integer fieldId;

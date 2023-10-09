@@ -9,9 +9,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "asset_phases")
+@Audited
 class AssetPhase {
 
   @Id
@@ -20,10 +23,12 @@ class AssetPhase {
 
   @ManyToOne
   @JoinColumn(name = "asset_id")
+  @NotAudited
   private Asset asset;
 
   @ManyToOne
   @JoinColumn(name = "appointment_id")
+  @NotAudited
   private Appointment appointment;
 
   private String phase;

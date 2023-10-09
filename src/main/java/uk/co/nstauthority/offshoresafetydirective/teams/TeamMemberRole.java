@@ -8,9 +8,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 
 @Entity
 @Table(name = "team_member_roles")
+@Audited
 class TeamMemberRole {
 
   @Id
@@ -19,6 +22,7 @@ class TeamMemberRole {
 
   @JoinColumn(name = "team_id")
   @ManyToOne
+  @NotAudited
   private Team team;
 
   private Long wuaId;

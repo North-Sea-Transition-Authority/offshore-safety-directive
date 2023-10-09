@@ -9,10 +9,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.NotAudited;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Entity
 @Table(name = "nominated_licence_block_subareas")
+@Audited
 class NominatedBlockSubarea {
 
   @Id
@@ -21,6 +24,7 @@ class NominatedBlockSubarea {
 
   @ManyToOne
   @JoinColumn(name = "nomination_detail_id")
+  @NotAudited
   private NominationDetail nominationDetail;
 
   private String blockSubareaId;
