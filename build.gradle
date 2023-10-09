@@ -79,7 +79,7 @@ dependencies {
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:OSDOP-225-nomination-id-converted-to-uuid-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
-	implementation 'uk.co.fivium.energyportalmessagequeue:messages:OSDOP-225-nomination-id-converted-to-uuid-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:OSDOP-579-emit-correction-applied-event-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'
@@ -94,6 +94,9 @@ dependencies {
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+
+	// external test dependencies
+	testImplementation 'org.awaitility:awaitility:4.2.0'
 
 	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
 	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'

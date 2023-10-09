@@ -2,16 +2,23 @@ package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
+import java.util.UUID;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.pears.PearsLicenceProcessedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -26,6 +33,12 @@ class PearsLicenceSqsServiceTest {
   @Mock
   private SnsService snsService;
 
+  @Mock
+  private PearsLicenceService pearsLicenceService;
+
+  @Captor
+  private ArgumentCaptor<Consumer<PearsCorrectionAppliedEpmqMessage>> correctionAppliedEpmqMessageConsumerCaptor;
+
   private final SnsTopicArn licencesSnsTopicArn = new SnsTopicArn("test-licences-sns-topic-arn");
   private final SqsQueueUrl licencesOsdQueueUrl = new SqsQueueUrl("test-licences-osd-queue-url");
 
@@ -38,7 +51,7 @@ class PearsLicenceSqsServiceTest {
     when(sqsService.getOrCreateQueue(PearsLicenceSqsService.LICENCES_OSD_QUEUE_NAME))
         .thenReturn(licencesOsdQueueUrl);
 
-    pearsLicenceSqsService = new PearsLicenceSqsService(sqsService, snsService);
+    pearsLicenceSqsService = new PearsLicenceSqsService(sqsService, snsService, pearsLicenceService);
   }
 
   @Test
@@ -52,6 +65,48 @@ class PearsLicenceSqsServiceTest {
   void receiveMessages() {
     pearsLicenceSqsService.receiveMessages();
 
-    verify(sqsService).receiveQueueMessages(eq(licencesOsdQueueUrl), eq(PearsLicenceProcessedEpmqMessage.class), any());
+    verify(sqsService).receiveQueueMessages(
+        eq(licencesOsdQueueUrl),
+        eq(PearsCorrectionAppliedEpmqMessage.class),
+        any()
+    );
+  }
+
+  @Test
+  void receiveMessages_verifyCalls() {
+
+    var createdInstantOfMessage1 = Instant.now();
+    var createdInstantOfMessage2 = Instant.now().plusSeconds(10);
+
+    var message1 = new PearsCorrectionAppliedEpmqMessage(
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        createdInstantOfMessage1
+    );
+    var message2 = new PearsCorrectionAppliedEpmqMessage(
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        createdInstantOfMessage2
+    );
+
+    doAnswer(invocation -> {
+      var onMessage = correctionAppliedEpmqMessageConsumerCaptor.getValue();
+      onMessage.accept(message1);
+      onMessage.accept(message2);
+      return null;
+    })
+        .when(sqsService)
+        .receiveQueueMessages(
+            eq(licencesOsdQueueUrl),
+            eq(PearsCorrectionAppliedEpmqMessage.class),
+            correctionAppliedEpmqMessageConsumerCaptor.capture()
+        );
+
+    pearsLicenceSqsService.receiveMessages();
+
+    verify(pearsLicenceService, times(1)).handlePearsCorrectionApplied(message1);
+    verify(pearsLicenceService, times(1)).handlePearsCorrectionApplied(message2);
   }
 }

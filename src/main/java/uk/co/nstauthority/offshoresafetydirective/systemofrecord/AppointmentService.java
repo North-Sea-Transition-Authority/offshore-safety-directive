@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
@@ -140,6 +141,11 @@ public class AppointmentService {
         appointmentRemovedEventPublisher.publish(new AppointmentId(appointment.getId()));
       }
     }
+  }
+
+  @Transactional
+  public void endAppointmentsForSubareas(Collection<LicenceBlockSubareaDto> subareaDtos) {
+    // TODO OSDOP-557 - End forward approval appointments for the given subarea
   }
 
   private List<Appointment> endExistingAppointments(Collection<Asset> assets, LocalDate endDate) {

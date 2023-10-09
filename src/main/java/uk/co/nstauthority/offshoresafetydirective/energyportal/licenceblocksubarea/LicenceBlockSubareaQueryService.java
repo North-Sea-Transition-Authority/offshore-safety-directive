@@ -9,6 +9,7 @@ import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.generated.client.SubareasProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaShoreLocation;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @Service
@@ -89,6 +90,25 @@ public class LicenceBlockSubareaQueryService {
           requestPurpose,
           logCorrelationId
       )
+          .stream()
+          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
+          .toList();
+
+      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
+    }));
+  }
+
+  public List<LicenceBlockSubareaDto> searchSubareasByLicenceReferenceWithStatuses(String licenceReference,
+                                                                                   List<SubareaStatus> statuses) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+
+      var energyPortalSubareas = subareaApi.searchSubareasByLicenceReferenceAndStatuses(
+              licenceReference,
+              statuses,
+              SUBAREAS_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
           .stream()
           .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
           .toList();
