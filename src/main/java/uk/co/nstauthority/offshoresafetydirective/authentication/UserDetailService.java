@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.authentication;
 
+import java.util.Optional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,14 @@ public class UserDetailService {
       }
     } else {
       throw new InvalidAuthenticationException("ServiceSaml2Authentication not found in authentication context");
+    }
+  }
+
+  public Optional<ServiceUserDetail> getOptionalUserDetail() {
+    try {
+      return Optional.of(getUserDetail());
+    } catch (InvalidAuthenticationException exception) {
+      return Optional.empty();
     }
   }
 

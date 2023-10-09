@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,9 +11,11 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.envers.Audited;
 
 @Entity
 @Table(name = "nominations")
+@Audited
 public class Nomination implements Serializable {
 
   @Serial
@@ -27,20 +30,23 @@ public class Nomination implements Serializable {
 
   private String reference;
 
+  public Nomination() {
+  }
+
+  @VisibleForTesting
+  public Nomination(UUID id) {
+    this.id = id;
+  }
+
   public UUID getId() {
     return id;
   }
 
-  Nomination setId(UUID id) {
-    this.id = id;
-    return this;
-  }
-
-  Instant getCreatedInstant() {
+  public Instant getCreatedInstant() {
     return createdInstant;
   }
 
-  Nomination setCreatedInstant(Instant createdInstant) {
+  public Nomination setCreatedInstant(Instant createdInstant) {
     this.createdInstant = createdInstant;
     return this;
   }

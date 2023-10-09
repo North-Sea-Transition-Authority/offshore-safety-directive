@@ -35,8 +35,7 @@ public class NominationTestUtil {
     }
 
     public Nomination build() {
-     var nomination = new Nomination()
-         .setId(id)
+     var nomination = new Nomination(id)
          .setCreatedInstant(createdInstant);
      nomination.setReference(reference);
      return nomination;

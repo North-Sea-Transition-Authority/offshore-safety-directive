@@ -81,4 +81,34 @@ class UserDetailServiceTest {
     SecurityContextHolder.setContext(new SecurityContextImpl(new ServiceSaml2Authentication(null, Set.of())));
     assertFalse(userDetailService.isUserLoggedIn());
   }
+
+  @Test
+  void getOptionalUserDetail_whenUserLoggedIn_thenPopulatedOptional() {
+
+    var user = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(100L)
+        .build();
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(user)
+        .setSecurityContext();
+
+    var resultingUser = userDetailService.getOptionalUserDetail();
+
+    assertThat(resultingUser).contains(user);
+  }
+
+  @Test
+  void getOptionalUserDetail_whenPrincipleNotFoundInServiceSaml2Authentication_thenEmptyOptional() {
+    SecurityContextHolder.setContext(new SecurityContextImpl(new ServiceSaml2Authentication(null, Set.of())));
+    var resultingUser = userDetailService.getOptionalUserDetail();
+    assertThat(resultingUser).isEmpty();
+  }
+
+  @Test
+  void getOptionalUserDetail_whenServiceSaml2AuthenticationNotFoundInAuthenticationContext_thenEmptyOptional() {
+    SecurityContextHolder.setContext(new SecurityContextImpl());
+    var resultingUser = userDetailService.getOptionalUserDetail();
+    assertThat(resultingUser).isEmpty();
+  }
 }

@@ -60,10 +60,11 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-core'
 	implementation 'org.springframework.session:spring-session-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-jooq'
+	implementation 'org.springframework.data:spring-data-envers'
 
 	// spring managed
 	implementation 'org.jooq:jooq-codegen'
-  	implementation 'org.jooq:jooq-meta'
+	implementation 'org.jooq:jooq-meta'
 	implementation 'org.flywaydb:flyway-core'
 
 	// external dependencies

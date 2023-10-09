@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.history.RevisionRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface NominationRepository extends CrudRepository<Nomination, UUID> {
+public interface NominationRepository
+    extends CrudRepository<Nomination, UUID>, RevisionRepository<Nomination, UUID, Long> {
 
   @Query("""
        SELECT COUNT(DISTINCT n)
