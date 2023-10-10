@@ -59,7 +59,7 @@ class PearsLicenceServiceTest {
 
     pearsLicenceService.handlePearsCorrectionApplied(message);
 
-    verify(appointmentService).endAppointmentsForSubareas(List.of(blockSubareaDto));
+    verify(appointmentService).endAppointmentsForSubareas(List.of(blockSubareaDto), message.getCorrectionId());
   }
 
   @Test

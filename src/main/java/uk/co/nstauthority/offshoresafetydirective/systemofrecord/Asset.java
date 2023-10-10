@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import com.google.common.annotations.VisibleForTesting;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -26,6 +27,15 @@ public class Asset {
   private PortalAssetType portalAssetType;
 
   private String assetName;
+
+  @Column(name = "status")
+  @Enumerated(EnumType.STRING)
+  private AssetStatus status;
+
+  private String portalEventId;
+
+  @Enumerated(EnumType.STRING)
+  private PortalEventType portalEventType;
 
   @VisibleForTesting
   Asset(UUID id) {
@@ -61,5 +71,29 @@ public class Asset {
 
   void setAssetName(String assetName) {
     this.assetName = assetName;
+  }
+
+  public AssetStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(AssetStatus assetStatus) {
+    this.status = assetStatus;
+  }
+
+  public String getPortalEventId() {
+    return portalEventId;
+  }
+
+  public void setPortalEventId(String portalEventId) {
+    this.portalEventId = portalEventId;
+  }
+
+  public PortalEventType getPortalEventType() {
+    return portalEventType;
+  }
+
+  public void setPortalEventType(PortalEventType portalEventType) {
+    this.portalEventType = portalEventType;
   }
 }

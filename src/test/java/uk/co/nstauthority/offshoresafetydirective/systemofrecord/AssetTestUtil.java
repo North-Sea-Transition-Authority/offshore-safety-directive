@@ -19,6 +19,7 @@ public class AssetTestUtil {
     private String portalAssetId = UUID.randomUUID().toString();
     private PortalAssetType portalAssetType = PortalAssetType.INSTALLATION;
     private String assetName = "asset name";
+    private AssetStatus assetStatus = AssetStatus.EXTANT;
 
     private Builder() {
     }
@@ -43,11 +44,17 @@ public class AssetTestUtil {
       return this;
     }
 
+    public Builder withAssetStatus(AssetStatus assetStatus) {
+      this.assetStatus = assetStatus;
+      return this;
+    }
+
     public Asset build() {
       var asset = new Asset(id);
       asset.setPortalAssetId(portalAssetId);
       asset.setPortalAssetType(portalAssetType);
       asset.setAssetName(assetName);
+      asset.setStatus(assetStatus);
       return asset;
     }
 

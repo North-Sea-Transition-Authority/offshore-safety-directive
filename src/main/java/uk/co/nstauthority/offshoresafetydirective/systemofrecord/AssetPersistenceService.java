@@ -109,6 +109,7 @@ public class AssetPersistenceService {
     asset.setAssetName(nominatedAssetDto.portalAssetName().value());
     asset.setPortalAssetId(nominatedAssetDto.portalAssetId().id());
     asset.setPortalAssetType(nominatedAssetDto.portalAssetType());
+    asset.setStatus(AssetStatus.EXTANT);
     return asset;
   }
 

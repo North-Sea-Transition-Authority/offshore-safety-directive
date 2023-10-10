@@ -85,10 +85,11 @@ class AssetPersistenceServiceTest {
         .extracting(
             Asset::getPortalAssetId,
             Asset::getAssetName,
-            Asset::getPortalAssetType
+            Asset::getPortalAssetType,
+            Asset::getStatus
         )
         .containsExactly(
-            tuple(newAssetId.id(), assetName, portalAssetType)
+            tuple(newAssetId.id(), assetName, portalAssetType, AssetStatus.EXTANT)
         );
   }
 
@@ -129,10 +130,11 @@ class AssetPersistenceServiceTest {
         .extracting(
             Asset::getPortalAssetId,
             Asset::getAssetName,
-            Asset::getPortalAssetType
+            Asset::getPortalAssetType,
+            Asset::getStatus
         )
         .containsExactly(
-            tuple(newAssetId.id(), assetName, portalAssetType)
+            tuple(newAssetId.id(), assetName, portalAssetType, AssetStatus.EXTANT)
         );
   }
 
@@ -186,7 +188,6 @@ class AssetPersistenceServiceTest {
             assetName
         );
 
-    @SuppressWarnings("unchecked")
     ArgumentCaptor<Asset> savedAsset = ArgumentCaptor.forClass(Asset.class);
     verify(assetRepository).save(savedAsset.capture());
 
@@ -194,12 +195,14 @@ class AssetPersistenceServiceTest {
         .extracting(
             Asset::getPortalAssetId,
             Asset::getPortalAssetType,
-            Asset::getAssetName
+            Asset::getAssetName,
+            Asset::getStatus
         )
         .containsExactly(
             portalAssetId.id(),
             portalAssetType,
-            assetName
+            assetName,
+            AssetStatus.EXTANT
         );
 
   }
@@ -262,12 +265,14 @@ class AssetPersistenceServiceTest {
         .extracting(
             Asset::getPortalAssetId,
             Asset::getPortalAssetType,
-            Asset::getAssetName
+            Asset::getAssetName,
+            Asset::getStatus
         )
         .containsExactly(
             portalAssetId.id(),
             portalAssetType,
-            assetName.value()
+            assetName.value(),
+            AssetStatus.EXTANT
         );
   }
 

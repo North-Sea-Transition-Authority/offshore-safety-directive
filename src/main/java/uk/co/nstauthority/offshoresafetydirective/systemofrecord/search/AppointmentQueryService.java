@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
 @Service
@@ -55,6 +56,8 @@ class AppointmentQueryService {
 
     // only appointments which haven't been removed
     predicateList.add(APPOINTMENTS.STATUS.in(AppointmentAccessService.ACTIVE_STATUSES));
+
+    predicateList.add(ASSETS.STATUS.eq(AssetStatus.EXTANT.name()));
 
     // if operator ID filter provided then filter by appointed operator
     if (searchFilter.appointedOperatorId() != null) {

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 @Service
 public class AppointmentService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentService.class);
   private final AppointmentRepository appointmentRepository;
   private final NomineeDetailAccessService nomineeDetailAccessService;
   private final AssetRepository assetRepository;
@@ -148,11 +151,47 @@ public class AppointmentService {
     // TODO OSDOP-557 - End forward approval appointments for the given subarea
   }
 
+  @Transactional
+  public void endAppointmentsForSubareas(Collection<LicenceBlockSubareaDto> subareaDtos, String correctionId) {
+    var portalAssetIds = subareaDtos.stream()
+        .map(licenceBlockSubareaDto -> licenceBlockSubareaDto.subareaId().id())
+        .toList();
+
+    List<Asset> assets = assetRepository.findByPortalAssetIdInAndPortalAssetType(
+        portalAssetIds,
+        PortalAssetType.SUBAREA
+    );
+
+    var existingAppointments = endExistingAppointments(assets, LocalDate.now());
+
+    if (!existingAppointments.isEmpty()) {
+      appointmentRepository.saveAll(existingAppointments);
+    }
+
+    if (!assets.isEmpty()) {
+      assets.forEach(asset -> removeAsset(asset, correctionId));
+      assetRepository.saveAll(assets);
+    }
+  }
+
+  private void removeAsset(Asset asset, String correctionId) {
+    switch (asset.getStatus()) {
+      case REMOVED -> LOGGER.warn(
+          "Attempting to remove asset with ID [%s] but asset already has a non-extant status".formatted(asset.getId())
+      );
+      case EXTANT -> {
+        asset.setStatus(AssetStatus.REMOVED);
+        asset.setPortalEventId(correctionId);
+        asset.setPortalEventType(PortalEventType.PEARS_CORRECTION);
+      }
+    }
+  }
+
   private List<Appointment> endExistingAppointments(Collection<Asset> assets, LocalDate endDate) {
     var existingAppointments =
         appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
             assets,
-            EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED)
+            EnumSet.of(AppointmentStatus.EXTANT)
         );
     if (!existingAppointments.isEmpty()) {
       existingAppointments.forEach(appointment -> appointment.setResponsibleToDate(endDate));

@@ -3,7 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
@@ -35,8 +38,7 @@ class AppointmentServiceTest {
 
   private static final Instant FIXED_INSTANT = Instant.now();
   private static final EnumSet<AppointmentStatus> ACTIVE_APPOINTMENT_STATUSES = EnumSet.of(
-      AppointmentStatus.EXTANT,
-      AppointmentStatus.TERMINATED
+      AppointmentStatus.EXTANT
   );
 
   @Mock
@@ -369,5 +371,102 @@ class AppointmentServiceTest {
     assertThatThrownBy(() -> appointmentService.removeAppointment(appointment))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Appointment with ID [%s] cannot be removed as it has been terminated".formatted(appointment.getId()));
+  }
+
+  @Test
+  void endAppointmentsForSubareas_whenActiveAppointmentsWithExtantStatus_thenEndAppointment_andRemoveAssets() {
+    var licenceBlockSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(licenceBlockSubarea.subareaId().id())
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withResponsibleToDate(null)
+        .build();
+
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
+    )).thenReturn(List.of(asset));
+
+    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+        List.of(asset),
+        EnumSet.of(AppointmentStatus.EXTANT)
+    )).thenReturn(List.of(appointment));
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Appointment>> appointmentCaptor = ArgumentCaptor.forClass(List.class);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Asset>> assetCaptor = ArgumentCaptor.forClass(List.class);
+
+    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+
+    verify(appointmentRepository).saveAll(appointmentCaptor.capture());
+
+    assertThat(appointmentCaptor.getValue().get(0)).isInstanceOf(Appointment.class);
+
+    var resultingAppointment = (Appointment) appointmentCaptor.getValue().get(0);
+    assertThat(resultingAppointment.getId()).isEqualTo(appointment.getId());
+    assertThat(resultingAppointment.getAsset()).isEqualTo(appointment.getAsset());
+    assertThat(resultingAppointment.getResponsibleToDate()).isEqualTo(LocalDate.now());
+
+    verify(assetRepository).saveAll(assetCaptor.capture());
+
+    var resultingAsset = assetCaptor.getValue().get(0);
+    assertThat(resultingAsset.getId()).isEqualTo(asset.getId());
+    assertThat(resultingAsset.getStatus()).isEqualTo(asset.getStatus());
+    assertThat(resultingAsset.getPortalEventType()).isEqualTo(PortalEventType.PEARS_CORRECTION);
+    assertThat(resultingAsset.getPortalEventId()).isEqualTo("correctionId");
+  }
+
+  @Test
+  void endAppointmentsForSubareas_whenNoActiveAppointmentsWithExtantStatus_andAssetsExist_thenRemoveAssets() {
+    var licenceBlockSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(licenceBlockSubarea.subareaId().id())
+        .build();
+
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
+    )).thenReturn(List.of(asset));
+
+    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+        List.of(asset),
+        EnumSet.of(AppointmentStatus.EXTANT)
+    )).thenReturn(List.of());
+
+    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Asset>> assetCaptor = ArgumentCaptor.forClass(List.class);
+
+    verify(appointmentRepository, never()).saveAll(any());
+    verify(assetRepository).saveAll(assetCaptor.capture());
+
+    var resultingAsset = assetCaptor.getValue().get(0);
+    assertThat(resultingAsset.getId()).isEqualTo(asset.getId());
+    assertThat(resultingAsset.getStatus()).isEqualTo(AssetStatus.REMOVED);
+    assertThat(resultingAsset.getPortalEventType()).isEqualTo(PortalEventType.PEARS_CORRECTION);
+    assertThat(resultingAsset.getPortalEventId()).isEqualTo("correctionId");
+  }
+
+  @Test
+  void endAppointmentsForSubareas_whenNoActiveAppointmentsWithExtantStatus_andNoAssetsExist_thenDoNothing() {
+    var licenceBlockSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
+    )).thenReturn(List.of());
+
+    when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
+        List.of(),
+        EnumSet.of(AppointmentStatus.EXTANT)
+    )).thenReturn(List.of());
+
+    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+
+    verify(appointmentRepository, never()).saveAll(any());
+    verify(assetRepository, never()).saveAll(any());
   }
 }

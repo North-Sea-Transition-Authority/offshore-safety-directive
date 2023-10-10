@@ -56,7 +56,7 @@ class PearsLicenceService {
         .orElse(List.of());
 
     if (!nonExtantSubareas.isEmpty()) {
-      appointmentService.endAppointmentsForSubareas(nonExtantSubareas);
+      appointmentService.endAppointmentsForSubareas(nonExtantSubareas, message.getCorrectionId());
     }
   }
 
