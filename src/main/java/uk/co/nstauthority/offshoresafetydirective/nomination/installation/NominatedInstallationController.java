@@ -51,8 +51,7 @@ public class NominatedInstallationController {
       FacilityType.LARGE_STEEL_PLATFORM,
       FacilityType.SMALL_STEEL_PLATFORM,
       FacilityType.TENSION_LEG_PLATFORM,
-      FacilityType.UNKNOWN_TO_BE_UPDATED,
-      FacilityType.SUBSEA_WELLHEAD_PROTECTION_STRUCTURE
+      FacilityType.UNKNOWN_TO_BE_UPDATED
   );
 
   static final String PAGE_TITLE = "Installation nominations";
