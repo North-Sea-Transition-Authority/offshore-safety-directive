@@ -38,6 +38,14 @@
 
       <@nominationSummary.nominationSummary summaryView=summaryView/>
 
+      <#if hasLicenceBlockSubareas>
+        <@fdsWarning.warning>
+          The wells included in your nomination may have changed since you last checked as they are based on the
+          wells within the selected subareas at the time of submission.
+          Ensure that the included wells in the above summary are correct before you submit your nomination.
+        </@fdsWarning.warning>
+      </#if>
+
       <#if isSubmittable>
         <@fdsAction.submitButtons
           linkSecondaryAction=true

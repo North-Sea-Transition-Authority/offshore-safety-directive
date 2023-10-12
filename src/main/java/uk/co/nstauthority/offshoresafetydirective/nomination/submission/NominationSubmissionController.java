@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -90,12 +91,15 @@ public class NominationSubmissionController {
 
   private ModelAndView getModelAndView(NominationId nominationId, NominationDetail nominationDetail) {
 
+    var summaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
+
     var modelAndView = new ModelAndView("osd/nomination/submission/submitNomination")
         .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject("actionUrl", ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(nominationId)))
         .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail))
-        .addObject("summaryView",
-            nominationSummaryService.getNominationSummaryView(nominationDetail));
+        .addObject("summaryView", summaryView)
+        .addObject("hasLicenceBlockSubareas",
+            summaryView.wellSummaryView().getWellSelectionType().equals(WellSelectionType.LICENCE_BLOCK_SUBAREA));
 
     var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,

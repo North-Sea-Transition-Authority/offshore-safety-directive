@@ -37,7 +37,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -218,6 +222,53 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute("isSubmittable", isSubmittable));
   }
+
+  @Test
+  void getSubmissionPage_assertIsLicenceBlockSubareaTrueInModelProperties() throws Exception {
+    var wellSummaryView = WellSummaryView
+        .builder(WellSelectionType.LICENCE_BLOCK_SUBAREA)
+        .withSubareaSummary(NominatedBlockSubareaDetailViewTestUtil.builder().build())
+        .withExcludedWellSummaryView(new ExcludedWellView())
+        .build();
+    var nominationSummaryViewWithSubarea = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .build();
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryViewWithSubarea);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attribute("hasLicenceBlockSubareas", true));
+  }
+
+  @Test
+  void getSubmissionPage_assertIsLicenceBlockSubareaFalseInModelProperties() throws Exception {
+    var wellSummaryView = WellSummaryView
+        .builder(WellSelectionType.NO_WELLS)
+        .build();
+    var nominationSummaryViewWithSubarea = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .build();
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryViewWithSubarea);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attribute("hasLicenceBlockSubareas", false));
+  }
+
 
   @Test
   void getSubmissionPage_whenHasUpdateRequest_assertReasonInModelProperties() throws Exception {
