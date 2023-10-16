@@ -81,6 +81,9 @@ class AppointmentTimelineItemServiceTest {
   @Mock
   private AppointmentTerminationService appointmentTerminationService;
 
+  @Mock
+  private SystemOfRecordConfigurationProperties systemOfRecordConfigurationProperties;
+
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
 
@@ -609,7 +612,7 @@ class AppointmentTimelineItemServiceTest {
   }
 
   @Test
-  void getTimelineItemViews_whenAppointmentFromLegacyNomination_thenCreatedByReferenceIsLegacyReference() {
+  void getTimelineItemViews_whenAppointmentFromLegacyNomination_andMemberOfRegulatorTeam_thenCreatedByReferenceIsLegacyReference() {
 
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
@@ -620,8 +623,10 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByLegacyNominationReference(legacyNominationReference)
         .build();
 
-    given(userDetailService.getUserDetail())
-        .willThrow(InvalidAuthenticationException.class);
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(legacyAppointment),
@@ -633,7 +638,70 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
-        .containsEntry("createdByReference", legacyNominationReference);
+        .containsEntry("createdByReference", legacyNominationReference)
+        .containsEntry("offlineNominationDocumentUrl", systemOfRecordConfigurationProperties.offlineNominationDocumentUrl());
+  }
+
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class, mode = EnumSource.Mode.EXCLUDE, names = "REGULATOR")
+  void getTimelineItemViews_whenOfflineNominationWithLegacyNominationReference_andNotRegulator_thenCreatedByReferenceHasNoUrl(TeamType invalidTeamType) {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var legacyNominationReference = "legacy nomination reference";
+
+    var legacyAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference(legacyNominationReference)
+        .build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(invalidTeamType, Set.of(RolePermission.GRANT_ROLES)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(legacyAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", legacyNominationReference)
+        .doesNotContainKey("offlineNominationDocumentUrl");
+  }
+
+  @Test
+  void getTimelineItemViews_whenAppointmentFromLegacyNomination_andNoLegacyNominationProvided_thenCreatedByReferenceIsOfflineNomination() {
+
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var legacyAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference(null)
+        .build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(legacyAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText())
+        .doesNotContainKey("offlineNominationDocumentUrl");
   }
 
   @Test

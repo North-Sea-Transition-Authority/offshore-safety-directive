@@ -80,6 +80,13 @@
                 openInNewTab=true
                 linkClass="govuk-link govuk-link--no-visited-state"
             />
+        <#elseif modelProperties["offlineNominationDocumentUrl"]?has_content>
+            <@fdsAction.link
+                linkText=modelProperties["createdByReference"]
+                linkUrl=modelProperties["offlineNominationDocumentUrl"]
+                openInNewTab=true
+                linkClass="govuk-link govuk-link--no-visited-state"
+            />
         <#else>
             ${modelProperties["createdByReference"]}
         </#if>

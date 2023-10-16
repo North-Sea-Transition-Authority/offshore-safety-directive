@@ -64,6 +64,7 @@ public class AppointmentTimelineItemService {
 
   private final AppointmentPhasesService appointmentPhasesService;
 
+  private final SystemOfRecordConfigurationProperties systemOfRecordConfiguration;
 
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
@@ -72,7 +73,8 @@ public class AppointmentTimelineItemService {
                                  UserDetailService userDetailService,
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
-                                 AppointmentPhasesService appointmentPhasesService) {
+                                 AppointmentPhasesService appointmentPhasesService,
+                                 SystemOfRecordConfigurationProperties systemOfRecordConfiguration) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -80,6 +82,7 @@ public class AppointmentTimelineItemService {
     this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentPhasesService = appointmentPhasesService;
+    this.systemOfRecordConfiguration = systemOfRecordConfiguration;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
@@ -230,7 +233,11 @@ public class AppointmentTimelineItemService {
           appointmentTimelineItemDto,
           nominationIdToReferenceMap
       );
-      case OFFLINE_NOMINATION -> addOfflineNominationModelProperties(modelProperties, appointmentDto);
+      case OFFLINE_NOMINATION -> addOfflineNominationModelProperties(
+          modelProperties,
+          appointmentDto,
+          appointmentTimelineItemDto.isMemberOfRegulatorTeam()
+      );
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
     }
 
@@ -289,12 +296,17 @@ public class AppointmentTimelineItemService {
   }
 
   private void addOfflineNominationModelProperties(AssetTimelineModelProperties modelProperties,
-                                                   AppointmentDto appointmentDto) {
+                                                   AppointmentDto appointmentDto,
+                                                   boolean isMemberOfRegulatorTeam) {
 
     var reference = Optional.ofNullable(appointmentDto.legacyNominationReference())
         .orElse(AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText());
 
     modelProperties.addProperty("createdByReference", reference);
+
+    if (!AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText().equals(reference) && isMemberOfRegulatorTeam) {
+      modelProperties.addProperty("offlineNominationDocumentUrl", systemOfRecordConfiguration.offlineNominationDocumentUrl());
+    }
   }
 
   private void addDeemedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {

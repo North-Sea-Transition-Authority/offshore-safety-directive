@@ -97,6 +97,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_SERVICE_LAST_TEST_DATE                 | The date the service was last tested. E.g. 05 May 2023                                               |
 | OSD_SERVICE_LAST_TESTED_BY                 | The company who carried out the last service E.g. Fivium Ltd                                         |
 | OSD_DESIGN_SYSTEM_LAST_TEST_DATE           | The date the design system was last tested. E.g. 05 May 2023                                         |
+| OSD_OFFLINE_DOCUMENT_LOCATION_URL          | The link to the location of offline appointments documents                                           |   
 | OSD_EPMQ_MESSAGE_POLL_FREQUENCY_SECONDS    | The delay for epmq messages annotated with @Scheduled (Optional) defaults to 30                      |
 
 ### 3. Initialise the Fivium Design System
