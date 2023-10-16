@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.pears;
+package uk.co.nstauthority.offshoresafetydirective.wons;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,14 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 
 @DatabaseIntegrationTest
 @SpringBootTest(properties = { "epmq.message-poll-interval-seconds = 1" })
-class PearsLicenceSqsServiceIntegrationTest {
+class WonsApplicationSqsServiceIntegrationTest {
 
   @MockBean
   private SqsService sqsService;
@@ -28,11 +28,11 @@ class PearsLicenceSqsServiceIntegrationTest {
   protected SnsService snsService;
 
   @Autowired
-  protected PearsLicenceSqsService pearsLicenceSqsService;
+  protected WonsApplicationSqsService wonsApplicationSqsService;
 
   @Test
   void receiveMessages_verifySchedule() {
-    var expectedSchedule = 1L;
+    var expectedSchedule = 30L;
     var expectedInvocations = 2;
     var maxTimeInSeconds = expectedSchedule * (expectedInvocations + 1);
     var counter = new AtomicInteger();
@@ -42,7 +42,7 @@ class PearsLicenceSqsServiceIntegrationTest {
       return invocation;
     }).when(sqsService).receiveQueueMessages(
         any(),
-        eq(PearsCorrectionAppliedEpmqMessage.class),
+        eq(WonsApplicationSubmittedEpmqMessage.class),
         any()
     );
 
@@ -50,5 +50,4 @@ class PearsLicenceSqsServiceIntegrationTest {
         .atMost(maxTimeInSeconds, TimeUnit.SECONDS)
         .untilAtomic(counter, Matchers.is(expectedInvocations));
   }
-
 }

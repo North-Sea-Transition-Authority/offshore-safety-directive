@@ -1,6 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import java.util.concurrent.TimeUnit;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -19,6 +22,7 @@ import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 class PearsLicenceSqsService {
 
   static final String LICENCES_OSD_QUEUE_NAME = "pears-licences-osd";
+  private static final Logger LOGGER = LoggerFactory.getLogger(PearsLicenceSqsService.class);
 
   private final SqsService sqsService;
   private final SnsService snsService;
@@ -41,8 +45,10 @@ class PearsLicenceSqsService {
     snsService.subscribeTopicToSqsQueue(licencesSnsTopicArn, licencesOsdQueueUrl);
   }
 
-  @Scheduled(fixedDelay = 5L, timeUnit = TimeUnit.SECONDS)
+  @Scheduled(fixedDelayString = "${epmq.message-poll-interval-seconds}", timeUnit = TimeUnit.SECONDS)
+  @SchedulerLock(name = "PearsLicenceSqsService_receiveMessages")
   void receiveMessages() {
+    LOGGER.info("Process received PEARS licence messages");
     sqsService.receiveQueueMessages(
         licencesOsdQueueUrl,
         // TODO OSDOP-114 - Change this to support multiple messages on the same topic

@@ -73,6 +73,8 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.532'
 	implementation 'fi.solita.clamav:clamav-client:1.0.1'
 	implementation 'commons-validator:commons-validator:1.7'
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.6.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.6.0'
 
 	// fivium managed dependencies
 	implementation 'uk.co.fivium.energyportalapi:client:v6.2.0'

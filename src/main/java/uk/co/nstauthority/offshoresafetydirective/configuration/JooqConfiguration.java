@@ -57,8 +57,8 @@ class JooqConfiguration {
   }
 
   @Bean
-  public Schema getDefaultSchema(JooqConfigurationProperties jooqConfigurationProperties) {
-    return DSL.schema(jooqConfigurationProperties.schema());
+  public Schema getDefaultSchema(DatabaseConfigurationProperties databaseConfigurationProperties) {
+    return DSL.schema(databaseConfigurationProperties.schema());
   }
 
 }

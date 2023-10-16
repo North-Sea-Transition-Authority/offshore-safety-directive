@@ -1,5 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.wons;
 
+import java.util.concurrent.TimeUnit;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
@@ -18,6 +22,7 @@ import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 class WonsApplicationSqsService {
 
   static final String APPLICATIONS_OSD_QUEUE_NAME = "wons-applications-osd";
+  private static final Logger LOGGER = LoggerFactory.getLogger(WonsApplicationSqsService.class);
 
   private final SqsService sqsService;
   private final SnsService snsService;
@@ -38,10 +43,16 @@ class WonsApplicationSqsService {
     snsService.subscribeTopicToSqsQueue(applicationsSnsTopicArn, applicationsOsdQueueUrl);
   }
 
-  @Scheduled(fixedDelay = 5000L)
+  @Scheduled(fixedDelayString = "${epmq.message-poll-interval-seconds}", timeUnit = TimeUnit.SECONDS)
+  @SchedulerLock(name = "WonsApplicationSqsService_receiveMessages")
   void receiveMessages() {
-    sqsService.receiveQueueMessages(applicationsOsdQueueUrl, WonsApplicationSubmittedEpmqMessage.class, message -> {
+    LOGGER.info("Process received WONS application messages");
+    sqsService.receiveQueueMessages(
+        applicationsOsdQueueUrl,
+        WonsApplicationSubmittedEpmqMessage.class,
+        message -> {
       // TODO: Handle messages as part of https://ogajira.atlassian.net/browse/OSDOP-17
-    });
+      }
+    );
   }
 }
