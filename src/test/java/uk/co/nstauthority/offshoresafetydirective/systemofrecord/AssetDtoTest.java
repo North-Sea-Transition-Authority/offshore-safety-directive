@@ -17,6 +17,7 @@ class AssetDtoTest {
         .withAssetName("asset name")
         .withPortalAssetId("portal asset id")
         .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withAssetStatus(AssetStatus.EXTANT)
         .build();
 
     var resultingAssetDto = AssetDto.fromAsset(asset);
@@ -26,13 +27,15 @@ class AssetDtoTest {
             AssetDto::assetId,
             AssetDto::assetName,
             AssetDto::portalAssetId,
-            AssetDto::portalAssetType
+            AssetDto::portalAssetType,
+            AssetDto::status
         )
         .containsExactly(
             new AssetId(assetId),
             new AssetName("asset name"),
             new PortalAssetId("portal asset id"),
-            PortalAssetType.INSTALLATION
+            PortalAssetType.INSTALLATION,
+            AssetStatus.EXTANT
         );
   }
 

@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -203,5 +205,90 @@ class PortalAssetRetrievalServiceTest {
 
     var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
     assertThat(result).contains(expectedName);
+  }
+
+  @Test
+  void isExtantInPortal_whenWellboreIsExtantInPortal_thenTrue() {
+    var wellboreId = new WellboreId(123);
+    var portalAssetId = new PortalAssetId(String.valueOf(wellboreId.id()));
+
+    when(wellQueryService.getWell(wellboreId))
+        .thenReturn(Optional.of(WellDtoTestUtil.builder().build()));
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.WELLBORE);
+    assertTrue(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenWellboreIsNotExtantInPortal_thenFalse() {
+    var wellboreId = new WellboreId(123);
+    var portalAssetId = new PortalAssetId(String.valueOf(wellboreId.id()));
+
+    when(wellQueryService.getWell(wellboreId))
+        .thenReturn(Optional.empty());
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.WELLBORE);
+    assertFalse(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenInstallationIsExtantInPortal_thenTrue() {
+    var installationId = new InstallationId(123);
+    var portalAssetId = new PortalAssetId(String.valueOf(installationId.id()));
+
+    when(installationQueryService.getInstallation(installationId))
+        .thenReturn(Optional.of(InstallationDtoTestUtil.builder().build()));
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.INSTALLATION);
+    assertTrue(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenInstallationIsNotExtantInPortal_thenFalse() {
+    var installationId = new InstallationId(123);
+    var portalAssetId = new PortalAssetId(String.valueOf(installationId.id()));
+
+    when( installationQueryService.getInstallation(installationId))
+        .thenReturn(Optional.empty());
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.INSTALLATION);
+    assertFalse(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenLicenceBlockSubareaIsExtantInPortal_thenTrue() {
+    var subareaId = new LicenceBlockSubareaId("123");
+    var portalAssetId = new PortalAssetId(subareaId.id());
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+        .thenReturn(Optional.of(LicenceBlockSubareaDtoTestUtil.builder().build()));
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);
+    assertTrue(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenLicenceBlockSubareaDoesNotExist_thenFalse() {
+    var subareaId = new LicenceBlockSubareaId("123");
+    var portalAssetId = new PortalAssetId(subareaId.id());
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+        .thenReturn(Optional.empty());
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);
+    assertFalse(resultingIsExtantInPortal);
+  }
+
+  @Test
+  void isExtantInPortal_whenLicenceBlockSubareaIsNotExtantInPortal_thenFalse() {
+    var subareaId = new LicenceBlockSubareaId("123");
+    var portalAssetId = new PortalAssetId(subareaId.id());
+
+    var nonExtantSubarea = LicenceBlockSubareaDtoTestUtil.builder().isExtant(false).build();
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+        .thenReturn(Optional.of(nonExtantSubarea));
+
+    var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);
+    assertFalse(resultingIsExtantInPortal);
   }
 }

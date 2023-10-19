@@ -56,6 +56,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTest
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
@@ -134,6 +135,18 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
 
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(AssetStatus.EXTANT)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(APPOINTMENT_ID.id())
+        .withAsset(asset)
+        .build();
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(appointment));
+
     new HasPermissionSecurityTestUtil.SmokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
@@ -161,9 +174,11 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void renderTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
+  void renderTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_andHasExtantAssetStatus_thenAssertOk() throws Exception {
+    var asset = AssetTestUtil.builder().withAssetStatus(AssetStatus.EXTANT).build();
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
+        .withAsset(asset)
         .withId(APPOINTMENT_ID.id())
         .build();
     var currentAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
@@ -177,11 +192,48 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
 
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(currentAppointment));
+
     mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
             .with(user(USER)))
         .andExpect(status().isOk());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void renderTermination_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantAssetStatus) throws Exception {
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantAssetStatus)
+        .build();
+
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withResponsibleFromDate(LocalDate.now())
+        .withResponsibleToDate(null)
+        .withId(APPOINTMENT_ID.id())
+        .build();
+
+    var endAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .willReturn(Optional.of(endAppointmentDto));
+
+    when(appointmentTerminationService.hasBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(false);
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID)).thenReturn(Optional.of(currentAppointment));
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).renderTermination(APPOINTMENT_ID)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -256,6 +308,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
     var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
+        .withAssetStatus(AssetStatus.EXTANT)
         .build();
 
     var currentAppointment = AppointmentTestUtil.builder()
@@ -266,6 +319,9 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
     var assetDto = AssetDto.fromAsset(asset);
     var appointmentDto = AppointmentDto.fromAppointment(currentAppointment);
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(currentAppointment));
 
     when(appointmentTerminationService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(currentAppointment));
@@ -333,6 +389,41 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void submitTermination_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantStatus)
+        .build();
+
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withResponsibleFromDate(LocalDate.now())
+        .withResponsibleToDate(null)
+        .withId(APPOINTMENT_ID.id())
+        .build();
+
+    var endAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    given(appointmentAccessService.findAppointmentDtoById(APPOINTMENT_ID))
+        .willReturn(Optional.of(endAppointmentDto));
+
+    when(appointmentTerminationService.hasBeenTerminated(APPOINTMENT_ID))
+        .thenReturn(false);
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID)).thenReturn(Optional.of(currentAppointment));
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(AppointmentTerminationController.class).submitTermination(APPOINTMENT_ID, null, null, null)))
+            .with(user(USER))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
+  }
+
   @SecurityTest
   void submitTermination_whenAppointmentIsNotCurrent_thenAssertForbidden() throws Exception {
     var currentAppointment = AppointmentTestUtil.builder()
@@ -356,11 +447,19 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void submitTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(AssetStatus.EXTANT)
+        .build();
+
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
         .withId(APPOINTMENT_ID.id())
+        .withAsset(asset)
         .build();
     var currentAppointmentDto = AppointmentDto.fromAppointment(currentAppointment);
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(currentAppointment));
 
     given(teamMemberService.getUserAsTeamMembers(USER))
         .willReturn(List.of(APPOINTMENT_MANAGER));
@@ -416,6 +515,18 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
 
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(AssetStatus.EXTANT)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(APPOINTMENT_ID.id())
+        .withAsset(asset)
+        .build();
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(appointment));
+
     mockMvc.perform(post(
             ReverseRouter.route(
                 on(AppointmentTerminationController.class).submitTermination(APPOINTMENT_ID, null, null, null)))
@@ -449,6 +560,18 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
+
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(AssetStatus.EXTANT)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withId(APPOINTMENT_ID.id())
+        .withAsset(asset)
+        .build();
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(appointment));
 
     var files = FileUploadFormTestUtil.builder()
         .withUploadedFileId(uploadedFileId.uuid())
@@ -494,9 +617,11 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(appointment));
 
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
+        .thenReturn(Optional.of(appointment));
+
     when(appointmentTerminationService.hasNotBeenTerminated(APPOINTMENT_ID))
         .thenReturn(true);
-
 
     var assetName = "asset name";
     when(appointmentTerminationService.getAssetName(assetDto))

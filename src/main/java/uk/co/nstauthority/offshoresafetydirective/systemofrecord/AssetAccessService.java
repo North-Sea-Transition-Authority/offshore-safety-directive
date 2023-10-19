@@ -18,4 +18,9 @@ public class AssetAccessService {
     return assetRepository.findByPortalAssetIdAndPortalAssetType(assetId.id(), portalAssetType)
         .map(AssetDto::fromAsset);
   }
+
+  public Optional<AssetDto> getAsset(AssetId assetId) {
+    return assetRepository.findById(assetId.id())
+        .map(AssetDto::fromAsset);
+  }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
@@ -42,6 +43,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor;
   private final IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor;
   private final HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor;
+  private final HasAssetStatusInterceptor hasAssetStatusInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
@@ -52,7 +54,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor,
                       HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor,
                       IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor,
-                      HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor) {
+                      HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor,
+                      HasAssetStatusInterceptor hasAssetStatusInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
@@ -62,6 +65,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.hasNotBeenTerminatedInterceptor = hasNotBeenTerminatedInterceptor;
     this.isMemberOfTeamTypeInterceptor = isMemberOfTeamTypeInterceptor;
     this.hasAppointmentStatusInterceptor = hasAppointmentStatusInterceptor;
+    this.hasAssetStatusInterceptor = hasAssetStatusInterceptor;
   }
 
   @Override
@@ -95,6 +99,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(isMemberOfTeamTypeInterceptor)
         .addPathPatterns("/appointment/**", "/nomination/**");
+    registry.addInterceptor(hasAssetStatusInterceptor)
+        .addPathPatterns("/asset/**", "/appointment/**");
   }
 
   @Bean

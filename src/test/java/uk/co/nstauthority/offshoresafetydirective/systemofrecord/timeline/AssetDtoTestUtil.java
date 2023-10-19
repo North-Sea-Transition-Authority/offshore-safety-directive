@@ -5,6 +5,7 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 
@@ -28,6 +29,8 @@ public class AssetDtoTestUtil {
 
     private PortalAssetType portalAssetType = PortalAssetType.INSTALLATION;
 
+    private AssetStatus assetStatus = AssetStatus.EXTANT;
+
     public Builder withAssetId(UUID assetId) {
       this.assetId = new AssetId(assetId);
       return this;
@@ -48,12 +51,18 @@ public class AssetDtoTestUtil {
       return this;
     }
 
+    public Builder withStatus(AssetStatus status) {
+      this.assetStatus = status;
+      return this;
+    }
+
     public AssetDto build() {
       return new AssetDto(
           assetId,
           portalAssetId,
           assetName,
-          portalAssetType
+          portalAssetType,
+          assetStatus
       );
     }
   }

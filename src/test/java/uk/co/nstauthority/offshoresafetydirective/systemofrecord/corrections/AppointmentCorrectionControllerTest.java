@@ -52,6 +52,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTest
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
@@ -115,6 +116,34 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             status().isForbidden()
         )
         .test();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void renderCorrection_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantStatus)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(appointmentTerminationService.hasBeenTerminated(appointmentId))
+        .thenReturn(false);
+
+    when(appointmentAccessService.getAppointment(appointmentId)).thenReturn(Optional.ofNullable(appointment));
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
   }
 
   @SecurityTest
@@ -671,6 +700,35 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null)))
             .with(csrf())
             .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void submitCorrection_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantStatus)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(appointmentTerminationService.hasBeenTerminated(appointmentId))
+        .thenReturn(false);
+
+    when(appointmentAccessService.getAppointment(appointmentId)).thenReturn(Optional.ofNullable(appointment));
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null)))
+            .with(user(USER))
+            .with(csrf()))
         .andExpect(status().isForbidden());
   }
 

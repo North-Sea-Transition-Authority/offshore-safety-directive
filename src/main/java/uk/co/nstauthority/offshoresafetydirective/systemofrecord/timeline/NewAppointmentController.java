@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
@@ -33,7 +34,11 @@ import uk.co.nstauthority.offshoresafetydirective.organisation.unit.Organisation
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -57,6 +62,7 @@ public class NewAppointmentController {
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final NominationDetailService nominationDetailService;
+  private final AssetAccessService assetAccessService;
 
   @Autowired
   public NewAppointmentController(PortalAssetRetrievalService portalAssetRetrievalService,
@@ -66,7 +72,8 @@ public class NewAppointmentController {
                                   ControllerHelperService controllerHelperService,
                                   AppointmentCorrectionValidator appointmentCorrectionValidator,
                                   PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                  NominationDetailService nominationDetailService) {
+                                  NominationDetailService nominationDetailService,
+                                  AssetAccessService assetAccessService) {
     this.portalAssetRetrievalService = portalAssetRetrievalService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentService = appointmentService;
@@ -75,68 +82,79 @@ public class NewAppointmentController {
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.nominationDetailService = nominationDetailService;
+    this.assetAccessService = assetAccessService;
+  }
+
+  @GetMapping("/asset/{assetId}/appointment/add")
+  @HasAssetStatus(AssetStatus.EXTANT)
+  public ModelAndView renderNewAppointment(@PathVariable AssetId assetId) {
+    var assetDto = assetAccessService.getAsset(assetId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "No asset found with asset id [%s]".formatted(assetId.id()
+            ))
+        );
+    return getNewAppointmentForm(assetDto, new AppointmentCorrectionForm());
   }
 
   @GetMapping("/installation/{portalAssetId}/appointments/add")
   public ModelAndView renderNewInstallationAppointment(@PathVariable PortalAssetId portalAssetId) {
-    var assetType = PortalAssetType.INSTALLATION;
-    return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
+    return getOrCreateAssetIfInPortal(PortalAssetType.INSTALLATION, portalAssetId);
   }
 
   @GetMapping("/wellbore/{portalAssetId}/appointments/add")
   public ModelAndView renderNewWellboreAppointment(@PathVariable PortalAssetId portalAssetId) {
-    var assetType = PortalAssetType.WELLBORE;
-    return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
+    return getOrCreateAssetIfInPortal(PortalAssetType.WELLBORE, portalAssetId);
   }
 
   @GetMapping("/forward-approval/{portalAssetId}/appointments/add")
   public ModelAndView renderNewSubareaAppointment(@PathVariable PortalAssetId portalAssetId) {
-    var assetType = PortalAssetType.SUBAREA;
-    return getNewAppointmentForm(portalAssetId, assetType, new AppointmentCorrectionForm());
+    return getOrCreateAssetIfInPortal(PortalAssetType.SUBAREA, portalAssetId);
   }
 
-  @PostMapping("/installation/{portalAssetId}/appointments/add")
-  public ModelAndView createNewInstallationAppointment(@PathVariable PortalAssetId portalAssetId,
-                                                       @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                       BindingResult bindingResult,
-                                                       RedirectAttributes redirectAttributes) {
-    var portalAssetType = PortalAssetType.INSTALLATION;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
+  @PostMapping("/asset/{assetId}/appointment/add")
+  @HasAssetStatus(AssetStatus.EXTANT)
+  public ModelAndView createNewAppointment(@PathVariable AssetId assetId,
+                                           @ModelAttribute("form") AppointmentCorrectionForm form,
+                                           BindingResult bindingResult,
+                                           RedirectAttributes redirectAttributes) {
+    var asset = assetAccessService.getAsset(assetId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "No asset found with asset id [%s]".formatted(assetId.id()
+            ))
+        );
+    return processCreateNewAppointment(asset, form, bindingResult, redirectAttributes);
   }
 
-  @PostMapping("/wellbore/{portalAssetId}/appointments/add")
-  public ModelAndView createNewWellboreAppointment(@PathVariable PortalAssetId portalAssetId,
-                                                   @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                   BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-    var portalAssetType = PortalAssetType.WELLBORE;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
+  private ModelAndView getOrCreateAssetIfInPortal(PortalAssetType portalAssetType, PortalAssetId portalAssetId) {
+
+    if (portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType)) {
+      var asset = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
+      return ReverseRouter.redirect(on(NewAppointmentController.class).renderNewAppointment(asset.assetId()));
+    }
+
+    throw new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "No portal asset found with portal asset id [%s]".formatted(portalAssetId.id())
+    );
   }
 
-  @PostMapping("/forward-approval/{portalAssetId}/appointments/add")
-  public ModelAndView createNewSubareaAppointment(@PathVariable PortalAssetId portalAssetId,
-                                                  @ModelAttribute("form") AppointmentCorrectionForm form,
-                                                  BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-    var portalAssetType = PortalAssetType.SUBAREA;
-    return processCreateNewAppointment(portalAssetId, portalAssetType, form, bindingResult, redirectAttributes);
-  }
-
-  private ModelAndView processCreateNewAppointment(PortalAssetId portalAssetId, PortalAssetType portalAssetType,
+  private ModelAndView processCreateNewAppointment(AssetDto assetDto,
                                                    AppointmentCorrectionForm form, BindingResult bindingResult,
                                                    RedirectAttributes redirectAttributes) {
-
-    var assetDto = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
 
     var validatorHint = new AppointmentCorrectionValidationHint(
         null,
         assetDto.assetId(),
-        portalAssetType
+        assetDto.portalAssetType()
     );
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
     return controllerHelperService.checkErrorsAndRedirect(
         bindingResult,
-        getNewAppointmentForm(portalAssetId, portalAssetType, form),
+        getNewAppointmentForm(assetDto, form),
         form,
         () -> {
           appointmentService.addManualAppointment(form, assetDto);
@@ -150,50 +168,41 @@ public class NewAppointmentController {
 
           NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
 
-          return switch (portalAssetType) {
+          return switch (assetDto.portalAssetType()) {
             case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderInstallationTimeline(portalAssetId));
+                .renderInstallationTimeline(assetDto.portalAssetId()));
             case WELLBORE -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderWellboreTimeline(portalAssetId));
+                .renderWellboreTimeline(assetDto.portalAssetId()));
             case SUBAREA -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderSubareaTimeline(portalAssetId));
+                .renderSubareaTimeline(assetDto.portalAssetId()));
           };
         }
     );
   }
 
-  private ModelAndView getNewAppointmentForm(PortalAssetId portalAssetId, PortalAssetType portalAssetType,
-                                             AppointmentCorrectionForm form) {
+  private ModelAndView getNewAppointmentForm(AssetDto assetDto, AppointmentCorrectionForm form) {
 
-    var submitUrl = switch (portalAssetType) {
-      case INSTALLATION -> ReverseRouter.route(on(NewAppointmentController.class)
-          .renderNewInstallationAppointment(portalAssetId));
-      case WELLBORE -> ReverseRouter.route(on(NewAppointmentController.class)
-          .renderNewWellboreAppointment(portalAssetId));
-      case SUBAREA -> ReverseRouter.route(on(NewAppointmentController.class)
-          .renderNewSubareaAppointment(portalAssetId));
-    };
-
-    var assetName = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType)
+    var assetName = portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType())
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "No portal asset of type [%s] found with ID [%s]".formatted(
-                portalAssetType,
-                portalAssetId.id()
+                assetDto.portalAssetType(),
+                assetDto.portalAssetId().id()
             )));
     var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
     var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("pageTitle", "Add appointment")
         .addObject("assetName", assetName)
-        .addObject("assetTypeDisplayName", portalAssetType.getDisplayName())
-        .addObject("assetTypeSentenceCaseDisplayName", portalAssetType.getSentenceCaseDisplayName())
-        .addObject("submitUrl", submitUrl)
+        .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
+        .addObject("assetTypeSentenceCaseDisplayName", assetDto.portalAssetType().getSentenceCaseDisplayName())
+        .addObject("submitUrl", ReverseRouter.route(on(NewAppointmentController.class)
+            .createNewAppointment(assetDto.assetId(), null, null, null)))
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
             .searchAllPortalOrganisations(null)))
-        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
+        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
         .addObject("appointmentTypes", appointmentTypes)
         .addObject("form", form)
-        .addObject("cancelUrl", getTimelineRoute(portalAssetId, portalAssetType))
+        .addObject("cancelUrl", getTimelineRoute(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .addObject(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
@@ -216,7 +225,7 @@ public class NewAppointmentController {
       });
     }
 
-    if (PortalAssetType.SUBAREA.equals(portalAssetType)) {
+    if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {
       modelAndView.addObject("phaseSelectionHint", "If decommissioning is required, another phase must be selected.");
     }
 

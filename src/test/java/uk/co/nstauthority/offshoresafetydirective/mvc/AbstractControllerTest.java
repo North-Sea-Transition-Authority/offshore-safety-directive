@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponsePar
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
@@ -37,6 +38,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
@@ -65,6 +67,7 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     PermissionService.class,
     WebSecurityConfiguration.class,
     IsMemberOfTeamTypeInterceptor.class,
+    HasAssetStatusInterceptor.class,
     RequestLogFilter.class,
     PostAuthenticationRequestMdcFilter.class
 })
@@ -97,6 +100,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected AppointmentAccessService appointmentAccessService;
+
+  @MockBean
+  protected AssetAccessService assetAccessService;
 
   @MockBean
   protected AppointmentTerminationService appointmentTerminationService;

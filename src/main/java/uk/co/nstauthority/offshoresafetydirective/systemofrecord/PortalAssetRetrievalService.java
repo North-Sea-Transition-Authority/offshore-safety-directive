@@ -65,5 +65,14 @@ public class PortalAssetRetrievalService {
     };
   }
 
-
+  public boolean isExtantInPortal(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+    return switch (portalAssetType) {
+      case WELLBORE -> getWellbore(new WellboreId(Integer.parseInt(portalAssetId.id()))).isPresent();
+      case INSTALLATION -> getInstallation(new InstallationId(Integer.parseInt(portalAssetId.id()))).isPresent();
+      case SUBAREA ->
+          getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id()))
+          .map(LicenceBlockSubareaDto::isExtant)
+          .orElse(false);
+    };
+  }
 }

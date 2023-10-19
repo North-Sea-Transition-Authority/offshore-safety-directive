@@ -4,7 +4,8 @@ public record AssetDto(
     AssetId assetId,
     PortalAssetId portalAssetId,
     AssetName assetName,
-    PortalAssetType portalAssetType
+    PortalAssetType portalAssetType,
+    AssetStatus status
 ) {
 
   public static AssetDto fromAsset(Asset asset) {
@@ -12,7 +13,8 @@ public record AssetDto(
         new AssetId(asset.getId()),
         new PortalAssetId(asset.getPortalAssetId()),
         new AssetName(asset.getAssetName()),
-        asset.getPortalAssetType()
+        asset.getPortalAssetType(),
+        asset.getStatus()
     );
   }
 }

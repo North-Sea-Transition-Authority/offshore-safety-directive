@@ -19,11 +19,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -45,8 +48,9 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
@@ -70,9 +74,6 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final Map<String, String> APPOINTMENT_TYPES =
       DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
-
-  @MockBean
-  private AssetAccessService assetAccessService;
 
   @MockBean
   private PortalAssetRetrievalService portalAssetRetrievalService;
@@ -102,10 +103,19 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   void smokeTestPermissions() {
     var portalAssetId = new PortalAssetId("123");
 
-    when(portalAssetRetrievalService.getAssetName(eq(portalAssetId), any()))
-        .thenReturn(Optional.of("Asset name"));
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetId(portalAssetId.id())
+        .withAssetId(UUID.randomUUID())
+        .build();
 
-    var assetDto = AssetDtoTestUtil.builder().build();
+    when(assetAccessService.getAsset(assetDto.assetId())).thenReturn(Optional.of(assetDto));
+
+    when(portalAssetRetrievalService.getAssetName(eq(assetDto.portalAssetId()), any()))
+        .thenReturn(Optional.of("asset name"));
+
+    when(portalAssetRetrievalService.isExtantInPortal(eq(portalAssetId), any(PortalAssetType.class)))
+        .thenReturn(true);
+
     when(assetPersistenceService.getOrCreateAsset(eq(portalAssetId), any()))
         .thenReturn(assetDto);
 
@@ -114,31 +124,29 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
         .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .renderNewInstallationAppointment(portalAssetId))
+                .renderNewAppointment(assetDto.assetId()))
         )
         .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .renderNewWellboreAppointment(portalAssetId))
+                .renderNewInstallationAppointment(portalAssetId)),
+            status().is3xxRedirection(),
+            status().isForbidden()
         )
         .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .renderNewSubareaAppointment(portalAssetId))
+                .renderNewWellboreAppointment(portalAssetId)),
+            status().is3xxRedirection(),
+            status().isForbidden()
         )
-        .withPostEndpoint(
+        .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewInstallationAppointment(portalAssetId, null, null, null)),
+                .renderNewSubareaAppointment(portalAssetId)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewWellboreAppointment(portalAssetId, null, null, null)),
-            status().is3xxRedirection(),
-            status().isForbidden()
-        )
-        .withPostEndpoint(
-            ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewSubareaAppointment(portalAssetId, null, null, null)),
+                .createNewAppointment(assetDto.assetId(), null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -146,30 +154,55 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   }
 
   @ParameterizedTest
-  @MethodSource("portalAssetTypeAndEndpointArguments")
-  void renderAppointment_whenNoAssetNameFound_thenError(
-      PortalAssetType portalAssetType,
-      Function<PortalAssetId, String> submitRouteGenerator,
-      Function<PortalAssetId, String> backRouteGenerator
-  ) throws Exception {
-    var portalAssetId = new PortalAssetId("123");
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void renderNewAppointment_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var assetId = new AssetId(UUID.randomUUID());
+    var asset = AssetDtoTestUtil.builder()
+        .withStatus(nonExtantStatus)
+        .withAssetId(assetId.id())
+        .build();
 
-    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+    when(assetAccessService.getAsset(assetId)).thenReturn(Optional.ofNullable(asset));
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).renderNewAppointment(assetId)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void renderNewAppointment_whenAssetNotFound_thenError() throws Exception {
+    var assetId = new AssetId(UUID.randomUUID());
+
+    when(assetAccessService.getAsset(assetId))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).renderNewAppointment(assetId)))
             .with(user(USER)))
         .andExpect(status().isNotFound());
   }
 
   @ParameterizedTest
   @MethodSource("portalAssetTypeAndEndpointArguments")
-  void renderAppointment_verifyAttributes(
-      PortalAssetType portalAssetType,
-      Function<PortalAssetId, String> submitRouteGenerator,
-      Function<PortalAssetId, String> backRouteGenerator
-  ) throws Exception {
+  void renderNewAppointment_assertModelProperties
+      (
+          PortalAssetType portalAssetType,
+          Function<PortalAssetId, String> submitRouteGenerator,
+          Function<PortalAssetId, String> backRouteGenerator
+      ) throws Exception {
     var portalAssetId = new PortalAssetId("123");
+    var assetId = new AssetId(UUID.randomUUID());
+    var asset = AssetDtoTestUtil.builder()
+        .withAssetId(assetId.id())
+        .withPortalAssetId(portalAssetId.id())
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    when(assetAccessService.getAsset(assetId))
+        .thenReturn(Optional.ofNullable(asset));
 
     var assetName = "asset name";
     when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
@@ -179,17 +212,15 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
         .thenReturn(phaseMap);
 
-    mockMvc.perform(get(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(get(ReverseRouter.route(on(NewAppointmentController.class).renderNewAppointment(assetId)))
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(model().attribute("pageTitle", "Add appointment"))
         .andExpect(model().attribute("assetName", assetName))
         .andExpect(model().attribute("assetTypeDisplayName", portalAssetType.getDisplayName()))
-        .andExpect(model().attribute(
-            "assetTypeSentenceCaseDisplayName",
-            portalAssetType.getSentenceCaseDisplayName()
-        ))
-        .andExpect(model().attribute("submitUrl", submitRouteGenerator.apply(portalAssetId)))
+        .andExpect(model().attribute("assetTypeSentenceCaseDisplayName", portalAssetType.getSentenceCaseDisplayName()))
+        .andExpect(model().attribute("submitUrl",
+            ReverseRouter.route(on(NewAppointmentController.class).createNewAppointment(assetId, null, null, null))))
         .andExpect(model().attribute("cancelUrl", backRouteGenerator.apply(portalAssetId)))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
@@ -205,23 +236,95 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   }
 
   @ParameterizedTest
+  @EnumSource(PortalAssetType.class)
+  void renderAppointment_whenNoAssetNameFound_thenError(PortalAssetType portalAssetType) throws Exception {
+    var portalAssetId = new PortalAssetId("123");
+
+    var asset = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .withPortalAssetId(portalAssetId.id())
+        .build();
+
+    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
+        .thenReturn(asset);
+
+    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(get(ReverseRouter.route(on(NewAppointmentController.class).renderNewAppointment(asset.assetId())))
+            .with(user(USER)))
+        .andExpect(status().isNotFound());
+  }
+
+  @ParameterizedTest
+  @MethodSource("portalAssetTypeAndEndpointArguments")
+  void renderAppointment_verifyAttributes(
+      PortalAssetType portalAssetType,
+      Function<PortalAssetId, String> submitRouteGenerator,
+      Function<PortalAssetId, String> backRouteGenerator
+  ) throws Exception {
+    var portalAssetId = new PortalAssetId("123");
+
+    var asset = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .withPortalAssetId(portalAssetId.id())
+        .build();
+
+    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
+        .thenReturn(asset);
+
+    when(portalAssetRetrievalService.isExtantInPortal(eq(portalAssetId), any(PortalAssetType.class)))
+        .thenReturn(true);
+
+    var assetName = "asset name";
+    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+        .thenReturn(Optional.of(assetName));
+
+    var phaseMap = Map.of("key", "value");
+    when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
+        .thenReturn(phaseMap);
+
+    mockMvc.perform(get(submitRouteGenerator.apply(portalAssetId))
+            .with(user(USER)))
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(NewAppointmentController.class)
+            .renderNewAppointment(asset.assetId()))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("portalAssetTypeAndEndpointArguments")
+  void renderAppointment_whenAssetNotExtantInPortal_thenNotFound(
+      PortalAssetType portalAssetType,
+      Function<PortalAssetId, String> submitRouteGenerator,
+      Function<PortalAssetId, String> backRouteGenerator
+  ) throws Exception {
+    var portalAssetId = new PortalAssetId("123");
+
+    when(portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType))
+        .thenReturn(false);
+
+    mockMvc.perform(get(submitRouteGenerator.apply(portalAssetId))
+            .with(user(USER)))
+        .andExpect(status().isNotFound());
+  }
+
+  @ParameterizedTest
   @MethodSource("portalAssetTypeAndEndpointArguments")
   void createAppointment_whenHasError_thenVerifyAttributes(
       PortalAssetType portalAssetType,
       Function<PortalAssetId, String> submitRouteGenerator,
       Function<PortalAssetId, String> backRouteGenerator
   ) throws Exception {
-    int portalAssetIdAsInt = 123;
-    var portalAssetId = new PortalAssetId(Integer.toString(portalAssetIdAsInt));
 
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
-        .thenReturn(assetDto);
+
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
 
     var assetName = "asset name";
-    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+    when(portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), portalAssetType))
         .thenReturn(Optional.of(assetName));
 
     var phaseMap = Map.of("key", "value");
@@ -234,7 +337,11 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
       return invocation;
     }).when(appointmentCorrectionValidator).validate(any(), any(), any());
 
-    mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class)
+                    .createNewAppointment(assetDto.assetId(), null, null, null)
+            ))
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().isOk())
@@ -245,8 +352,9 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             "assetTypeSentenceCaseDisplayName",
             portalAssetType.getSentenceCaseDisplayName()
         ))
-        .andExpect(model().attribute("submitUrl", submitRouteGenerator.apply(portalAssetId)))
-        .andExpect(model().attribute("cancelUrl", backRouteGenerator.apply(portalAssetId)))
+        .andExpect(model().attribute("submitUrl", ReverseRouter.route(on(NewAppointmentController.class)
+            .createNewAppointment(assetDto.assetId(), null, null, null))))
+        .andExpect(model().attribute("cancelUrl", backRouteGenerator.apply(assetDto.portalAssetId())))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
@@ -261,28 +369,18 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attributeDoesNotExist("preselectedOperator"));
   }
 
-  @ParameterizedTest
-  @MethodSource("portalAssetTypeAndEndpointArguments")
-  void createAppointment_whenHasError_andHasOperatorSelected_verifyHasPreselectedOperatorAttribute(
-      PortalAssetType portalAssetType,
-      Function<PortalAssetId, String> submitRouteGenerator,
-      Function<PortalAssetId, String> backRouteGenerator
-  ) throws Exception {
-    int portalAssetIdAsInt = 123;
-    var portalAssetId = new PortalAssetId(Integer.toString(portalAssetIdAsInt));
-
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetType(portalAssetType)
-        .build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
-        .thenReturn(assetDto);
+  @Test
+  void createAppointment_whenHasError_andHasOperatorSelected_verifyHasPreselectedOperatorAttribute() throws Exception {
+    var assetDto = AssetDtoTestUtil.builder().build();
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
 
     var assetName = "asset name";
-    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+    when(portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
         .thenReturn(Optional.of(assetName));
 
     var phaseMap = Map.of("key", "value");
-    when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
+    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
         .thenReturn(phaseMap);
 
     doAnswer(invocation -> {
@@ -302,7 +400,9 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
         .thenReturn(Optional.of(portalOrganisationDto));
 
-    mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)))
             .with(user(USER))
             .with(csrf())
             .flashAttr("form", form))
@@ -323,17 +423,15 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
       Function<PortalAssetId, String> submitRouteGenerator,
       Function<PortalAssetId, String> backRouteGenerator
   ) throws Exception {
-    int portalAssetIdAsInt = 123;
-    var portalAssetId = new PortalAssetId(Integer.toString(portalAssetIdAsInt));
 
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
-        .thenReturn(assetDto);
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
 
     var assetName = "asset name";
-    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+    when(portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), portalAssetType))
         .thenReturn(Optional.of(assetName));
 
     var notificationBanner = NotificationBanner.builder()
@@ -343,11 +441,13 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         ))
         .build();
 
-    mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)))
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(backRouteGenerator.apply(portalAssetId)))
+        .andExpect(redirectedUrl(backRouteGenerator.apply(assetDto.portalAssetId())))
         .andExpect(notificationBanner(notificationBanner));
 
     verify(appointmentService).addManualAppointment(any(), eq(assetDto));
@@ -360,55 +460,53 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
       Function<PortalAssetId, String> submitRouteGenerator,
       Function<PortalAssetId, String> backRouteGenerator
   ) throws Exception {
-    int portalAssetIdAsInt = 123;
-    var portalAssetId = new PortalAssetId(Integer.toString(portalAssetIdAsInt));
 
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
-        .thenReturn(assetDto);
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
 
-    when(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getAsset(assetDto.portalAssetId(), portalAssetType))
         .thenReturn(Optional.empty());
 
     var assetName = "asset name";
-    when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
+    when(portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), portalAssetType))
         .thenReturn(Optional.of(assetName));
 
     var asset = AssetTestUtil.builder().build();
     when(assetPersistenceService.persistNominatedAssets(any()))
         .thenReturn(List.of(asset));
 
-    mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)
+            ))
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(backRouteGenerator.apply(portalAssetId)));
+        .andExpect(redirectedUrl(backRouteGenerator.apply(assetDto.portalAssetId())));
 
     verify(appointmentService).addManualAppointment(any(), eq(assetDto));
   }
 
-  @ParameterizedTest
-  @MethodSource("portalAssetTypeAndEndpointArguments")
-  void createAppointment_whenInstallationDtoNotFound_thenVerifyError(
-      PortalAssetType portalAssetType,
-      Function<PortalAssetId, String> submitRouteGenerator,
-      Function<PortalAssetId, String> backRouteGenerator
-  ) throws Exception {
-    int portalAssetIdAsInt = 123;
-    var portalAssetId = new PortalAssetId(Integer.toString(portalAssetIdAsInt));
+  @Test
+  void createAppointment_whenInstallationDtoNotFound_thenVerifyError() throws Exception {
+    var portalAssetIdAsInt = 123;
 
     var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetType(portalAssetType)
+        .withPortalAssetId(String.valueOf(portalAssetIdAsInt))
         .build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType))
-        .thenReturn(assetDto);
+
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
 
     when(portalAssetRetrievalService.getInstallation(new InstallationId(portalAssetIdAsInt)))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(post(submitRouteGenerator.apply(portalAssetId))
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)))
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().isNotFound());

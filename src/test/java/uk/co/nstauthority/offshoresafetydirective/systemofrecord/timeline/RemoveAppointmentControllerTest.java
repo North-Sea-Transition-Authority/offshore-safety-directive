@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -40,6 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStat
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -109,6 +113,31 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
             status().isForbidden()
         )
         .test();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void renderRemoveAppointment_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantStatus)
+        .build();
+
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(APPOINTMENT_ID.id())
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID)).thenReturn(Optional.of(currentAppointment));
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(RemoveAppointmentController.class).renderRemoveAppointment(APPOINTMENT_ID)))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -260,6 +289,32 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
             .renderRemoveAppointment(APPOINTMENT_ID)))
             .with(user(USER)))
         .andExpect(status().isInternalServerError());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void removeAppointment_whenNonExtantAssetStatus_verifyForbidden(AssetStatus nonExtantStatus) throws Exception {
+    var asset = AssetTestUtil.builder()
+        .withAssetStatus(nonExtantStatus)
+        .build();
+
+    var currentAppointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(APPOINTMENT_ID.id())
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+
+    given(teamMemberService.getUserAsTeamMembers(USER))
+        .willReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(appointmentAccessService.getAppointment(APPOINTMENT_ID)).thenReturn(Optional.of(currentAppointment));
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(RemoveAppointmentController.class).removeAppointment(APPOINTMENT_ID, null)))
+            .with(user(USER))
+            .with(csrf()))
+        .andExpect(status().isForbidden());
   }
 
   @Test
