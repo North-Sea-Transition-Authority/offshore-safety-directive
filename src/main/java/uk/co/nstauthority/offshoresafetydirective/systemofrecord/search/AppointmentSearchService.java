@@ -287,37 +287,6 @@ class AppointmentSearchService {
 
         appointments.addAll(subareaAppointments);
       }
-
-      // All the appointments created so far are from assets known by the Energy Portal.
-      // Since appointment some assets may no longer exist in the source sets but if the appointment
-      // is valid for the search performed it should be returned with the cached asset name at time of
-      // appointment.
-
-      var assetIdsKnownByEnergyPortal = appointments
-          .stream()
-          .map(AppointmentSearchItemDto::assetId)
-          .toList();
-
-      // add appointments for assets we don't have in the energy portal api anymore
-      appointmentQueryResultItems
-          .entrySet()
-          .stream()
-          .filter(appointmentResult -> !assetIdsKnownByEnergyPortal.contains(appointmentResult.getKey()))
-          .forEach(appointmentResult -> {
-
-            AppointmentQueryResultItemDto appointmentQueryResultItem =
-                appointmentQueryResultItems.get(appointmentResult.getKey());
-
-            AppointmentSearchItemDto appointment = createAppointmentSearchItem(
-                appointmentResult.getKey(),
-                new AssetName(appointmentQueryResultItem.getAssetName()),
-                appointmentResult.getValue().getPortalAssetType(),
-                appointmentQueryResultItem,
-                organisationUnits
-            );
-
-            appointments.add(appointment);
-          });
     }
 
     return appointments;

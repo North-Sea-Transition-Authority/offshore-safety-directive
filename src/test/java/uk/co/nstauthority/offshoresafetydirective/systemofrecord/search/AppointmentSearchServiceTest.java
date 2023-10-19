@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
@@ -156,13 +157,12 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchAppointments_whenInstallationNotReturnedByApi_thenAssetNameFromCache() {
+  void searchAppointments_whenInstallationNotReturnedByApi_thenNoAppointmentsReturned() {
 
     var appointedInstallationId = new InstallationId(100);
 
     var appointedInstallation = InstallationDtoTestUtil.builder()
         .withId(appointedInstallationId.id())
-        .withName("ASSET NAME FROM API")
         .build();
 
     var appointedOperatorId = new PortalOrganisationUnitId(200);
@@ -177,7 +177,6 @@ class AppointmentSearchServiceTest {
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
@@ -199,10 +198,8 @@ class AppointmentSearchServiceTest {
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
-    // then the asset name is the cached name in the appointment and not the name of the asset from the API
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
-        .containsExactly("NOT THE ASSET NAME FROM THE API");
+    // then no appointments are returned
+    assertThat(resultingAppointments).isEmpty();
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
@@ -285,13 +282,12 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchAppointments_whenWellNotReturnedByApi_thenAssetNameFromCache() {
+  void searchAppointments_whenWellNotReturnedByApi_thenNoAppointmentsReturned() {
 
     var appointedWellboreId = new WellboreId(100);
 
     var appointedWellbore = WellDtoTestUtil.builder()
         .withWellboreId(appointedWellboreId.id())
-        .withRegistrationNumber("ASSET NAME FROM API")
         .build();
 
     var appointedOperatorId = new PortalOrganisationUnitId(200);
@@ -306,7 +302,6 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedWellbore.wellboreId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
@@ -328,10 +323,8 @@ class AppointmentSearchServiceTest {
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value()
-        )
-        .containsExactly("NOT THE ASSET NAME FROM THE API");
+    // then no appointments are returned
+    assertThat(resultingAppointments).isEmpty();
 
     then(installationQueryService)
         .shouldHaveNoInteractions();
@@ -414,13 +407,12 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchAppointments_whenForwardApprovalNotReturnedByApi_thenAssetNameFromCache() {
+  void searchAppointments_whenForwardApprovalNotReturnedByApi_thenNoAppointmentsReturned() {
 
     var appointedSubareaId = new LicenceBlockSubareaId("subarea-id");
 
     var appointedSubarea = LicenceBlockSubareaDtoTestUtil.builder()
         .withSubareaId(appointedSubareaId.id())
-        .withSubareaName("ASSET NAME FROM API")
         .build();
 
     var appointedOperatorId = new PortalOrganisationUnitId(200);
@@ -435,7 +427,6 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
     var searchFilter = SystemOfRecordSearchFilter.builder()
@@ -457,9 +448,7 @@ class AppointmentSearchServiceTest {
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
-        .containsExactly("ASSET NAME NOT FROM API");
+    assertThat(resultingAppointments).isEmpty();
 
     then(installationQueryService)
         .shouldHaveNoInteractions();
@@ -625,19 +614,10 @@ class AppointmentSearchServiceTest {
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .build();
 
-    // and one of the installation IDs doesn't exist in the portal but has a valid appointment
-    var notInPortalInstallationId = new InstallationId(-1);
-
-    var appointmentForNotInPortalInstallation = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withPortalAssetId(String.valueOf(notInPortalInstallationId.id()))
-        .withAssetType(PortalAssetType.INSTALLATION)
-        .withAssetName("NOT FROM PORTAL")
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .build();
 
     // and the installations are returned out of name order, excluding the installation not in the portal
     given(installationQueryService.getInstallationsByIds(
-        Set.of(firstAppointedInstallationId, secondAppointedInstallationId, notInPortalInstallationId))
+        Set.of(firstAppointedInstallationId, secondAppointedInstallationId))
     )
         .willReturn(List.of(secondInstallationByName, firstInstallationByName));
 
@@ -722,7 +702,6 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(
             appointmentForFirstWellbore,
             appointmentForSecondWellbore,
-            appointmentForNotInPortalInstallation,
             appointmentForFirstSubarea,
             appointmentForSecondSubarea,
             appointmentForFirstInstallation,
@@ -744,8 +723,7 @@ class AppointmentSearchServiceTest {
             firstWellboreByRegistrationNumber.name(),
             secondWellboreByRegistrationNumber.name(),
             firstSubareaByLicence.displayName(),
-            secondSubareaByLicence.displayName(),
-            appointmentForNotInPortalInstallation.getAssetName()
+            secondSubareaByLicence.displayName()
         );
   }
 
@@ -841,13 +819,12 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchInstallationAppointments_whenAppointmentWithAssetIdNotInPortal_thenAppointmentReturnedWithCacheName() {
+  void searchInstallationAppointments_whenAppointmentWithAssetIdNotInPortal_thenNoAppointmentsReturned() {
 
     var appointedInstallationId = new InstallationId(100);
 
     var appointedInstallation = InstallationDtoTestUtil.builder()
         .withId(appointedInstallationId.id())
-        .withName("ASSET NAME FROM API")
         .build();
 
     var appointedOperatorId = new PortalOrganisationUnitId(200);
@@ -862,7 +839,6 @@ class AppointmentSearchServiceTest {
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAssetType(PortalAssetType.INSTALLATION)
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withAssetName("NOT THE ASSET NAME FROM THE API")
         .build();
 
     var searchFilter = SystemOfRecordSearchFilter.builder()
@@ -883,17 +859,14 @@ class AppointmentSearchServiceTest {
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
-    // then the asset name is the cached name in the appointment and not the name of the asset from the API
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
-        .containsExactly("NOT THE ASSET NAME FROM THE API");
+    // then no appointments show
+    assertThat(resultingAppointments).isEmpty();
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
-
   }
 
   @Test
@@ -931,19 +904,9 @@ class AppointmentSearchServiceTest {
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .build();
 
-    // and one of the installation IDs doesn't exist in the portal but has a valid appointment
-    var notInPortalInstallationId = new InstallationId(-1);
-
-    var appointmentForNotInPortalInstallation = AppointmentQueryResultItemDtoTestUtil.builder()
-        .withPortalAssetId(String.valueOf(notInPortalInstallationId.id()))
-        .withAssetType(PortalAssetType.INSTALLATION)
-        .withAssetName("NOT FROM PORTAL")
-        .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
-        .build();
-
     // and the installations are returned out of name order, excluding the installation not from the portal
     given(installationQueryService.getInstallationsByIds(
-        Set.of(firstAppointedInstallationId, secondAppointedInstallationId, notInPortalInstallationId))
+        Set.of(firstAppointedInstallationId, secondAppointedInstallationId))
     )
         .willReturn(List.of(secondInstallationByName, firstInstallationByName));
 
@@ -957,8 +920,7 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(List.of(
             appointmentForFirstInstallation,
-            appointmentForSecondInstallation,
-            appointmentForNotInPortalInstallation
+            appointmentForSecondInstallation
         ));
 
     var resultingAppointmentSearchItems =
@@ -968,8 +930,7 @@ class AppointmentSearchServiceTest {
         .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
         .containsExactly(
             firstInstallationByName.name(),
-            secondInstallationByName.name(),
-            appointmentForNotInPortalInstallation.getAssetName()
+            secondInstallationByName.name()
         );
   }
 
@@ -1026,6 +987,9 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+        .willReturn(List.of(appointedSubarea));
+
     // when we search appointments
     var resultingAppointments =
         appointmentSearchService.searchForwardApprovalAppointments(searchForm);
@@ -1062,13 +1026,12 @@ class AppointmentSearchServiceTest {
   }
 
   @Test
-  void searchForwardApprovalAppointments_whenAppointmentWithAssetIdNotInPortal_thenAppointmentReturnedWithCacheName() {
+  void searchForwardApprovalAppointments_whenAppointmentWithAssetIdNotInPortal_thenNoAppointmentsReturned() {
 
     var appointedSubareaId = new LicenceBlockSubareaId("subarea-id");
 
     var appointedSubarea = LicenceBlockSubareaDtoTestUtil.builder()
         .withSubareaId(appointedSubareaId.id())
-        .withSubareaName("ASSET NAME FROM API")
         .build();
 
     var appointedOperatorId = new PortalOrganisationUnitId(200);
@@ -1083,7 +1046,6 @@ class AppointmentSearchServiceTest {
         .withPortalAssetId(String.valueOf(appointedSubarea.subareaId().id()))
         .withAppointedOperatorId(String.valueOf(appointedOperator.id()))
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
-        .withAssetName("ASSET NAME NOT FROM API")
         .build();
 
     var searchFilter = SystemOfRecordSearchFilter.fromSearchForm(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -1102,9 +1064,8 @@ class AppointmentSearchServiceTest {
     var resultingAppointments =
         appointmentSearchService.searchForwardApprovalAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
-    assertThat(resultingAppointments)
-        .extracting(appointmentSearchItemDto -> appointmentSearchItemDto.assetName().value())
-        .containsExactly("ASSET NAME NOT FROM API");
+    // then no appointments are returned
+    assertThat(resultingAppointments).isEmpty();
 
     then(installationQueryService)
         .shouldHaveNoInteractions();
@@ -1360,7 +1321,7 @@ class AppointmentSearchServiceTest {
         .build();
 
     given(wellQueryService.searchWellbores(
-        List.of(new WellboreId(123)),
+        List.of(appointedWellbore.wellboreId()),
         null,
         List.of(new LicenceId(456)))
     )
@@ -1385,6 +1346,9 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
         .willReturn(List.of(expectedAppointment));
+
+    when(wellQueryService.getWellsByIds(Set.of(appointedWellbore.wellboreId())))
+        .thenReturn(List.of(appointedWellbore));
 
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
@@ -1458,6 +1422,9 @@ class AppointmentSearchServiceTest {
         .withWellboreId(wellboreWithAppointment.wellboreId().id())
         .withWellboreId(noAppointmentWellbore.wellboreId().id())
         .build();
+
+    when(wellQueryService.getWellsByIds(Set.of(wellboreWithAppointment.wellboreId())))
+        .thenReturn(List.of(wellboreWithAppointment));
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
         .willReturn(List.of(wellboreAppointment));

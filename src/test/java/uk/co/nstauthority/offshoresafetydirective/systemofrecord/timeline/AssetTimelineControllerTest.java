@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -39,6 +40,9 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
   @MockBean
   private AssetTimelineService assetTimelineService;
 
+  @MockBean
+  private PortalAssetRetrievalService portalAssetRetrievalService;
+
   @BeforeEach
   void setUp() {
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -47,6 +51,11 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderInstallationTimeline_verifyUnauthenticated() throws Exception {
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
 
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
@@ -64,6 +73,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
   @SecurityTest
   void renderWellboreTimeline_verifyUnauthenticated() throws Exception {
 
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
+
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.WELLBORE
@@ -79,6 +94,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderSubareaTimeline_verifyUnauthenticated() throws Exception {
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
 
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
@@ -105,6 +126,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
+
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.INSTALLATION
@@ -128,6 +155,23 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void renderInstallationTimeline_whenNotExtantInPortalOrDatabase_verifyNotFound() throws Exception {
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(false);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(false);
+
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
+            ))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   void renderInstallationTimeline_verifyModelPropertiesWhenHasPermission() throws Exception {
 
     when(userDetailService.isUserLoggedIn()).thenReturn(true);
@@ -140,6 +184,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withAssetName(assetName)
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.INSTALLATION))
+        .thenReturn(true);
 
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
@@ -170,6 +220,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withAssetName(assetName)
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
 
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
@@ -207,6 +263,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(true);
+
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.WELLBORE
@@ -226,6 +288,23 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void renderWellboreTimeline_whenNotExtantInPortalOrDatabase_verifyNotFound() throws Exception {
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(false);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.WELLBORE))
+        .thenReturn(false);
+
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
+            ))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
   void renderSubareaTimeline_verifyModelProperties() throws Exception {
 
     var assetName = "asset name";
@@ -236,6 +315,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withAssetName(assetName)
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
 
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
@@ -273,6 +358,12 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
         .withTimelineItemView(appointmentTimelineItemView)
         .build();
 
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(true);
+
     given(assetTimelineService.getAppointmentHistoryForPortalAsset(
         PORTAL_ASSET_ID,
         PortalAssetType.SUBAREA
@@ -289,6 +380,23 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(NewAppointmentController.class)
                 .renderNewSubareaAppointment(PORTAL_ASSET_ID))
         ));
+  }
+
+  @Test
+  void renderSubareaTimeline_whenNotExtantInPortalOrDatabase_verifyNotFound() throws Exception {
+
+    when(portalAssetRetrievalService.isExtantInPortal(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(false);
+
+    when(assetAccessService.isAssetExtant(PORTAL_ASSET_ID, PortalAssetType.SUBAREA))
+        .thenReturn(false);
+
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(AssetTimelineController.class)
+                .renderInstallationTimeline(PORTAL_ASSET_ID))
+            ))
+        .andExpect(status().isNotFound());
   }
 
   @Test

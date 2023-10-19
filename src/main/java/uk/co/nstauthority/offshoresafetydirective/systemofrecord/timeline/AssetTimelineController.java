@@ -15,7 +15,9 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -27,13 +29,20 @@ public class AssetTimelineController {
   private final AssetTimelineService assetTimelineService;
   private final PermissionService permissionService;
   private final UserDetailService userDetailService;
+  private final AssetAccessService assetAccessService;
+  private final PortalAssetRetrievalService portalAssetRetrievalService;
 
   @Autowired
-  public AssetTimelineController(AssetTimelineService assetTimelineService, PermissionService permissionService,
-                                 UserDetailService userDetailService) {
+  public AssetTimelineController(AssetTimelineService assetTimelineService,
+                                 PermissionService permissionService,
+                                 UserDetailService userDetailService,
+                                 AssetAccessService assetAccessService,
+                                 PortalAssetRetrievalService portalAssetRetrievalService) {
     this.assetTimelineService = assetTimelineService;
     this.permissionService = permissionService;
     this.userDetailService = userDetailService;
+    this.assetAccessService = assetAccessService;
+    this.portalAssetRetrievalService = portalAssetRetrievalService;
   }
 
   public static String determineRouteByPortalAssetType(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
@@ -45,6 +54,21 @@ public class AssetTimelineController {
     return ReverseRouter.redirect(getRouteMethodCallByPortalAssetType(portalAssetId, portalAssetType));
   }
 
+  @GetMapping("/installation/{portalAssetId}")
+  public ModelAndView renderInstallationTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModelIfInPortal(portalAssetId, PortalAssetType.INSTALLATION);
+  }
+
+  @GetMapping("/wellbore/{portalAssetId}")
+  public ModelAndView renderWellboreTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModelIfInPortal(portalAssetId, PortalAssetType.WELLBORE);
+  }
+
+  @GetMapping("/forward-approval/{portalAssetId}")
+  public ModelAndView renderSubareaTimeline(@PathVariable PortalAssetId portalAssetId) {
+    return getAssetTimelineModelIfInPortal(portalAssetId, PortalAssetType.SUBAREA);
+  }
+
   private static Object getRouteMethodCallByPortalAssetType(PortalAssetId portalAssetId,
                                                             PortalAssetType portalAssetType) {
     return switch (portalAssetType) {
@@ -54,19 +78,16 @@ public class AssetTimelineController {
     };
   }
 
-  @GetMapping("/installation/{portalAssetId}")
-  public ModelAndView renderInstallationTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetTimelineModel(portalAssetId, PortalAssetType.INSTALLATION);
-  }
+  private ModelAndView getAssetTimelineModelIfInPortal(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+    if (portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType)
+        || assetAccessService.isAssetExtant(portalAssetId, portalAssetType)) {
+      return getAssetTimelineModel(portalAssetId, portalAssetType);
+    }
 
-  @GetMapping("/wellbore/{portalAssetId}")
-  public ModelAndView renderWellboreTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetTimelineModel(portalAssetId, PortalAssetType.WELLBORE);
-  }
-
-  @GetMapping("/forward-approval/{portalAssetId}")
-  public ModelAndView renderSubareaTimeline(@PathVariable PortalAssetId portalAssetId) {
-    return getAssetTimelineModel(portalAssetId, PortalAssetType.SUBAREA);
+    throw new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "No extant asset found for PortalAssetId [%s] and PortalAssetType [%s]"
+            .formatted(portalAssetId, portalAssetType));
   }
 
   private ModelAndView getAssetTimelineModel(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {

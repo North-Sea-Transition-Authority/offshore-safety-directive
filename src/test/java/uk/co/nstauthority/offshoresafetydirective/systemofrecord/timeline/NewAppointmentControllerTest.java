@@ -509,7 +509,8 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
                 on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)))
             .with(user(USER))
             .with(csrf()))
-        .andExpect(status().isNotFound());
+        .andExpect(status().is3xxRedirection())
+        .andExpect(redirectedUrl(ReverseRouter.route(on(AssetTimelineController.class).renderInstallationTimeline(assetDto.portalAssetId()))));
   }
 
   private static Stream<Arguments> portalAssetTypeAndEndpointArguments() {

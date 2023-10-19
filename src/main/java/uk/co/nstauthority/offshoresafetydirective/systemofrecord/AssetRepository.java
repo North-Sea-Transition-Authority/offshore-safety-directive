@@ -16,4 +16,8 @@ interface AssetRepository extends CrudRepository<Asset, UUID> {
 
   Optional<Asset> findByPortalAssetIdAndPortalAssetType(String portalAssetId, PortalAssetType portalAssetType);
 
+  Optional<Asset> findByPortalAssetIdAndPortalAssetTypeAndStatusIs(String portalAssetId,
+                                                                   PortalAssetType portalAssetType,
+                                                                   AssetStatus assetStatus);
+
 }

@@ -1,11 +1,17 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -62,5 +68,58 @@ class AssetAccessServiceTest {
     var resultingAssetDto = assetAccessService.getAsset(unmatchedPortalAssetId, portalAssetType);
 
     assertThat(resultingAssetDto).isEmpty();
+  }
+
+  @Test
+  void isAssetExtant_whenAssetExists_andIsExtant_thenTrue() {
+    var portalAssetId = new PortalAssetId("123");
+    var portalAssetType = PortalAssetType.WELLBORE;
+
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(portalAssetId.id())
+        .withAssetStatus(AssetStatus.EXTANT)
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+        .thenReturn(Optional.of(asset));
+
+    var resultingIsAssetExtant = assetAccessService.isAssetExtant(portalAssetId, portalAssetType);
+
+    assertTrue(resultingIsAssetExtant);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = AssetStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "EXTANT")
+  void isAssetExtant_whenAssetExists_andIsNotExtant_thenFalse(AssetStatus nonExtantStatus) {
+    var portalAssetId = new PortalAssetId("123");
+    var portalAssetType = PortalAssetType.WELLBORE;
+
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(portalAssetId.id())
+        .withAssetStatus(nonExtantStatus)
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+        .thenReturn(Optional.of(asset));
+
+    var resultingIsAssetExtant = assetAccessService.isAssetExtant(portalAssetId, portalAssetType);
+
+    assertFalse(resultingIsAssetExtant);
+  }
+
+  @Test
+  void isAssetExtant_whenAssetDoesntExists_thenThrow() {
+    var portalAssetId = new PortalAssetId("123");
+    var portalAssetType = PortalAssetType.WELLBORE;
+
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> assetAccessService.isAssetExtant(portalAssetId, portalAssetType))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No asset status found for PortalAssetId [%s] and PortalAssetType [%s]"
+            .formatted(portalAssetId.id(), portalAssetType.getDisplayName()));
   }
 }

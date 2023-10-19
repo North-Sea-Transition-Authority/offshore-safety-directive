@@ -129,7 +129,8 @@ public class NewAppointmentController {
 
   private ModelAndView getOrCreateAssetIfInPortal(PortalAssetType portalAssetType, PortalAssetId portalAssetId) {
 
-    if (portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType)) {
+    if (portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType)
+        || assetAccessService.isAssetExtant(portalAssetId, portalAssetType)) {
       var asset = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
       return ReverseRouter.redirect(on(NewAppointmentController.class).renderNewAppointment(asset.assetId()));
     }
@@ -183,12 +184,7 @@ public class NewAppointmentController {
   private ModelAndView getNewAppointmentForm(AssetDto assetDto, AppointmentCorrectionForm form) {
 
     var assetName = portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No portal asset of type [%s] found with ID [%s]".formatted(
-                assetDto.portalAssetType(),
-                assetDto.portalAssetId().id()
-            )));
+        .orElse(assetDto.assetName().value());
     var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
     var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("pageTitle", "Add appointment")
