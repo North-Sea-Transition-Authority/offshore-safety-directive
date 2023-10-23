@@ -9,9 +9,13 @@ import jakarta.persistence.EntityManager;
 import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.jooq.DSLContext;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -22,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -42,6 +47,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 
 @Transactional
 @DatabaseIntegrationTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NominationWorkAreaQueryServiceIntegrationTest {
 
   @Autowired
@@ -58,6 +64,28 @@ class NominationWorkAreaQueryServiceIntegrationTest {
 
   @Autowired
   private EntityManager entityManager;
+
+  @Autowired
+  private MetricsProvider metricsProvider;
+
+  @Test
+  @Order(1)
+  void getNominationDetailsForWorkArea_verifyTimerForMetricsProvider() {
+    assertThat(metricsProvider.getWorkAreaQueryTimer().totalTime(TimeUnit.MILLISECONDS)).isEqualTo(0.0);
+
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    nominationWorkAreaQueryService.getWorkAreaItems();
+
+    assertThat(metricsProvider.getWorkAreaQueryTimer().totalTime(TimeUnit.MILLISECONDS)).isGreaterThan(0.0);
+  }
 
   @ParameterizedTest
   @MethodSource("getPostSubmissionStatuses")
@@ -315,6 +343,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
     assertThat(workAreaItems)
         .extracting(nominationWorkAreaQueryResult -> nominationWorkAreaQueryResult.getNominationId().id())
         .doesNotContain(deletedNominationDetail.getNomination().getId());
+
   }
 
   @ParameterizedTest
@@ -376,6 +405,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .doesNotContain(
             tuple(nomination.getId(), 1)
         );
+
   }
 
   @ParameterizedTest
@@ -438,6 +468,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .doesNotContain(
             tuple(nomination.getId(), 2)
         );
+
   }
 
   @Test

@@ -3,10 +3,13 @@ package uk.co.nstauthority.offshoresafetydirective.pears;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import io.micrometer.core.instrument.Counter;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -23,6 +26,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 
 @ExtendWith(MockitoExtension.class)
 class PearsLicenceSqsServiceTest {
@@ -36,6 +40,9 @@ class PearsLicenceSqsServiceTest {
   @Mock
   private PearsLicenceService pearsLicenceService;
 
+  @Mock
+  private MetricsProvider metricsProvider;
+
   @Captor
   private ArgumentCaptor<Consumer<PearsCorrectionAppliedEpmqMessage>> correctionAppliedEpmqMessageConsumerCaptor;
 
@@ -43,6 +50,7 @@ class PearsLicenceSqsServiceTest {
   private final SqsQueueUrl licencesOsdQueueUrl = new SqsQueueUrl("test-licences-osd-queue-url");
 
   private PearsLicenceSqsService pearsLicenceSqsService;
+  private Counter counter;
 
   @BeforeEach
   void setUp() {
@@ -51,7 +59,9 @@ class PearsLicenceSqsServiceTest {
     when(sqsService.getOrCreateQueue(PearsLicenceSqsService.LICENCES_OSD_QUEUE_NAME))
         .thenReturn(licencesOsdQueueUrl);
 
-    pearsLicenceSqsService = new PearsLicenceSqsService(sqsService, snsService, pearsLicenceService);
+    counter = mock(Counter.class);
+
+    pearsLicenceSqsService = new PearsLicenceSqsService(sqsService, snsService, pearsLicenceService, metricsProvider);
   }
 
   @Test
@@ -104,9 +114,16 @@ class PearsLicenceSqsServiceTest {
             correctionAppliedEpmqMessageConsumerCaptor.capture()
         );
 
+    when(metricsProvider.getPearsLicenceMessagesReceivedCounter()).thenReturn(counter);
+
+
     pearsLicenceSqsService.receiveMessages();
 
     verify(pearsLicenceService, times(1)).handlePearsCorrectionApplied(message1);
     verify(pearsLicenceService, times(1)).handlePearsCorrectionApplied(message2);
+
+    verify(metricsProvider, times(2)).getPearsLicenceMessagesReceivedCounter();
+    verify(counter, times(2)).increment();
+    verifyNoMoreInteractions(metricsProvider);
   }
 }

@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import com.google.common.base.Stopwatch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
@@ -45,17 +48,21 @@ class AppointmentSearchService {
 
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
+  private final MetricsProvider metricsProvider;
+
   @Autowired
   AppointmentSearchService(AppointmentQueryService appointmentQueryService,
                            InstallationQueryService installationQueryService,
                            PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                            WellQueryService wellQueryService,
-                           LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+                           LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                           MetricsProvider metricsProvider) {
     this.appointmentQueryService = appointmentQueryService;
     this.installationQueryService = installationQueryService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.wellQueryService = wellQueryService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
+    this.metricsProvider = metricsProvider;
   }
 
   List<AppointmentSearchItemDto> searchAppointments(SystemOfRecordSearchForm searchForm) {
@@ -193,6 +200,8 @@ class AppointmentSearchService {
   private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
                                                 SystemOfRecordSearchFilter searchFilter) {
 
+    var checkStopWatch = Stopwatch.createStarted();
+
     List<AppointmentSearchItemDto> appointments = new ArrayList<>();
 
     Set<PortalOrganisationUnitId> operatorIds = new HashSet<>();
@@ -288,6 +297,9 @@ class AppointmentSearchService {
         appointments.addAll(subareaAppointments);
       }
     }
+
+    var elapsedMs = checkStopWatch.elapsed(TimeUnit.MILLISECONDS);
+    metricsProvider.getSystemOfRecordSearchTimer().record(elapsedMs, TimeUnit.MILLISECONDS);
 
     return appointments;
   }

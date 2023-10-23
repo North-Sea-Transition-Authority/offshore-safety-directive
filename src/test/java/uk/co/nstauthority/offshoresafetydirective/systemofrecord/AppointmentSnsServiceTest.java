@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import io.micrometer.core.instrument.Counter;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,6 +42,7 @@ import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreated
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentUpdatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
@@ -64,9 +67,14 @@ class AppointmentSnsServiceTest {
   @Mock
   private AssetPhaseRepository assetPhaseRepository;
 
+  @Mock
+  private MetricsProvider metricsProvider;
+
   private final SnsTopicArn appointmentsTopicArn = new SnsTopicArn("test-appointments-topic-arn");
 
   private AppointmentSnsService appointmentSnsService;
+
+  private Counter counter;
 
   @BeforeEach
   public void setUp() {
@@ -74,13 +82,15 @@ class AppointmentSnsServiceTest {
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(CORRELATION_ID);
 
+    counter = mock(Counter.class);
+
     appointmentSnsService = spy(
         new AppointmentSnsService(
             snsService,
             appointmentRepository,
             assetPhaseRepository,
-            Clock.fixed(FIXED_INSTANT, ZoneId.systemDefault())
-        )
+            Clock.fixed(FIXED_INSTANT, ZoneId.systemDefault()),
+            metricsProvider)
     );
   }
 
@@ -134,6 +144,7 @@ class AppointmentSnsServiceTest {
     );
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+
     var event = new ManualAppointmentAddedEvent(appointmentId);
 
     doNothing().when(appointmentSnsService).publishAppointmentCreatedSnsMessage(appointment.get());
@@ -153,6 +164,7 @@ class AppointmentSnsServiceTest {
     );
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+
     var event = new ManualAppointmentAddedEvent(appointmentId);
 
     appointmentSnsService.handleAppointmentAdded(event);
@@ -164,11 +176,15 @@ class AppointmentSnsServiceTest {
   void handleAppointmentAdded_whenNoAppointment() {
     var appointmentId = new AppointmentId(UUID.randomUUID());
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.empty());
+
     var event = new ManualAppointmentAddedEvent(appointmentId);
 
     assertThatThrownBy(() -> appointmentSnsService.handleAppointmentAdded(event))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("No Appointment found with ID [%s]".formatted(appointmentId.id()));
+
+    verify(metricsProvider, never()).getAppointmentsPublishedCounter();
+    verify(counter, never()).increment();
   }
 
   @ArchTest
@@ -196,6 +212,8 @@ class AppointmentSnsServiceTest {
     );
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    when(metricsProvider.getAppointmentsPublishedCounter()).thenReturn(counter);
+
     var event = new AppointmentRemovedEvent(appointmentId);
 
     appointmentSnsService.handleAppointmentRemoved(event);
@@ -203,6 +221,8 @@ class AppointmentSnsServiceTest {
     var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
 
     assertThat(argumentCaptor.getValue())
         .extracting(
@@ -233,6 +253,8 @@ class AppointmentSnsServiceTest {
     appointmentSnsService.handleAppointmentRemoved(event);
 
     verify(snsService, never()).publishMessage(any(), any());
+    verify(metricsProvider, never()).getAppointmentsPublishedCounter();
+    verify(counter, never()).increment();
   }
 
   @Test
@@ -244,6 +266,9 @@ class AppointmentSnsServiceTest {
     assertThatThrownBy(() -> appointmentSnsService.handleAppointmentRemoved(event))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("No Appointment found with ID [%s]".formatted(appointmentId.id()));
+
+    verify(metricsProvider, never()).getAppointmentsPublishedCounter();
+    verify(counter, never()).increment();
   }
 
   @ArchTest
@@ -266,11 +291,15 @@ class AppointmentSnsServiceTest {
     var appointmentId = new AppointmentId(UUID.randomUUID());
     var event = new AppointmentTerminationEvent(appointmentId);
 
+    when(metricsProvider.getAppointmentsPublishedCounter()).thenReturn(counter);
+
     appointmentSnsService.handleAppointmentTermination(event);
 
     var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
 
     assertThat(argumentCaptor.getValue())
         .extracting(
@@ -317,6 +346,8 @@ class AppointmentSnsServiceTest {
         .thenReturn(assetPhases);
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(Optional.of(appointment));
+    when(metricsProvider.getAppointmentsPublishedCounter()).thenReturn(counter);
+
     var event = new AppointmentCorrectionEvent(appointmentId);
 
     appointmentSnsService.handleAppointmentCorrected(event);
@@ -324,6 +355,8 @@ class AppointmentSnsServiceTest {
     var argumentCaptor = ArgumentCaptor.forClass(AppointmentUpdatedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
 
     var epmqMessage = argumentCaptor.getValue();
 
@@ -348,6 +381,8 @@ class AppointmentSnsServiceTest {
     );
 
     when(appointmentRepository.findById(appointmentId.id())).thenReturn(appointment);
+    when(metricsProvider.getAppointmentsPublishedCounter()).thenReturn(counter);
+
     var event = new AppointmentCorrectionEvent(appointmentId);
 
     appointmentSnsService.handleAppointmentCorrected(event);
@@ -355,6 +390,8 @@ class AppointmentSnsServiceTest {
     var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
 
     verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
 
     assertThat(argumentCaptor.getValue())
         .extracting(
@@ -441,6 +478,8 @@ class AppointmentSnsServiceTest {
         AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
     );
 
+    when(metricsProvider.getAppointmentsPublishedCounter()).thenReturn(counter);
+
     appointmentSnsService.publishAppointmentCreatedSnsMessage(appointment, assetPhases, CORRELATION_ID);
 
     var epmqMessageArgumentCaptor = ArgumentCaptor.forClass(AppointmentCreatedOsdEpmqMessage.class);
@@ -457,5 +496,8 @@ class AppointmentSnsServiceTest {
     assertThat(epmqMessage.getPhases()).isEqualTo(assetPhases.stream().map(AssetPhase::getPhase).toList());
     assertThat(epmqMessage.getCorrelationId()).isEqualTo(CORRELATION_ID);
     assertThat(epmqMessage.getCreatedInstant()).isEqualTo(FIXED_INSTANT);
+
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
   }
 }

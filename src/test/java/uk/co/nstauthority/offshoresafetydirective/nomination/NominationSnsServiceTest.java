@@ -3,10 +3,12 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.micrometer.core.instrument.Counter;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -22,6 +24,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NominatedOrganisationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
@@ -38,23 +41,30 @@ class NominationSnsServiceTest {
   @Mock
   private NominationDetailService nominationDetailService;
 
+  @Mock
+  private MetricsProvider metricsProvider;
+
   private final SnsTopicArn nominationsTopicArn = new SnsTopicArn("test-nominations-topic-arn");
 
   private final Instant instant = Instant.now();
 
   private NominationSnsService nominationSnsService;
 
+  private Counter counter;
+
   @BeforeEach
   void setUp() {
     when(snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName())).thenReturn(nominationsTopicArn);
+
+    counter = mock(Counter.class);
 
     nominationSnsService = spy(
         new NominationSnsService(
             snsService,
             nominationDetailService,
             nominationSnsQueryService,
-            Clock.fixed(instant, ZoneId.systemDefault())
-        )
+            Clock.fixed(instant, ZoneId.systemDefault()),
+            metricsProvider)
     );
   }
 
@@ -100,6 +110,8 @@ class NominationSnsServiceTest {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
+    when(metricsProvider.getNominationsPublishedCounter()).thenReturn(counter);
+
     nominationSnsService.publishNominationSubmittedMessage(nominationId);
 
     var epmqMessageArgumentCaptor = ArgumentCaptor.forClass(NominationSubmittedOsdEpmqMessage.class);
@@ -127,6 +139,8 @@ class NominationSnsServiceTest {
             correlationId,
             instant
         );
-  }
 
+    verify(metricsProvider).getNominationsPublishedCounter();
+    verify(counter).increment();
+  }
 }

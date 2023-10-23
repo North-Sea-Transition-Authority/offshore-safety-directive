@@ -61,6 +61,7 @@ dependencies {
 	implementation 'org.springframework.session:spring-session-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-jooq'
 	implementation 'org.springframework.data:spring-data-envers'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
 	// spring managed
 	implementation 'org.jooq:jooq-codegen'
@@ -75,6 +76,7 @@ dependencies {
 	implementation 'commons-validator:commons-validator:1.7'
 	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.6.0'
 	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.6.0'
+	implementation 'io.micrometer:micrometer-registry-statsd'
 
 	// fivium managed dependencies
 	implementation 'uk.co.fivium.energyportalapi:client:v6.2.0'

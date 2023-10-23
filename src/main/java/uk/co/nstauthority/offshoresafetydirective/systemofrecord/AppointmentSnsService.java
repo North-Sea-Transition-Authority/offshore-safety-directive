@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentCreated
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentDeletedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.AppointmentUpdatedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
@@ -35,19 +36,21 @@ class AppointmentSnsService {
   private final AppointmentRepository appointmentRepository;
   private final AssetPhaseRepository assetPhaseRepository;
   private final Clock clock;
+  private final MetricsProvider metricsProvider;
 
   @Autowired
   AppointmentSnsService(
       SnsService snsService,
       AppointmentRepository appointmentRepository,
       AssetPhaseRepository assetPhaseRepository,
-      Clock clock
-  ) {
+      Clock clock,
+      MetricsProvider metricsProvider) {
     this.snsService = snsService;
     appointmentsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.APPOINTMENTS.getName());
     this.appointmentRepository = appointmentRepository;
     this.assetPhaseRepository = assetPhaseRepository;
     this.clock = clock;
+    this.metricsProvider = metricsProvider;
   }
 
   @Async
@@ -69,6 +72,7 @@ class AppointmentSnsService {
         appointmentsTopicArn,
         new AppointmentDeletedOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
     );
+    metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
   @Async
@@ -98,6 +102,7 @@ class AppointmentSnsService {
           appointmentsTopicArn,
           new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
       );
+      metricsProvider.getAppointmentsPublishedCounter().increment();
     } else {
       LOGGER.info("AppointmentDeletedOsdEpmqMessage not published for appointment with id {} as is not active",
           event.getAppointment().id());
@@ -138,6 +143,7 @@ class AppointmentSnsService {
           new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
       );
     }
+    metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
   void publishAppointmentCreatedSnsMessages(NominationId nominationId) {
@@ -175,6 +181,7 @@ class AppointmentSnsService {
             clock.instant()
         )
     );
+    metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
   void publishAppointmentCreatedSnsMessage(Appointment appointment) {

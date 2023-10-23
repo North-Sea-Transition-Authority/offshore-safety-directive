@@ -4,16 +4,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
+import io.micrometer.core.instrument.Timer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
@@ -60,8 +67,17 @@ class AppointmentSearchServiceTest {
   @Mock
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
+  @Mock
+  private MetricsProvider metricsProvider;
+
   @InjectMocks
   private AppointmentSearchService appointmentSearchService;
+
+  @BeforeEach
+  void setUp() {
+    Timer timer = mock(Timer.class);
+    given(metricsProvider.getSystemOfRecordSearchTimer()).willReturn(timer);
+  }
 
   @ParameterizedTest
   @NullAndEmptySource
@@ -81,6 +97,9 @@ class AppointmentSearchServiceTest {
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -154,6 +173,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -206,6 +228,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -279,6 +304,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -331,6 +359,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -404,6 +435,9 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -455,6 +489,9 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -568,6 +605,9 @@ class AppointmentSearchServiceTest {
                 appointedSubareaOperator.name()
             )
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   /**
@@ -725,6 +765,9 @@ class AppointmentSearchServiceTest {
             firstSubareaByLicence.displayName(),
             secondSubareaByLicence.displayName()
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @ParameterizedTest
@@ -744,6 +787,9 @@ class AppointmentSearchServiceTest {
         appointmentSearchService.searchInstallationAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -816,6 +862,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -867,6 +916,9 @@ class AppointmentSearchServiceTest {
 
     then(licenceBlockSubareaQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -932,6 +984,9 @@ class AppointmentSearchServiceTest {
             firstInstallationByName.name(),
             secondInstallationByName.name()
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @ParameterizedTest
@@ -949,6 +1004,9 @@ class AppointmentSearchServiceTest {
         appointmentSearchService.searchForwardApprovalAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
     assertThat(resultingAppointments).isEmpty();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1023,6 +1081,9 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1072,6 +1133,9 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1093,7 +1157,8 @@ class AppointmentSearchServiceTest {
         .build();
 
     // and the installation is a valid installation
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(searchFormWithSubareaId.getSubareaId())))
+    given(
+        licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(searchFormWithSubareaId.getSubareaId())))
         .willReturn(Optional.of(expectedSubarea));
 
     var resultingAppointments =
@@ -1117,6 +1182,9 @@ class AppointmentSearchServiceTest {
                 null
             )
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1162,6 +1230,9 @@ class AppointmentSearchServiceTest {
                 null
             )
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1183,6 +1254,9 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .shouldHaveNoInteractions();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1208,6 +1282,9 @@ class AppointmentSearchServiceTest {
 
     // then no results returned
     assertThat(resultingAppointments).isEmpty();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1220,6 +1297,9 @@ class AppointmentSearchServiceTest {
     then(wellQueryService)
         .should(onlyOnce())
         .searchWellbores(Collections.emptyList(), null, Collections.emptyList());
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1239,6 +1319,9 @@ class AppointmentSearchServiceTest {
     then(appointmentQueryService)
         .should(onlyOnce())
         .search(anyCollection(), any());
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1259,6 +1342,9 @@ class AppointmentSearchServiceTest {
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
     assertThat(resultingWellboreAppointments).isEmpty();
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1304,6 +1390,9 @@ class AppointmentSearchServiceTest {
                 null
             )
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1375,6 +1464,9 @@ class AppointmentSearchServiceTest {
                 )
             )
         );
+
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1470,5 +1562,7 @@ class AppointmentSearchServiceTest {
 
         );
 
+    then(metricsProvider.getSystemOfRecordSearchTimer())
+        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 }

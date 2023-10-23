@@ -16,6 +16,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 
 @Service
 @Profile("!disable-epmq")
@@ -29,15 +30,18 @@ class PearsLicenceSqsService {
   private final SnsTopicArn licencesSnsTopicArn;
   private final SqsQueueUrl licencesOsdQueueUrl;
   private final PearsLicenceService pearsLicenceService;
+  private final MetricsProvider metricsProvider;
 
   @Autowired
-  PearsLicenceSqsService(SqsService sqsService, SnsService snsService, PearsLicenceService pearsLicenceService) {
+  PearsLicenceSqsService(SqsService sqsService, SnsService snsService, PearsLicenceService pearsLicenceService,
+                         MetricsProvider metricsProvider) {
     this.sqsService = sqsService;
     this.snsService = snsService;
 
     licencesSnsTopicArn = snsService.getOrCreateTopic(EpmqTopics.PEARS_LICENCES.getName());
     licencesOsdQueueUrl = sqsService.getOrCreateQueue(LICENCES_OSD_QUEUE_NAME);
     this.pearsLicenceService = pearsLicenceService;
+    this.metricsProvider = metricsProvider;
   }
 
   @EventListener(classes = ApplicationReadyEvent.class)
@@ -48,12 +52,15 @@ class PearsLicenceSqsService {
   @Scheduled(fixedDelayString = "${epmq.message-poll-interval-seconds}", timeUnit = TimeUnit.SECONDS)
   @SchedulerLock(name = "PearsLicenceSqsService_receiveMessages")
   void receiveMessages() {
-    LOGGER.info("Process received PEARS licence messages");
+    LOGGER.debug("Process received PEARS licence messages");
     sqsService.receiveQueueMessages(
         licencesOsdQueueUrl,
         // TODO OSDOP-114 - Change this to support multiple messages on the same topic
         PearsCorrectionAppliedEpmqMessage.class,
-        pearsLicenceService::handlePearsCorrectionApplied
+        message -> {
+          pearsLicenceService.handlePearsCorrectionApplied(message);
+          metricsProvider.getPearsLicenceMessagesReceivedCounter().increment();
+        }
     );
   }
 }

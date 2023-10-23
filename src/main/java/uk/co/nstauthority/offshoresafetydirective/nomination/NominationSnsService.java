@@ -12,6 +12,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 
 @Service
@@ -23,15 +24,17 @@ class NominationSnsService {
   private final NominationDetailService nominationDetailService;
   private final NominationSnsQueryService nominationSnsQueryService;
   private final Clock clock;
+  private final MetricsProvider metricsProvider;
 
   @Autowired
   NominationSnsService(SnsService snsService, NominationDetailService nominationDetailService,
-                       NominationSnsQueryService nominationSnsQueryService, Clock clock) {
+                       NominationSnsQueryService nominationSnsQueryService, Clock clock, MetricsProvider metricsProvider) {
     this.snsService = snsService;
     nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
     this.nominationDetailService = nominationDetailService;
     this.nominationSnsQueryService = nominationSnsQueryService;
     this.clock = clock;
+    this.metricsProvider = metricsProvider;
   }
 
   @Async
@@ -63,5 +66,6 @@ class NominationSnsService {
         nominationsTopicArn,
         empqMessage
     );
+    metricsProvider.getNominationsPublishedCounter().increment();
   }
 }

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.configuration;
 
 import static net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider.Configuration.builder;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 
 @Configuration
 @EnableScheduling
@@ -39,5 +41,10 @@ public class ApplicationConfiguration {
         .usingDbTime()
         .build()
     );
+  }
+
+  @Bean
+  public MetricsProvider metricsProvider(MeterRegistry registry) {
+    return new MetricsProvider(registry);
   }
 }

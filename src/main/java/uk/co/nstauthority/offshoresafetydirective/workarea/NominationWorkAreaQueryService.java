@@ -17,7 +17,9 @@ import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.N
 import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.NOMINEE_DETAILS;
 import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.WELL_SELECTION_SETUP;
 
+import com.google.common.base.Stopwatch;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.CaseEvents;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.NominationDetails;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
@@ -45,20 +48,25 @@ class NominationWorkAreaQueryService {
   private final DSLContext context;
   private final UserDetailService userDetailService;
   private final TeamMemberService teamMemberService;
+  private final MetricsProvider metricsProvider;
+
 
   @Autowired
   NominationWorkAreaQueryService(DSLContext context,
                                  UserDetailService userDetailService,
-                                 TeamMemberService teamMemberService) {
+                                 TeamMemberService teamMemberService,
+                                 MetricsProvider metricsProvider) {
     this.context = context;
     this.userDetailService = userDetailService;
     this.teamMemberService = teamMemberService;
+    this.metricsProvider = metricsProvider;
   }
 
   List<NominationWorkAreaQueryResult> getWorkAreaItems() {
+    var checkStopWatch = Stopwatch.createStarted();
     var conditions = getConditions();
 
-    return context
+    var workAreaItems = context
         .select(
             NOMINATIONS.ID,
             APPLICANT_DETAILS.PORTAL_ORGANISATION_ID.as("applicant_organisation_id"),
@@ -96,6 +104,9 @@ class NominationWorkAreaQueryService {
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
         .fetchInto(NominationWorkAreaQueryResult.class);
+    var elapsedMs = checkStopWatch.elapsed(TimeUnit.MILLISECONDS);
+    metricsProvider.getWorkAreaQueryTimer().record(elapsedMs, TimeUnit.MILLISECONDS);
+    return workAreaItems;
   }
 
   private List<Condition> getConditions() {

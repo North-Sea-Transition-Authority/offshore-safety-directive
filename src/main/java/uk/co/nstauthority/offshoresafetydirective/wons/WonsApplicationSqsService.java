@@ -16,6 +16,7 @@ import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 
 @Service
 @Profile("!disable-epmq")
@@ -28,14 +29,16 @@ class WonsApplicationSqsService {
   private final SnsService snsService;
   private final SnsTopicArn applicationsSnsTopicArn;
   private final SqsQueueUrl applicationsOsdQueueUrl;
+  private final MetricsProvider metricsProvider;
 
   @Autowired
-  WonsApplicationSqsService(SqsService sqsService, SnsService snsService) {
+  WonsApplicationSqsService(SqsService sqsService, SnsService snsService, MetricsProvider metricsProvider) {
     this.sqsService = sqsService;
     this.snsService = snsService;
 
     applicationsSnsTopicArn = snsService.getOrCreateTopic(EpmqTopics.WONS_APPLICATIONS.getName());
     applicationsOsdQueueUrl = sqsService.getOrCreateQueue(APPLICATIONS_OSD_QUEUE_NAME);
+    this.metricsProvider = metricsProvider;
   }
 
   @EventListener(classes = ApplicationReadyEvent.class)
@@ -46,13 +49,13 @@ class WonsApplicationSqsService {
   @Scheduled(fixedDelayString = "${epmq.message-poll-interval-seconds}", timeUnit = TimeUnit.SECONDS)
   @SchedulerLock(name = "WonsApplicationSqsService_receiveMessages")
   void receiveMessages() {
-    LOGGER.info("Process received WONS application messages");
+    LOGGER.debug("Process received WONS application messages");
     sqsService.receiveQueueMessages(
         applicationsOsdQueueUrl,
         WonsApplicationSubmittedEpmqMessage.class,
-        message -> {
-      // TODO: Handle messages as part of https://ogajira.atlassian.net/browse/OSDOP-17
-      }
+        message ->
+          // TODO: Handle messages as part of https://ogajira.atlassian.net/browse/OSDOP-17
+          metricsProvider.getWonsApplicationMessagesReceivedCounter().increment()
     );
   }
 }

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import static org.mockito.Mockito.doCallRealMethod;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHel
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
+import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
@@ -69,7 +71,8 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     IsMemberOfTeamTypeInterceptor.class,
     HasAssetStatusInterceptor.class,
     RequestLogFilter.class,
-    PostAuthenticationRequestMdcFilter.class
+    PostAuthenticationRequestMdcFilter.class,
+    MetricsProvider.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -118,6 +121,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected JooqStatisticsListener jooqStatisticsListener;
+
+  @MockBean
+  protected MeterRegistry registry;
 
   @BeforeEach
   void setupAbstractControllerTest() {
