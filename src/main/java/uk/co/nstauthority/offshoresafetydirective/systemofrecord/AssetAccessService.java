@@ -25,16 +25,12 @@ public class AssetAccessService {
   }
 
   public boolean isAssetExtant(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
-    var assetStatus = assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
+    return assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
             portalAssetId.id(),
             portalAssetType,
             AssetStatus.EXTANT
         )
-        .map(Asset::getStatus)
-        .orElseThrow(() -> new IllegalStateException(
-            "No asset status found for PortalAssetId [%s] and PortalAssetType [%s]"
-                .formatted(portalAssetId.id(), portalAssetType.getDisplayName())
-        ));
-    return assetStatus.equals(AssetStatus.EXTANT);
+        .map(asset -> AssetStatus.EXTANT.equals(asset.getStatus()))
+        .orElse(false);
   }
 }

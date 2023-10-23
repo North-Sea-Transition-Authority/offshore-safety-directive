@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
@@ -110,16 +109,13 @@ class AssetAccessServiceTest {
   }
 
   @Test
-  void isAssetExtant_whenAssetDoesntExists_thenThrow() {
+  void isAssetExtant_whenAssetDoesntExists_thenReturnFalse() {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.WELLBORE;
 
     when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> assetAccessService.isAssetExtant(portalAssetId, portalAssetType))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No asset status found for PortalAssetId [%s] and PortalAssetType [%s]"
-            .formatted(portalAssetId.id(), portalAssetType.getDisplayName()));
+    assertFalse(() -> assetAccessService.isAssetExtant(portalAssetId, portalAssetType));
   }
 }
