@@ -248,6 +248,29 @@ class NominationSubmissionControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void getSubmissionPage_whenWellSelectionTypeIsNull_thenAssertIsLicenceBlockSubareaFalseInModelProperties() throws Exception {
+    var wellSummaryView = WellSummaryView.builder(null)
+        .withSubareaSummary(NominatedBlockSubareaDetailViewTestUtil.builder().build())
+        .withExcludedWellSummaryView(new ExcludedWellView())
+        .build();
+    var nominationSummaryViewWithSubarea = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .build();
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryViewWithSubarea);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"))
+        .andExpect(model().attribute("hasLicenceBlockSubareas", false));
+  }
+
+  @Test
   void getSubmissionPage_assertIsLicenceBlockSubareaFalseInModelProperties() throws Exception {
     var wellSummaryView = WellSummaryView
         .builder(WellSelectionType.NO_WELLS)

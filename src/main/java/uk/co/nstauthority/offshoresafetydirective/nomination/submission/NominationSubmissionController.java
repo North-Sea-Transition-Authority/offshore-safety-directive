@@ -99,7 +99,7 @@ public class NominationSubmissionController {
         .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail))
         .addObject("summaryView", summaryView)
         .addObject("hasLicenceBlockSubareas",
-            summaryView.wellSummaryView().getWellSelectionType().equals(WellSelectionType.LICENCE_BLOCK_SUBAREA));
+            WellSelectionType.LICENCE_BLOCK_SUBAREA.equals(summaryView.wellSummaryView().getWellSelectionType()));
 
     var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
