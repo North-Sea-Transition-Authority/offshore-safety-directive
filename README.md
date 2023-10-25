@@ -56,49 +56,54 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable                       | Description                                                                                          |
-|--------------------------------------------|------------------------------------------------------------------------------------------------------|
-| OSD_DATABASE_URL                           | The URL to the database the service connect to                                                       |
-| OSD_DATABASE_PASSWORD                      | Database schema password for the `osd` user                                                          |
-| OSD_SAML_ENTITY_ID                         | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                             |
-| OSD_SAML_CERTIFICATE                       | The x509 certificate string                                                                          |
-| OSD_SAML_LOGIN_URL                         | The URL to hit the `login` entry theme of the SAML login module                                      |
-| OSD_SERVICE_BASE_URL                       | The URL prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local)   |
-| OSD_ENABLE_FLYWAY_OUT_OF_ORDER             | Set to `true` to allow flyway to run out of order, defaults to `false`                               | 
-| OSD_ENERGY_PORTAL_API_URL                  | The URL to the Energy Portal API (ending in `/graphql`)                                              |
-| OSD_ENERGY_PORTAL_API_TOKEN                | The pre-shared key to authenticate with the Energy Portal API                                        |
-| OSD_ENERGY_PORTAL_TEAM_ACCESS_API_BASE_URL | The Energy Portal team access API base url. (ending in the fox 5 context for the environment)        |
-| OSD_ENERGY_PORTAL_TEAM_ACCESS_API_TOKEN    | The Energy Portal team access API token                                                              |
-| OSD_ENERGY_PORTAL_REGISTRATION_URL         | The Energy Portal registration url for the environment                                               |
-| OSD_ENERGY_PORTAL_LOGOUT_URL               | The URL to the log out entry theme of the Energy Portal                                              |
-| OSD_ENERGY_PORTAL_LOGOUT_KEY               | The pre-shared logout key for the energy portal (https://tpm.fivium.co.uk/index.php/pwd/view/2098)   |
-| OSD_S3_ACCESS_KEY                          | S3 username for document uploads / downloads                                                         |
-| OSD_S3_SECRET_KEY                          | S3 secret for document uploads / downloads                                                           |
-| OSD_S3_BUCKET_NAME                         | S3 bucket for document uploads / downloads                                                           |
-| OSD_S3_ENDPOINT                            | S3 endpoint for document uploads / downloads                                                         |
-| OSD_S3_REGION_NAME                         | S3 region for document uploads / downloads                                                           |
-| OSD_S3_DISABLE_SSL                         | Disable S3 SSL (default `false`)                                                                     |
-| OSD_S3_PROXY_HOST                          | The hostname to access the S3 proxy (Optional)                                                       |
-| OSD_S3_PROXY_PORT                          | The port number to access the S3 proxy (Optional)                                                    |
-| OSD_CLAMAV_HOST                            | The host URL for ClamAV                                                                              |
-| OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                         |
-| OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                               |
-| OSD_SESSION_TIMEOUT_MINUTES                | The time in minutes before a session timeouts. This should be the same as the Energy Portal, e.g 180 |
-| OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)      |
-| OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                |
-| OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                |
-| OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                            |
-| OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod              |
-| OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                 |
-| OSD_CAN_SHOW_STACK_TRACE                   | Boolean flag to control if the stack trace shows up when a 500 response is received (Optional)       |
-| OSD_DATAWAREHOUSE_USER_PASSWORD            | The database password for the `datawarehouse` database user                                          |
-| OSD_STATEMENT_PREPARED_DATE                | The date the accessibility statement was prepared. E.g. 05 May 2023                                  |
-| OSD_STATEMENT_LAST_REVIEW_DATE             | The date the accessibility statement was last reviewed. E.g. 05 May 2023                             |
-| OSD_SERVICE_LAST_TEST_DATE                 | The date the service was last tested. E.g. 05 May 2023                                               |
-| OSD_SERVICE_LAST_TESTED_BY                 | The company who carried out the last service E.g. Fivium Ltd                                         |
-| OSD_DESIGN_SYSTEM_LAST_TEST_DATE           | The date the design system was last tested. E.g. 05 May 2023                                         |
-| OSD_OFFLINE_DOCUMENT_LOCATION_URL          | The link to the location of offline appointments documents                                           |   
-| OSD_EPMQ_MESSAGE_POLL_FREQUENCY_SECONDS    | The delay for epmq messages annotated with @Scheduled (Optional) defaults to 30                      |
+| Environment Variable                       | Description                                                                                                                 |
+|--------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| OSD_DATABASE_URL                           | The URL to the database the service connect to                                                                              |
+| OSD_DATABASE_PASSWORD                      | Database schema password for the `osd` user                                                                                 |
+| OSD_SAML_ENTITY_ID                         | Fox instance URL (dev: https://itportal.dev.fivium.local/engedudev1/fox)                                                    |
+| OSD_SAML_CERTIFICATE                       | The x509 certificate string                                                                                                 |
+| OSD_SAML_LOGIN_URL                         | The URL to hit the `login` entry theme of the SAML login module                                                             |
+| OSD_SERVICE_BASE_URL                       | The URL prior to the `/${serverContext}` part of the url  (e.g: https://itportal.dev.fivium.local)                          |
+| OSD_ENABLE_FLYWAY_OUT_OF_ORDER             | Set to `true` to allow flyway to run out of order, defaults to `false`                                                      | 
+| OSD_ENERGY_PORTAL_API_URL                  | The URL to the Energy Portal API (ending in `/graphql`)                                                                     |
+| OSD_ENERGY_PORTAL_API_TOKEN                | The pre-shared key to authenticate with the Energy Portal API                                                               |
+| OSD_ENERGY_PORTAL_TEAM_ACCESS_API_BASE_URL | The Energy Portal team access API base url. (ending in the fox 5 context for the environment)                               |
+| OSD_ENERGY_PORTAL_TEAM_ACCESS_API_TOKEN    | The Energy Portal team access API token                                                                                     |
+| OSD_ENERGY_PORTAL_REGISTRATION_URL         | The Energy Portal registration url for the environment                                                                      |
+| OSD_ENERGY_PORTAL_LOGOUT_URL               | The URL to the log out entry theme of the Energy Portal                                                                     |
+| OSD_ENERGY_PORTAL_LOGOUT_KEY               | The pre-shared logout key for the energy portal (https://tpm.fivium.co.uk/index.php/pwd/view/2098)                          |
+| OSD_S3_ACCESS_KEY                          | S3 username for document uploads / downloads                                                                                |
+| OSD_S3_SECRET_KEY                          | S3 secret for document uploads / downloads                                                                                  |
+| OSD_S3_BUCKET_NAME                         | S3 bucket for document uploads / downloads                                                                                  |
+| OSD_S3_ENDPOINT                            | S3 endpoint for document uploads / downloads                                                                                |
+| OSD_S3_REGION_NAME                         | S3 region for document uploads / downloads                                                                                  |
+| OSD_S3_DISABLE_SSL                         | Disable S3 SSL (default `false`)                                                                                            |
+| OSD_S3_PROXY_HOST                          | The hostname to access the S3 proxy (Optional)                                                                              |
+| OSD_S3_PROXY_PORT                          | The port number to access the S3 proxy (Optional)                                                                           |
+| OSD_CLAMAV_HOST                            | The host URL for ClamAV                                                                                                     |
+| OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                                                |
+| OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                                                      |
+| OSD_SESSION_TIMEOUT                        | The time before a session timeouts. This should be the same as the Energy Portal, e.g 180m. Note, needs the unit afterwards |
+| OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)                             |
+| OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                                       |
+| OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                                       |
+| OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                                                   |
+| OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod                                     |
+| OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                                        |
+| OSD_CAN_SHOW_STACK_TRACE                   | Boolean flag to control if the stack trace shows up when a 500 response is received (Optional)                              |
+| OSD_DATAWAREHOUSE_USER_PASSWORD            | The database password for the `datawarehouse` database user                                                                 |
+| OSD_STATEMENT_PREPARED_DATE                | The date the accessibility statement was prepared. E.g. 05 May 2023                                                         |
+| OSD_STATEMENT_LAST_REVIEW_DATE             | The date the accessibility statement was last reviewed. E.g. 05 May 2023                                                    |
+| OSD_SERVICE_LAST_TEST_DATE                 | The date the service was last tested. E.g. 05 May 2023                                                                      |
+| OSD_SERVICE_LAST_TESTED_BY                 | The company who carried out the last service E.g. Fivium Ltd                                                                |
+| OSD_DESIGN_SYSTEM_LAST_TEST_DATE           | The date the design system was last tested. E.g. 05 May 2023                                                                |
+| OSD_OFFLINE_DOCUMENT_LOCATION_URL          | The link to the location of offline appointments documents                                                                  |   
+| OSD_EPMQ_MESSAGE_POLL_FREQUENCY_SECONDS    | The delay for epmq messages annotated with @Scheduled (Optional) defaults to 30                                             |
+| OSD_ENABLE_STATSD                          | To enable or disable the statsd export. Should be true in prod                                                              |
+| OSD_STATSD_HOST                            | The url that the metrics run on                                                                                             |
+| OSD_STATSD_PORT                            | The port that the metrics run on                                                                                            |
+| OSD_METRICS_INSTANCE_TAG                   | The hostname which will be applied to all metrics                                                                           |
+| OSD_METRICS_ENVIRONMENT_NAME               | The app name and environment e.g. osd-prod                                                                                  |
 
 ### 3. Initialise the Fivium Design System
 
