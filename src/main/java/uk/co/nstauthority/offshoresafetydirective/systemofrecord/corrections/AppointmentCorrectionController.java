@@ -109,7 +109,7 @@ public class AppointmentCorrectionController {
         getModelAndView(appointment, form),
         form,
         () -> {
-          appointmentCorrectionService.updateAppointment(
+          appointmentCorrectionService.correctAppointment(
               appointment,
               Objects.requireNonNull(form)
           );

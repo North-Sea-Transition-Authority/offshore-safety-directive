@@ -65,7 +65,7 @@ public class Appointment {
     return asset;
   }
 
-  void setAsset(Asset asset) {
+  public void setAsset(Asset asset) {
     this.asset = asset;
   }
 
@@ -73,7 +73,7 @@ public class Appointment {
     return appointedPortalOperatorId;
   }
 
-  void setAppointedPortalOperatorId(Integer appointedPortalOperatorId) {
+  public void setAppointedPortalOperatorId(Integer appointedPortalOperatorId) {
     this.appointedPortalOperatorId = appointedPortalOperatorId;
   }
 
@@ -81,11 +81,11 @@ public class Appointment {
     return responsibleFromDate;
   }
 
-  void setResponsibleFromDate(LocalDate responsibleFromDate) {
+  public void setResponsibleFromDate(LocalDate responsibleFromDate) {
     this.responsibleFromDate = responsibleFromDate;
   }
 
-  LocalDate getResponsibleToDate() {
+  public LocalDate getResponsibleToDate() {
     return responsibleToDate;
   }
 
@@ -93,11 +93,11 @@ public class Appointment {
     this.responsibleToDate = responsibleToDate;
   }
 
-  AppointmentType getAppointmentType() {
+  public AppointmentType getAppointmentType() {
     return appointmentType;
   }
 
-  void setAppointmentType(AppointmentType appointmentType) {
+  public void setAppointmentType(AppointmentType appointmentType) {
     this.appointmentType = appointmentType;
   }
 
@@ -105,15 +105,15 @@ public class Appointment {
     return createdByNominationId;
   }
 
-  void setCreatedByNominationId(UUID createdByNominationId) {
+  public void setCreatedByNominationId(UUID createdByNominationId) {
     this.createdByNominationId = createdByNominationId;
   }
 
-  String getCreatedByLegacyNominationReference() {
+  public String getCreatedByLegacyNominationReference() {
     return createdByLegacyNominationReference;
   }
 
-  void setCreatedByLegacyNominationReference(String createdByLegacyNominationReference) {
+  public void setCreatedByLegacyNominationReference(String createdByLegacyNominationReference) {
     this.createdByLegacyNominationReference = createdByLegacyNominationReference;
   }
 
@@ -121,7 +121,7 @@ public class Appointment {
     return createdByAppointmentId;
   }
 
-  void setCreatedByAppointmentId(UUID createdByAppointmentId) {
+  public void setCreatedByAppointmentId(UUID createdByAppointmentId) {
     this.createdByAppointmentId = createdByAppointmentId;
   }
 
@@ -129,7 +129,7 @@ public class Appointment {
     return createdDatetime;
   }
 
-  void setCreatedDatetime(Instant createdDatetime) {
+  public void setCreatedDatetime(Instant createdDatetime) {
     this.createdDatetime = createdDatetime;
   }
 

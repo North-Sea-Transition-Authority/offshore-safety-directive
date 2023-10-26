@@ -31,14 +31,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
@@ -51,9 +50,6 @@ class AppointmentTerminationServiceTest {
 
   @Mock
   private PortalAssetNameService portalAssetNameService;
-
-  @Mock
-  private AppointmentUpdateService appointmentUpdateService;
 
   @Mock
   private AppointmentAccessService appointmentAccessService;
@@ -81,6 +77,9 @@ class AppointmentTerminationServiceTest {
 
   @Mock
   private AppointmentTerminationEventPublisher appointmentTerminationEventPublisher;
+
+  @Mock
+  private AppointmentService appointmentService;
 
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
@@ -359,8 +358,8 @@ class AppointmentTerminationServiceTest {
     var appointmentTerminationArgumentCaptor = ArgumentCaptor.forClass(AppointmentTermination.class);
     verify(appointmentTerminationRepository).save(appointmentTerminationArgumentCaptor.capture());
 
-    var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
-    verify(appointmentUpdateService).updateAppointment(appointmentDtoArgumentCaptor.capture());
+    verify(appointmentService).setAppointmentStatus(appointment, AppointmentStatus.TERMINATED);
+    verify(appointmentService).endAppointment(appointment, terminationDate);
     verify(appointmentTerminationEventPublisher).publish(appointmentId);
 
     assertThat(appointmentTerminationArgumentCaptor.getValue())
@@ -377,17 +376,6 @@ class AppointmentTerminationServiceTest {
             appointment
         );
 
-    assertThat(appointmentDtoArgumentCaptor.getValue())
-        .extracting(
-            appointmentDto -> appointmentDto.appointmentToDate().value(),
-            AppointmentDto::appointmentStatus
-        )
-        .containsExactly(
-            terminationDate,
-            AppointmentStatus.TERMINATED
-        );
-
     verify(fileAssociationService).submitFiles(form.getTerminationDocuments());
-
   }
 }

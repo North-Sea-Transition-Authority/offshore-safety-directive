@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -71,14 +71,13 @@ class AppointmentServiceTest {
         nomineeDetailAccessService,
         assetRepository,
         clock,
-        appointmentCorrectionService,
         appointmentRemovedEventPublisher,
-        appointmentAddedEventPublisher
-    );
+        appointmentAddedEventPublisher,
+        appointmentCorrectionService);
   }
 
   @Test
-  void addAppointments_whenExistingAppointments_verifyEnded() {
+  void confirmAppointmentsForNomination_whenExistingAppointments_verifyEnded() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var newAppointmentConfirmationDate = LocalDate.now().minusDays(1);
     var asset = AssetTestUtil.builder().build();
@@ -100,7 +99,7 @@ class AppointmentServiceTest {
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetailDto));
 
-    var appointments = appointmentService.addAppointments(
+    var appointments = appointmentService.createAppointmentsFromNomination(
         nominationDetail,
         newAppointmentConfirmationDate,
         List.of(asset)
@@ -158,7 +157,7 @@ class AppointmentServiceTest {
   }
 
   @Test
-  void addAppointments_whenNoExistingAppointments_verifyNoExistingUpdated() {
+  void confirmAppointmentsForNomination_whenNoExistingAppointments_verifyNoExistingUpdated() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var confirmationDate = LocalDate.now().minusDays(1);
     var asset = AssetTestUtil.builder().build();
@@ -174,7 +173,7 @@ class AppointmentServiceTest {
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetailDto));
 
-    var appointments = appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(asset));
+    var appointments = appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, List.of(asset));
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Appointment>> appointmentsPersisted = ArgumentCaptor.forClass(List.class);
@@ -208,7 +207,7 @@ class AppointmentServiceTest {
   }
 
   @Test
-  void addAppointments_whenNoNomineeDetailDto_verifyError() {
+  void confirmAppointmentsForNomination_whenNoNomineeDetailDto_verifyError() {
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
     var confirmationDate = LocalDate.now().minusDays(1);
@@ -218,7 +217,7 @@ class AppointmentServiceTest {
     when(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
         .thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> appointmentService.addAppointments(nominationDetail, confirmationDate, assetList))
+    assertThatThrownBy(() -> appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, assetList))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("Unable to get NomineeDetailDto for NominationDetail [%s]".formatted(
             nominationDetailDto.nominationDetailId()
@@ -235,108 +234,21 @@ class AppointmentServiceTest {
         .withPortalAssetId(portalAssetId)
         .withPortalAssetType(portalAssetType)
         .build();
-    var asset = AssetTestUtil.builder().build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, portalAssetType))
-        .thenReturn(Optional.of(asset));
+    var appointment = AppointmentTestUtil.builder().build();
 
-    var captor = ArgumentCaptor.forClass(Appointment.class);
-    doAnswer(invocation -> invocation.getArgument(0))
-        .when(appointmentRepository)
-        .save(captor.capture());
+    var appointmentArgumentCaptor = ArgumentCaptor.forClass(Appointment.class);
+
+    when(appointmentCorrectionService.applyCorrectionToAppointment(eq(form), eq(assetDto), appointmentArgumentCaptor.capture()))
+        .thenReturn(appointment);
 
     appointmentService.addManualAppointment(
         form,
         assetDto
     );
 
-    verify(appointmentCorrectionService).saveAppointment(captor.getValue(), form);
-    verify(appointmentAddedEventPublisher).publish(new AppointmentId(captor.getValue().getId()));
-
-    assertThat(captor.getValue().getAppointmentStatus())
-        .isEqualTo(AppointmentStatus.EXTANT);
-  }
-
-  @Test
-  void addManualAppointment_whenAssetNotFound_thenError() {
-    var portalAssetId = "123";
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    var form = AppointmentCorrectionFormTestUtil.builder().build();
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetId(portalAssetId)
-        .withPortalAssetType(portalAssetType)
-        .build();
-
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, portalAssetType))
-        .thenReturn(Optional.empty());
-
-    assertThatThrownBy(() ->
-        appointmentService.addManualAppointment(
-            form,
-            assetDto
-        ))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage(
-            "No Asset with ID [%s] found for manual appointment creation".formatted(
-                assetDto.portalAssetId()
-            ));
-  }
-
-  @Test
-  void addManualAppointment_whenAssetNoPortalAssetId_thenError() {
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    var form = AppointmentCorrectionFormTestUtil.builder().build();
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetId(null)
-        .withPortalAssetType(portalAssetType)
-        .build();
-
-    assertThatThrownBy(() ->
-        appointmentService.addManualAppointment(
-            form,
-            assetDto
-        ))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No ID found for AssetDto");
-  }
-
-  @Test
-  void addManualAppointment_whenNotCreatedByNominationId_thenVerifyNotPopulated() {
-    var portalAssetId = "123";
-    var portalAssetType = PortalAssetType.INSTALLATION;
-
-    var form = AppointmentCorrectionFormTestUtil.builder()
-        .withOnlineNominationReference(null)
-        .build();
-
-    var assetDto = AssetDtoTestUtil.builder()
-        .withPortalAssetId(portalAssetId)
-        .withPortalAssetType(portalAssetType)
-        .withPortalAssetType(portalAssetType)
-        .build();
-
-    var asset = AssetTestUtil.builder().build();
-
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, portalAssetType))
-        .thenReturn(Optional.of(asset));
-
-    var captor = ArgumentCaptor.forClass(Appointment.class);
-    doAnswer(invocation -> invocation.getArgument(0))
-        .when(appointmentRepository)
-        .save(captor.capture());
-
-    appointmentService.addManualAppointment(
-        form,
-        assetDto
-    );
-
-    verify(appointmentCorrectionService).saveAppointment(captor.getValue(), form);
-
-    assertThat(captor.getValue())
-        .extracting(Appointment::getCreatedByNominationId)
-        .isNull();
+    verify(appointmentCorrectionService).applyCorrectionToAppointment(form, assetDto, appointmentArgumentCaptor.getValue());
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(appointment.getId()));
   }
 
   @Test

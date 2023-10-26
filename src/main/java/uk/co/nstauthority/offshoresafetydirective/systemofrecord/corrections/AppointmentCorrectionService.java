@@ -4,14 +4,12 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,50 +20,53 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
-import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentFromDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
 
 @Service
 public class AppointmentCorrectionService {
 
-  private final AppointmentUpdateService appointmentUpdateService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
-  private final AssetPhasePersistenceService assetPhasePersistenceService;
-  private final Clock clock;
-  private final UserDetailService userDetailService;
   private final AppointmentCorrectionRepository appointmentCorrectionRepository;
   private final EnergyPortalUserService energyPortalUserService;
   private final AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher;
+  private final AssetRepository assetRepository;
+  private final AppointmentRepository appointmentRepository;
+  private final AssetPhasePersistenceService assetPhasePersistenceService;
+  private final Clock clock;
+  private final UserDetailService userDetailService;
 
   @Autowired
-  AppointmentCorrectionService(AppointmentUpdateService appointmentUpdateService,
-                               AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
-                               AssetPhasePersistenceService assetPhasePersistenceService, Clock clock,
-                               UserDetailService userDetailService,
+  AppointmentCorrectionService(AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                AppointmentCorrectionRepository appointmentCorrectionRepository,
                                EnergyPortalUserService energyPortalUserService,
-                               AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher) {
-    this.appointmentUpdateService = appointmentUpdateService;
+                               AppointmentCorrectionEventPublisher appointmentCorrectionEventPublisher,
+                               AssetRepository assetRepository, AppointmentRepository appointmentRepository,
+                               AssetPhasePersistenceService assetPhasePersistenceService, Clock clock,
+                               UserDetailService userDetailService) {
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
-    this.assetPhasePersistenceService = assetPhasePersistenceService;
-    this.clock = clock;
-    this.userDetailService = userDetailService;
     this.appointmentCorrectionRepository = appointmentCorrectionRepository;
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentCorrectionEventPublisher = appointmentCorrectionEventPublisher;
+    this.assetRepository = assetRepository;
+    this.appointmentRepository = appointmentRepository;
+    this.assetPhasePersistenceService = assetPhasePersistenceService;
+    this.clock = clock;
+    this.userDetailService = userDetailService;
   }
 
   AppointmentCorrectionForm getForm(Appointment appointment) {
@@ -121,90 +122,91 @@ public class AppointmentCorrectionService {
     return form;
   }
 
-  public Map<String, String> getSelectablePhaseMap(PortalAssetType portalAssetType) {
-    var phaseClass = PortalAssetTypeUtil.getEnumPhaseClass(portalAssetType);
-    return DisplayableEnumOptionUtil.getDisplayableOptions(phaseClass);
-  }
-
   @Transactional
-  public void updateAppointment(Appointment appointment,
-                                AppointmentCorrectionForm appointmentCorrectionForm) {
-    saveAppointment(appointment, appointmentCorrectionForm);
-    appointmentCorrectionEventPublisher.publish(new AppointmentId(appointment.getId()));
-  }
-
-  @Transactional
-  public void saveAppointment(Appointment appointment, AppointmentCorrectionForm appointmentCorrectionForm) {
-
+  public void correctAppointment(Appointment appointment, AppointmentCorrectionForm appointmentCorrectionForm) {
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
 
-    var startDate = getStartDateFromForm(appointmentCorrectionForm)
+    var exsitingAppointment = appointmentRepository.findById(appointment.getId())
+        .orElseThrow(() -> new IllegalStateException("No appointment found with id [%s]".formatted(
+            appointmentDto.appointmentId().id()
+        )));
+
+    var assetDto = AssetDto.fromAsset(exsitingAppointment.getAsset());
+
+    var savedAppointment = applyCorrectionToAppointment(
+        appointmentCorrectionForm,
+        assetDto,
+        exsitingAppointment);
+    appointmentCorrectionEventPublisher.publish(new AppointmentId(savedAppointment.getId()));
+  }
+
+  @Transactional
+  public Appointment applyCorrectionToAppointment(AppointmentCorrectionForm form, AssetDto assetDto, Appointment appointment) {
+
+    var createdByNominationId = Optional.ofNullable(form.getOnlineNominationReference())
+        .map(UUID::fromString)
+        .orElse(null);
+
+    var portalAssetId = Optional.ofNullable(assetDto.portalAssetId())
+        .map(PortalAssetId::id)
+        .orElseThrow(
+            () -> new IllegalStateException("No PortalAssetID found for AssetDto with assetId [%s]"
+                .formatted(assetDto.assetId())));
+
+    var asset = assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, assetDto.portalAssetType())
         .orElseThrow(() -> new IllegalStateException(
-            "Unable to get start date from form with AppointmentType [%s] with appointment ID [%s]".formatted(
-                appointmentCorrectionForm.getAppointmentType(),
-                appointmentDto.appointmentId()
+            "No Asset with ID [%s] found for manual appointment creation".formatted(
+                assetDto.portalAssetId()
             )
         ));
 
-    Optional<LocalDate> endDate = BooleanUtils.isTrue(Boolean.valueOf(appointmentCorrectionForm.getHasEndDate()))
-        ? appointmentCorrectionForm.getEndDate().getAsLocalDate()
-        : Optional.empty();
+    var startDate = getStartDateFromForm(form)
+        .orElseThrow(() -> new IllegalStateException(
+            "Unable to get start date from form with AppointmentType [%s] with appointment ID [%s]".formatted(
+                form.getAppointmentType(),
+                appointment.getId()
+            )
+        ));
 
-    var appointmentType = EnumUtils.getEnum(AppointmentType.class, appointmentCorrectionForm.getAppointmentType());
+    var endDate = form.getEndDate().getAsLocalDate().orElse(null);
+    var appointmentType = AppointmentType.valueOf(form.getAppointmentType());
 
-    var updateDtoBuilder = AppointmentDto.builder(
-        appointmentDto.appointmentId(),
-        new AppointedOperatorId(appointmentCorrectionForm.getAppointedOperatorId().toString()),
-        new AppointmentFromDate(startDate),
-        endDate.map(AppointmentToDate::new).orElse(null),
-        appointmentDto.appointmentCreatedDate(),
-        appointmentType,
-        appointmentDto.assetDto(),
-        appointmentDto.appointmentStatus()
-    );
+    appointment.setAsset(asset);
+    appointment.setAppointedPortalOperatorId(form.getAppointedOperatorId());
+    appointment.setResponsibleFromDate(startDate);
+    appointment.setResponsibleToDate(endDate);
+    appointment.setAppointmentType(appointmentType);
 
     switch (appointmentType) {
-      case OFFLINE_NOMINATION -> updateDtoBuilder
-          .withLegacyNominationReference(appointmentCorrectionForm.getOfflineNominationReference().getInputValue());
+      case OFFLINE_NOMINATION -> {
+        appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
+        appointment.setCreatedByNominationId(null);
+      }
       case ONLINE_NOMINATION -> {
-        var onlineNominationReferenceId = Optional.ofNullable(appointmentCorrectionForm.getOnlineNominationReference())
-            .map(nominationId -> new NominationId(UUID.fromString(nominationId)))
-            .orElse(null);
-
-        updateDtoBuilder
-            .withNominationId(onlineNominationReferenceId);
+        appointment.setCreatedByNominationId(createdByNominationId);
+        appointment.setCreatedByLegacyNominationReference(null);
       }
       case DEEMED -> {
-
+        appointment.setCreatedByLegacyNominationReference(null);
+        appointment.setCreatedByNominationId(null);
       }
     }
 
-    var updateDto = updateDtoBuilder.build();
+    appointment.setCreatedByAppointmentId(null);
+    appointment.setCreatedDatetime(clock.instant());
+    appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
 
-    List<AssetAppointmentPhase> phases;
-    if (BooleanUtils.isTrue(Boolean.valueOf(appointmentCorrectionForm.getForAllPhases()))) {
-      phases = switch (appointmentDto.assetDto().portalAssetType()) {
-        case INSTALLATION -> EnumSet.allOf(InstallationPhase.class)
-            .stream()
-            .map(Enum::name)
-            .map(AssetAppointmentPhase::new)
-            .toList();
-        case SUBAREA, WELLBORE -> EnumSet.allOf(WellPhase.class)
-            .stream()
-            .map(Enum::name)
-            .map(AssetAppointmentPhase::new)
-            .toList();
-      };
-    } else {
-      phases = appointmentCorrectionForm.getPhases()
-          .stream()
-          .map(AssetAppointmentPhase::new)
-          .toList();
-    }
+    var phases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
 
-    saveCorrectionReason(appointment, appointmentCorrectionForm.getReason().getInputValue());
-    appointmentUpdateService.updateAppointment(updateDto);
-    assetPhasePersistenceService.updateAssetPhases(appointmentDto, phases);
+    var savedAppointment = appointmentRepository.save(appointment);
+    saveCorrectionReason(appointment, form.getReason().getInputValue());
+    assetPhasePersistenceService.updateAssetPhases(AppointmentDto.fromAppointment(appointment), phases);
+    return savedAppointment;
+  }
+
+  public Map<String, String> getSelectablePhaseMap(PortalAssetType portalAssetType) {
+    var phaseClass = PortalAssetTypeUtil.getEnumPhaseClass(portalAssetType);
+    return DisplayableEnumOptionUtil.getDisplayableOptions(phaseClass);
   }
 
   public List<AppointmentCorrectionHistoryView> getAppointmentCorrectionHistoryViews(Appointment appointment) {
@@ -270,5 +272,4 @@ public class AppointmentCorrectionService {
     correction.setCorrectedByWuaId(userDetailService.getUserDetail().wuaId());
     appointmentCorrectionRepository.save(correction);
   }
-
 }

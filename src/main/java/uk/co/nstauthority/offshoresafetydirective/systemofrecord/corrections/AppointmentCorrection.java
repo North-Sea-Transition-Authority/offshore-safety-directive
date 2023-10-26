@@ -17,7 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 @Entity
 @Table(name = "appointment_corrections")
 @Audited
-class AppointmentCorrection {
+public class AppointmentCorrection {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -50,7 +50,7 @@ class AppointmentCorrection {
     return appointment;
   }
 
-  void setAppointment(Appointment appointment) {
+  public void setAppointment(Appointment appointment) {
     this.appointment = appointment;
   }
 
@@ -58,7 +58,7 @@ class AppointmentCorrection {
     return createdTimestamp;
   }
 
-  void setCreatedTimestamp(Instant createdTimestamp) {
+  public void setCreatedTimestamp(Instant createdTimestamp) {
     this.createdTimestamp = createdTimestamp;
   }
 
@@ -66,7 +66,7 @@ class AppointmentCorrection {
     return correctedByWuaId;
   }
 
-  void setCorrectedByWuaId(Long correctedByWuaId) {
+  public void setCorrectedByWuaId(Long correctedByWuaId) {
     this.correctedByWuaId = correctedByWuaId;
   }
 
@@ -74,7 +74,7 @@ class AppointmentCorrection {
     return reasonForCorrection;
   }
 
-  void setReasonForCorrection(String reasonForCorrection) {
+  public void setReasonForCorrection(String reasonForCorrection) {
     this.reasonForCorrection = reasonForCorrection;
   }
 }

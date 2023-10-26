@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 
 @Repository
-interface AppointmentCorrectionRepository extends CrudRepository<AppointmentCorrection, UUID> {
+public interface AppointmentCorrectionRepository extends CrudRepository<AppointmentCorrection, UUID> {
 
   List<AppointmentCorrection> findAllByAppointment(Appointment appointment);
 

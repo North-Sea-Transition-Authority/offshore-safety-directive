@@ -8,7 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface AssetRepository extends CrudRepository<Asset, UUID> {
+public interface AssetRepository extends CrudRepository<Asset, UUID> {
 
   List<Asset> findAllByPortalAssetIdIn(Collection<String> id);
 

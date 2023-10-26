@@ -50,7 +50,11 @@ public class SystemOfRecordUpdateService {
         .toList();
 
     var persistedAssetDtos = assetPersistenceService.persistNominatedAssets(nominatedAssetDtos);
-    var appointments = appointmentService.addAppointments(nominationDetail, confirmationDate, persistedAssetDtos);
+    var appointments = appointmentService.createAppointmentsFromNomination(
+        nominationDetail,
+        confirmationDate,
+        persistedAssetDtos
+    );
 
     Map<PortalAssetType, List<NominatedAssetDto>> groupedNominatedAssets = nominatedAssetDtos.stream()
         .collect(Collectors.groupingBy(NominatedAssetDto::portalAssetType));

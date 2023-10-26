@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,75 +27,39 @@ public class AppointmentService {
   private final NomineeDetailAccessService nomineeDetailAccessService;
   private final AssetRepository assetRepository;
   private final Clock clock;
-  private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
+  private final AppointmentCorrectionService appointmentCorrectionService;
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
                      NomineeDetailAccessService nomineeDetailAccessService,
                      AssetRepository assetRepository,
-                     Clock clock, AppointmentCorrectionService appointmentCorrectionService,
+                     Clock clock,
                      AppointmentRemovedEventPublisher appointmentRemovedEventPublisher,
-                     AppointmentAddedEventPublisher appointmentAddedEventPublisher) {
+                     AppointmentAddedEventPublisher appointmentAddedEventPublisher,
+                     AppointmentCorrectionService appointmentCorrectionService) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
     this.assetRepository = assetRepository;
     this.clock = clock;
-    this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentRemovedEventPublisher = appointmentRemovedEventPublisher;
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
+    this.appointmentCorrectionService = appointmentCorrectionService;
   }
 
   @Transactional
   public void addManualAppointment(AppointmentCorrectionForm form, AssetDto assetDto) {
 
-    var createdByNominationId = Optional.ofNullable(form.getOnlineNominationReference())
-        .map(UUID::fromString)
-        .orElse(null);
-
-    var assetId = Optional.ofNullable(assetDto.portalAssetId())
-        .map(PortalAssetId::id)
-        .orElseThrow(() -> new IllegalStateException("No ID found for AssetDto"));
-
-    var asset = assetRepository.findByPortalAssetIdAndPortalAssetType(
-            assetId,
-            assetDto.portalAssetType()
-        )
-        .orElseThrow(() -> new IllegalStateException(
-            "No Asset with ID [%s] found for manual appointment creation".formatted(
-                assetDto.portalAssetId()
-            )
-        ));
-
-    // TODO OSDOP-583 - Read below block for details
-    /*
-    The block below creates an appointment as the correction service expects an appointment to exist within the database.
-    We are calling the correction service as logic to persist data on the form is already handled within this method.
-
-    The action to take is to investigate refactoring this work to be more streamlined.
-     */
-    var appointment = new Appointment();
-    appointment.setAsset(asset);
-    appointment.setAppointedPortalOperatorId(form.getAppointedOperatorId());
-    appointment.setResponsibleFromDate(LocalDate.now());
-    appointment.setResponsibleToDate(LocalDate.now());
-    appointment.setAppointmentType(AppointmentType.valueOf(form.getAppointmentType()));
-    appointment.setCreatedByNominationId(createdByNominationId);
-    appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
-    appointment.setCreatedByAppointmentId(null);
-    appointment.setCreatedDatetime(clock.instant());
-    appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
-
-    var savedAppointment = appointmentRepository.save(appointment);
-    appointmentCorrectionService.saveAppointment(savedAppointment, form);
+    var savedAppointment = appointmentCorrectionService.applyCorrectionToAppointment(form, assetDto, new Appointment());
     appointmentAddedEventPublisher.publish(new AppointmentId(savedAppointment.getId()));
   }
 
   @Transactional
-  public List<Appointment> addAppointments(NominationDetail nominationDetail, LocalDate appointmentConfirmationDate,
-                                           Collection<Asset> assets) {
+  public List<Appointment> createAppointmentsFromNomination(NominationDetail nominationDetail,
+                                                            LocalDate appointmentConfirmationDate,
+                                                            Collection<Asset> assets) {
 
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
     var nomineeDetailDto = nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail)
@@ -144,11 +106,6 @@ public class AppointmentService {
         appointmentRemovedEventPublisher.publish(new AppointmentId(appointment.getId()));
       }
     }
-  }
-
-  @Transactional
-  public void endAppointmentsForSubareas(Collection<LicenceBlockSubareaDto> subareaDtos) {
-    // TODO OSDOP-557 - End forward approval appointments for the given subarea
   }
 
   @Transactional
@@ -199,4 +156,15 @@ public class AppointmentService {
     return existingAppointments;
   }
 
+  @Transactional
+  public void setAppointmentStatus(Appointment appointment, AppointmentStatus appointmentStatus) {
+    appointment.setAppointmentStatus(appointmentStatus);
+    appointmentRepository.save(appointment);
+  }
+
+  @Transactional
+  public void endAppointment(Appointment appointment, LocalDate endDate) {
+    appointment.setResponsibleToDate(endDate);
+    appointmentRepository.save(appointment);
+  }
 }

@@ -17,9 +17,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentUpdateService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
@@ -33,7 +33,7 @@ public class AppointmentTerminationService {
   private final NominationAccessService nominationAccessService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
-  private final AppointmentUpdateService appointmentUpdateService;
+  private final AppointmentService appointmentService;
   private final AppointmentTerminationRepository appointmentTerminationRepository;
   private final UserDetailService userDetailService;
   private final AppointmentPhasesService appointmentPhasesService;
@@ -46,7 +46,7 @@ public class AppointmentTerminationService {
                                        NominationAccessService nominationAccessService,
                                        AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                        PortalOrganisationUnitQueryService organisationUnitQueryService,
-                                       AppointmentUpdateService appointmentUpdateService,
+                                       AppointmentService appointmentService,
                                        AppointmentTerminationRepository appointmentTerminationRepository,
                                        UserDetailService userDetailService,
                                        AppointmentPhasesService appointmentPhasesService,
@@ -57,7 +57,7 @@ public class AppointmentTerminationService {
     this.nominationAccessService = nominationAccessService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.organisationUnitQueryService = organisationUnitQueryService;
-    this.appointmentUpdateService = appointmentUpdateService;
+    this.appointmentService = appointmentService;
     this.appointmentTerminationRepository = appointmentTerminationRepository;
     this.userDetailService = userDetailService;
     this.appointmentPhasesService = appointmentPhasesService;
@@ -83,11 +83,8 @@ public class AppointmentTerminationService {
 
     appointmentTerminationRepository.save(termination);
 
-    appointment.setResponsibleToDate(terminationDate);
-    appointment.setAppointmentStatus(AppointmentStatus.TERMINATED);
-
-    var appointmentDto = AppointmentDto.fromAppointment(appointment);
-    appointmentUpdateService.updateAppointment(appointmentDto);
+    appointmentService.setAppointmentStatus(appointment, AppointmentStatus.TERMINATED);
+    appointmentService.endAppointment(appointment, terminationDate);
 
     fileAssociationService.submitFiles(form.getTerminationDocuments());
     appointmentTerminationEventPublisher.publish(new AppointmentId(appointment.getId()));

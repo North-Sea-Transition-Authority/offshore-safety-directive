@@ -49,7 +49,7 @@ public class Asset {
     return id;
   }
 
-  String getPortalAssetId() {
+  public String getPortalAssetId() {
     return portalAssetId;
   }
 
@@ -57,7 +57,7 @@ public class Asset {
     this.portalAssetId = portalAssetId;
   }
 
-  PortalAssetType getPortalAssetType() {
+  public PortalAssetType getPortalAssetType() {
     return portalAssetType;
   }
 

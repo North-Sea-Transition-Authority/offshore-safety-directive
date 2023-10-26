@@ -66,7 +66,7 @@ class SystemOfRecordUpdateServiceTest {
     when(assetPersistenceService.persistNominatedAssets(List.of(assetDto)))
         .thenReturn(List.of(existingAsset));
 
-    when(appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(existingAsset)))
+    when(appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, List.of(existingAsset)))
         .thenReturn(List.of(appointment));
 
     systemOfRecordUpdateService.updateSystemOfRecordByNominationDetail(nominationDetail, confirmationDate);
@@ -111,7 +111,7 @@ class SystemOfRecordUpdateServiceTest {
     when(assetPersistenceService.persistNominatedAssets(List.of(assetDto)))
         .thenReturn(List.of(existingAsset));
 
-    when(appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(existingAsset)))
+    when(appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, List.of(existingAsset)))
         .thenReturn(List.of(appointment));
 
     systemOfRecordUpdateService.updateSystemOfRecordByNominationDetail(nominationDetail, confirmationDate);
@@ -172,7 +172,7 @@ class SystemOfRecordUpdateServiceTest {
     when(assetPersistenceService.persistNominatedAssets(List.of(nominatedInstallationAssetDto, nominatedWellAssetDto)))
         .thenReturn(List.of(installationAsset, wellAsset));
 
-    when(appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(installationAsset, wellAsset)))
+    when(appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, List.of(installationAsset, wellAsset)))
         .thenReturn(List.of(installationAppointment, wellAppointment));
 
     systemOfRecordUpdateService.updateSystemOfRecordByNominationDetail(nominationDetail, confirmationDate);
@@ -221,7 +221,7 @@ class SystemOfRecordUpdateServiceTest {
     when(assetPersistenceService.persistNominatedAssets(List.of(assetDto)))
         .thenReturn(List.of(existingAsset));
 
-    when(appointmentService.addAppointments(nominationDetail, confirmationDate, List.of(existingAsset)))
+    when(appointmentService.createAppointmentsFromNomination(nominationDetail, confirmationDate, List.of(existingAsset)))
         .thenReturn(List.of(appointment));
 
     systemOfRecordUpdateService.updateSystemOfRecordByNominationDetail(nominationDetail, confirmationDate);

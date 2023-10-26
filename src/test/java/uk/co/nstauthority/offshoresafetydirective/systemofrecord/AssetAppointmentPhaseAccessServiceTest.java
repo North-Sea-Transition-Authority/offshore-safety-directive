@@ -5,14 +5,21 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -116,5 +123,87 @@ class AssetAppointmentPhaseAccessServiceTest {
         .extracting(AssetAppointmentPhase::value)
         .containsExactly(firstAppointmentPhase);
 
+  }
+
+  @Test
+  void getPhasesForAppointmentCorrections_whenNoPhasesProvided_AndInstallationType_thenReturnEmptyList() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withForAllPhases(false)
+        .withPhases(Set.of())
+        .build();
+
+    var appointment = AppointmentTestUtil.builder().build();
+
+    var resultingPhases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
+
+    assertThat(resultingPhases).isEmpty();
+  }
+
+  @Test
+  void getPhasesForAppointmentCorrections_whenAllPhasesProvided_AndInstallation_thenReturn() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withForAllPhases(true)
+        .build();
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+
+    var resultingPhases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
+
+    var installationAssetPhases = EnumSet.allOf(InstallationPhase.class)
+        .stream()
+        .map(Enum::name)
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    assertThat(resultingPhases).isEqualTo(installationAssetPhases);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = PortalAssetType.class, mode = EnumSource.Mode.INCLUDE, names = {"WELLBORE", "SUBAREA"})
+  void getPhasesForAppointmentCorrections_whenAllPhasesProvided_AndWellOrSubarea_thenReturn(PortalAssetType portalAssetType) {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withForAllPhases(true)
+        .build();
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+
+    var resultingPhases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
+
+    var wellAssetPhases = EnumSet.allOf(WellPhase.class)
+        .stream()
+        .map(Enum::name)
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    assertThat(resultingPhases).isEqualTo(wellAssetPhases);
+  }
+
+  @Test
+  void getPhasesForAppointmentCorrections_whenCustomPhasesProvided_thenReturn() {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withForAllPhases(false)
+        .withPhases(Set.of("Decommissioning", "Development"))
+        .build();
+
+    var appointment = AppointmentTestUtil.builder().build();
+
+    var resultingPhases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
+
+    var expectedPhases = form.getPhases()
+        .stream()
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    assertThat(resultingPhases).isEqualTo(expectedPhases);
   }
 }

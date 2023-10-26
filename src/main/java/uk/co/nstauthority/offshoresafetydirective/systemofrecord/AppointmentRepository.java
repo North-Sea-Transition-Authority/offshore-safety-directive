@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface AppointmentRepository extends CrudRepository<Appointment, UUID> {
+public interface AppointmentRepository extends CrudRepository<Appointment, UUID> {
 
   List<Appointment> findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(Collection<Asset> asset,
                                                                                      Collection<AppointmentStatus> statuses);
