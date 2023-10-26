@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,13 +87,13 @@ class NominatedInstallationDetailFormServiceTest {
         )
         .containsExactly(
             List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId()),
-            nominatedInstallationDetail.getForAllInstallationPhases(),
-            nominatedInstallationDetail.getDevelopmentDesignPhase(),
-            nominatedInstallationDetail.getDevelopmentConstructionPhase(),
-            nominatedInstallationDetail.getDevelopmentInstallationPhase(),
-            nominatedInstallationDetail.getDevelopmentCommissioningPhase(),
-            nominatedInstallationDetail.getDevelopmentProductionPhase(),
-            nominatedInstallationDetail.getDecommissioningPhase(),
+            Objects.toString(nominatedInstallationDetail.getForAllInstallationPhases(), null),
+            Objects.toString(nominatedInstallationDetail.getDevelopmentDesignPhase(), null),
+            Objects.toString(nominatedInstallationDetail.getDevelopmentConstructionPhase(), null),
+            Objects.toString(nominatedInstallationDetail.getDevelopmentInstallationPhase(), null),
+            Objects.toString(nominatedInstallationDetail.getDevelopmentCommissioningPhase(), null),
+            Objects.toString(nominatedInstallationDetail.getDevelopmentProductionPhase(), null),
+            Objects.toString(nominatedInstallationDetail.getDecommissioningPhase(), null),
             List.of(nominationLicence.getLicenceId())
         );
   }

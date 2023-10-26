@@ -49,8 +49,8 @@ class NominatedInstallationDetailPersistenceService {
                                                                              NominatedInstallationDetail installationDetail,
                                                                              NominatedInstallationDetailForm form) {
     installationDetail.setNominationDetail(nominationDetail)
-        .setForAllInstallationPhases(form.getForAllInstallationPhases());
-    if (BooleanUtils.isTrue(form.getForAllInstallationPhases())) {
+        .setForAllInstallationPhases(BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()));
+    if (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()))) {
       installationDetail.setDevelopmentDesignPhase(null)
           .setDevelopmentConstructionPhase(null)
           .setDevelopmentInstallationPhase(null)
@@ -58,12 +58,12 @@ class NominatedInstallationDetailPersistenceService {
           .setDevelopmentProductionPhase(null)
           .setDecommissioningPhase(null);
     } else {
-      installationDetail.setDevelopmentDesignPhase(form.getDevelopmentDesignPhase())
-          .setDevelopmentConstructionPhase(form.getDevelopmentConstructionPhase())
-          .setDevelopmentInstallationPhase(form.getDevelopmentInstallationPhase())
-          .setDevelopmentCommissioningPhase(form.getDevelopmentCommissioningPhase())
-          .setDevelopmentProductionPhase(form.getDevelopmentProductionPhase())
-          .setDecommissioningPhase(form.getDecommissioningPhase());
+      installationDetail.setDevelopmentDesignPhase(BooleanUtils.toBooleanObject(form.getDevelopmentDesignPhase()))
+          .setDevelopmentConstructionPhase(BooleanUtils.toBooleanObject(form.getDevelopmentConstructionPhase()))
+          .setDevelopmentInstallationPhase(BooleanUtils.toBooleanObject(form.getDevelopmentInstallationPhase()))
+          .setDevelopmentCommissioningPhase(BooleanUtils.toBooleanObject(form.getDevelopmentCommissioningPhase()))
+          .setDevelopmentProductionPhase(BooleanUtils.toBooleanObject(form.getDevelopmentProductionPhase()))
+          .setDecommissioningPhase(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()));
     }
     return installationDetail;
   }

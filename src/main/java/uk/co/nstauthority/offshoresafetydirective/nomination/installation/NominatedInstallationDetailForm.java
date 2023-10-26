@@ -8,111 +8,100 @@ public class NominatedInstallationDetailForm {
   private String installationsSelect;
   private List<Integer> licences;
   private String licencesSelect;
-  private Boolean forAllInstallationPhases;
-  private Boolean developmentDesignPhase;
-  private Boolean developmentConstructionPhase;
-  private Boolean developmentInstallationPhase;
-  private Boolean developmentCommissioningPhase;
-  private Boolean developmentProductionPhase;
-  private Boolean decommissioningPhase;
+  private String forAllInstallationPhases;
+  private String developmentDesignPhase;
+  private String developmentConstructionPhase;
+  private String developmentInstallationPhase;
+  private String developmentCommissioningPhase;
+  private String developmentProductionPhase;
+  private String decommissioningPhase;
 
   public List<Integer> getInstallations() {
     return installations;
   }
 
-  public NominatedInstallationDetailForm setInstallations(List<Integer> installations) {
+  public void setInstallations(List<Integer> installations) {
     this.installations = installations;
-    return this;
   }
 
   public String getInstallationsSelect() {
     return installationsSelect;
   }
 
-  public NominatedInstallationDetailForm setInstallationsSelect(String installationsSelect) {
+  public void setInstallationsSelect(String installationsSelect) {
     this.installationsSelect = installationsSelect;
-    return this;
-  }
-
-  public Boolean getForAllInstallationPhases() {
-    return forAllInstallationPhases;
-  }
-
-  public NominatedInstallationDetailForm setForAllInstallationPhases(Boolean forAllInstallationPhases) {
-    this.forAllInstallationPhases = forAllInstallationPhases;
-    return this;
-  }
-
-  public Boolean getDevelopmentDesignPhase() {
-    return developmentDesignPhase;
-  }
-
-  public NominatedInstallationDetailForm setDevelopmentDesignPhase(Boolean developmentDesignPhase) {
-    this.developmentDesignPhase = developmentDesignPhase;
-    return this;
-  }
-
-  public  Boolean getDevelopmentConstructionPhase() {
-    return developmentConstructionPhase;
-  }
-
-  public NominatedInstallationDetailForm setDevelopmentConstructionPhase(Boolean developmentConstructionPhase) {
-    this.developmentConstructionPhase = developmentConstructionPhase;
-    return this;
-  }
-
-  public  Boolean getDevelopmentInstallationPhase() {
-    return developmentInstallationPhase;
-  }
-
-  public NominatedInstallationDetailForm setDevelopmentInstallationPhase(Boolean developmentInstallationPhase) {
-    this.developmentInstallationPhase = developmentInstallationPhase;
-    return this;
-  }
-
-  public Boolean getDevelopmentCommissioningPhase() {
-    return developmentCommissioningPhase;
-  }
-
-  public NominatedInstallationDetailForm setDevelopmentCommissioningPhase(Boolean developmentCommissioningPhase) {
-    this.developmentCommissioningPhase = developmentCommissioningPhase;
-    return this;
-  }
-
-  public  Boolean getDevelopmentProductionPhase() {
-    return developmentProductionPhase;
-  }
-
-  public NominatedInstallationDetailForm setDevelopmentProductionPhase(Boolean developmentProductionPhase) {
-    this.developmentProductionPhase = developmentProductionPhase;
-    return this;
-  }
-
-  public Boolean getDecommissioningPhase() {
-    return decommissioningPhase;
-  }
-
-  public NominatedInstallationDetailForm setDecommissioningPhase(Boolean decommissioningPhase) {
-    this.decommissioningPhase = decommissioningPhase;
-    return this;
   }
 
   public List<Integer> getLicences() {
     return licences;
   }
 
-  public NominatedInstallationDetailForm setLicences(List<Integer> licences) {
+  public void setLicences(List<Integer> licences) {
     this.licences = licences;
-    return this;
   }
 
   public String getLicencesSelect() {
     return licencesSelect;
   }
 
-  public NominatedInstallationDetailForm setLicencesSelect(String licencesSelect) {
+  public void setLicencesSelect(String licencesSelect) {
     this.licencesSelect = licencesSelect;
-    return this;
+  }
+
+  public String getForAllInstallationPhases() {
+    return forAllInstallationPhases;
+  }
+
+  public void setForAllInstallationPhases(String forAllInstallationPhases) {
+    this.forAllInstallationPhases = forAllInstallationPhases;
+  }
+
+  public String getDevelopmentDesignPhase() {
+    return developmentDesignPhase;
+  }
+
+  public void setDevelopmentDesignPhase(String developmentDesignPhase) {
+    this.developmentDesignPhase = developmentDesignPhase;
+  }
+
+  public String getDevelopmentConstructionPhase() {
+    return developmentConstructionPhase;
+  }
+
+  public void setDevelopmentConstructionPhase(String developmentConstructionPhase) {
+    this.developmentConstructionPhase = developmentConstructionPhase;
+  }
+
+  public String getDevelopmentInstallationPhase() {
+    return developmentInstallationPhase;
+  }
+
+  public void setDevelopmentInstallationPhase(String developmentInstallationPhase) {
+    this.developmentInstallationPhase = developmentInstallationPhase;
+  }
+
+  public String getDevelopmentCommissioningPhase() {
+    return developmentCommissioningPhase;
+  }
+
+  public void setDevelopmentCommissioningPhase(String developmentCommissioningPhase) {
+    this.developmentCommissioningPhase = developmentCommissioningPhase;
+  }
+
+  public String getDevelopmentProductionPhase() {
+    return developmentProductionPhase;
+  }
+
+  public void setDevelopmentProductionPhase(String developmentProductionPhase) {
+    this.developmentProductionPhase = developmentProductionPhase;
+  }
+
+  public String getDecommissioningPhase() {
+    return decommissioningPhase;
+  }
+
+  public void setDecommissioningPhase(String decommissioningPhase) {
+    this.decommissioningPhase = decommissioningPhase;
   }
 
   @Override

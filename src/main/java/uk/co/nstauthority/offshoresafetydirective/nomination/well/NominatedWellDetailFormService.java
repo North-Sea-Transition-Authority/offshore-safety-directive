@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -35,10 +36,10 @@ class NominatedWellDetailFormService {
 
   private NominatedWellDetailForm nominatedWellDetailEntityToForm(NominatedWellDetail entity) {
     var form = new NominatedWellDetailForm();
-    form.setForAllWellPhases(entity.getForAllWellPhases());
-    form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
-    form.setDevelopmentPhase(entity.getDevelopmentPhase());
-    form.setDecommissioningPhase(entity.getDecommissioningPhase());
+    form.setForAllWellPhases(Objects.toString(entity.getForAllWellPhases(), null));
+    form.setExplorationAndAppraisalPhase(Objects.toString(entity.getExplorationAndAppraisalPhase(), null));
+    form.setDevelopmentPhase(Objects.toString(entity.getDevelopmentPhase(), null));
+    form.setDecommissioningPhase(Objects.toString(entity.getDecommissioningPhase(), null));
     List<Integer> wellIds = nominatedWellAccessService.getNominatedWells(entity.getNominationDetail())
         .stream()
         .map(NominatedWell::getWellId)

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
@@ -121,7 +122,7 @@ public class AppointmentCorrectionFormTestUtil {
     public AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
-      form.setForAllPhases(String.valueOf(forAllPhases));
+      form.setForAllPhases(Objects.toString(forAllPhases, null));
       form.setPhases(phases);
       form.setAppointmentType(appointmentType);
       form.setHasEndDate(hasEndDate);

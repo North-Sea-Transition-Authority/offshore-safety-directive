@@ -10,6 +10,9 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -59,10 +62,12 @@ class NominatedWellDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenForAllWellPhasesNotSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenForAllWellPhasesInvalidValue_thenError(String value) {
     var form = NominatedWellFormTestUtil.builder()
-        .isForAllWellPhases(null)
+        .isForAllWellPhases(value)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -75,13 +80,15 @@ class NominatedWellDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError(String value) {
     var form = NominatedWellFormTestUtil.builder()
         .isForAllWellPhases(false)
-        .isExplorationAndAppraisalPhase(null)
-        .isDevelopmentPhase(null)
-        .isDecommissioningPhase(null)
+        .isExplorationAndAppraisalPhase(value)
+        .isDevelopmentPhase(value)
+        .isDecommissioningPhase(value)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");

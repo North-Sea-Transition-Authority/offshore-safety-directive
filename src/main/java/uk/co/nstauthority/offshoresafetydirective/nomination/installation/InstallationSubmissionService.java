@@ -40,7 +40,8 @@ class InstallationSubmissionService implements NominationSectionSubmissionServic
     );
     if (installationInclusionFormBindingResult.hasErrors()) {
       return false;
-    } else if (BooleanUtils.isFalse(installationInclusionForm.getIncludeInstallationsInNomination())) {
+    } else if (BooleanUtils.isFalse(
+        BooleanUtils.toBooleanObject(installationInclusionForm.getIncludeInstallationsInNomination()))) {
       return true;
     }
 
@@ -51,14 +52,14 @@ class InstallationSubmissionService implements NominationSectionSubmissionServic
         nominatedInstallationDetailFormBindingResult
     );
 
-    return BooleanUtils.isTrue(installationInclusionForm.getIncludeInstallationsInNomination())
+    return BooleanUtils.isTrue(BooleanUtils.toBooleanObject(installationInclusionForm.getIncludeInstallationsInNomination()))
         && !nominatedInstallationDetailFormBindingResult.hasErrors();
   }
 
   @Override
   public void onSubmission(NominationDetail nominationDetail) {
     var installationInclusionForm = installationInclusionFormService.getForm(nominationDetail);
-    if (BooleanUtils.isFalse(installationInclusionForm.getIncludeInstallationsInNomination())) {
+    if (BooleanUtils.isFalse(BooleanUtils.toBooleanObject(installationInclusionForm.getIncludeInstallationsInNomination()))) {
       nominatedInstallationPersistenceService.deleteByNominationDetail(nominationDetail);
       nominatedInstallationDetailPersistenceService.deleteByNominationDetail(nominationDetail);
     }

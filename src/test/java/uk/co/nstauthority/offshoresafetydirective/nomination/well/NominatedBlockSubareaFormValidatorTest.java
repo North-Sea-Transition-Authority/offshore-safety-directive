@@ -10,6 +10,9 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -60,10 +63,12 @@ class NominatedBlockSubareaFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenValidForFutureWellsInSubareaNotSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenValidForFutureWellsInSubareaNotSelected_thenError(String value) {
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .withValidForFutureWellsInSubarea(null)
+        .withValidForFutureWellsInSubarea(value)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -75,10 +80,12 @@ class NominatedBlockSubareaFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenForAllWellPhasesNotSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenForAllWellPhasesNotSelected_thenError(String value) {
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .withForAllWellPhases(null)
+        .withForAllWellPhases(value)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -90,13 +97,15 @@ class NominatedBlockSubareaFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError(String value) {
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
         .withForAllWellPhases(false)
-        .withExplorationAndAppraisalPhase(null)
-        .withDevelopmentPhase(null)
-        .withDecommissioningPhase(null)
+        .withExplorationAndAppraisalPhase(value)
+        .withDevelopmentPhase(value)
+        .withDecommissioningPhase(value)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -108,12 +117,14 @@ class NominatedBlockSubareaFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenValidForFutureWellsAndOnlyDecommissioningPhase_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenValidForFutureWellsAndOnlyDecommissioningPhase_thenError(String value) {
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
         .withForAllWellPhases(true)
-        .withExplorationAndAppraisalPhase(null)
-        .withDevelopmentPhase(null)
+        .withExplorationAndAppraisalPhase(value)
+        .withDevelopmentPhase(value)
         .withDecommissioningPhase(true)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");

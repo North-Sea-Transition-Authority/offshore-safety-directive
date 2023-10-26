@@ -45,7 +45,7 @@ class InstallationSubmissionServiceTest {
   @Test
   void isSectionSubmittable_whenInstallationsInclusionFormNotValid_thenTrue() {
     var installationInclusionForm = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder()
-        .includeInstallationsInNomination(null)
+        .includeInstallationsInNomination((String) null)
         .build();
 
     when(installationInclusionFormService.getForm(NOMINATION_DETAIL)).thenReturn(installationInclusionForm);

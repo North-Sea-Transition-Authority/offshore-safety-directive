@@ -77,11 +77,11 @@ class NominatedBlockSubareaFormServiceTest {
         )
         .containsExactly(
             List.of(subarea1.getBlockSubareaId(), subarea2.getBlockSubareaId()),
-            nominatedBlockSubareaDetail.getValidForFutureWellsInSubarea(),
-            nominatedBlockSubareaDetail.getForAllWellPhases(),
-            nominatedBlockSubareaDetail.getExplorationAndAppraisalPhase(),
-            nominatedBlockSubareaDetail.getDevelopmentPhase(),
-            nominatedBlockSubareaDetail.getDecommissioningPhase()
+            nominatedBlockSubareaDetail.getValidForFutureWellsInSubarea().toString(),
+            nominatedBlockSubareaDetail.getForAllWellPhases().toString(),
+            nominatedBlockSubareaDetail.getExplorationAndAppraisalPhase().toString(),
+            nominatedBlockSubareaDetail.getDevelopmentPhase().toString(),
+            nominatedBlockSubareaDetail.getDecommissioningPhase().toString()
         );
   }
 

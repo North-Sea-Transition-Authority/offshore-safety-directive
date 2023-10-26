@@ -8,13 +8,13 @@ public class NominatedWellDetailForm {
 
   String wellsSelect;
 
-  private Boolean forAllWellPhases;
+  private String forAllWellPhases;
 
-  private Boolean explorationAndAppraisalPhase;
+  private String explorationAndAppraisalPhase;
 
-  private Boolean developmentPhase;
+  private String developmentPhase;
 
-  private Boolean decommissioningPhase;
+  private String decommissioningPhase;
 
   public List<Integer> getWells() {
     return wells;
@@ -32,35 +32,35 @@ public class NominatedWellDetailForm {
     this.wellsSelect = wellsSelect;
   }
 
-  public Boolean getForAllWellPhases() {
+  public String getForAllWellPhases() {
     return forAllWellPhases;
   }
 
-  public void setForAllWellPhases(Boolean forAllWellPhases) {
+  public void setForAllWellPhases(String forAllWellPhases) {
     this.forAllWellPhases = forAllWellPhases;
   }
 
-  public Boolean getExplorationAndAppraisalPhase() {
+  public String getExplorationAndAppraisalPhase() {
     return explorationAndAppraisalPhase;
   }
 
-  public void setExplorationAndAppraisalPhase(Boolean explorationAndAppraisalPhase) {
+  public void setExplorationAndAppraisalPhase(String explorationAndAppraisalPhase) {
     this.explorationAndAppraisalPhase = explorationAndAppraisalPhase;
   }
 
-  public Boolean getDevelopmentPhase() {
+  public String getDevelopmentPhase() {
     return developmentPhase;
   }
 
-  public void setDevelopmentPhase(Boolean developmentPhase) {
+  public void setDevelopmentPhase(String developmentPhase) {
     this.developmentPhase = developmentPhase;
   }
 
-  public Boolean getDecommissioningPhase() {
+  public String getDecommissioningPhase() {
     return decommissioningPhase;
   }
 
-  public void setDecommissioningPhase(Boolean decommissioningPhase) {
+  public void setDecommissioningPhase(String decommissioningPhase) {
     this.decommissioningPhase = decommissioningPhase;
   }
 }

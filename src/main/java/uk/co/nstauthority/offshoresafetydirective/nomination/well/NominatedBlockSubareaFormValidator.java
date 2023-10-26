@@ -24,20 +24,21 @@ class NominatedBlockSubareaFormValidator implements Validator {
           "You must select at least one licence block subarea"
       );
     }
-    if (form.getValidForFutureWellsInSubarea() == null) {
+    if (BooleanUtils.toBooleanObject(form.getValidForFutureWellsInSubarea()) == null) {
       errors.rejectValue(
           "validForFutureWellsInSubarea",
           "validForFutureWellsInSubarea.required",
           "Select Yes if this nomination should cover future wells that may be drilled in the selected subareas"
       );
     }
-    if (form.getForAllWellPhases() == null) {
+    if (BooleanUtils.toBooleanObject(form.getForAllWellPhases()) == null) {
       errors.rejectValue(
           "forAllWellPhases",
           "forAllWellPhases.required",
           "Select Yes if this nomination is for all well activity phases"
       );
-    } else if (BooleanUtils.isFalse(form.getForAllWellPhases()) && !anyNominationPhaseSelected(form)) {
+    } else if (BooleanUtils.isFalse(BooleanUtils.toBooleanObject(form.getForAllWellPhases()))
+              && !anyNominationPhaseSelected(form)) {
       errors.rejectValue(
           "explorationAndAppraisalPhase",
           "explorationAndAppraisalPhase.required",
@@ -45,10 +46,10 @@ class NominatedBlockSubareaFormValidator implements Validator {
       );
     }
 
-    if (BooleanUtils.isTrue(form.getValidForFutureWellsInSubarea())
-        && BooleanUtils.isTrue(form.getDecommissioningPhase())
-        && form.getExplorationAndAppraisalPhase() == null
-        && form.getDevelopmentPhase() == null) {
+    if (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getValidForFutureWellsInSubarea()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()))
+        && BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()) == null
+        && BooleanUtils.toBooleanObject(form.getDevelopmentPhase()) == null) {
       errors.rejectValue(
           "validForFutureWellsInSubarea",
           "validForFutureWellsInSubarea.invalid",
@@ -58,8 +59,8 @@ class NominatedBlockSubareaFormValidator implements Validator {
   }
 
   private boolean anyNominationPhaseSelected(NominatedBlockSubareaForm form) {
-    return !(form.getExplorationAndAppraisalPhase() == null
-        && form.getDevelopmentPhase() == null
-        && form.getDecommissioningPhase() == null);
+    return !(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()) == null
+        && BooleanUtils.toBooleanObject(form.getDevelopmentPhase()) == null
+        && BooleanUtils.toBooleanObject(form.getDecommissioningPhase()) == null);
   }
 }

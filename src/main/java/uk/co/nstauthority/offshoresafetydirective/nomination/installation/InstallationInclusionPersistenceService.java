@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,6 @@ class InstallationInclusionPersistenceService {
                                                                           InstallationInclusion installationInclusion,
                                                                           InstallationInclusionForm form) {
     return installationInclusion.setNominationDetail(nominationDetail)
-        .setIncludeInstallationsInNomination(form.getIncludeInstallationsInNomination());
+        .setIncludeInstallationsInNomination(BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()));
   }
 }

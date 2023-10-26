@@ -44,16 +44,16 @@ class NominatedBlockSubareaDetailPersistenceService {
                                                                                 NominatedBlockSubareaDetail blockSubareaDetail,
                                                                                 NominatedBlockSubareaForm form) {
     blockSubareaDetail.setNominationDetail(nominationDetail);
-    blockSubareaDetail.setValidForFutureWellsInSubarea(form.getValidForFutureWellsInSubarea());
-    blockSubareaDetail.setForAllWellPhases(form.getForAllWellPhases());
-    if (BooleanUtils.isTrue(form.getForAllWellPhases())) {
+    blockSubareaDetail.setValidForFutureWellsInSubarea(Boolean.valueOf(form.getValidForFutureWellsInSubarea()));
+    blockSubareaDetail.setForAllWellPhases(Boolean.valueOf(form.getForAllWellPhases()));
+    if (BooleanUtils.isTrue(Boolean.valueOf(form.getForAllWellPhases()))) {
       blockSubareaDetail.setExplorationAndAppraisalPhase(null);
       blockSubareaDetail.setDevelopmentPhase(null);
       blockSubareaDetail.setDecommissioningPhase(null);
     } else {
-      blockSubareaDetail.setExplorationAndAppraisalPhase(form.getExplorationAndAppraisalPhase());
-      blockSubareaDetail.setDevelopmentPhase(form.getDevelopmentPhase());
-      blockSubareaDetail.setDecommissioningPhase(form.getDecommissioningPhase());
+      blockSubareaDetail.setExplorationAndAppraisalPhase(Boolean.valueOf(form.getExplorationAndAppraisalPhase()));
+      blockSubareaDetail.setDevelopmentPhase(Boolean.valueOf(form.getDevelopmentPhase()));
+      blockSubareaDetail.setDecommissioningPhase(Boolean.valueOf(form.getDecommissioningPhase()));
     }
     return blockSubareaDetail;
   }

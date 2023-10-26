@@ -153,11 +153,11 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
   }
 
   private boolean isForAllPhasesNotAnswered(NominatedInstallationDetailForm form) {
-    return form.getForAllInstallationPhases() == null;
+    return BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()) == null;
   }
 
   private boolean notForAllPhases(NominatedInstallationDetailForm form) {
-    return BooleanUtils.isFalse(form.getForAllInstallationPhases());
+    return BooleanUtils.isFalse(BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()));
   }
 
   private void rejectValue(Errors errors, FrontEndErrorMessage frontEndErrorMessage) {

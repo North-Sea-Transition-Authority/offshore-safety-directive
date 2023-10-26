@@ -38,7 +38,7 @@ class InstallationInclusionFormServiceTest {
 
     assertThat(form)
         .extracting(InstallationInclusionForm::getIncludeInstallationsInNomination)
-        .isEqualTo(installationInclusion.getIncludeInstallationsInNomination());
+        .isEqualTo(String.valueOf(installationInclusion.getIncludeInstallationsInNomination()));
   }
 
   @Test

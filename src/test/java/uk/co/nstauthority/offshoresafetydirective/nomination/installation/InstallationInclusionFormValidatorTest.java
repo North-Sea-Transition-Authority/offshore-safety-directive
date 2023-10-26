@@ -9,6 +9,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,9 +56,13 @@ class InstallationInclusionFormValidatorTest {
     assertFalse(bindingResult.hasErrors());
   }
 
-  @Test
-  void validate_whenInvalidForm_thenAssertErrors() {
-    var invalidForm = new InstallationInclusionForm();
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenInvalidForm_thenAssertErrors(String invalidValue) {
+    var invalidForm = new InstallationInclusionFormTestUtil.InstallationInclusionFormBuilder()
+        .includeInstallationsInNomination(invalidValue)
+        .build();
     var bindingResult = new BeanPropertyBindingResult(invalidForm, "form");
 
     installationInclusionFormValidator.validate(invalidForm, bindingResult, HINT);

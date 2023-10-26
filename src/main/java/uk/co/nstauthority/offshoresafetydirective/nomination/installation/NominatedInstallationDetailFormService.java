@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -40,14 +41,14 @@ class NominatedInstallationDetailFormService {
   }
 
   private NominatedInstallationDetailForm nominatedInstallationEntityToForm(NominatedInstallationDetail installationDetail) {
-    var form = new NominatedInstallationDetailForm()
-        .setForAllInstallationPhases(installationDetail.getForAllInstallationPhases())
-        .setDevelopmentDesignPhase(installationDetail.getDevelopmentDesignPhase())
-        .setDevelopmentConstructionPhase(installationDetail.getDevelopmentConstructionPhase())
-        .setDevelopmentInstallationPhase(installationDetail.getDevelopmentInstallationPhase())
-        .setDevelopmentCommissioningPhase(installationDetail.getDevelopmentCommissioningPhase())
-        .setDevelopmentProductionPhase(installationDetail.getDevelopmentProductionPhase())
-        .setDecommissioningPhase(installationDetail.getDecommissioningPhase());
+    var form = new NominatedInstallationDetailForm();
+    form.setForAllInstallationPhases(Objects.toString(installationDetail.getForAllInstallationPhases(), null));
+    form.setDevelopmentDesignPhase(Objects.toString(installationDetail.getDevelopmentDesignPhase(), null));
+    form.setDevelopmentConstructionPhase(Objects.toString(installationDetail.getDevelopmentConstructionPhase(), null));
+    form.setDevelopmentInstallationPhase(Objects.toString(installationDetail.getDevelopmentInstallationPhase(), null));
+    form.setDevelopmentCommissioningPhase(Objects.toString(installationDetail.getDevelopmentCommissioningPhase(), null));
+    form.setDevelopmentProductionPhase(Objects.toString(installationDetail.getDevelopmentProductionPhase(), null));
+    form.setDecommissioningPhase(Objects.toString(installationDetail.getDecommissioningPhase(), null));
     List<Integer> installationIds =
         nominatedInstallationAccessService.getNominatedInstallations(installationDetail.getNominationDetail())
             .stream()

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,10 +69,10 @@ class NominatedWellDetailFormServiceTest {
             NominatedWellDetailForm::getWells
         )
         .containsExactly(
-            nominatedWellDetail.getForAllWellPhases(),
-            nominatedWellDetail.getExplorationAndAppraisalPhase(),
-            nominatedWellDetail.getDevelopmentPhase(),
-            nominatedWellDetail.getDecommissioningPhase(),
+            Objects.toString(nominatedWellDetail.getForAllWellPhases(), null),
+            Objects.toString(nominatedWellDetail.getExplorationAndAppraisalPhase(), null),
+            Objects.toString(nominatedWellDetail.getDevelopmentPhase(), null),
+            Objects.toString(nominatedWellDetail.getDecommissioningPhase(), null),
             List.of(well1.getWellId(), well2.getWellId())
         );
   }

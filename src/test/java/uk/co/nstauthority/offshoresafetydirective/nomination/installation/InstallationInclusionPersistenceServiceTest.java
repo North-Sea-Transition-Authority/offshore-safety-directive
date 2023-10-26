@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import org.apache.commons.lang3.BooleanUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,7 +47,7 @@ class InstallationInclusionPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getIncludeInstallationsInNomination()
+            BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination())
         );
   }
 }

@@ -37,7 +37,7 @@ class InstallationInclusionFormValidator implements SmartValidator {
         .orElseThrow(() -> new IllegalStateException("Cannot get InstallationInclusionFormValidatorHint"));
 
     var form = (InstallationInclusionForm) target;
-    if (form.getIncludeInstallationsInNomination() == null) {
+    if (BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()) == null) {
       errors.rejectValue(
           INCLUDE_INSTALLATIONS_FIELD_NAME,
           "%s.required".formatted(INCLUDE_INSTALLATIONS_FIELD_NAME),
@@ -45,7 +45,7 @@ class InstallationInclusionFormValidator implements SmartValidator {
       );
     }
 
-    if (BooleanUtils.isFalse(form.getIncludeInstallationsInNomination())) {
+    if (BooleanUtils.isFalse(BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()))) {
       nominationTypeValidator.validateNominationExclusionAssetTypes(
           errors,
           hint.nominationDetail(),

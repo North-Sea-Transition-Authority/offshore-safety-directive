@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +65,7 @@ class NominatedInstallationDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getForAllInstallationPhases(),
+            BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()),
             null,
             null,
             null,
@@ -107,13 +108,13 @@ class NominatedInstallationDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getForAllInstallationPhases(),
-            form.getDevelopmentDesignPhase(),
-            form.getDevelopmentConstructionPhase(),
-            form.getDevelopmentInstallationPhase(),
-            form.getDevelopmentCommissioningPhase(),
-            form.getDevelopmentProductionPhase(),
-            form.getDecommissioningPhase()
+            BooleanUtils.toBooleanObject(form.getForAllInstallationPhases()),
+            BooleanUtils.toBooleanObject(form.getDevelopmentDesignPhase()),
+            BooleanUtils.toBooleanObject(form.getDevelopmentConstructionPhase()),
+            BooleanUtils.toBooleanObject(form.getDevelopmentInstallationPhase()),
+            BooleanUtils.toBooleanObject(form.getDevelopmentCommissioningPhase()),
+            BooleanUtils.toBooleanObject(form.getDevelopmentProductionPhase()),
+            BooleanUtils.toBooleanObject(form.getDecommissioningPhase())
         );
   }
 

@@ -37,11 +37,11 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
     nominatedSubareaDetail.setDevelopmentPhase(true);
     nominatedSubareaDetail.setDecommissioningPhase(true);
     var form = new NominatedBlockSubareaForm();
-    form.setValidForFutureWellsInSubarea(true);
-    form.setForAllWellPhases(true);
-    form.setDevelopmentPhase(true);
-    form.setExplorationAndAppraisalPhase(true);
-    form.setDecommissioningPhase(true);
+    form.setValidForFutureWellsInSubarea("true");
+    form.setForAllWellPhases("true");
+    form.setDevelopmentPhase("true");
+    form.setExplorationAndAppraisalPhase("true");
+    form.setDecommissioningPhase("true");
 
     when(nominatedBlockSubareaDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedSubareaDetail));
@@ -62,8 +62,8 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getValidForFutureWellsInSubarea(),
-            form.getForAllWellPhases(),
+            Boolean.valueOf(form.getValidForFutureWellsInSubarea()),
+            Boolean.valueOf(form.getForAllWellPhases()),
             null,
             null,
             null
@@ -73,11 +73,11 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
   @Test
   void createOrUpdateNominatedBlockSubareaDetail_whenNotForAllPhases_verifyEntitySaved() {
     var form = new NominatedBlockSubareaForm();
-    form.setValidForFutureWellsInSubarea(true);
-    form.setForAllWellPhases(false);
-    form.setDevelopmentPhase(true);
-    form.setExplorationAndAppraisalPhase(true);
-    form.setDecommissioningPhase(true);
+    form.setValidForFutureWellsInSubarea("true");
+    form.setForAllWellPhases("false");
+    form.setDevelopmentPhase("true");
+    form.setExplorationAndAppraisalPhase("true");
+    form.setDecommissioningPhase("true");
 
     when(nominatedBlockSubareaDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.empty());
@@ -98,11 +98,11 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getValidForFutureWellsInSubarea(),
-            form.getForAllWellPhases(),
-            form.getExplorationAndAppraisalPhase(),
-            form.getDevelopmentPhase(),
-            form.getDecommissioningPhase()
+            Boolean.valueOf(form.getValidForFutureWellsInSubarea()),
+            Boolean.valueOf(form.getForAllWellPhases()),
+            Boolean.valueOf(form.getExplorationAndAppraisalPhase()),
+            Boolean.valueOf(form.getDevelopmentPhase()),
+            Boolean.valueOf(form.getDecommissioningPhase())
         );
   }
 

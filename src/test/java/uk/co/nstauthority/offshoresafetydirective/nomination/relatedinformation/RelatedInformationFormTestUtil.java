@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.BooleanUtils;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -95,9 +96,9 @@ class RelatedInformationFormTestUtil {
       }
 
       form.setFields(fields);
-      form.setRelatedToAnyLicenceApplications(String.valueOf(relatedToAnyLicenceApplications));
+      form.setRelatedToAnyLicenceApplications(Objects.toString(relatedToAnyLicenceApplications, null));
       form.setRelatedLicenceApplications(relatedLicenceApplications);
-      form.setRelatedToAnyWellApplications(String.valueOf(relatedToAnyWellApplications));
+      form.setRelatedToAnyWellApplications(Objects.toString(relatedToAnyWellApplications, null));
       form.setRelatedWellApplications(relatedWellApplications);
       return form;
     }

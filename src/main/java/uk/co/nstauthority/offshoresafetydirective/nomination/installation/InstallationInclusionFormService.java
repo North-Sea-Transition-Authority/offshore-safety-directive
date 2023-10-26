@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
+import java.util.Objects;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,9 @@ public class InstallationInclusionFormService {
   }
 
   public boolean isNotRelatedToInstallationOperatorship(NominationDetail nominationDetail) {
-    return BooleanUtils.isFalse(getForm(nominationDetail).getIncludeInstallationsInNomination());
+    var installationInclusionsInNomination =
+        BooleanUtils.toBooleanObject(getForm(nominationDetail).getIncludeInstallationsInNomination());
+    return BooleanUtils.isFalse(installationInclusionsInNomination);
   }
 
   InstallationInclusionForm getForm(NominationDetail nominationDetail) {
@@ -26,7 +29,8 @@ public class InstallationInclusionFormService {
   }
 
   private InstallationInclusionForm installationInclusionFormFromEntity(InstallationInclusion installationInclusion) {
-    return new InstallationInclusionForm()
-        .setIncludeInstallationsInNomination(installationInclusion.getIncludeInstallationsInNomination());
+    var form = new InstallationInclusionForm();
+    form.setIncludeInstallationsInNomination(Objects.toString(installationInclusion.getIncludeInstallationsInNomination(), null));
+    return form;
   }
 }

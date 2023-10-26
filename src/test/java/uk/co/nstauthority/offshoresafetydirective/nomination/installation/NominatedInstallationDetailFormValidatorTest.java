@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
@@ -116,7 +118,6 @@ class NominatedInstallationDetailFormValidatorTest {
     when(licenceQueryService.getLicencesByIdIn(form.getLicences()))
         .thenReturn(List.of(licence));
 
-
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
@@ -125,14 +126,16 @@ class NominatedInstallationDetailFormValidatorTest {
     assertThat(extractedErrors).isEmpty();
   }
 
-  @Test
-  void validate_whenForAllInstallationPhasesNotSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenForAllInstallationPhasesNotSelected_thenError(String invalidValue) {
 
     var installation = InstallationDtoTestUtil.builder().build();
     var licence = LicenceDtoTestUtil.builder().build();
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withForAllInstallationPhases(null)
+        .withForAllInstallationPhases(invalidValue)
         .withInstallation(installation.id())
         .withLicence(licence.licenceId().id())
         .build();
@@ -161,20 +164,22 @@ class NominatedInstallationDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenNotForAllInstallationPhasesAndNoPhasesSelected_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenNotForAllInstallationPhasesAndNoPhasesSelected_thenError(String invalidValue) {
 
     var installation = InstallationDtoTestUtil.builder().build();
     var licence = LicenceDtoTestUtil.builder().build();
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withForAllInstallationPhases(false)
-        .withDevelopmentDesignPhase(null)
-        .withDevelopmentConstructionPhase(null)
-        .withDevelopmentInstallationPhase(null)
-        .withDevelopmentCommissioningPhase(null)
-        .withDevelopmentProductionPhase(null)
-        .withDecommissioningPhase(null)
+        .withDevelopmentDesignPhase(invalidValue)
+        .withDevelopmentConstructionPhase(invalidValue)
+        .withDevelopmentInstallationPhase(invalidValue)
+        .withDevelopmentCommissioningPhase(invalidValue)
+        .withDevelopmentProductionPhase(invalidValue)
+        .withDecommissioningPhase(invalidValue)
         .withInstallation(installation.id())
         .withLicence(licence.licenceId().id())
         .build();

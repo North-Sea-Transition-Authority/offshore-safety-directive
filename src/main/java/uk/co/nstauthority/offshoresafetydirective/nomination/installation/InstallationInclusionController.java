@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -63,7 +64,7 @@ public class InstallationInclusionController {
         form,
         () -> {
           installationInclusionPersistenceService.createOrUpdateInstallationInclusion(nominationDetail, form);
-          if (form.getIncludeInstallationsInNomination()) {
+          if (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()))) {
             return ReverseRouter.redirect(
                 on(NominatedInstallationController.class).getNominatedInstallationDetail(nominationId));
           } else {

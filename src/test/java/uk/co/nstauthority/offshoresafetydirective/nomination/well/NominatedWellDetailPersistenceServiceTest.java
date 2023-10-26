@@ -40,10 +40,10 @@ class NominatedWellDetailPersistenceServiceTest {
     specificWellSetup.setDevelopmentPhase(true);
     specificWellSetup.setDecommissioningPhase(true);
     var form = new NominatedWellDetailForm();
-    form.setForAllWellPhases(true);
-    form.setDevelopmentPhase(true);
-    form.setExplorationAndAppraisalPhase(true);
-    form.setDecommissioningPhase(true);
+    form.setForAllWellPhases("true");
+    form.setDevelopmentPhase("true");
+    form.setExplorationAndAppraisalPhase("true");
+    form.setDecommissioningPhase("true");
 
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(specificWellSetup));
@@ -63,7 +63,7 @@ class NominatedWellDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getForAllWellPhases(),
+           Boolean.valueOf(form.getForAllWellPhases()),
             null,
             null,
             null
@@ -74,10 +74,10 @@ class NominatedWellDetailPersistenceServiceTest {
   @Test
   void createOrUpdateNominatedWellDetail_whenNotForAllPhases_verifyEntitySaved() {
     var form = new NominatedWellDetailForm();
-    form.setForAllWellPhases(false);
-    form.setExplorationAndAppraisalPhase(true);
-    form.setDevelopmentPhase(true);
-    form.setDecommissioningPhase(true);
+    form.setForAllWellPhases("false");
+    form.setExplorationAndAppraisalPhase("true");
+    form.setDevelopmentPhase("true");
+    form.setDecommissioningPhase("true");
 
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.empty());
@@ -97,10 +97,10 @@ class NominatedWellDetailPersistenceServiceTest {
         )
         .containsExactly(
             NOMINATION_DETAIL,
-            form.getForAllWellPhases(),
-            form.getExplorationAndAppraisalPhase(),
-            form.getDevelopmentPhase(),
-            form.getDecommissioningPhase()
+            Boolean.valueOf(form.getForAllWellPhases()),
+            Boolean.valueOf(form.getExplorationAndAppraisalPhase()),
+            Boolean.valueOf(form.getDevelopmentPhase()),
+            Boolean.valueOf(form.getDecommissioningPhase())
         );
     verify(nominatedWellPersistenceService, times(1)).saveNominatedWells(NOMINATION_DETAIL, form);
   }

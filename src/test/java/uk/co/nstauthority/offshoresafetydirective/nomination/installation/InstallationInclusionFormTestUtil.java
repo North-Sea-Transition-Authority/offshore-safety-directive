@@ -7,16 +7,22 @@ public class InstallationInclusionFormTestUtil {
   }
 
   static class InstallationInclusionFormBuilder {
-    private Boolean includeInstallationsInNomination = true;
+    private String includeInstallationsInNomination = "true";
 
     InstallationInclusionFormBuilder includeInstallationsInNomination(Boolean includeInstallationsInNomination) {
+      this.includeInstallationsInNomination = String.valueOf(includeInstallationsInNomination);
+      return this;
+    }
+
+    InstallationInclusionFormBuilder includeInstallationsInNomination(String includeInstallationsInNomination) {
       this.includeInstallationsInNomination = includeInstallationsInNomination;
       return this;
     }
 
     InstallationInclusionForm build() {
-      return new InstallationInclusionForm()
-          .setIncludeInstallationsInNomination(includeInstallationsInNomination);
+      var form =  new InstallationInclusionForm();
+      form.setIncludeInstallationsInNomination(includeInstallationsInNomination);
+      return form;
     }
   }
 }

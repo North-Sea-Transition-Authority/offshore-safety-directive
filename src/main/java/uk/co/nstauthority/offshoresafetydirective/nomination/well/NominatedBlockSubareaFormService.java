@@ -35,11 +35,11 @@ class NominatedBlockSubareaFormService {
 
   private NominatedBlockSubareaForm nominatedSubareaDetailToForm(NominatedBlockSubareaDetail entity) {
     var form = new NominatedBlockSubareaForm();
-    form.setValidForFutureWellsInSubarea(entity.getValidForFutureWellsInSubarea());
-    form.setForAllWellPhases(entity.getForAllWellPhases());
-    form.setExplorationAndAppraisalPhase(entity.getExplorationAndAppraisalPhase());
-    form.setDevelopmentPhase(entity.getDevelopmentPhase());
-    form.setDecommissioningPhase(entity.getDecommissioningPhase());
+    form.setValidForFutureWellsInSubarea(String.valueOf(entity.getValidForFutureWellsInSubarea()));
+    form.setForAllWellPhases(String.valueOf(entity.getForAllWellPhases()));
+    form.setExplorationAndAppraisalPhase(String.valueOf(entity.getExplorationAndAppraisalPhase()));
+    form.setDevelopmentPhase(String.valueOf(entity.getDevelopmentPhase()));
+    form.setDecommissioningPhase(String.valueOf(entity.getDecommissioningPhase()));
 
     List<String> blockSubareaIds = nominatedBlockSubareaPersistenceService
         .findAllByNominationDetail(entity.getNominationDetail())

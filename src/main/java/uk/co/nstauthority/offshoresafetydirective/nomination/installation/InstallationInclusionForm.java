@@ -2,15 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 class InstallationInclusionForm {
 
-  private Boolean includeInstallationsInNomination;
+  private String includeInstallationsInNomination;
 
-  public Boolean getIncludeInstallationsInNomination() {
+  public String getIncludeInstallationsInNomination() {
     return includeInstallationsInNomination;
   }
 
-  public InstallationInclusionForm setIncludeInstallationsInNomination(Boolean includeInstallationsInNomination) {
+  public void setIncludeInstallationsInNomination(String includeInstallationsInNomination) {
     this.includeInstallationsInNomination = includeInstallationsInNomination;
-    return this;
   }
 
   @Override
