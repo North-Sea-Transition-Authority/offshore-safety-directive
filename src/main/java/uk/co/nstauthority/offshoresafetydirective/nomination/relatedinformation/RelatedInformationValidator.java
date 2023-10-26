@@ -85,16 +85,15 @@ class RelatedInformationValidator implements SmartValidator {
   }
 
   private void validateRelatedFields(RelatedInformationForm form, Errors errors) {
+    var relatedToAnyFields = BooleanUtils.toBooleanObject(form.getRelatedToAnyFields());
 
-    if (form.getRelatedToAnyFields() == null) {
+    if (relatedToAnyFields == null) {
       errors.rejectValue(
           RELATED_TO_ANY_FIELDS_FIELD_NAME,
           RELATED_TO_ANY_FIELDS_REQUIRED_CODE,
           RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE
       );
-    }
-
-    if (BooleanUtils.isTrue(form.getRelatedToAnyFields())) {
+    } else if (BooleanUtils.isTrue(relatedToAnyFields)) {
       if (form.getFields().isEmpty()) {
         errors.rejectValue(FIELDS_FIELD_NAME, FIELDS_REQUIRED_CODE, FIELDS_REQUIRED_MESSAGE);
       } else {
@@ -120,16 +119,15 @@ class RelatedInformationValidator implements SmartValidator {
   }
 
   private void validateRelatedLicenceApplications(RelatedInformationForm form, Errors errors) {
+    var relatedToAnyLicenceApplications = BooleanUtils.toBooleanObject(form.getRelatedToAnyLicenceApplications());
 
-    if (form.getRelatedToAnyLicenceApplications() == null) {
+    if (relatedToAnyLicenceApplications == null) {
       errors.rejectValue(
           RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
           RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE,
           RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
       );
-    }
-
-    if (BooleanUtils.isTrue(form.getRelatedToAnyLicenceApplications())) {
+    } else if (BooleanUtils.isTrue(relatedToAnyLicenceApplications)) {
       ValidationUtils.rejectIfEmptyOrWhitespace(
           errors,
           RELATED_LICENCE_APPLICATIONS_FIELD_NAME,
@@ -140,16 +138,15 @@ class RelatedInformationValidator implements SmartValidator {
   }
 
   private void validateRelatedWellApplications(RelatedInformationForm form, Errors errors) {
+    var relatedToAnyWellApplications = BooleanUtils.toBooleanObject(form.getRelatedToAnyWellApplications());
 
-    if (form.getRelatedToAnyWellApplications() == null) {
+    if (relatedToAnyWellApplications == null) {
       errors.rejectValue(
           RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
           RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE,
           RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE
       );
-    }
-
-    if (BooleanUtils.isTrue(form.getRelatedToAnyWellApplications())) {
+    } else if (BooleanUtils.isTrue(relatedToAnyWellApplications)) {
       ValidationUtils.rejectIfEmptyOrWhitespace(
           errors,
           RELATED_WELL_APPLICATIONS_FIELD_NAME,

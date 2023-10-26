@@ -40,7 +40,7 @@ public class AppointmentCorrectionDateValidator {
 
     var startDate = optionalStartDate.get();
 
-    Optional<LocalDate> optionalEndDate = BooleanUtils.isTrue(form.getHasEndDate())
+    Optional<LocalDate> optionalEndDate = BooleanUtils.isTrue(Boolean.valueOf(form.getHasEndDate()))
         ? form.getEndDate().getAsLocalDate()
         : Optional.empty();
     var endDate = optionalEndDate.orElse(null);
@@ -108,8 +108,11 @@ public class AppointmentCorrectionDateValidator {
 
   void validateAppointmentEndDateIsBetweenAcceptableRange(AppointmentCorrectionForm form,
                                                           BindingResult bindingResult) {
+    if (bindingResult.hasFieldErrors("hasEndDate") || form.getEndDate().fieldHasErrors(bindingResult)) {
+      return;
+    }
 
-    if (BooleanUtils.isTrue(form.getHasEndDate())) {
+    if (BooleanUtils.isTrue(Boolean.valueOf(form.getHasEndDate()))) {
       ThreeFieldDateInputValidator.builder()
           .mustBeBeforeOrEqualTo(LocalDate.now())
           .mustBeAfterOrEqualTo(DEEMED_DATE)
@@ -120,7 +123,9 @@ public class AppointmentCorrectionDateValidator {
   private void validateAppointmentEndDateIsNotBeforeStartDate(AppointmentCorrectionForm form,
                                                               BindingResult bindingResult, LocalDate startDate) {
 
-    if (!form.getEndDate().fieldHasErrors(bindingResult) && BooleanUtils.isTrue(form.getHasEndDate())) {
+    if (!form.getEndDate().fieldHasErrors(bindingResult)
+        && BooleanUtils.isTrue(Boolean.valueOf(form.getHasEndDate()))) {
+
       ThreeFieldDateInputValidator.builder()
           .mustBeAfterOrEqualTo(startDate)
           .validate(form.getEndDate(), bindingResult);

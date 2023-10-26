@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -67,11 +68,13 @@ class RelatedInformationValidatorTest {
     assertFalse(bindingResult.hasErrors());
   }
 
-  @Test
-  void validate_whenNoFieldRelationSelected_thenHasError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenNoFieldRelationSelected_thenHasError(String invalidValue) {
 
     var form = RelatedInformationFormTestUtil.builder()
-        .withRelatedToAnyFields(null)
+        .withRelatedToAnyFields(invalidValue)
         .build();
 
     var bindingResult = validate(form);
@@ -142,11 +145,13 @@ class RelatedInformationValidatorTest {
         );
   }
 
-  @Test
-  void validate_whenRelatedLicenceApplicationsIsNull_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenRelatedLicenceApplicationsIsNull_thenError(String invalidValue) {
 
     var form = RelatedInformationFormTestUtil.builder()
-        .withRelatedToLicenceApplications(null)
+        .withRelatedToLicenceApplications(invalidValue)
         .build();
 
     var bindingResult = validate(form);
@@ -229,11 +234,13 @@ class RelatedInformationValidatorTest {
     assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
   }
 
-  @Test
-  void validate_whenRelatedWellApplicationsIsNull_thenError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenRelatedWellApplicationsIsNull_thenError(String invalidValue) {
 
     var form = RelatedInformationFormTestUtil.builder()
-        .withRelatedToWellApplications(null)
+        .withRelatedToWellApplications(invalidValue)
         .build();
 
     var bindingResult = validate(form);

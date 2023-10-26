@@ -22,10 +22,10 @@ public class AppointmentCorrectionFormTestUtil {
   public static class Builder {
 
     private Integer appointedOperatorId = 123;
-    private Boolean forAllPhases = false;
+    private String forAllPhases = "false";
     private Set<String> phases = new HashSet<>();
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
-    private Boolean hasEndDate = false;
+    private String hasEndDate = "false";
     private String offlineNominationReference = null;
     private String onlineNominationReference = UUID.randomUUID().toString();
     private LocalDate offlineStartDate = LocalDate.now();
@@ -43,6 +43,11 @@ public class AppointmentCorrectionFormTestUtil {
     }
 
     public Builder withForAllPhases(Boolean forAllPhases) {
+      this.forAllPhases = String.valueOf(forAllPhases);
+      return this;
+    }
+
+    public Builder withForAllPhases(String forAllPhases) {
       this.forAllPhases = forAllPhases;
       return this;
     }
@@ -68,6 +73,11 @@ public class AppointmentCorrectionFormTestUtil {
     }
 
     public Builder withHasEndDate(Boolean hasEndDate) {
+      this.hasEndDate = String.valueOf(hasEndDate);
+      return this;
+    }
+
+    public Builder withHasEndDate(String hasEndDate) {
       this.hasEndDate = hasEndDate;
       return this;
     }
@@ -111,7 +121,7 @@ public class AppointmentCorrectionFormTestUtil {
     public AppointmentCorrectionForm build() {
       var form = new AppointmentCorrectionForm();
       form.setAppointedOperatorId(appointedOperatorId);
-      form.setForAllPhases(forAllPhases);
+      form.setForAllPhases(String.valueOf(forAllPhases));
       form.setPhases(phases);
       form.setAppointmentType(appointmentType);
       form.setHasEndDate(hasEndDate);

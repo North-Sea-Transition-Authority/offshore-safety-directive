@@ -108,15 +108,15 @@ public class AppointmentCorrectionService {
         .map(AppointmentToDate::value)
         .ifPresentOrElse(
             toDate -> {
-              form.setHasEndDate(true);
+              form.setHasEndDate("true");
               form.getEndDate().setDate(toDate);
             },
-            () -> form.setHasEndDate(false)
+            () -> form.setHasEndDate("false")
         );
 
     var selectablePhases = getSelectablePhaseMap(appointmentDto.assetDto().portalAssetType());
     var allPhasesSelected = selectablePhases.size() == phaseNames.size();
-    form.setForAllPhases(allPhasesSelected);
+    form.setForAllPhases(String.valueOf(allPhasesSelected));
 
     return form;
   }
@@ -146,7 +146,7 @@ public class AppointmentCorrectionService {
             )
         ));
 
-    Optional<LocalDate> endDate = BooleanUtils.isTrue(appointmentCorrectionForm.getHasEndDate())
+    Optional<LocalDate> endDate = BooleanUtils.isTrue(Boolean.valueOf(appointmentCorrectionForm.getHasEndDate()))
         ? appointmentCorrectionForm.getEndDate().getAsLocalDate()
         : Optional.empty();
 
@@ -182,7 +182,7 @@ public class AppointmentCorrectionService {
     var updateDto = updateDtoBuilder.build();
 
     List<AssetAppointmentPhase> phases;
-    if (BooleanUtils.isTrue(appointmentCorrectionForm.getForAllPhases())) {
+    if (BooleanUtils.isTrue(Boolean.valueOf(appointmentCorrectionForm.getForAllPhases()))) {
       phases = switch (appointmentDto.assetDto().portalAssetType()) {
         case INSTALLATION -> EnumSet.allOf(InstallationPhase.class)
             .stream()

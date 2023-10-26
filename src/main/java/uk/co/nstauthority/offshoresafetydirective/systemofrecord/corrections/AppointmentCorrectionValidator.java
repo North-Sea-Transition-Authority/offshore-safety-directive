@@ -78,12 +78,15 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
     validateAppointedOperatorId(form, bindingResult);
 
-    ValidationUtils.rejectIfEmpty(
-        bindingResult,
-        "hasEndDate",
-        "hasEndDate.required",
-        "Select Yes if the appointment has an end date"
-    );
+    var hasEndDate = BooleanUtils.toBooleanObject(form.getHasEndDate());
+
+    if (hasEndDate == null) {
+      bindingResult.rejectValue(
+          "hasEndDate",
+          "hasEndDate.required",
+          "Select Yes if the appointment has an end date"
+      );
+    }
 
     appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(form, bindingResult);
 
@@ -195,14 +198,15 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
   private void validatePhases(AppointmentCorrectionForm form, BindingResult bindingResult,
                               AppointmentCorrectionValidationHint hint) {
-    if (form.getForAllPhases() == null) {
-      ValidationUtils.rejectIfEmpty(
-          bindingResult,
+
+    var forAllPhases = BooleanUtils.toBooleanObject(form.getForAllPhases());
+    if (forAllPhases == null) {
+      bindingResult.rejectValue(
           FOR_ALL_PHASES_FIELD_NAME,
           FIELD_REQUIRED_ERROR.formatted(FOR_ALL_PHASES_FIELD_NAME),
           "Select Yes if this appointment is for all activity phases"
       );
-    } else if (BooleanUtils.isFalse(form.getForAllPhases())) {
+    } else if (BooleanUtils.isFalse(forAllPhases)) {
 
       // Null safe to prevent checking each time
       var formPhases = Optional.ofNullable(form.getPhases()).orElse(Set.of());
@@ -245,5 +249,4 @@ public class AppointmentCorrectionValidator implements SmartValidator {
     StringInputValidator.builder()
         .validate(appointmentCorrectionForm.getReason(), bindingResult);
   }
-
 }

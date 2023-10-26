@@ -39,18 +39,23 @@ class RelatedInformationPersistenceService {
     var relatedInformation = getRelatedInformation(nominationDetail)
         .orElseGet(RelatedInformation::new);
 
-    relatedInformation.setNominationDetail(nominationDetail);
-    relatedInformation.setRelatedToFields(relatedInformationForm.getRelatedToAnyFields());
-    relatedInformation.setRelatedToLicenceApplications(relatedInformationForm.getRelatedToAnyLicenceApplications());
-    relatedInformation.setRelatedToWellApplications(relatedInformationForm.getRelatedToAnyWellApplications());
+    var relatedToAnyFields = BooleanUtils.toBooleanObject(relatedInformationForm.getRelatedToAnyFields());
+    var relatedToLicenceApplications =
+        BooleanUtils.toBooleanObject(relatedInformationForm.getRelatedToAnyLicenceApplications());
+    var relatedToAnyWellApplications = BooleanUtils.toBooleanObject(relatedInformationForm.getRelatedToAnyWellApplications());
 
-    if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyLicenceApplications())) {
+    relatedInformation.setNominationDetail(nominationDetail);
+    relatedInformation.setRelatedToFields(relatedToAnyFields);
+    relatedInformation.setRelatedToLicenceApplications(relatedToLicenceApplications);
+    relatedInformation.setRelatedToWellApplications(relatedToAnyWellApplications);
+
+    if (BooleanUtils.isTrue(relatedToLicenceApplications)) {
       relatedInformation.setRelatedLicenceApplications(relatedInformationForm.getRelatedLicenceApplications());
     } else {
       relatedInformation.setRelatedLicenceApplications(null);
     }
 
-    if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyWellApplications())) {
+    if (BooleanUtils.isTrue(relatedToAnyWellApplications)) {
       relatedInformation.setRelatedWellApplications(relatedInformationForm.getRelatedWellApplications());
     } else {
       relatedInformation.setRelatedWellApplications(null);
@@ -58,7 +63,7 @@ class RelatedInformationPersistenceService {
 
     relatedInformationRepository.save(relatedInformation);
 
-    if (BooleanUtils.isTrue(relatedInformationForm.getRelatedToAnyFields())) {
+    if (BooleanUtils.isTrue(relatedToAnyFields)) {
 
       var fieldIds = relatedInformationForm.getFields()
           .stream()
@@ -69,7 +74,7 @@ class RelatedInformationPersistenceService {
           relatedInformation,
           fieldIds
       );
-    } else if (BooleanUtils.isFalse(relatedInformationForm.getRelatedToAnyFields())) {
+    } else if (BooleanUtils.isFalse(relatedToAnyFields)) {
       relatedInformationFieldPersistenceService.removeExistingLinkedFields(relatedInformation);
     }
   }

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.BooleanUtils;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 class RelatedInformationFormTestUtil {
@@ -37,6 +38,11 @@ class RelatedInformationFormTestUtil {
       return this;
     }
 
+    Builder withRelatedToAnyFields(String isRelatedToAnyFields) {
+      this.relatedToAnyFields = BooleanUtils.toBooleanObject(isRelatedToAnyFields);
+      return this;
+    }
+
     Builder withField(int fieldId) {
       this.fields.add(fieldId);
       fieldsListInitialised = true;
@@ -54,6 +60,12 @@ class RelatedInformationFormTestUtil {
       return this;
     }
 
+    Builder withRelatedToLicenceApplications(String isRelatedToLicenceApplications) {
+      this.relatedToAnyLicenceApplications = BooleanUtils.toBooleanObject(isRelatedToLicenceApplications);
+      return this;
+    }
+
+
     Builder withRelatedLicenceApplications(String relatedLicenceApplications) {
       this.relatedLicenceApplications = relatedLicenceApplications;
       return this;
@@ -64,6 +76,11 @@ class RelatedInformationFormTestUtil {
       return this;
     }
 
+    Builder withRelatedToWellApplications(String isRelatedToWellApplications) {
+      this.relatedToAnyWellApplications = BooleanUtils.toBooleanObject(isRelatedToWellApplications);
+      return this;
+    }
+
     Builder withRelatedWellApplications(String relatedWellApplications) {
       this.relatedWellApplications = relatedWellApplications;
       return this;
@@ -71,16 +88,16 @@ class RelatedInformationFormTestUtil {
 
     RelatedInformationForm build() {
       var form = new RelatedInformationForm();
-      form.setRelatedToAnyFields(relatedToAnyFields);
+      form.setRelatedToAnyFields(String.valueOf(relatedToAnyFields));
 
       if (!fieldsListInitialised) {
         fields.add(100);
       }
 
       form.setFields(fields);
-      form.setRelatedToAnyLicenceApplications(relatedToAnyLicenceApplications);
+      form.setRelatedToAnyLicenceApplications(String.valueOf(relatedToAnyLicenceApplications));
       form.setRelatedLicenceApplications(relatedLicenceApplications);
-      form.setRelatedToAnyWellApplications(relatedToAnyWellApplications);
+      form.setRelatedToAnyWellApplications(String.valueOf(relatedToAnyWellApplications));
       form.setRelatedWellApplications(relatedWellApplications);
       return form;
     }

@@ -5,19 +5,21 @@ import java.util.List;
 
 class RelatedInformationForm {
 
-  private Boolean relatedToAnyFields;
+  private String relatedToAnyFields;
+
   private List<Integer> fields = new ArrayList<>();
+
   private String fieldSelector;
 
-  private Boolean relatedToAnyLicenceApplications;
+  private String relatedToAnyLicenceApplications;
 
   private String relatedLicenceApplications;
 
-  private Boolean relatedToAnyWellApplications;
+  private String relatedToAnyWellApplications;
 
   private String relatedWellApplications;
 
-  public Boolean getRelatedToAnyFields() {
+  public String getRelatedToAnyFields() {
     return relatedToAnyFields;
   }
 
@@ -37,15 +39,15 @@ class RelatedInformationForm {
     this.fieldSelector = fieldSelector;
   }
 
-  public void setRelatedToAnyFields(Boolean relatedToAnyFields) {
+  public void setRelatedToAnyFields(String relatedToAnyFields) {
     this.relatedToAnyFields = relatedToAnyFields;
   }
 
-  public Boolean getRelatedToAnyLicenceApplications() {
+  public String getRelatedToAnyLicenceApplications() {
     return relatedToAnyLicenceApplications;
   }
 
-  public void setRelatedToAnyLicenceApplications(Boolean relatedToAnyLicenceApplications) {
+  public void setRelatedToAnyLicenceApplications(String relatedToAnyLicenceApplications) {
     this.relatedToAnyLicenceApplications = relatedToAnyLicenceApplications;
   }
 
@@ -57,11 +59,11 @@ class RelatedInformationForm {
     this.relatedLicenceApplications = relatedLicenceApplications;
   }
 
-  public Boolean getRelatedToAnyWellApplications() {
+  public String getRelatedToAnyWellApplications() {
     return relatedToAnyWellApplications;
   }
 
-  public void setRelatedToAnyWellApplications(Boolean relatedToAnyWellApplications) {
+  public void setRelatedToAnyWellApplications(String relatedToAnyWellApplications) {
     this.relatedToAnyWellApplications = relatedToAnyWellApplications;
   }
 

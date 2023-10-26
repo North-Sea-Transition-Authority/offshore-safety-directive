@@ -49,7 +49,7 @@ class RelatedInformationFormServiceTest {
     var result = relatedInformationFormService.getForm(nominationDetail);
 
     assertThat(result).extracting(RelatedInformationForm::getRelatedToAnyFields, RelatedInformationForm::getFields)
-        .containsExactly(false, List.of());
+        .containsExactly("false", List.of());
   }
 
   @Test
@@ -70,7 +70,7 @@ class RelatedInformationFormServiceTest {
     var result = relatedInformationFormService.getForm(nominationDetail);
 
     assertThat(result).extracting(RelatedInformationForm::getRelatedToAnyFields, RelatedInformationForm::getFields)
-        .containsExactly(true, List.of(field.getFieldId()));
+        .containsExactly("true", List.of(field.getFieldId()));
   }
 
   @Test
@@ -91,7 +91,7 @@ class RelatedInformationFormServiceTest {
             RelatedInformationForm::getRelatedToAnyLicenceApplications,
             RelatedInformationForm::getRelatedLicenceApplications
         )
-        .containsExactly(true, "related licence applications");
+        .containsExactly("true", "related licence applications");
   }
 
   @Test
@@ -112,7 +112,7 @@ class RelatedInformationFormServiceTest {
             RelatedInformationForm::getRelatedToAnyLicenceApplications,
             RelatedInformationForm::getRelatedLicenceApplications
         )
-        .containsExactly(false, null);
+        .containsExactly("false", null);
   }
 
   @Test
@@ -133,7 +133,7 @@ class RelatedInformationFormServiceTest {
             RelatedInformationForm::getRelatedToAnyWellApplications,
             RelatedInformationForm::getRelatedWellApplications
         )
-        .containsExactly(true, "related well applications");
+        .containsExactly("true", "related well applications");
   }
 
   @Test
@@ -154,6 +154,6 @@ class RelatedInformationFormServiceTest {
             RelatedInformationForm::getRelatedToAnyWellApplications,
             RelatedInformationForm::getRelatedWellApplications
         )
-        .containsExactly(false, null);
+        .containsExactly("false", null);
   }
 }

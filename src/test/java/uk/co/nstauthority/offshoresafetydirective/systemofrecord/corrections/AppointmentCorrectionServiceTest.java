@@ -130,7 +130,7 @@ class AppointmentCorrectionServiceTest {
     var startDate = LocalDate.now().minusDays(1);
     var endDate = LocalDate.now();
     form.getOfflineAppointmentStartDate().setDate(startDate);
-    form.setHasEndDate(true);
+    form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
 
     when(userDetailService.getUserDetail())
@@ -317,7 +317,7 @@ class AppointmentCorrectionServiceTest {
     form.setAppointmentType(newAppointmentType.name());
 
     var endDate = LocalDate.now();
-    form.setHasEndDate(true);
+    form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
 
     when(userDetailService.getUserDetail())
@@ -344,7 +344,7 @@ class AppointmentCorrectionServiceTest {
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
     form.setAppointmentType(newAppointmentType.name());
@@ -352,7 +352,7 @@ class AppointmentCorrectionServiceTest {
     var startDate = LocalDate.now().minusDays(2);
     form.getOnlineAppointmentStartDate().setDate(startDate);
     var endDate = LocalDate.now();
-    form.setHasEndDate(true);
+    form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
 
     form.setOnlineNominationReference(UUID.randomUUID().toString());
@@ -381,7 +381,7 @@ class AppointmentCorrectionServiceTest {
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
     form.setAppointmentType(newAppointmentType.name());
@@ -389,7 +389,7 @@ class AppointmentCorrectionServiceTest {
     var startDate = LocalDate.now().minusDays(2);
     form.getOfflineAppointmentStartDate().setDate(startDate);
     var endDate = LocalDate.now();
-    form.setHasEndDate(true);
+    form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
 
     when(userDetailService.getUserDetail())
@@ -416,11 +416,11 @@ class AppointmentCorrectionServiceTest {
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
     form.setAppointmentType(newAppointmentType.name());
-    form.setHasEndDate(false);
+    form.setHasEndDate("false");
     form.getOfflineAppointmentStartDate().setDate(LocalDate.now());
 
     var offlineReference = "OFFLINE/REF/1";
@@ -455,13 +455,13 @@ class AppointmentCorrectionServiceTest {
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.DEEMED;
     form.setAppointmentType(newAppointmentType.name());
 
     var endDate = LocalDate.now().minusDays(1);
-    form.setHasEndDate(true);
+    form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
 
     when(userDetailService.getUserDetail())
@@ -488,11 +488,11 @@ class AppointmentCorrectionServiceTest {
 
     var form = new AppointmentCorrectionForm();
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.DEEMED;
     form.setAppointmentType(newAppointmentType.name());
-    form.setHasEndDate(false);
+    form.setHasEndDate("false");
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -519,8 +519,8 @@ class AppointmentCorrectionServiceTest {
     var form = new AppointmentCorrectionForm();
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
-    form.setHasEndDate(false);
+    form.setForAllPhases("true");
+    form.setHasEndDate("false");
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -553,8 +553,8 @@ class AppointmentCorrectionServiceTest {
     var form = new AppointmentCorrectionForm();
     form.setAppointmentType(AppointmentType.DEEMED.name());
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
-    form.setHasEndDate(false);
+    form.setForAllPhases("true");
+    form.setHasEndDate("false");
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -582,7 +582,7 @@ class AppointmentCorrectionServiceTest {
     var appointmentType = "INVALID_APPOINTMENT_TYPE";
     form.setAppointmentType(appointmentType);
     form.setAppointedOperatorId(123);
-    form.setForAllPhases(true);
+    form.setForAllPhases("true");
 
     assertThatThrownBy(() -> appointmentCorrectionService.saveAppointment(originalAppointment, form))
         .isInstanceOf(IllegalStateException.class)
@@ -671,15 +671,13 @@ class AppointmentCorrectionServiceTest {
         .toList();
 
     when(assetAppointmentPhaseAccessService.getAppointmentPhases(originalAppointmentDto.assetDto()))
-        .thenReturn(
-            Map.of(originalAppointmentDto.appointmentId(), assetPhases)
-        );
+        .thenReturn(Map.of(originalAppointmentDto.appointmentId(), assetPhases));
 
     var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
-        .hasFieldOrPropertyWithValue("forAllPhases", true);
+        .hasFieldOrPropertyWithValue("forAllPhases", "true");
   }
 
   @Test
@@ -697,15 +695,13 @@ class AppointmentCorrectionServiceTest {
         .toList();
 
     when(assetAppointmentPhaseAccessService.getAppointmentPhases(originalAppointmentDto.assetDto()))
-        .thenReturn(
-            Map.of(originalAppointmentDto.appointmentId(), assetPhases)
-        );
+        .thenReturn(Map.of(originalAppointmentDto.appointmentId(), assetPhases));
 
     var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
 
     PropertyObjectAssert.thenAssertThat(resultingForm)
         .hasFieldOrPropertyWithValue("phases", assetPhaseNames)
-        .hasFieldOrPropertyWithValue("forAllPhases", false);
+        .hasFieldOrPropertyWithValue("forAllPhases", "false");
   }
 
   @Test
@@ -814,7 +810,7 @@ class AppointmentCorrectionServiceTest {
             form -> form.getEndDate().getAsLocalDate()
         )
         .containsExactly(
-            true,
+            "true",
             Optional.of(endDate)
         );
   }
@@ -834,7 +830,7 @@ class AppointmentCorrectionServiceTest {
             form -> form.getEndDate().getAsLocalDate()
         )
         .containsExactly(
-            false,
+            "false",
             Optional.empty()
         );
   }

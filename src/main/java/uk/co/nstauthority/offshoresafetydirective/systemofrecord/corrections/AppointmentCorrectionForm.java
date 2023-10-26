@@ -7,14 +7,14 @@ import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 public class AppointmentCorrectionForm {
 
   private Integer appointedOperatorId;
-  private Boolean forAllPhases;
+  private String forAllPhases;
   private Set<String> phases;
   private String appointmentType;
   private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
   private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
   private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
   private String onlineNominationReference;
-  private Boolean hasEndDate;
+  private String hasEndDate;
   private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
 
   private StringInput reason = new StringInput("reason", "a reason for the correction");
@@ -27,11 +27,11 @@ public class AppointmentCorrectionForm {
     this.appointedOperatorId = appointedOperatorId;
   }
 
-  public Boolean getForAllPhases() {
+  public String getForAllPhases() {
     return forAllPhases;
   }
 
-  public void setForAllPhases(Boolean forAllPhases) {
+  public void setForAllPhases(String forAllPhases) {
     this.forAllPhases = forAllPhases;
   }
 
@@ -83,11 +83,11 @@ public class AppointmentCorrectionForm {
     this.onlineNominationReference = onlineNominationReference;
   }
 
-  public Boolean getHasEndDate() {
+  public String getHasEndDate() {
     return hasEndDate;
   }
 
-  public void setHasEndDate(Boolean hasEndDate) {
+  public void setHasEndDate(String hasEndDate) {
     this.hasEndDate = hasEndDate;
   }
 

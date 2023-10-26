@@ -81,7 +81,7 @@ class RelatedInformationPersistenceServiceTest {
   void createOrUpdateRelatedInformation_whenFieldsPopulated_andNotRelatedToAnyFields_thenNothingChanged() {
 
     var form = RelatedInformationFormTestUtil.builder()
-        .withRelatedToAnyFields(null)
+        .withRelatedToAnyFields((Boolean) null)
         .withField(100)
         .build();
 

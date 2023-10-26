@@ -33,10 +33,10 @@ class RelatedInformationFormService {
         .map(RelatedInformationField::getFieldId)
         .toList();
 
-    form.setRelatedToAnyFields(relatedInformation.getRelatedToFields());
+    form.setRelatedToAnyFields(String.valueOf(relatedInformation.getRelatedToFields()));
     form.setFields(fields);
 
-    form.setRelatedToAnyLicenceApplications(relatedInformation.getRelatedToLicenceApplications());
+    form.setRelatedToAnyLicenceApplications(String.valueOf(relatedInformation.getRelatedToLicenceApplications()));
 
     if (BooleanUtils.isTrue(relatedInformation.getRelatedToLicenceApplications())) {
       form.setRelatedLicenceApplications(relatedInformation.getRelatedLicenceApplications());
@@ -44,7 +44,7 @@ class RelatedInformationFormService {
       form.setRelatedLicenceApplications(null);
     }
 
-    form.setRelatedToAnyWellApplications(relatedInformation.getRelatedToWellApplications());
+    form.setRelatedToAnyWellApplications(String.valueOf(relatedInformation.getRelatedToWellApplications()));
 
     if (BooleanUtils.isTrue(relatedInformation.getRelatedToWellApplications())) {
       form.setRelatedWellApplications(relatedInformation.getRelatedWellApplications());
