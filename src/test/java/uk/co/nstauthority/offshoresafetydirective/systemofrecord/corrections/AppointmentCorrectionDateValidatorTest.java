@@ -155,6 +155,7 @@ class AppointmentCorrectionDateValidatorTest {
         .build();
 
     var startDateInput = getAssociatedStartDateInput(form, appointmentType);
+    startDateInput.setDate(LocalDate.now());
     startDateInput.getDayInput().setInputValue("a");
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -1170,6 +1171,7 @@ class AppointmentCorrectionDateValidatorTest {
       case DEEMED -> null;
       case OFFLINE_NOMINATION -> appointmentCorrectionForm.getOfflineAppointmentStartDate();
       case ONLINE_NOMINATION -> appointmentCorrectionForm.getOnlineAppointmentStartDate();
+      case FORWARD_APPROVED -> appointmentCorrectionForm.getForwardApprovedAppointmentStartDate();
     };
   }
 }

@@ -181,14 +181,23 @@ public class AppointmentCorrectionService {
       case OFFLINE_NOMINATION -> {
         appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
         appointment.setCreatedByNominationId(null);
+        appointment.setCreatedByAppointmentId(null);
       }
       case ONLINE_NOMINATION -> {
         appointment.setCreatedByNominationId(createdByNominationId);
         appointment.setCreatedByLegacyNominationReference(null);
+        appointment.setCreatedByAppointmentId(null);
       }
       case DEEMED -> {
         appointment.setCreatedByLegacyNominationReference(null);
         appointment.setCreatedByNominationId(null);
+        appointment.setCreatedByAppointmentId(null);
+      }
+      case FORWARD_APPROVED -> {
+        appointment.setCreatedByLegacyNominationReference(null);
+        appointment.setCreatedByNominationId(null);
+        // TODO OSDOP-617
+        // appointment.setCreatedByAppointmentId();
       }
     }
 
@@ -261,6 +270,7 @@ public class AppointmentCorrectionService {
       case ONLINE_NOMINATION -> form.getOnlineAppointmentStartDate().getAsLocalDate();
       case OFFLINE_NOMINATION -> form.getOfflineAppointmentStartDate().getAsLocalDate();
       case DEEMED -> Optional.of(AppointmentCorrectionDateValidator.DEEMED_DATE);
+      case FORWARD_APPROVED -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate();
     };
   }
 

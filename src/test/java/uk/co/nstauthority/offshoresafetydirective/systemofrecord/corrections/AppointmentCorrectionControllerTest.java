@@ -423,6 +423,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     assertThat(appointmentTypes)
         .containsExactly(
             entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
+            entry(AppointmentType.FORWARD_APPROVED.name(), AppointmentType.FORWARD_APPROVED.getScreenDisplayText()),
             entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
             entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
         );
@@ -521,6 +522,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     assertThat(appointmentTypes)
         .containsExactly(
             entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
+            entry(AppointmentType.FORWARD_APPROVED.name(), AppointmentType.FORWARD_APPROVED.getScreenDisplayText()),
             entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
             entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
         );

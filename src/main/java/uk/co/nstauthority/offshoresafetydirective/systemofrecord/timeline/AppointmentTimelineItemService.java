@@ -239,6 +239,7 @@ public class AppointmentTimelineItemService {
           appointmentTimelineItemDto.isMemberOfRegulatorTeam()
       );
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
+      case FORWARD_APPROVED -> addForwardApprovedAppointmentModelProperties(modelProperties);
     }
 
     if (appointmentTimelineItemDto.canManageAppointments()
@@ -311,7 +312,7 @@ public class AppointmentTimelineItemService {
 
   private void addDeemedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {
 
-    modelProperties.addProperty("createdByReference", "Deemed appointment");
+    modelProperties.addProperty("createdByReference", AppointmentType.DEEMED.getScreenDisplayText());
 
     if (userDetailService.isUserLoggedIn()) {
       modelProperties.addProperty(
@@ -323,6 +324,10 @@ public class AppointmentTimelineItemService {
       );
     }
 
+  }
+
+  private void addForwardApprovedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {
+    modelProperties.addProperty("createdByReference", AppointmentType.FORWARD_APPROVED.getScreenDisplayText());
   }
 
   private String getNominationUrl(AppointmentDto appointmentDto,

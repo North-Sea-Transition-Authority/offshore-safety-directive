@@ -50,6 +50,15 @@
                         <@fdsInsetText.insetText>
                           The start date will automatically be set to the 19 July 2015
                         </@fdsInsetText.insetText>
+                    <#elseif appointmentTypeName == "FORWARD_APPROVED">
+                        <@fdsDateInput.dateInput
+                            dayPath="form.forwardApprovedAppointmentStartDate.dayInput.inputValue"
+                            monthPath="form.forwardApprovedAppointmentStartDate.monthInput.inputValue"
+                            yearPath="form.forwardApprovedAppointmentStartDate.yearInput.inputValue"
+                            labelText="Start date"
+                            formId="forwardApprovedAppointmentStartDate"
+                            nestingPath="form.appointmentType"
+                        />
                     <#elseif appointmentTypeName == "OFFLINE_NOMINATION">
                         <@fdsTextInput.textInput
                             path="form.offlineNominationReference.inputValue"

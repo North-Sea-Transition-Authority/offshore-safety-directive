@@ -31,6 +31,7 @@ public class AppointmentCorrectionFormTestUtil {
     private String onlineNominationReference = UUID.randomUUID().toString();
     private LocalDate offlineStartDate = LocalDate.now();
     private LocalDate onlineStartDate = LocalDate.now();
+    private LocalDate forwardApprovedAppointmentStartDate = LocalDate.now();
     private LocalDate endDate = null;
     private String correctionReason = "reason for correction";
 
@@ -103,9 +104,15 @@ public class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    public Builder withForwardApprovedStartDate(LocalDate forwardApprovedAppointmentStartDate) {
+      this.forwardApprovedAppointmentStartDate = forwardApprovedAppointmentStartDate;
+      return this;
+    }
+
     public Builder withStartDate(LocalDate localDate) {
       this.onlineStartDate = localDate;
       this.offlineStartDate = localDate;
+      this.forwardApprovedAppointmentStartDate = localDate;
       return this;
     }
 
@@ -144,6 +151,15 @@ public class AppointmentCorrectionFormTestUtil {
         ));
       } else {
         form.getOnlineAppointmentStartDate().setDate(onlineStartDate);
+      }
+
+      if (forwardApprovedAppointmentStartDate == null) {
+        form.setOnlineAppointmentStartDate(new ThreeFieldDateInput(
+            form.getForwardApprovedAppointmentStartDate().getFieldName(),
+            form.getForwardApprovedAppointmentStartDate().getDisplayName()
+        ));
+      } else {
+        form.getForwardApprovedAppointmentStartDate().setDate(forwardApprovedAppointmentStartDate);
       }
 
       if (endDate == null) {

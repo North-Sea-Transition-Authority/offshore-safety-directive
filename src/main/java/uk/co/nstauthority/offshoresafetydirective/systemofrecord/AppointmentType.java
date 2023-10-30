@@ -4,9 +4,10 @@ import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
 public enum AppointmentType implements DisplayableEnumOption {
 
-  DEEMED("Deemed", 10),
-  OFFLINE_NOMINATION("Offline nomination", 20),
-  ONLINE_NOMINATION("Online nomination", 30);
+  DEEMED("Deemed appointment", 10),
+  FORWARD_APPROVED("Forward approved appointment", 20),
+  OFFLINE_NOMINATION("Offline nomination", 30),
+  ONLINE_NOMINATION("Online nomination", 40);
 
   private final String displayName;
   private final int displayOrder;
