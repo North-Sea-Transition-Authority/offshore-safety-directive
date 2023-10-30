@@ -121,7 +121,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
       */
       SELECT st.join(stagg(xwws.well_registration_no))
       INTO l_possible_matches
-      FROM wellmgr.xview_wons_wellbore_search xwws
+      FROM wellmgr.extant_wellbores_current ewc
+      JOIN wellmgr.xview_wons_wellbore_search xwws ON xwws.w_id = ewc.w_id
       WHERE REGEXP_REPLACE(xwws.well_registration_no, ' |-') = REGEXP_REPLACE(TO_CHAR(p_wellbore_registration_number), ' |-')
       AND xwws.status_control = 'C';
 
@@ -178,7 +179,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
     SAVEPOINT sp_before_operator_mapping;
 
     l_matched_operator_id := wios_migration.operator_name_mapping.get_operator_from_name(
-      p_operator_name => p_operator_name
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_operator_name => p_operator_name
     );
 
     IF l_matched_operator_id IS NOT NULL THEN
@@ -259,9 +261,9 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
     ) RETURN DATE
     IS
 
-     BEGIN
+    BEGIN
 
-      RETURN TO_DATE(p_date_as_string, 'DD/MM/YYYY');
+      RETURN TO_DATE(p_date_as_string, 'DD/MM/RRRR');
 
     EXCEPTION WHEN OTHERS THEN
 
@@ -319,7 +321,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
 
       BEGIN
 
-        SELECT TO_CHAR(w.wellbore_registration_number)
+        SELECT TRIM(TO_CHAR(w.wellbore_registration_number))
         INTO l_well_registration_number
         FROM wios_migration.raw_wellbore_appointments_data w
         WHERE w.migratable_appointment_id = p_migratable_appointment_id;
@@ -331,11 +333,11 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
             w.migratable_appointment_id
           , LEAD(TO_CHAR(w.responsible_from_date))
               OVER(
-                PARTITION BY TO_CHAR(w.wellbore_registration_number)
-                ORDER BY TO_DATE(TO_CHAR(w.responsible_from_date), 'DD/MM/YYYY')
+                PARTITION BY TRIM(TO_CHAR(w.wellbore_registration_number))
+                ORDER BY TO_DATE(TO_CHAR(w.responsible_from_date), 'DD/MM/RRRR')
               ) next_appointment_from_date
           FROM wios_migration.raw_wellbore_appointments_data w
-          WHERE TO_CHAR(w.wellbore_registration_number) = l_well_registration_number
+          WHERE TRIM(TO_CHAR(w.wellbore_registration_number)) = l_well_registration_number
         ) x
         WHERE x.migratable_appointment_id = p_migratable_appointment_id;
 
@@ -448,7 +450,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
 
         RETURN 1;
 
-      ELSIF LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT THEN
+      ELSIF (LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT) OR (p_is_for_phase_text IS NULL) THEN
 
         RETURN 0;
 
@@ -647,7 +649,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
       SELECT
         xwws.well_registration_no
       , xwws.w_id id
-      FROM wellmgr.xview_wons_wellbore_search xwws
+      FROM wellmgr.extant_wellbores_current ewc
+      JOIN wellmgr.xview_wons_wellbore_search xwws ON xwws.w_id = ewc.w_id
       WHERE xwws.well_registration_no IS NOT NULL
       AND xwws.status_control = 'C'
     )
@@ -660,8 +663,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
     FOR migratable_wellbore_appointment IN (
       SELECT
         wad.migratable_appointment_id
-      , wad.wellbore_registration_number
-      , wad.appointed_operator_name
+      , TRIM(TO_CHAR(wad.wellbore_registration_number)) wellbore_registration_number
+      , TRIM(TO_CHAR(wad.appointed_operator_name)) appointed_operator_name
       , LOWER(wad.appointment_source) appointment_source
       , wad.is_decommissioning_phase
       , wad.is_development_phase
@@ -719,14 +722,14 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
         , p_appointment_source => migratable_wellbore_appointment.appointment_source
         );
 
-        IF LOWER(migratable_wellbore_appointment.appointment_source) = K_OFFLINE_NOMINATION_SOURCE AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
+        IF LOWER(migratable_wellbore_appointment.appointment_source) IN(K_OFFLINE_NOMINATION_SOURCE, K_FORWARD_APPROVED_SOURCE) AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
 
           migrate_legacy_nomination_reference(
             p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
           , p_legacy_nomination_reference => migratable_wellbore_appointment.legacy_nomination_reference
           );
 
-        ELSIF LOWER(migratable_wellbore_appointment.appointment_source) != K_OFFLINE_NOMINATION_SOURCE AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
+        ELSIF LOWER(migratable_wellbore_appointment.appointment_source) NOT IN(K_OFFLINE_NOMINATION_SOURCE, K_FORWARD_APPROVED_SOURCE) AND migratable_wellbore_appointment.legacy_nomination_reference IS NOT NULL THEN
 
           add_migration_error(
             p_migratable_appointment_id => migratable_wellbore_appointment.migratable_appointment_id
@@ -829,6 +832,21 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.wellbore_appointment_migration AS
       add_migration_error(
         p_migratable_appointment_id => asset_with_more_than_one_current_appointment.migratable_appointment_id
       , p_error_message => 'Asset has more than one active appointment'
+      );
+
+    END LOOP;
+
+    FOR deemed_appointment_not_on_deemed_date IN (
+      SELECT wa.migratable_appointment_id
+      FROM wios_migration.wellbore_appointments wa
+      WHERE wa.appointment_source = 'DEEMED'
+      AND wa.responsible_from_date != TO_DATE('19/07/2015', 'DD/MM/YYYY')
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => deemed_appointment_not_on_deemed_date.migratable_appointment_id
+      , p_error_message => 'Asset has a deemed appointment that does not start on the deeming date'
       );
 
     END LOOP;

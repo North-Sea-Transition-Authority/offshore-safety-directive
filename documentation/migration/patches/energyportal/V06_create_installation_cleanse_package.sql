@@ -174,7 +174,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
     SAVEPOINT sp_before_operator_mapping;
 
     l_matched_operator_id := wios_migration.operator_name_mapping.get_operator_from_name(
-      p_operator_name => p_operator_name
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_operator_name => p_operator_name
     );
 
     IF l_matched_operator_id IS NOT NULL THEN
@@ -257,7 +258,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
      BEGIN
 
-      RETURN TO_DATE(p_date_as_string, 'DD/MM/YYYY');
+      RETURN TO_DATE(p_date_as_string, 'DD/MM/RRRR');
 
     EXCEPTION WHEN OTHERS THEN
 
@@ -328,7 +329,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
           , LEAD(TO_CHAR(i.responsible_from_date))
               OVER(
                 PARTITION BY TO_CHAR(i.installation_name)
-                ORDER BY TO_DATE(TO_CHAR(i.responsible_from_date), 'DD/MM/YYYY')
+                ORDER BY TO_DATE(TO_CHAR(i.responsible_from_date), 'DD/MM/RRRR')
               ) next_appointment_from_date
           FROM wios_migration.raw_installation_appointments_data i
           WHERE TO_CHAR(i.installation_name) = l_installation_name
@@ -441,7 +442,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
 
         RETURN 1;
 
-      ELSIF LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT THEN
+      ELSIF (LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT) OR (p_is_for_phase_text IS NULL) THEN
 
         RETURN 0;
 
@@ -810,6 +811,21 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.installation_appointment_migration
       add_migration_error(
         p_migratable_appointment_id => asset_with_more_than_one_current_appointment.migratable_appointment_id
       , p_error_message => 'Asset has more than one active appointment'
+      );
+
+    END LOOP;
+
+    FOR deemed_appointment_not_on_deemed_date IN (
+      SELECT ia.migratable_appointment_id
+      FROM wios_migration.installation_appointments ia
+      WHERE ia.appointment_source = 'DEEMED'
+      AND ia.responsible_from_date != TO_DATE('19/07/2015', 'DD/MM/YYYY')
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => deemed_appointment_not_on_deemed_date.migratable_appointment_id
+      , p_error_message => 'Asset has a deemed appointment that does not start on the deeming date'
       );
 
     END LOOP;

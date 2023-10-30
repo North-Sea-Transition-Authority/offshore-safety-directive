@@ -31,3 +31,8 @@ CREATE TABLE wios_migration.wellbore_migration_errors (
 , error_timestamp TIMESTAMP DEFAULT SYSTIMESTAMP
 , error_message CLOB NOT NULL
 ) TABLESPACE tbsdata;
+
+CREATE TABLE wios_migration.migration_warnings (
+  migratable_appointment_id NUMBER
+, warning_message CLOB
+) TABLESPACE tbsdata;

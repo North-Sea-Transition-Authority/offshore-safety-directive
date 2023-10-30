@@ -64,6 +64,35 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
   END add_migration_error;
 
+  /**
+    Utility procedure to log a migration warning for a given migratable appointment
+
+    @param p_migratable_appointment_id The ID of the appointment being migrated
+    @param p_warning_message The warning message to log
+   */
+  PROCEDURE add_migration_warning (
+    p_migratable_appointment_id IN wios_migration.migration_warnings.migratable_appointment_id%TYPE
+  , p_warning_message IN wios_migration.migration_warnings.warning_message%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+  BEGIN
+
+    INSERT INTO wios_migration.migration_warnings(
+      migratable_appointment_id
+    , warning_message
+    )
+    VALUES(
+      p_migratable_appointment_id
+    , p_warning_message
+    );
+
+    COMMIT;
+
+  END add_migration_warning;
+
   FUNCTION create_subarea_identifier_sql(
     p_licence_type IN VARCHAR2
   , p_licence_number IN NUMBER
@@ -275,7 +304,8 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
     SAVEPOINT sp_before_operator_mapping;
 
     l_matched_operator_id := wios_migration.operator_name_mapping.get_operator_from_name(
-      p_operator_name => p_operator_name
+      p_migratable_appointment_id => p_migratable_appointment_id
+    , p_operator_name => p_operator_name
     );
 
     IF l_matched_operator_id IS NOT NULL THEN
@@ -358,7 +388,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
      BEGIN
 
-      RETURN TO_DATE(p_date_as_string, 'DD/MM/YYYY');
+      RETURN TO_DATE(p_date_as_string, 'DD/MM/RRRR');
 
     EXCEPTION WHEN OTHERS THEN
 
@@ -440,7 +470,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
           , LEAD(TO_CHAR(s.responsible_from_date))
               OVER(
                 PARTITION BY TO_CHAR(s.licence_type), TO_CHAR(s.licence_number), TO_CHAR(s.block_reference), TO_CHAR(s.subarea_name)
-                ORDER BY TO_DATE(TO_CHAR(s.responsible_from_date), 'DD/MM/YYYY')
+                ORDER BY TO_DATE(TO_CHAR(s.responsible_from_date), 'DD/MM/RRRR')
               ) next_appointment_from_date
           FROM wios_migration.raw_subarea_appointments_data s
           WHERE TO_CHAR(s.licence_type) = l_licence_type
@@ -485,15 +515,16 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
           WHERE s.migratable_appointment_id = p_migratable_appointment_id
         );
 
-        add_migration_error(
+        add_migration_warning(
           p_migratable_appointment_id => p_migratable_appointment_id
-        , p_error_message => 'Appointment to date was NULL from source data but an end date was found in PEARS and used instead'
+        , p_warning_message => 'Appointment to date was NULL from source data but an end date ' || TO_CHAR(l_appointment_to_date, 'DD/MM/YYYY') || ' was found in PEARS and used instead'
         );
 
-      EXCEPTION WHEN NO_DATA_FOUND THEN
+      EXCEPTION
 
-        l_appointment_to_date := NULL;
+        WHEN NO_DATA_FOUND THEN
 
+          l_appointment_to_date := NULL;
       END;
 
     END IF;
@@ -588,7 +619,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
         RETURN 1;
 
-      ELSIF LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT THEN
+      ELSIF (LOWER(p_is_for_phase_text) = K_NOT_PHASE_TEXT) OR (p_is_for_phase_text IS NULL) THEN
 
         RETURN 0;
 
@@ -976,6 +1007,21 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
       add_migration_error(
         p_migratable_appointment_id => asset_with_more_than_one_current_appointment.migratable_appointment_id
       , p_error_message => 'Asset has more than one active appointment'
+      );
+
+    END LOOP;
+
+    FOR deemed_appointment_not_on_deemed_date IN (
+      SELECT sa.migratable_appointment_id
+      FROM wios_migration.subarea_appointments sa
+      WHERE sa.appointment_source = 'DEEMED'
+      AND sa.responsible_from_date != TO_DATE('19/07/2015', 'DD/MM/YYYY')
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => deemed_appointment_not_on_deemed_date.migratable_appointment_id
+      , p_error_message => 'Asset has a deemed appointment that does not start on the deeming date'
       );
 
     END LOOP;

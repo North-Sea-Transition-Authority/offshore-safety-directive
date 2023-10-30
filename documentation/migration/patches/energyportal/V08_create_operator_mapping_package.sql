@@ -3,12 +3,14 @@ CREATE OR REPLACE PACKAGE wios_migration.operator_name_mapping AS
   /**
     Function to get the ID of an operator from a name.
 
+    @param p_migratable_appointment_id The ID of the appointment being migrated
     @param p_operator_name The name of the operator to retrieve the ID of
     @return The ID of the operator matching the provided name or NULL if there is
             no matching operator with that name
   */
   FUNCTION get_operator_from_name(
-    p_operator_name IN VARCHAR2
+    p_migratable_appointment_id IN NUMBER
+  , p_operator_name IN VARCHAR2
   ) RETURN NUMBER;
 
   /**
@@ -30,6 +32,36 @@ CREATE OR REPLACE PACKAGE wios_migration.operator_name_mapping AS
 END operator_name_mapping;
 
 CREATE OR REPLACE PACKAGE BODY wios_migration.operator_name_mapping AS
+
+  /**
+    Utility procedure to log a migration warning for a given migratable appointment
+
+    @param p_migratable_appointment_id The ID of the appointment being migrated
+    @param p_warning_message The warning message to log
+   */
+  PROCEDURE add_migration_warning (
+    p_migratable_appointment_id IN wios_migration.migration_warnings.migratable_appointment_id%TYPE
+  , p_warning_message IN wios_migration.migration_warnings.warning_message%TYPE
+  )
+  IS
+
+    PRAGMA AUTONOMOUS_TRANSACTION;
+
+  BEGIN
+
+    INSERT INTO wios_migration.migration_warnings(
+      migratable_appointment_id
+    , warning_message
+    )
+    VALUES(
+      p_migratable_appointment_id
+    , p_warning_message
+    );
+
+    COMMIT;
+
+  END add_migration_warning;
+
 
   /**
     Utility procedure to write an entry to the unmatched organisation units
@@ -81,7 +113,10 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.operator_name_mapping AS
 
   END;
 
-  FUNCTION get_operator_from_name(p_operator_name IN VARCHAR2)
+  FUNCTION get_operator_from_name(
+    p_migratable_appointment_id IN NUMBER
+  , p_operator_name IN VARCHAR2
+  )
   RETURN NUMBER
   IS
 
@@ -112,7 +147,7 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.operator_name_mapping AS
       , l_current_name
       FROM decmgr.xview_organisation_names xon
       JOIN decmgr.xview_organisation_units xou ON xou.organ_id = xon.organ_id
-      WHERE xon.name = remove_company_house_number(p_operator_name);
+      WHERE xon.name = remove_company_house_number(TRIM(p_operator_name));
 
       IF l_matched_name != l_current_name THEN
 
@@ -137,7 +172,27 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.operator_name_mapping AS
 
       WHEN TOO_MANY_ROWS THEN
 
-        raise_application_error(-20999, 'Multiple organisations with name ' || remove_company_house_number(p_operator_name));
+        -- attempt to find a current organisation name that matches the
+        -- provided operator name
+        BEGIN
+
+          SELECT ou.id
+          INTO l_operator_id
+          FROM decmgr.organisation_units ou
+          WHERE ou.name = remove_company_house_number(p_operator_name);
+
+          add_migration_warning(
+            p_migratable_appointment_id => p_migratable_appointment_id
+          , p_warning_message => 'Multiple organisations with name ' || remove_company_house_number(p_operator_name) || ' exist, but one is current so operator ID set to ' || l_operator_id
+          );
+
+        EXCEPTION WHEN NO_DATA_FOUND THEN
+
+          l_operator_id := NULL;
+
+          raise_application_error(-20999, 'Multiple organisations with name ' || remove_company_house_number(p_operator_name));
+
+        END;
 
     END;
 
