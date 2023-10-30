@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -96,7 +97,7 @@ public class ExcludedWellboreController {
           excludedWellPersistenceService.saveWellsToExclude(
               nominationDetail,
               excludedWellboreIds,
-              wellExclusionForm.hasWellsToExclude()
+              BooleanUtils.toBooleanObject(wellExclusionForm.hasWellsToExclude())
           );
           return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
         }

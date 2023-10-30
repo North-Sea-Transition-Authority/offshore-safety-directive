@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -48,9 +49,9 @@ class NomineeDetailFormService {
     form.setPlannedStartDay(String.valueOf(entity.getPlannedStartDate().getDayOfMonth()));
     form.setPlannedStartMonth(String.valueOf(entity.getPlannedStartDate().getMonthValue()));
     form.setPlannedStartYear(String.valueOf(entity.getPlannedStartDate().getYear()));
-    form.setOperatorHasAuthority(entity.getOperatorHasAuthority());
-    form.setOperatorHasCapacity(entity.getOperatorHasCapacity());
-    form.setLicenseeAcknowledgeOperatorRequirements(entity.getLicenseeAcknowledgeOperatorRequirements());
+    form.setOperatorHasAuthority(Objects.toString(entity.getOperatorHasAuthority(), null));
+    form.setOperatorHasCapacity(Objects.toString(entity.getOperatorHasCapacity(), null));
+    form.setLicenseeAcknowledgeOperatorRequirements(Objects.toString(entity.getLicenseeAcknowledgeOperatorRequirements(), null));
 
     Map<FilePurpose, List<UploadedFileView>> viewMap =
         fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(

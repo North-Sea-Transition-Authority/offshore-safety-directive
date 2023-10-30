@@ -10,6 +10,9 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,10 +62,15 @@ class ExcludedWellValidatorTest {
         .isInstanceOf(UnsupportedOperationException.class);
   }
 
-  @Test
-  void validate_whenEmptyForm_thenVerifyErrors() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenInvalidHasWellsToExcludeForm_thenVerifyErrors(String invalidValue) {
 
-    var form = new WellExclusionForm();
+    var form = WellExclusionFormTestUtil.builder()
+        .hasWellsToExclude(invalidValue)
+        .build();
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));

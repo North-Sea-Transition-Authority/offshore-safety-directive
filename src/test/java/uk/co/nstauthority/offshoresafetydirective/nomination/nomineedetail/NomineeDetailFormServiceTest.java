@@ -18,14 +18,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
 
 @ExtendWith(MockitoExtension.class)
 class NomineeDetailFormServiceTest {
@@ -67,9 +67,9 @@ class NomineeDetailFormServiceTest {
             String.valueOf(nomineeDetail.getPlannedStartDate().getDayOfMonth()),
             String.valueOf(nomineeDetail.getPlannedStartDate().getMonthValue()),
             String.valueOf(nomineeDetail.getPlannedStartDate().getYear()),
-            nomineeDetail.getOperatorHasAuthority(),
-            nomineeDetail.getOperatorHasCapacity(),
-            nomineeDetail.getLicenseeAcknowledgeOperatorRequirements()
+            String.valueOf(nomineeDetail.getOperatorHasAuthority()),
+            String.valueOf(nomineeDetail.getOperatorHasCapacity()),
+            String.valueOf(nomineeDetail.getLicenseeAcknowledgeOperatorRequirements())
         );
   }
 
@@ -150,9 +150,9 @@ class NomineeDetailFormServiceTest {
             String.valueOf(plannedStartDate.getDayOfMonth()),
             String.valueOf(plannedStartDate.getMonthValue()),
             String.valueOf(plannedStartDate.getYear()),
-            operatorHasCapacity,
-            operatorHasAuthority,
-            licenseeAcknowledgeOperatorRequirements,
+            String.valueOf(operatorHasCapacity),
+            String.valueOf(operatorHasAuthority),
+            String.valueOf(licenseeAcknowledgeOperatorRequirements),
             List.of(fileUploadForm)
         );
   }

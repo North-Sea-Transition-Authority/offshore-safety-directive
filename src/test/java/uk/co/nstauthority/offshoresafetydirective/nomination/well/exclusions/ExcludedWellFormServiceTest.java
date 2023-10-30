@@ -57,7 +57,7 @@ class ExcludedWellFormServiceTest {
     var resultingForm = excludedWellFormService.getExcludedWellForm(nominationDetail);
 
     assertThat(resultingForm).hasNoNullFieldsOrProperties();
-    assertThat(resultingForm.hasWellsToExclude()).isTrue();
+    assertThat(resultingForm.hasWellsToExclude()).isEqualTo("true");
     assertThat(resultingForm.getExcludedWells())
         .containsExactly(String.valueOf(expectedExcludedWell.getWellboreId()));
   }
@@ -80,7 +80,7 @@ class ExcludedWellFormServiceTest {
         .should(never())
         .getExcludedWells(nominationDetail);
 
-    assertThat(resultingForm.hasWellsToExclude()).isFalse();
+    assertThat(resultingForm.hasWellsToExclude()).isEqualTo("false");
     assertThat(resultingForm.getExcludedWells()).isEmpty();
   }
 

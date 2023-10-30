@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import org.apache.commons.lang3.BooleanUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -84,9 +85,9 @@ class NomineeDetailPersistenceServiceTest {
             form.getNominatedOrganisationId(),
             form.getReasonForNomination(),
             expectedStartDate,
-            form.getOperatorHasAuthority(),
-            form.getOperatorHasCapacity(),
-            form.getLicenseeAcknowledgeOperatorRequirements()
+            BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),
+            BooleanUtils.toBooleanObject(form.getOperatorHasCapacity()),
+            BooleanUtils.toBooleanObject(form.getLicenseeAcknowledgeOperatorRequirements())
         );
   }
 
@@ -126,9 +127,9 @@ class NomineeDetailPersistenceServiceTest {
             form.getNominatedOrganisationId(),
             form.getReasonForNomination(),
             expectedStartDate,
-            form.getOperatorHasAuthority(),
-            form.getOperatorHasCapacity(),
-            form.getLicenseeAcknowledgeOperatorRequirements()
+            BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),
+            BooleanUtils.toBooleanObject(form.getOperatorHasCapacity()),
+            BooleanUtils.toBooleanObject(form.getLicenseeAcknowledgeOperatorRequirements())
         );
   }
 

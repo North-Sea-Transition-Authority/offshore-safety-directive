@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,12 +29,12 @@ class ExcludedWellFormService {
     if (BooleanUtils.isTrue(hasWellsToExclude)) {
       excludedWellIds = excludedWellAccessService.getExcludedWells(nominationDetail)
           .stream()
-          .map(excludedWell -> String.valueOf(excludedWell.getWellboreId()))
+          .map(excludedWell -> Objects.toString(excludedWell.getWellboreId()))
           .toList();
     }
 
     var form = new WellExclusionForm();
-    form.setHasWellsToExclude(hasWellsToExclude);
+    form.setHasWellsToExclude(Objects.toString(hasWellsToExclude, null));
     form.setExcludedWells(excludedWellIds);
     return form;
   }

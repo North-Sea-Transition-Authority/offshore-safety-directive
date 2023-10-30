@@ -14,6 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -75,12 +78,14 @@ class NomineeDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenFirstDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenFirstDeclarationsNotTicked_thenAssertCheckBoxGroupError(String invalidValue) {
     var invalidForm = NomineeDetailFormTestingUtil.builder()
-        .withOperatorHasAuthority(null)
-        .withLicenseeAcknowledgeOperatorRequirements(null)
-        .withOperatorHasCapacity(null)
+        .withOperatorHasAuthority(invalidValue)
+        .withLicenseeAcknowledgeOperatorRequirements(invalidValue)
+        .withOperatorHasCapacity(invalidValue)
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
@@ -94,11 +99,13 @@ class NomineeDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenSecondDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenSecondDeclarationsNotTicked_thenAssertCheckBoxGroupError(String invalidValue) {
     var invalidForm = NomineeDetailFormTestingUtil.builder()
-        .withLicenseeAcknowledgeOperatorRequirements(null)
-        .withOperatorHasCapacity(null)
+        .withLicenseeAcknowledgeOperatorRequirements(invalidValue)
+        .withOperatorHasCapacity(invalidValue)
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
@@ -112,10 +119,12 @@ class NomineeDetailFormValidatorTest {
     );
   }
 
-  @Test
-  void validate_whenThirdDeclarationsNotTicked_thenAssertCheckBoxGroupError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenThirdDeclarationsNotTicked_thenAssertCheckBoxGroupError(String invalidValue) {
     var invalidForm = NomineeDetailFormTestingUtil.builder()
-        .withOperatorHasCapacity(null)
+        .withOperatorHasCapacity(invalidValue)
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))

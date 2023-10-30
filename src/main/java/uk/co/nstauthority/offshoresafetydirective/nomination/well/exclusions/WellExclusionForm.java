@@ -7,18 +7,18 @@ public class WellExclusionForm {
 
   private List<String> excludedWells = new ArrayList<>();
 
-  private Boolean hasWellsToExclude;
+  private String hasWellsToExclude;
 
-  public Boolean hasWellsToExclude() {
+  public String hasWellsToExclude() {
     return hasWellsToExclude;
   }
 
-  public void setHasWellsToExclude(Boolean hasWellsToExclude) {
+  public String getHasWellsToExclude() {
+    return hasWellsToExclude;
+  }
+
+  public void setHasWellsToExclude(String hasWellsToExclude) {
     this.hasWellsToExclude = hasWellsToExclude;
-  }
-
-  public Boolean getHasWellsToExclude() {
-    return hasWellsToExclude;
   }
 
   public List<String> getExcludedWells() {

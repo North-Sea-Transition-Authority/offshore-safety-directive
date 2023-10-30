@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.lang3.BooleanUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -47,7 +48,7 @@ class ExcludedWellPersistenceServiceTest {
     excludedWellPersistenceService.saveWellsToExclude(
         nominationDetail,
         List.of(expectedExcludedWellboreId),
-        excludedWellsForm.hasWellsToExclude()
+        BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude())
     );
 
     var excludedWellDetailCaptor = ArgumentCaptor.forClass(ExcludedWellDetail.class);
@@ -66,7 +67,7 @@ class ExcludedWellPersistenceServiceTest {
             ExcludedWellDetail::getNominationDetail
         )
         .containsExactly(
-            excludedWellsForm.hasWellsToExclude(),
+            BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude()),
             nominationDetail
         );
 
@@ -105,7 +106,7 @@ class ExcludedWellPersistenceServiceTest {
     excludedWellPersistenceService.saveWellsToExclude(
         nominationDetail,
         List.of(expectedExcludedWellboreId),
-        excludedWellsForm.hasWellsToExclude()
+        BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude())
     );
 
     var excludedWellDetailCaptor = ArgumentCaptor.forClass(ExcludedWellDetail.class);
@@ -124,7 +125,7 @@ class ExcludedWellPersistenceServiceTest {
             ExcludedWellDetail::getNominationDetail
         )
         .containsExactly(
-            excludedWellsForm.hasWellsToExclude(),
+            BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude()),
             nominationDetail
         );
 
@@ -159,7 +160,7 @@ class ExcludedWellPersistenceServiceTest {
     excludedWellPersistenceService.saveWellsToExclude(
         nominationDetail,
         List.of(shouldNotBeSavedWellboreId),
-        excludedWellsForm.hasWellsToExclude()
+        BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude())
     );
 
     var excludedWellDetailCaptor = ArgumentCaptor.forClass(ExcludedWellDetail.class);
@@ -178,7 +179,7 @@ class ExcludedWellPersistenceServiceTest {
             ExcludedWellDetail::getNominationDetail
         )
         .containsExactly(
-            excludedWellsForm.hasWellsToExclude(),
+            BooleanUtils.toBooleanObject(excludedWellsForm.hasWellsToExclude()),
             nominationDetail
         );
 

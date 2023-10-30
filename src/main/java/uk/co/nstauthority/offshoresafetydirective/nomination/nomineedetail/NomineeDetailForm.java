@@ -12,9 +12,9 @@ class NomineeDetailForm {
   private String plannedStartMonth;
   private String plannedStartYear;
   private List<FileUploadForm> appendixDocuments = new ArrayList<>();
-  private Boolean licenseeAcknowledgeOperatorRequirements;
-  private Boolean operatorHasCapacity;
-  private Boolean operatorHasAuthority;
+  private String licenseeAcknowledgeOperatorRequirements;
+  private String operatorHasCapacity;
+  private String operatorHasAuthority;
 
   public Integer getNominatedOrganisationId() {
     return nominatedOrganisationId;
@@ -56,36 +56,35 @@ class NomineeDetailForm {
     this.plannedStartYear = plannedStartYear;
   }
 
-  public Boolean getOperatorHasAuthority() {
-    return operatorHasAuthority;
-  }
-
-  public void setOperatorHasAuthority(Boolean operatorHasAuthority) {
-    this.operatorHasAuthority = operatorHasAuthority;
-  }
-
-  public Boolean getOperatorHasCapacity() {
-    return operatorHasCapacity;
-  }
-
-  public void setOperatorHasCapacity(Boolean operatorHasCapacity) {
-    this.operatorHasCapacity = operatorHasCapacity;
-  }
-
   public List<FileUploadForm> getAppendixDocuments() {
     return appendixDocuments;
   }
 
-  public void setAppendixDocuments(
-      List<FileUploadForm> appendixDocuments) {
+  public void setAppendixDocuments(List<FileUploadForm> appendixDocuments) {
     this.appendixDocuments = appendixDocuments;
   }
 
-  public Boolean getLicenseeAcknowledgeOperatorRequirements() {
+  public String getLicenseeAcknowledgeOperatorRequirements() {
     return licenseeAcknowledgeOperatorRequirements;
   }
 
-  public void setLicenseeAcknowledgeOperatorRequirements(Boolean licenseeAcknowledgeOperatorRequirements) {
+  public void setLicenseeAcknowledgeOperatorRequirements(String licenseeAcknowledgeOperatorRequirements) {
     this.licenseeAcknowledgeOperatorRequirements = licenseeAcknowledgeOperatorRequirements;
+  }
+
+  public String getOperatorHasCapacity() {
+    return operatorHasCapacity;
+  }
+
+  public void setOperatorHasCapacity(String operatorHasCapacity) {
+    this.operatorHasCapacity = operatorHasCapacity;
+  }
+
+  public String getOperatorHasAuthority() {
+    return operatorHasAuthority;
+  }
+
+  public void setOperatorHasAuthority(String operatorHasAuthority) {
+    this.operatorHasAuthority = operatorHasAuthority;
   }
 }

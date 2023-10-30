@@ -55,13 +55,15 @@ class ExcludedWellValidator implements SmartValidator {
     var form = (WellExclusionForm) target;
     var validationHint = (ExcludedWellValidatorHint) validationHints[0];
 
-    if (form.hasWellsToExclude() == null) {
+    var hasWellsToExclude = BooleanUtils.toBooleanObject(form.hasWellsToExclude());
+
+    if (hasWellsToExclude == null) {
       errors.rejectValue(
           HAS_WELL_TO_EXCLUDE_REQUIRED.field(),
           HAS_WELL_TO_EXCLUDE_REQUIRED.code(),
           HAS_WELL_TO_EXCLUDE_REQUIRED.message()
       );
-    } else if (BooleanUtils.isTrue(form.hasWellsToExclude())) {
+    } else if (BooleanUtils.isTrue(hasWellsToExclude)) {
 
       var nominatedSubareaIds = nominatedBlockSubareaAccessService
           .getNominatedSubareaDtos(validationHint.nominationDetail())

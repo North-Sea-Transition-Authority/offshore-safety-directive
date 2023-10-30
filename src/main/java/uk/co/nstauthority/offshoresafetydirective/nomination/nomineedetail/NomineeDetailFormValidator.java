@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -95,19 +96,19 @@ class NomineeDetailFormValidator implements SmartValidator {
     //Need to individually check which checkboxes have not been ticked and assign an error to that specific field
     //This will make sure the error link points to the right unchecked checkbox
     //We also only want to a single error message even if multiple checkboxes are not ticked
-    if (form.getOperatorHasAuthority() == null) {
+    if (BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()) == null) {
       errors.rejectValue(
           "operatorHasAuthority",
           "operatorHasAuthority.required",
           NOMINEE_DECLARATIONS_ERROR_MESSAGE
       );
-    } else if (form.getLicenseeAcknowledgeOperatorRequirements() == null) {
+    } else if (BooleanUtils.toBooleanObject(form.getLicenseeAcknowledgeOperatorRequirements()) == null) {
       errors.rejectValue(
           "licenseeAcknowledgeOperatorRequirements",
           "licenseeAcknowledgeOperatorRequirements.required",
           NOMINEE_DECLARATIONS_ERROR_MESSAGE
       );
-    } else if (form.getOperatorHasCapacity() == null) {
+    } else if (BooleanUtils.toBooleanObject(form.getOperatorHasCapacity()) == null) {
       errors.rejectValue(
           "operatorHasCapacity",
           "operatorHasCapacity.required",

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
 
@@ -25,9 +26,9 @@ public class NomineeDetailFormTestingUtil {
     private String plannedStartDateDay = String.valueOf(plannedStartDate.getDayOfMonth());
     private String plannedStartDateMonth = String.valueOf(plannedStartDate.getMonthValue());
     private String plannedStartDateYear = String.valueOf(plannedStartDate.getYear());
-    private Boolean operatorHasAuthority = true;
-    private Boolean operatorHasCapacity = true;
-    private Boolean licenseeAcknowledgeOperatorRequirements = true;
+    private String operatorHasAuthority = "true";
+    private String operatorHasCapacity = "true";
+    private String licenseeAcknowledgeOperatorRequirements = "true";
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
     private List<FileUploadForm> appendixDocuments = Arrays.asList(FileUploadFormTestUtil.builder().build());
 
@@ -67,16 +68,31 @@ public class NomineeDetailFormTestingUtil {
     }
 
     public Builder withOperatorHasAuthority(Boolean operatorHasAuthority) {
+      this.operatorHasAuthority = String.valueOf(operatorHasAuthority);
+      return this;
+    }
+
+    public Builder withOperatorHasAuthority(String operatorHasAuthority) {
       this.operatorHasAuthority = operatorHasAuthority;
       return this;
     }
 
     public Builder withOperatorHasCapacity(Boolean operatorHasCapacity) {
+      this.operatorHasCapacity = String.valueOf(operatorHasCapacity);
+      return this;
+    }
+
+    public Builder withOperatorHasCapacity(String operatorHasCapacity) {
       this.operatorHasCapacity = operatorHasCapacity;
       return this;
     }
 
     public Builder withLicenseeAcknowledgeOperatorRequirements(Boolean licenseeAcknowledgeOperatorRequirements) {
+      this.licenseeAcknowledgeOperatorRequirements = String.valueOf(licenseeAcknowledgeOperatorRequirements);
+      return this;
+    }
+
+    public Builder withLicenseeAcknowledgeOperatorRequirements(String licenseeAcknowledgeOperatorRequirements) {
       this.licenseeAcknowledgeOperatorRequirements = licenseeAcknowledgeOperatorRequirements;
       return this;
     }
@@ -98,9 +114,9 @@ public class NomineeDetailFormTestingUtil {
     form.setPlannedStartDay(plannedStartDateDay);
     form.setPlannedStartMonth(plannedStartDateMonth);
     form.setPlannedStartYear(plannedStartDateYear);
-    form.setOperatorHasAuthority(operatorHasAuthority);
-    form.setOperatorHasCapacity(operatorHasCapacity);
-    form.setLicenseeAcknowledgeOperatorRequirements(licenseeAcknowledgeOperatorRequirements);
+    form.setOperatorHasAuthority(Objects.toString(operatorHasAuthority, null));
+    form.setOperatorHasCapacity(Objects.toString(operatorHasCapacity, null));
+    form.setLicenseeAcknowledgeOperatorRequirements(Objects.toString(licenseeAcknowledgeOperatorRequirements, null));
     form.setAppendixDocuments(appendixDocuments);
     return form;
     }

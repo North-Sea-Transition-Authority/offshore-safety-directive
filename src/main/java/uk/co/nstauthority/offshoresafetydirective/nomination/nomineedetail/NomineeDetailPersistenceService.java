@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +43,9 @@ class NomineeDetailPersistenceService {
         form.getNominatedOrganisationId(),
         form.getReasonForNomination(),
         createProposedStartDate(form),
-        form.getOperatorHasAuthority(),
-        form.getOperatorHasCapacity(),
-        form.getLicenseeAcknowledgeOperatorRequirements()
+        BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),
+        BooleanUtils.toBooleanObject(form.getOperatorHasCapacity()),
+        BooleanUtils.toBooleanObject(form.getLicenseeAcknowledgeOperatorRequirements())
     );
   }
 
@@ -55,9 +56,10 @@ class NomineeDetailPersistenceService {
     nomineeDetail.setNominatedOrganisationId(form.getNominatedOrganisationId());
     nomineeDetail.setReasonForNomination(form.getReasonForNomination());
     nomineeDetail.setPlannedStartDate(createProposedStartDate(form));
-    nomineeDetail.setOperatorHasAuthority(form.getOperatorHasAuthority());
-    nomineeDetail.setOperatorHasCapacity(form.getOperatorHasCapacity());
-    nomineeDetail.setLicenseeAcknowledgeOperatorRequirements(form.getLicenseeAcknowledgeOperatorRequirements());
+    nomineeDetail.setOperatorHasAuthority(BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()));
+    nomineeDetail.setOperatorHasCapacity(BooleanUtils.toBooleanObject(form.getOperatorHasCapacity()));
+    nomineeDetail.setLicenseeAcknowledgeOperatorRequirements(
+        BooleanUtils.toBooleanObject(form.getLicenseeAcknowledgeOperatorRequirements()));
     return nomineeDetail;
   }
 
