@@ -36,7 +36,11 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -45,7 +49,9 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
@@ -57,6 +63,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionValidator;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -89,6 +96,9 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
 
   @MockBean
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @MockBean
+  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @BeforeEach
   void setUp() {
@@ -231,7 +241,10 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
-        ));
+        ))
+        .andExpect(model().attribute("forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null)))
+        );
   }
 
   @ParameterizedTest
@@ -366,6 +379,10 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
+        ))
+        .andExpect(model().attribute(
+            "forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         ))
         .andExpect(model().attributeDoesNotExist("preselectedOperator"));
   }
@@ -511,7 +528,121 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             .with(user(USER))
             .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(AssetTimelineController.class).renderInstallationTimeline(assetDto.portalAssetId()))));
+        .andExpect(redirectedUrl(
+            ReverseRouter.route(on(AssetTimelineController.class).renderInstallationTimeline(assetDto.portalAssetId()))));
+  }
+
+  @Test
+  void createAppointment_whenForwardApprovedAndAppointmentSelected_whenFormErrors_thenAppointmentRepopulated() throws Exception {
+    var portalAssetId = new PortalAssetId("123");
+    var createdByAppointmentAssetId = new AssetId(UUID.randomUUID());
+    var assetIdOfNewAppointment = new AssetId(UUID.randomUUID());
+
+    var createdByAppointmentAsset = AssetTestUtil.builder()
+        .withId(createdByAppointmentAssetId.id())
+        .withPortalAssetId(portalAssetId.id())
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withAssetName("asset name")
+        .build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAsset(createdByAppointmentAsset)
+        .build();
+
+    var assetDtoOfNewAppointment = AssetDtoTestUtil.builder()
+        .withAssetId(assetIdOfNewAppointment.id())
+        .build();
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("error", "error", "error.message"));
+      return invocation;
+    }).when(appointmentCorrectionValidator).validate(any(), any(), any());
+
+    when(assetAccessService.getAsset(assetIdOfNewAppointment))
+        .thenReturn(Optional.of(assetDtoOfNewAppointment));
+
+    var forwardApprovedAppointmentId = UUID.randomUUID();
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointmentId)))
+        .thenReturn(Optional.ofNullable(createdByAppointment));
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointmentAsset.getPortalAssetId())))
+        .thenReturn(Optional.of(subareaDto));
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetIdOfNewAppointment, null, null, null)))
+            .param("forwardApprovedAppointmentId", forwardApprovedAppointmentId.toString())
+            .param("appointmentType", AppointmentType.FORWARD_APPROVED.name())
+            .with(user(USER))
+            .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "preSelectedForwardApprovedAppointment",
+            Map.of(
+                createdByAppointment.getId(),
+                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                    .formatted(subareaDto.displayName(), DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()))
+            )));
+  }
+
+  @Test
+  void createNewAppointment_whenForwardApprovedAppointmentType_andSubareaIsNotFound_thenCachedAssetName() throws Exception {
+    var portalAssetId = new PortalAssetId("123");
+    var createdByAppointmentAssetId = new AssetId(UUID.randomUUID());
+    var assetIdOfNewAppointment = new AssetId(UUID.randomUUID());
+
+    var createdByAsset = AssetTestUtil.builder()
+        .withId(createdByAppointmentAssetId.id())
+        .withPortalAssetId(portalAssetId.id())
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withAssetName("asset name")
+        .build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAsset(createdByAsset)
+        .build();
+
+    var assetDtoOfNewAppointment = AssetDtoTestUtil.builder()
+        .withAssetId(assetIdOfNewAppointment.id())
+        .build();
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("error", "error", "error.message"));
+      return invocation;
+    }).when(appointmentCorrectionValidator).validate(any(), any(), any());
+
+    when(assetAccessService.getAsset(assetIdOfNewAppointment))
+        .thenReturn(Optional.of(assetDtoOfNewAppointment));
+
+    var forwardApprovedAppointmentId = UUID.randomUUID();
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointmentId)))
+        .thenReturn(Optional.ofNullable(createdByAppointment));
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(createdByAsset.getPortalAssetId())))
+        .thenReturn(Optional.empty());
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetIdOfNewAppointment, null, null, null)))
+            .param("forwardApprovedAppointmentId", forwardApprovedAppointmentId.toString())
+        .param("appointmentType", AppointmentType.FORWARD_APPROVED.name())
+        .with(user(USER))
+        .with(csrf()))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "preSelectedForwardApprovedAppointment",
+            Map.of(
+                createdByAppointment.getId(),
+                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                    .formatted(createdByAsset.getAssetName(), DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()))
+            )));
   }
 
   private static Stream<Arguments> portalAssetTypeAndEndpointArguments() {

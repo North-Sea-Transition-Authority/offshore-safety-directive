@@ -43,7 +43,7 @@ class LicenceBlockSubareaQueryServiceTest {
   }
 
   @Test
-  void searchSubareasByName_whenNoResults_thenEmptyList() {
+  void searchExtantSubareasByName_whenNoResults_thenEmptyList() {
 
     var searchTerm = "not a matching search term";
 
@@ -55,13 +55,13 @@ class LicenceBlockSubareaQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm);
+    var resultingSubareas = licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm);
 
     assertThat(resultingSubareas).isEmpty();
   }
 
   @Test
-  void searchSubareasByName_whenResults_thenResultsMappedCorrectly() {
+  void searchExtantSubareasByName_whenResults_thenResultsMappedCorrectly() {
 
     var searchTerm = "matching search term";
 
@@ -77,13 +77,13 @@ class LicenceBlockSubareaQueryServiceTest {
     ))
         .willReturn(List.of(expectedSubarea));
 
-    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm);
+    var resultingSubareas = licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm);
 
     assertResultingLicenceBlockSubareaProperties(resultingSubareas, expectedSubarea);
   }
 
   @Test
-  void searchSubareasByName_whenResultIncludingOnshoreSubareas_thenResultOnlyContainsOffshoreSubareas() {
+  void searchExtantSubareasByName_whenResultIncludingOnshoreSubareas_thenResultOnlyContainsOffshoreSubareas() {
 
     var searchTerm = "matching search term";
 
@@ -105,7 +105,83 @@ class LicenceBlockSubareaQueryServiceTest {
     ))
         .willReturn(List.of(offshoreSubarea, onshoreSubarea));
 
-    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm);
+    var resultingSubareas = licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm);
+
+    assertThat(resultingSubareas)
+        .extracting(subareaDto -> subareaDto.subareaId().id())
+        .containsExactly(offshoreSubarea.getId());
+  }
+
+  @Test
+  void searchSubareasByName_whenNoResults_thenEmptyList() {
+
+    var searchTerm = "not a matching search term";
+    var statuses = List.of(SubareaStatus.EXTANT);
+
+    given(subareaApi.searchSubareasByNameAndStatuses(
+        eq(searchTerm),
+        eq(statuses),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(Collections.emptyList());
+
+    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm, statuses);
+
+    assertThat(resultingSubareas).isEmpty();
+  }
+
+  @Test
+  void searchSubareasByName_whenResults_thenResultsMappedCorrectly() {
+
+    var searchTerm = "matching search term";
+    var statuses = List.of(SubareaStatus.EXTANT);
+
+    var expectedSubarea = EpaSubareaTestUtil.builder()
+        .withShoreLocation(SubareaShoreLocation.OFFSHORE)
+        .build();
+
+    given(subareaApi.searchSubareasByNameAndStatuses(
+        eq(searchTerm),
+        eq(statuses),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedSubarea));
+
+    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm, statuses);
+
+    assertResultingLicenceBlockSubareaProperties(resultingSubareas, expectedSubarea);
+  }
+
+  @Test
+  void searchSubareasByName_whenResultIncludingOnshoreSubareas_thenResultOnlyContainsOffshoreSubareas() {
+
+    var searchTerm = "matching search term";
+    var statuses = List.of(SubareaStatus.EXTANT);
+
+    var offshoreSubarea = EpaSubareaTestUtil.builder()
+        .withShoreLocation(SubareaShoreLocation.OFFSHORE)
+        .withSubareaId("offshore")
+        .build();
+
+    var onshoreSubarea = EpaSubareaTestUtil.builder()
+        .withShoreLocation(SubareaShoreLocation.ONSHORE)
+        .withSubareaId("onshore")
+        .build();
+
+    given(subareaApi.searchSubareasByNameAndStatuses(
+        eq(searchTerm),
+        eq(statuses),
+        eq(LicenceBlockSubareaQueryService.SUBAREAS_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(offshoreSubarea, onshoreSubarea));
+
+    var resultingSubareas = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm, statuses);
 
     assertThat(resultingSubareas)
         .extracting(subareaDto -> subareaDto.subareaId().id())

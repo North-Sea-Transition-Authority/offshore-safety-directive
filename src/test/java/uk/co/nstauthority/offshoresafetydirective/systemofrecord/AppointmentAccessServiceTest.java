@@ -155,6 +155,7 @@ class AppointmentAccessServiceTest {
         .hasFieldOrPropertyWithValue("nominationId", new NominationId(nominationId))
         .hasFieldOrPropertyWithValue("assetDto", AssetDto.fromAsset(asset))
         .hasFieldOrPropertyWithValue("appointmentStatus", appointmentStatus)
+        .hasFieldOrPropertyWithValue("createdByAppointmentId", appointmentId)
         .hasAssertedAllProperties();
   }
 
@@ -222,5 +223,62 @@ class AppointmentAccessServiceTest {
                 expectedAppointments.getResponsibleToDate()
             )
         );
+  }
+
+  @Test
+  void getAppointmentsForAsset_whenNoAppointmentFound_thenReturnEmptyList() {
+    var portalAssetIds = List.of("portal-asset-id");
+    var statuses = EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED);
+
+    when(appointmentRepository.findAppointmentsByAppointmentStatusInAndAsset_PortalAssetIdInAndAsset_PortalAssetType(
+        statuses,
+        portalAssetIds,
+        PortalAssetType.SUBAREA)
+    )
+        .thenReturn(List.of());
+
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAssets(
+        statuses,
+        portalAssetIds,
+        PortalAssetType.SUBAREA
+    );
+
+    assertThat(resultingAppointments).isEmpty();
+  }
+
+  @Test
+  void getAppointmentsForAsset_whenAppointmentFound_thenReturnList() {
+    var portalAssetIds = List.of("portal-asset-id");
+    var statuses = EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED);
+
+    var expectedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+
+    when(appointmentRepository.findAppointmentsByAppointmentStatusInAndAsset_PortalAssetIdInAndAsset_PortalAssetType(
+        statuses,
+        portalAssetIds,
+        PortalAssetType.SUBAREA)
+    )
+        .thenReturn(List.of(expectedAppointment));
+
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAssets(
+        statuses,
+        portalAssetIds,
+        PortalAssetType.SUBAREA
+    );
+
+    assertThat(resultingAppointments)
+        .extracting(
+            Appointment::getId,
+            Appointment::getAsset,
+            Appointment::getAppointmentStatus
+        )
+        .contains(
+            tuple(
+                expectedAppointment.getId(),
+                expectedAppointment.getAsset(),
+                expectedAppointment.getAppointmentStatus()
+            ));
   }
 }

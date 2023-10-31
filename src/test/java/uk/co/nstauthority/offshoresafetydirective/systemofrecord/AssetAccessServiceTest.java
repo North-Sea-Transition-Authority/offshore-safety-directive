@@ -1,12 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -80,7 +84,8 @@ class AssetAccessServiceTest {
         .withPortalAssetType(portalAssetType)
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+    when(
+        assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var resultingIsAssetExtant = assetAccessService.isAssetExtant(portalAssetId, portalAssetType);
@@ -100,7 +105,8 @@ class AssetAccessServiceTest {
         .withPortalAssetType(portalAssetType)
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+    when(
+        assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var resultingIsAssetExtant = assetAccessService.isAssetExtant(portalAssetId, portalAssetType);
@@ -113,9 +119,54 @@ class AssetAccessServiceTest {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.WELLBORE;
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+    when(
+        assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(portalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .thenReturn(Optional.empty());
 
     assertFalse(() -> assetAccessService.isAssetExtant(portalAssetId, portalAssetType));
+  }
+
+  @Test
+  void getAsset_whenNotFound_thenReturnEmptyList() {
+    var portalAssetType = PortalAssetType.SUBAREA;
+    var portalAssetIds = List.of(UUID.randomUUID().toString());
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(portalAssetIds, portalAssetType))
+        .thenReturn(List.of());
+
+    var resultingAssets = assetAccessService.getAsset(portalAssetIds, portalAssetType);
+    assertThat(resultingAssets).isEmpty();
+  }
+
+  @Test
+  void getAsset_whenFound_thenReturnList() {
+    var portalAssetId = UUID.randomUUID().toString();
+    var portalAssetIds = List.of(portalAssetId);
+    var portalAssetType = PortalAssetType.WELLBORE;
+
+    var expectedAsset = AssetTestUtil.builder()
+        .withPortalAssetId(portalAssetId)
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    given(assetRepository.findByPortalAssetIdInAndPortalAssetType(portalAssetIds, portalAssetType))
+        .willReturn(List.of(expectedAsset));
+
+    var resultingAsset = assetAccessService.getAsset(portalAssetIds, portalAssetType);
+
+    assertThat(resultingAsset)
+        .extracting(
+            Asset::getId,
+            Asset::getAssetName,
+            Asset::getPortalAssetId,
+            Asset::getPortalAssetType
+        )
+        .contains(
+            tuple(
+                expectedAsset.getId(),
+                expectedAsset.getAssetName(),
+                expectedAsset.getPortalAssetId(),
+                expectedAsset.getPortalAssetType()
+            )
+        );
   }
 }

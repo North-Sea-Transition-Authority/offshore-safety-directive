@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -40,5 +41,16 @@ public class AppointmentAccessService {
 
   public List<Appointment> getActiveAppointmentsForAsset(AssetId assetId) {
     return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(assetId.id(), ACTIVE_STATUSES);
+  }
+
+  public List<Appointment> getAppointmentsForAssets(
+      Collection<AppointmentStatus> statuses,
+      List<String> portalAssetIds,
+      PortalAssetType portalAssetType) {
+    return appointmentRepository.findAppointmentsByAppointmentStatusInAndAsset_PortalAssetIdInAndAsset_PortalAssetType(
+        statuses,
+        portalAssetIds,
+        portalAssetType
+    );
   }
 }

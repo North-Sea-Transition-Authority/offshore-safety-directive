@@ -29,7 +29,7 @@ public class LicenceBlockSubareaRestController {
 
     Set<LicenceBlockSubareaDto> matchedSubareas = new HashSet<>();
 
-    var matchedSubareasByName = licenceBlockSubareaQueryService.searchSubareasByName(searchTerm);
+    var matchedSubareasByName = licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm);
 
     if (matchedSubareasByName != null && !matchedSubareasByName.isEmpty()) {
       matchedSubareas.addAll(matchedSubareasByName);

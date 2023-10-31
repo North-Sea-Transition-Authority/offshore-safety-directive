@@ -242,6 +242,82 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
+  void applyCorrectionToAppointment_whenForwardApprovedAppointments() {
+    var nominationId = UUID.randomUUID();
+    var createdByAppointmentId = UUID.randomUUID();
+
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId("portal/asset/id")
+        .build();
+
+    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+        .thenReturn(Optional.of(asset));
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withAsset(asset)
+        .withAppointedPortalOperatorId(456)
+        .withResponsibleFromDate(LocalDate.now().minusDays(1))
+        .withResponsibleToDate(LocalDate.now().plusDays(2))
+        .withCreatedDatetime(Instant.now())
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference("legacy/ref")
+        .withCreatedByNominationId(nominationId)
+        .withCreatedByAppointmentId(createdByAppointmentId)
+        .build();
+
+    var newAppointmentType = AppointmentType.FORWARD_APPROVED;
+    var forwardApprovedAppointmentId = UUID.randomUUID().toString();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(123)
+        .withAppointmentType(newAppointmentType)
+        .withForwardApprovedAppointmentId(forwardApprovedAppointmentId)
+        .withHasEndDate(true)
+        .build();
+
+    assertThat(newAppointmentType).isNotEqualTo(originalAppointment.getAppointmentType());
+
+    var phaseNames = Set.of("phase 1", "phase 2");
+    form.setPhases(phaseNames);
+    var assetAppointmentPhases = phaseNames.stream()
+        .map(AssetAppointmentPhase::new)
+        .toList();
+
+    when(assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, originalAppointment))
+        .thenReturn(assetAppointmentPhases);
+
+    var startDate = LocalDate.now().minusDays(1);
+    var endDate = LocalDate.now();
+    form.getForwardApprovedAppointmentStartDate().setDate(startDate);
+    form.getEndDate().setDate(endDate);
+    form.setForwardApprovedAppointmentId(createdByAppointmentId.toString());
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.applyCorrectionToAppointment(form, AssetDto.fromAsset(asset), originalAppointment);
+
+    var appointmentArgumentCaptor = ArgumentCaptor.forClass(Appointment.class);
+    verify(appointmentRepository).save(appointmentArgumentCaptor.capture());
+
+    PropertyObjectAssert.thenAssertThat(appointmentArgumentCaptor.getValue())
+        .hasFieldOrPropertyWithValue("id", originalAppointment.getId())
+        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", form.getAppointedOperatorId())
+        .hasFieldOrPropertyWithValue("responsibleFromDate", startDate)
+        .hasFieldOrPropertyWithValue("responsibleToDate", endDate)
+        .hasFieldOrPropertyWithValue("createdDatetime", originalAppointment.getCreatedDatetime())
+        .hasFieldOrPropertyWithValue("appointmentType", newAppointmentType)
+        .hasFieldOrPropertyWithValue("asset", originalAppointment.getAsset())
+        .hasFieldOrPropertyWithValue("createdByNominationId", null)
+        .hasFieldOrPropertyWithValue("createdByLegacyNominationReference", null)
+        .hasFieldOrPropertyWithValue("appointmentStatus", originalAppointment.getAppointmentStatus())
+        .hasFieldOrPropertyWithValue("createdByAppointmentId", createdByAppointmentId)
+        .hasAssertedAllProperties();
+
+    verify(assetPhasePersistenceService).updateAssetPhases(AppointmentDto.fromAppointment(originalAppointment), assetAppointmentPhases);
+  }
+
+  @Test
   void applyCorrectionToAppointment_whenDeemedNomination() {
     var nominationId = UUID.randomUUID();
 
@@ -348,7 +424,7 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void applyCorrectionToAppointment_whenOnlineNomination_startDate() {
+  void applyCorrectionToAppointment_whenOnlineNomination_assertStartDateIsSaved() {
     var asset = AssetTestUtil.builder().build();
     when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
         .thenReturn(Optional.of(asset));
@@ -387,7 +463,46 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void applyCorrectionToAppointment_whenOfflineNomination_startDate() {
+  void applyCorrectionToAppointment_whenForwardApprovedAppointment_assertStartDateIsSaved() {
+    var asset = AssetTestUtil.builder().build();
+    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+        .thenReturn(Optional.of(asset));
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withResponsibleFromDate(LocalDate.now().minusDays(20))
+        .withResponsibleToDate(LocalDate.now().plusDays(10))
+        .build();
+
+    var form = new AppointmentCorrectionForm();
+    form.setAppointedOperatorId(123);
+    form.setForAllPhases("true");
+
+    var newAppointmentType = AppointmentType.FORWARD_APPROVED;
+    form.setAppointmentType(newAppointmentType.name());
+
+    var startDate = LocalDate.now().minusDays(2);
+    form.getForwardApprovedAppointmentStartDate().setDate(startDate);
+    var endDate = LocalDate.now();
+    form.setHasEndDate("true");
+    form.getEndDate().setDate(endDate);
+
+    form.setForwardApprovedAppointmentId(UUID.randomUUID().toString());
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
+
+    appointmentCorrectionService.applyCorrectionToAppointment(form, AssetDto.fromAsset(asset), originalAppointment);
+
+    var appointmentArgumentCaptor = ArgumentCaptor.forClass(Appointment.class);
+    verify(appointmentRepository).save(appointmentArgumentCaptor.capture());
+
+    assertThat(appointmentArgumentCaptor.getValue())
+        .extracting(Appointment::getResponsibleFromDate)
+        .isEqualTo(startDate);
+  }
+
+  @Test
+  void applyCorrectionToAppointment_whenOfflineNomination_assertStartDateIsSaved() {
     var asset = AssetTestUtil.builder().build();
     when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
         .thenReturn(Optional.of(asset));
@@ -808,9 +923,36 @@ class AppointmentCorrectionServiceTest {
     assertThat(resultingForm)
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate()
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.of(startDate),
+            Optional.empty()
+        );
+  }
+
+  @Test
+  void getForm_assertMappings_startDate_whenForwardApprovedAppointment() {
+    var appointmentType = AppointmentType.FORWARD_APPROVED;
+    var startDate = LocalDate.now();
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withResponsibleFromDate(startDate)
+        .build();
+
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
+
+    assertThat(resultingForm)
+        .extracting(
+            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+        )
+        .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.of(startDate)
         );
@@ -829,9 +971,12 @@ class AppointmentCorrectionServiceTest {
     assertThat(resultingForm)
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate()
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+
         )
         .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty()
         );
@@ -896,6 +1041,30 @@ class AppointmentCorrectionServiceTest {
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.empty()
+        );
+  }
+
+  @Test
+  void getForm_assertMappings_whenForwardApprovedAppointment_andNoAppointmentFromDate() {
+    var appointmentType = AppointmentType.FORWARD_APPROVED;
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withResponsibleFromDate(null)
+        .build();
+
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
+
+    assertThat(resultingForm)
+        .extracting(
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+        )
+        .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty()
         );

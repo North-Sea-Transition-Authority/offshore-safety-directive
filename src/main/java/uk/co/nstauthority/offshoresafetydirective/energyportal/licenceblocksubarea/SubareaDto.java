@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
-abstract class SubareaDto {
+public abstract class SubareaDto {
 
   private final LicenceBlockSubareaId licenceBlockSubareaId;
 

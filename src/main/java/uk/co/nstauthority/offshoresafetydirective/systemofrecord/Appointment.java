@@ -69,7 +69,7 @@ public class Appointment {
     this.asset = asset;
   }
 
-  Integer getAppointedPortalOperatorId() {
+  public Integer getAppointedPortalOperatorId() {
     return appointedPortalOperatorId;
   }
 
@@ -117,7 +117,7 @@ public class Appointment {
     this.createdByLegacyNominationReference = createdByLegacyNominationReference;
   }
 
-  UUID getCreatedByAppointmentId() {
+  public UUID getCreatedByAppointmentId() {
     return createdByAppointmentId;
   }
 

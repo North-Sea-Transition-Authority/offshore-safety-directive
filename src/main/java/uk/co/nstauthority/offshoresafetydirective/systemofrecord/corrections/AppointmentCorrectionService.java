@@ -89,6 +89,17 @@ public class AppointmentCorrectionService {
     var appointmentFromDate = Optional.ofNullable(appointmentDto.appointmentFromDate())
         .map(AppointmentFromDate::value);
 
+    if (AppointmentType.FORWARD_APPROVED.equals(appointmentDto.appointmentType()) && appointmentFromDate.isPresent()) {
+      form.getForwardApprovedAppointmentStartDate().setDate(appointmentFromDate.get());
+
+      var forwardApprovedAppointmentId = Optional.ofNullable(appointmentDto.createdByAppointmentId())
+          .map(AppointmentId::id)
+          .map(String::valueOf)
+          .orElse(null);
+
+      form.setForwardApprovedAppointmentId(forwardApprovedAppointmentId);
+    }
+
     if (AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
 
@@ -147,6 +158,10 @@ public class AppointmentCorrectionService {
         .map(UUID::fromString)
         .orElse(null);
 
+    var createdByAppointment = Optional.ofNullable(form.getForwardApprovedAppointmentId())
+        .map(UUID::fromString)
+        .orElse(null);
+
     var portalAssetId = Optional.ofNullable(assetDto.portalAssetId())
         .map(PortalAssetId::id)
         .orElseThrow(() -> new IllegalStateException("No PortalAssetID found for AssetDto with assetId [%s]"
@@ -195,12 +210,10 @@ public class AppointmentCorrectionService {
       case FORWARD_APPROVED -> {
         appointment.setCreatedByLegacyNominationReference(null);
         appointment.setCreatedByNominationId(null);
-        // TODO OSDOP-617
-        // appointment.setCreatedByAppointmentId();
+        appointment.setCreatedByAppointmentId(createdByAppointment);
       }
     }
 
-    appointment.setCreatedByAppointmentId(null);
     appointment.setCreatedDatetime(clock.instant());
     appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
 

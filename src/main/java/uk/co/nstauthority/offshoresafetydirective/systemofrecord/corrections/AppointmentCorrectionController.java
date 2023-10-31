@@ -23,6 +23,10 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -60,6 +64,7 @@ public class AppointmentCorrectionController {
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
+  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   public AppointmentCorrectionController(AppointmentAccessService appointmentAccessService,
@@ -68,7 +73,8 @@ public class AppointmentCorrectionController {
                                          AppointmentCorrectionService appointmentCorrectionService,
                                          AppointmentCorrectionValidator appointmentCorrectionValidator,
                                          ControllerHelperService controllerHelperService,
-                                         NominationDetailService nominationDetailService) {
+                                         NominationDetailService nominationDetailService,
+                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.appointmentAccessService = appointmentAccessService;
     this.portalAssetNameService = portalAssetNameService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
@@ -76,6 +82,7 @@ public class AppointmentCorrectionController {
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
     this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
+    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   @GetMapping
@@ -138,15 +145,12 @@ public class AppointmentCorrectionController {
 
   String getTimelineRoute(AppointmentDto appointmentDto) {
     return switch (appointmentDto.assetDto().portalAssetType()) {
-      case WELLBORE ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
-      case INSTALLATION ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
-      case SUBAREA ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
+      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
     };
   }
 
@@ -179,6 +183,10 @@ public class AppointmentCorrectionController {
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         )
+        .addObject(
+            "forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
+        )
         .addObject("showCorrectionHistory", true);
 
     if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
@@ -190,6 +198,26 @@ public class AppointmentCorrectionController {
         modelAndView.addObject("preselectedNominationReference", Map.of(
             nomination.getId(),
             nomination.getReference()
+        ));
+      });
+    }
+
+    if (AppointmentType.FORWARD_APPROVED.name().equals(form.getAppointmentType())
+        && form.getForwardApprovedAppointmentId() != null) {
+      appointmentAccessService.getAppointment(
+          new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))
+
+      ).ifPresent(preSelectedAppointment -> {
+        var startDate = DateUtil.formatLongDate(preSelectedAppointment.getResponsibleFromDate());
+
+        var subareaName = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+                new LicenceBlockSubareaId(preSelectedAppointment.getAsset().getPortalAssetId())
+            ).map(LicenceBlockSubareaDto::displayName)
+            .orElse(assetDto.assetName().value());
+
+        modelAndView.addObject("preSelectedForwardApprovedAppointment", Map.of(
+            preSelectedAppointment.getId(),
+            ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(subareaName, startDate)
         ));
       });
     }

@@ -64,7 +64,7 @@ public class LicenceBlockSubareaQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName) {
+  List<LicenceBlockSubareaDto> searchExtantSubareasByName(String subareaName) {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       var energyPortalSubareas = subareaApi.searchExtantSubareasByName(
@@ -73,6 +73,24 @@ public class LicenceBlockSubareaQueryService {
           requestPurpose,
           logCorrelationId
       )
+          .stream()
+          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
+          .toList();
+
+      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
+    }));
+  }
+
+  public List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName, List<SubareaStatus> subareaStatuses) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+
+      var energyPortalSubareas = subareaApi.searchSubareasByNameAndStatuses(
+              subareaName,
+              subareaStatuses,
+              SUBAREAS_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
           .stream()
           .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
           .toList();

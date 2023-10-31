@@ -45,7 +45,7 @@ public class Asset {
   protected Asset() {
   }
 
-  UUID getId() {
+  public UUID getId() {
     return id;
   }
 

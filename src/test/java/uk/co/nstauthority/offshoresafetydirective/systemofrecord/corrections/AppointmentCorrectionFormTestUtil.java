@@ -32,6 +32,7 @@ public class AppointmentCorrectionFormTestUtil {
     private LocalDate offlineStartDate = LocalDate.now();
     private LocalDate onlineStartDate = LocalDate.now();
     private LocalDate forwardApprovedAppointmentStartDate = LocalDate.now();
+    private String forwardApprovedAppointmentId = null;
     private LocalDate endDate = null;
     private String correctionReason = "reason for correction";
 
@@ -109,6 +110,11 @@ public class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
+    public Builder withForwardApprovedAppointmentId(String forwardApprovedAppointmentId) {
+      this.forwardApprovedAppointmentId = forwardApprovedAppointmentId;
+      return this;
+    }
+
     public Builder withStartDate(LocalDate localDate) {
       this.onlineStartDate = localDate;
       this.offlineStartDate = localDate;
@@ -173,6 +179,7 @@ public class AppointmentCorrectionFormTestUtil {
 
       form.getOfflineNominationReference().setInputValue(offlineNominationReference);
       form.setOnlineNominationReference(onlineNominationReference);
+      form.setForwardApprovedAppointmentId(forwardApprovedAppointmentId);
 
       return form;
     }

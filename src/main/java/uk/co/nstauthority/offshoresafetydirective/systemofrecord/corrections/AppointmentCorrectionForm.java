@@ -11,9 +11,10 @@ public class AppointmentCorrectionForm {
   private Set<String> phases;
   private String appointmentType;
   private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
+  private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
   private ThreeFieldDateInput forwardApprovedAppointmentStartDate =
       new ThreeFieldDateInput("forwardApprovedAppointmentStartDate", "Start date");
-  private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
+  private String forwardApprovedAppointmentId;
   private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
   private String onlineNominationReference;
   private String hasEndDate;
@@ -60,6 +61,14 @@ public class AppointmentCorrectionForm {
   public void setForwardApprovedAppointmentStartDate(
       ThreeFieldDateInput forwardApprovedAppointmentStartDate) {
     this.forwardApprovedAppointmentStartDate = forwardApprovedAppointmentStartDate;
+  }
+
+  public String getForwardApprovedAppointmentId() {
+    return forwardApprovedAppointmentId;
+  }
+
+  public void setForwardApprovedAppointmentId(String forwardApprovedAppointmentId) {
+    this.forwardApprovedAppointmentId = forwardApprovedAppointmentId;
   }
 
   public ThreeFieldDateInput getOfflineAppointmentStartDate() {

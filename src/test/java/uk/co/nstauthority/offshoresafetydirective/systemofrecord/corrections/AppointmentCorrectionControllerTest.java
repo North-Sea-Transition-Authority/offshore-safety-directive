@@ -34,6 +34,10 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -81,6 +85,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
+
+  @MockBean
+  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @SecurityTest
   void smokeTestPermissions() {
@@ -413,6 +420,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
+        .andExpect(model().attribute(
+            "forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
+        ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
         .andExpect(model().attributeDoesNotExist("phaseSelectionHint"));
   }
@@ -492,6 +503,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
+        ))
+        .andExpect(model().attribute(
+            "forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
         .andExpect(model().attribute("cancelUrl", getExpectedRedirect(appointmentDto, portalAssetType)))
@@ -621,6 +636,145 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "preselectedNominationReference",
             Map.of(nominationDetail.getNomination().getId(), nominationDetail.getNomination().getReference())
         ));
+  }
+
+  @Test
+  void renderCorrection_whenForwardApprovedAppointmentType_andNoForwardApprovedAppointment_thenNoPreselectedForwardApproved()
+      throws Exception {
+    var appointmentType = AppointmentType.FORWARD_APPROVED;
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
+        .build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var form = AppointmentCorrectionFormTestUtil.builder().build();
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(form);
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attributeDoesNotExist("preSelectedForwardApprovedAppointment"));
+  }
+
+
+  @Test
+  void renderCorrection_whenForwardApprovedAppointmentType_andSubareaIsNotFound_thenCachedAssetName()
+      throws Exception {
+    var appointmentType = AppointmentType.FORWARD_APPROVED;
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
+        .build();
+
+    var forwardApprovedAppointmentId = UUID.randomUUID().toString();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForwardApprovedAppointmentId(forwardApprovedAppointmentId)
+        .build();
+
+    when(appointmentAccessService.getAppointment(
+        new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()
+    )))
+        .thenReturn(Optional.empty());
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(form);
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "preSelectedForwardApprovedAppointment",
+            Map.of(
+                appointment.getId(),
+                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                    .formatted(appointment.getAsset().getAssetName(), DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
+            )));
+  }
+
+  @Test
+  void renderCorrection_whenForwardApprovedAppointmentType_andValidReference_thenHasPreselectedForwardApproval() throws Exception {
+    var appointmentType = AppointmentType.FORWARD_APPROVED;
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withId(appointmentId.id())
+        .build();
+
+    var forwardApprovedAppointmentId = UUID.randomUUID().toString();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForwardApprovedAppointmentId(forwardApprovedAppointmentId)
+        .build();
+
+    when(appointmentAccessService.getAppointment(
+        new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var subarea = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()
+        )))
+        .thenReturn(Optional.of(subarea));
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(form);
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(get(
+            ReverseRouter.route(
+                on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
+            .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute(
+            "preSelectedForwardApprovedAppointment",
+            Map.of(
+                appointment.getId(),
+                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                    .formatted(subarea.displayName(), DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
+        )));
   }
 
   @SecurityTest

@@ -21,6 +21,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -31,6 +35,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
@@ -45,6 +51,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionValidationHint;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionValidator;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -62,6 +69,8 @@ public class NewAppointmentController {
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final NominationDetailService nominationDetailService;
   private final AssetAccessService assetAccessService;
+  private final AppointmentAccessService appointmentAccessService;
+  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   public NewAppointmentController(PortalAssetRetrievalService portalAssetRetrievalService,
@@ -72,7 +81,8 @@ public class NewAppointmentController {
                                   AppointmentCorrectionValidator appointmentCorrectionValidator,
                                   PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                   NominationDetailService nominationDetailService,
-                                  AssetAccessService assetAccessService) {
+                                  AssetAccessService assetAccessService, AppointmentAccessService appointmentAccessService,
+                                  LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.portalAssetRetrievalService = portalAssetRetrievalService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentService = appointmentService;
@@ -82,6 +92,8 @@ public class NewAppointmentController {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.nominationDetailService = nominationDetailService;
     this.assetAccessService = assetAccessService;
+    this.appointmentAccessService = appointmentAccessService;
+    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   @GetMapping("/asset/{assetId}/appointment/add")
@@ -202,6 +214,10 @@ public class NewAppointmentController {
         .addObject(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
+        )
+        .addObject(
+            "forwardApprovedAppointmentRestUrl",
+            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         );
 
     if (form.getAppointedOperatorId() != null) {
@@ -217,6 +233,26 @@ public class NewAppointmentController {
         modelAndView.addObject("preselectedNominationReference", Map.of(
             nomination.getId(),
             nomination.getReference()
+        ));
+      });
+    }
+
+    if (AppointmentType.FORWARD_APPROVED.name().equals(form.getAppointmentType())
+        && form.getForwardApprovedAppointmentId() != null) {
+      appointmentAccessService.getAppointment(
+          new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))
+
+      ).ifPresent(preSelectedAppointment -> {
+        var startDate = DateUtil.formatLongDate(preSelectedAppointment.getResponsibleFromDate());
+
+        var subareaName = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+                new LicenceBlockSubareaId(preSelectedAppointment.getAsset().getPortalAssetId())
+            ).map(LicenceBlockSubareaDto::displayName)
+            .orElse(preSelectedAppointment.getAsset().getAssetName());
+
+        modelAndView.addObject("preSelectedForwardApprovedAppointment", Map.of(
+            preSelectedAppointment.getId(),
+            ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(subareaName, startDate)
         ));
       });
     }

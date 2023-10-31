@@ -42,6 +42,8 @@ public class AppointmentDtoTestUtil {
 
     private AppointmentStatus appointmentStatus = AppointmentStatus.EXTANT;
 
+    private AppointmentId createdByAppointmentId = new AppointmentId(UUID.randomUUID());
+
     public Builder withAppointmentId(UUID appointmentId) {
       this.appointmentId = new AppointmentId(appointmentId);
       return this;
@@ -100,6 +102,12 @@ public class AppointmentDtoTestUtil {
       return this;
     }
 
+    Builder withCreatedByAppointmentId(AppointmentId createdByAppointmentId) {
+      this.createdByAppointmentId = createdByAppointmentId;
+      return this;
+    }
+
+
     public AppointmentDto build() {
       return new AppointmentDto(
           appointmentId,
@@ -111,7 +119,8 @@ public class AppointmentDtoTestUtil {
           legacyNominationReference,
           nominationId,
           assetDto,
-          appointmentStatus
+          appointmentStatus,
+          createdByAppointmentId
       );
     }
   }

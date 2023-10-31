@@ -13,7 +13,8 @@ public record AppointmentDto(
     String legacyNominationReference,
     NominationId nominationId,
     AssetDto assetDto,
-    AppointmentStatus appointmentStatus
+    AppointmentStatus appointmentStatus,
+    AppointmentId createdByAppointmentId
 ) {
 
   public static AppointmentDto fromAppointment(Appointment appointment) {
@@ -29,7 +30,8 @@ public record AppointmentDto(
             ? new NominationId(appointment.getCreatedByNominationId())
             : null,
         AssetDto.fromAsset(appointment.getAsset()),
-        appointment.getAppointmentStatus()
+        appointment.getAppointmentStatus(),
+        new AppointmentId(appointment.getCreatedByAppointmentId())
     );
   }
 
@@ -79,6 +81,7 @@ public record AppointmentDto(
     private String legacyNominationReference;
     private NominationId nominationId;
     private AppointmentStatus appointmentStatus;
+    private AppointmentId createdByAppointmentId;
 
     public Builder withLegacyNominationReference(String legacyNominationReference) {
       this.legacyNominationReference = legacyNominationReference;
@@ -87,6 +90,11 @@ public record AppointmentDto(
 
     public Builder withNominationId(NominationId nominationId) {
       this.nominationId = nominationId;
+      return this;
+    }
+
+    public Builder withCreatedByAppointmentId(AppointmentId appointmentId) {
+      this.createdByAppointmentId = appointmentId;
       return this;
     }
 
@@ -101,7 +109,8 @@ public record AppointmentDto(
           legacyNominationReference,
           nominationId,
           assetDto,
-          appointmentStatus
+          appointmentStatus,
+          createdByAppointmentId
       );
     }
   }

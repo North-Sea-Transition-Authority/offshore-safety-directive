@@ -51,6 +51,14 @@
                           The start date will automatically be set to the 19 July 2015
                         </@fdsInsetText.insetText>
                     <#elseif appointmentTypeName == "FORWARD_APPROVED">
+                        <@fdsSearchSelector.searchSelectorRest
+                            path="form.forwardApprovedAppointmentId"
+                            restUrl=springUrl(forwardApprovedAppointmentRestUrl)
+                            labelText="What is the name of the forward approval subarea?"
+                            hintText="The appointment start date will be shown to help select the correct appointment"
+                            preselectedItems=preSelectedForwardApprovedAppointment!{}
+                            optionalLabel=true
+                        />
                         <@fdsDateInput.dateInput
                             dayPath="form.forwardApprovedAppointmentStartDate.dayInput.inputValue"
                             monthPath="form.forwardApprovedAppointmentStartDate.monthInput.inputValue"

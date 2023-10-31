@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,5 +34,9 @@ public class AssetAccessService {
         )
         .map(asset -> AssetStatus.EXTANT.equals(asset.getStatus()))
         .orElse(false);
+  }
+
+  public List<Asset> getAsset(Collection<String> portalAssetIds, PortalAssetType portalAssetType) {
+    return assetRepository.findByPortalAssetIdInAndPortalAssetType(portalAssetIds, portalAssetType);
   }
 }

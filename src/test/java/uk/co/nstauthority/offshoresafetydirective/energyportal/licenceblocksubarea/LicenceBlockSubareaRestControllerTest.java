@@ -56,7 +56,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
 
     var searchTerm = "no matching subareas";
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(resultingSubareas);
 
     given(licenceBlockSubareaQueryService.searchSubareasByLicenceReference(searchTerm))
@@ -85,7 +85,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
 
     var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(List.of(expectedSubarea));
 
     var response = mockMvc.perform(get(
@@ -181,7 +181,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
     given(licenceBlockSubareaQueryService.searchSubareasByBlockReference(searchTerm))
         .willReturn(List.of(expectedSubarea));
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(List.of(expectedSubarea));
 
     var response = mockMvc.perform(get(
@@ -239,7 +239,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         firstSubareaByLicence
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -322,7 +322,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         fourthSubareaByBlock
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -391,7 +391,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         firstSubareaByName
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
