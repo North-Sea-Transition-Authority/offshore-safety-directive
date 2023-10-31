@@ -94,7 +94,7 @@ public class AppointmentCorrectionValidator implements SmartValidator {
         .isOptional()
         .validate(form.getOfflineNominationReference(), bindingResult);
 
-    var optionalAppointmentType = getAppointmentType(form);
+    var optionalAppointmentType = getAppointmentType(form, hint.portalAssetType());
     optionalAppointmentType.ifPresentOrElse(
         appointmentType -> {
           var appointments = appointmentAccessService.getActiveAppointmentDtosForAsset(
@@ -143,8 +143,10 @@ public class AppointmentCorrectionValidator implements SmartValidator {
     }
   }
 
-  private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form) {
-    if (form.getAppointmentType() == null || !EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())) {
+  private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form, PortalAssetType portalAssetType) {
+    if (form.getAppointmentType() == null
+        || !EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())
+        || (!AppointmentType.isValidForAssetType(portalAssetType, AppointmentType.valueOf(form.getAppointmentType())))) {
       return Optional.empty();
     }
     var appointmentType = EnumUtils.getEnum(AppointmentType.class, form.getAppointmentType());

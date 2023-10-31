@@ -149,9 +149,8 @@ public class AppointmentCorrectionService {
 
     var portalAssetId = Optional.ofNullable(assetDto.portalAssetId())
         .map(PortalAssetId::id)
-        .orElseThrow(
-            () -> new IllegalStateException("No PortalAssetID found for AssetDto with assetId [%s]"
-                .formatted(assetDto.assetId())));
+        .orElseThrow(() -> new IllegalStateException("No PortalAssetID found for AssetDto with assetId [%s]"
+            .formatted(assetDto.assetId())));
 
     var asset = assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, assetDto.portalAssetType())
         .orElseThrow(() -> new IllegalStateException(

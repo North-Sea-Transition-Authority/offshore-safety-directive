@@ -21,6 +21,8 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDate;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,7 +35,12 @@ class AppointmentCorrectionDateValidatorTest {
   @ParameterizedTest
   @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "DEEMED")
   void validate_startDateIsEmpty_thenNotValid(AppointmentType appointmentType) {
-    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
         .withStartDate(null)

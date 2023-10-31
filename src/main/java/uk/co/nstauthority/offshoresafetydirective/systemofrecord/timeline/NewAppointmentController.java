@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
-import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -185,7 +184,8 @@ public class NewAppointmentController {
 
     var assetName = portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType())
         .orElse(assetDto.assetName().value());
-    var appointmentTypes = DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
+    var appointmentTypes = AppointmentType.getDisplayableOptions(assetDto.portalAssetType());
+
     var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
         .addObject("pageTitle", "Add appointment")
         .addObject("assetName", assetName)

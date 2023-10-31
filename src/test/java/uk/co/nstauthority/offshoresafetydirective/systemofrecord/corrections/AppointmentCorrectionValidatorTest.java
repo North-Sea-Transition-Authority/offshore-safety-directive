@@ -102,7 +102,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
   void validate_whenFullyPopulatedForm_thenNoErrors(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
@@ -142,6 +142,74 @@ class AppointmentCorrectionValidatorTest {
         appointmentType,
         List.of(appointmentDto)
     );
+  }
+
+  @Test
+  void validate_whenIsForwardApproved_andWellbore_thenValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = PortalAssetType.class, mode = EnumSource.Mode.INCLUDE, names = {"INSTALLATION", "SUBAREA"})
+  void validate_whenIsForwardApproved_andNotWellbore_thenInvalid(PortalAssetType portalAssetType) {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId()))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry("appointmentType", Set.of("Select the type of appointment")));
   }
 
   @Test
@@ -290,7 +358,9 @@ class AppointmentCorrectionValidatorTest {
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var assetDto = AssetDtoTestUtil.builder().build();
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
         .build();
@@ -334,8 +404,9 @@ class AppointmentCorrectionValidatorTest {
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var assetDto = AssetDtoTestUtil.builder().build();
-    var appointmentDto = AppointmentDtoTestUtil.builder()
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();    var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
         .build();
 
@@ -371,7 +442,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class)
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "FORWARD_APPROVED")
   void validate_whenNotForAllPhases_andPhaseIsNotValid_thenError(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase("NOT_A_VALID_PHASE")
@@ -418,7 +489,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
   void validate_whenNotForAllPhases_andValidPhase_thenNoErrors(AppointmentType appointmentType) {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -569,7 +640,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class)
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "FORWARD_APPROVED")
   void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhases(Set.of(WellPhase.DECOMMISSIONING.name()))
@@ -616,7 +687,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "ONLINE_NOMINATION")
+  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
   void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected(
       AppointmentType appointmentType
   ) {
@@ -771,7 +842,9 @@ class AppointmentCorrectionValidatorTest {
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
-    var assetDto = AssetDtoTestUtil.builder().build();
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
     var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
         .build();

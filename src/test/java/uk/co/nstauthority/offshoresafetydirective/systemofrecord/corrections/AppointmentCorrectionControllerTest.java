@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -388,7 +387,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
         .thenReturn(true);
 
-    var modelAndView = mockMvc.perform(get(
+    var appointmentTypes = AppointmentType.getDisplayableOptions(portalAssetType);
+
+    mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
@@ -407,26 +408,13 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
         )))
         .andExpect(model().attribute("phases", phaseMap))
+        .andExpect(model().attribute("appointmentTypes", appointmentTypes))
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
         ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
-        .andExpect(model().attributeDoesNotExist("phaseSelectionHint"))
-        .andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    @SuppressWarnings("unchecked")
-    var appointmentTypes = (Map<String, String>) modelAndView.getModel().get("appointmentTypes");
-    assertThat(appointmentTypes)
-        .containsExactly(
-            entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
-            entry(AppointmentType.FORWARD_APPROVED.name(), AppointmentType.FORWARD_APPROVED.getScreenDisplayText()),
-            entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
-            entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
-        );
+        .andExpect(model().attributeDoesNotExist("phaseSelectionHint"));
   }
 
   @ParameterizedTest
@@ -479,6 +467,8 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment))
         .thenReturn(List.of(correctionHistoryView));
 
+    var appointmentTypes = AppointmentType.getDisplayableOptions(portalAssetType);
+
     var modelAndViewAssertions = mockMvc.perform(get(
             ReverseRouter.route(
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
@@ -505,6 +495,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute("correctionHistoryViews", List.of(correctionHistoryView)))
         .andExpect(model().attribute("cancelUrl", getExpectedRedirect(appointmentDto, portalAssetType)))
+        .andExpect(model().attribute("appointmentTypes", appointmentTypes))
         .andExpect(model().attribute("showCorrectionHistory", true));
 
     if (PortalAssetType.SUBAREA.equals(portalAssetType)) {
@@ -512,20 +503,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
           model().attribute("phaseSelectionHint", "If decommissioning is required, another phase must be selected."));
     }
 
-    var modelAndView = modelAndViewAssertions.andReturn()
-        .getModelAndView();
-
-    assertThat(modelAndView).isNotNull();
-
-    @SuppressWarnings("unchecked")
-    var appointmentTypes = (Map<String, String>) modelAndView.getModel().get("appointmentTypes");
-    assertThat(appointmentTypes)
-        .containsExactly(
-            entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
-            entry(AppointmentType.FORWARD_APPROVED.name(), AppointmentType.FORWARD_APPROVED.getScreenDisplayText()),
-            entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
-            entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
-        );
+    assertThat(modelAndViewAssertions.andReturn().getModelAndView()).isNotNull();
   }
 
   @Test

@@ -36,7 +36,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -72,8 +71,6 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
       .build();
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-  private static final Map<String, String> APPOINTMENT_TYPES =
-      DisplayableEnumOptionUtil.getDisplayableOptions(AppointmentType.class);
 
   @MockBean
   private PortalAssetRetrievalService portalAssetRetrievalService;
@@ -212,6 +209,8 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
         .thenReturn(phaseMap);
 
+    var appointmentTypes = AppointmentType.getDisplayableOptions(portalAssetType);
+
     mockMvc.perform(get(ReverseRouter.route(on(NewAppointmentController.class).renderNewAppointment(assetId)))
             .with(user(USER)))
         .andExpect(status().isOk())
@@ -228,7 +227,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
                 .searchAllPortalOrganisations(null))
         ))
         .andExpect(model().attribute("phases", phaseMap))
-        .andExpect(model().attribute("appointmentTypes", APPOINTMENT_TYPES))
+        .andExpect(model().attribute("appointmentTypes", appointmentTypes))
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
@@ -331,6 +330,8 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getSelectablePhaseMap(portalAssetType))
         .thenReturn(phaseMap);
 
+    var appointmentTypes = AppointmentType.getDisplayableOptions(portalAssetType);
+
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
       bindingResult.addError(new FieldError("error", "error", "error.message"));
@@ -361,7 +362,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
                 .searchAllPortalOrganisations(null))
         ))
         .andExpect(model().attribute("phases", phaseMap))
-        .andExpect(model().attribute("appointmentTypes", APPOINTMENT_TYPES))
+        .andExpect(model().attribute("appointmentTypes", appointmentTypes))
         .andExpect(model().attribute(
             "nominationReferenceRestUrl",
             RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
