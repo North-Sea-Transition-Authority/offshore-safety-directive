@@ -14,12 +14,18 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jooq.tools.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -27,11 +33,13 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.consultee.NominationConsulteeViewController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
@@ -49,6 +57,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 
 @Service
 public class AppointmentTimelineItemService {
+  private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentTimelineItemService.class);
+  private static final String FORWARD_APPROVED_STRING_FORMAT = "%s: %s";
 
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
@@ -65,6 +75,8 @@ public class AppointmentTimelineItemService {
   private final AppointmentPhasesService appointmentPhasesService;
 
   private final SystemOfRecordConfigurationProperties systemOfRecordConfiguration;
+  private final AppointmentAccessService appointmentAccessService;
+  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
@@ -74,7 +86,9 @@ public class AppointmentTimelineItemService {
                                  PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
                                  AppointmentPhasesService appointmentPhasesService,
-                                 SystemOfRecordConfigurationProperties systemOfRecordConfiguration) {
+                                 SystemOfRecordConfigurationProperties systemOfRecordConfiguration,
+                                 AppointmentAccessService appointmentAccessService,
+                                 LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -83,6 +97,8 @@ public class AppointmentTimelineItemService {
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentPhasesService = appointmentPhasesService;
     this.systemOfRecordConfiguration = systemOfRecordConfiguration;
+    this.appointmentAccessService = appointmentAccessService;
+    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
@@ -239,7 +255,11 @@ public class AppointmentTimelineItemService {
           appointmentTimelineItemDto.isMemberOfRegulatorTeam()
       );
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
-      case FORWARD_APPROVED -> addForwardApprovedAppointmentModelProperties(modelProperties);
+      case FORWARD_APPROVED -> addForwardApprovedAppointmentModelProperties(
+          modelProperties,
+          appointmentDto,
+          appointmentTimelineItemDto
+      );
     }
 
     if (appointmentTimelineItemDto.canManageAppointments()
@@ -323,11 +343,82 @@ public class AppointmentTimelineItemService {
           )
       );
     }
+  }
+
+  private void addForwardApprovedAppointmentModelProperties(AssetTimelineModelProperties modelProperties,
+                                                            AppointmentDto appointmentDto,
+                                                            AppointmentTimelineItemDto appointmentTimelineItemDto) {
+
+    modelProperties.addProperty("createdByReference",
+        Optional.ofNullable(appointmentDto.createdByAppointmentId())
+            .flatMap(appointmentAccessService::getAppointment)
+            .map(createdByAppointment -> switch (createdByAppointment.getAppointmentType()) {
+              case DEEMED, FORWARD_APPROVED -> FORWARD_APPROVED_STRING_FORMAT.formatted(
+                  getFormattedAssetName(createdByAppointment),
+                  DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()
+                  ));
+              case OFFLINE_NOMINATION -> getCreatedByReferenceForOfflineAppointmentType(
+                  createdByAppointment,
+                  appointmentTimelineItemDto,
+                  modelProperties
+              );
+              case ONLINE_NOMINATION -> getCreatedByReferenceForOnlineAppointmentType(
+                  createdByAppointment,
+                  appointmentTimelineItemDto,
+                  modelProperties
+              );
+            }).orElseGet(() -> {
+              LOGGER.warn("No created by appointment with id [%s]  found for appointment with id [%s]"
+                  .formatted(appointmentDto.createdByAppointmentId(), appointmentDto.appointmentId()));
+              return AppointmentType.FORWARD_APPROVED.getScreenDisplayText();
+            }));
+  }
+
+  private String getCreatedByReferenceForOfflineAppointmentType(Appointment createdByAppointment,
+                                                                AppointmentTimelineItemDto appointmentTimelineItemDto,
+                                                                AssetTimelineModelProperties modelProperties) {
+
+    if (appointmentTimelineItemDto.isMemberOfRegulatorTeam()) {
+      modelProperties.addProperty("offlineNominationDocumentUrl",
+          systemOfRecordConfiguration.offlineNominationDocumentUrl());
+    }
+
+    if (StringUtils.isBlank(createdByAppointment.getCreatedByLegacyNominationReference())) {
+      return FORWARD_APPROVED_STRING_FORMAT.formatted(
+          getFormattedAssetName(createdByAppointment),
+          DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()));
+    } else {
+      return FORWARD_APPROVED_STRING_FORMAT.formatted(
+          getFormattedAssetName(createdByAppointment),
+          createdByAppointment.getCreatedByLegacyNominationReference()
+      );
+    }
+  }
+
+  private String getCreatedByReferenceForOnlineAppointmentType(Appointment createdByAppointment,
+                                                               AppointmentTimelineItemDto appointmentTimelineItemDto,
+                                                               AssetTimelineModelProperties modelProperties) {
+    var nominationReference = nominationAccessService.getNomination(
+            new NominationId(createdByAppointment.getCreatedByNominationId()))
+        .map(NominationDto::nominationReference)
+        .orElse("Unknown");
+
+    Optional.ofNullable(
+            getNominationUrl(AppointmentDto.fromAppointment(createdByAppointment), appointmentTimelineItemDto))
+        .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
+
+    return FORWARD_APPROVED_STRING_FORMAT.formatted(getFormattedAssetName(createdByAppointment), nominationReference);
 
   }
 
-  private void addForwardApprovedAppointmentModelProperties(AssetTimelineModelProperties modelProperties) {
-    modelProperties.addProperty("createdByReference", AppointmentType.FORWARD_APPROVED.getScreenDisplayText());
+  private String getFormattedAssetName(Appointment createdByAppointment) {
+    var subareaDtoOptional = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()));
+
+    if (subareaDtoOptional.isPresent()) {
+      return subareaDtoOptional.get().displayName();
+    }
+    return createdByAppointment.getAsset().getAssetName();
   }
 
   private String getNominationUrl(AppointmentDto appointmentDto,

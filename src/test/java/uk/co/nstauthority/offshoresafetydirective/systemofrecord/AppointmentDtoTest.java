@@ -63,6 +63,35 @@ class AppointmentDtoTest {
   }
 
   @Test
+  void fromAppointment_whenCreatedByAppointmentId_thenVerifyMapping() {
+    var createdByAppointmentId = UUID.randomUUID();
+    var appointment = AppointmentTestUtil.builder()
+        .withCreatedByAppointmentId(createdByAppointmentId)
+        .build();
+
+    var resultingAppointmentDto = AppointmentDto.fromAppointment(appointment);
+
+    assertThat(resultingAppointmentDto)
+        .extracting(AppointmentDto::createdByAppointmentId)
+        .isEqualTo(new AppointmentId(createdByAppointmentId));
+  }
+
+  @Test
+  void fromAppointment_whenCreatedByAppointmentId_thenNullValueMapped() {
+
+    var appointment = AppointmentTestUtil.builder()
+        .withCreatedByAppointmentId(null)
+        .build();
+
+    var resultingAppointmentDto = AppointmentDto.fromAppointment(appointment);
+
+    assertThat(resultingAppointmentDto)
+        .extracting(AppointmentDto::createdByAppointmentId)
+        .isNull();
+  }
+
+
+  @Test
   void fromAppointment_whenNominationId_thenVerifyMapping() {
     var nominationId = UUID.randomUUID();
 

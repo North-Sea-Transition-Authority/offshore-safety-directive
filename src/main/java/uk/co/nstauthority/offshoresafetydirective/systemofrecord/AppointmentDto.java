@@ -31,7 +31,9 @@ public record AppointmentDto(
             : null,
         AssetDto.fromAsset(appointment.getAsset()),
         appointment.getAppointmentStatus(),
-        new AppointmentId(appointment.getCreatedByAppointmentId())
+        (appointment.getCreatedByAppointmentId() != null)
+            ? new AppointmentId(appointment.getCreatedByAppointmentId())
+            : null
     );
   }
 

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +25,10 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -31,12 +36,14 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.consultee.NominationConsulteeViewController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
@@ -49,8 +56,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
@@ -79,10 +86,13 @@ class AppointmentTimelineItemServiceTest {
   private AppointmentPhasesService appointmentPhasesService;
 
   @Mock
-  private AppointmentTerminationService appointmentTerminationService;
+  private SystemOfRecordConfigurationProperties systemOfRecordConfigurationProperties;
 
   @Mock
-  private SystemOfRecordConfigurationProperties systemOfRecordConfigurationProperties;
+  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+
+  @Mock
+  private AppointmentAccessService appointmentAccessService;
 
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
@@ -1027,7 +1037,7 @@ class AppointmentTimelineItemServiceTest {
             ReverseRouter.route(on(RemoveAppointmentController.class).removeAppointment(
                 new AppointmentId(appointment.getId()),
                 null
-        )));
+            )));
   }
 
   @ParameterizedTest
@@ -1248,5 +1258,352 @@ class AppointmentTimelineItemServiceTest {
             "corrections",
             List.of(appointmentCorrectionHistoryView)
         );
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsNull_thenDisplayText() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(null)
+        .build();
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", AppointmentType.FORWARD_APPROVED.getScreenDisplayText());
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsDeemed_thenAssetNameAndStartDate() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.DEEMED)
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+    var startDate = DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate());
+
+    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+        .formatted(subareaDto.displayName(), startDate);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference);
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andNoLegacyRef_thenAssetNameAndStartDate() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference(null)
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+    var startDate = DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate());
+
+    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+        .formatted(subareaDto.displayName(), startDate);
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .doesNotContainKey("offlineNominationDocumentUrl");
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andLegacyRef_andIsRegulator_thenIncludeLegacyRefAndLink() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference("OSDOP-124")
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    var expectedReference = "%s: %s".formatted(subareaDto.displayName(), createdByAppointment.getCreatedByLegacyNominationReference());
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .containsEntry("offlineNominationDocumentUrl", systemOfRecordConfigurationProperties.offlineNominationDocumentUrl());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TeamType.class, mode = EnumSource.Mode.EXCLUDE, names = "REGULATOR")
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andLegacyRef_andIsNotRegulator_thenNoLink(
+      TeamType teamType) {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
+        .withCreatedByLegacyNominationReference("OSDOP-124")
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(teamType, Set.of(RolePermission.GRANT_ROLES)));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    var expectedReference = "%s: %s".formatted(subareaDto.displayName(), createdByAppointment.getCreatedByLegacyNominationReference());
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .doesNotContainKey("offlineNominationDocumentUrl");
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNominationExists_thenIncludeNominationAndLink() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var nomination = NominationDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .withCreatedByNominationId(nomination.nominationId().id())
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)));
+
+    given(nominationAccessService.getNomination(new NominationId(createdByAppointment.getCreatedByNominationId())))
+        .willReturn(Optional.of(nomination));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+        .formatted(subareaDto.displayName(), nomination.nominationReference());
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .containsEntry("nominationUrl",
+            ReverseRouter.route(on(NominationCaseProcessingController.class)
+                .renderCaseProcessing(new NominationId(createdByAppointment.getCreatedByNominationId()), null)));
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNominationExists_andCantViewNominations_thenNoLink() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var nomination = NominationDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .withCreatedByNominationId(nomination.nominationId().id())
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.GRANT_ROLES)));
+
+    given(nominationAccessService.getNomination(new NominationId(createdByAppointment.getCreatedByNominationId())))
+        .willReturn(Optional.of(nomination));
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+        .formatted(subareaDto.displayName(), nomination.nominationReference());
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .doesNotContainKey("nominationUrl");
+  }
+
+  @Test
+  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNoNominationExists_thenUnknownNominationReference() {
+    var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
+
+    var createdByAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
+        .build();
+
+    var forwardApprovedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withCreatedByAppointmentId(createdByAppointment.getId())
+        .build();
+
+    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        .willReturn(Optional.ofNullable(subareaDto));
+
+    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+        .willReturn(Optional.of(createdByAppointment));
+
+    given(userDetailService.getUserDetail()).willReturn(loggedInUser);
+
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.GRANT_ROLES)));
+
+    given(nominationAccessService.getNomination(new NominationId(createdByAppointment.getCreatedByNominationId())))
+        .willReturn(Optional.empty());
+
+    var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
+        List.of(forwardApprovedAppointment),
+        assetInSystemOfRecord
+    );
+
+    assertThat(resultingAppointmentTimelineHistoryItems).hasSize(1);
+
+    AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
+
+    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+        .formatted(subareaDto.displayName(), "Unknown");
+
+    assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
+        .containsEntry("createdByReference", expectedReference)
+        .doesNotContainKey("nominationUrl");
   }
 }

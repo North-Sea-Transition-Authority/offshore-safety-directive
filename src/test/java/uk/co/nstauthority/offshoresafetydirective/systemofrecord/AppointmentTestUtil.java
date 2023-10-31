@@ -25,7 +25,7 @@ public class AppointmentTestUtil {
     private AppointmentType appointmentType = AppointmentType.ONLINE_NOMINATION;
     private UUID createdByNominationId = UUID.randomUUID();
     private String createdByLegacyNominationReference;
-    private UUID createdByAppointmentId;
+    private UUID createdByAppointmentId = UUID.randomUUID();
     private Instant createdDatetime = Instant.now();
     private AppointmentStatus appointmentStatus = AppointmentStatus.EXTANT;
 
