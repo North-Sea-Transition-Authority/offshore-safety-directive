@@ -16,6 +16,8 @@ public interface AppointmentRepository extends CrudRepository<Appointment, UUID>
 
   List<Appointment> findAllByCreatedByNominationId(UUID createdByNominationId);
 
+  List<Appointment> findAllByCreatedByAppointmentId(UUID appointmentId);
+
   List<Appointment> findAppointmentsByAppointmentStatusInAndAsset_PortalAssetIdInAndAsset_PortalAssetType(
       Collection<AppointmentStatus> appointmentStatus,
       List<String> portalAssetId,

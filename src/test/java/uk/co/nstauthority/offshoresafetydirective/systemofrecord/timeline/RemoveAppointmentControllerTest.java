@@ -216,6 +216,7 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("operatorName", operatorName))
         .andExpect(model().attribute("displayPhases", List.of(assetAppointmentPhase)))
         .andExpect(model().attribute("timelineItemView", assetTimelineView))
+        .andExpect(model().attribute("portalAssetType", appointmentDto.assetDto().portalAssetType().name()))
         .andExpect(model().attribute("assetName", appointmentDto.assetDto().assetName().value()));
   }
 

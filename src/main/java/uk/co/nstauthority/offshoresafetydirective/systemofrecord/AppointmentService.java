@@ -100,12 +100,32 @@ public class AppointmentService {
           "Appointment with ID [%s] cannot be removed as it has been terminated".formatted(appointment.getId())
       );
       case EXTANT -> {
-        appointment.setAppointmentStatus(AppointmentStatus.REMOVED);
-        appointmentRepository.save(appointment);
+        List<Appointment> appointmentsToSave = new ArrayList<>();
 
+        var forwardApprovedAppointments = removeLinkBetweenAppointmentAndCreatedByAppointments(appointment);
+        if (!forwardApprovedAppointments.isEmpty()) {
+          appointmentsToSave.addAll(forwardApprovedAppointments);
+        }
+
+        appointment.setAppointmentStatus(AppointmentStatus.REMOVED);
+        appointmentsToSave.add(appointment);
+
+        appointmentRepository.saveAll(appointmentsToSave);
         appointmentRemovedEventPublisher.publish(new AppointmentId(appointment.getId()));
       }
     }
+  }
+
+  private List<Appointment> removeLinkBetweenAppointmentAndCreatedByAppointments(Appointment appointment) {
+    var linkedAppointments = appointmentRepository.findAllByCreatedByAppointmentId(appointment.getId());
+    var appointmentsWithCreatedByRemoved = new ArrayList<Appointment>();
+
+    linkedAppointments.forEach(createdByAppointment -> {
+      createdByAppointment.setCreatedByAppointmentId(null);
+      appointmentsWithCreatedByRemoved.add(createdByAppointment);
+    });
+
+    return appointmentsWithCreatedByRemoved;
   }
 
   @Transactional

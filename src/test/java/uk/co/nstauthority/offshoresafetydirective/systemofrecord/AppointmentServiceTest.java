@@ -256,11 +256,52 @@ class AppointmentServiceTest {
     var appointment = AppointmentTestUtil.builder()
         .withAppointmentStatus(AppointmentStatus.EXTANT)
         .build();
+
+    when(appointmentRepository.findAllByCreatedByAppointmentId(appointment.getId()))
+        .thenReturn(List.of());
+
     appointmentService.removeAppointment(appointment);
 
     assertThat(appointment.getAppointmentStatus()).isEqualTo(AppointmentStatus.REMOVED);
-    verify(appointmentRepository).save(appointment);
+    verify(appointmentRepository).saveAll(List.of(appointment));
     verify(appointmentRemovedEventPublisher).publish(new AppointmentId(appointment.getId()));
+  }
+
+  @Test
+  void removeAppointment_whenAppointmentIsLinkedToOtherAppointments_thenLinkedAppointmentsBecomeUnlinked() {
+
+    var appointmentToRemove = AppointmentTestUtil.builder()
+        .withAppointmentStatus(AppointmentStatus.EXTANT)
+        .build();
+
+    var appointmentLinkedToAppointmentBeingRemoved = AppointmentTestUtil.builder()
+        .withCreatedByAppointmentId(appointmentToRemove.getId())
+        .build();
+
+    when(appointmentRepository.findAllByCreatedByAppointmentId(appointmentToRemove.getId()))
+        .thenReturn(List.of(appointmentLinkedToAppointmentBeingRemoved));
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Appointment>> captor = ArgumentCaptor.forClass(List.class);
+
+    appointmentService.removeAppointment(appointmentToRemove);
+
+    assertThat(appointmentToRemove.getAppointmentStatus()).isEqualTo(AppointmentStatus.REMOVED);
+
+    verify(appointmentRepository).saveAll(captor.capture());
+
+    assertThat(captor.getAllValues())
+        .flatExtracting(appointments -> appointments)
+        .containsExactlyInAnyOrder(
+            appointmentToRemove,
+            appointmentLinkedToAppointmentBeingRemoved
+        );
+
+    assertThat(appointmentLinkedToAppointmentBeingRemoved)
+        .extracting(Appointment::getCreatedByAppointmentId)
+        .isNull();
+
+    verify(appointmentRemovedEventPublisher).publish(new AppointmentId(appointmentToRemove.getId()));
   }
 
   @Test

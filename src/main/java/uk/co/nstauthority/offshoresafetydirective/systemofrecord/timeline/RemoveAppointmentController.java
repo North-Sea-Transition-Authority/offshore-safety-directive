@@ -105,6 +105,7 @@ class RemoveAppointmentController {
         .addObject("operatorName", operatorName)
         .addObject("displayPhases", displayPhases)
         .addObject("timelineItemView", timelineItem)
+        .addObject("portalAssetType", appointmentDto.assetDto().portalAssetType().name())
         .addObject("assetName", appointmentDto.assetDto().assetName().value())
         .addObject("cancelUrl", AssetTimelineController.determineRouteByPortalAssetType(
             appointmentDto.assetDto().portalAssetId(),
