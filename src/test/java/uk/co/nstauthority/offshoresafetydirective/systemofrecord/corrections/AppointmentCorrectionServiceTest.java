@@ -552,16 +552,12 @@ class AppointmentCorrectionServiceTest {
         .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
-    var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
-    form.setForAllPhases("true");
+    var expectedEndDate = LocalDate.now();
 
-    var newAppointmentType = AppointmentType.DEEMED;
-    form.setAppointmentType(newAppointmentType.name());
-
-    var endDate = LocalDate.now().minusDays(1);
-    form.setHasEndDate("true");
-    form.getEndDate().setDate(endDate);
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(true)
+        .withEndDate(expectedEndDate)
+        .build();
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -573,7 +569,7 @@ class AppointmentCorrectionServiceTest {
 
     assertThat(appointmentArgumentCaptor.getValue())
         .extracting(Appointment::getResponsibleToDate)
-        .isEqualTo(endDate);
+        .isEqualTo(expectedEndDate);
   }
 
   @Test
@@ -587,13 +583,11 @@ class AppointmentCorrectionServiceTest {
         .withResponsibleToDate(LocalDate.now().plusDays(10))
         .build();
 
-    var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
-    form.setForAllPhases("true");
-
-    var newAppointmentType = AppointmentType.DEEMED;
-    form.setAppointmentType(newAppointmentType.name());
-    form.setHasEndDate("false");
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withHasEndDate(false)
+        // set an end date to ensure it doesn't get saved
+        .withEndDate(LocalDate.now())
+        .build();
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());

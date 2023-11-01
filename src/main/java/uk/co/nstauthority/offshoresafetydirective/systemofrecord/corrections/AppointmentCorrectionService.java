@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -186,7 +187,10 @@ public class AppointmentCorrectionService {
             )
         ));
 
-    var endDate = form.getEndDate().getAsLocalDate().orElse(null);
+    var endDate = (BooleanUtils.toBoolean(form.getHasEndDate()))
+        ? form.getEndDate().getAsLocalDate().orElse(null)
+        : null;
+
     var appointmentType = AppointmentType.valueOf(form.getAppointmentType());
 
     appointment.setAsset(asset);

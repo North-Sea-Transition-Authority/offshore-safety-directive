@@ -17,9 +17,18 @@
 
     <#assign modelProperties = timelineItemView.assetTimelineModelProperties().modelProperties/>
 
+    <#assign responsibleToDate>
+        ${
+            modelProperties["appointmentToDate"].formattedValue()
+                ?has_content
+                ?then(modelProperties["appointmentToDate"].formattedValue(), "Present")
+        }
+    </#assign>
+
     <@_appointmentDetailSummary.appointmentDetailSummary
       appointedOperator=operatorName
       responsibleFromDate=modelProperties["appointmentFromDate"].formattedValue()
+      responsibleToDate=responsibleToDate
       phases=displayPhases
       createdBy=modelProperties["createdByReference"]
     />
