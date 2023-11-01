@@ -10,11 +10,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AssetRepository extends CrudRepository<Asset, UUID> {
 
-  List<Asset> findAllByPortalAssetIdIn(Collection<String> id);
+  List<Asset> findAllByPortalAssetIdInAndStatusIs(Collection<String> id, AssetStatus assetStatus);
 
-  List<Asset> findByPortalAssetIdInAndPortalAssetType(Collection<String> id, PortalAssetType portalAssetTypes);
-
-  Optional<Asset> findByPortalAssetIdAndPortalAssetType(String portalAssetId, PortalAssetType portalAssetType);
+  List<Asset> findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(Collection<String> id,
+                                                                 PortalAssetType portalAssetType,
+                                                                 AssetStatus assetStatus);
 
   Optional<Asset> findByPortalAssetIdAndPortalAssetTypeAndStatusIs(String portalAssetId,
                                                                    PortalAssetType portalAssetType,

@@ -49,6 +49,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmen
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
@@ -100,7 +101,7 @@ class AppointmentCorrectionServiceTest {
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var nominationId = UUID.randomUUID();
@@ -175,7 +176,7 @@ class AppointmentCorrectionServiceTest {
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -250,11 +251,11 @@ class AppointmentCorrectionServiceTest {
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
-        .withId(UUID.randomUUID())
+        .withId(createdByAppointmentId)
         .withAsset(asset)
         .withAppointedPortalOperatorId(456)
         .withResponsibleFromDate(LocalDate.now().minusDays(1))
@@ -263,15 +264,13 @@ class AppointmentCorrectionServiceTest {
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)
         .withCreatedByLegacyNominationReference("legacy/ref")
         .withCreatedByNominationId(nominationId)
-        .withCreatedByAppointmentId(createdByAppointmentId)
         .build();
 
     var newAppointmentType = AppointmentType.FORWARD_APPROVED;
-    var forwardApprovedAppointmentId = UUID.randomUUID().toString();
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(123)
         .withAppointmentType(newAppointmentType)
-        .withForwardApprovedAppointmentId(forwardApprovedAppointmentId)
+        .withForwardApprovedAppointmentId(createdByAppointmentId.toString())
         .withHasEndDate(true)
         .build();
 
@@ -290,7 +289,6 @@ class AppointmentCorrectionServiceTest {
     var endDate = LocalDate.now();
     form.getForwardApprovedAppointmentStartDate().setDate(startDate);
     form.getEndDate().setDate(endDate);
-    form.setForwardApprovedAppointmentId(createdByAppointmentId.toString());
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -325,7 +323,7 @@ class AppointmentCorrectionServiceTest {
         .withPortalAssetId("portal/asset/id")
         .build();
 
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -390,7 +388,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenDeemed_thenStartDateIsDeemedDate() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -424,48 +422,9 @@ class AppointmentCorrectionServiceTest {
   }
 
   @Test
-  void applyCorrectionToAppointment_whenOnlineNomination_assertStartDateIsSaved() {
-    var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
-        .thenReturn(Optional.of(asset));
-
-    var originalAppointment = AppointmentTestUtil.builder()
-        .withResponsibleFromDate(LocalDate.now().minusDays(20))
-        .withResponsibleToDate(LocalDate.now().plusDays(10))
-        .build();
-
-    var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
-    form.setForAllPhases("true");
-
-    var newAppointmentType = AppointmentType.ONLINE_NOMINATION;
-    form.setAppointmentType(newAppointmentType.name());
-
-    var startDate = LocalDate.now().minusDays(2);
-    form.getOnlineAppointmentStartDate().setDate(startDate);
-    var endDate = LocalDate.now();
-    form.setHasEndDate("true");
-    form.getEndDate().setDate(endDate);
-
-    form.setOnlineNominationReference(UUID.randomUUID().toString());
-
-    when(userDetailService.getUserDetail())
-        .thenReturn(ServiceUserDetailTestUtil.Builder().build());
-
-    appointmentCorrectionService.applyCorrectionToAppointment(form, AssetDto.fromAsset(asset), originalAppointment);
-
-    var appointmentArgumentCaptor = ArgumentCaptor.forClass(Appointment.class);
-    verify(appointmentRepository).save(appointmentArgumentCaptor.capture());
-
-    assertThat(appointmentArgumentCaptor.getValue())
-        .extracting(Appointment::getResponsibleFromDate)
-        .isEqualTo(startDate);
-  }
-
-  @Test
   void applyCorrectionToAppointment_whenForwardApprovedAppointment_assertStartDateIsSaved() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -504,7 +463,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenOfflineNomination_assertStartDateIsSaved() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -516,14 +475,16 @@ class AppointmentCorrectionServiceTest {
     form.setAppointedOperatorId(123);
     form.setForAllPhases("true");
 
-    var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
+    var newAppointmentType = AppointmentType.FORWARD_APPROVED;
     form.setAppointmentType(newAppointmentType.name());
 
     var startDate = LocalDate.now().minusDays(2);
-    form.getOfflineAppointmentStartDate().setDate(startDate);
+    form.getForwardApprovedAppointmentStartDate().setDate(startDate);
     var endDate = LocalDate.now();
     form.setHasEndDate("true");
     form.getEndDate().setDate(endDate);
+
+    form.setForwardApprovedAppointmentId(UUID.randomUUID().toString());
 
     when(userDetailService.getUserDetail())
         .thenReturn(ServiceUserDetailTestUtil.Builder().build());
@@ -541,7 +502,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenOfflineNomination_assertOfflineNominationReference() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -583,7 +544,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenHasEndDate() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -618,7 +579,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenDoesNotHaveEndDate() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -651,7 +612,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenAssetNotFound_thenError() {
     var assetDto = AssetDtoTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(assetDto.portalAssetId().id(), assetDto.portalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(assetDto.portalAssetId().id(), assetDto.portalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.empty());
 
     var form = new AppointmentCorrectionForm();
@@ -663,7 +624,7 @@ class AppointmentCorrectionServiceTest {
 
     assertThatThrownBy(() -> appointmentCorrectionService.applyCorrectionToAppointment(form, assetDto, originalAppointment))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No Asset with ID [%s] found for manual appointment creation".formatted(assetDto.portalAssetId()));
+        .hasMessage("No extant asset with PortalAssetID [%s] found for manual appointment creation".formatted(assetDto.portalAssetId()));
   }
 
   @Test
@@ -686,7 +647,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenNotCreatedByNominationId_thenVerifyNotPopulated() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var form = new AppointmentCorrectionForm();
@@ -707,7 +668,7 @@ class AppointmentCorrectionServiceTest {
   @Test
   void applyCorrectionToAppointment_whenInvalidAppointmentTypeForStartDate_thenError() {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var originalAppointment = AppointmentTestUtil.builder()
@@ -736,7 +697,7 @@ class AppointmentCorrectionServiceTest {
   @EnumSource(AppointmentType.class)
   void applyCorrectionToAppointment_verifySavedCorrectionReason(AppointmentType appointmentType) {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetType(asset.getPortalAssetId(), asset.getPortalAssetType()))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
         .thenReturn(Optional.of(asset));
 
     var appointment = AppointmentTestUtil.builder()

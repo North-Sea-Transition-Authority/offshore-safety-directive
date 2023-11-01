@@ -60,7 +60,7 @@ class AssetPersistenceServiceTest {
         List.of(InstallationPhase.DECOMMISSIONING.name())
     );
 
-    when(assetRepository.findAllByPortalAssetIdIn(List.of(existingAsset.getPortalAssetId(), newAssetId.id())))
+    when(assetRepository.findAllByPortalAssetIdInAndStatusIs(List.of(existingAsset.getPortalAssetId(), newAssetId.id()), AssetStatus.EXTANT))
         .thenReturn(List.of(existingAsset));
 
     // Return collection that was passed into saveAll call.
@@ -106,7 +106,7 @@ class AssetPersistenceServiceTest {
         List.of(InstallationPhase.DECOMMISSIONING.name())
     );
 
-    when(assetRepository.findAllByPortalAssetIdIn(List.of(newAssetId.id())))
+    when(assetRepository.findAllByPortalAssetIdInAndStatusIs(List.of(newAssetId.id()), AssetStatus.EXTANT))
         .thenReturn(List.of());
 
     // Return collection that was passed into saveAll call.

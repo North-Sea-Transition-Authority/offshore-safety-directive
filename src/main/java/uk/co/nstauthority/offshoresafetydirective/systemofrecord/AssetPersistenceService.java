@@ -25,16 +25,16 @@ public class AssetPersistenceService {
 
   @Transactional
   public List<Asset> persistNominatedAssets(Collection<NominatedAssetDto> nominatedAssetDtos) {
-    var existingAssets = getExistingAssets(nominatedAssetDtos);
+    var existingExtantAssets = getExistingAssets(nominatedAssetDtos);
 
-    List<Asset> missingAssets = createNonExistingAssets(nominatedAssetDtos, existingAssets);
+    List<Asset> missingAssets = createNonExistingAssets(nominatedAssetDtos, existingExtantAssets);
 
     Stream<Asset> savedAssets = Stream.empty();
     if (!missingAssets.isEmpty()) {
       savedAssets = Streams.stream(assetRepository.saveAll(missingAssets));
     }
 
-    return Stream.concat(existingAssets.stream(), savedAssets).toList();
+    return Stream.concat(existingExtantAssets.stream(), savedAssets).toList();
   }
 
   @Transactional
@@ -77,7 +77,7 @@ public class AssetPersistenceService {
         .map(PortalAssetId::id)
         .toList();
 
-    var allAssets = assetRepository.findAllByPortalAssetIdIn(allPortalAssetIds);
+    var allAssets = assetRepository.findAllByPortalAssetIdInAndStatusIs(allPortalAssetIds, AssetStatus.EXTANT);
 
     return allAssets.stream()
         .filter(asset ->

@@ -338,9 +338,9 @@ class AppointmentServiceTest {
         .withResponsibleToDate(null)
         .build();
 
-    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
-        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
-    )).thenReturn(List.of(asset));
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA,
+        AssetStatus.EXTANT)).thenReturn(List.of(asset));
 
     when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
         List.of(asset),
@@ -380,9 +380,9 @@ class AppointmentServiceTest {
         .withPortalAssetId(licenceBlockSubarea.subareaId().id())
         .build();
 
-    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
-        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
-    )).thenReturn(List.of(asset));
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA,
+        AssetStatus.EXTANT)).thenReturn(List.of(asset));
 
     when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
         List.of(asset),
@@ -408,9 +408,9 @@ class AppointmentServiceTest {
   void endAppointmentsForSubareas_whenNoActiveAppointmentsWithExtantStatus_andNoAssetsExist_thenDoNothing() {
     var licenceBlockSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
 
-    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
-        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA
-    )).thenReturn(List.of());
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(
+        List.of(licenceBlockSubarea.subareaId().id()), PortalAssetType.SUBAREA,
+        AssetStatus.EXTANT)).thenReturn(List.of());
 
     when(appointmentRepository.findAllByAssetInAndResponsibleToDateIsNullAndAppointmentStatusIn(
         List.of(),

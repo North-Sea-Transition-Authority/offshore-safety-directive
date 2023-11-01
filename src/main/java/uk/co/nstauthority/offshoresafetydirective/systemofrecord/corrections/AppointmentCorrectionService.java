@@ -33,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmen
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
@@ -167,9 +168,12 @@ public class AppointmentCorrectionService {
         .orElseThrow(() -> new IllegalStateException("No PortalAssetID found for AssetDto with assetId [%s]"
             .formatted(assetDto.assetId())));
 
-    var asset = assetRepository.findByPortalAssetIdAndPortalAssetType(portalAssetId, assetDto.portalAssetType())
+    var asset = assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
+            portalAssetId,
+            assetDto.portalAssetType(),
+            AssetStatus.EXTANT)
         .orElseThrow(() -> new IllegalStateException(
-            "No Asset with ID [%s] found for manual appointment creation".formatted(
+            "No extant asset with PortalAssetID [%s] found for manual appointment creation".formatted(
                 assetDto.portalAssetId()
             )
         ));

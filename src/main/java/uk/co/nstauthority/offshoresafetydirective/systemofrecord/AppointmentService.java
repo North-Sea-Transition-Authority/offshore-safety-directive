@@ -134,10 +134,10 @@ public class AppointmentService {
         .map(licenceBlockSubareaDto -> licenceBlockSubareaDto.subareaId().id())
         .toList();
 
-    List<Asset> assets = assetRepository.findByPortalAssetIdInAndPortalAssetType(
+    List<Asset> assets = assetRepository.findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(
         portalAssetIds,
-        PortalAssetType.SUBAREA
-    );
+        PortalAssetType.SUBAREA,
+        AssetStatus.EXTANT);
 
     var existingAppointments = endExistingAppointments(assets, LocalDate.now());
 
