@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
@@ -45,12 +44,10 @@ public class ForwardApprovedAppointmentRestController {
 
   @GetMapping
   public RestSearchResult searchSubareaAppointments(@RequestParam("term") String searchTerm) {
-    List<LicenceBlockSubareaDto> portalSubareas = licenceBlockSubareaQueryService.searchSubareasByName(
-            searchTerm,
-            List.of(SubareaStatus.EXTANT, SubareaStatus.NOT_EXTANT)
-        )
+    List<LicenceBlockSubareaDto> portalSubareas = licenceBlockSubareaQueryService
+        .searchSubareasByDisplayName(searchTerm)
         .stream()
-        .sorted(Comparator.comparing(licenceBlockSubareaDto -> licenceBlockSubareaDto.displayName().toLowerCase()))
+        .sorted(LicenceBlockSubareaDto.sort())
         .toList();
 
     if (portalSubareas.isEmpty()) {

@@ -10,11 +10,11 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -25,6 +25,8 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
 @ContextConfiguration(classes = LicenceBlockSubareaRestController.class)
 class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
+
+  private static final List<SubareaStatus> SUBAREA_STATUSES = List.of(SubareaStatus.EXTANT);
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
@@ -50,20 +52,13 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
   }
 
-  @ParameterizedTest(name = "{index} => resultingSubareas=''{0}''")
-  @NullAndEmptySource
-  void searchSubareas_whenNoMatchesToAnySearch_thenNoRestResultItems(List<LicenceBlockSubareaDto> resultingSubareas) throws Exception {
+  @Test
+  void searchSubareas_whenNoMatchesToAnySearch_thenNoRestResultItems() throws Exception {
 
     var searchTerm = "no matching subareas";
 
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
-        .willReturn(resultingSubareas);
-
-    given(licenceBlockSubareaQueryService.searchSubareasByLicenceReference(searchTerm))
-        .willReturn(resultingSubareas);
-
-    given(licenceBlockSubareaQueryService.searchSubareasByBlockReference(searchTerm))
-        .willReturn(resultingSubareas);
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
+        .willReturn(Set.of());
 
     var response = mockMvc.perform(get(
             ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas(searchTerm)))
@@ -79,132 +74,6 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void searchSubareas_whenMatchesByName_thenRestResultItemsPopulated() throws Exception {
-
-    var searchTerm = "matching subareas";
-
-    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    var response = mockMvc.perform(get(
-            ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas(searchTerm)))
-            .with(user(USER))
-        )
-        .andExpect(status().isOk())
-        .andReturn()
-        .getResponse();
-
-    var searchResult = OBJECT_MAPPER.readValue(response.getContentAsString(), RestSearchResult.class);
-
-    assertThat(searchResult.getResults())
-        .extracting(RestSearchItem::id, RestSearchItem::text)
-        .containsExactly(
-            tuple(
-                expectedSubarea.subareaId().id(),
-                expectedSubarea.displayName()
-            )
-        );
-  }
-
-  @Test
-  void searchSubareas_whenMatchesByLicence_thenRestResultItemsPopulated() throws Exception {
-
-    var searchTerm = "matching subareas";
-
-    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-
-    given(licenceBlockSubareaQueryService.searchSubareasByLicenceReference(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    var response = mockMvc.perform(get(
-            ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas(searchTerm)))
-            .with(user(USER))
-        )
-        .andExpect(status().isOk())
-        .andReturn()
-        .getResponse();
-
-    var searchResult = OBJECT_MAPPER.readValue(response.getContentAsString(), RestSearchResult.class);
-
-    assertThat(searchResult.getResults())
-        .extracting(RestSearchItem::id, RestSearchItem::text)
-        .containsExactly(
-            tuple(
-                expectedSubarea.subareaId().id(),
-                expectedSubarea.displayName()
-            )
-        );
-  }
-
-  @Test
-  void searchSubareas_whenMatchesByBlock_thenRestResultItemsPopulated() throws Exception {
-
-    var searchTerm = "matching subareas";
-
-    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-
-    given(licenceBlockSubareaQueryService.searchSubareasByBlockReference(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    var response = mockMvc.perform(get(
-            ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas(searchTerm)))
-            .with(user(USER))
-        )
-        .andExpect(status().isOk())
-        .andReturn()
-        .getResponse();
-
-    var searchResult = OBJECT_MAPPER.readValue(response.getContentAsString(), RestSearchResult.class);
-
-    assertThat(searchResult.getResults())
-        .extracting(RestSearchItem::id, RestSearchItem::text)
-        .containsExactly(
-            tuple(
-                expectedSubarea.subareaId().id(),
-                expectedSubarea.displayName()
-            )
-        );
-  }
-
-  @Test
-  void searchSubareas_whenDuplicateMatchesFromDifferentSearches_thenNoDuplicatesInRestResultItems() throws Exception {
-
-    var searchTerm = "matching subareas";
-
-    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-
-    given(licenceBlockSubareaQueryService.searchSubareasByLicenceReference(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    given(licenceBlockSubareaQueryService.searchSubareasByBlockReference(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
-        .willReturn(List.of(expectedSubarea));
-
-    var response = mockMvc.perform(get(
-            ReverseRouter.route(on(LicenceBlockSubareaRestController.class).searchSubareas(searchTerm)))
-            .with(user(USER))
-        )
-        .andExpect(status().isOk())
-        .andReturn()
-        .getResponse();
-
-    var searchResult = OBJECT_MAPPER.readValue(response.getContentAsString(), RestSearchResult.class);
-
-    assertThat(searchResult.getResults())
-        .extracting(RestSearchItem::id, RestSearchItem::text)
-        .containsExactly(
-            tuple(
-                expectedSubarea.subareaId().id(),
-                expectedSubarea.displayName()
-            )
-        );
-  }
-
-  @Test
   void searchSubareas_whenMultipleResultForSameBlockAndSubareaName_thenSortedByLicence() throws Exception {
 
     var searchTerm = "matching subareas";
@@ -215,31 +84,35 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
     var firstSubareaByLicence = LicenceBlockSubareaDtoTestUtil.builder()
         .withLicenceType("A")
         .withLicenceNumber(1)
+        .withSubareaId("1")
         .build();
 
     var secondSubareaByLicence = LicenceBlockSubareaDtoTestUtil.builder()
         .withLicenceType("A")
-        .withLicenceNumber(10)
+        .withLicenceNumber(2)
+        .withSubareaId("2")
         .build();
 
     var thirdSubareaByLicence = LicenceBlockSubareaDtoTestUtil.builder()
         .withLicenceType("A")
-        .withLicenceNumber(2)
+        .withLicenceNumber(10)
+        .withSubareaId("3")
         .build();
 
     var fourthSubareaByLicence = LicenceBlockSubareaDtoTestUtil.builder()
         .withLicenceType("B")
         .withLicenceNumber(1)
+        .withSubareaId("4")
         .build();
 
-    var unsortedSubareaList = List.of(
+    var unsortedSubareaList = Set.of(
         fourthSubareaByLicence,
         thirdSubareaByLicence,
         secondSubareaByLicence,
         firstSubareaByLicence
     );
 
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -286,34 +159,40 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix(null)
+        .withSubareaId("1")
         .build();
 
     var secondSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix("a")
+        .withSubareaId("2")
         .build();
 
     var thirdSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix("B")
+        .withSubareaId("3")
         .build();
 
     var fourthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
         .withQuadrantNumber("1")
         .withBlockNumber(2)
+        .withSubareaId("4")
         .build();
 
     var fifthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
         .withQuadrantNumber("10")
+        .withSubareaId("5")
         .build();
 
     var sixthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
         .withQuadrantNumber("2")
+        .withSubareaId("6")
         .build();
 
-    var unsortedSubareaList = List.of(
+    var unsortedSubareaList = Set.of(
         sixthSubareaByBlock,
         firstSubareaByBlock,
         thirdSubareaByBlock,
@@ -322,7 +201,7 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         fourthSubareaByBlock
     );
 
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -375,23 +254,26 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
 
     var firstSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
         .withSubareaName("a name")
+        .withSubareaId("1")
         .build();
 
     var secondSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
         .withSubareaName("B name")
+        .withSubareaId("2")
         .build();
 
     var thirdSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
         .withSubareaName("c name")
+        .withSubareaId("3")
         .build();
 
-    var unsortedSubareaList = List.of(
+    var unsortedSubareaList = Set.of(
         thirdSubareaByName,
         secondSubareaByName,
         firstSubareaByName
     );
 
-    given(licenceBlockSubareaQueryService.searchExtantSubareasByName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(

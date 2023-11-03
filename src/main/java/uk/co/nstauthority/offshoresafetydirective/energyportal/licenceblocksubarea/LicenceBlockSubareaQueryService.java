@@ -1,10 +1,17 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.generated.client.SubareasProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
@@ -135,7 +142,7 @@ public class LicenceBlockSubareaQueryService {
     }));
   }
 
-  List<LicenceBlockSubareaDto> searchSubareasByBlockReference(String blockReference) {
+  List<LicenceBlockSubareaDto> searchExtantSubareasByBlockReference(String blockReference) {
     return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
 
       var energyPortalSubareas = subareaApi.searchExtantSubareasByBlockReference(
@@ -144,6 +151,24 @@ public class LicenceBlockSubareaQueryService {
           requestPurpose,
           logCorrelationId
       )
+          .stream()
+          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
+          .toList();
+
+      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
+    }));
+  }
+
+  List<LicenceBlockSubareaDto> searchSubareasByBlockReference(String blockReference, List<SubareaStatus> statuses) {
+    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+
+      var energyPortalSubareas = subareaApi.searchSubareasByBlockReferenceAndStatuses(
+              blockReference,
+              statuses,
+              SUBAREAS_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
           .stream()
           .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
           .toList();
@@ -193,6 +218,47 @@ public class LicenceBlockSubareaQueryService {
     return getLicenceBlockSubareasByIds(List.of(licenceBlockSubareaId))
         .stream()
         .findFirst();
+  }
+
+  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm) {
+    return searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.values()));
+  }
+
+  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm, List<SubareaStatus> statuses) {
+
+    Map<LicenceBlockSubareaId, LicenceBlockSubareaDto> matchedSubareaMap = new HashMap<>();
+
+    var matchedSubareasByName = searchSubareasByName(searchTerm, statuses);
+
+    if (!CollectionUtils.isEmpty(matchedSubareasByName)) {
+      matchedSubareaMap.putAll(
+          matchedSubareasByName
+              .stream()
+              .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+      );
+    }
+
+    var matchedSubareasByLicence = searchSubareasByLicenceReferenceWithStatuses(searchTerm, statuses);
+
+    if (!CollectionUtils.isEmpty(matchedSubareasByLicence)) {
+      matchedSubareaMap.putAll(
+          matchedSubareasByLicence
+              .stream()
+              .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+      );
+    }
+
+    var matchedSubareasByBlockReference = searchSubareasByBlockReference(searchTerm, statuses);
+
+    if (!CollectionUtils.isEmpty(matchedSubareasByBlockReference)) {
+      matchedSubareaMap.putAll(
+          matchedSubareasByBlockReference
+              .stream()
+              .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+      );
+    }
+
+    return new HashSet<>(matchedSubareaMap.values());
   }
 
   private List<LicenceBlockSubareaDto> convertToLicenceBlockSubareaDtoList(List<Subarea> subareas) {
