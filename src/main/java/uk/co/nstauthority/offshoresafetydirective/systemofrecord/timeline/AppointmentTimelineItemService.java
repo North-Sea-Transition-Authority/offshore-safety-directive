@@ -378,16 +378,16 @@ public class AppointmentTimelineItemService {
                                                                 AppointmentTimelineItemDto appointmentTimelineItemDto,
                                                                 AssetTimelineModelProperties modelProperties) {
 
-    if (appointmentTimelineItemDto.isMemberOfRegulatorTeam()) {
-      modelProperties.addProperty("offlineNominationDocumentUrl",
-          systemOfRecordConfiguration.offlineNominationDocumentUrl());
-    }
-
     if (StringUtils.isBlank(createdByAppointment.getCreatedByLegacyNominationReference())) {
       return FORWARD_APPROVED_STRING_FORMAT.formatted(
           getFormattedAssetName(createdByAppointment),
           DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()));
     } else {
+      if (appointmentTimelineItemDto.isMemberOfRegulatorTeam()) {
+        modelProperties.addProperty("offlineNominationDocumentUrl",
+            systemOfRecordConfiguration.offlineNominationDocumentUrl());
+      }
+
       return FORWARD_APPROVED_STRING_FORMAT.formatted(
           getFormattedAssetName(createdByAppointment),
           createdByAppointment.getCreatedByLegacyNominationReference()

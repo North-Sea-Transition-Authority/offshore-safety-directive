@@ -1350,6 +1350,9 @@ class AppointmentTimelineItemServiceTest {
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
 
+    given(permissionService.getTeamTypePermissionMap(loggedInUser))
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
+
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(forwardApprovedAppointment),
         assetInSystemOfRecord
