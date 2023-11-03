@@ -38,7 +38,7 @@ public class CorrelationIdUtil {
     MDC.remove(MDC_CORRELATION_ID_ATTR);
   }
 
-  static String getOrCreateCorrelationId(HttpServletRequest request) {
+  public static String getOrCreateCorrelationId(HttpServletRequest request) {
     var existingCorrelationId = request.getHeader(HTTP_CORRELATION_ID_HEADER);
     if (existingCorrelationId == null || existingCorrelationId.isBlank()) {
       return UUID.randomUUID().toString();

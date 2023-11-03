@@ -18,11 +18,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 @ExtendWith(MockitoExtension.class)
 class EnergyPortalUserServiceTest {
+
+  private static final String CORRELATION_ID = "1";
 
   private static UserApi userApi;
 
@@ -34,6 +37,8 @@ class EnergyPortalUserServiceTest {
   @BeforeAll
   static void setup() {
     userApi = mock(UserApi.class);
+    CorrelationIdUtil.setCorrelationIdOnMdc(CORRELATION_ID);
+
     energyPortalUserService = new EnergyPortalUserService(
         userApi,
         new EnergyPortalApiWrapper(serviceConfigurationProperties)
@@ -51,7 +56,7 @@ class EnergyPortalUserServiceTest {
         eq(username),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(Collections.emptyList());
 
     assertTrue(energyPortalUserService.findUserByUsername(username).isEmpty());
@@ -71,7 +76,7 @@ class EnergyPortalUserServiceTest {
         eq(username),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(List.of(expectedUser));
 
     assertThat(energyPortalUserService.findUserByUsername(username))
@@ -120,7 +125,7 @@ class EnergyPortalUserServiceTest {
         eq(username),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(List.of(
         canLoginUser,
         notLoginUser
@@ -142,7 +147,7 @@ class EnergyPortalUserServiceTest {
         eq(List.of(webUserAccountId.toInt())),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(Collections.emptyList());
 
     assertTrue(energyPortalUserService.findByWuaIds(List.of(webUserAccountId)).isEmpty());
@@ -160,7 +165,7 @@ class EnergyPortalUserServiceTest {
           eq(List.of(webUserAccountId.toInt())),
           eq(userProjectionRoot),
           anyString(),
-          anyString()
+          eq(CORRELATION_ID)
       )).thenReturn(List.of(expectedUser));
 
     assertThat(energyPortalUserService.findByWuaIds(List.of(webUserAccountId)))
@@ -200,7 +205,7 @@ class EnergyPortalUserServiceTest {
         eq(webUserAccountId.toInt()),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(Optional.of(expectedUser));
 
     var resultingUser = energyPortalUserService.findByWuaId(webUserAccountId);
@@ -240,7 +245,7 @@ class EnergyPortalUserServiceTest {
         eq(webUserAccountId.toInt()),
         eq(userProjectionRoot),
         anyString(),
-        anyString()
+        eq(CORRELATION_ID)
     )).thenReturn(Optional.empty());
 
     assertThat(energyPortalUserService.findByWuaId(webUserAccountId)).isEmpty();

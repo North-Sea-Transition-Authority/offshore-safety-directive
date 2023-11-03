@@ -43,7 +43,8 @@ public class EnergyPortalApiWrapper {
   }
 
   private void logEpaRequest(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
-    LOGGER.info("%s (%s)".formatted(logCorrelationId.id(), requestPurpose.purpose()));
+    LOGGER.info("Making request to EPA with correlation id %s and request purpose (%s)"
+        .formatted(logCorrelationId.id(), requestPurpose.purpose()));
   }
 
   private String getServiceIdentifier() {

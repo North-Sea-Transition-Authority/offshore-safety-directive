@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authentication.EnergyPortalSamlAttribute;
+import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
 
@@ -50,8 +51,11 @@ public class RequestLogFilter extends OncePerRequestFilter {
 
     var stopwatch = Stopwatch.createStarted();
     hibernateQueryCounter.clearQueryCount();
+    String correlationId = "";
 
     try {
+      correlationId = CorrelationIdUtil.getOrCreateCorrelationId(request);
+      CorrelationIdUtil.setCorrelationIdOnMdc(correlationId);
       filterChain.doFilter(request, response);
     } finally {
       String queryString = StringUtils.defaultString(request.getQueryString());
@@ -71,14 +75,14 @@ public class RequestLogFilter extends OncePerRequestFilter {
 
       var jooqQueryCount = jooqStatisticsListener.getCount();
       jooqStatisticsListener.clear();
+      CorrelationIdUtil.clearCorrelationIdOnMdc();
 
       LOGGER.info(
-          "{} request: {} {}{} ({}), time: {}, status: {}, user id: {}, proxy user id: {}, " +
+          "{} request: {} {}{} ({}), correlation id: {}, time: {}, status: {}, user id: {}, proxy user id: {}, " +
               "hibernate query count: {}, jooq query count: {}",
           requestType, request.getMethod(), request.getRequestURI(), queryString,
-          mvcPattern, stopwatch.elapsed(TimeUnit.MILLISECONDS),
+          mvcPattern, correlationId, stopwatch.elapsed(TimeUnit.MILLISECONDS),
           response.getStatus(), userId, proxyUserId, hibernateQueryCount, jooqQueryCount);
     }
-
   }
 }

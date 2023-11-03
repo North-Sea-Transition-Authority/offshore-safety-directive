@@ -113,8 +113,9 @@ class AppointmentSnsService {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void handleAppointmentCorrected(AppointmentCorrectionEvent event) {
     var appointment = getAppointment(event.getAppointment().id());
-    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+    LOGGER.info("Received AppointmentCorrectionEvent for appointment {}", event.getAppointment().id());
 
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
     if (appointment.getResponsibleToDate() == null) {
 
       var assetPhasesByAssetIdAndAppointment =
