@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
@@ -281,4 +282,35 @@ class AppointmentAccessServiceTest {
                 expectedAppointment.getAppointmentStatus()
             ));
   }
+
+  @Test
+  void getActiveAppointments_whenAppointmentFound_thenReturn() {
+    var status = AppointmentStatus.EXTANT;
+    var expectedAppointment = AppointmentTestUtil.builder()
+        .withAppointmentStatus(status)
+        .build();
+
+    when(appointmentRepository.findByIdAndAppointmentStatus(expectedAppointment.getId(), status))
+        .thenReturn(Optional.of(expectedAppointment));
+
+    var resultingAppointments = appointmentAccessService.getAppointmentByStatus(
+        new AppointmentId(expectedAppointment.getId()),
+        AppointmentStatus.EXTANT
+    );
+
+    assertThat(resultingAppointments).contains(expectedAppointment);
+  }
+
+  @Test
+  void getActiveAppointments_whenNoAppointmentFound_thenReturnEmptyOptional() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var status = AppointmentStatus.EXTANT;
+    when(appointmentRepository.findByIdAndAppointmentStatus(appointmentId.id(), status))
+        .thenReturn(Optional.empty());
+
+    var resultingAppointments = appointmentAccessService.getAppointmentByStatus(appointmentId, status);
+
+    assertTrue(resultingAppointments.isEmpty());
+  }
+
 }

@@ -500,4 +500,56 @@ class AppointmentSnsServiceTest {
     verify(metricsProvider).getAppointmentsPublishedCounter();
     verify(counter).increment();
   }
+
+  @Test
+  void publishAppointmentUpdatedSnsMessage() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var asset = AssetTestUtil.builder().withId(UUID.randomUUID()).build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withId(appointmentId.id())
+        .build();
+    var assetPhases = List.of(
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_1").build(),
+        AssetPhaseTestUtil.builder().withAsset(asset).withPhase("TEST_PHASE_2").build()
+    );
+
+    when(assetPhaseRepository.findByAppointment( appointment))
+        .thenReturn(assetPhases);
+
+    appointmentSnsService.publishAppointmentUpdatedSnsMessage(appointment, CORRELATION_ID);
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentUpdatedOsdEpmqMessage.class);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+
+    var epmqMessage = argumentCaptor.getValue();
+
+    assertThat(epmqMessage).isNotNull();
+    assertThat(epmqMessage.getAppointmentId()).isEqualTo(appointment.getId());
+    assertThat(epmqMessage.getPortalAssetId()).isEqualTo(asset.getPortalAssetId());
+    assertThat(epmqMessage.getPortalAssetType()).isEqualTo(asset.getPortalAssetType().name());
+    assertThat(epmqMessage.getAppointedPortalOperatorId()).isEqualTo(appointment.getAppointedPortalOperatorId());
+    assertThat(epmqMessage.getPhases()).isEqualTo(assetPhases.stream().map(AssetPhase::getPhase).toList());
+    assertThat(epmqMessage.getCorrelationId()).isEqualTo(CORRELATION_ID);
+    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(FIXED_INSTANT);
+  }
+
+  @Test
+  void publishAppointmentDeletedSnsMessage() {
+    var appointmentId = UUID.randomUUID();
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
+
+    appointmentSnsService.publishAppointmentDeletedSnsMessage(appointmentId, CORRELATION_ID);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+
+    var epmqMessage = argumentCaptor.getValue();
+
+    assertThat(epmqMessage).isNotNull();
+    assertThat(epmqMessage.getAppointmentId()).isEqualTo(appointmentId);
+    assertThat(epmqMessage.getCorrelationId()).isEqualTo(CORRELATION_ID);
+    assertThat(epmqMessage.getCreatedInstant()).isEqualTo(FIXED_INSTANT);
+  }
 }

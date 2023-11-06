@@ -68,10 +68,8 @@ class AppointmentSnsService {
 
     LOGGER.info("Received AppointmentTerminationEvent for appointment {}", event.getAppointmentId().id());
 
-    snsService.publishMessage(
-        appointmentsTopicArn,
-        new AppointmentDeletedOsdEpmqMessage(event.getAppointmentId().id(), correlationId, clock.instant())
-    );
+    publishAppointmentDeletedSnsMessage(event.getAppointmentId().id(), correlationId);
+
     metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
@@ -97,11 +95,7 @@ class AppointmentSnsService {
 
     if (appointment.getResponsibleToDate() == null) {
       var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
-
-      snsService.publishMessage(
-          appointmentsTopicArn,
-          new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
-      );
+      publishAppointmentDeletedSnsMessage(appointment.getId(), correlationId);
       metricsProvider.getAppointmentsPublishedCounter().increment();
     } else {
       LOGGER.info("AppointmentDeletedOsdEpmqMessage not published for appointment with id {} as is not active",
@@ -117,34 +111,44 @@ class AppointmentSnsService {
 
     var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
     if (appointment.getResponsibleToDate() == null) {
-
-      var assetPhasesByAssetIdAndAppointment =
-          assetPhaseRepository.findByAppointment(appointment)
-              .stream()
-              .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
-
-      var asset = appointment.getAsset();
-      var assetPhases = assetPhasesByAssetIdAndAppointment.getOrDefault(asset.getId(), Collections.emptyList());
-
-      snsService.publishMessage(
-          appointmentsTopicArn,
-          new AppointmentUpdatedOsdEpmqMessage(
-              appointment.getId(),
-              asset.getPortalAssetId(),
-              asset.getPortalAssetType().name(),
-              appointment.getAppointedPortalOperatorId(),
-              assetPhases.stream().map(AssetPhase::getPhase).toList(),
-              correlationId,
-              clock.instant())
-      );
+      publishAppointmentUpdatedSnsMessage(appointment, correlationId);
 
     } else {
-      snsService.publishMessage(
-          appointmentsTopicArn,
-          new AppointmentDeletedOsdEpmqMessage(appointment.getId(), correlationId, clock.instant())
-      );
+      publishAppointmentDeletedSnsMessage(appointment.getId(), correlationId);
     }
     metricsProvider.getAppointmentsPublishedCounter().increment();
+  }
+
+  void publishAppointmentDeletedSnsMessage(UUID appointmentId, String correlationId) {
+    snsService.publishMessage(
+        appointmentsTopicArn,
+        new AppointmentDeletedOsdEpmqMessage(appointmentId, correlationId, clock.instant())
+    );
+  }
+
+  void publishAppointmentUpdatedSnsMessage(Appointment appointment, String correlationId) {
+    var assetPhasesByAssetId =
+        assetPhaseRepository.findByAppointment(appointment)
+            .stream()
+            .collect(Collectors.groupingBy(assetPhase -> assetPhase.getAsset().getId()));
+
+    var asset = appointment.getAsset();
+    var assetPhases = assetPhasesByAssetId.getOrDefault(asset.getId(), Collections.emptyList())
+        .stream()
+        .map(AssetPhase::getPhase)
+        .toList();
+
+    snsService.publishMessage(
+        appointmentsTopicArn,
+        new AppointmentUpdatedOsdEpmqMessage(
+            appointment.getId(),
+            asset.getPortalAssetId(),
+            asset.getPortalAssetType().name(),
+            appointment.getAppointedPortalOperatorId(),
+            assetPhases,
+            correlationId,
+            clock.instant())
+    );
   }
 
   void publishAppointmentCreatedSnsMessages(NominationId nominationId) {

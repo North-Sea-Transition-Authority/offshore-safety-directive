@@ -39,6 +39,10 @@ public class AppointmentAccessService {
     return appointmentRepository.findById(appointmentId.id());
   }
 
+  public Optional<Appointment> getAppointmentByStatus(AppointmentId appointmentId, AppointmentStatus appointmentStatus) {
+    return appointmentRepository.findByIdAndAppointmentStatus(appointmentId.id(), appointmentStatus);
+  }
+
   public List<Appointment> getActiveAppointmentsForAsset(AssetId assetId) {
     return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(assetId.id(), ACTIVE_STATUSES);
   }
