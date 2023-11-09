@@ -21,7 +21,7 @@
 >
   <#assign searchFilterContent>
     <@fdsSearch.searchFilterList filterButtonItemText="appointments">
-      <@fdsSearch.searchFilterItem itemName="Subarea" expanded=searchForm.subareaId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Licence block subarea" expanded=searchForm.subareaId?has_content>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.subareaId"
           restUrl=springUrl(subareaRestUrl)

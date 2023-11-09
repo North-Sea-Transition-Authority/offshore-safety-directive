@@ -20,8 +20,8 @@
   <#if wellSelectionType?has_content && wellSelectionType == "LICENCE_BLOCK_SUBAREA">
     <@fdsDetails.summaryDetails summaryTitle="How are the included wells determined?">
       <p class="govuk-body">
-        A well is included if its origin or total depth (TD) location for a well is within the spatial area for a
-        subareas on the nomination, and it has not been manually excluded using the excluded wells section above.
+        A well is included if its origin or total depth location is within the spatial area for a subarea on the
+        nomination, and it has not been manually excluded using the excluded wells section above.
       </p>
       <p class="govuk-body">
         The well origin and total depth location is recorded in WONS. If wells are missing, or included when they

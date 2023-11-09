@@ -233,8 +233,7 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(NOMINATION_ID))
         ),
         model().attributeHasNoErrors("accidentRegulatorBranding"),
-        model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding")
-    );
+        model().attributeExists("org.springframework.validation.BindingResult.accidentRegulatorBranding"));
   }
 
   @Test

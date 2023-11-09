@@ -35,7 +35,7 @@
           preselectedItems=filteredWellbore
         />
       </@fdsSearch.searchFilterItem>
-      <@fdsSearch.searchFilterItem itemName="Wells within licence" expanded=searchForm.licenceId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Licence well pursuant to" expanded=searchForm.licenceId?has_content>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.licenceId"
           restUrl=springUrl(licenceRestUrl)

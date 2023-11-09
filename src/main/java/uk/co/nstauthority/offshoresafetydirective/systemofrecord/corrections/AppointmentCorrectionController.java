@@ -123,7 +123,7 @@ public class AppointmentCorrectionController {
           var assetName = getAssetName(appointmentDto.assetDto());
           var notificationBanner = NotificationBanner.builder()
               .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Corrected appointment for %s".formatted(assetName.value()))
+              .withHeading("Updated appointment for %s".formatted(assetName.value()))
               .build();
 
           NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);

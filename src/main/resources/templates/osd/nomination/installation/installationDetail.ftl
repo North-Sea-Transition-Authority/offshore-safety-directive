@@ -10,6 +10,7 @@
 <#-- @ftlvariable name="alreadyAddedLicences" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationAddToListView>" -->
 <#-- @ftlvariable name="licencesRestUrl" type="String" -->
 <#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
+<#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 
 <@defaultPage
   htmlTitle=pageTitle
@@ -34,6 +35,14 @@
       restUrl=springUrl(installationsRestUrl)
       selectorMinInputLength=3
     />
+    <@fdsDetails.summaryDetails summaryTitle="The installation I want to include on this nomination is not listed">
+      <p class="govuk-body">
+        If the installation you want to include on this nomination is not listed, contact the Licensing team at
+        <@mailTo.mailToLink
+          mailToEmailAddress=customerBranding.businessEmailAddress()
+        />
+      </p>
+    </@fdsDetails.summaryDetails>
     <@fdsFieldset.fieldset
       legendHeadingSize="h2"
       legendHeadingClass="govuk-fieldset__legend--m"

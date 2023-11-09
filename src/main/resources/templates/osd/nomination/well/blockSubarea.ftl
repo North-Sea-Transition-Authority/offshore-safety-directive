@@ -8,6 +8,7 @@
 <#-- @ftlvariable name="alreadyAddedSubareas" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView>" -->
 <#-- @ftlvariable name="blockSubareaRestUrl" type="String" -->
 <#-- @ftlvariable name="accidentRegulatorBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties" -->
+<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 
 <@defaultPage
 htmlTitle=pageTitle
@@ -46,6 +47,13 @@ backLinkUrl=springUrl(backLinkUrl)
       <@fdsRadio.radioYes path="form.validForFutureWellsInSubarea"/>
       <@fdsRadio.radioNo path="form.validForFutureWellsInSubarea"/>
     </@fdsRadio.radioGroup>
+    <@fdsDetails.summaryDetails summaryTitle="Why would I want this nomination to cover future wells?">
+      <p class="govuk-body">
+        This ${serviceBranding.mnemonic()} feature aims to reduce administrative burden and potential blockers. Selecting Yes to this question
+        would help avoid having to submit separate ${serviceBranding.mnemonic()} nominations for future wells in the selected subareas,
+        if the well operator and activity phases you specify now continue to be suitable for your well activities.
+      </p>
+    </@fdsDetails.summaryDetails>
     <@fdsRadio.radioGroup
       path="form.forAllWellPhases"
       labelText="Is this nomination for all well activity phases?"

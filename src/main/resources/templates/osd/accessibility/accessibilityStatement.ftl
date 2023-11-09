@@ -102,7 +102,7 @@
         This website was last tested on ${accessibilityConfig.serviceLastTestDate()}. The test was carried out by ${accessibilityConfig.serviceLastTestedBy()}.
     </p>
     <p class="govuk-body">
-        The ${serviceBranding.name()} (${serviceBranding.mnemonic()}) service has been developed using the Energy Portal Design System. The Design System was last
+        The ${serviceBranding.name()} (${serviceBranding.mnemonic()}) has been developed using the Energy Portal Design System. The Design System was last
         accessibility tested on  ${accessibilityConfig.designSystemLastTestedOnDate()}. All features on ${serviceBranding.mnemonic()} were accessibility tested using automated
         tools as part of the quality assurance process.
     </p>

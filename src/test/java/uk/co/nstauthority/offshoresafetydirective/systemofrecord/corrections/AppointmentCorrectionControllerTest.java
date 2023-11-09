@@ -988,7 +988,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeading("Corrected appointment for %s".formatted(assetName))
+        .withHeading("Updated appointment for %s".formatted(assetName))
         .build();
 
     var expectedRedirect = switch (portalAssetType) {
