@@ -121,32 +121,29 @@ steps:
       status:
         - success
 
-# Step commented out due to https://github.com/aquasecurity/trivy/issues/3421 as
-# mentioned in https://fivium.slack.com/archives/C7W7GGYN9/p1673523512313139
+  - name: trivy-build-image
+    image: docker:20.10.9
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+    commands:
+      - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
 
-#  - name: trivy-build-image
-#    image: docker:20.10.9
-#    volumes:
-#      - name: docker-sock
-#        path: /var/run/docker.sock
-#    commands:
-#      - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
-
-#  - name: trivy-scan
-#    image: aquasec/trivy:0.20.0
-#    volumes:
-#      - name: docker-sock
-#        path: /var/run/docker.sock
-#      - name: drone-trivy-cache
-#        path: /root/trivy-cache
-#      - name: webfiles
-#        path: /var/webfiles
-#    commands:
-#      # timeout set as initial cache population can seemingly take a while sometimes
-#      - trivy --format template --template "@contrib/html.tpl" -o /var/webfiles/${DRONE_BUILD_NUMBER}/trivy-scan.html image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
-#    when:
-#      status:
-#        - success
+  - name: trivy-scan
+    image: aquasec/trivy:0.47.0
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+      - name: drone-trivy-cache
+        path: /root/trivy-cache
+      - name: webfiles
+        path: /var/webfiles
+    commands:
+      # timeout set as initial cache population can seemingly take a while sometimes
+      - trivy image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
+    when:
+      status:
+        - success
 
   - name: deploy-dev-st
     image: plugins/downstream:linux-amd64

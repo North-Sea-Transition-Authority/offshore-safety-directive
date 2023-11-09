@@ -1,47 +1,14 @@
-# Transient vulnerability from spring-security-saml2-service-provider
-CVE-2015-7501
-CVE-2015-6420
-CVE-2021-40690
-CVE-2019-12400
-CVE-2020-13936
-CVE-2020-15522
-
-# Transient vulnerability from spring-boot-starter-actuator
-CVE-2022-25857
+# uk.co.fivium.energyportalapi:client:v6.2.0
+CVE-2022-1471
 CVE-2022-38752
-CVE-2022-38749
-CVE-2022-38750
-CVE-2022-38751
-
-# Transient vulnerability from spring-boot-starter-web
-CVE-2022-42003
-CVE-2022-42004
-
-# Transient vulnerability from energyportalapi:client
-CVE-2022-3171
-CVE-2022-37734
-
-# Transient vulnerability from opensaml-saml-api
-CVE-2022-40151
-CVE-2022-40152
-CVE-2022-40153
-CVE-2022-40154
-CVE-2022-40155
-CVE-2022-40156
-
-# Transient vulnerability from org.springframework.security:spring-security-core
-CVE-2022-31692
-CVE-2022-31690
-
-# Transient vulnerability from spring-boot-starter-freemarker
 CVE-2022-41854
 CVE-2022-1471
+CVE-2023-41080
 
-# Transient vulnerability from energyportalapi
-CVE-2022-41946
+# org.springframework.security:spring-security-saml2-service-provider -> 6.1.5
+CVE-2023-44483
+CVE-2023-33201
 
-#Transient vulnerability from postgresql
-CVE-2022-31197
-
-# Vulnerability from org.springframework:spring-web
-CVE-2016-1000027
+# com.google.guava:guava
+CVE-2023-2976
+CVE-2020-8908
