@@ -175,17 +175,20 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
     when(installationQueryService.getInstallationsByIdIn(
-        List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
-    )
+        List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()),
+        NominatedInstallationController.ALREADY_ADDED_INSTALLATIONS_PURPOSE
+    ))
         .thenReturn(List.of(lastInstallationAlphabeticallyByName, firstInstallationAlphabeticallyByName));
 
-    when(licenceQueryService.getLicencesByIdIn(List.of(firstLicence.licenceId().id())))
+    when(licenceQueryService.getLicencesByIdIn(List.of(firstLicence.licenceId().id()),
+        NominatedInstallationController.ALREADY_ADDED_LICENCES_PURPOSE))
         .thenReturn(List.of(firstLicence));
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
-            .with(user(NOMINATION_CREATOR_USER))
+            get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/installation/installationDetail"))
@@ -236,7 +239,8 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
   @ParameterizedTest
   @NullAndEmptySource
-  void getNominatedInstallationDetail_whenAlreadyAddedLicencesNull_assertEmptyList(List<Integer> nullOrEmptyList) throws Exception {
+  void getNominatedInstallationDetail_whenAlreadyAddedLicencesNull_assertEmptyList(List<Integer> nullOrEmptyList)
+      throws Exception {
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withLicences(nullOrEmptyList)
         .build();
@@ -244,7 +248,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
 
-    verify(licenceQueryService, never()).getLicencesByIdIn(any());
+    verify(licenceQueryService, never()).getLicencesByIdIn(any(), any());
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID)))
@@ -267,7 +271,10 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominatedInstallationDetailFormService.getForm(nominationDetail)).thenReturn(form);
 
-    when(licenceQueryService.getLicencesByIdIn(List.of(firstLicence.licenceId().id())))
+    when(licenceQueryService.getLicencesByIdIn(
+        List.of(firstLicence.licenceId().id()),
+        NominatedInstallationController.ALREADY_ADDED_LICENCES_PURPOSE
+    ))
         .thenReturn(List.of(firstLicence));
 
     mockMvc.perform(

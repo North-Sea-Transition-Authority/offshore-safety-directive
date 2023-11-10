@@ -20,6 +20,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 @Service
 public class PortalAssetRetrievalService {
 
+  static final RequestPurpose INSTALLATION_PURPOSE = new RequestPurpose("Retrieve installation asset");
+
   private final WellQueryService wellQueryService;
 
   private final InstallationQueryService installationQueryService;
@@ -44,7 +46,7 @@ public class PortalAssetRetrievalService {
   }
 
   public Optional<InstallationDto> getInstallation(InstallationId installationId) {
-    return installationQueryService.getInstallation(installationId);
+    return installationQueryService.getInstallation(installationId, INSTALLATION_PURPOSE);
   }
 
   public Optional<LicenceBlockSubareaDto> getLicenceBlockSubarea(LicenceBlockSubareaId licenceBlockSubareaId) {

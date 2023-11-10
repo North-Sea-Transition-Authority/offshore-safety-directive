@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 
 class LicenceQueryServiceTest {
 
+  static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static final ServiceConfigurationProperties serviceConfigurationProperties
       = ServiceConfigurationPropertiesTestUtil.builder().build();
 
@@ -112,7 +113,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(List.of(expectedPortalLicence));
 
-    var resultingLicence = licenceQueryService.getLicencesByIdIn(matchingLicenceIdList);
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(matchingLicenceIdList, REQUEST_PURPOSE);
 
     assertThat(resultingLicence)
         .extracting(
@@ -144,7 +145,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingLicence = licenceQueryService.getLicencesByIdIn(unmatchedLicenceIdList);
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(unmatchedLicenceIdList, REQUEST_PURPOSE);
 
     assertThat(resultingLicence).isEmpty();
   }
@@ -152,7 +153,7 @@ class LicenceQueryServiceTest {
   @ParameterizedTest
   @NullAndEmptySource
   void getLicencesByIdIn_whenNullOrEmptyList_thenEmptyListReturned(List<Integer> nullOrEmptyList) {
-    var resultingLicence = licenceQueryService.getLicencesByIdIn(nullOrEmptyList);
+    var resultingLicence = licenceQueryService.getLicencesByIdIn(nullOrEmptyList, REQUEST_PURPOSE);
     assertThat(resultingLicence).isEmpty();
   }
 
@@ -171,7 +172,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(List.of(expectedPortalLicence));
 
-    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter, REQUEST_PURPOSE);
 
     assertThat(resultingLicence)
         .extracting(
@@ -203,7 +204,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter, REQUEST_PURPOSE);
 
     assertThat(resultingLicence).isEmpty();
   }
@@ -233,7 +234,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(List.of(secondLicenceByNumber, firstLicenceByNumber));
 
-    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter, REQUEST_PURPOSE);
 
     assertThat(resultingLicence)
         .extracting(
@@ -283,7 +284,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(List.of(secondLicenceByType, firstLicenceByType));
 
-    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter);
+    var resultingLicence = licenceQueryService.searchLicences(licenceSearchFilter, REQUEST_PURPOSE);
 
     assertThat(resultingLicence)
         .extracting(

@@ -8,6 +8,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.client.FieldsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
@@ -32,13 +33,13 @@ public class EnergyPortalFieldQueryService {
     this.fieldApi = fieldApi;
   }
 
-  public List<FieldDto> getFieldsByIds(Collection<FieldId> fieldIds) {
+  public List<FieldDto> getFieldsByIds(Collection<FieldId> fieldIds, RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(fieldIds)) {
       return Collections.emptyList();
     }
 
-    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         fieldApi.searchFields(
             null,
             null,
@@ -54,8 +55,8 @@ public class EnergyPortalFieldQueryService {
         .toList();
   }
 
-  public List<FieldDto> searchFields(String fieldName, Set<FieldStatus> fieldStatuses) {
-    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+  public List<FieldDto> searchFields(String fieldName, Set<FieldStatus> fieldStatuses, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         fieldApi.searchFields(
             fieldName,
             fieldStatuses.stream().toList(),

@@ -9,11 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 
 @Service
 class RelatedInformationValidator implements SmartValidator {
+
+  static final RequestPurpose FIELD_VALIDATION_PURPOSE = new RequestPurpose("Ensure related fields are valid selections");
 
   static final String REQUIRED_FIELD_CODE = "required";
 
@@ -102,7 +105,7 @@ class RelatedInformationValidator implements SmartValidator {
             .map(FieldId::new)
             .collect(Collectors.toSet());
 
-        fieldQueryService.getFieldsByIds(fieldIds)
+        fieldQueryService.getFieldsByIds(fieldIds, FIELD_VALIDATION_PURPOSE)
             .stream()
             .filter(field -> !field.isActive())
             .sorted(Comparator.comparing(field -> field.name().toLowerCase()))

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
@@ -39,6 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class RelatedInformationController {
 
   static final String PAGE_NAME = "Related information";
+  static final RequestPurpose PRE_SELECTED_FIELDS_PURPOSE = new RequestPurpose("Pre-selected fields for related information");
 
   private final EnergyPortalFieldQueryService fieldQueryService;
   private final CustomerConfigurationProperties customerConfigurationProperties;
@@ -96,7 +98,7 @@ public class RelatedInformationController {
         .map(FieldId::new)
         .collect(Collectors.toSet());
 
-    List<FieldAddToListItem> preselectedFields = fieldQueryService.getFieldsByIds(fieldIds)
+    List<FieldAddToListItem> preselectedFields = fieldQueryService.getFieldsByIds(fieldIds, PRE_SELECTED_FIELDS_PURPOSE)
         .stream()
         .sorted(Comparator.comparing(field -> field.name().toLowerCase()))
         .map(field -> new FieldAddToListItem(String.valueOf(field.fieldId().id()), field.name(), field.isActive()))

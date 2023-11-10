@@ -81,7 +81,7 @@ class PortalAssetRetrievalServiceTest {
 
     var installationId = new InstallationId(10);
 
-    given(installationQueryService.getInstallation(installationId))
+    given(installationQueryService.getInstallation(installationId, PortalAssetRetrievalService.INSTALLATION_PURPOSE))
         .willReturn(Optional.empty());
 
     var resultingInstallation = portalAssetRetrievalService.getInstallation(installationId);
@@ -96,7 +96,7 @@ class PortalAssetRetrievalServiceTest {
 
     var expectedInstallation = InstallationDtoTestUtil.builder().build();
 
-    given(installationQueryService.getInstallation(installationId))
+    given(installationQueryService.getInstallation(installationId, PortalAssetRetrievalService.INSTALLATION_PURPOSE))
         .willReturn(Optional.of(expectedInstallation));
 
     var resultingInstallation = portalAssetRetrievalService.getInstallation(installationId);
@@ -170,7 +170,7 @@ class PortalAssetRetrievalServiceTest {
     var installationDto = InstallationDtoTestUtil.builder()
         .withName(expectedName)
         .build();
-    when(installationQueryService.getInstallation(new InstallationId(portalAssetIdAsInt)))
+    when(installationQueryService.getInstallation(new InstallationId(portalAssetIdAsInt), PortalAssetRetrievalService.INSTALLATION_PURPOSE))
         .thenReturn(Optional.of(installationDto));
 
     var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
@@ -239,7 +239,7 @@ class PortalAssetRetrievalServiceTest {
     var installationId = new InstallationId(123);
     var portalAssetId = new PortalAssetId(String.valueOf(installationId.id()));
 
-    when(installationQueryService.getInstallation(installationId))
+    when(installationQueryService.getInstallation(installationId, PortalAssetRetrievalService.INSTALLATION_PURPOSE))
         .thenReturn(Optional.of(InstallationDtoTestUtil.builder().build()));
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.INSTALLATION);
@@ -251,7 +251,7 @@ class PortalAssetRetrievalServiceTest {
     var installationId = new InstallationId(123);
     var portalAssetId = new PortalAssetId(String.valueOf(installationId.id()));
 
-    when( installationQueryService.getInstallation(installationId))
+    when( installationQueryService.getInstallation(installationId, PortalAssetRetrievalService.INSTALLATION_PURPOSE))
         .thenReturn(Optional.empty());
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.INSTALLATION);

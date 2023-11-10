@@ -54,7 +54,8 @@ class RelatedInformationFieldPersistenceServiceTest {
     var fieldId = new FieldId(1000);
     var field = FieldDtoTestUtil.builder().build();
 
-    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId)))
+    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId),
+        RelatedInformationFieldPersistenceService.RELATED_FIELDS_PURPOSE))
         .thenReturn(List.of(field));
 
     relatedInformationFieldPersistenceService.updateLinkedFields(relatedInformation, List.of(fieldId));
@@ -81,7 +82,8 @@ class RelatedInformationFieldPersistenceServiceTest {
     var fieldId = new FieldId(1000);
     var field = FieldDtoTestUtil.builder().build();
 
-    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId)))
+    when(energyPortalFieldQueryService.getFieldsByIds(Set.of(fieldId),
+        RelatedInformationFieldPersistenceService.RELATED_FIELDS_PURPOSE))
         .thenReturn(List.of(field));
 
     relatedInformationFieldPersistenceService.updateLinkedFields(relatedInformation, List.of(fieldId, fieldId));

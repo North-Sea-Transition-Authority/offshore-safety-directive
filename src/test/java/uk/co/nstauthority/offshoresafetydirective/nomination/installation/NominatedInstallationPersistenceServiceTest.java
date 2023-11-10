@@ -46,7 +46,10 @@ class NominatedInstallationPersistenceServiceTest {
         .withInstallations(List.of(installationId, installationId))
         .build();
 
-    when(installationQueryService.getInstallationsByIdIn(List.of(installationId)))
+    when(installationQueryService.getInstallationsByIdIn(
+        List.of(installationId),
+        NominatedInstallationPersistenceService.SAVE_INSTALLATIONS_PURPOSE
+    ))
         .thenReturn(List.of(installationDto));
 
     nominatedInstallationPersistenceService.saveNominatedInstallations(NOMINATION_DETAIL, formWithDuplicateInstallation);

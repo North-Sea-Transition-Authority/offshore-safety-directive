@@ -352,7 +352,10 @@ class RelatedInformationValidatorTest {
         .withField(invalidField.fieldId().id())
         .build();
 
-    given(fieldQueryService.getFieldsByIds(Set.of(validField.fieldId(), invalidField.fieldId())))
+    given(fieldQueryService.getFieldsByIds(
+        Set.of(validField.fieldId(), invalidField.fieldId()),
+        RelatedInformationValidator.FIELD_VALIDATION_PURPOSE
+    ))
         .willReturn(List.of(validField, invalidField));
 
     var bindingResult = validate(form);
@@ -388,7 +391,10 @@ class RelatedInformationValidatorTest {
         .withField(validField.fieldId().id())
         .build();
 
-    given(fieldQueryService.getFieldsByIds(Set.of(validField.fieldId())))
+    given(fieldQueryService.getFieldsByIds(
+        Set.of(validField.fieldId()),
+        RelatedInformationValidator.FIELD_VALIDATION_PURPOSE
+    ))
         .willReturn(List.of(validField));
 
     var bindingResult = validate(form);

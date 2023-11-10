@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
@@ -21,6 +22,12 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
   private static final String ALL_PHASES_FIELD_NAME = "forAllInstallationPhases";
 
   private static final String SPECIFIC_PHASES_FIELD_NAME = "developmentDesignPhase";
+
+  static final RequestPurpose INSTALLATIONS_SELECTED_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the installations selected exist in portal");
+
+  static final RequestPurpose LICENCES_SELECTED_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the licences selected exist in portal");
 
   static final FrontEndErrorMessage INSTALLATIONS_REQUIRED_ERROR = new FrontEndErrorMessage(
       INSTALLATION_SELECT_FIELD_NAME,
@@ -91,7 +98,10 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
           .distinct()
           .toList();
 
-      var installations = installationQueryService.getInstallationsByIdIn(distinctInstallations);
+      var installations = installationQueryService.getInstallationsByIdIn(
+          distinctInstallations,
+          INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
+      );
 
       if (installations.size() != distinctInstallations.size()) {
         rejectValue(errors, INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR);
@@ -116,7 +126,7 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
           .distinct()
           .toList();
 
-      var licencesInPortal = licenceQueryService.getLicencesByIdIn(distinctLicences);
+      var licencesInPortal = licenceQueryService.getLicencesByIdIn(distinctLicences, LICENCES_SELECTED_VALIDATION_PURPOSE);
 
       if (licencesInPortal.size() != distinctLicences.size()) {
         rejectValue(errors, LICENCE_NOT_FOUND_IN_PORTAL_ERROR);

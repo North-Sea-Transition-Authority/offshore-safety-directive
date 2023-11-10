@@ -55,7 +55,10 @@ class FieldRestControllerTest extends AbstractControllerTest {
 
     var fieldName = "unmatched field name";
 
-    given(fieldQueryService.searchFields(fieldName, FieldRestController.NON_DELETION_FIELD_STATUSES))
+    given(fieldQueryService.searchFields(
+        fieldName,
+        FieldRestController.NON_DELETION_FIELD_STATUSES,
+        FieldRestController.SEARCH_FIELDS_PURPOSE))
         .willReturn(Collections.emptyList());
 
     var response = mockMvc.perform(
@@ -81,7 +84,9 @@ class FieldRestControllerTest extends AbstractControllerTest {
         .withName(fieldName)
         .build();
 
-    given(fieldQueryService.searchFields(fieldName, FieldRestController.NON_DELETION_FIELD_STATUSES))
+    given(fieldQueryService.searchFields(fieldName,
+        FieldRestController.NON_DELETION_FIELD_STATUSES,
+        FieldRestController.SEARCH_FIELDS_PURPOSE))
         .willReturn(List.of(expectedField));
 
     var response = mockMvc.perform(
@@ -117,7 +122,9 @@ class FieldRestControllerTest extends AbstractControllerTest {
         .build();
 
     // return the fields in the wrong order to verify the sort
-    given(fieldQueryService.searchFields(fieldName, FieldRestController.NON_DELETION_FIELD_STATUSES))
+    given(fieldQueryService.searchFields(fieldName,
+        FieldRestController.NON_DELETION_FIELD_STATUSES,
+        FieldRestController.SEARCH_FIELDS_PURPOSE))
         .willReturn(List.of(secondFieldByName, firstFieldByName));
 
     var response = mockMvc.perform(

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,10 +42,10 @@ class LicenceRestControllerTest extends AbstractControllerTest {
     var searchTerm = "search";
 
     mockMvc.perform(
-        get(
-          ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            get(
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            )
         )
-    )
         .andExpect(status().isOk());
   }
 
@@ -56,11 +57,11 @@ class LicenceRestControllerTest extends AbstractControllerTest {
     var searchTerm = "search";
 
     mockMvc.perform(
-        get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            get(
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            )
+                .with(user(loggedInUser))
         )
-            .with(user(loggedInUser))
-    )
         .andExpect(status().isOk());
 
   }
@@ -70,14 +71,17 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var searchTerm = "search";
 
-    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
+    given(licenceQueryService.searchLicences(
+        licenceSearchFilterArgumentCaptor.capture(),
+        eq(LicenceRestController.LICENCE_SEARCH_PURPOSE)
+    ))
         .willReturn(Collections.emptyList());
 
     var response = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            get(
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            )
         )
-    )
         .andExpect(status().isOk())
         .andReturn()
         .getResponse();
@@ -97,14 +101,17 @@ class LicenceRestControllerTest extends AbstractControllerTest {
 
     var expectedLicence = LicenceDtoTestUtil.builder().build();
 
-    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
+    given(licenceQueryService.searchLicences(
+        licenceSearchFilterArgumentCaptor.capture(),
+        eq(LicenceRestController.LICENCE_SEARCH_PURPOSE)
+    ))
         .willReturn(List.of(expectedLicence));
 
     var response = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            get(
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            )
         )
-    )
         .andExpect(status().isOk())
         .andReturn()
         .getResponse();
@@ -141,7 +148,10 @@ class LicenceRestControllerTest extends AbstractControllerTest {
         .withLicenceReference("second")
         .build();
 
-    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
+    given(licenceQueryService.searchLicences(
+        licenceSearchFilterArgumentCaptor.capture(),
+        eq(LicenceRestController.LICENCE_SEARCH_PURPOSE)
+    ))
         .willReturn(List.of(secondLicenceByNumber, firstLicenceByNumber));
 
     var response = mockMvc.perform(
@@ -183,14 +193,17 @@ class LicenceRestControllerTest extends AbstractControllerTest {
         .withLicenceReference("second")
         .build();
 
-    given(licenceQueryService.searchLicences(licenceSearchFilterArgumentCaptor.capture()))
+    given(licenceQueryService.searchLicences(
+        licenceSearchFilterArgumentCaptor.capture(),
+        eq(LicenceRestController.LICENCE_SEARCH_PURPOSE)
+    ))
         .willReturn(List.of(secondLicenceByType, firstLicenceByType));
 
     var response = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            get(
+                ReverseRouter.route(on(LicenceRestController.class).searchLicences(searchTerm))
+            )
         )
-    )
         .andExpect(status().isOk())
         .andReturn()
         .getResponse();

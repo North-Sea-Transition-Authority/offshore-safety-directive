@@ -39,7 +39,7 @@ class NominationLicenceServiceTest {
     var licenceId = 10;
     var licenceDto = LicenceDtoTestUtil.builder().withLicenceId(licenceId).build();
 
-    when(licenceQueryService.getLicencesByIdIn(List.of(licenceId)))
+    when(licenceQueryService.getLicencesByIdIn(List.of(licenceId), NominationLicenceService.SAVE_LICENCES_PURPOSE))
         .thenReturn(List.of(licenceDto));
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()

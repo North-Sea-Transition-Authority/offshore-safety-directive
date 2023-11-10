@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -55,6 +56,12 @@ public class NominatedInstallationController {
   );
 
   static final String PAGE_TITLE = "Installation nominations";
+
+  static final RequestPurpose ALREADY_ADDED_INSTALLATIONS_PURPOSE =
+      new RequestPurpose("Get installations already added to list for nomination");
+
+  static final RequestPurpose ALREADY_ADDED_LICENCES_PURPOSE =
+      new RequestPurpose("Get licences already added to list for nomination");
 
   private final ControllerHelperService controllerHelperService;
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
@@ -138,7 +145,7 @@ public class NominatedInstallationController {
       return Collections.emptyList();
     }
 
-    return installationQueryService.getInstallationsByIdIn(form.getInstallations())
+    return installationQueryService.getInstallationsByIdIn(form.getInstallations(), ALREADY_ADDED_INSTALLATIONS_PURPOSE)
         .stream()
         .map(InstallationAddToListView::new)
         .sorted(Comparator.comparing(InstallationAddToListView::getName))
@@ -150,7 +157,7 @@ public class NominatedInstallationController {
       return Collections.emptyList();
     }
 
-    return licenceQueryService.getLicencesByIdIn(form.getLicences())
+    return licenceQueryService.getLicencesByIdIn(form.getLicences(), ALREADY_ADDED_LICENCES_PURPOSE)
         .stream()
         .map(LicenceAddToListView::new)
         .sorted(Comparator.comparing(LicenceAddToListView::getName))

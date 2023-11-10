@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
@@ -37,6 +38,12 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetT
 
 @Service
 class AppointmentSearchService {
+
+  static final RequestPurpose APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE =
+      new RequestPurpose("Search for existing installation appointments");
+
+  static final RequestPurpose NO_INSTALLATION_APPOINTMENT_PURPOSE =
+      new RequestPurpose("Search for installation appointments with no operator");
 
   private final AppointmentQueryService appointmentQueryService;
 
@@ -89,7 +96,10 @@ class AppointmentSearchService {
             && searchForm.getInstallationId() != null
             && searchForm.isEmptyExcept("installationId")
     ) {
-      installationQueryService.getInstallation(new InstallationId(searchForm.getInstallationId()))
+      installationQueryService.getInstallation(
+              new InstallationId(searchForm.getInstallationId()),
+              NO_INSTALLATION_APPOINTMENT_PURPOSE
+          )
           .ifPresent(installation ->
               resultingAppointments.add(
                   createNoAppointedOperatorItem(
@@ -139,8 +149,8 @@ class AppointmentSearchService {
 
     resultingWellbores.forEach(wellbore ->
         Optional.ofNullable(
-            assetAppointments.get(new PortalAssetId(String.valueOf(wellbore.wellboreId().id())))
-        )
+                assetAppointments.get(new PortalAssetId(String.valueOf(wellbore.wellboreId().id())))
+            )
             .ifPresentOrElse(
                 // add operator appointment
                 appointmentsToReturn::add,
@@ -194,7 +204,7 @@ class AppointmentSearchService {
    * 4) Any appointments for assets that no longer exist in the Energy Portal
    *
    * @param assetTypeRestrictions The assets types to restrict results to
-   * @param searchFilter The search filters to apply
+   * @param searchFilter          The search filters to apply
    * @return a list of appointments matching the search criteria
    */
   private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
@@ -251,7 +261,7 @@ class AppointmentSearchService {
       if (!CollectionUtils.isEmpty(installationIds)) {
 
         var installationAppointments = installationQueryService
-            .getInstallationsByIds(installationIds)
+            .getInstallationsByIds(installationIds, APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE)
             .stream()
             .sorted(Comparator.comparing(installation -> installation.name().toLowerCase()))
             .map(installation -> createInstallationAppointmentSearchItem(

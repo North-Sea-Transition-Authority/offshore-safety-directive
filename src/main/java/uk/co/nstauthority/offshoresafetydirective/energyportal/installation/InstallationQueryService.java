@@ -8,6 +8,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.generated.client.FacilitiesByIdsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.FacilitiesByNameAndTypesProjectionRoot;
@@ -42,9 +43,11 @@ public class InstallationQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<InstallationDto> queryInstallationsByName(String facilityName, List<FacilityType> facilityTypes) {
+  List<InstallationDto> queryInstallationsByName(String facilityName,
+                                                 List<FacilityType> facilityTypes,
+                                                 RequestPurpose requestPurpose) {
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         facilityApi.searchFacilitiesByNameAndTypeIn(
             facilityName,
             facilityTypes,
@@ -56,16 +59,16 @@ public class InstallationQueryService {
             .filter(InstallationQueryService::isInUkcs)
             .map(this::convertToInstallationDto)
             .toList()
-    ));
+    );
   }
 
-  public List<InstallationDto> getInstallationsByIdIn(List<Integer> idList) {
+  public List<InstallationDto> getInstallationsByIdIn(List<Integer> idList, RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(idList)) {
       return Collections.emptyList();
     }
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         facilityApi.searchFacilitiesByIds(
             idList,
             FACILITIES_BY_IDS_PROJECTION_ROOT,
@@ -75,21 +78,21 @@ public class InstallationQueryService {
             .stream()
             .map(this::convertToInstallationDto)
             .toList()
-    ));
+    );
   }
 
-  public List<InstallationDto> getInstallationsByIds(Collection<InstallationId> installationIds) {
+  public List<InstallationDto> getInstallationsByIds(Collection<InstallationId> installationIds, RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(installationIds)) {
       return Collections.emptyList();
     }
 
     var installationIdList = installationIds.stream().map(InstallationId::id).toList();
-    return getInstallationsByIdIn(installationIdList);
+    return getInstallationsByIdIn(installationIdList, requestPurpose);
   }
 
-  public Optional<InstallationDto> getInstallation(InstallationId installationId) {
-    return getInstallationsByIds(List.of(installationId))
+  public Optional<InstallationDto> getInstallation(InstallationId installationId, RequestPurpose requestPurpose) {
+    return getInstallationsByIds(List.of(installationId), requestPurpose)
         .stream()
         .findFirst();
   }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
@@ -14,6 +15,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licenc
 
 @Service
 public class NominatedInstallationDetailViewService {
+  static final RequestPurpose NOMINATED_INSTALLATION_PURPOSE = new RequestPurpose("View nominated installations for nomination");
+  static final RequestPurpose NOMINATED_LICENCE_PURPOSE = new RequestPurpose("View nominated licences for nomination");
 
   private final InstallationQueryService installationQueryService;
   private final LicenceQueryService licenceQueryService;
@@ -48,8 +51,12 @@ public class NominatedInstallationDetailViewService {
               .map(NominationLicence::getLicenceId)
               .toList();
 
-          var installationDtos = installationQueryService.getInstallationsByIdIn(nominatedInstallationIds);
-          var licenceDtos = licenceQueryService.getLicencesByIdIn(nominationLicenceIds)
+          var installationDtos = installationQueryService.getInstallationsByIdIn(
+              nominatedInstallationIds,
+              NOMINATED_INSTALLATION_PURPOSE
+          );
+
+          var licenceDtos = licenceQueryService.getLicencesByIdIn(nominationLicenceIds, NOMINATED_LICENCE_PURPOSE)
               .stream()
               .sorted(LicenceDto.sort())
               .toList();

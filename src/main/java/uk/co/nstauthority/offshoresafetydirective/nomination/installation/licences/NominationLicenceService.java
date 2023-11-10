@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominatedInstallationDetailForm;
@@ -11,6 +12,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Nomina
 @Service
 public class NominationLicenceService {
 
+  static final RequestPurpose SAVE_LICENCES_PURPOSE = new RequestPurpose("Save licences for nomination");
   private final NominationLicenceRepository nominationLicenceRepository;
   private final LicenceQueryService licenceQueryService;
 
@@ -27,7 +29,7 @@ public class NominationLicenceService {
         .distinct()
         .toList();
 
-    var nominationLicences = licenceQueryService.getLicencesByIdIn(licenceIds)
+    var nominationLicences = licenceQueryService.getLicencesByIdIn(licenceIds, SAVE_LICENCES_PURPOSE)
         .stream()
         .map(licenceDto -> {
           var nominationLicence = new NominationLicence();

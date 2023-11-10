@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
@@ -20,6 +21,12 @@ import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehav
 
 @Service
 public class InstallationSummaryService {
+
+  static final RequestPurpose INSTALLATION_RELATED_TO_NOMINATION_PURPOSE =
+      new RequestPurpose("Get installations related to nomination for the summary view");
+
+  static final RequestPurpose LICENCE_RELATED_TO_NOMINATION_PURPOSE =
+      new RequestPurpose("Get licences related to nomination for the summary view");
 
   private final NominatedInstallationAccessService nominatedInstallationAccessService;
   private final InstallationSubmissionService installationSubmissionService;
@@ -86,7 +93,10 @@ public class InstallationSummaryService {
         .map(NominatedInstallation::getInstallationId)
         .toList();
 
-    var installationNames = installationQueryService.getInstallationsByIdIn(installationIds)
+    var installationNames = installationQueryService.getInstallationsByIdIn(
+            installationIds,
+            INSTALLATION_RELATED_TO_NOMINATION_PURPOSE
+        )
         .stream()
         .map(InstallationDto::name)
         .sorted()
@@ -104,7 +114,7 @@ public class InstallationSummaryService {
           .map(NominationLicence::getLicenceId)
           .toList();
 
-      return licenceQueryService.getLicencesByIdIn(licenceIds)
+      return licenceQueryService.getLicencesByIdIn(licenceIds, LICENCE_RELATED_TO_NOMINATION_PURPOSE)
           .stream()
           .sorted(LicenceDto.sort())
           .map(licenceDto -> licenceDto.licenceReference().value())

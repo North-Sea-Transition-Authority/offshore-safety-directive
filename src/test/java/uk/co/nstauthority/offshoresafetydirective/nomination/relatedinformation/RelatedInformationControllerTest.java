@@ -212,7 +212,10 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
     when(relatedInformationFormService.getForm(nominationDetail))
         .thenReturn(form);
 
-    when(fieldQueryService.getFieldsByIds(Set.of(new FieldId(10), new FieldId(20))))
+    when(fieldQueryService.getFieldsByIds(
+        Set.of(new FieldId(10), new FieldId(20)),
+        RelatedInformationController.PRE_SELECTED_FIELDS_PURPOSE
+    ))
         // return out of order to verify sort
         .thenReturn(List.of(secondFieldByName, firstFieldByName));
 

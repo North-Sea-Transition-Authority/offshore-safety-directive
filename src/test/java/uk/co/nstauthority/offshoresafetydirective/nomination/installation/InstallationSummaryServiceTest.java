@@ -125,8 +125,13 @@ class InstallationSummaryServiceTest {
 
     when(installationInclusionAccessService.getInstallationInclusion(nominationDetail))
         .thenReturn(Optional.of(installationInclusion));
-    when(licenceQueryService.getLicencesByIdIn(List.of(nominationLicence.getLicenceId())))
+
+    when(licenceQueryService.getLicencesByIdIn(
+        List.of(nominationLicence.getLicenceId()),
+        InstallationSummaryService.LICENCE_RELATED_TO_NOMINATION_PURPOSE
+    ))
         .thenReturn(List.of(licenceDto));
+
     when(nominationLicenceService.getRelatedLicences(installationInclusion.getNominationDetail()))
         .thenReturn(List.of(nominationLicence));
 
@@ -136,7 +141,7 @@ class InstallationSummaryServiceTest {
         .isEqualTo(List.of(licenceReference));
   }
 
-    @Test
+  @Test
   void getInstallationSummaryView_whenRelated_andRelatedToAllPhases_thenAssertFields() {
 
     var installationInclusion = InstallationInclusionTestUtil.builder()
@@ -204,7 +209,9 @@ class InstallationSummaryServiceTest {
     when(nominatedInstallationAccessService.getNominatedInstallations(nominationDetail))
         .thenReturn(List.of(nominatedInstallationB, nominatedInstallationA));
 
-    when(installationQueryService.getInstallationsByIdIn(List.of(2, 1)))
+    when(installationQueryService.getInstallationsByIdIn(
+        List.of(2, 1),
+        InstallationSummaryService.INSTALLATION_RELATED_TO_NOMINATION_PURPOSE))
         .thenReturn(List.of(installationB, installationA));
 
     var result = installationSummaryService.getInstallationSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);

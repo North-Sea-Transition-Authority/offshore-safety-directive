@@ -25,6 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectA
 
 class EnergyPortalFieldQueryServiceTest {
 
+  static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private FieldApi fieldApi;
 
   private EnergyPortalFieldQueryService energyPortalFieldQueryService;
@@ -63,7 +64,7 @@ class EnergyPortalFieldQueryServiceTest {
     ))
         .thenReturn(List.of(field));
 
-    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(List.of(matchedFieldId));
+    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(List.of(matchedFieldId), REQUEST_PURPOSE);
 
     assertThat(resultingFields).hasSize(1);
     PropertyObjectAssert.thenAssertThat(resultingFields.get(0))
@@ -88,7 +89,7 @@ class EnergyPortalFieldQueryServiceTest {
     ))
         .thenReturn(Collections.emptyList());
 
-    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(List.of(unmatchedFieldId));
+    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(List.of(unmatchedFieldId), REQUEST_PURPOSE);
 
     assertThat(resultingFields).isEmpty();
   }
@@ -121,7 +122,8 @@ class EnergyPortalFieldQueryServiceTest {
         List.of(
             new FieldId(firstFieldByName.getFieldId()),
             new FieldId(secondFieldByName.getFieldId())
-        )
+        ),
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingFields)
@@ -132,7 +134,7 @@ class EnergyPortalFieldQueryServiceTest {
   @ParameterizedTest
   @NullAndEmptySource
   void getFieldsByIds_whenNoIdsProvided_thenEmptyListReturned(List<FieldId> nullOrEmptyFieldIds) {
-    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(nullOrEmptyFieldIds);
+    var resultingFields = energyPortalFieldQueryService.getFieldsByIds(nullOrEmptyFieldIds, REQUEST_PURPOSE);
     assertThat(resultingFields).isEmpty();
     verify(fieldApi, never()).getFieldsByIds(any(), any(), any(), any());
   }
@@ -154,7 +156,10 @@ class EnergyPortalFieldQueryServiceTest {
     ))
         .thenReturn(List.of(expectedField));
 
-    var resultingFields = energyPortalFieldQueryService.searchFields(fieldName, Set.of(fieldStatus));
+    var resultingFields = energyPortalFieldQueryService.searchFields(
+        fieldName,
+        Set.of(fieldStatus),
+        new RequestPurpose("a request purpose"));
 
     assertThat(resultingFields).hasSize(1);
     PropertyObjectAssert.thenAssertThat(resultingFields.get(0))
@@ -179,7 +184,11 @@ class EnergyPortalFieldQueryServiceTest {
     ))
         .thenReturn(Collections.emptyList());
 
-    var resultingFields = energyPortalFieldQueryService.searchFields(fieldName, Set.of(fieldStatus));
+    var resultingFields = energyPortalFieldQueryService.searchFields(
+        fieldName,
+        Set.of(fieldStatus),
+        new RequestPurpose("a request purpose")
+    );
 
     assertThat(resultingFields).isEmpty();
   }
@@ -210,7 +219,10 @@ class EnergyPortalFieldQueryServiceTest {
         // return the fields out of order
         .thenReturn(List.of(secondFieldByName, firstFieldByName));
 
-    var resultingFields = energyPortalFieldQueryService.searchFields(fieldName, Set.of(fieldStatus));
+    var resultingFields = energyPortalFieldQueryService.searchFields(
+        fieldName,
+        Set.of(fieldStatus),
+        new RequestPurpose("a request purpose"));
 
     assertThat(resultingFields)
         .extracting(FieldDto::name)

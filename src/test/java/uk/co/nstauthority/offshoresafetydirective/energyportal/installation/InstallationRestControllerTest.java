@@ -64,6 +64,6 @@ class InstallationRestControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     verify(installationQueryService, times(1))
-        .queryInstallationsByName(SEARCH_TERM, FACILITY_TYPES);
+        .queryInstallationsByName(SEARCH_TERM, FACILITY_TYPES, InstallationRestController.INSTALLATION_SEARCH_PURPOSE);
   }
 }

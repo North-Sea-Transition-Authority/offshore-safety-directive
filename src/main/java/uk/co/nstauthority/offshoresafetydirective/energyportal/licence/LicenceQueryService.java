@@ -43,7 +43,7 @@ public class LicenceQueryService {
   }
 
   public Optional<LicenceDto> getLicenceById(LicenceId licenceId, RequestPurpose requestPurpose) {
-    return energyPortalApiWrapper.makeRequest(requestPurpose, (logCorrelationId) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             licenceApi.findLicence(
                 licenceId.id(),
                 SINGLE_LICENCE_PROJECTION_ROOT,
@@ -56,13 +56,13 @@ public class LicenceQueryService {
         .findFirst();
   }
 
-  public List<LicenceDto> getLicencesByIdIn(Collection<Integer> idList) {
+  public List<LicenceDto> getLicencesByIdIn(Collection<Integer> idList, RequestPurpose requestPurpose) {
 
     if (idList == null || idList.isEmpty()) {
       return Collections.emptyList();
     }
 
-    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         licenceApi.searchLicencesById(
             idList.stream().toList(),
             MULTI_LICENCE_PROJECTION_ROOT,
@@ -75,8 +75,8 @@ public class LicenceQueryService {
         );
   }
 
-  List<LicenceDto> searchLicences(LicenceSearchFilter licenceSearchFilter) {
-    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+  List<LicenceDto> searchLicences(LicenceSearchFilter licenceSearchFilter, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         licenceApi.searchLicences(
             licenceSearchFilter,
             MULTI_LICENCE_PROJECTION_ROOT,

@@ -135,7 +135,9 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(installationAppointment));
 
-    given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
+    given(installationQueryService.getInstallationsByIds(
+        Set.of(appointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -211,7 +213,9 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
-    given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
+    given(installationQueryService.getInstallationsByIds(
+        Set.of(appointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(Collections.emptyList());
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -564,7 +568,9 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(installationAppointment, wellboreAppointment, subareaAppointment));
 
     // and all assets are returned from the API
-    given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
+    given(installationQueryService.getInstallationsByIds(
+        Set.of(appointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
@@ -657,8 +663,9 @@ class AppointmentSearchServiceTest {
 
     // and the installations are returned out of name order, excluding the installation not in the portal
     given(installationQueryService.getInstallationsByIds(
-        Set.of(firstAppointedInstallationId, secondAppointedInstallationId))
-    )
+        Set.of(firstAppointedInstallationId, secondAppointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE
+    ))
         .willReturn(List.of(secondInstallationByName, firstInstallationByName));
 
     // and given multiple wellbore appointments
@@ -823,7 +830,9 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(List.of(installationAppointment));
 
-    given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
+    given(installationQueryService.getInstallationsByIds(
+        Set.of(appointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -898,7 +907,9 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(installationAppointment));
 
     // and the installation ID is not returned by the API
-    given(installationQueryService.getInstallationsByIds(Set.of(appointedInstallationId)))
+    given(installationQueryService.getInstallationsByIds(
+        Set.of(appointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(Collections.emptyList());
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -958,7 +969,8 @@ class AppointmentSearchServiceTest {
 
     // and the installations are returned out of name order, excluding the installation not from the portal
     given(installationQueryService.getInstallationsByIds(
-        Set.of(firstAppointedInstallationId, secondAppointedInstallationId))
+        Set.of(firstAppointedInstallationId, secondAppointedInstallationId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE)
     )
         .willReturn(List.of(secondInstallationByName, firstInstallationByName));
 
@@ -1206,7 +1218,9 @@ class AppointmentSearchServiceTest {
         .build();
 
     // and the installation is a valid installation
-    given(installationQueryService.getInstallation(new InstallationId(searchFormWithInstallationId.getInstallationId())))
+    given(installationQueryService.getInstallation(
+        new InstallationId(searchFormWithInstallationId.getInstallationId()),
+        AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.of(expectedInstallation));
 
     var resultingAppointments =
@@ -1274,7 +1288,9 @@ class AppointmentSearchServiceTest {
         .willReturn(Collections.emptyList());
 
     // and the installation doesn't exist
-    given(installationQueryService.getInstallation(new InstallationId(searchFormWithInstallationId.getInstallationId())))
+    given(installationQueryService.getInstallation(
+        new InstallationId(searchFormWithInstallationId.getInstallationId()),
+        AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.empty());
 
     var resultingAppointments =

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
@@ -26,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 
 class InstallationQueryServiceTest {
 
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static FacilityApi facilityApi;
 
   private static final ServiceConfigurationProperties serviceConfigurationProperties
@@ -58,7 +60,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    assertThat(installationQueryService.queryInstallationsByName(searchTerm, facilityTypes)).isEmpty();
+    assertThat(installationQueryService.queryInstallationsByName(searchTerm, facilityTypes, REQUEST_PURPOSE)).isEmpty();
   }
 
   @Test
@@ -77,7 +79,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedFacility));
 
-    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes);
+    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities)
         .extracting(
@@ -121,7 +123,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(List.of(facilityInUkcs, facilityNotInUkcs, facilityWithInUkcsNull));
 
-    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes);
+    var resultingFacilities = installationQueryService.queryInstallationsByName(searchTerm, facilityTypes, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities)
         .extracting(InstallationDto::id)
@@ -143,7 +145,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    assertThat(installationQueryService.getInstallationsByIdIn(facilityIdList)).isEmpty();
+    assertThat(installationQueryService.getInstallationsByIdIn(facilityIdList, REQUEST_PURPOSE)).isEmpty();
   }
 
   @Test
@@ -160,7 +162,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedFacility));
 
-    var resultingFacilities = installationQueryService.getInstallationsByIdIn(facilityIdList);
+    var resultingFacilities = installationQueryService.getInstallationsByIdIn(facilityIdList, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities)
         .extracting(
@@ -217,7 +219,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    var resultingFacilities = installationQueryService.getInstallationsByIdIn(unmatchedFacilityId);
+    var resultingFacilities = installationQueryService.getInstallationsByIdIn(unmatchedFacilityId, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities).isEmpty();
   }
@@ -236,7 +238,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedFacility));
 
-    var resultingFacilities = installationQueryService.getInstallationsByIds(List.of(facilityId));
+    var resultingFacilities = installationQueryService.getInstallationsByIds(List.of(facilityId), REQUEST_PURPOSE);
 
     assertThat(resultingFacilities)
         .extracting(
@@ -259,7 +261,7 @@ class InstallationQueryServiceTest {
   @NullAndEmptySource
   void getInstallationsByIds_whenInputIdsNullOrEmpty_thenEmptyListReturned(List<InstallationId> installationIds) {
 
-    var resultingFacilities = installationQueryService.getInstallationsByIds(installationIds);
+    var resultingFacilities = installationQueryService.getInstallationsByIds(installationIds, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities).isEmpty();
 
@@ -270,7 +272,7 @@ class InstallationQueryServiceTest {
   @NullAndEmptySource
   void getInstallationsByIdIn_whenInputIdsNullOrEmpty_thenEmptyListReturned(List<Integer> installationIds) {
 
-    var resultingFacilities = installationQueryService.getInstallationsByIdIn(installationIds);
+    var resultingFacilities = installationQueryService.getInstallationsByIdIn(installationIds, REQUEST_PURPOSE);
 
     assertThat(resultingFacilities).isEmpty();
 
@@ -291,7 +293,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    var resultingInstallation = installationQueryService.getInstallation(unmatchedInstallationId);
+    var resultingInstallation = installationQueryService.getInstallation(unmatchedInstallationId, REQUEST_PURPOSE);
 
     assertThat(resultingInstallation).isEmpty();
   }
@@ -312,7 +314,7 @@ class InstallationQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedInstallation));
 
-    var resultingInstallation = installationQueryService.getInstallation(matchedInstallationId);
+    var resultingInstallation = installationQueryService.getInstallation(matchedInstallationId, REQUEST_PURPOSE);
 
     assertThat(resultingInstallation).isPresent();
     assertThat(resultingInstallation.get())

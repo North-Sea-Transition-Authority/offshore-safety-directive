@@ -99,13 +99,15 @@ class NominatedInstallationDetailViewServiceTest {
     when(nominatedInstallationAccessService.getNominatedInstallations(NOMINATION_DETAIL))
         .thenReturn(List.of(nominatedInstallation1, nominatedInstallation2));
     when(installationQueryService.getInstallationsByIdIn(
-        List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId())
+        List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId()),
+        NominatedInstallationDetailViewService.NOMINATED_INSTALLATION_PURPOSE
     )).thenReturn(List.of(installationDto1, installationDto2));
 
     when(nominationLicenceService.getRelatedLicences(NOMINATION_DETAIL))
         .thenReturn(List.of(nominationLicence1, nominationLicence2));
     when(licenceQueryService.getLicencesByIdIn(
-        List.of(nominationLicence1.getLicenceId(), nominationLicence2.getLicenceId())))
+        List.of(nominationLicence1.getLicenceId(), nominationLicence2.getLicenceId()),
+        NominatedInstallationDetailViewService.NOMINATED_LICENCE_PURPOSE))
         .thenReturn(List.of(licenceDto1, licenceDto2));
 
     var nominatedInstallationDetailView =
