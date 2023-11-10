@@ -4,10 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 
 @Service
 class CreateIndustryTeamValidator {
+
+  static final RequestPurpose INDUSTRY_TEAM_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the industry team selected exists in portal");
 
   private static final String ORGANISATION_GROUP_ID_FIELD_NAME = "orgGroupId";
 
@@ -27,7 +31,10 @@ class CreateIndustryTeamValidator {
     );
 
     if (!bindingResult.hasFieldErrors(ORGANISATION_GROUP_ID_FIELD_NAME)) {
-      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId());
+      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(
+          form.getOrgGroupId(),
+          INDUSTRY_TEAM_VALIDATION_PURPOSE
+      );
       if (orgGroup.isEmpty()) {
         bindingResult.rejectValue(
             ORGANISATION_GROUP_ID_FIELD_NAME,

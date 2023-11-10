@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -56,6 +57,9 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasNotBeenTerminated
 @HasAssetStatus(AssetStatus.EXTANT)
 public class AppointmentCorrectionController {
+
+  static final RequestPurpose PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE =
+      new RequestPurpose("Subarea name for the preselected forward approved appointment display string");
 
   private final AppointmentAccessService appointmentAccessService;
   private final PortalAssetNameService portalAssetNameService;
@@ -211,7 +215,8 @@ public class AppointmentCorrectionController {
         var startDate = DateUtil.formatLongDate(preSelectedAppointment.getResponsibleFromDate());
 
         var subareaName = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-                new LicenceBlockSubareaId(preSelectedAppointment.getAsset().getPortalAssetId())
+                new LicenceBlockSubareaId(preSelectedAppointment.getAsset().getPortalAssetId()),
+                PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
             ).map(LicenceBlockSubareaDto::displayName)
             .orElse(assetDto.assetName().value());
 

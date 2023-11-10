@@ -401,7 +401,8 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(subareaAppointment));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(List.of(appointedSubarea));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -477,7 +478,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(Collections.emptyList());
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -576,7 +578,10 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
         .willReturn(List.of(appointedWellbore));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        Set.of(appointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE
+    ))
         .willReturn(List.of(appointedSubarea));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(
@@ -734,8 +739,9 @@ class AppointmentSearchServiceTest {
 
     // return the subareas out of order
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
-        Set.of(firstAppointedSubareaId, secondAppointedSubareaId))
-    )
+        Set.of(firstAppointedSubareaId, secondAppointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE
+    ))
         .willReturn(List.of(secondSubareaByLicence, firstSubareaByLicence));
 
     var assetTypeRestrictions = Set.of(PortalAssetType.values());
@@ -1057,7 +1063,10 @@ class AppointmentSearchServiceTest {
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
         .willReturn(List.of(appointedOperator));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        Set.of(appointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE
+    ))
         .willReturn(List.of(appointedSubarea));
 
     // when we search appointments
@@ -1127,7 +1136,9 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(subareaAppointment));
 
     // and the subarea ID isn't returned from the API
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(Set.of(appointedSubareaId)))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        Set.of(appointedSubareaId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(Collections.emptyList());
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
@@ -1170,7 +1181,9 @@ class AppointmentSearchServiceTest {
 
     // and the installation is a valid installation
     given(
-        licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(searchFormWithSubareaId.getSubareaId())))
+        licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+            new LicenceBlockSubareaId(searchFormWithSubareaId.getSubareaId()),
+            AppointmentSearchService.NO_SUBAREA_APPOINTMENT_PURPOSE))
         .willReturn(Optional.of(expectedSubarea));
 
     var resultingAppointments =

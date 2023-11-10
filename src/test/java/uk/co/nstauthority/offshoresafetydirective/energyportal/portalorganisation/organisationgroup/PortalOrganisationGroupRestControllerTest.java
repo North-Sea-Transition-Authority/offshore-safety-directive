@@ -68,7 +68,10 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
         .build();
 
     // Return the results in the incorrect order
-    when(portalOrganisationGroupQueryService.queryOrganisationByName(term))
+    when(portalOrganisationGroupQueryService.queryOrganisationByName(
+        term,
+        PortalOrganisationGroupRestController.PORTAL_ORG_GROUP_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(secondDto, firstDto));
 
     var result = mockMvc.perform(get(
@@ -97,7 +100,10 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
   void searchPortalOrganisationGroups_whenNoResults_thenEmpty() throws Exception {
     var term = "term";
 
-    when(portalOrganisationGroupQueryService.queryOrganisationByName(term))
+    when(portalOrganisationGroupQueryService.queryOrganisationByName(
+        term,
+        PortalOrganisationGroupRestController.PORTAL_ORG_GROUP_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = mockMvc.perform(get(
@@ -123,7 +129,11 @@ class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
     var uppercaseDto = PortalOrganisationGroupDtoTestUtil.builder()
         .withName("org/B")
         .build();
-    when(portalOrganisationGroupQueryService.queryOrganisationByName(term))
+
+    when(portalOrganisationGroupQueryService.queryOrganisationByName(
+        term,
+        PortalOrganisationGroupRestController.PORTAL_ORG_GROUP_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(lowercaseDto, uppercaseDto));
 
     var result = mockMvc.perform(get(

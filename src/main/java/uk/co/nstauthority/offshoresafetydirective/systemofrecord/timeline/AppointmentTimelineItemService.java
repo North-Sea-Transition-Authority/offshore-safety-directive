@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
@@ -59,6 +60,9 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class AppointmentTimelineItemService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentTimelineItemService.class);
   private static final String FORWARD_APPROVED_STRING_FORMAT = "%s: %s";
+
+  static final RequestPurpose FORWARD_APPROVED_APPOINTMENT_PURPOSE =
+      new RequestPurpose("Subarea name for the forward approved appointment display string");
 
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
@@ -413,7 +417,9 @@ public class AppointmentTimelineItemService {
 
   private String getFormattedAssetName(Appointment createdByAppointment) {
     var subareaDtoOptional = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()));
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    );
 
     if (subareaDtoOptional.isPresent()) {
       return subareaDtoOptional.get().displayName();

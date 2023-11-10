@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
@@ -31,6 +32,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class ForwardApprovedAppointmentRestController {
 
   public static final String SEARCH_DISPLAY_STRING = "%s: %s";
+  static final RequestPurpose FORWARD_APPROVED_SEARCH_PURPOSE =
+      new RequestPurpose("Forward approved appointments search selector (search forward approved appointments)");
   static final EnumSet<AppointmentStatus> STATUSES = EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED);
   private final AppointmentAccessService appointmentAccessService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -45,7 +48,7 @@ public class ForwardApprovedAppointmentRestController {
   @GetMapping
   public RestSearchResult searchSubareaAppointments(@RequestParam("term") String searchTerm) {
     List<LicenceBlockSubareaDto> portalSubareas = licenceBlockSubareaQueryService
-        .searchSubareasByDisplayName(searchTerm)
+        .searchSubareasByDisplayName(searchTerm, FORWARD_APPROVED_SEARCH_PURPOSE)
         .stream()
         .sorted(LicenceBlockSubareaDto.sort())
         .toList();

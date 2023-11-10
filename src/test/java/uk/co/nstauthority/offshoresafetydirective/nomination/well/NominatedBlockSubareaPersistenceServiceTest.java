@@ -52,7 +52,9 @@ class NominatedBlockSubareaPersistenceServiceTest {
         .withSubareas(List.of(firstSubareaId.id(), secondSubareaId.id(), secondSubareaId.id()))
         .build();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(firstSubareaId, secondSubareaId)))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(firstSubareaId, secondSubareaId),
+        NominatedBlockSubareaPersistenceService.SAVE_LICENCE_BLOCK_SUBAREAS_PURPOSE))
         .thenReturn(List.of(firstSubareaDto, secondSubareaDto));
 
     nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(NOMINATION_DETAIL, formWithDuplicateSubarea);

@@ -64,7 +64,7 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
 
     var orgGroupId = 123;
     var orgGroupDto = PortalOrganisationGroupDtoTestUtil.builder().build();
-    when(portalOrganisationGroupQueryService.findOrganisationById(orgGroupId))
+    when(portalOrganisationGroupQueryService.findOrganisationById(orgGroupId, CreateIndustryTeamController.INDUSTRY_TEAM_PURPOSE))
         .thenReturn(Optional.of(orgGroupDto));
 
     var team = TeamTestUtil.Builder().build();
@@ -144,7 +144,10 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
         .build();
 
     var createdTeam = TeamTestUtil.Builder().build();
-    when(portalOrganisationGroupQueryService.findOrganisationById(orgGroupId))
+    when(portalOrganisationGroupQueryService.findOrganisationById(
+        orgGroupId,
+        CreateIndustryTeamController.INDUSTRY_TEAM_PURPOSE
+    ))
         .thenReturn(Optional.of(portalOrganisationGroupDto));
 
     when(industryTeamService.createIndustryTeam(portalOrganisationGroupDto))
@@ -172,7 +175,10 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
         .withOrgGroupId(orgGroupId)
         .build();
 
-    when(portalOrganisationGroupQueryService.findOrganisationById(orgGroupId))
+    when(portalOrganisationGroupQueryService.findOrganisationById(
+        orgGroupId,
+        CreateIndustryTeamController.INDUSTRY_TEAM_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(post(ReverseRouter.route(on(CreateIndustryTeamController.class)

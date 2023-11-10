@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
@@ -17,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 
 class PortalOrganisationGroupQueryServiceTest {
 
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private OrganisationApi organisationApi;
   private EnergyPortalApiWrapper energyPortalApiWrapper;
   private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
@@ -52,7 +54,7 @@ class PortalOrganisationGroupQueryServiceTest {
         any()
     )).thenReturn(Optional.of(organisationGroup));
 
-    var result = portalOrganisationGroupQueryService.findOrganisationById(orgId);
+    var result = portalOrganisationGroupQueryService.findOrganisationById(orgId, REQUEST_PURPOSE);
 
     var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
         .withOrganisationGroupId(String.valueOf(orgId))
@@ -83,7 +85,7 @@ class PortalOrganisationGroupQueryServiceTest {
         any()
     )).thenReturn(List.of(organisationGroup));
 
-    var result = portalOrganisationGroupQueryService.queryOrganisationByName(orgName);
+    var result = portalOrganisationGroupQueryService.queryOrganisationByName(orgName, REQUEST_PURPOSE);
 
     var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
         .withOrganisationGroupId(String.valueOf(orgId))

@@ -570,7 +570,9 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointmentAsset.getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointmentAsset.getPortalAssetId()),
+        NewAppointmentController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .thenReturn(Optional.of(subareaDto));
 
     mockMvc.perform(post(
@@ -625,7 +627,10 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointmentId)))
         .thenReturn(Optional.ofNullable(createdByAppointment));
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(createdByAsset.getPortalAssetId())))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(createdByAsset.getPortalAssetId()),
+        NewAppointmentController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(post(

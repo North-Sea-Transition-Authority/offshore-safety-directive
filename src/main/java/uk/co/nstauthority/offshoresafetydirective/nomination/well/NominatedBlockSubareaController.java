@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
@@ -37,6 +38,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominatedBlockSubareaController {
 
   static final String PAGE_TITLE = "Licence block subarea nominations";
+  static final RequestPurpose ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE =
+      new RequestPurpose("Get the licence block subareas already added to list for nomination");
 
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
@@ -115,7 +118,10 @@ public class NominatedBlockSubareaController {
         .map(LicenceBlockSubareaId::new)
         .toList();
 
-    return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(licenceBlockSubareaIds)
+    return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+            licenceBlockSubareaIds,
+            ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
+        )
         .stream()
         .sorted(LicenceBlockSubareaDto.sort())
         .map(blockSubareaDto ->

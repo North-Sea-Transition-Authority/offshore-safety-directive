@@ -51,7 +51,10 @@ class SubareaAssetServiceTest {
         .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
 
     var subarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(subarea.subareaId())))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(subarea.subareaId()),
+        SubareaAssetService.FORWARD_APPROVED_ASSET_PURPOSE
+    ))
         .thenReturn(List.of(subarea));
 
     var wellPhase = WellPhase.EXPLORATION_AND_APPRAISAL;
@@ -90,7 +93,10 @@ class SubareaAssetServiceTest {
         .thenReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
 
     var subarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(subarea.subareaId())))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(subarea.subareaId()),
+        SubareaAssetService.FORWARD_APPROVED_ASSET_PURPOSE
+    ))
         .thenReturn(List.of(subarea));
 
     var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder()
@@ -150,7 +156,7 @@ class SubareaAssetServiceTest {
 
     assertThat(result).isEmpty();
 
-    verify(licenceBlockSubareaQueryService, never()).getLicenceBlockSubareasByIds(any());
+    verify(licenceBlockSubareaQueryService, never()).getLicenceBlockSubareasByIds(any(), any());
   }
 
   @Test
@@ -168,10 +174,13 @@ class SubareaAssetServiceTest {
         .withSubareaId("nonExtant")
         .build();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(List.of(
-        subareaExtant.subareaId(),
-        subareaNonExtant.subareaId()
-    )))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(
+          subareaExtant.subareaId(),
+          subareaNonExtant.subareaId()
+        ),
+        SubareaAssetService.FORWARD_APPROVED_ASSET_PURPOSE
+    ))
         .thenReturn(List.of(subareaExtant, subareaNonExtant));
 
     var nominatedBlockSubareaDetailView = NominatedBlockSubareaDetailViewTestUtil.builder()

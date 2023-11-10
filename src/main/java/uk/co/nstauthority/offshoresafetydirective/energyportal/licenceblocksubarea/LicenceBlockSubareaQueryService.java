@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.generated.client.SubareasProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
@@ -71,25 +72,10 @@ public class LicenceBlockSubareaQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<LicenceBlockSubareaDto> searchExtantSubareasByName(String subareaName) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
-
-      var energyPortalSubareas = subareaApi.searchExtantSubareasByName(
-          subareaName,
-          SUBAREAS_PROJECTION_ROOT,
-          requestPurpose,
-          logCorrelationId
-      )
-          .stream()
-          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
-          .toList();
-
-      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
-  }
-
-  public List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName, List<SubareaStatus> subareaStatuses) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+  public List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName,
+                                                           List<SubareaStatus> subareaStatuses,
+                                                           RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var energyPortalSubareas = subareaApi.searchSubareasByNameAndStatuses(
               subareaName,
@@ -103,29 +89,13 @@ public class LicenceBlockSubareaQueryService {
           .toList();
 
       return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
-  }
-
-  List<LicenceBlockSubareaDto> searchSubareasByLicenceReference(String licenceReference) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
-
-      var energyPortalSubareas = subareaApi.searchExtantSubareasByLicenceReference(
-          licenceReference,
-          SUBAREAS_PROJECTION_ROOT,
-          requestPurpose,
-          logCorrelationId
-      )
-          .stream()
-          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
-          .toList();
-
-      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
+    });
   }
 
   public List<LicenceBlockSubareaDto> searchSubareasByLicenceReferenceWithStatuses(String licenceReference,
-                                                                                   List<SubareaStatus> statuses) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+                                                                                   List<SubareaStatus> statuses,
+                                                                                   RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var energyPortalSubareas = subareaApi.searchSubareasByLicenceReferenceAndStatuses(
               licenceReference,
@@ -139,28 +109,13 @@ public class LicenceBlockSubareaQueryService {
           .toList();
 
       return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
+    });
   }
 
-  List<LicenceBlockSubareaDto> searchExtantSubareasByBlockReference(String blockReference) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
-
-      var energyPortalSubareas = subareaApi.searchExtantSubareasByBlockReference(
-          blockReference,
-          SUBAREAS_PROJECTION_ROOT,
-          requestPurpose,
-          logCorrelationId
-      )
-          .stream()
-          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
-          .toList();
-
-      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
-  }
-
-  List<LicenceBlockSubareaDto> searchSubareasByBlockReference(String blockReference, List<SubareaStatus> statuses) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+  List<LicenceBlockSubareaDto> searchSubareasByBlockReference(String blockReference,
+                                                              List<SubareaStatus> statuses,
+                                                              RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var energyPortalSubareas = subareaApi.searchSubareasByBlockReferenceAndStatuses(
               blockReference,
@@ -174,13 +129,12 @@ public class LicenceBlockSubareaQueryService {
           .toList();
 
       return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
+    });
   }
 
-  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(
-      Collection<LicenceBlockSubareaId> licenceBlockSubareaIds
-  ) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+  public List<LicenceBlockSubareaDto> getLicenceBlockSubareasByIds(Collection<LicenceBlockSubareaId> licenceBlockSubareaIds,
+                                                                   RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();
 
@@ -192,13 +146,14 @@ public class LicenceBlockSubareaQueryService {
       );
 
       return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
-    }));
+    });
   }
 
   List<LicenceBlockSubareaWellboreDto> getLicenceBlockSubareasWithWellboresByIds(
-      List<LicenceBlockSubareaId> licenceBlockSubareaIds
+      List<LicenceBlockSubareaId> licenceBlockSubareaIds,
+      RequestPurpose requestPurpose
   ) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();
 
@@ -211,24 +166,27 @@ public class LicenceBlockSubareaQueryService {
           .stream()
           .map(LicenceBlockSubareaWellboreDto::fromPortalSubarea)
           .toList();
-    }));
+    });
   }
 
-  public Optional<LicenceBlockSubareaDto> getLicenceBlockSubarea(LicenceBlockSubareaId licenceBlockSubareaId) {
-    return getLicenceBlockSubareasByIds(List.of(licenceBlockSubareaId))
+  public Optional<LicenceBlockSubareaDto> getLicenceBlockSubarea(LicenceBlockSubareaId licenceBlockSubareaId,
+                                                                 RequestPurpose requestPurpose) {
+    return getLicenceBlockSubareasByIds(List.of(licenceBlockSubareaId), requestPurpose)
         .stream()
         .findFirst();
   }
 
-  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm) {
-    return searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.values()));
+  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm, RequestPurpose requestPurpose) {
+    return searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.values()), requestPurpose);
   }
 
-  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm, List<SubareaStatus> statuses) {
+  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm,
+                                                                 List<SubareaStatus> statuses,
+                                                                 RequestPurpose requestPurpose) {
 
     Map<LicenceBlockSubareaId, LicenceBlockSubareaDto> matchedSubareaMap = new HashMap<>();
 
-    var matchedSubareasByName = searchSubareasByName(searchTerm, statuses);
+    var matchedSubareasByName = searchSubareasByName(searchTerm, statuses, requestPurpose);
 
     if (!CollectionUtils.isEmpty(matchedSubareasByName)) {
       matchedSubareaMap.putAll(
@@ -238,7 +196,7 @@ public class LicenceBlockSubareaQueryService {
       );
     }
 
-    var matchedSubareasByLicence = searchSubareasByLicenceReferenceWithStatuses(searchTerm, statuses);
+    var matchedSubareasByLicence = searchSubareasByLicenceReferenceWithStatuses(searchTerm, statuses, requestPurpose);
 
     if (!CollectionUtils.isEmpty(matchedSubareasByLicence)) {
       matchedSubareaMap.putAll(
@@ -248,7 +206,7 @@ public class LicenceBlockSubareaQueryService {
       );
     }
 
-    var matchedSubareasByBlockReference = searchSubareasByBlockReference(searchTerm, statuses);
+    var matchedSubareasByBlockReference = searchSubareasByBlockReference(searchTerm, statuses, requestPurpose);
 
     if (!CollectionUtils.isEmpty(matchedSubareasByBlockReference)) {
       matchedSubareaMap.putAll(

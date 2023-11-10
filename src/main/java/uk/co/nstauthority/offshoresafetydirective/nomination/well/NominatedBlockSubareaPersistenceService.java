@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -12,6 +13,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Service
 class NominatedBlockSubareaPersistenceService {
 
+  static final RequestPurpose SAVE_LICENCE_BLOCK_SUBAREAS_PURPOSE =
+      new RequestPurpose("Get the licence block subareas to save on nomination");
   private final NominatedBlockSubareaRepository nominatedBlockSubareaRepository;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
@@ -37,7 +40,7 @@ class NominatedBlockSubareaPersistenceService {
         .toList();
 
     List<NominatedBlockSubarea> nominatedBlockSubareas = licenceBlockSubareaQueryService
-        .getLicenceBlockSubareasByIds(blockSubareaIds)
+        .getLicenceBlockSubareasByIds(blockSubareaIds, SAVE_LICENCE_BLOCK_SUBAREAS_PURPOSE)
         .stream()
         .map(blockSubareaDto -> {
           var nominatedBlockSubarea = new NominatedBlockSubarea();

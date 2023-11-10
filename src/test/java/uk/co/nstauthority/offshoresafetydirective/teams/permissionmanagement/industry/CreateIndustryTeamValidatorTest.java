@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.in
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.entry;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -32,7 +32,10 @@ class CreateIndustryTeamValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var portalOrganisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder().build();
-    when(portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId()))
+    when(portalOrganisationGroupQueryService.findOrganisationById(
+        form.getOrgGroupId(),
+        CreateIndustryTeamValidator.INDUSTRY_TEAM_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(portalOrganisationGroupDto));
 
     createIndustryTeamValidator.validate(form, bindingResult);
@@ -61,7 +64,10 @@ class CreateIndustryTeamValidatorTest {
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    when(portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId()))
+    when(portalOrganisationGroupQueryService.findOrganisationById(
+        form.getOrgGroupId(),
+        CreateIndustryTeamValidator.INDUSTRY_TEAM_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     createIndustryTeamValidator.validate(form, bindingResult);

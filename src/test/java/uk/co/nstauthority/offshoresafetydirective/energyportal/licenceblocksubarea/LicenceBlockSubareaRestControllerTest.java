@@ -57,7 +57,11 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
 
     var searchTerm = "no matching subareas";
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        SUBAREA_STATUSES,
+        LicenceBlockSubareaRestController.LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE
+    ))
         .willReturn(Set.of());
 
     var response = mockMvc.perform(get(
@@ -112,7 +116,11 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         firstSubareaByLicence
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        SUBAREA_STATUSES,
+        LicenceBlockSubareaRestController.LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -201,7 +209,11 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         fourthSubareaByBlock
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        SUBAREA_STATUSES,
+        LicenceBlockSubareaRestController.LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(
@@ -273,7 +285,11 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
         firstSubareaByName
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm, SUBAREA_STATUSES))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        SUBAREA_STATUSES,
+        LicenceBlockSubareaRestController.LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     var response = mockMvc.perform(get(

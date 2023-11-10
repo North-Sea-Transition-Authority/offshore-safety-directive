@@ -700,8 +700,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()
-    )))
+        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()),
+        AppointmentCorrectionController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     when(appointmentCorrectionService.getForm(appointment))
@@ -720,12 +721,14 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             Map.of(
                 appointment.getId(),
                 ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-                    .formatted(appointment.getAsset().getAssetName(), DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
+                    .formatted(appointment.getAsset().getAssetName(),
+                        DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
             )));
   }
 
   @Test
-  void renderCorrection_whenForwardApprovedAppointmentType_andValidReference_thenHasPreselectedForwardApproval() throws Exception {
+  void renderCorrection_whenForwardApprovedAppointmentType_andValidReference_thenHasPreselectedForwardApproval()
+      throws Exception {
     var appointmentType = AppointmentType.FORWARD_APPROVED;
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
@@ -753,8 +756,9 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var subarea = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()
-        )))
+        new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()),
+        AppointmentCorrectionController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .thenReturn(Optional.of(subarea));
 
     when(appointmentCorrectionService.getForm(appointment))
@@ -774,7 +778,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 appointment.getId(),
                 ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
                     .formatted(subarea.displayName(), DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
-        )));
+            )));
   }
 
   @SecurityTest

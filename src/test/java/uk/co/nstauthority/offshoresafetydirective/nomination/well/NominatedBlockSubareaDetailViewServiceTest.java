@@ -60,7 +60,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
         .thenReturn(List.of(nominatedBlockSubarea));
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
-        List.of(new LicenceBlockSubareaId(nominatedBlockSubarea.getBlockSubareaId())))
+        List.of(new LicenceBlockSubareaId(nominatedBlockSubarea.getBlockSubareaId())),
+        NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE)
     )
         .thenReturn(List.of(expectedLicenceBlockSubareaDto));
 
@@ -136,7 +137,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
             secondSubareaByLicence.subareaId(),
             thirdSubareaByLicence.subareaId(),
             fourthSubareaByLicence.subareaId()
-        )
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
     )).thenReturn(unsortedSubareaList);
 
     var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();
@@ -230,7 +231,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
             fourthSubareaByBlock.subareaId(),
             fifthSubareaByBlock.subareaId(),
             sixthSubareaByBlock.subareaId()
-        )
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
     )).thenReturn(unsortedSubareaList);
 
     var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();
@@ -304,7 +305,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
             firstSubareaByName.subareaId(),
             secondSubareaByName.subareaId(),
             thirdSubareaByName.subareaId()
-        )
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
     )).thenReturn(unsortedSubareaList);
 
     var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();

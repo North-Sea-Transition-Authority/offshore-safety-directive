@@ -83,7 +83,10 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
   @Test
   void searchSubareaAppointments_whenNoSubareasFoundInPortal_returnEmptyList() throws Exception {
     var searchTerm = "some subarea name";
-    when(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm))
+    when(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        ForwardApprovedAppointmentRestController.FORWARD_APPROVED_SEARCH_PURPOSE
+    ))
         .thenReturn(Set.of());
 
     var result = mockMvc.perform(get(
@@ -138,7 +141,10 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
         firstSubareaByLicence
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        ForwardApprovedAppointmentRestController.FORWARD_APPROVED_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     @SuppressWarnings("unchecked")
@@ -220,7 +226,10 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
         fourthSubareaByBlock
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        ForwardApprovedAppointmentRestController.FORWARD_APPROVED_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     @SuppressWarnings("unchecked")
@@ -279,7 +288,10 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
         firstSubareaByName
     );
 
-    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm))
+    given(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        ForwardApprovedAppointmentRestController.FORWARD_APPROVED_SEARCH_PURPOSE
+    ))
         .willReturn(unsortedSubareaList);
 
     @SuppressWarnings("unchecked")
@@ -326,7 +338,10 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
         firstSubareaByName
     );
 
-    when(licenceBlockSubareaQueryService.searchSubareasByDisplayName(searchTerm))
+    when(licenceBlockSubareaQueryService.searchSubareasByDisplayName(
+        searchTerm,
+        ForwardApprovedAppointmentRestController.FORWARD_APPROVED_SEARCH_PURPOSE
+    ))
         .thenReturn(unsortedSubareaList);
 
     var firstSubareaByNameAsset = AssetTestUtil.builder()

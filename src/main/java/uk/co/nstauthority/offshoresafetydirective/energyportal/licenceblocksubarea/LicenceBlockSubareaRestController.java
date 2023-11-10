@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
@@ -16,6 +17,9 @@ import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 @RequestMapping("/api/public/licence-block-subarea")
 @Unauthenticated
 public class LicenceBlockSubareaRestController {
+
+  static final RequestPurpose LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE =
+      new RequestPurpose("Licence block subarea search selector (search licence block subarea)");
 
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
@@ -28,7 +32,7 @@ public class LicenceBlockSubareaRestController {
   public RestSearchResult searchSubareas(@RequestParam("term") String searchTerm) {
 
     Set<LicenceBlockSubareaDto> matchedSubareas = licenceBlockSubareaQueryService
-        .searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.EXTANT));
+        .searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.EXTANT), LICENCE_BLOCK_SUBAREA_SEARCH_PURPOSE);
 
     List<RestSearchItem> searchItemsResult = matchedSubareas
         .stream()

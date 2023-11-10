@@ -5,8 +5,10 @@ import java.util.List;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.SubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.enumutil.EnumUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
@@ -18,7 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionT
 
 @Service
 class SubareaAssetService {
-
+  static final RequestPurpose FORWARD_APPROVED_ASSET_PURPOSE = new RequestPurpose("Get the nominated subarea assets");
   private final WellSelectionSetupAccessService wellSelectionSetupAccessService;
   private final NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -57,10 +59,10 @@ class SubareaAssetService {
 
       var licenceBlockIds = blockSubareaDetailView.getLicenceBlockSubareas()
           .stream()
-          .map(dto -> dto.subareaId())
+          .map(SubareaDto::subareaId)
           .toList();
 
-      return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(licenceBlockIds)
+      return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(licenceBlockIds, FORWARD_APPROVED_ASSET_PURPOSE)
           .stream()
           .filter(LicenceBlockSubareaDto::isExtant)
           .map(dto -> new NominatedAssetDto(

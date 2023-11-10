@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
@@ -31,28 +32,28 @@ public class PortalOrganisationGroupQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  public Optional<PortalOrganisationGroupDto> findOrganisationById(int id) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+  public Optional<PortalOrganisationGroupDto> findOrganisationById(int id, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.findOrganisationGroup(
                 id,
                 SINGLE_ORGANISATION_PROJECTION_ROOT,
                 requestPurpose,
                 logCorrelationId
             )
-        ))
+        )
         .map(PortalOrganisationGroupDto::fromOrganisationGroup);
   }
 
-  List<PortalOrganisationGroupDto> queryOrganisationByName(String organisationName) {
+  List<PortalOrganisationGroupDto> queryOrganisationByName(String organisationName, RequestPurpose requestPurpose) {
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.searchOrganisationGroups(
                 organisationName,
                 MULTI_ORGANISATION_PROJECTION_ROOT,
                 requestPurpose,
                 logCorrelationId
             )
-        ))
+        )
         .stream()
         .map(PortalOrganisationGroupDto::fromOrganisationGroup)
         .toList();

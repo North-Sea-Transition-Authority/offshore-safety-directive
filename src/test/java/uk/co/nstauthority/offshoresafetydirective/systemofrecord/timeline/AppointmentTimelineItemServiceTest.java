@@ -1300,7 +1300,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1342,7 +1344,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1388,7 +1392,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1434,7 +1440,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1480,7 +1488,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1532,7 +1542,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
@@ -1579,7 +1591,9 @@ class AppointmentTimelineItemServiceTest {
     var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId())))
+        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
+        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
+    ))
         .willReturn(Optional.ofNullable(subareaDto));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))

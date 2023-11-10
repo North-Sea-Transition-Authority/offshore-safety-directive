@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
@@ -12,6 +13,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Service
 public class NominatedBlockSubareaDetailViewService {
 
+  static final RequestPurpose NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
+      = new RequestPurpose("View nominated licence block subareas for nomination");
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
   private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -36,7 +39,7 @@ public class NominatedBlockSubareaDetailViewService {
               .toList();
 
           var licenceBlockSubareaDtos = licenceBlockSubareaQueryService
-              .getLicenceBlockSubareasByIds(licenceBlockSubareaIds)
+              .getLicenceBlockSubareasByIds(licenceBlockSubareaIds, NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE)
               .stream()
               .sorted(LicenceBlockSubareaDto.sort())
               .toList();

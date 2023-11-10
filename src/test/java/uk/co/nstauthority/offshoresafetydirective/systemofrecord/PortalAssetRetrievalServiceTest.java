@@ -109,7 +109,7 @@ class PortalAssetRetrievalServiceTest {
 
     var licenceBlockSubareaId = new LicenceBlockSubareaId("subarea-id");
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(licenceBlockSubareaId))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(licenceBlockSubareaId, PortalAssetRetrievalService.SUBAREA_PURPOSE))
         .willReturn(Optional.empty());
 
     var resultingSubarea = portalAssetRetrievalService.getLicenceBlockSubarea(licenceBlockSubareaId);
@@ -124,7 +124,7 @@ class PortalAssetRetrievalServiceTest {
 
     var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(licenceBlockSubareaId))
+    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(licenceBlockSubareaId, PortalAssetRetrievalService.SUBAREA_PURPOSE))
         .willReturn(Optional.of(expectedSubarea));
 
     var resultingSubarea = portalAssetRetrievalService.getLicenceBlockSubarea(licenceBlockSubareaId);
@@ -203,7 +203,10 @@ class PortalAssetRetrievalServiceTest {
     var subareaDto = mock(LicenceBlockSubareaDto.class);
     when(subareaDto.displayName()).thenReturn(expectedName);
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id())))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+        new LicenceBlockSubareaId(portalAssetId.id()),
+        PortalAssetRetrievalService.SUBAREA_PURPOSE
+    ))
         .thenReturn(Optional.of(subareaDto));
 
     var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
@@ -263,7 +266,7 @@ class PortalAssetRetrievalServiceTest {
     var subareaId = new LicenceBlockSubareaId("123");
     var portalAssetId = new PortalAssetId(subareaId.id());
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId, PortalAssetRetrievalService.SUBAREA_PURPOSE))
         .thenReturn(Optional.of(LicenceBlockSubareaDtoTestUtil.builder().build()));
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);
@@ -275,7 +278,7 @@ class PortalAssetRetrievalServiceTest {
     var subareaId = new LicenceBlockSubareaId("123");
     var portalAssetId = new PortalAssetId(subareaId.id());
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId, PortalAssetRetrievalService.SUBAREA_PURPOSE))
         .thenReturn(Optional.empty());
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);
@@ -288,7 +291,7 @@ class PortalAssetRetrievalServiceTest {
     var portalAssetId = new PortalAssetId(subareaId.id());
 
     var nonExtantSubarea = LicenceBlockSubareaDtoTestUtil.builder().isExtant(false).build();
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(subareaId, PortalAssetRetrievalService.SUBAREA_PURPOSE))
         .thenReturn(Optional.of(nonExtantSubarea));
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.SUBAREA);

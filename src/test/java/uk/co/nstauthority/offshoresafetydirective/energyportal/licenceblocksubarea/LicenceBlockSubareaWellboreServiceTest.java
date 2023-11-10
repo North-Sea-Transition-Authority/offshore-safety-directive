@@ -31,7 +31,8 @@ class LicenceBlockSubareaWellboreServiceTest {
     var noMatchingLicenceBlockSubareaId = new LicenceBlockSubareaId("not a match");
 
     given(subareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
-        List.of(noMatchingLicenceBlockSubareaId)
+        List.of(noMatchingLicenceBlockSubareaId),
+        LicenceBlockSubareaWellboreService.SUBAREA_RELATED_WELLBORES_PURPOSE
     ))
         .willReturn(Collections.emptyList());
 
@@ -52,7 +53,8 @@ class LicenceBlockSubareaWellboreServiceTest {
         .build();
 
     given(subareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
-        List.of(matchingLicenceBlockSubareaId)
+        List.of(matchingLicenceBlockSubareaId),
+        LicenceBlockSubareaWellboreService.SUBAREA_RELATED_WELLBORES_PURPOSE
     ))
         .willReturn(List.of(subareaWithNoWellbores));
 
@@ -77,7 +79,8 @@ class LicenceBlockSubareaWellboreServiceTest {
         .build();
 
     given(subareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
-        List.of(matchingLicenceBlockSubareaId)
+        List.of(matchingLicenceBlockSubareaId),
+        LicenceBlockSubareaWellboreService.SUBAREA_RELATED_WELLBORES_PURPOSE
     ))
         .willReturn(List.of(subareaWithWellbores));
 
@@ -109,7 +112,8 @@ class LicenceBlockSubareaWellboreServiceTest {
         .build();
 
     given(subareaQueryService.getLicenceBlockSubareasWithWellboresByIds(
-        List.of(matchingLicenceBlockSubareaId)
+        List.of(matchingLicenceBlockSubareaId),
+        LicenceBlockSubareaWellboreService.SUBAREA_RELATED_WELLBORES_PURPOSE
     ))
         .willReturn(List.of(subareaWithDuplicateWellbores, subareaWithSameWellboreAsAnother));
 

@@ -45,6 +45,12 @@ class AppointmentSearchService {
   static final RequestPurpose NO_INSTALLATION_APPOINTMENT_PURPOSE =
       new RequestPurpose("Search for installation appointments with no operator");
 
+  static final RequestPurpose APPOINTMENT_SEARCH_SUBAREA_PURPOSE =
+      new RequestPurpose("Search for existing subarea appointments");
+
+  static final RequestPurpose NO_SUBAREA_APPOINTMENT_PURPOSE =
+      new RequestPurpose("Search for subarea appointments with no operator");
+
   private final AppointmentQueryService appointmentQueryService;
 
   private final InstallationQueryService installationQueryService;
@@ -180,7 +186,10 @@ class AppointmentSearchService {
             && searchForm.getSubareaId() != null
             && searchForm.isEmptyExcept("subareaId")
     ) {
-      licenceBlockSubareaQueryService.getLicenceBlockSubarea(new LicenceBlockSubareaId(searchForm.getSubareaId()))
+      licenceBlockSubareaQueryService.getLicenceBlockSubarea(
+              new LicenceBlockSubareaId(searchForm.getSubareaId()),
+              NO_SUBAREA_APPOINTMENT_PURPOSE
+          )
           .ifPresent(subarea ->
               resultingAppointments.add(
                   createNoAppointedOperatorItem(
@@ -204,7 +213,7 @@ class AppointmentSearchService {
    * 4) Any appointments for assets that no longer exist in the Energy Portal
    *
    * @param assetTypeRestrictions The assets types to restrict results to
-   * @param searchFilter          The search filters to apply
+   * @param searchFilter The search filters to apply
    * @return a list of appointments matching the search criteria
    */
   private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
@@ -296,7 +305,7 @@ class AppointmentSearchService {
       if (!CollectionUtils.isEmpty(subareaIds)) {
 
         var subareaAppointments = licenceBlockSubareaQueryService
-            .getLicenceBlockSubareasByIds(subareaIds)
+            .getLicenceBlockSubareasByIds(subareaIds, APPOINTMENT_SEARCH_SUBAREA_PURPOSE)
             .stream()
             .sorted(LicenceBlockSubareaDto.sort())
             .map(subarea -> createSubareaAppointmentSearchItem(subarea, appointmentQueryResultItems, organisationUnits))

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
@@ -26,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasPermission(permissions = RolePermission.MANAGE_INDUSTRY_TEAMS)
 public class CreateIndustryTeamController {
 
+  static final RequestPurpose INDUSTRY_TEAM_PURPOSE = new RequestPurpose("Create industry team");
   private final CreateIndustryTeamValidator createIndustryTeamValidator;
   private final ControllerHelperService controllerHelperService;
   private final IndustryTeamService industryTeamService;
@@ -55,7 +57,7 @@ public class CreateIndustryTeamController {
 
     return controllerHelperService.checkErrorsAndRedirect(bindingResult, getModelAndView(form), form, () -> {
 
-      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId())
+      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId(), INDUSTRY_TEAM_PURPOSE)
           .orElseThrow(() -> new ResponseStatusException(
               HttpStatus.INTERNAL_SERVER_ERROR,
               "Organisation group with id [%d] does not exist".formatted(form.getOrgGroupId())

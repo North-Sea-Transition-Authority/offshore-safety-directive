@@ -48,7 +48,8 @@ class PearsLicenceServiceTest {
     var blockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
     when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
         licenceDto.licenceReference().value(),
-        List.of(SubareaStatus.NOT_EXTANT)
+        List.of(SubareaStatus.NOT_EXTANT),
+        PearsLicenceService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
     ))
         .thenReturn(List.of(blockSubareaDto));
 
@@ -76,7 +77,8 @@ class PearsLicenceServiceTest {
 
     when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
         licenceDto.licenceReference().value(),
-        List.of(SubareaStatus.NOT_EXTANT)
+        List.of(SubareaStatus.NOT_EXTANT),
+        PearsLicenceService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
     ))
         .thenReturn(List.of());
 

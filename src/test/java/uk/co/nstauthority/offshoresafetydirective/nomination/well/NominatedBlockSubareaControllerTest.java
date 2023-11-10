@@ -182,7 +182,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
 
     var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(subareaIds))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        subareaIds,
+        NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    ))
         .thenReturn(List.of(expectedSubarea));
 
     var modelAndView = mockMvc.perform(
@@ -280,7 +283,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
             .map(LicenceBlockSubareaId::new)
             .toList();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(subareaIds))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        subareaIds,
+        NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    ))
         .thenReturn(unsortedSubareaList);
 
     var modelAndView = mockMvc.perform(
@@ -366,7 +372,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .map(LicenceBlockSubareaId::new)
         .toList();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(subareaIds))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        subareaIds,
+        NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    ))
         .thenReturn(unsortedSubareaList);
 
     var modelAndView = mockMvc.perform(
@@ -426,7 +435,10 @@ class NominatedBlockSubareaControllerTest extends AbstractControllerTest {
         .map(LicenceBlockSubareaId::new)
         .toList();
 
-    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(subareaIds))
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        subareaIds,
+        NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    ))
         .thenReturn(unsortedSubareaList);
 
     var modelAndView = mockMvc.perform(

@@ -21,6 +21,10 @@ class PearsLicenceService {
 
   static final RequestPurpose PEARS_CORRECTION_APPLIED_PURPOSE =
       new RequestPurpose("Handle PEARS correction applied EPMQ message");
+
+  static final RequestPurpose SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE =
+      new RequestPurpose("Find non-extant subareas by licence reference when receiving a PEARS correction applied EPMQ message");
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PearsLicenceService.class);
   private final LicenceQueryService licenceQueryService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
@@ -57,7 +61,8 @@ class PearsLicenceService {
         .map(LicenceDto.LicenceReference::value)
         .map(reference -> licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
             reference,
-            List.of(SubareaStatus.NOT_EXTANT)
+            List.of(SubareaStatus.NOT_EXTANT),
+            SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
         ))
         .orElse(List.of());
 
