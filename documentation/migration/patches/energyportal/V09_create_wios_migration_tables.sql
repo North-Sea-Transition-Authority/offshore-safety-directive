@@ -42,4 +42,11 @@ CREATE TABLE osd_migration.migratable_subarea_appointments (
 , is_decommissioning_phase INT
 , appointment_source VARCHAR(255)
 , legacy_nomination_reference TEXT
+, created_by_migratable_appointment_id INT
+, asset_status VARCHAR(255)
+);
+
+CREATE TABLE osd_migration.subarea_migration_appointment_lookup (
+  migratable_appointment_id INT
+, appointment_id UUID
 );

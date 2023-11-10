@@ -2,6 +2,16 @@ GRANT SELECT ON pedmgr.epa_subareas_mv TO wios_migration;
 
 GRANT SELECT ON pedmgr.ped_licence_master TO wios_migration;
 
+GRANT SELECT ON pedmgr.ped_licence_blocks TO wios_migration;
+
+GRANT SELECT ON pedmgr.ped_current_data_points TO wios_migration;
+
+GRANT SELECT ON pedmgr.ped_licence_block_refs TO wios_migration;
+
+GRANT SELECT ON pedmgr.ped_subareas TO wios_migration;
+
+GRANT EXECUTE ON pedmgr.ped_utils TO wios_migration;
+
 CREATE TABLE wios_migration.subarea_appointments (
   migratable_appointment_id NUMBER
 , subarea_id VARCHAR2(4000)
@@ -15,8 +25,9 @@ CREATE TABLE wios_migration.subarea_appointments (
 , is_decommissioning_phase NUMBER
 , appointment_source VARCHAR2(4000)
 , legacy_nomination_reference VARCHAR2(4000)
-, CONSTRAINT subarea_migration_fkey
-    FOREIGN KEY (migratable_appointment_id) REFERENCES wios_migration.raw_subarea_appointments_data(migratable_appointment_id)
+, status VARCHAR2(4000)
+, created_by_migratable_appointment_id NUMBER
+, asset_status VARCHAR2(4000)
 , CONSTRAINT subarea_exploration_check CHECK(is_exploration_phase IN (0, 1))
 , CONSTRAINT subarea_development_check CHECK(is_development_phase IN (0, 1))
 , CONSTRAINT subarea_decommissioning_check CHECK(is_decommissioning_phase IN (0, 1))

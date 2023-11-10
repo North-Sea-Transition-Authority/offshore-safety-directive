@@ -205,6 +205,8 @@ SELECT
 , sa.is_decommissioning_phase
 , sa.appointment_source
 , sa.legacy_nomination_reference
+, sa.created_by_migratable_appointment_id
+, sa.asset_status
 FROM wios_migration.subarea_appointments sa
 WHERE sa.migratable_appointment_id NOT IN(
   SELECT DISTINCT sme.migratable_appointment_id

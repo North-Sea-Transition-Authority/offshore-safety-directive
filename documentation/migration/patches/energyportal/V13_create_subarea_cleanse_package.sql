@@ -101,9 +101,21 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
   ) RETURN VARCHAR2 DETERMINISTIC
   IS
 
+    l_licence_id pedmgr.ped_licence_master.id%TYPE;
+
   BEGIN
 
-    RETURN p_licence_type || p_licence_number || '-' || p_block_reference || '-' || p_subarea_name;
+    SELECT plm.id
+    INTO l_licence_id
+    FROM pedmgr.ped_licence_master plm
+    WHERE plm.licence_type = p_licence_type
+    AND plm.licence_no = p_licence_number;
+
+    RETURN pedmgr.ped_utils.get_portal_api_subarea_id(
+      p_subarea_name => p_subarea_name
+    , p_block_reference => p_block_reference
+    , p_licence_master_id => l_licence_id
+    );
 
   END create_subarea_identifier_sql;
 
@@ -499,36 +511,6 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
     END IF;
 
-    -- if the input appointment date is null then check if the subarea is
-    -- ended in the portal. If so set the appointment to the end date of the
-    -- subarea recorded in PEARS
-    IF l_appointment_to_date IS NULL THEN
-
-      BEGIN
-
-        SELECT esm.end_datetime
-        INTO l_appointment_to_date
-        FROM pedmgr.epa_subareas_mv esm
-        WHERE esm.public_subarea_id = (
-          SELECT s.subarea_id
-          FROM wios_migration.subarea_appointments s
-          WHERE s.migratable_appointment_id = p_migratable_appointment_id
-        );
-
-        add_migration_warning(
-          p_migratable_appointment_id => p_migratable_appointment_id
-        , p_warning_message => 'Appointment to date was NULL from source data but an end date ' || TO_CHAR(l_appointment_to_date, 'DD/MM/YYYY') || ' was found in PEARS and used instead'
-        );
-
-      EXCEPTION
-
-        WHEN NO_DATA_FOUND THEN
-
-          l_appointment_to_date := NULL;
-      END;
-
-    END IF;
-
     IF l_appointment_to_date IS NOT NULL AND l_appointment_to_date > K_CURRENT_DATE THEN
 
       add_migration_error(
@@ -806,6 +788,12 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
   IS
 
     t_subarea_lookup t_subarea_lookup_type;
+    l_subarea_is_extant_following_pears_changes NUMBER := 0;
+    l_copy_forward_subarea_id VARCHAR2(4000);
+    l_copy_forward_subarea_name VARCHAR2(4000);
+    l_max_migratable_appointment_id wios_migration.subarea_appointments.migratable_appointment_id%TYPE;
+    l_original_subarea_end_date DATE;
+    l_earliest_responsible_from_date_for_subarea DATE;
 
   BEGIN
 
@@ -937,6 +925,222 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
 
     END LOOP;
 
+    -- migration of forward area approval appointment will error when the subarea
+    -- the appointment is for did not exist on the appointment date
+    FOR subarea_not_existing_at_appointment_time IN (
+      SELECT sa.migratable_appointment_id
+      FROM wios_migration.subarea_appointments sa
+      JOIN wios_migration.raw_subarea_appointments_data sad ON sad.migratable_appointment_id = sa.migratable_appointment_id
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM pedmgr.ped_current_data_points pcdp
+        JOIN pedmgr.ped_licence_blocks plb ON plb.ped_dp_id = pcdp.id
+        JOIN pedmgr.ped_licence_block_refs plbr ON plbr.plb_id = plb.id
+          AND plbr.block_ref = TO_CHAR(sad.block_reference)
+        JOIN pedmgr.ped_subareas ps ON ps.ped_lb_id = plb.id
+          AND ps.title = TO_CHAR(sad.subarea_name)
+        WHERE sa.responsible_from_date BETWEEN ps.start_datetime AND NVL(ps.end_datetime, SYSDATE)
+        AND pcdp.ped_sim_id = 0
+        AND pcdp.licence_type = TO_CHAR(sad.licence_type)
+        AND pcdp.licence_no = TO_NUMBER(sad.licence_number)
+      )
+      AND sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => subarea_not_existing_at_appointment_time.migratable_appointment_id
+      , p_error_message => 'Subarea does not exist during the appointment period'
+      );
+
+    END LOOP;
+
+    -- migration of a forward area approval appointment will error when
+    -- the subarea the appointment is for existed on the appointment date (catered for above) AND
+    -- the subarea does not exist as an extant subarea after taking into account operations that have taken place since the appointment date
+    -- the appointment does not have an end date
+    FOR current_appointment IN (
+      SELECT
+        sa.migratable_appointment_id
+      , TO_CHAR(rd.licence_type) licence_type
+      , TO_NUMBER(rd.licence_number) licence_number
+      , TO_CHAR(rd.block_reference) block_reference
+      , TO_CHAR(rd.subarea_name) subarea_name
+      , sa.responsible_from_date
+      FROM wios_migration.subarea_appointments sa
+      JOIN wios_migration.raw_subarea_appointments_data rd ON rd.migratable_appointment_id = sa.migratable_appointment_id
+      WHERE sa.responsible_to_date IS NULL
+      AND sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      SELECT DECODE(COUNT(*), 0, 0, 1)
+      INTO l_subarea_is_extant_following_pears_changes
+      FROM pedmgr.subarea_history h
+      WHERE h.licence_type = current_appointment.licence_type
+      AND h.licence_no = current_appointment.licence_number
+      AND h.block_ref = current_appointment.block_reference
+      AND h.title = current_appointment.subarea_name
+      AND current_appointment.responsible_from_date BETWEEN h.start_datetime AND NVL(h.end_datetime, SYSDATE);
+
+      IF l_subarea_is_extant_following_pears_changes = 0 THEN
+
+        add_migration_error(
+          p_migratable_appointment_id => current_appointment.migratable_appointment_id
+        , p_error_message => 'Subarea appointment is current but subarea does not currently exist as extant taking into account pears changes'
+        );
+
+      END IF;
+
+    END LOOP;
+
+    -- migration of a forward area approval appointment will occur for the current extant versions of the subarea when
+    -- the subarea the appointment is for existed on the appointment date (as per PEARS timeline) AND
+    -- the subarea exists as one or more extant subareas after taking into account operations that have taken place since the appointment date
+    -- the original subarea will also be migrated as REMOVED with the appointment migrated as ended on the date the subarea was ended in pears
+    FOR asset IN (
+      SELECT DISTINCT sa.subarea_id
+      FROM wios_migration.subarea_appointments sa
+      WHERE sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      SAVEPOINT sp_before_subarea_copy_forward;
+
+      BEGIN
+
+        SELECT MIN(sa.responsible_from_date)
+        INTO l_earliest_responsible_from_date_for_subarea
+        FROM wios_migration.subarea_appointments sa
+        WHERE sa.subarea_id = asset.subarea_id
+        AND sa.migratable_appointment_id NOT IN(
+          SELECT DISTINCT sme.migratable_appointment_id
+          FROM wios_migration.subarea_migration_errors sme
+        );
+
+        FOR subarea_history IN (
+          -- if we have ALL -> NORTH -> ALL we could get the same subarea ID multiple times,
+          -- distinct to only get each implicated history ID once
+          SELECT DISTINCT h.subarea_history_id id
+          FROM pedmgr.subarea_history h
+          JOIN pedmgr.epa_subareas_mv esm ON esm.licence_reference = (h.licence_type || h.licence_no) AND esm.block_reference = h.block_ref AND esm.name = h.title
+          WHERE esm.public_subarea_id = asset.subarea_id
+          AND (h.end_datetime IS NULL OR TRUNC(h.end_datetime) >= l_earliest_responsible_from_date_for_subarea)
+        )
+        LOOP
+
+          BEGIN
+
+            SELECT
+              es.public_subarea_id
+            , es.licence_reference || ' ' || es.block_reference || ' ' ||  es.name
+            INTO
+              l_copy_forward_subarea_id
+            , l_copy_forward_subarea_name
+            FROM pedmgr.subarea_history h
+            JOIN pedmgr.epa_subareas_mv es ON es.name = h.title AND es.block_reference = h.block_ref AND es.licence_reference = (h.licence_type || h.licence_no)
+            WHERE h.subarea_history_id = subarea_history.id
+            AND h.history_sequence_id = 1
+            AND h.end_datetime IS NULL
+            -- exclude the current subarea
+            AND es.public_subarea_id != asset.subarea_id;
+
+          EXCEPTION WHEN NO_DATA_FOUND THEN
+
+            -- nothing to copy forward as no extant subarea
+            -- exists. A future subarea history record may have
+            -- an extant subarea to copy
+            CONTINUE;
+
+          END;
+
+          SELECT MAX(sa.migratable_appointment_id)
+          INTO l_max_migratable_appointment_id
+          FROM wios_migration.subarea_appointments sa;
+
+          INSERT INTO wios_migration.subarea_appointments (
+            migratable_appointment_id
+          , subarea_id
+          , subarea_reference
+          , appointed_operator_id
+          , appointed_operator_name
+          , responsible_from_date
+          , responsible_to_date
+          , appointment_source
+          , is_exploration_phase
+          , is_development_phase
+          , is_decommissioning_phase
+          , legacy_nomination_reference
+          , created_by_migratable_appointment_id
+          , asset_status
+          )
+          SELECT
+            (l_max_migratable_appointment_id + 1)
+          , l_copy_forward_subarea_id
+          , l_copy_forward_subarea_name
+          , sa.appointed_operator_id
+          , sa.appointed_operator_name
+          , sa.responsible_from_date
+          , sa.responsible_to_date
+          , sa.appointment_source
+          , sa.is_exploration_phase
+          , sa.is_development_phase
+          , sa.is_decommissioning_phase
+          , sa.legacy_nomination_reference
+          , sa.migratable_appointment_id
+          , 'EXTANT'
+          FROM wios_migration.subarea_appointments sa
+          WHERE sa.subarea_id = asset.subarea_id;
+
+        END LOOP;
+
+        COMMIT;
+
+      EXCEPTION WHEN OTHERS THEN
+
+        ROLLBACK TO SAVEPOINT sp_before_subarea_copy_forward;
+
+        raise_application_error(
+          -20999
+        , 'Unexpected error in subarea copy forward for subarea ' || asset.subarea_id
+            || CHR(10) || CHR(10) || SQLERRM || CHR(10)
+            || CHR(10) || dbms_utility.format_error_backtrace()
+        );
+
+      END;
+
+    END LOOP;
+
+    -- any subareas which are no longer extant should be marked as removed and the appointment ended
+    -- on the date the subarea ended
+    FOR ended_asset IN (
+      SELECT DISTINCT sa.subarea_id, TRUNC(es.end_datetime) end_date
+      FROM wios_migration.subarea_appointments sa
+      JOIN pedmgr.epa_subareas_mv es ON es.public_subarea_id = sa.subarea_id AND es.end_datetime IS NOT NULL
+      WHERE sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      UPDATE wios_migration.subarea_appointments sa
+      SET
+        sa.asset_status = 'REMOVED'
+      , sa.responsible_to_date = LEAST(NVL(sa.responsible_to_date, SYSDATE), ended_asset.end_date)
+      WHERE sa.subarea_id = ended_asset.subarea_id;
+
+    END LOOP;
+
     FOR appointment_with_inconsistent_date IN(
       SELECT *
       FROM (
@@ -1022,6 +1226,43 @@ CREATE OR REPLACE PACKAGE BODY wios_migration.subarea_appointment_migration AS
       add_migration_error(
         p_migratable_appointment_id => deemed_appointment_not_on_deemed_date.migratable_appointment_id
       , p_error_message => 'Asset has a deemed appointment that does not start on the deeming date'
+      );
+
+    END LOOP;
+
+    FOR appointment_with_start_date_after_end_date IN (
+      SELECT sa.migratable_appointment_id
+      FROM wios_migration.subarea_appointments sa
+      WHERE sa.responsible_to_date IS NOT NULL
+      AND sa.responsible_from_date > sa.responsible_to_date
+      AND sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => appointment_with_start_date_after_end_date.migratable_appointment_id
+      , p_error_message => 'Appointment start date is after the appointment end date'
+      );
+
+    END LOOP;
+
+    FOR appointment_with_start_date_in_future IN(
+      SELECT sa.migratable_appointment_id
+      FROM wios_migration.subarea_appointments sa
+      WHERE sa.responsible_from_date > TRUNC(SYSDATE)
+      AND sa.migratable_appointment_id NOT IN(
+        SELECT DISTINCT sme.migratable_appointment_id
+        FROM wios_migration.subarea_migration_errors sme
+      )
+    )
+    LOOP
+
+      add_migration_error(
+        p_migratable_appointment_id => appointment_with_start_date_in_future.migratable_appointment_id
+      , p_error_message => 'Appointment start date is in the future'
       );
 
     END LOOP;
