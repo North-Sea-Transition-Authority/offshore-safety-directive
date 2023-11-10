@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
@@ -18,8 +19,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentServ
 @Service
 class PearsLicenceService {
 
+  static final RequestPurpose PEARS_CORRECTION_APPLIED_PURPOSE =
+      new RequestPurpose("Handle PEARS correction applied EPMQ message");
   private static final Logger LOGGER = LoggerFactory.getLogger(PearsLicenceService.class);
-
   private final LicenceQueryService licenceQueryService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final AppointmentService appointmentService;
@@ -36,7 +38,11 @@ class PearsLicenceService {
 
   public void handlePearsCorrectionApplied(PearsCorrectionAppliedEpmqMessage message) {
     var licenceId = Integer.parseInt(message.getLicenceId());
-    var optionalLicence = licenceQueryService.getLicenceById(new LicenceId(licenceId));
+    var optionalLicence = licenceQueryService.getLicenceById(
+        new LicenceId(licenceId),
+        PEARS_CORRECTION_APPLIED_PURPOSE
+    );
+
     if (optionalLicence.isEmpty()) {
       LOGGER.error(
           "No licence [{}] found for PEARS correction with id [{}]",

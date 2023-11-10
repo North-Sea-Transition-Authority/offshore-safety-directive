@@ -408,7 +408,9 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var expectedLicence = LicenceDtoTestUtil.builder().build();
 
-    given(portalAssetRetrievalService.getLicence(new LicenceId(20)))
+    given(portalAssetRetrievalService.getLicence(
+        new LicenceId(20),
+        SystemOfRecordSearchController.LICENCE_SEARCH_FILTER_PURPOSE))
         .willReturn(Optional.of(expectedLicence));
 
     mockMvc.perform(

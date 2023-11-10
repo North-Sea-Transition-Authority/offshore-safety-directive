@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
@@ -29,6 +30,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 
 @ExtendWith(MockitoExtension.class)
 class PortalAssetRetrievalServiceTest {
+
+  private static final RequestPurpose LICENCE_PURPOSE = new RequestPurpose("get licence purpose");
 
   @Mock
   private WellQueryService wellQueryService;
@@ -136,10 +139,10 @@ class PortalAssetRetrievalServiceTest {
 
     var expectedLicence = LicenceDtoTestUtil.builder().build();
 
-    given(licenceQueryService.getLicenceById(licenceId))
+    given(licenceQueryService.getLicenceById(licenceId, LICENCE_PURPOSE))
         .willReturn(Optional.of(expectedLicence));
 
-    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId);
+    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId, LICENCE_PURPOSE);
 
     assertThat(resultingLicence).contains(expectedLicence);
   }
@@ -149,10 +152,10 @@ class PortalAssetRetrievalServiceTest {
 
     var licenceId = new LicenceId(123);
 
-    given(licenceQueryService.getLicenceById(licenceId))
+    given(licenceQueryService.getLicenceById(licenceId, LICENCE_PURPOSE))
         .willReturn(Optional.empty());
 
-    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId);
+    var resultingLicence = portalAssetRetrievalService.getLicence(licenceId, LICENCE_PURPOSE);
 
     assertThat(resultingLicence).isEmpty();
   }

@@ -26,28 +26,15 @@ class EnergyPortalApiWrapperTest {
 
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
 
-    var returnedCorrelationId = energyPortalApiWrapper.makeRequest(this::returnLogCorrelationId);
+    var returnedCorrelationId = energyPortalApiWrapper.makeRequest(
+        new RequestPurpose("a request purpose"),
+        this::returnLogCorrelationId
+    );
 
     assertThat(returnedCorrelationId).isEqualTo(correlationId);
   }
 
-  @Test
-  void makeRequest_verifyRequestPurpose() {
-
-    var requestPurpose = energyPortalApiWrapper.makeRequest(this::returnRequestPurpose);
-
-    assertThat(requestPurpose).isEqualTo("%s: %s.%s".formatted(
-        serviceConfigurationProperties.mnemonic(),
-        this.getClass().getName(),
-        "makeRequest_verifyRequestPurpose"
-    ));
-  }
-
-  private String returnLogCorrelationId(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
+  private String returnLogCorrelationId(LogCorrelationId logCorrelationId) {
     return logCorrelationId.id();
-  }
-
-  private String returnRequestPurpose(LogCorrelationId logCorrelationId, RequestPurpose requestPurpose) {
-    return requestPurpose.purpose();
   }
 }

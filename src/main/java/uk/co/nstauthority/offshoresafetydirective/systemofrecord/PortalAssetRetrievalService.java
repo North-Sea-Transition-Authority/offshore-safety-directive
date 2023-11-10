@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
@@ -50,8 +51,8 @@ public class PortalAssetRetrievalService {
     return licenceBlockSubareaQueryService.getLicenceBlockSubarea(licenceBlockSubareaId);
   }
 
-  public Optional<LicenceDto> getLicence(LicenceId licenceId) {
-    return licenceQueryService.getLicenceById(licenceId);
+  public Optional<LicenceDto> getLicence(LicenceId licenceId, RequestPurpose requestPurpose) {
+    return licenceQueryService.getLicenceById(licenceId, requestPurpose);
   }
 
   public Optional<String> getAssetName(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {

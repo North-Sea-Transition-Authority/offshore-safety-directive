@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceApi;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
 import uk.co.fivium.energyportalapi.generated.client.LicenceProjectionRoot;
@@ -41,8 +42,8 @@ public class LicenceQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  public Optional<LicenceDto> getLicenceById(LicenceId licenceId) {
-    return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+  public Optional<LicenceDto> getLicenceById(LicenceId licenceId, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, (logCorrelationId) ->
             licenceApi.findLicence(
                 licenceId.id(),
                 SINGLE_LICENCE_PROJECTION_ROOT,

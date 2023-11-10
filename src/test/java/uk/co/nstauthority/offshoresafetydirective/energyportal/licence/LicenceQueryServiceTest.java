@@ -57,7 +57,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(Optional.of(expectedPortalLicence));
 
-    var resultingLicence = licenceQueryService.getLicenceById(matchingLicenceId);
+    var resultingLicence = licenceQueryService.getLicenceById(matchingLicenceId, new RequestPurpose("a request purpose"));
 
     assertThat(resultingLicence).isPresent();
     assertThat(resultingLicence.get())
@@ -88,7 +88,7 @@ class LicenceQueryServiceTest {
     ))
         .willReturn(Optional.empty());
 
-    var resultingLicence = licenceQueryService.getLicenceById(unmatchedLicenceId);
+    var resultingLicence = licenceQueryService.getLicenceById(unmatchedLicenceId, new RequestPurpose("a request purpose"));
 
     assertThat(resultingLicence).isEmpty();
   }

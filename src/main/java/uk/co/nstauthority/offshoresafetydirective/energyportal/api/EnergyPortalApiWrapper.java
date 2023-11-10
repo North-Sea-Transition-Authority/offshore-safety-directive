@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.api;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,12 @@ public class EnergyPortalApiWrapper {
     var requestPurpose = getRequestPurpose();
     logEpaRequest(logCorrelationId, requestPurpose);
     return request.apply(logCorrelationId, requestPurpose);
+  }
+
+  public <T> T makeRequest(RequestPurpose requestPurpose, Function<LogCorrelationId, T> request) {
+    var logCorrelationId = new LogCorrelationId(CorrelationIdUtil.getCorrelationIdFromMdc());
+    logEpaRequest(logCorrelationId, requestPurpose);
+    return request.apply(logCorrelationId);
   }
 
   private RequestPurpose getRequestPurpose() {

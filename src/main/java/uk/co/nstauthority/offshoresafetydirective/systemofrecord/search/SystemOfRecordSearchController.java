@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
@@ -37,6 +38,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetr
 @RequestMapping("/system-of-record")
 @Unauthenticated
 public class SystemOfRecordSearchController {
+
+  static final RequestPurpose LICENCE_SEARCH_FILTER_PURPOSE =
+      new RequestPurpose("Retrieve licence for SoR wellbore search filter");
 
   private static final String OPERATORS_MODEL_AND_VIEW_NAME =
       "osd/systemofrecord/search/operator/searchAppointmentsByOperator";
@@ -260,7 +264,9 @@ public class SystemOfRecordSearchController {
 
     if (searchForm.getLicenceId() != null) {
       filteredLicence = portalAssetRetrievalService
-          .getLicence(new LicenceId(searchForm.getLicenceId()))
+          .getLicence(
+              new LicenceId(searchForm.getLicenceId()),
+              LICENCE_SEARCH_FILTER_PURPOSE)
           .stream()
           .collect(Collectors.toMap(
               licence -> String.valueOf(licence.licenceId().id()),

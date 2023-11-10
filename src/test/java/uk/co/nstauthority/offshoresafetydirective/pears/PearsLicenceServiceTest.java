@@ -40,7 +40,9 @@ class PearsLicenceServiceTest {
     var licenceId = 123;
     var licenceDto = LicenceDtoTestUtil.builder().build();
 
-    when(licenceQueryService.getLicenceById(new LicenceId(licenceId)))
+    when(licenceQueryService.getLicenceById(
+        new LicenceId(licenceId),
+        PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
         .thenReturn(Optional.of(licenceDto));
 
     var blockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
@@ -67,7 +69,9 @@ class PearsLicenceServiceTest {
     var licenceId = 123;
     var licenceDto = LicenceDtoTestUtil.builder().build();
 
-    when(licenceQueryService.getLicenceById(new LicenceId(licenceId)))
+    when(licenceQueryService.getLicenceById(
+        new LicenceId(licenceId),
+        PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
         .thenReturn(Optional.of(licenceDto));
 
     when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
@@ -92,7 +96,9 @@ class PearsLicenceServiceTest {
   void handlePearsCorrectionApplied_whenLicenceIdIsNotFound_thenVerifyNoCalls() {
     var licenceId = 123;
 
-    when(licenceQueryService.getLicenceById(new LicenceId(licenceId)))
+    when(licenceQueryService.getLicenceById(
+            new LicenceId(licenceId),
+            PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
         .thenReturn(Optional.empty());
 
     var message = new PearsCorrectionAppliedEpmqMessage(
