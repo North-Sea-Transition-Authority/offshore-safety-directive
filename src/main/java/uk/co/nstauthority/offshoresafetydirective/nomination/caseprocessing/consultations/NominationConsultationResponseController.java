@@ -118,7 +118,7 @@ public class NominationConsultationResponseController {
 
           var notificationBanner = NotificationBanner.builder()
               .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("The consultation response has been added")
+              .withHeading("Added consultation response")
               .build();
 
           NotificationBannerUtil.applyNotificationBanner(

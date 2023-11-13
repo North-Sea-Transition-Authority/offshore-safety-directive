@@ -184,7 +184,7 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withHeading("The consultation response has been added")
+        .withHeading("Added consultation response")
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(

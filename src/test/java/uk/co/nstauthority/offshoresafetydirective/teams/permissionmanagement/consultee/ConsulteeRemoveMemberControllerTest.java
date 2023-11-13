@@ -433,7 +433,7 @@ class ConsulteeRemoveMemberControllerTest extends AbstractControllerTest {
 
     var expectedNotificationBanner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withContent("%s has been removed from the team".formatted(teamMemberView.getDisplayName()))
+        .withHeading("Removed %s from team".formatted(teamMemberView.getDisplayName()))
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(ConsulteeRemoveMemberController.class)

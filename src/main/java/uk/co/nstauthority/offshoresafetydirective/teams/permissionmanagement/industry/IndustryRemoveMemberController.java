@@ -107,7 +107,7 @@ public class IndustryRemoveMemberController extends AbstractTeamController {
 
     var banner = NotificationBanner.builder()
         .withBannerType(NotificationBannerType.SUCCESS)
-        .withContent("%s has been removed from the team".formatted(userView.getDisplayName()))
+        .withHeading("Removed %s from team".formatted(userView.getDisplayName()))
         .build();
 
     NotificationBannerUtil.applyNotificationBanner(redirectAttributes, banner);
