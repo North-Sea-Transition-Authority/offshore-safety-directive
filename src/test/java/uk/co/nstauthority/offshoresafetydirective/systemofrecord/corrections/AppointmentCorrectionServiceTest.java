@@ -1109,7 +1109,10 @@ class AppointmentCorrectionServiceTest {
     when(appointmentCorrectionRepository.findAllByAppointment(appointment))
         .thenReturn(List.of(firstCorrection, secondCorrection));
 
-    when(energyPortalUserService.findByWuaIds(Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy)))
+    when(energyPortalUserService.findByWuaIds(
+        Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy),
+        AppointmentCorrectionService.CORRECTED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(firstUser, secondUser));
 
     var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
@@ -1151,7 +1154,10 @@ class AppointmentCorrectionServiceTest {
     when(appointmentCorrectionRepository.findAllByAppointment(appointment))
         .thenReturn(List.of(correction));
 
-    when(energyPortalUserService.findByWuaIds(Set.of(correctionCreatedBy)))
+    when(energyPortalUserService.findByWuaIds(
+        Set.of(correctionCreatedBy),
+        AppointmentCorrectionService.CORRECTED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
@@ -1206,7 +1212,10 @@ class AppointmentCorrectionServiceTest {
     when(appointmentCorrectionRepository.findAllByAppointment_IdIn(List.of(appointmentId.id())))
         .thenReturn(List.of(firstCorrection, secondCorrection));
 
-    when(energyPortalUserService.findByWuaIds(Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy)))
+    when(energyPortalUserService.findByWuaIds(
+        Set.of(firstCorrectionCreatedBy, secondCorrectionCreatedBy),
+        AppointmentCorrectionService.CORRECTED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(firstUser, secondUser));
 
     var result = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(List.of(appointmentId));

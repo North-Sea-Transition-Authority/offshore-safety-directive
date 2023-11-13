@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -24,6 +25,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 @Service
 public class CaseEventQueryService {
 
+  static final RequestPurpose CASE_EVENT_CREATED_BY_USER_PURPOSE =
+      new RequestPurpose("Get details for user who created the case event");
   private final CaseEventRepository caseEventRepository;
   private final CaseEventFileService caseEventFileService;
   private final EnergyPortalUserService energyPortalUserService;
@@ -90,7 +93,7 @@ public class CaseEventQueryService {
         .distinct()
         .toList();
 
-    var users = energyPortalUserService.findByWuaIds(createdByUserIds);
+    var users = energyPortalUserService.findByWuaIds(createdByUserIds, CASE_EVENT_CREATED_BY_USER_PURPOSE);
 
     var userIdAndDtoMap = users.stream()
         .collect(Collectors.toMap(

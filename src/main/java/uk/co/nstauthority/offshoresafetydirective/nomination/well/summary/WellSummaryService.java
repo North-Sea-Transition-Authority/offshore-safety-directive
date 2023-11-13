@@ -11,6 +11,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
@@ -33,6 +34,8 @@ import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehav
 
 @Service
 public class WellSummaryService {
+  static final RequestPurpose WELLS_RELATED_TO_NOMINATION_PURPOSE =
+      new RequestPurpose("Get wells related to nomination for the summary view");
 
   private final WellSelectionSetupViewService wellSelectionSetupViewService;
 
@@ -142,7 +145,8 @@ public class WellSummaryService {
     if (!CollectionUtils.isEmpty(wellboreIdsToFind)) {
 
       var wellbores = wellQueryService.getWellsByIds(
-              Stream.concat(nominatedSubareaWellIds.stream(), excludedWellIds.stream()).toList()
+              Stream.concat(nominatedSubareaWellIds.stream(), excludedWellIds.stream()).toList(),
+              WELLS_RELATED_TO_NOMINATION_PURPOSE
           )
           .stream()
           // use a linked hash map so the ordering from the api can be maintained

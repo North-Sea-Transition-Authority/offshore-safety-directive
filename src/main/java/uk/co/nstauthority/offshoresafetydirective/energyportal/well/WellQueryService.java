@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 import uk.co.fivium.energyportalapi.generated.client.WellboresProjectionRoot;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
@@ -25,15 +26,15 @@ public class WellQueryService {
           .mechanicalStatus().root()
           .regulatoryJurisdiction().root()
           .originLicence()
-            .id()
-            .licenceType()
-            .licenceNo()
-            .licenceRef().root()
+          .id()
+          .licenceType()
+          .licenceNo()
+          .licenceRef().root()
           .totalDepthLicence()
-            .id()
-            .licenceType()
-            .licenceNo()
-            .licenceRef().root();
+          .id()
+          .licenceType()
+          .licenceNo()
+          .licenceRef().root();
 
   static final WellboresProjectionRoot SEARCH_WELLBORES_PROJECTION_ROOT =
       new WellboresProjectionRoot()
@@ -51,27 +52,27 @@ public class WellQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<WellDto> searchWellsByRegistrationNumber(String wellRegistrationNumber) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+  List<WellDto> searchWellsByRegistrationNumber(String wellRegistrationNumber, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         wellboreApi.searchWellboresByRegistrationNumber(
-            wellRegistrationNumber,
-            SEARCH_WELLBORES_PROJECTION_ROOT,
-            requestPurpose,
-            logCorrelationId
-        )
+                wellRegistrationNumber,
+                SEARCH_WELLBORES_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
             .stream()
             .map(WellDto::fromPortalWellbore)
             .toList()
-    ));
+    );
   }
 
-  public List<WellDto> getWellsByIds(Collection<WellboreId> wellboreIds) {
+  public List<WellDto> getWellsByIds(Collection<WellboreId> wellboreIds, RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(wellboreIds)) {
       return Collections.emptyList();
     }
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) -> {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->  {
 
       var wellboreIdLiterals = wellboreIds
           .stream()
@@ -79,20 +80,21 @@ public class WellQueryService {
           .toList();
 
       return wellboreApi.searchWellboresByIds(
-          wellboreIdLiterals,
-          WELLBORES_PROJECTION_ROOT,
-          requestPurpose,
-          logCorrelationId
-      )
+              wellboreIdLiterals,
+              WELLBORES_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
           .stream()
           .map(WellDto::fromPortalWellbore)
           .toList();
-    }));
+    });
   }
 
   public Set<WellDto> searchWellbores(List<WellboreId> wellboreIds,
                                       WellboreRegistrationNumber registrationNumber,
-                                      List<LicenceId> licenceIds) {
+                                      List<LicenceId> licenceIds,
+                                      RequestPurpose requestPurpose) {
 
     List<Integer> wellboreIdApiInput = CollectionUtils.isEmpty(wellboreIds)
         ? Collections.emptyList()
@@ -101,16 +103,16 @@ public class WellQueryService {
     String registrationNumberApiInput = (registrationNumber != null) ? registrationNumber.value() : null;
 
     if (CollectionUtils.isEmpty(licenceIds)) {
-      return energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+      return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
           wellboreApi.searchWellbores(
-              wellboreIdApiInput,
-              registrationNumberApiInput,
-              null,
-              null,
-              WELLBORES_PROJECTION_ROOT,
-              requestPurpose,
-              logCorrelationId
-          )
+                  wellboreIdApiInput,
+                  registrationNumberApiInput,
+                  null,
+                  null,
+                  WELLBORES_PROJECTION_ROOT,
+                  requestPurpose,
+                  logCorrelationId
+              )
               .stream()
               .map(WellDto::fromPortalWellbore)
               .collect(Collectors.toSet())
@@ -122,43 +124,45 @@ public class WellQueryService {
 
       List<Integer> licenceIdApiInput = licenceIds.stream().map(LicenceId::id).toList();
 
-      Set<WellDto> totalDepthLicenceWellbores = energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
+      Set<WellDto> totalDepthLicenceWellbores = energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+
           wellboreApi.searchWellbores(
-              wellboreIdApiInput,
-              registrationNumberApiInput,
-              licenceIdApiInput,
-              null,
-              WELLBORES_PROJECTION_ROOT,
-              requestPurpose,
-              logCorrelationId
-          )
-              .stream()
-              .map(WellDto::fromPortalWellbore)
-              .collect(Collectors.toSet())
+                      wellboreIdApiInput,
+                      registrationNumberApiInput,
+                      licenceIdApiInput,
+                      null,
+                      WELLBORES_PROJECTION_ROOT,
+                      requestPurpose,
+                      logCorrelationId
+                  )
+                  .stream()
+                  .map(WellDto::fromPortalWellbore)
+                  .collect(Collectors.toSet())
       );
 
-      Set<WellDto> originLicenceWellbores = energyPortalApiWrapper.makeRequest((logCorrelationId, requestPurpose) ->
-          wellboreApi.searchWellbores(
-              wellboreIdApiInput,
-              registrationNumberApiInput,
-              null,
-              licenceIdApiInput,
-              WELLBORES_PROJECTION_ROOT,
-              requestPurpose,
-              logCorrelationId
-          )
-              .stream()
-              .map(WellDto::fromPortalWellbore)
-              .collect(Collectors.toSet())
-      );
+      Set<WellDto> originLicenceWellbores =
+          energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+              wellboreApi.searchWellbores(
+                      wellboreIdApiInput,
+                      registrationNumberApiInput,
+                      null,
+                      licenceIdApiInput,
+                      WELLBORES_PROJECTION_ROOT,
+                      requestPurpose,
+                      logCorrelationId
+                  )
+                  .stream()
+                  .map(WellDto::fromPortalWellbore)
+                  .collect(Collectors.toSet())
+          );
 
       return Stream.concat(totalDepthLicenceWellbores.stream(), originLicenceWellbores.stream())
           .collect(Collectors.toSet());
     }
   }
 
-  public Optional<WellDto> getWell(WellboreId wellboreId) {
-    return getWellsByIds(List.of(wellboreId))
+  public Optional<WellDto> getWell(WellboreId wellboreId, RequestPurpose requestPurpose) {
+    return getWellsByIds(List.of(wellboreId), requestPurpose)
         .stream()
         .findFirst();
   }

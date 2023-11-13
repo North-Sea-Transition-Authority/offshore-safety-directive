@@ -7,6 +7,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreRegistrationNumber;
@@ -14,6 +15,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
 public class ExcludedWellSummaryService {
+
+  static final RequestPurpose EXCLUDED_WELLS_PURPOSE = new RequestPurpose("Get wells exlcuded from nomination");
 
   private final ExcludedWellAccessService excludedWellAccessService;
 
@@ -48,7 +51,7 @@ public class ExcludedWellSummaryService {
           .toList();
 
       if (!CollectionUtils.isEmpty(excludedWellIds)) {
-        excludedWellReferences = wellQueryService.getWellsByIds(excludedWellIds)
+        excludedWellReferences = wellQueryService.getWellsByIds(excludedWellIds, EXCLUDED_WELLS_PURPOSE)
             .stream()
             .map(wellDto -> new WellboreRegistrationNumber(wellDto.name()))
             .toList();

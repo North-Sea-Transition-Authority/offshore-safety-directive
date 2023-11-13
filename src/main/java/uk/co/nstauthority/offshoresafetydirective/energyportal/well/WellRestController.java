@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
@@ -18,6 +19,8 @@ import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 @Unauthenticated
 public class WellRestController {
 
+  static final RequestPurpose WELL_SEARCH_PURPOSE =
+      new RequestPurpose("Well name and type search selector (search wells)");
   private final WellQueryService wellQueryService;
 
   @Autowired
@@ -29,7 +32,8 @@ public class WellRestController {
   @ResponseBody
   public RestSearchResult searchWells(@RequestParam("term") String searchTerm) {
     
-    List<RestSearchItem> searchItemsResult = Optional.ofNullable(wellQueryService.searchWellsByRegistrationNumber(searchTerm))
+    List<RestSearchItem> searchItemsResult =
+        Optional.ofNullable(wellQueryService.searchWellsByRegistrationNumber(searchTerm, WELL_SEARCH_PURPOSE))
         .orElse(Collections.emptyList())
         .stream()
         .map(wellDto -> new RestSearchItem(String.valueOf(wellDto.wellboreId().id()), wellDto.name()))

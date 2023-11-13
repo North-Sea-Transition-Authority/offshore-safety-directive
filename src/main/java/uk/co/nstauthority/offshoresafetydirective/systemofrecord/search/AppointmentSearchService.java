@@ -54,6 +54,12 @@ class AppointmentSearchService {
   static final RequestPurpose NO_SUBAREA_APPOINTMENT_PURPOSE =
       new RequestPurpose("Search for subarea appointments with no operator");
 
+  static final RequestPurpose APPOINTMENT_SEARCH_WELLBORE_PURPOSE =
+      new RequestPurpose("Search for existing wellbore appointments");
+
+  static final RequestPurpose SEARCH_WELLBORE_APPOINTMENTS_PURPOSE =
+      new RequestPurpose("Search for all well appointments based on well and licence ids");
+
   private final AppointmentQueryService appointmentQueryService;
 
   private final InstallationQueryService installationQueryService;
@@ -138,7 +144,8 @@ class AppointmentSearchService {
     Set<WellDto> resultingWellbores = wellQueryService.searchWellbores(
         wellboreIds,
         null,
-        licenceIds
+        licenceIds,
+        SEARCH_WELLBORE_APPOINTMENTS_PURPOSE
     );
 
     List<Integer> wellboreIdsToFilter = resultingWellbores
@@ -216,7 +223,7 @@ class AppointmentSearchService {
    * 4) Any appointments for assets that no longer exist in the Energy Portal
    *
    * @param assetTypeRestrictions The assets types to restrict results to
-   * @param searchFilter The search filters to apply
+   * @param searchFilter          The search filters to apply
    * @return a list of appointments matching the search criteria
    */
   private List<AppointmentSearchItemDto> search(Set<PortalAssetType> assetTypeRestrictions,
@@ -293,7 +300,7 @@ class AppointmentSearchService {
       if (!CollectionUtils.isEmpty(wellboreIds)) {
 
         var wellboreAppointments = wellQueryService
-            .getWellsByIds(wellboreIds)
+            .getWellsByIds(wellboreIds, APPOINTMENT_SEARCH_WELLBORE_PURPOSE)
             .stream()
             .map(wellbore -> createWellboreAppointmentSearchItem(wellbore, appointmentQueryResultItems, organisationUnits))
             .filter(Optional::isPresent)

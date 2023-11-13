@@ -15,9 +15,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
@@ -25,14 +24,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 @ExtendWith(MockitoExtension.class)
 class EnergyPortalUserServiceTest {
 
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static final String CORRELATION_ID = "1";
 
   private static UserApi userApi;
 
   private static EnergyPortalUserService energyPortalUserService;
-
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   @BeforeAll
   static void setup() {
@@ -41,7 +38,7 @@ class EnergyPortalUserServiceTest {
 
     energyPortalUserService = new EnergyPortalUserService(
         userApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 
@@ -59,7 +56,7 @@ class EnergyPortalUserServiceTest {
         eq(CORRELATION_ID)
     )).thenReturn(Collections.emptyList());
 
-    assertTrue(energyPortalUserService.findUserByUsername(username).isEmpty());
+    assertTrue(energyPortalUserService.findUserByUsername(username, REQUEST_PURPOSE).isEmpty());
   }
 
   @Test
@@ -79,7 +76,7 @@ class EnergyPortalUserServiceTest {
         eq(CORRELATION_ID)
     )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.findUserByUsername(username))
+    assertThat(energyPortalUserService.findUserByUsername(username, REQUEST_PURPOSE))
         .extracting(
             EnergyPortalUserDto::webUserAccountId,
             EnergyPortalUserDto::title,
@@ -131,7 +128,7 @@ class EnergyPortalUserServiceTest {
         notLoginUser
     ));
 
-    assertThat(energyPortalUserService.findUserByUsername(username))
+    assertThat(energyPortalUserService.findUserByUsername(username, REQUEST_PURPOSE))
         .extracting(EnergyPortalUserDto::webUserAccountId)
         .containsExactly(Long.valueOf(canLoginUser.getWebUserAccountId()));
   }
@@ -150,7 +147,7 @@ class EnergyPortalUserServiceTest {
         eq(CORRELATION_ID)
     )).thenReturn(Collections.emptyList());
 
-    assertTrue(energyPortalUserService.findByWuaIds(List.of(webUserAccountId)).isEmpty());
+    assertTrue(energyPortalUserService.findByWuaIds(List.of(webUserAccountId), REQUEST_PURPOSE).isEmpty());
   }
 
   @Test
@@ -168,7 +165,7 @@ class EnergyPortalUserServiceTest {
           eq(CORRELATION_ID)
       )).thenReturn(List.of(expectedUser));
 
-    assertThat(energyPortalUserService.findByWuaIds(List.of(webUserAccountId)))
+    assertThat(energyPortalUserService.findByWuaIds(List.of(webUserAccountId), REQUEST_PURPOSE))
         .extracting(
             EnergyPortalUserDto::webUserAccountId,
             EnergyPortalUserDto::title,
@@ -208,7 +205,7 @@ class EnergyPortalUserServiceTest {
         eq(CORRELATION_ID)
     )).thenReturn(Optional.of(expectedUser));
 
-    var resultingUser = energyPortalUserService.findByWuaId(webUserAccountId);
+    var resultingUser = energyPortalUserService.findByWuaId(webUserAccountId, REQUEST_PURPOSE);
 
     assertThat(resultingUser).isPresent();
     assertThat(resultingUser.get())
@@ -248,6 +245,6 @@ class EnergyPortalUserServiceTest {
         eq(CORRELATION_ID)
     )).thenReturn(Optional.empty());
 
-    assertThat(energyPortalUserService.findByWuaId(webUserAccountId)).isEmpty();
+    assertThat(energyPortalUserService.findByWuaId(webUserAccountId, REQUEST_PURPOSE)).isEmpty();
   }
 }

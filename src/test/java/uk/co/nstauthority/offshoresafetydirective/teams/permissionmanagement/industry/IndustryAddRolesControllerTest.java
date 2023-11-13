@@ -86,7 +86,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -116,7 +116,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -146,7 +146,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -225,7 +225,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
@@ -256,7 +256,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -287,7 +287,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -322,7 +322,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -353,7 +353,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -382,7 +382,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -465,7 +465,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
@@ -498,7 +498,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamMemberService.isMemberOfTeam(teamId, user)).thenReturn(true);
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -531,7 +531,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -566,7 +566,7 @@ class IndustryAddRolesControllerTest extends AbstractControllerTest {
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
     var energyPortalUser = EnergyPortalUserDtoTestUtil.Builder().build();
-    when(energyPortalUserService.findByWuaId(teamMember.wuaId()))
+    when(energyPortalUserService.findByWuaId(teamMember.wuaId(), IndustryAddRolesController.ROLES_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     var expectedNotificationBanner = NotificationBanner.builder()

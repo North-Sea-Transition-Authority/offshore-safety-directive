@@ -63,7 +63,7 @@ class NominatedSubareaWellAccessServiceTest {
         .map(nominatedSubareaWell -> new WellboreId(nominatedSubareaWell.getWellboreId()))
         .toList();
 
-    given(wellQueryService.getWellsByIds(nominatedSubareaIds))
+    given(wellQueryService.getWellsByIds(nominatedSubareaIds, NominatedSubareaWellAccessService.NOMINATED_SUBAREA_WELLS_PURPOSE))
         .willReturn(wells);
 
     var nominatedSubareaWellDetailViews = nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(NOMINATION_DETAIL);
@@ -84,7 +84,7 @@ class NominatedSubareaWellAccessServiceTest {
     given(nominatedSubareaWellRepository.findByNominationDetail(NOMINATION_DETAIL))
         .willReturn(Collections.emptyList());
 
-    given(wellQueryService.getWellsByIds(Collections.emptyList()))
+    given(wellQueryService.getWellsByIds(Collections.emptyList(), NominatedSubareaWellAccessService.NOMINATED_SUBAREA_WELLS_PURPOSE))
         .willReturn(Collections.emptyList());
 
     var nominatedSubareaWellDetailViews = nominatedSubareaWellAccessService.getNominatedSubareaWellDetailView(NOMINATION_DETAIL);

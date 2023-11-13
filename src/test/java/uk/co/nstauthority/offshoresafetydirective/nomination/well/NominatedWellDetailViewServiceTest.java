@@ -64,7 +64,8 @@ class NominatedWellDetailViewServiceTest {
         .thenReturn(List.of(firstNominatedWell, secondNominatedWell));
 
     when(wellQueryService.getWellsByIds(
-        List.of(new WellboreId(firstNominatedWell.getWellId()), new WellboreId(secondNominatedWell.getWellId()))
+        List.of(new WellboreId(firstNominatedWell.getWellId()), new WellboreId(secondNominatedWell.getWellId())),
+        NominatedWellDetailViewService.NOMINATED_WELL_PURPOSE
     ))
         .thenReturn(List.of(firstWellDto, secondWellDto));
 

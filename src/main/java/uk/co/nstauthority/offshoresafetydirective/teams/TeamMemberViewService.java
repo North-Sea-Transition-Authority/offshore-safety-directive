@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
@@ -18,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 @Service
 public class TeamMemberViewService {
 
+  static final RequestPurpose USER_ACCOUNTS_PURPOSE = new RequestPurpose("Get energy portal user accounts for team members");
   private final TeamMemberService teamMemberService;
   private final EnergyPortalUserService energyPortalUserService;
 
@@ -52,10 +54,13 @@ public class TeamMemberViewService {
         .toList();
 
     // Create map of Energy Portal users with WUA as the key for ease of lookup
-    Map<WebUserAccountId, EnergyPortalUserDto> energyPortalUsers = energyPortalUserService.findByWuaIds(webUserAccountIds)
+    Map<WebUserAccountId, EnergyPortalUserDto> energyPortalUsers = energyPortalUserService.findByWuaIds(
+            webUserAccountIds,
+            USER_ACCOUNTS_PURPOSE
+        )
         .stream()
         .collect(Collectors.toMap(energyPortalUser ->
-            new WebUserAccountId(energyPortalUser.webUserAccountId()),
+                new WebUserAccountId(energyPortalUser.webUserAccountId()),
             Function.identity())
         );
 
@@ -90,9 +95,9 @@ public class TeamMemberViewService {
       );
     } else {
       throw new IllegalArgumentException(
-         "Did not find an Energy Portal User with WUA ID %s when converting team members"
-             .formatted(teamMember.wuaId())
-     );
+          "Did not find an Energy Portal User with WUA ID %s when converting team members"
+              .formatted(teamMember.wuaId())
+      );
     }
   }
 

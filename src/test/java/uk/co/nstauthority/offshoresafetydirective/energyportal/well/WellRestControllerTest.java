@@ -54,7 +54,7 @@ class WellRestControllerTest extends AbstractControllerTest {
   @NullAndEmptySource
   void searchWells_whenNoMatches_thenNoItemsReturned(List<WellDto> resultingWells) throws Exception {
 
-    given(wellQueryService.searchWellsByRegistrationNumber(SEARCH_TERM))
+    given(wellQueryService.searchWellsByRegistrationNumber(SEARCH_TERM, WellRestController.WELL_SEARCH_PURPOSE))
         .willReturn(resultingWells);
 
     var response = mockMvc.perform(
@@ -84,7 +84,7 @@ class WellRestControllerTest extends AbstractControllerTest {
         .build();
 
     // results should be ordered as they are returned from this method
-    given(wellQueryService.searchWellsByRegistrationNumber(SEARCH_TERM))
+    given(wellQueryService.searchWellsByRegistrationNumber(SEARCH_TERM, WellRestController.WELL_SEARCH_PURPOSE))
         .willReturn(List.of(firstWellbore, secondWellbore));
 
     var response = mockMvc.perform(

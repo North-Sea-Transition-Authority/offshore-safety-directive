@@ -276,7 +276,8 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(List.of(wellboreAppointment));
 
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
+    given(
+        wellQueryService.getWellsByIds(Set.of(appointedWellboreId), AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .willReturn(List.of(appointedWellbore));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(
@@ -355,7 +356,8 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(wellboreAppointment));
 
     // when the API doesn't return the asset
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
+    given(
+        wellQueryService.getWellsByIds(Set.of(appointedWellboreId), AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .willReturn(Collections.emptyList());
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(
@@ -593,7 +595,9 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
-    given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
+
+    given(
+        wellQueryService.getWellsByIds(Set.of(appointedWellboreId), AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .willReturn(List.of(appointedWellbore));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
@@ -725,7 +729,8 @@ class AppointmentSearchServiceTest {
 
     // The order of wellbores is determined by the return order of this method
     // The Energy Portal API sorts the wellbores and the rules are not exposed to the consumer
-    given(wellQueryService.getWellsByIds(Set.of(firstAppointedWellboreId, secondAppointedWellboreId)))
+    given(wellQueryService.getWellsByIds(Set.of(firstAppointedWellboreId, secondAppointedWellboreId),
+        AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .willReturn(List.of(firstWellboreByRegistrationNumber, secondWellboreByRegistrationNumber));
 
     var firstAppointedSubareaId = new LicenceBlockSubareaId("subarea-id-1");
@@ -1361,7 +1366,11 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .should(onlyOnce())
-        .searchWellbores(Collections.emptyList(), null, Collections.emptyList());
+        .searchWellbores(
+            Collections.emptyList(),
+            null,
+            Collections.emptyList(),
+            AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE);
 
     then(metricsProvider.getSystemOfRecordSearchTimer())
         .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
@@ -1379,7 +1388,11 @@ class AppointmentSearchServiceTest {
 
     then(wellQueryService)
         .should(onlyOnce())
-        .searchWellbores(List.of(new WellboreId(123)), null, List.of(new LicenceId(456)));
+        .searchWellbores(
+            List.of(new WellboreId(123)),
+            null,
+            List.of(new LicenceId(456)),
+            AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE);
 
     then(appointmentQueryService)
         .should(onlyOnce())
@@ -1400,7 +1413,8 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.searchWellbores(
         List.of(new WellboreId(123)),
         null,
-        List.of(new LicenceId(456)))
+        List.of(new LicenceId(456)),
+        AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE)
     )
         .willReturn(Collections.emptySet());
 
@@ -1429,7 +1443,8 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.searchWellbores(
         List.of(new WellboreId(123)),
         null,
-        List.of(new LicenceId(456)))
+        List.of(new LicenceId(456)),
+        AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE)
     )
         .willReturn(Set.of(expectedWellbore));
 
@@ -1477,7 +1492,8 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.searchWellbores(
         List.of(appointedWellbore.wellboreId()),
         null,
-        List.of(new LicenceId(456)))
+        List.of(new LicenceId(456)),
+        AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE)
     )
         .willReturn(Set.of(appointedWellbore));
 
@@ -1504,7 +1520,8 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
         .willReturn(List.of(expectedAppointment));
 
-    when(wellQueryService.getWellsByIds(Set.of(appointedWellbore.wellboreId())))
+    when(wellQueryService.getWellsByIds(Set.of(appointedWellbore.wellboreId()),
+        AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .thenReturn(List.of(appointedWellbore));
 
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
@@ -1568,7 +1585,8 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.searchWellbores(
         Collections.emptyList(),
         null,
-        List.of(new LicenceId(456)))
+        List.of(new LicenceId(456)),
+        AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE)
     )
         .willReturn(Set.of(wellboreWithAppointment, noAppointmentWellbore));
 
@@ -1586,7 +1604,8 @@ class AppointmentSearchServiceTest {
         .withWellboreId(noAppointmentWellbore.wellboreId().id())
         .build();
 
-    when(wellQueryService.getWellsByIds(Set.of(wellboreWithAppointment.wellboreId())))
+    when(wellQueryService.getWellsByIds(Set.of(wellboreWithAppointment.wellboreId()),
+        AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .thenReturn(List.of(wellboreWithAppointment));
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))

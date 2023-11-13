@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
@@ -35,6 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 
 @Service
 class TerminationTimelineItemService {
+
+  static final RequestPurpose TERMINATED_BY_USER_PURPOSE = new RequestPurpose("User who terminated the appointment");
 
   private final EnergyPortalUserService energyPortalUserService;
   private final FileAssociationService fileAssociationService;
@@ -117,7 +120,7 @@ class TerminationTimelineItemService {
         .map(WebUserAccountId::new)
         .collect(Collectors.toSet());
 
-    return energyPortalUserService.findByWuaIds(wuaIds)
+    return energyPortalUserService.findByWuaIds(wuaIds, TERMINATED_BY_USER_PURPOSE)
         .stream()
         .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
   }

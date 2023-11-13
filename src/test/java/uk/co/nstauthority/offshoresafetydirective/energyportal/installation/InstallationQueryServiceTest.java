@@ -21,17 +21,12 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class InstallationQueryServiceTest {
 
   private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static FacilityApi facilityApi;
-
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static InstallationQueryService installationQueryService;
 
@@ -42,7 +37,7 @@ class InstallationQueryServiceTest {
 
     installationQueryService = new InstallationQueryService(
         facilityApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 

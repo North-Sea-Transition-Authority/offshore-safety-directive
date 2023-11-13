@@ -71,7 +71,7 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, IndustryAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -258,7 +258,7 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, IndustryAddRolesController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, IndustryAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -453,7 +453,10 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
     var username = "username";
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
 
-    when(energyPortalUserService.findUserByUsername(username))
+    when(energyPortalUserService.findUserByUsername(username, IndustryAddMemberController.USER_TO_ADD_PURPOSE))
+        .thenReturn(List.of(userToAdd));
+
+    when(energyPortalUserService.findUserByUsername(username, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(userToAdd));
 
     var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
@@ -494,7 +497,10 @@ class IndustryAddMemberControllerTest extends AbstractControllerTest {
     var username = "username";
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
 
-    when(energyPortalUserService.findUserByUsername(username))
+    when(energyPortalUserService.findUserByUsername(username, IndustryAddMemberController.USER_TO_ADD_PURPOSE))
+        .thenReturn(List.of(userToAdd));
+
+    when(energyPortalUserService.findUserByUsername(username, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(userToAdd));
 
     var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());

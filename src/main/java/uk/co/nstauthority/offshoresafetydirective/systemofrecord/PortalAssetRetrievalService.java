@@ -22,6 +22,7 @@ public class PortalAssetRetrievalService {
 
   static final RequestPurpose INSTALLATION_PURPOSE = new RequestPurpose("Retrieve installation asset");
   static final RequestPurpose SUBAREA_PURPOSE = new RequestPurpose("Retrieve subarea asset");
+  static final RequestPurpose WELL_PURPOSE = new RequestPurpose("Retrieve well asset");
 
   private final WellQueryService wellQueryService;
 
@@ -43,7 +44,7 @@ public class PortalAssetRetrievalService {
   }
 
   public Optional<WellDto> getWellbore(WellboreId wellboreId) {
-    return wellQueryService.getWell(wellboreId);
+    return wellQueryService.getWell(wellboreId, WELL_PURPOSE);
   }
 
   public Optional<InstallationDto> getInstallation(InstallationId installationId) {

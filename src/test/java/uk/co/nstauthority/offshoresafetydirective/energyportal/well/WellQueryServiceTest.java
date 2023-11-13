@@ -22,15 +22,12 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 
 class WellQueryServiceTest {
 
-  private final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
 
   private WellboreApi wellboreApi;
 
@@ -43,7 +40,7 @@ class WellQueryServiceTest {
 
     wellQueryService = new WellQueryService(
         wellboreApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 
@@ -60,7 +57,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm);
+    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm, REQUEST_PURPOSE);
 
     assertThat(resultingWellbores).isEmpty();
   }
@@ -82,7 +79,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
-    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm);
+    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm, REQUEST_PURPOSE);
 
     assertThat(resultingWellbores)
         .extracting(
@@ -122,7 +119,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(seawardWellbore, landwardWellbore));
 
-    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm);
+    var resultingWellbores = wellQueryService.searchWellsByRegistrationNumber(searchTerm, REQUEST_PURPOSE);
 
     assertThat(resultingWellbores)
         .extracting(
@@ -154,7 +151,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingWellbores = wellQueryService.getWellsByIds(List.of(nonMatchingWellboreId));
+    var resultingWellbores = wellQueryService.getWellsByIds(List.of(nonMatchingWellboreId), REQUEST_PURPOSE);
 
     assertThat(resultingWellbores).isEmpty();
   }
@@ -176,7 +173,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
-    var resultingWellbores = wellQueryService.getWellsByIds(List.of(matchingWellboreId));
+    var resultingWellbores = wellQueryService.getWellsByIds(List.of(matchingWellboreId), REQUEST_PURPOSE);
 
     assertThat(resultingWellbores)
         .extracting(
@@ -210,7 +207,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
-    var resultingWellbores = wellQueryService.getWellsByIds(List.of(matchingWellboreId));
+    var resultingWellbores = wellQueryService.getWellsByIds(List.of(matchingWellboreId), REQUEST_PURPOSE);
 
     assertThat(resultingWellbores)
         .extracting(
@@ -229,7 +226,7 @@ class WellQueryServiceTest {
   @NullAndEmptySource
   void getWellsByIds_whenIdInputListNullOrEmpty_thenEmptyListReturned(List<WellboreId> wellboreIds) {
 
-    var resultingWellbores = wellQueryService.getWellsByIds(wellboreIds);
+    var resultingWellbores = wellQueryService.getWellsByIds(wellboreIds, REQUEST_PURPOSE);
 
     assertThat(resultingWellbores).isEmpty();
 
@@ -251,7 +248,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingWellbore = wellQueryService.getWell(unmatchedWellboreId);
+    var resultingWellbore = wellQueryService.getWell(unmatchedWellboreId, REQUEST_PURPOSE);
 
     assertThat(resultingWellbore).isEmpty();
   }
@@ -273,7 +270,7 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
-    var resultingWellbore = wellQueryService.getWell(matchedWellboreId);
+    var resultingWellbore = wellQueryService.getWell(matchedWellboreId, REQUEST_PURPOSE);
 
     assertThat(resultingWellbore).isPresent();
     assertThat(resultingWellbore.get())
@@ -290,7 +287,8 @@ class WellQueryServiceTest {
     wellQueryService.searchWellbores(
         nullOrEmptyWellboreIds,
         registrationNumber,
-        null
+        null,
+        REQUEST_PURPOSE
     );
 
     then(wellboreApi)
@@ -320,7 +318,8 @@ class WellQueryServiceTest {
     wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        nullOrEmptyLicenceIds
+        nullOrEmptyLicenceIds,
+        REQUEST_PURPOSE
     );
 
     then(wellboreApi)
@@ -362,7 +361,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        licenceIds
+        licenceIds,
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores)
@@ -399,7 +399,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        licenceIds
+        licenceIds,
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores).isEmpty();
@@ -436,7 +437,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        licenceIds
+        licenceIds,
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores)
@@ -454,7 +456,8 @@ class WellQueryServiceTest {
     wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        List.of(licenceId)
+        List.of(licenceId),
+        REQUEST_PURPOSE
     );
 
     // whe licence is passed to total depth filter
@@ -510,7 +513,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        List.of(licenceId)
+        List.of(licenceId),
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores)
@@ -547,7 +551,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        List.of(licenceId)
+        List.of(licenceId),
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores).isEmpty();
@@ -584,7 +589,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
-        List.of(licenceId)
+        List.of(licenceId),
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores)
@@ -628,7 +634,8 @@ class WellQueryServiceTest {
     var resultingWellbores = wellQueryService.searchWellbores(
         null,
         null,
-        List.of(licenceId)
+        List.of(licenceId),
+        REQUEST_PURPOSE
     );
 
     assertThat(resultingWellbores)

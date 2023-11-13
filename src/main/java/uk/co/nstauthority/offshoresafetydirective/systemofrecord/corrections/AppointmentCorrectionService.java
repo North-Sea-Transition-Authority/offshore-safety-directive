@@ -15,6 +15,7 @@ import org.apache.commons.lang3.EnumUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -41,6 +42,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 
 @Service
 public class AppointmentCorrectionService {
+
+  static final RequestPurpose CORRECTED_BY_USER_PURPOSE = new RequestPurpose("User who corrected the appointment");
 
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
   private final AppointmentCorrectionRepository appointmentCorrectionRepository;
@@ -266,7 +269,7 @@ public class AppointmentCorrectionService {
         .map(WebUserAccountId::new)
         .collect(Collectors.toSet());
 
-    Map<Long, EnergyPortalUserDto> userIdAndUserMap = energyPortalUserService.findByWuaIds(wuaIds)
+    Map<Long, EnergyPortalUserDto> userIdAndUserMap = energyPortalUserService.findByWuaIds(wuaIds, CORRECTED_BY_USER_PURPOSE)
         .stream()
         .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
 

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -11,6 +12,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Service
 public class NominatedWellDetailViewService {
 
+  static final RequestPurpose NOMINATED_WELL_PURPOSE
+      = new RequestPurpose("View nominated wells for nomination");
   private final NominatedWellDetailRepository nominatedWellDetailRepository;
   private final NominatedWellAccessService nominatedWellAccessService;
   private final WellQueryService wellQueryService;
@@ -33,7 +36,7 @@ public class NominatedWellDetailViewService {
               .map(nominatedWell -> new WellboreId(nominatedWell.getWellId()))
               .toList();
 
-          var wellDtos = wellQueryService.getWellsByIds(nominatedWellIds);
+          var wellDtos = wellQueryService.getWellsByIds(nominatedWellIds, NOMINATED_WELL_PURPOSE);
 
           var wellPhases = new ArrayList<WellPhase>();
 

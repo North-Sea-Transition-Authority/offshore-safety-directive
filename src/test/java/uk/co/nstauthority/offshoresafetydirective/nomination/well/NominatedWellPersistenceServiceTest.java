@@ -54,7 +54,7 @@ class NominatedWellPersistenceServiceTest {
         .withWell(secondWellboreId.id())
         .build();
 
-    when(wellQueryService.getWellsByIds(List.of(firstWellboreId, secondWellboreId)))
+    when(wellQueryService.getWellsByIds(List.of(firstWellboreId, secondWellboreId), NominatedWellPersistenceService.SAVE_WELLS_PURPOSE))
         .thenReturn(List.of(firstWellDto, secondWellDto));
 
     nominatedWellPersistenceService.saveNominatedWells(NOMINATION_DETAIL, formWithDuplicateWell);

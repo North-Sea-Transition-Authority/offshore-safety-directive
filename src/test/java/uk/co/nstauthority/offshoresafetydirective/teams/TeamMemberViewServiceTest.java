@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -50,7 +51,8 @@ class TeamMemberViewServiceTest {
         .withWebUserAccountId(teamMember.wuaId().toInt())
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId()))).thenReturn(List.of(energyPortalUser));
+    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId()), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
+        .thenReturn(List.of(energyPortalUser));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
 
@@ -104,7 +106,8 @@ class TeamMemberViewServiceTest {
         .build();
 
     when(energyPortalUserService.findByWuaIds(
-        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId())))
+        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId()))),
+        eq(TeamMemberViewService.USER_ACCOUNTS_PURPOSE)
     ))
         .thenReturn(List.of(secondAlphabeticallyEnergyPortalUser, firstAlphabeticallyEnergyPortalUser));
 
@@ -146,7 +149,8 @@ class TeamMemberViewServiceTest {
         .build();
 
     when(energyPortalUserService.findByWuaIds(
-        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId())))
+        argThat(wuaIds -> wuaIds.containsAll(List.of(firstTeamMember.wuaId(), secondTeamMember.wuaId()))),
+        eq(TeamMemberViewService.USER_ACCOUNTS_PURPOSE)
     ))
         .thenReturn(List.of(secondAlphabeticallyEnergyPortalUser, firstAlphabeticallyEnergyPortalUser));
 
@@ -176,7 +180,7 @@ class TeamMemberViewServiceTest {
         .withWebUserAccountId(teamMemberWithMultipleRoles.wuaId().toInt())
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMemberWithMultipleRoles.wuaId())))
+    when(energyPortalUserService.findByWuaIds(List.of(teamMemberWithMultipleRoles.wuaId()), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
         .thenReturn(List.of(energyPortalUser));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMemberViewsForTeam(team);
@@ -199,7 +203,7 @@ class TeamMemberViewServiceTest {
 
     when(teamMemberService.getTeamMembers(team)).thenReturn(List.of(teamMember));
 
-    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId())))
+    when(energyPortalUserService.findByWuaIds(List.of(teamMember.wuaId()), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
         .thenReturn(Collections.emptyList());
 
     assertThatThrownBy(
@@ -241,7 +245,7 @@ class TeamMemberViewServiceTest {
         .withWebUserAccountId(expectedTeamMember.wuaId().id())
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(expectedTeamMember.wuaId())))
+    when(energyPortalUserService.findByWuaIds(List.of(expectedTeamMember.wuaId()), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
         .thenReturn(List.of(energyPortalUser));
 
     var resultingTeamMemberViews = teamMemberViewService.getTeamMembersWithRoles(List.of(role.name()), teamType);
@@ -289,7 +293,7 @@ class TeamMemberViewServiceTest {
         .withPhoneNumber("telephone")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId))))
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId)), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
         .thenReturn(List.of(portalUser));
 
     var result = teamMemberViewService.getTeamMemberViewsForTeam(team);
@@ -337,7 +341,7 @@ class TeamMemberViewServiceTest {
         .withPhoneNumber("telephone")
         .build();
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId))))
+    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(wuaId)), TeamMemberViewService.USER_ACCOUNTS_PURPOSE))
         .thenReturn(List.of(portalUser));
 
     var result = teamMemberViewService.getTeamMemberView(teamMember);

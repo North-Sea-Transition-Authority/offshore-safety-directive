@@ -5,12 +5,15 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
 class NominatedWellPersistenceService {
+
+  static final RequestPurpose SAVE_WELLS_PURPOSE = new RequestPurpose("Save wells for nomination");
 
   private final NominatedWellRepository nominatedWellRepository;
   private final WellQueryService wellQueryService;
@@ -35,7 +38,7 @@ class NominatedWellPersistenceService {
         .map(WellboreId::new)
         .toList();
 
-    List<NominatedWell> nominatedWells = wellQueryService.getWellsByIds(wellIds)
+    List<NominatedWell> nominatedWells = wellQueryService.getWellsByIds(wellIds, SAVE_WELLS_PURPOSE)
         .stream()
         .map(wellDto -> new NominatedWell(nominationDetail, wellDto.wellboreId().id()))
         .toList();

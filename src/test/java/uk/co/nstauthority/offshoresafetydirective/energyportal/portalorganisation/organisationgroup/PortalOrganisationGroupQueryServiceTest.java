@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class PortalOrganisationGroupQueryServiceTest {
@@ -26,7 +25,7 @@ class PortalOrganisationGroupQueryServiceTest {
   @BeforeEach
   public void setup() {
     organisationApi = mock(OrganisationApi.class);
-    energyPortalApiWrapper = new EnergyPortalApiWrapper(ServiceConfigurationPropertiesTestUtil.builder().build());
+    energyPortalApiWrapper = new EnergyPortalApiWrapper();
     portalOrganisationGroupQueryService = new PortalOrganisationGroupQueryService(
         organisationApi,
         energyPortalApiWrapper

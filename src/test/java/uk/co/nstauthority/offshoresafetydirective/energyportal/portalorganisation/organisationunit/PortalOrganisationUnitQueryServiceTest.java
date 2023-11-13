@@ -16,15 +16,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class PortalOrganisationUnitQueryServiceTest {
 
   private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static OrganisationApi organisationApi;
 
@@ -37,7 +33,7 @@ class PortalOrganisationUnitQueryServiceTest {
 
     portalOrganisationUnitQueryService = new PortalOrganisationUnitQueryService(
         organisationApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 
@@ -237,7 +233,7 @@ class PortalOrganisationUnitQueryServiceTest {
 
     portalOrganisationUnitQueryService = new PortalOrganisationUnitQueryService(
         organisationApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
 
     var resultingOrganisationUnits = portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds, REQUEST_PURPOSE);

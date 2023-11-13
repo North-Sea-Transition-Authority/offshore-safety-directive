@@ -7,18 +7,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 
 class EnergyPortalApiWrapperTest {
 
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
 
-  private final EnergyPortalApiWrapper energyPortalApiWrapper = new EnergyPortalApiWrapper(
-      serviceConfigurationProperties
-  );
+  private final EnergyPortalApiWrapper energyPortalApiWrapper = new EnergyPortalApiWrapper();
 
   @Test
   void makeRequest_verifyLogCorrelationId() {
@@ -27,7 +22,7 @@ class EnergyPortalApiWrapperTest {
     CorrelationIdTestUtil.setCorrelationIdOnMdc(correlationId);
 
     var returnedCorrelationId = energyPortalApiWrapper.makeRequest(
-        new RequestPurpose("a request purpose"),
+        REQUEST_PURPOSE,
         this::returnLogCorrelationId
     );
 

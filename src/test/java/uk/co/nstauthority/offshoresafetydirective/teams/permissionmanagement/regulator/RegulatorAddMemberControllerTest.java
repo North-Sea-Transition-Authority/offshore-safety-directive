@@ -331,7 +331,10 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     var username = "username";
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
 
-    when(energyPortalUserService.findUserByUsername(username))
+    when(energyPortalUserService.findUserByUsername(username, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
+        .thenReturn(List.of(userToAdd));
+
+    when(energyPortalUserService.findUserByUsername(username, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(userToAdd));
 
     var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
@@ -371,7 +374,10 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
     var username = "username";
     var userToAdd = EnergyPortalUserDtoTestUtil.Builder().build();
 
-    when(energyPortalUserService.findUserByUsername(username))
+    when(energyPortalUserService.findUserByUsername(username, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
+        .thenReturn(List.of(userToAdd));
+
+    when(energyPortalUserService.findUserByUsername(username, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(userToAdd));
 
     var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
@@ -410,7 +416,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -491,7 +497,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
@@ -523,7 +529,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -556,7 +562,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUserToAdd));
 
     mockMvc.perform(
@@ -622,7 +628,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -684,7 +690,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
@@ -718,7 +724,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     mockMvc.perform(
@@ -751,7 +757,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     mockMvc.perform(
@@ -787,7 +793,7 @@ class RegulatorAddMemberControllerTest extends AbstractControllerTest {
 
     when(teamService.getTeam(teamId, RegulatorAddMemberController.TEAM_TYPE)).thenReturn(Optional.of(team));
 
-    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd))
+    when(energyPortalUserService.findByWuaId(webUserAccountIdToAdd, RegulatorAddMemberController.USER_TO_ADD_PURPOSE))
         .thenReturn(Optional.of(energyPortalUser));
 
     var expectedNotificationBanner = NotificationBanner.builder()

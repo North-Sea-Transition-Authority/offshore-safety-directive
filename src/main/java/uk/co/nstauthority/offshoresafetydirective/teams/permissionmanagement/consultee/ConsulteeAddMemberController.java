@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
@@ -35,6 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 class ConsulteeAddMemberController extends AbstractTeamController {
 
   static final TeamType TEAM_TYPE = TeamType.CONSULTEE;
+
+  static final RequestPurpose USER_TO_ADD_PURPOSE = new RequestPurpose("Get user to add to consultee team");
 
   private final ControllerHelperService controllerHelperService;
   private final AddTeamMemberValidator addTeamMemberValidator;
@@ -73,7 +76,7 @@ class ConsulteeAddMemberController extends AbstractTeamController {
         getAddTeamMemberModelAndView(form, team),
         form,
         () -> {
-          var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername()).get(0);
+          var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername(), USER_TO_ADD_PURPOSE).get(0);
           var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
           if (teamService.isMemberOfTeam(wuaId, teamId)) {
             return ReverseRouter.redirect(on(ConsulteeEditMemberController.class).renderEditMember(teamId, wuaId));

@@ -17,8 +17,6 @@ import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaShoreLocation;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreTestUtil;
 
@@ -26,9 +24,6 @@ class LicenceBlockSubareaQueryServiceTest {
 
   private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static final List<SubareaStatus> SUBAREA_STATUSES = List.of(SubareaStatus.EXTANT);
-
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static SubareaApi subareaApi;
 
@@ -41,7 +36,7 @@ class LicenceBlockSubareaQueryServiceTest {
 
     licenceBlockSubareaQueryService = new LicenceBlockSubareaQueryService(
         subareaApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 

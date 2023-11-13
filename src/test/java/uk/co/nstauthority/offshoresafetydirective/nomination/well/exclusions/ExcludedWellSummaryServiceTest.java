@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -111,7 +112,7 @@ class ExcludedWellSummaryServiceTest {
 
     then(wellQueryService)
         .should(never())
-        .getWellsByIds(anyList());
+        .getWellsByIds(anyList(), any());
   }
 
   @Test
@@ -137,7 +138,10 @@ class ExcludedWellSummaryServiceTest {
 
     var expectedWellDto = WellDtoTestUtil.builder().build();
 
-    given(wellQueryService.getWellsByIds(List.of(new WellboreId(expectedExcludedWell.getWellboreId()))))
+    given(wellQueryService.getWellsByIds(
+        List.of(new WellboreId(expectedExcludedWell.getWellboreId())),
+        ExcludedWellSummaryService.EXCLUDED_WELLS_PURPOSE
+    ))
         .willReturn(List.of(expectedWellDto));
 
     // then the values are populated in the resulting view
@@ -193,7 +197,8 @@ class ExcludedWellSummaryServiceTest {
         List.of(
             new WellboreId(secondExcludedWell.getWellboreId()),
             new WellboreId(firstExcludedWell.getWellboreId())
-        )
+        ),
+        ExcludedWellSummaryService.EXCLUDED_WELLS_PURPOSE
     ))
         .willReturn(List.of(firstWellDto, secondWellDto));
 

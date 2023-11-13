@@ -53,7 +53,7 @@ class PortalAssetRetrievalServiceTest {
 
     var wellboreId = new WellboreId(10);
 
-    given(wellQueryService.getWell(wellboreId))
+    given(wellQueryService.getWell(wellboreId, PortalAssetRetrievalService.WELL_PURPOSE))
         .willReturn(Optional.empty());
 
     var resultingWellbore = portalAssetRetrievalService.getWellbore(wellboreId);
@@ -68,7 +68,7 @@ class PortalAssetRetrievalServiceTest {
 
     var expectedWellbore = WellDtoTestUtil.builder().build();
 
-    given(wellQueryService.getWell(wellboreId))
+    given(wellQueryService.getWell(wellboreId, PortalAssetRetrievalService.WELL_PURPOSE))
         .willReturn(Optional.of(expectedWellbore));
 
     var resultingWellbore = portalAssetRetrievalService.getWellbore(wellboreId);
@@ -187,7 +187,7 @@ class PortalAssetRetrievalServiceTest {
     var wellboreDto = WellDtoTestUtil.builder()
         .withRegistrationNumber(registrationNumber)
         .build();
-    when(wellQueryService.getWell(new WellboreId(portalAssetIdAsInt)))
+    when(wellQueryService.getWell(new WellboreId(portalAssetIdAsInt), PortalAssetRetrievalService.WELL_PURPOSE))
         .thenReturn(Optional.of(wellboreDto));
 
     var result = portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType);
@@ -218,7 +218,7 @@ class PortalAssetRetrievalServiceTest {
     var wellboreId = new WellboreId(123);
     var portalAssetId = new PortalAssetId(String.valueOf(wellboreId.id()));
 
-    when(wellQueryService.getWell(wellboreId))
+    when(wellQueryService.getWell(wellboreId, PortalAssetRetrievalService.WELL_PURPOSE))
         .thenReturn(Optional.of(WellDtoTestUtil.builder().build()));
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.WELLBORE);
@@ -230,7 +230,7 @@ class PortalAssetRetrievalServiceTest {
     var wellboreId = new WellboreId(123);
     var portalAssetId = new PortalAssetId(String.valueOf(wellboreId.id()));
 
-    when(wellQueryService.getWell(wellboreId))
+    when(wellQueryService.getWell(wellboreId, PortalAssetRetrievalService.WELL_PURPOSE))
         .thenReturn(Optional.empty());
 
     var resultingIsExtantInPortal = portalAssetRetrievalService.isExtantInPortal(portalAssetId, PortalAssetType.WELLBORE);

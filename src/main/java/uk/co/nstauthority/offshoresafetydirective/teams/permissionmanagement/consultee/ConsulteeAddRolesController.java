@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
@@ -45,6 +46,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Tea
 class ConsulteeAddRolesController extends AbstractTeamController {
 
   static final TeamType TEAM_TYPE = TeamType.CONSULTEE;
+  static final RequestPurpose ROLES_TO_ADD_PURPOSE = new RequestPurpose("Get user to add roles to");
 
   private final ControllerHelperService controllerHelperService;
   private final EnergyPortalUserService energyPortalUserService;
@@ -130,7 +132,7 @@ class ConsulteeAddRolesController extends AbstractTeamController {
 
   // TODO OSDOP-426 - Merge with RegulatorAddRolesController usage
   private EnergyPortalUserDto getEnergyPortalUser(WebUserAccountId webUserAccountId) {
-    var energyPortalUser = energyPortalUserService.findByWuaId(webUserAccountId)
+    var energyPortalUser = energyPortalUserService.findByWuaId(webUserAccountId, ROLES_TO_ADD_PURPOSE)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "No Energy Portal user with WUA_ID %s could be found".formatted(webUserAccountId)

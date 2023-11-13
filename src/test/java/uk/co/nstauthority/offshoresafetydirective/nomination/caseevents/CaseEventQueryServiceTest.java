@@ -179,7 +179,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
@@ -214,7 +217,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -253,7 +259,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -291,7 +300,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(List.of(
+        new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -330,7 +342,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -368,7 +383,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
@@ -403,7 +421,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     var result = caseEventQueryService.getCaseEventViews(nominationDetail.getNomination());
@@ -439,7 +460,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -478,7 +502,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(caseEvent));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent)))
@@ -522,7 +549,10 @@ class CaseEventQueryServiceTest {
     when(caseEventRepository.findAllByNomination(nominationDetail.getNomination()))
         .thenReturn(List.of(secondCaseEventByCreatedDate, firstCaseEventByCreatedDate));
 
-    when(energyPortalUserService.findByWuaIds(List.of(new WebUserAccountId(caseEventCreator.webUserAccountId()))))
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(caseEventCreator.webUserAccountId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE
+    ))
         .thenReturn(List.of(caseEventCreator));
 
     when(caseEventFileService.getFileViewMapFromCaseEvents(

@@ -19,7 +19,6 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
@@ -35,10 +34,8 @@ class EnergyPortalFieldQueryServiceTest {
 
     fieldApi = mock(FieldApi.class);
 
-    var serviceConfigurationProperties = ServiceConfigurationPropertiesTestUtil.builder().build();
-
     energyPortalFieldQueryService = new EnergyPortalFieldQueryService(
-        new EnergyPortalApiWrapper(serviceConfigurationProperties),
+        new EnergyPortalApiWrapper(),
         fieldApi
     );
   }

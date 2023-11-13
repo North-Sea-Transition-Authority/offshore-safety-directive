@@ -7,11 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
 
 @Service
 public class AddTeamMemberValidator implements SmartValidator {
 
+  public static final RequestPurpose USERS_VALIDATION_PURPOSE = new RequestPurpose("Validate that the username exists in portal");
   static final String USERNAME_FORM_FIELD_NAME = "username";
 
   static final String NO_USERNAME_ERROR_CODE = "%s.required".formatted(USERNAME_FORM_FIELD_NAME);
@@ -55,7 +57,7 @@ public class AddTeamMemberValidator implements SmartValidator {
 
     if (StringUtils.isNotBlank(form.getUsername())) {
 
-      var resultingUsers = energyPortalUserService.findUserByUsername(form.getUsername());
+      var resultingUsers = energyPortalUserService.findUserByUsername(form.getUsername(), USERS_VALIDATION_PURPOSE);
 
       if (resultingUsers.isEmpty()) {
         errors.rejectValue(

@@ -158,11 +158,11 @@ public class LicenceBlockSubareaQueryService {
       var subareaIdLiterals = licenceBlockSubareaIds.stream().map(LicenceBlockSubareaId::id).toList();
 
       return subareaApi.searchSubareasByIds(
-          subareaIdLiterals,
-          SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT,
-          requestPurpose,
-          logCorrelationId
-      )
+              subareaIdLiterals,
+              SUBAREAS_WITH_WELLBORES_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
           .stream()
           .map(LicenceBlockSubareaWellboreDto::fromPortalSubarea)
           .toList();

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
@@ -37,6 +38,9 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NominatedWellDetailController {
 
   static final String PAGE_TITLE = "Specific well nominations";
+
+  static final RequestPurpose ALREADY_ADDED_WELLS_PURPOSE =
+      new RequestPurpose("Wells already added to list for nomination");
 
   private final ControllerHelperService controllerHelperService;
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
@@ -115,7 +119,7 @@ public class NominatedWellDetailController {
         .map(WellboreId::new)
         .toList();
 
-    return wellQueryService.getWellsByIds(wellboreIds)
+    return wellQueryService.getWellsByIds(wellboreIds, ALREADY_ADDED_WELLS_PURPOSE)
         .stream()
         .map(wellDto ->
             new WellAddToListView(

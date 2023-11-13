@@ -86,7 +86,7 @@ class TerminationTimelineItemServiceTest {
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
     given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
 
-    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
     var appointments = List.of(AppointmentTestUtil.builder().build());
@@ -191,7 +191,7 @@ class TerminationTimelineItemServiceTest {
     given(fileUploadService.getUploadedFileViewList(fileUploadIds))
         .willReturn(List.of(uploadedFileViewA, uploadedFileViewC, uploadedFileViewB));
 
-    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();
@@ -262,7 +262,7 @@ class TerminationTimelineItemServiceTest {
     given(appointmentTerminationService.getTerminations(appointments))
         .willReturn(List.of(termination));
 
-    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
     var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(List.of(termination.getAppointment()));
@@ -293,7 +293,7 @@ class TerminationTimelineItemServiceTest {
     given(appointmentTerminationService.getTerminations(appointments))
         .willReturn(List.of(termination));
 
-    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+    given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
     var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(List.of(termination.getAppointment()));
@@ -314,7 +314,7 @@ class TerminationTimelineItemServiceTest {
      given(appointmentTerminationService.getTerminations(appointments))
          .willReturn(terminations);
 
-     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId))))
+     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
          .willReturn(Collections.emptyList());
 
     var loggedInUser = ServiceUserDetailTestUtil.Builder().build();

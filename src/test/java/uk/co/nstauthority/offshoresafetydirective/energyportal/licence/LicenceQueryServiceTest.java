@@ -18,15 +18,11 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceApi;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class LicenceQueryServiceTest {
 
   static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
-  private static final ServiceConfigurationProperties serviceConfigurationProperties
-      = ServiceConfigurationPropertiesTestUtil.builder().build();
 
   private static LicenceApi licenceApi;
 
@@ -39,7 +35,7 @@ class LicenceQueryServiceTest {
 
     licenceQueryService = new LicenceQueryService(
         licenceApi,
-        new EnergyPortalApiWrapper(serviceConfigurationProperties)
+        new EnergyPortalApiWrapper()
     );
   }
 

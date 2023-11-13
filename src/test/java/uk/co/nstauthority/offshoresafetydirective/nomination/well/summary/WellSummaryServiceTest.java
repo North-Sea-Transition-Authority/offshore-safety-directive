@@ -331,7 +331,7 @@ class WellSummaryServiceTest {
     given(finalisedNominatedSubareaWellsAccessService.getFinalisedNominatedSubareasWells(nominationDetail))
         .willReturn(Set.of(expectedSubareaWell));
 
-    given(wellQueryService.getWellsByIds(List.of(expectedSubareaWell.wellboreId())))
+    given(wellQueryService.getWellsByIds(List.of(expectedSubareaWell.wellboreId()), WellSummaryService.WELLS_RELATED_TO_NOMINATION_PURPOSE))
         .willReturn(List.of(expectedWell));
 
     var resultingWellSummaryView = wellSummaryService.getWellSummaryView(
@@ -523,7 +523,7 @@ class WellSummaryServiceTest {
     given(excludedWellAccessService.getExcludedWellIds(nominationDetail))
         .willReturn(Set.of(excludedWell.wellboreId()));
 
-    given(wellQueryService.getWellsByIds(List.of(excludedWell.wellboreId())))
+    given(wellQueryService.getWellsByIds(List.of(excludedWell.wellboreId()), WellSummaryService.WELLS_RELATED_TO_NOMINATION_PURPOSE))
         .willReturn(List.of(excludedWell));
 
     var resultingWellSummaryView = wellSummaryService.getWellSummaryView(
@@ -671,7 +671,9 @@ class WellSummaryServiceTest {
     // excluded and included wells
     then(wellQueryService)
         .should(onlyOnce())
-        .getWellsByIds(List.of(expectedWell.wellboreId(), excludedWell.wellboreId()));
+        .getWellsByIds(
+            List.of(expectedWell.wellboreId(), excludedWell.wellboreId()),
+            WellSummaryService.WELLS_RELATED_TO_NOMINATION_PURPOSE);
   }
 
   @Test

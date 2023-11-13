@@ -65,7 +65,10 @@ class NominatedSubareaWellsSummaryServiceTest {
         .withWellboreId(expectedNominatedSubareaWell.wellboreId().id())
         .build();
 
-    given(wellQueryService.getWellsByIds(List.of(expectedNominatedSubareaWell.wellboreId())))
+    given(wellQueryService.getWellsByIds(
+        List.of(expectedNominatedSubareaWell.wellboreId()),
+        NominatedSubareaWellsSummaryService.NOMINATED_SUBAREA_WELLS_PURPOSE
+    ))
         .willReturn(List.of(expectedWellDto));
 
     var resultingNominatedSubareaWellsView =

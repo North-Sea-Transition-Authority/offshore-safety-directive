@@ -214,7 +214,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
 
     // controller should return wellbores in the same order as they
     // are returned from the query service
-    when(wellQueryService.getWellsByIds(wellboreIdsFromForm))
+    when(wellQueryService.getWellsByIds(wellboreIdsFromForm, NominatedWellDetailController.ALREADY_ADDED_WELLS_PURPOSE))
         .thenReturn(List.of(secondWellDto, firstWellDto));
 
     var modelAndView = mockMvc.perform(

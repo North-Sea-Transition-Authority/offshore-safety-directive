@@ -72,7 +72,8 @@ class AddTeamMemberValidatorTest {
         EnergyPortalUserDtoTestUtil.Builder().withWebUserAccountId(2).build()
     );
 
-    when(energyPortalUserService.findUserByUsername(usernameToTest)).thenReturn(matchingUsers);
+    when(energyPortalUserService.findUserByUsername(usernameToTest, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
+        .thenReturn(matchingUsers);
 
     var form = constructAddTeamMemberForm(usernameToTest);
 
@@ -102,7 +103,8 @@ class AddTeamMemberValidatorTest {
 
     var usernameToTest = "username";
 
-    when(energyPortalUserService.findUserByUsername(usernameToTest)).thenReturn(Collections.emptyList());
+    when(energyPortalUserService.findUserByUsername(usernameToTest, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
+        .thenReturn(Collections.emptyList());
 
     var form = constructAddTeamMemberForm(usernameToTest);
 
@@ -133,7 +135,7 @@ class AddTeamMemberValidatorTest {
     var usernameToTest = "username";
     var form = constructAddTeamMemberForm(usernameToTest);
 
-    when(energyPortalUserService.findUserByUsername(usernameToTest))
+    when(energyPortalUserService.findUserByUsername(usernameToTest, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(EnergyPortalUserDtoTestUtil.Builder().build()));
 
     var bindingResult = validateAddTeamMemberForm(form);
@@ -153,7 +155,7 @@ class AddTeamMemberValidatorTest {
         .hasSharedAccount(true)
         .build();
 
-    when(energyPortalUserService.findUserByUsername(usernameToTest))
+    when(energyPortalUserService.findUserByUsername(usernameToTest, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(energyPortalUserWithSharedAccount));
 
     var bindingResult = validateAddTeamMemberForm(form);
@@ -188,7 +190,7 @@ class AddTeamMemberValidatorTest {
         .hasSharedAccount(false)
         .build();
 
-    when(energyPortalUserService.findUserByUsername(usernameToTest))
+    when(energyPortalUserService.findUserByUsername(usernameToTest, AddTeamMemberValidator.USERS_VALIDATION_PURPOSE))
         .thenReturn(List.of(energyPortalUserWithoutSharedAccount));
 
     var bindingResult = validateAddTeamMemberForm(form);

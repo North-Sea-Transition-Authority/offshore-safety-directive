@@ -82,7 +82,7 @@ public class PortalOrganisationUnitQueryService {
 
   List<PortalOrganisationDto> queryOrganisationByName(String organisationName, RequestPurpose requestPurpose) {
 
-    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> 
         organisationApi.searchOrganisationUnits(
             organisationName,
             null,
