@@ -34,23 +34,23 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
   @SecurityTest
   void searchPortalOrganisations_whenNotLoggedIn_thenOk() throws Exception {
     mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchPortalOrganisations("searchTerm"))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations("searchTerm"))
+            )
         )
-    )
         .andExpect(status().isOk());
   }
 
   @SecurityTest
   void searchPortalOrganisations_whenLoggedIn_thenOk() throws Exception {
     mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchPortalOrganisations("searchTerm"))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations("searchTerm"))
+            )
+                .with(user(USER))
         )
-            .with(user(USER))
-    )
         .andExpect(status().isOk());
   }
 
@@ -59,19 +59,25 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var searchTerm = "no match search term";
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchPortalOrganisations(searchTerm))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
         )
-            .with(user(USER))
-    )
         .andExpect(status().isOk())
         .andReturn();
 
@@ -88,18 +94,24 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedOrganisationUnit));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchPortalOrganisations(searchTerm))
-        )
-            .with(user(USER))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -119,10 +131,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedOrganisationUnit));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(get(
@@ -152,7 +170,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("a company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedNameMatchOrganisationUnit));
 
     var expectedNumberMatchOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
@@ -160,7 +181,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("b company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedNumberMatchOrganisationUnit));
 
     var result = mockMvc.perform(get(
@@ -198,7 +222,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("c company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(thirdOrganisationAlphabetically, firstOrganisationAlphabetically));
 
     var secondOrganisationAlphabetically = PortalOrganisationDtoTestUtil.builder()
@@ -206,7 +233,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("b company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(secondOrganisationAlphabetically));
 
     var result = mockMvc.perform(get(
@@ -247,7 +277,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withRegisteredNumber((OrganisationRegisteredNumber) null)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(organisationWithoutNumberString, organisationWithoutNumberObject));
 
     var organisationWithNumber = PortalOrganisationDtoTestUtil.builder()
@@ -256,7 +289,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withRegisteredNumber("registered number")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(organisationWithNumber));
 
     var result = mockMvc.perform(get(
@@ -287,10 +323,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
     var result = mockMvc.perform(get(
@@ -321,10 +363,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .isActive(true)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = mockMvc.perform(get(
@@ -355,10 +403,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .isActive(false)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.NOMINATION_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = mockMvc.perform(get(
@@ -381,10 +435,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var searchTerm = "no match search term";
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(get(
@@ -409,10 +469,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedOrganisationUnit));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(get(
@@ -439,18 +505,24 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var expectedOrganisationUnit = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedOrganisationUnit));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(Collections.emptyList());
 
     var result = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(searchTerm))
-        )
-            .with(user(USER))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -473,7 +545,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("a company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedNameMatchOrganisationUnit));
 
     var expectedNumberMatchOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
@@ -481,7 +556,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("b company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(expectedNumberMatchOrganisationUnit));
 
     var result = mockMvc.perform(get(
@@ -519,7 +597,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("c company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(thirdOrganisationAlphabetically, firstOrganisationAlphabetically));
 
     var secondOrganisationAlphabetically = PortalOrganisationDtoTestUtil.builder()
@@ -527,7 +608,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withName("b company")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(secondOrganisationAlphabetically));
 
     var result = mockMvc.perform(get(
@@ -568,7 +652,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withRegisteredNumber((OrganisationRegisteredNumber) null)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(organisationWithoutNumberString, organisationWithoutNumberObject));
 
     var organisationWithNumber = PortalOrganisationDtoTestUtil.builder()
@@ -577,7 +664,10 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .withRegisteredNumber("registered number")
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(organisationWithNumber));
 
     var result = mockMvc.perform(get(
@@ -608,10 +698,16 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
 
     var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
     var result = mockMvc.perform(get(
@@ -643,18 +739,24 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .isDuplicate(false)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(searchTerm))
-        )
-            .with(user(USER))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -679,18 +781,23 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
         .isDuplicate(true)
         .build();
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(
+        searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisationDto));
 
-    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm))
+    when(portalOrganisationUnitQueryService.queryOrganisationByName(searchTerm,
+        PortalOrganisationUnitRestController.APPOINTED_OPERATOR_SEARCH_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = mockMvc.perform(
-        get(
-            ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(searchTerm))
-        )
-            .with(user(USER))
+            get(
+                ReverseRouter.route(on(PortalOrganisationUnitRestController.class)
+                    .searchAllPortalOrganisations(searchTerm))
+            )
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andReturn();

@@ -17,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -34,6 +35,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 @Service
 public class AppointmentCorrectionValidator implements SmartValidator {
 
+  static final RequestPurpose APPOINTED_OPERATOR_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the appointed operator selected for the appointment exists in portal");
   private static final String PHASES_FIELD_NAME = "phases";
   private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
   private static final String FOR_ALL_PHASES_FIELD_NAME = "forAllPhases";
@@ -131,7 +134,9 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
     if (form.getAppointedOperatorId() != null) {
 
-      var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId());
+      var operator = portalOrganisationUnitQueryService.getOrganisationById(
+          form.getAppointedOperatorId(),
+          APPOINTED_OPERATOR_VALIDATION_PURPOSE);
 
       if (operator.isEmpty() || operator.get().isDuplicate()) {
         bindingResult.rejectValue(

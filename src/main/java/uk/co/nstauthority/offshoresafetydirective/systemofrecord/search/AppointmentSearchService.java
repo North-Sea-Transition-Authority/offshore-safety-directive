@@ -39,6 +39,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetT
 @Service
 class AppointmentSearchService {
 
+  static final RequestPurpose APPOINTED_OPERATORS_PURPOSE =
+      new RequestPurpose("Get the appointed operators for all appointments");
+
   static final RequestPurpose APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE =
       new RequestPurpose("Search for existing installation appointments");
 
@@ -261,7 +264,7 @@ class AppointmentSearchService {
       });
 
       var organisationUnits = portalOrganisationUnitQueryService
-          .getOrganisationByIds(operatorIds)
+          .getOrganisationByIds(operatorIds, APPOINTED_OPERATORS_PURPOSE)
           .stream()
           .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
 

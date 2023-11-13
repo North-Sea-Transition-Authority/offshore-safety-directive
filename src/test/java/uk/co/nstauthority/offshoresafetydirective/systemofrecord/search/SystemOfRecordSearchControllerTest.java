@@ -88,7 +88,10 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
     var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder().build();
 
-    given(portalOrganisationUnitQueryService.getOrganisationById(searchForm.getAppointedOperatorId()))
+    given(portalOrganisationUnitQueryService.getOrganisationById(
+        searchForm.getAppointedOperatorId(),
+        SystemOfRecordSearchController.OPERATOR_SEARCH_FILTER_PURPOSE
+    ))
         .willReturn(Optional.of(expectedAppointedOperator));
 
     var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();

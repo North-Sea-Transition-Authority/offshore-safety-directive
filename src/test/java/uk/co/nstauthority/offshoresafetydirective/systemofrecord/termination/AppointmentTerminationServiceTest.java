@@ -297,7 +297,10 @@ class AppointmentTerminationServiceTest {
   void getAppointedOperator_whenAppointedOrganisationNotFound_thenThrowException() {
     var appointedOperatorId = new AppointedOperatorId("10");
 
-    when(organisationUnitQueryService.getOrganisationById(Integer.valueOf(appointedOperatorId.id())))
+    when(organisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(appointedOperatorId.id()),
+        AppointmentTerminationService.APPOINTED_OPERATOR_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> appointmentTerminationService.getAppointedOperator(appointedOperatorId))
@@ -313,7 +316,10 @@ class AppointmentTerminationServiceTest {
         .withName("appointedName")
         .build();
 
-    when(organisationUnitQueryService.getOrganisationById(Integer.valueOf(appointedOperatorId.id())))
+    when(organisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(appointedOperatorId.id()),
+        AppointmentTerminationService.APPOINTED_OPERATOR_PURPOSE
+    ))
         .thenReturn(Optional.of(appointedOrganisation));
 
     var resultingAppointedOperator = appointmentTerminationService.getAppointedOperator(appointedOperatorId);

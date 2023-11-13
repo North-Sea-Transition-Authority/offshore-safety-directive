@@ -63,6 +63,10 @@ public class NewAppointmentController {
 
   static final RequestPurpose PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE =
       new RequestPurpose("Subarea name for the preselected forward approved appointment display string");
+
+  static final RequestPurpose PRE_SELECTED_OPERATOR_NAME_PURPOSE =
+      new RequestPurpose("Get pre-selected operator name for appointment");
+
   private final PortalAssetRetrievalService portalAssetRetrievalService;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentService appointmentService;
@@ -280,7 +284,8 @@ public class NewAppointmentController {
   }
 
   private Map<String, String> getPreselectedOperator(AppointmentCorrectionForm form) {
-    var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId());
+    var operator = portalOrganisationUnitQueryService.getOrganisationById(form.getAppointedOperatorId(),
+        PRE_SELECTED_OPERATOR_NAME_PURPOSE);
     return operator.stream()
         .collect(Collectors.toMap(
             portalOrganisationDto -> String.valueOf(portalOrganisationDto.id()),

@@ -95,18 +95,21 @@ class NominationCaseProcessingServiceTest {
         .toList();
 
     var portalApplicationOrganisationDto = PortalOrganisationDtoTestUtil.builder()
-            .withId(applicantOrgUnitId)
-            .withName(applicantOrgUnitName)
-            .withRegisteredNumber(applicantCompanyNumber)
-            .build();
+        .withId(applicantOrgUnitId)
+        .withName(applicantOrgUnitName)
+        .withRegisteredNumber(applicantCompanyNumber)
+        .build();
 
     var portalNominatedOrganisationDto = PortalOrganisationDtoTestUtil.builder()
-            .withId(nominatedOrgUnitId)
-            .withName(nominatedOrgUnitName)
-            .withRegisteredNumber(nomineeCompanyNumber)
-            .build();
+        .withId(nominatedOrgUnitId)
+        .withName(nominatedOrgUnitName)
+        .withRegisteredNumber(nomineeCompanyNumber)
+        .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(
+        ids,
+        NominationCaseProcessingService.NOMINATION_CASE_PROCESSING_OPERATORS_PURPOSE
+    ))
         .thenReturn(List.of(portalNominatedOrganisationDto, portalApplicationOrganisationDto));
 
     when(caseEventService.getNominationDecisionForNominationDetail(nominationDetail))
@@ -168,7 +171,10 @@ class NominationCaseProcessingServiceTest {
         .map(PortalOrganisationUnitId::new)
         .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(
+        ids,
+        NominationCaseProcessingService.NOMINATION_CASE_PROCESSING_OPERATORS_PURPOSE
+    ))
         .thenReturn(List.of());
 
     var result = nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail);
@@ -216,7 +222,10 @@ class NominationCaseProcessingServiceTest {
         .withName(orgName)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(List.of(orgId)))
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(
+        List.of(orgId),
+        NominationCaseProcessingService.NOMINATION_CASE_PROCESSING_OPERATORS_PURPOSE
+    ))
         .thenReturn(List.of(portalOrganisation));
 
     assertDoesNotThrow(() -> nominationCaseProcessingService.getNominationCaseProcessingHeader(nominationDetail));

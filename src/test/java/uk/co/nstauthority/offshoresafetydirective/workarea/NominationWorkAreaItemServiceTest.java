@@ -90,7 +90,8 @@ class NominationWorkAreaItemServiceTest {
             .map(PortalOrganisationUnitId::new)
             .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids)).thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
+        .thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 

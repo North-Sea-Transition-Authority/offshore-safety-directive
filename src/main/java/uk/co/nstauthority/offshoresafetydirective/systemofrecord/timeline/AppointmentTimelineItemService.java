@@ -64,6 +64,9 @@ public class AppointmentTimelineItemService {
   static final RequestPurpose FORWARD_APPROVED_APPOINTMENT_PURPOSE =
       new RequestPurpose("Subarea name for the forward approved appointment display string");
 
+  static final RequestPurpose APPOINTED_OPERATORS_PURPOSE =
+      new RequestPurpose("Appointed operators for each appointment on the asset timeline");
+
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
 
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
@@ -220,7 +223,7 @@ public class AppointmentTimelineItemService {
         .collect(Collectors.toSet());
 
     return organisationUnitQueryService
-        .getOrganisationByIds(appointedOrganisationUnitIds)
+        .getOrganisationByIds(appointedOrganisationUnitIds, APPOINTED_OPERATORS_PURPOSE)
         .stream()
         .collect(Collectors.toMap(
             portalOrganisationDto -> new AppointedOperatorId(String.valueOf(portalOrganisationDto.id())),

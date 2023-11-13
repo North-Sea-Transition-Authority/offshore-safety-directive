@@ -186,7 +186,7 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
     var portalOrganisationDto = mock(PortalOrganisationDto.class);
     when(portalOrganisationDto.displayName()).thenReturn(operatorName);
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, RemoveAppointmentController.OPERATOR_NAME_PURPOSE))
         .thenReturn(Optional.of(portalOrganisationDto));
 
     var assetTimelineView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
@@ -232,7 +232,7 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(appointment));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, RemoveAppointmentController.OPERATOR_NAME_PURPOSE))
         .thenReturn(Optional.empty());
 
     var assetTimelineView = AssetTimelineItemViewTestUtil.appointmentBuilder().build();
@@ -280,7 +280,7 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(appointment));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, RemoveAppointmentController.OPERATOR_NAME_PURPOSE))
         .thenReturn(Optional.empty());
 
     when(appointmentTimelineItemService.getTimelineItemViews(List.of(appointment), appointmentDto.assetDto()))

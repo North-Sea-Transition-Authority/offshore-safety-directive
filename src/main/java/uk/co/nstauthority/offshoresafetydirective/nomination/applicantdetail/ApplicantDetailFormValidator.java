@@ -5,6 +5,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
@@ -13,6 +14,9 @@ import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessag
 class ApplicantDetailFormValidator implements SmartValidator {
 
   static final String APPLICANT_FIELD_NAME = "portalOrganisationId";
+
+  static final RequestPurpose APPLICANT_ORGANISATION_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the applicant oganisation selected exists in portal");
 
   static final FrontEndErrorMessage APPLICANT_REQUIRED_ERROR = new FrontEndErrorMessage(
       APPLICANT_FIELD_NAME,
@@ -50,7 +54,7 @@ class ApplicantDetailFormValidator implements SmartValidator {
     } else {
 
       var energyPortalOrganisation = portalOrganisationUnitQueryService
-          .getOrganisationById(form.getPortalOrganisationId());
+          .getOrganisationById(form.getPortalOrganisationId(), APPLICANT_ORGANISATION_VALIDATION_PURPOSE);
 
       if (energyPortalOrganisation.isEmpty()) {
 

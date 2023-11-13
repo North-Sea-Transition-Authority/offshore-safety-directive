@@ -96,7 +96,8 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, NomineeDetailSummaryService.NOMINEE_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
@@ -225,7 +226,8 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, NomineeDetailSummaryService.NOMINEE_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
@@ -295,7 +297,8 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, NomineeDetailSummaryService.NOMINEE_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
@@ -363,7 +366,8 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, NomineeDetailSummaryService.NOMINEE_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 

@@ -321,7 +321,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     when(appointmentCorrectionService.getForm(appointment))
         .thenReturn(form);
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        operatorId,
+        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     when(teamMemberService.getUserAsTeamMembers(USER))
@@ -373,7 +376,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        expectedOrganisationId,
+        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+    ))
         .thenReturn(Optional.of(organisationDto));
 
     var form = AppointmentCorrectionFormTestUtil.builder()
@@ -457,7 +463,10 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(expectedOrganisationId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        expectedOrganisationId,
+        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+    ))
         .thenReturn(Optional.of(organisationDto));
 
     var form = AppointmentCorrectionFormTestUtil.builder()

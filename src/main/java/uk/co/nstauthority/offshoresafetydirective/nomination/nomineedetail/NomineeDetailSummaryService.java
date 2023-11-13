@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
@@ -28,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehav
 @Service
 public class NomineeDetailSummaryService {
 
+  static final RequestPurpose NOMINEE_ORGANISATION_PURPOSE =
+      new RequestPurpose("Get nominated organisation");
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
@@ -100,7 +103,10 @@ public class NomineeDetailSummaryService {
 
   private NominatedOrganisationUnitView getNomineeOrganisationUnitView(NomineeDetail nomineeDetail) {
     return Optional.ofNullable(nomineeDetail.getNominatedOrganisationId())
-        .flatMap(portalOrganisationUnitQueryService::getOrganisationById)
+        .flatMap(organisationId -> portalOrganisationUnitQueryService.getOrganisationById(
+            organisationId,
+            NOMINEE_ORGANISATION_PURPOSE
+        ))
         .map(NominatedOrganisationUnitView::from)
         .orElseGet(NominatedOrganisationUnitView::new);
   }

@@ -55,7 +55,7 @@ class NominationWorkAreaItemTransformerServiceTest {
         .withId(nominatedOrganisationId)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
         .thenReturn(List.of(portalApplicationOrganisationDto, portalNominatedOrganisationDto));
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();
@@ -107,7 +107,7 @@ class NominationWorkAreaItemTransformerServiceTest {
         .map(PortalOrganisationUnitId::new)
         .toList();
 
-    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids))
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
         .thenReturn(List.of());
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();

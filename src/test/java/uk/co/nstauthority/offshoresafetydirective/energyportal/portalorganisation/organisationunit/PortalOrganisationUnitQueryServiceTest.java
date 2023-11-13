@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationPropertiesTestUtil;
@@ -21,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 
 class PortalOrganisationUnitQueryServiceTest {
 
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("a request purpose");
   private static final ServiceConfigurationProperties serviceConfigurationProperties
       = ServiceConfigurationPropertiesTestUtil.builder().build();
 
@@ -52,7 +54,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(Optional.of(expectedOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.getOrganisationById(idToSearchFor);
+    var result = portalOrganisationUnitQueryService.getOrganisationById(idToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(expectedOrganisationUnit));
   }
@@ -69,7 +71,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(Optional.empty());
 
-    var result = portalOrganisationUnitQueryService.getOrganisationById(idToSearchFor);
+    var result = portalOrganisationUnitQueryService.getOrganisationById(idToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).isEmpty();
   }
@@ -87,7 +89,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).isEmpty();
   }
@@ -106,7 +108,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(expectedOrganisationUnit));
   }
@@ -139,7 +141,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(List.of(activeOrganisationUnit, inactiveOrganisationUnit, unknownActiveStateOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByName(nameToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result)
         .extracting(PortalOrganisationDto::id)
@@ -164,7 +166,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(Collections.emptyList());
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).isEmpty();
   }
@@ -183,7 +185,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(List.of(expectedOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(expectedOrganisationUnit));
   }
@@ -216,7 +218,7 @@ class PortalOrganisationUnitQueryServiceTest {
         any()
     )).thenReturn(List.of(activeOrganisationUnit, inactiveOrganisationUnit, unknownActiveStateOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(numberToSearchFor);
+    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(numberToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result)
         .extracting(PortalOrganisationDto::id)
@@ -238,7 +240,7 @@ class PortalOrganisationUnitQueryServiceTest {
         new EnergyPortalApiWrapper(serviceConfigurationProperties)
     );
 
-    var resultingOrganisationUnits = portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds);
+    var resultingOrganisationUnits = portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds, REQUEST_PURPOSE);
 
     assertThat(resultingOrganisationUnits).isEmpty();
 
@@ -258,7 +260,7 @@ class PortalOrganisationUnitQueryServiceTest {
     )).thenReturn(Collections.emptyList());
 
     var resultingOrganisationUnits = portalOrganisationUnitQueryService
-        .getOrganisationByIds(List.of(unmatchedOrganisationUnitId));
+        .getOrganisationByIds(List.of(unmatchedOrganisationUnitId), REQUEST_PURPOSE);
 
     assertThat(resultingOrganisationUnits).isEmpty();
   }
@@ -280,7 +282,7 @@ class PortalOrganisationUnitQueryServiceTest {
     )).thenReturn(List.of(expectedOrganisationUnit));
 
     var resultingOrganisationUnits = portalOrganisationUnitQueryService
-        .getOrganisationByIds(List.of(matchedOrganisationUnitId));
+        .getOrganisationByIds(List.of(matchedOrganisationUnitId), REQUEST_PURPOSE);
 
     assertThat(resultingOrganisationUnits)
         .extracting(PortalOrganisationDto::id)

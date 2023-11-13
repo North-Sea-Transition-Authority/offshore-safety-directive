@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
@@ -48,6 +49,9 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class NomineeDetailController {
 
   static final String PAGE_NAME = "Nominee details";
+
+  static final RequestPurpose PRE_SELECTED_OPERATOR_PURPOSE =
+      new RequestPurpose("Get pre-selected nominated organisation");
 
   private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
@@ -160,7 +164,7 @@ public class NomineeDetailController {
   private Map<String, String> getPreselectedPortalOrganisation(NomineeDetailForm form) {
     var selectedItem = new HashMap<String, String>();
     if (form.getNominatedOrganisationId() != null) {
-      portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId())
+      portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId(), PRE_SELECTED_OPERATOR_PURPOSE)
           .ifPresent(portalOrganisationDto -> selectedItem.put(
               String.valueOf(portalOrganisationDto.id()),
               OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationDto)

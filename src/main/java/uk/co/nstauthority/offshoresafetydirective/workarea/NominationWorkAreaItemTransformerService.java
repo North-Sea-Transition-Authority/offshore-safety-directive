@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -16,6 +17,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 @Service
 class NominationWorkAreaItemTransformerService {
 
+  static final RequestPurpose NOMINATED_OPERATORS_PURPOSE =
+      new RequestPurpose("Get the operators to display on the work area nominations");
   private final NominationWorkAreaQueryService nominationWorkAreaQueryService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
@@ -73,7 +76,7 @@ class NominationWorkAreaItemTransformerService {
         .map(PortalOrganisationUnitId::new)
         .toList();
 
-    return portalOrganisationUnitQueryService.getOrganisationByIds(ids)
+    return portalOrganisationUnitQueryService.getOrganisationByIds(ids, NOMINATED_OPERATORS_PURPOSE)
         .stream()
         .filter(Objects::nonNull)
         .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));

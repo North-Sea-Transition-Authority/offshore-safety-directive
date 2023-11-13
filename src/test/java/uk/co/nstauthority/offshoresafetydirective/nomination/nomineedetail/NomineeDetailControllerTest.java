@@ -106,7 +106,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
     when(nomineeDetailFormService.getForm(nominationDetail)).thenReturn(form);
-    when(portalOrganisationUnitQueryService.getOrganisationById(any())).thenReturn(Optional.empty());
+    when(portalOrganisationUnitQueryService.getOrganisationById(any(), any())).thenReturn(Optional.empty());
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
         .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
@@ -168,7 +168,10 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .withRegisteredNumber("registered number")
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailController.PRE_SELECTED_OPERATOR_PURPOSE
+    ))
         .thenReturn(Optional.of(portalOrganisationUnit));
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);

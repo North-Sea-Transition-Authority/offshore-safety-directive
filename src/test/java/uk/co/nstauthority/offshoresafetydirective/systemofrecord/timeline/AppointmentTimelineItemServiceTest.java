@@ -125,7 +125,10 @@ class AppointmentTimelineItemServiceTest {
 
     var expectedAppointmentDto = AppointmentDto.fromAppointment(expectedAppointment);
 
-    given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(organisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentTimelineItemService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // Treat user as not logged in to skip overhead in code we don't need to check
@@ -177,7 +180,10 @@ class AppointmentTimelineItemServiceTest {
         .withAppointedPortalOperatorId(appointedOperatorId.id())
         .build();
 
-    given(organisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(organisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentTimelineItemService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(Collections.emptyList());
 
     given(userDetailService.getUserDetail())

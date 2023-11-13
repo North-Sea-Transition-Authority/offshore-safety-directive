@@ -42,6 +42,9 @@ public class SystemOfRecordSearchController {
   static final RequestPurpose LICENCE_SEARCH_FILTER_PURPOSE =
       new RequestPurpose("Retrieve licence for SoR wellbore search filter");
 
+  static final RequestPurpose OPERATOR_SEARCH_FILTER_PURPOSE =
+      new RequestPurpose("Retrieve appointed operator for SoR wellbore search filter");
+
   private static final String OPERATORS_MODEL_AND_VIEW_NAME =
       "osd/systemofrecord/search/operator/searchAppointmentsByOperator";
 
@@ -223,7 +226,7 @@ public class SystemOfRecordSearchController {
 
     if (searchForm.getAppointedOperatorId() != null) {
       filteredAppointedOperator = portalOrganisationUnitQueryService
-          .getOrganisationById(searchForm.getAppointedOperatorId())
+          .getOrganisationById(searchForm.getAppointedOperatorId(), OPERATOR_SEARCH_FILTER_PURPOSE)
           .stream()
           .collect(Collectors.toMap(
               operator -> String.valueOf(operator.id()),

@@ -415,7 +415,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
         .withId(operatorId)
         .build();
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId))
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, NewAppointmentController.PRE_SELECTED_OPERATOR_NAME_PURPOSE))
         .thenReturn(Optional.of(portalOrganisationDto));
 
     mockMvc.perform(post(

@@ -56,7 +56,8 @@ class ApplicantDetailSummaryServiceTest {
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
         .thenReturn(Optional.of(applicantDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, ApplicantDetailSummaryService.APPLICANT_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
@@ -100,7 +101,8 @@ class ApplicantDetailSummaryServiceTest {
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
         .thenReturn(Optional.of(applicantDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId)).thenReturn(Optional.of(portalOrgDto));
+    when(portalOrganisationUnitQueryService.getOrganisationById(portalOrgId, ApplicantDetailSummaryService.APPLICANT_ORGANISATION_PURPOSE))
+        .thenReturn(Optional.of(portalOrgDto));
 
     when(applicantDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 

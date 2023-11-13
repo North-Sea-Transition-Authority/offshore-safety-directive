@@ -53,7 +53,10 @@ class NomineeDetailFormValidatorTest {
     var validForm = NomineeDetailFormTestingUtil.builder()
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(validForm.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        validForm.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(validForm);
@@ -88,7 +91,10 @@ class NomineeDetailFormValidatorTest {
         .withOperatorHasCapacity(invalidValue)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        invalidForm.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
@@ -108,7 +114,10 @@ class NomineeDetailFormValidatorTest {
         .withOperatorHasCapacity(invalidValue)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        invalidForm.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
@@ -127,7 +136,10 @@ class NomineeDetailFormValidatorTest {
         .withOperatorHasCapacity(invalidValue)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(invalidForm.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        invalidForm.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
@@ -146,7 +158,10 @@ class NomineeDetailFormValidatorTest {
         .withPlannedStartDateYear("c")
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
@@ -167,7 +182,10 @@ class NomineeDetailFormValidatorTest {
         .withPlannedStartDateYear("1999")
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
@@ -188,7 +206,10 @@ class NomineeDetailFormValidatorTest {
         .withPlannedStartDate(today)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
@@ -209,7 +230,10 @@ class NomineeDetailFormValidatorTest {
         .withPlannedStartDate(dateInTheFuture)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
@@ -224,7 +248,10 @@ class NomineeDetailFormValidatorTest {
     var form = NomineeDetailFormTestingUtil.builder()
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     var bindingResult = validateNomineeDetailsForm(form);
@@ -254,7 +281,10 @@ class NomineeDetailFormValidatorTest {
         .isActive(false)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(inactiveOrganisation));
 
 
@@ -288,7 +318,10 @@ class NomineeDetailFormValidatorTest {
         .withAppendixDocuments(List.of(fileUploadForm))
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getNominatedOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getNominatedOrganisationId(),
+        NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);

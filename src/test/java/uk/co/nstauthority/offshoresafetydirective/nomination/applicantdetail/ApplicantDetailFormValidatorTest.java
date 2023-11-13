@@ -52,7 +52,10 @@ class ApplicantDetailFormValidatorTest {
         .isActive(true)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getPortalOrganisationId(),
+        ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(validOrganisation));
 
     var bindingResult = validateApplicantDetailsForm(form);
@@ -75,7 +78,10 @@ class ApplicantDetailFormValidatorTest {
 
     var form = ApplicantDetailFormTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getPortalOrganisationId(),
+        ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.empty());
 
     var bindingResult = validateApplicantDetailsForm(form);
@@ -92,7 +98,10 @@ class ApplicantDetailFormValidatorTest {
         .isActive(false)
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getPortalOrganisationId(),
+        ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
+    ))
         .thenReturn(Optional.of(inactiveOrganisation));
 
     var bindingResult = validateApplicantDetailsForm(form);

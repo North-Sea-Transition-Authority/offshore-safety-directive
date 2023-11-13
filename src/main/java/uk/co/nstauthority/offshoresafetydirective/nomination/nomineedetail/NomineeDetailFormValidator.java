@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
@@ -18,6 +19,9 @@ class NomineeDetailFormValidator implements SmartValidator {
 
   private static final String NOMINEE_DECLARATIONS_ERROR_MESSAGE = "You must agree to all the licensee declarations";
   private static final String NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE = "Upload the Appendix C and any associated documents";
+
+  static final RequestPurpose NOMINATED_ORGANISATION_VALIDATION_PURPOSE =
+      new RequestPurpose("Validate that the nominated organisation selected exists in portal");
 
   static final String NOMINEE_FIELD_NAME = "nominatedOrganisationId";
 
@@ -57,7 +61,7 @@ class NomineeDetailFormValidator implements SmartValidator {
     } else {
 
       var energyPortalOrganisation = portalOrganisationUnitQueryService
-          .getOrganisationById(form.getNominatedOrganisationId());
+          .getOrganisationById(form.getNominatedOrganisationId(), NOMINATED_ORGANISATION_VALIDATION_PURPOSE);
 
       if (energyPortalOrganisation.isEmpty()) {
 

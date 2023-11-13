@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
@@ -38,6 +39,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 public class ApplicantDetailController {
 
   static final String PAGE_NAME = "Applicant details";
+  static final RequestPurpose PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE =
+      new RequestPurpose("Get pre-selected organisation");
 
   private final ApplicantDetailFormService applicantDetailFormService;
   private final NominationService nominationService;
@@ -151,7 +154,10 @@ public class ApplicantDetailController {
   private Map<String, String> getPreselectedPortalOrganisation(ApplicantDetailForm form) {
     var selectedItem = new HashMap<String, String>();
     if (form.getPortalOrganisationId() != null) {
-      portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId())
+      portalOrganisationUnitQueryService.getOrganisationById(
+              form.getPortalOrganisationId(),
+              PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE
+          )
           .ifPresent(portalOrganisationDto -> selectedItem.put(
               String.valueOf(portalOrganisationDto.id()),
               OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationDto)

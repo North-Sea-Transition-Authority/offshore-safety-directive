@@ -229,7 +229,10 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .withRegisteredNumber("registered number")
         .build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationById(form.getPortalOrganisationId()))
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        form.getPortalOrganisationId(),
+        ApplicantDetailController.PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE
+    ))
         .thenReturn(Optional.of(portalOrganisationUnit));
 
     mockMvc.perform(

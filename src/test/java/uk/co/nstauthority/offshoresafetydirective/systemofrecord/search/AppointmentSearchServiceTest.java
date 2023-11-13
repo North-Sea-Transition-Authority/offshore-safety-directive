@@ -140,7 +140,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -218,7 +221,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(Collections.emptyList());
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -273,7 +279,10 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
         .willReturn(List.of(appointedWellbore));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -349,7 +358,10 @@ class AppointmentSearchServiceTest {
     given(wellQueryService.getWellsByIds(Set.of(appointedWellboreId)))
         .willReturn(Collections.emptyList());
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -405,7 +417,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(List.of(appointedSubarea));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -482,7 +497,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(Collections.emptyList());
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -585,8 +603,9 @@ class AppointmentSearchServiceTest {
         .willReturn(List.of(appointedSubarea));
 
     given(portalOrganisationUnitQueryService.getOrganisationByIds(
-        Set.of(appointedInstallationOperatorId, appointedWellboreOperatorId, appointedSubareaOperatorId))
-    )
+        Set.of(appointedInstallationOperatorId, appointedWellboreOperatorId, appointedSubareaOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedInstallationOperator, appointedWellboreOperator, appointedSubareaOperator));
 
     // when we search appointments
@@ -761,7 +780,9 @@ class AppointmentSearchServiceTest {
             appointmentForSecondInstallation
         ));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -841,7 +862,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(List.of(appointedInstallation));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -918,7 +942,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE))
         .willReturn(Collections.emptyList());
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -980,7 +1007,10 @@ class AppointmentSearchServiceTest {
     )
         .willReturn(List.of(secondInstallationByName, firstInstallationByName));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     var searchFilter = SystemOfRecordSearchFilter.builder()
@@ -1060,7 +1090,10 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(List.of(subareaAppointment));
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     given(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
@@ -1141,7 +1174,10 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE))
         .willReturn(Collections.emptyList());
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // when we search appointments
@@ -1451,7 +1487,10 @@ class AppointmentSearchServiceTest {
         .withId(appointedOperatorId.id())
         .build();
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     var expectedAppointment = AppointmentQueryResultItemDtoTestUtil.builder()
@@ -1519,7 +1558,10 @@ class AppointmentSearchServiceTest {
         .withId(appointedOperatorId.id())
         .build();
 
-    given(portalOrganisationUnitQueryService.getOrganisationByIds(Set.of(appointedOperatorId)))
+    given(portalOrganisationUnitQueryService.getOrganisationByIds(
+        Set.of(appointedOperatorId),
+        AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
+    ))
         .willReturn(List.of(appointedOperator));
 
     // GIVEN two wellbores

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
@@ -28,6 +29,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.Portal
 
 @Service
 public class AppointmentTerminationService {
+
+  static final RequestPurpose APPOINTED_OPERATOR_PURPOSE =
+      new RequestPurpose("Get appointed operator for appointment");
   private final PortalAssetNameService portalAssetNameService;
   private final AppointmentAccessService appointmentAccessService;
   private final NominationAccessService nominationAccessService;
@@ -134,7 +138,7 @@ public class AppointmentTerminationService {
 
   String getAppointedOperator(AppointedOperatorId appointedOperatorId) {
     var appointedOrganisationOptional = organisationUnitQueryService
-        .getOrganisationById(Integer.parseInt(appointedOperatorId.id()));
+        .getOrganisationById(Integer.parseInt(appointedOperatorId.id()), APPOINTED_OPERATOR_PURPOSE);
     var appointedOrganisation = appointedOrganisationOptional.orElseThrow(() -> new IllegalStateException(
         "No AppointmentOrganisation found for PortalAssetId %s".formatted(appointedOperatorId.id())));
     return appointedOrganisation.name();

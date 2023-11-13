@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -27,6 +28,9 @@ import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCo
 
 @Service
 class NominationCaseProcessingService {
+
+  static final RequestPurpose NOMINATION_CASE_PROCESSING_OPERATORS_PURPOSE =
+      new RequestPurpose("Get applicant and nominee operators for case processing");
 
   private final NominationDetailCaseProcessingService nominationDetailCaseProcessingService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
@@ -102,7 +106,7 @@ class NominationCaseProcessingService {
         .map(PortalOrganisationUnitId::new)
         .toList();
 
-    return portalOrganisationUnitQueryService.getOrganisationByIds(ids)
+    return portalOrganisationUnitQueryService.getOrganisationByIds(ids, NOMINATION_CASE_PROCESSING_OPERATORS_PURPOSE)
         .stream()
         .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
   }

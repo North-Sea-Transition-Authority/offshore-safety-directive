@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
@@ -40,21 +41,22 @@ public class PortalOrganisationUnitQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  public Optional<PortalOrganisationDto> getOrganisationById(Integer id) {
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+  public Optional<PortalOrganisationDto> getOrganisationById(Integer id, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.findOrganisationUnit(
                 id,
                 SINGLE_ORGANISATION_PROJECTION_ROOT,
                 requestPurpose,
                 logCorrelationId
             )
-        ))
+        )
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .findFirst();
   }
 
-  public List<PortalOrganisationDto> getOrganisationByIds(Collection<PortalOrganisationUnitId> organisationUnitIds) {
+  public List<PortalOrganisationDto> getOrganisationByIds(Collection<PortalOrganisationUnitId> organisationUnitIds,
+                                                          RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(organisationUnitIds)) {
       return Collections.emptyList();
@@ -65,22 +67,22 @@ public class PortalOrganisationUnitQueryService {
         .map(PortalOrganisationUnitId::id)
         .toList();
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.getOrganisationUnitsByIds(
                 organisationUnitIdToRequest,
                 MULTI_ORGANISATION_PROJECTION_ROOT,
                 requestPurpose,
                 logCorrelationId
             )
-        ))
+        )
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }
 
-  List<PortalOrganisationDto> queryOrganisationByName(String organisationName) {
+  List<PortalOrganisationDto> queryOrganisationByName(String organisationName, RequestPurpose requestPurpose) {
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         organisationApi.searchOrganisationUnits(
             organisationName,
             null,
@@ -88,15 +90,15 @@ public class PortalOrganisationUnitQueryService {
             requestPurpose,
             logCorrelationId
         )
-    ))
+    )
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }
 
-  List<PortalOrganisationDto> queryOrganisationByRegisteredNumber(String registeredNumber) {
+  List<PortalOrganisationDto> queryOrganisationByRegisteredNumber(String registeredNumber, RequestPurpose requestPurpose) {
 
-    return energyPortalApiWrapper.makeRequest(((logCorrelationId, requestPurpose) ->
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.searchOrganisationUnits(
                 null,
                 registeredNumber,
@@ -104,7 +106,7 @@ public class PortalOrganisationUnitQueryService {
                 requestPurpose,
                 logCorrelationId
             )
-        ))
+        )
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();

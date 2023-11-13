@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -38,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasAssetStatus(AssetStatus.EXTANT)
 class RemoveAppointmentController {
 
+  static final RequestPurpose OPERATOR_NAME_PURPOSE = new RequestPurpose("Get operator name for appointment");
   private final AppointmentAccessService appointmentAccessService;
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
   private final AppointmentPhasesService appointmentPhasesService;
@@ -86,7 +88,7 @@ class RemoveAppointmentController {
     var operatorName = Optional.of(appointmentDto.appointedOperatorId())
         .map(AppointedOperatorId::id)
         .map(Integer::parseInt)
-        .flatMap(portalOrganisationUnitQueryService::getOrganisationById)
+        .flatMap(operatorId -> portalOrganisationUnitQueryService.getOrganisationById(operatorId, OPERATOR_NAME_PURPOSE))
         .map(PortalOrganisationDto::displayName)
         .orElse("Unknown operator");
 
