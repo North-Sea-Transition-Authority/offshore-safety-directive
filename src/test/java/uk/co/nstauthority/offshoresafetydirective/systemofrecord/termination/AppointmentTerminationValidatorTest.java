@@ -65,10 +65,10 @@ class AppointmentTerminationValidatorTest {
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
     assertThat(errors).containsExactly(
+        entry("reason.inputValue", Set.of("Enter a reason for the termination")),
         entry("terminationDate.dayInput.inputValue", Set.of("Enter a complete Termination date")),
         entry("terminationDate.monthInput.inputValue", Set.of("")),
         entry("terminationDate.yearInput.inputValue", Set.of("")),
-        entry("reason.inputValue", Set.of("Enter a reason for the termination")),
         entry("terminationDocuments", Set.of(TERMINATION_DOCUMENT_ERROR_MESSAGE))
     );
   }

@@ -301,8 +301,8 @@ class AppointmentCorrectionValidatorTest {
     assertThat(errorMessages)
         .containsExactly(
             entry("appointedOperatorId", Set.of("Select the appointed operator")),
-            entry("hasEndDate", Set.of("Select Yes if the appointment has an end date")),
             entry("appointmentType", Set.of("Select the type of appointment")),
+            entry("hasEndDate", Set.of("Select Yes if the appointment has an end date")),
             entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases")),
             entry("reason.inputValue", Set.of("Enter a reason for the correction"))
         );

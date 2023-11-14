@@ -32,13 +32,13 @@ class AppointmentTerminationValidator implements SmartValidator {
     var bindingResult = (BindingResult) Objects.requireNonNull(errors);
     var hint = (AppointmentTerminationValidatorHint) validationHints[0];
 
+    StringInputValidator.builder()
+        .validate(form.getReason(), bindingResult);
+
     ThreeFieldDateInputValidator.builder()
         .mustBeBeforeOrEqualTo(LocalDate.now())
         .mustBeAfterOrEqualTo(hint.appointmentDto().appointmentFromDate().value())
         .validate(form.getTerminationDate(), errors);
-
-    StringInputValidator.builder()
-        .validate(form.getReason(), bindingResult);
 
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, TERMINATION_DOCUMENT_ERROR_MESSAGE)

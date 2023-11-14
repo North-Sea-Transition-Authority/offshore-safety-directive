@@ -81,18 +81,6 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
     validateAppointedOperatorId(form, bindingResult);
 
-    var hasEndDate = BooleanUtils.toBooleanObject(form.getHasEndDate());
-
-    if (hasEndDate == null) {
-      bindingResult.rejectValue(
-          "hasEndDate",
-          "hasEndDate.required",
-          "Select Yes if the appointment has an end date"
-      );
-    }
-
-    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(form, bindingResult);
-
     StringInputValidator.builder()
         .isOptional()
         .validate(form.getOfflineNominationReference(), bindingResult);
@@ -119,6 +107,18 @@ public class AppointmentCorrectionValidator implements SmartValidator {
             FIELD_REQUIRED_ERROR.formatted(APPOINTMENT_TYPE_FIELD_NAME),
             "Select the type of appointment"
         ));
+
+    var hasEndDate = BooleanUtils.toBooleanObject(form.getHasEndDate());
+
+    if (hasEndDate == null) {
+      bindingResult.rejectValue(
+          "hasEndDate",
+          "hasEndDate.required",
+          "Select Yes if the appointment has an end date"
+      );
+    }
+
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(form, bindingResult);
 
     validatePhases(form, bindingResult, hint);
     validateReason(form, bindingResult);
