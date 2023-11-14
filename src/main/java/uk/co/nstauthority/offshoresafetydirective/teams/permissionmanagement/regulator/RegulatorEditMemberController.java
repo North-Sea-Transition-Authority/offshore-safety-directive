@@ -17,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -44,7 +43,6 @@ public class RegulatorEditMemberController extends AbstractTeamController {
   private final TeamMemberService teamMemberService;
   private final TeamMemberViewService teamMemberViewService;
   private final RegulatorTeamMemberEditService regulatorTeamMemberEditService;
-  private final ControllerHelperService controllerHelperService;
   private final RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator;
 
   @Autowired
@@ -53,13 +51,11 @@ public class RegulatorEditMemberController extends AbstractTeamController {
       TeamMemberService teamMemberService,
       TeamMemberViewService teamMemberViewService,
       RegulatorTeamMemberEditService regulatorTeamMemberEditService,
-      ControllerHelperService controllerHelperService,
       RegulatorTeamMemberEditRolesValidator regulatorTeamMemberEditRolesValidator) {
     super(teamService);
     this.teamMemberService = teamMemberService;
     this.teamMemberViewService = teamMemberViewService;
     this.regulatorTeamMemberEditService = regulatorTeamMemberEditService;
-    this.controllerHelperService = controllerHelperService;
     this.regulatorTeamMemberEditRolesValidator = regulatorTeamMemberEditRolesValidator;
   }
 
@@ -105,26 +101,23 @@ public class RegulatorEditMemberController extends AbstractTeamController {
     regulatorTeamMemberEditRolesValidator.validate(form, bindingResult,
         new RegulatorTeamMemberEditRolesValidatorDto(team, teamMember));
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getEditModelAndView(teamId, userView, form),
-        form,
-        () -> {
-          regulatorTeamMemberEditService.updateRoles(team, teamMember, form.getRoles());
+    if (bindingResult.hasErrors()) {
+      return getEditModelAndView(teamId, userView, form);
+    }
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Roles updated for %s".formatted(userView.getDisplayName()))
-              .build();
+    regulatorTeamMemberEditService.updateRoles(team, teamMember, form.getRoles());
 
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Roles updated for %s".formatted(userView.getDisplayName()))
+        .build();
 
-          return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
-        });
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
+    );
 
+    return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
   }
 
   private ModelAndView getEditModelAndView(TeamId teamId, TeamMemberView userView, TeamMemberRolesForm form) {

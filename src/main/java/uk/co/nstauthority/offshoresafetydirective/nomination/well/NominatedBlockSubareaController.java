@@ -17,7 +17,6 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -41,7 +40,6 @@ public class NominatedBlockSubareaController {
   static final RequestPurpose ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE =
       new RequestPurpose("Get the licence block subareas already added to list for nomination");
 
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
   private final NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
@@ -50,14 +48,12 @@ public class NominatedBlockSubareaController {
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
-  public NominatedBlockSubareaController(ControllerHelperService controllerHelperService,
-                                         NominationDetailService nominationDetailService,
+  public NominatedBlockSubareaController(NominationDetailService nominationDetailService,
                                          NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService,
                                          NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                                          NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
                                          AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
@@ -76,18 +72,18 @@ public class NominatedBlockSubareaController {
   public ModelAndView saveLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") NominatedBlockSubareaForm form,
                                                BindingResult bindingResult) {
-    return controllerHelperService.checkErrorsAndRedirect(
-        nominatedBlockSubareaFormService.validate(form, bindingResult),
-        getModelAndView(nominationId, form),
-        form,
-        () -> {
-          var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
-          nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
-          return ReverseRouter.redirect(on(ExcludedWellboreController.class)
-              .renderPossibleWellsToExclude(nominationId));
-        }
-    );
+    bindingResult = nominatedBlockSubareaFormService.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      return getModelAndView(nominationId, form);
+    }
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
+    nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
+    return ReverseRouter.redirect(on(ExcludedWellboreController.class)
+        .renderPossibleWellsToExclude(nominationId));
+
   }
 
   private ModelAndView getModelAndView(NominationId nominationId, NominatedBlockSubareaForm form) {

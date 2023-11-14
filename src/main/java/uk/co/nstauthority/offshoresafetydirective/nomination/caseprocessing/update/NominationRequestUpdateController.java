@@ -19,7 +19,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNoUpdateReque
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -47,21 +46,17 @@ public class NominationRequestUpdateController {
   public static final String FORM_NAME = "nominationRequestUpdateForm";
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final NominationRequestUpdateValidator nominationRequestUpdateValidator;
   private final NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
 
-
   @Autowired
   public NominationRequestUpdateController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      ControllerHelperService controllerHelperService,
       NominationDetailService nominationDetailService,
       NominationRequestUpdateValidator nominationRequestUpdateValidator,
       NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nominationRequestUpdateValidator = nominationRequestUpdateValidator;
     this.nominationRequestUpdateSubmissionService = nominationRequestUpdateSubmissionService;
@@ -89,34 +84,31 @@ public class NominationRequestUpdateController {
 
     nominationRequestUpdateValidator.validate(form, bindingResult);
 
-    var modelAndViewDto = CaseProcessingFormDto.builder()
-        .withNominationRequestUpdateForm(form)
+    if (Objects.requireNonNull(bindingResult).hasErrors()) {
+      var modelAndViewDto = CaseProcessingFormDto.builder()
+          .withNominationRequestUpdateForm(form)
+          .build();
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+          nominationDetail,
+          modelAndViewDto
+      );
+    }
+
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("An update has been requested for the nomination %s".formatted(
+            nominationDetail.getNomination().getReference()
+        ))
         .build();
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-        nominationDetail,
-        modelAndViewDto
+
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
     );
 
-    return controllerHelperService.checkErrorsAndRedirect(Objects.requireNonNull(bindingResult), modelAndView, form,
-        () -> {
+    nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("An update has been requested for the nomination %s".formatted(
-                  nominationDetail.getNomination().getReference()
-              ))
-              .build();
-
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
-
-          nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
-
-          return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-        });
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
   }
-
 }

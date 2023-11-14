@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -53,8 +52,6 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
   private final EnergyPortalConfiguration energyPortalConfiguration;
 
-  private final ControllerHelperService controllerHelperService;
-
   private final AddTeamMemberValidator addTeamMemberValidator;
 
   private final EnergyPortalUserService energyPortalUserService;
@@ -67,7 +64,6 @@ class RegulatorAddMemberController extends AbstractTeamController {
   RegulatorAddMemberController(RegulatorTeamService regulatorTeamService,
                                CustomerConfigurationProperties customerConfigurationProperties,
                                EnergyPortalConfiguration energyPortalConfiguration,
-                               ControllerHelperService controllerHelperService,
                                AddTeamMemberValidator addTeamMemberValidator,
                                EnergyPortalUserService energyPortalUserService,
                                RegulatorTeamMemberRolesValidator regulatorTeamMemberRolesValidator,
@@ -76,7 +72,6 @@ class RegulatorAddMemberController extends AbstractTeamController {
     this.regulatorTeamService = regulatorTeamService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.energyPortalConfiguration = energyPortalConfiguration;
-    this.controllerHelperService = controllerHelperService;
     this.addTeamMemberValidator = addTeamMemberValidator;
     this.energyPortalUserService = energyPortalUserService;
     this.regulatorTeamMemberRolesValidator = regulatorTeamMemberRolesValidator;
@@ -96,19 +91,16 @@ class RegulatorAddMemberController extends AbstractTeamController {
     getTeam(teamId, TEAM_TYPE);
     addTeamMemberValidator.validate(form, bindingResult);
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getAddTeamMemberModelAndView(teamId, form),
-        form,
-        () -> {
-          var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername(), USER_TO_ADD_PURPOSE).get(0);
-          var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
-          if (teamService.isMemberOfTeam(wuaId, teamId)) {
-            return ReverseRouter.redirect(on(RegulatorEditMemberController.class).renderEditMember(teamId, wuaId));
-          }
-          return ReverseRouter.redirect(on(RegulatorAddMemberController.class).renderAddTeamMemberRoles(teamId, wuaId));
-        }
-    );
+    if (bindingResult.hasErrors()) {
+      return getAddTeamMemberModelAndView(teamId, form);
+    }
+
+    var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername(), USER_TO_ADD_PURPOSE).get(0);
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    if (teamService.isMemberOfTeam(wuaId, teamId)) {
+      return ReverseRouter.redirect(on(RegulatorEditMemberController.class).renderEditMember(teamId, wuaId));
+    }
+    return ReverseRouter.redirect(on(RegulatorAddMemberController.class).renderAddTeamMemberRoles(teamId, wuaId));
   }
 
   @GetMapping("/add-member/{webUserAccountId}/roles")
@@ -130,33 +122,29 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
     regulatorTeamMemberRolesValidator.validate(form, bindingResult);
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
-        form,
-        () -> {
-          var regulatorRoles = form.getRoles()
-              .stream()
-              .map(RegulatorTeamRole::getRoleFromString)
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(Collectors.toSet());
+    if (bindingResult.hasErrors()) {
+      return getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form);
+    }
+    var regulatorRoles = form.getRoles()
+        .stream()
+        .map(RegulatorTeamRole::getRoleFromString)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(Collectors.toSet());
 
-          regulatorTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
+    regulatorTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
-              .build();
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+        .build();
 
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
-
-          return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
-        }
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
     );
+
+    return ReverseRouter.redirect(on(RegulatorTeamManagementController.class).renderMemberList(teamId));
   }
 
   private ModelAndView getAddTeamMemberModelAndView(TeamId teamId, AddTeamMemberForm form) {

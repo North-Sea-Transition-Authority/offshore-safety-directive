@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -71,7 +70,6 @@ public class NewAppointmentController {
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentService appointmentService;
   private final AssetPersistenceService assetPersistenceService;
-  private final ControllerHelperService controllerHelperService;
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final NominationDetailService nominationDetailService;
@@ -84,7 +82,6 @@ public class NewAppointmentController {
                                   AppointmentCorrectionService appointmentCorrectionService,
                                   AppointmentService appointmentService,
                                   AssetPersistenceService assetPersistenceService,
-                                  ControllerHelperService controllerHelperService,
                                   AppointmentCorrectionValidator appointmentCorrectionValidator,
                                   PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                   NominationDetailService nominationDetailService,
@@ -94,7 +91,6 @@ public class NewAppointmentController {
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentService = appointmentService;
     this.assetPersistenceService = assetPersistenceService;
-    this.controllerHelperService = controllerHelperService;
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.nominationDetailService = nominationDetailService;
@@ -171,32 +167,29 @@ public class NewAppointmentController {
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getNewAppointmentForm(assetDto, form),
-        form,
-        () -> {
-          appointmentService.addManualAppointment(form, assetDto);
+    if (bindingResult.hasErrors()) {
+      return getNewAppointmentForm(assetDto, form);
+    }
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Added appointment for %s".formatted(
-                  assetDto.assetName().value()
-              ))
-              .build();
+    appointmentService.addManualAppointment(form, assetDto);
 
-          NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added appointment for %s".formatted(
+            assetDto.assetName().value()
+        ))
+        .build();
 
-          return switch (assetDto.portalAssetType()) {
-            case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderInstallationTimeline(assetDto.portalAssetId()));
-            case WELLBORE -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderWellboreTimeline(assetDto.portalAssetId()));
-            case SUBAREA -> ReverseRouter.redirect(on(AssetTimelineController.class)
-                .renderSubareaTimeline(assetDto.portalAssetId()));
-          };
-        }
-    );
+    NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+
+    return switch (assetDto.portalAssetType()) {
+      case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderInstallationTimeline(assetDto.portalAssetId()));
+      case WELLBORE -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderWellboreTimeline(assetDto.portalAssetId()));
+      case SUBAREA -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderSubareaTimeline(assetDto.portalAssetId()));
+    };
   }
 
   private ModelAndView getNewAppointmentForm(AssetDto assetDto, AppointmentCorrectionForm form) {

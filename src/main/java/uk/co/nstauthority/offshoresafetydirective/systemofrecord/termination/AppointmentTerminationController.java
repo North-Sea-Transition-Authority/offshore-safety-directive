@@ -21,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointment;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -48,18 +47,16 @@ public class AppointmentTerminationController {
 
   private final AppointmentTerminationService appointmentTerminationService;
   private final AppointmentTerminationValidator appointmentTerminationValidator;
-  private final ControllerHelperService controllerHelperService;
   private final FileUploadConfig fileUploadConfig;
   private final FileUploadService fileUploadService;
 
   @Autowired
   public AppointmentTerminationController(AppointmentTerminationService appointmentTerminationService,
                                           AppointmentTerminationValidator appointmentTerminationValidator,
-                                          ControllerHelperService controllerHelperService, FileUploadConfig fileUploadConfig,
+                                          FileUploadConfig fileUploadConfig,
                                           FileUploadService fileUploadService) {
     this.appointmentTerminationService = appointmentTerminationService;
     this.appointmentTerminationValidator = appointmentTerminationValidator;
-    this.controllerHelperService = controllerHelperService;
     this.fileUploadConfig = fileUploadConfig;
     this.fileUploadService = fileUploadService;
   }
@@ -89,15 +86,6 @@ public class AppointmentTerminationController {
             )
         ));
 
-    List<UploadedFileView> uploadedFiles = List.of();
-    var modelAndView = getModelAndView(appointment, form);
-
-    if (!Objects.requireNonNull(form).getTerminationDocuments().isEmpty()) {
-      uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getTerminationDocuments());
-    }
-
-    modelAndView.addObject("uploadedFiles", uploadedFiles);
-
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var validatorHint = new AppointmentTerminationValidatorHint(appointmentDto);
 
@@ -107,23 +95,27 @@ public class AppointmentTerminationController {
         validatorHint
     );
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        Objects.requireNonNull(bindingResult),
-        modelAndView,
-        form,
-        () -> {
-          appointmentTerminationService.terminateAppointment(appointment, form);
-          var assetName = appointmentTerminationService.getAssetName(appointmentDto.assetDto());
+    if (bindingResult.hasErrors()) {
+      List<UploadedFileView> uploadedFiles = List.of();
+      var modelAndView = getModelAndView(appointment, form);
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Terminated appointment for %s".formatted(assetName.value()))
-              .build();
+      if (!Objects.requireNonNull(form).getTerminationDocuments().isEmpty()) {
+        uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getTerminationDocuments());
+      }
 
-          NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
-          return getSubmitRedirectRoute(appointmentDto);
-        }
-      );
+      return modelAndView.addObject("uploadedFiles", uploadedFiles);
+    }
+    appointmentTerminationService.terminateAppointment(appointment, form);
+    var assetName = appointmentTerminationService.getAssetName(appointmentDto.assetDto());
+
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Terminated appointment for %s".formatted(assetName.value()))
+        .build();
+
+    NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    return getSubmitRedirectRoute(appointmentDto);
+
   }
 
   private ModelAndView getModelAndView(Appointment appointment, AppointmentTerminationForm form) {
@@ -147,29 +139,23 @@ public class AppointmentTerminationController {
 
   ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {
     return switch (appointmentDto.assetDto().portalAssetType()) {
-      case WELLBORE ->
-          ReverseRouter.redirect(on(AssetTimelineController.class)
-              .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
-      case INSTALLATION ->
-          ReverseRouter.redirect(on(AssetTimelineController.class)
-              .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
-      case SUBAREA ->
-          ReverseRouter.redirect(on(AssetTimelineController.class)
-              .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
+      case WELLBORE -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case INSTALLATION -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA -> ReverseRouter.redirect(on(AssetTimelineController.class)
+          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
     };
   }
 
   String getTimelineRoute(AppointmentDto appointmentDto) {
     return switch (appointmentDto.assetDto().portalAssetType()) {
-      case WELLBORE ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
-      case INSTALLATION ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
-      case SUBAREA ->
-          ReverseRouter.route(on(AssetTimelineController.class)
-              .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
+      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
+      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
+      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
+          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
     };
   }
 

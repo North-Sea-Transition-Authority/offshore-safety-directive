@@ -15,7 +15,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -29,17 +28,14 @@ public class CreateIndustryTeamController {
 
   static final RequestPurpose INDUSTRY_TEAM_PURPOSE = new RequestPurpose("Create industry team");
   private final CreateIndustryTeamValidator createIndustryTeamValidator;
-  private final ControllerHelperService controllerHelperService;
   private final IndustryTeamService industryTeamService;
   private final PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @Autowired
   public CreateIndustryTeamController(CreateIndustryTeamValidator createIndustryTeamValidator,
-                                      ControllerHelperService controllerHelperService,
                                       IndustryTeamService industryTeamService,
                                       PortalOrganisationGroupQueryService portalOrganisationGroupQueryService) {
     this.createIndustryTeamValidator = createIndustryTeamValidator;
-    this.controllerHelperService = controllerHelperService;
     this.industryTeamService = industryTeamService;
     this.portalOrganisationGroupQueryService = portalOrganisationGroupQueryService;
   }
@@ -55,24 +51,25 @@ public class CreateIndustryTeamController {
 
     createIndustryTeamValidator.validate(form, bindingResult);
 
-    return controllerHelperService.checkErrorsAndRedirect(bindingResult, getModelAndView(form), form, () -> {
+    if (bindingResult.hasErrors()) {
+      return getModelAndView(form);
+    }
 
-      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId(), INDUSTRY_TEAM_PURPOSE)
-          .orElseThrow(() -> new ResponseStatusException(
-              HttpStatus.INTERNAL_SERVER_ERROR,
-              "Organisation group with id [%d] does not exist".formatted(form.getOrgGroupId())
-          ));
+    var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId(), INDUSTRY_TEAM_PURPOSE)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            "Organisation group with id [%d] does not exist".formatted(form.getOrgGroupId())
+        ));
 
-      var existingTeam = industryTeamService.findIndustryTeamForOrganisationGroup(orgGroup);
+    var existingTeam = industryTeamService.findIndustryTeamForOrganisationGroup(orgGroup);
 
-      if (existingTeam.isEmpty()) {
-        var team = industryTeamService.createIndustryTeam(orgGroup);
-        existingTeam = Optional.of(team);
-      }
+    if (existingTeam.isEmpty()) {
+      var team = industryTeamService.createIndustryTeam(orgGroup);
+      existingTeam = Optional.of(team);
+    }
 
-      return ReverseRouter.redirect(on(IndustryTeamManagementController.class)
-          .renderMemberList(existingTeam.get().toTeamId()));
-    });
+    return ReverseRouter.redirect(on(IndustryTeamManagementController.class)
+        .renderMemberList(existingTeam.get().toTeamId()));
   }
 
   private ModelAndView getModelAndView(CreateIndustryTeamForm form) {
@@ -84,5 +81,4 @@ public class CreateIndustryTeamController {
             RestApiUtil.route(on(PortalOrganisationGroupRestController.class).searchPortalOrganisationGroups(null))
         );
   }
-
 }

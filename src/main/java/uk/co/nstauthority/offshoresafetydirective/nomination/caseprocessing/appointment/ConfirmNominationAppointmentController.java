@@ -20,7 +20,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -51,7 +50,6 @@ public class ConfirmNominationAppointmentController {
 
   private final NominationDetailService nominationDetailService;
   private final ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final FileUploadService fileUploadService;
   private final ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
@@ -60,13 +58,11 @@ public class ConfirmNominationAppointmentController {
   public ConfirmNominationAppointmentController(
       NominationDetailService nominationDetailService,
       ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator,
-      ControllerHelperService controllerHelperService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       FileUploadService fileUploadService,
       ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService) {
     this.nominationDetailService = nominationDetailService;
     this.confirmNominationAppointmentValidator = confirmNominationAppointmentValidator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.fileUploadService = fileUploadService;
     this.confirmNominationAppointmentSubmissionService = confirmNominationAppointmentSubmissionService;
@@ -97,53 +93,50 @@ public class ConfirmNominationAppointmentController {
 
     confirmNominationAppointmentValidator.validate(confirmNominationAppointmentForm, bindingResult, validatorHint);
 
-    // TODO: OSDOP-266 - Include dto creation in supplier when creating invalid-state ModelAndView
-    var modelAndViewDto = CaseProcessingFormDto.builder()
-        .withConfirmNominationAppointmentForm(confirmNominationAppointmentForm)
-        .build();
+    if (bindingResult.hasErrors()) {
+      var modelAndViewDto = CaseProcessingFormDto.builder()
+          .withConfirmNominationAppointmentForm(confirmNominationAppointmentForm)
+          .build();
 
-    var files = Objects.requireNonNull(confirmNominationAppointmentForm).getFiles()
-        .stream()
-        .map(FileUploadForm::getUploadedFileId)
-        .map(UploadedFileId::new)
-        .toList();
+      var files = Objects.requireNonNull(confirmNominationAppointmentForm).getFiles()
+          .stream()
+          .map(FileUploadForm::getUploadedFileId)
+          .map(UploadedFileId::new)
+          .toList();
 
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-        nominationDetail,
-        modelAndViewDto
-    ).addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files));
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+          nominationDetail,
+          modelAndViewDto
+      ).addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files));
+    }
 
-    return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, confirmNominationAppointmentForm,
-        () -> {
+    var appointmentDate = Objects.requireNonNull(confirmNominationAppointmentForm).getAppointmentDate()
+        .getAsLocalDate()
+        .orElseThrow(() -> new IllegalStateException(
+            "Expected date but got empty optional for form mapping for Nomination [%s]".formatted(
+                nominationId.id()
+            )));
 
-          var appointmentDate = confirmNominationAppointmentForm.getAppointmentDate()
-              .getAsLocalDate()
-              .orElseThrow(() -> new IllegalStateException(
-                  "Expected date but got empty optional for form mapping for Nomination [%s]".formatted(
-                      nominationId.id()
-                  )));
+    confirmNominationAppointmentSubmissionService.submitAppointmentConfirmation(nominationDetail,
+        confirmNominationAppointmentForm);
 
-          confirmNominationAppointmentSubmissionService.submitAppointmentConfirmation(nominationDetail,
-              confirmNominationAppointmentForm);
+    if (redirectAttributes != null) {
 
-          if (redirectAttributes != null) {
+      var notificationBanner = NotificationBanner.builder()
+          .withBannerType(NotificationBannerType.SUCCESS)
+          .withHeading(
+              "Appointment confirmed for nomination %s with effect from %s".formatted(
+                  nominationDetail.getNomination().getReference(),
+                  DateUtil.formatLongDate(appointmentDate)
+              ))
+          .build();
 
-            var notificationBanner = NotificationBanner.builder()
-                .withBannerType(NotificationBannerType.SUCCESS)
-                .withHeading(
-                    "Appointment confirmed for nomination %s with effect from %s".formatted(
-                        nominationDetail.getNomination().getReference(),
-                        DateUtil.formatLongDate(appointmentDate)
-                    ))
-                .build();
+      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    }
 
-            NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
-          }
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
 
-          return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-
-        });
   }
 
 }

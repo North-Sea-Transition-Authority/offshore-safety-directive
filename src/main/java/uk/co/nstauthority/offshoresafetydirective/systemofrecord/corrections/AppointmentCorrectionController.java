@@ -23,7 +23,6 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -69,7 +68,6 @@ public class AppointmentCorrectionController {
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
@@ -79,7 +77,6 @@ public class AppointmentCorrectionController {
                                          PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                          AppointmentCorrectionService appointmentCorrectionService,
                                          AppointmentCorrectionValidator appointmentCorrectionValidator,
-                                         ControllerHelperService controllerHelperService,
                                          NominationDetailService nominationDetailService,
                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.appointmentAccessService = appointmentAccessService;
@@ -87,7 +84,6 @@ public class AppointmentCorrectionController {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
@@ -117,26 +113,24 @@ public class AppointmentCorrectionController {
 
     appointmentCorrectionValidator.validate(form, bindingResult, validatorHint);
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        Objects.requireNonNull(bindingResult),
-        getModelAndView(appointment, form),
-        form,
-        () -> {
-          appointmentCorrectionService.correctAppointment(
-              appointment,
-              Objects.requireNonNull(form)
-          );
+    if (Objects.requireNonNull(bindingResult).hasErrors()) {
+      return getModelAndView(appointment, form);
+    }
 
-          var assetName = getAssetName(appointmentDto.assetDto());
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Updated appointment for %s".formatted(assetName.value()))
-              .build();
+    appointmentCorrectionService.correctAppointment(
+        appointment,
+        Objects.requireNonNull(form)
+    );
 
-          NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    var assetName = getAssetName(appointmentDto.assetDto());
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Updated appointment for %s".formatted(assetName.value()))
+        .build();
 
-          return getSubmitRedirectRoute(appointmentDto);
-        });
+    NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+
+    return getSubmitRedirectRoute(appointmentDto);
   }
 
   private ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {

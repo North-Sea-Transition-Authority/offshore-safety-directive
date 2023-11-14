@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -28,19 +27,16 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class InstallationInclusionController {
 
-  private final ControllerHelperService controllerHelperService;
   private final InstallationInclusionPersistenceService installationInclusionPersistenceService;
   private final InstallationInclusionFormService installationInclusionFormService;
   private final InstallationInclusionValidationService installationInclusionValidationService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public InstallationInclusionController(ControllerHelperService controllerHelperService,
-                                         InstallationInclusionPersistenceService installationInclusionPersistenceService,
+  public InstallationInclusionController(InstallationInclusionPersistenceService installationInclusionPersistenceService,
                                          InstallationInclusionFormService installationInclusionFormService,
                                          InstallationInclusionValidationService installationInclusionValidationService,
                                          NominationDetailService nominationDetailService) {
-    this.controllerHelperService = controllerHelperService;
     this.installationInclusionPersistenceService = installationInclusionPersistenceService;
     this.installationInclusionFormService = installationInclusionFormService;
     this.installationInclusionValidationService = installationInclusionValidationService;
@@ -58,20 +54,19 @@ public class InstallationInclusionController {
                                                 @ModelAttribute("form") InstallationInclusionForm form,
                                                 BindingResult bindingResult) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return controllerHelperService.checkErrorsAndRedirect(
-        installationInclusionValidationService.validate(form, bindingResult, nominationDetail),
-        getModelAndView(nominationId, form),
-        form,
-        () -> {
-          installationInclusionPersistenceService.createOrUpdateInstallationInclusion(nominationDetail, form);
-          if (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()))) {
-            return ReverseRouter.redirect(
-                on(NominatedInstallationController.class).getNominatedInstallationDetail(nominationId));
-          } else {
-            return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
-          }
-        }
-    );
+    bindingResult = installationInclusionValidationService.validate(form, bindingResult, nominationDetail);
+
+    if (bindingResult.hasErrors()) {
+      return getModelAndView(nominationId, form);
+    }
+
+    installationInclusionPersistenceService.createOrUpdateInstallationInclusion(nominationDetail, form);
+    if (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getIncludeInstallationsInNomination()))) {
+      return ReverseRouter.redirect(
+          on(NominatedInstallationController.class).getNominatedInstallationDetail(nominationId));
+    } else {
+      return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+    }
   }
 
   private ModelAndView getModelAndView(NominationId nominationId, InstallationInclusionForm form) {

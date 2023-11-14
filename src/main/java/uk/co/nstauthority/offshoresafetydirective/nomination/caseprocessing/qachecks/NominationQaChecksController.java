@@ -17,7 +17,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -47,19 +46,16 @@ public class NominationQaChecksController {
   private final CaseEventService caseEventService;
   private final NominationDetailService nominationDetailService;
   private final NominationQaChecksValidator nominationQaChecksValidator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   public NominationQaChecksController(
       CaseEventService caseEventService,
       NominationDetailService nominationDetailService,
       NominationQaChecksValidator nominationQaChecksValidator,
-      ControllerHelperService controllerHelperService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator) {
     this.caseEventService = caseEventService;
     this.nominationDetailService = nominationDetailService;
     this.nominationQaChecksValidator = nominationQaChecksValidator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
   }
 
@@ -86,33 +82,32 @@ public class NominationQaChecksController {
         Objects.requireNonNull(bindingResult)
     );
 
-    var formDto = CaseProcessingFormDto.builder()
-        .withNominationQaChecksForm(nominationQaChecksForm)
-        .build();
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+    if (bindingResult.hasErrors()) {
+      var formDto = CaseProcessingFormDto.builder()
+          .withNominationQaChecksForm(nominationQaChecksForm)
+          .build();
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+          nominationDetail,
+          formDto
+      );
+    }
+
+    caseEventService.createCompletedQaChecksEvent(
         nominationDetail,
-        formDto
+        Objects.requireNonNull(nominationQaChecksForm).getComment().getInputValue()
     );
 
-    return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, nominationQaChecksForm, () -> {
+    if (redirectAttributes != null) {
+      var notificationBanner = NotificationBanner.builder()
+          .withHeading("Successfully completed QA checks")
+          .withBannerType(NotificationBannerType.SUCCESS)
+          .build();
+      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    }
 
-      caseEventService.createCompletedQaChecksEvent(
-          nominationDetail,
-          Objects.requireNonNull(nominationQaChecksForm).getComment().getInputValue()
-      );
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
 
-      if (redirectAttributes != null) {
-        var notificationBanner = NotificationBanner.builder()
-            .withHeading("Successfully completed QA checks")
-            .withBannerType(NotificationBannerType.SUCCESS)
-            .build();
-        NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
-      }
-
-      return ReverseRouter.redirect(
-          on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-
-    });
   }
 
 }

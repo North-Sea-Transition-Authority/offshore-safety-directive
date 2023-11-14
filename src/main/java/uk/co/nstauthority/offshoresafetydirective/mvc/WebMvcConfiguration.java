@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissio
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamTypeInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 
@@ -44,6 +45,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor;
   private final HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor;
   private final HasAssetStatusInterceptor hasAssetStatusInterceptor;
+  private final ErrorListHandlerInterceptor errorListHandlerInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
@@ -55,7 +57,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       HasNotBeenTerminatedInterceptor hasNotBeenTerminatedInterceptor,
                       IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor,
                       HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor,
-                      HasAssetStatusInterceptor hasAssetStatusInterceptor) {
+                      HasAssetStatusInterceptor hasAssetStatusInterceptor,
+                      ErrorListHandlerInterceptor errorListHandlerInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
@@ -66,6 +69,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.isMemberOfTeamTypeInterceptor = isMemberOfTeamTypeInterceptor;
     this.hasAppointmentStatusInterceptor = hasAppointmentStatusInterceptor;
     this.hasAssetStatusInterceptor = hasAssetStatusInterceptor;
+    this.errorListHandlerInterceptor = errorListHandlerInterceptor;
   }
 
   @Override
@@ -101,6 +105,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/appointment/**", "/nomination/**");
     registry.addInterceptor(hasAssetStatusInterceptor)
         .addPathPatterns("/asset/**", "/appointment/**");
+    registry.addInterceptor(errorListHandlerInterceptor)
+        .excludePathPatterns(ASSETS_PATH, "/api/**");
   }
 
   @Bean

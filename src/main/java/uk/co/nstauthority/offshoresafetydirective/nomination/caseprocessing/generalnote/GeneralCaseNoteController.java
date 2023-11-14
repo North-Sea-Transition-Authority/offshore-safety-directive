@@ -19,7 +19,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -41,7 +40,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @RequestMapping("/nomination/{nominationId}/review")
 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(
-    statuses = { NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION },
+    statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION},
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
 )
 public class GeneralCaseNoteController {
@@ -52,7 +51,6 @@ public class GeneralCaseNoteController {
 
   private final NominationDetailService nominationDetailService;
   private final GeneralCaseNoteValidator generalCaseNoteValidator;
-  private final ControllerHelperService controllerHelperService;
   private final GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final FileUploadService fileUploadService;
@@ -60,13 +58,11 @@ public class GeneralCaseNoteController {
   public GeneralCaseNoteController(
       NominationDetailService nominationDetailService,
       GeneralCaseNoteValidator generalCaseNoteValidator,
-      ControllerHelperService controllerHelperService,
       GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       FileUploadService fileUploadService) {
     this.nominationDetailService = nominationDetailService;
     this.generalCaseNoteValidator = generalCaseNoteValidator;
-    this.controllerHelperService = controllerHelperService;
     this.generalCaseNoteSubmissionService = generalCaseNoteSubmissionService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.fileUploadService = fileUploadService;
@@ -100,47 +96,41 @@ public class GeneralCaseNoteController {
 
     generalCaseNoteValidator.validate(generalCaseNoteForm, bindingResult);
 
-    var formDto = CaseProcessingFormDto.builder()
-        .withGeneralCaseNoteForm(generalCaseNoteForm)
-        .build();
+    if (Objects.requireNonNull(bindingResult).hasErrors()) {
+      var formDto = CaseProcessingFormDto.builder()
+          .withGeneralCaseNoteForm(generalCaseNoteForm)
+          .build();
 
-    var files = Objects.requireNonNull(generalCaseNoteForm).getCaseNoteFiles()
-        .stream()
-        .map(FileUploadForm::getUploadedFileId)
-        .map(UploadedFileId::new)
-        .toList();
+      var files = Objects.requireNonNull(generalCaseNoteForm).getCaseNoteFiles()
+          .stream()
+          .map(FileUploadForm::getUploadedFileId)
+          .map(UploadedFileId::new)
+          .toList();
 
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-        nominationDetail,
-        formDto
-    ).addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files));
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+          nominationDetail,
+          formDto
+      ).addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files));
+    }
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        Objects.requireNonNull(bindingResult),
-        modelAndView,
-        generalCaseNoteForm,
-        () -> {
+    generalCaseNoteSubmissionService.submitCaseNote(nominationDetail,
+        Objects.requireNonNull(generalCaseNoteForm));
 
-          generalCaseNoteSubmissionService.submitCaseNote(nominationDetail,
-              Objects.requireNonNull(generalCaseNoteForm));
+    if (redirectAttributes != null) {
 
-          if (redirectAttributes != null) {
+      var notificationBanner = NotificationBanner.builder()
+          .withBannerType(NotificationBannerType.SUCCESS)
+          .withHeading("A case note has been added to nomination %s".formatted(
+              nominationDetail.getNomination().getReference()
+          ))
+          .build();
 
-            var notificationBanner = NotificationBanner.builder()
-                .withBannerType(NotificationBannerType.SUCCESS)
-                .withHeading("A case note has been added to nomination %s".formatted(
-                    nominationDetail.getNomination().getReference()
-                ))
-                .build();
+      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
 
-            NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    }
 
-          }
-
-          return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-        }
-    );
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
   }
 
 }

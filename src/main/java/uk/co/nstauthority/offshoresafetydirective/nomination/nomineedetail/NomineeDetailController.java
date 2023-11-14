@@ -21,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConf
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
@@ -53,7 +52,6 @@ public class NomineeDetailController {
   static final RequestPurpose PRE_SELECTED_OPERATOR_PURPOSE =
       new RequestPurpose("Get pre-selected nominated organisation");
 
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final NomineeDetailFormService nomineeDetailFormService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
@@ -65,7 +63,6 @@ public class NomineeDetailController {
 
   @Autowired
   public NomineeDetailController(
-      ControllerHelperService controllerHelperService,
       NominationDetailService nominationDetailService,
       NomineeDetailFormService nomineeDetailFormService,
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
@@ -73,7 +70,6 @@ public class NomineeDetailController {
       FileAssociationService fileAssociationService,
       NomineeDetailSubmissionService nomineeDetailSubmissionService,
       AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.nomineeDetailFormService = nomineeDetailFormService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
@@ -103,21 +99,21 @@ public class NomineeDetailController {
                                         @ModelAttribute("form") NomineeDetailForm form,
                                         BindingResult bindingResult) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-    var modelAndView = getModelAndView(form, nominationId, detail);
-    List<UploadedFileView> uploadedFiles = List.of();
-    if (!form.getAppendixDocuments().isEmpty()) {
-      uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getAppendixDocuments());
+
+    bindingResult = nomineeDetailFormService.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      var modelAndView = getModelAndView(form, nominationId, detail);
+      List<UploadedFileView> uploadedFiles = List.of();
+
+      if (!form.getAppendixDocuments().isEmpty()) {
+        uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getAppendixDocuments());
+      }
+      return modelAndView.addObject("uploadedFiles", uploadedFiles);
     }
-    modelAndView.addObject("uploadedFiles", uploadedFiles);
-    return controllerHelperService.checkErrorsAndRedirect(
-        nomineeDetailFormService.validate(form, bindingResult),
-        modelAndView,
-        form,
-        () -> {
-          nomineeDetailSubmissionService.submit(detail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
-        }
-    );
+
+    nomineeDetailSubmissionService.submit(detail, form);
+    return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
   }
 
   private ModelAndView getModelAndView(NomineeDetailForm form,

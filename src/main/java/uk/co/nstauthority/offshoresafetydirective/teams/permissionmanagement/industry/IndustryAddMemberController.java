@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
@@ -39,19 +38,16 @@ public class IndustryAddMemberController extends AbstractTeamController {
 
   static final RequestPurpose USER_TO_ADD_PURPOSE = new RequestPurpose("Get user to add to industry team");
 
-  private final ControllerHelperService controllerHelperService;
   private final AddTeamMemberValidator addTeamMemberValidator;
   private final EnergyPortalUserService energyPortalUserService;
   private final EnergyPortalConfiguration energyPortalConfiguration;
 
   @Autowired
-  IndustryAddMemberController(ControllerHelperService controllerHelperService,
-                              AddTeamMemberValidator addTeamMemberValidator,
+  IndustryAddMemberController(AddTeamMemberValidator addTeamMemberValidator,
                               EnergyPortalUserService energyPortalUserService,
                               EnergyPortalConfiguration energyPortalConfiguration,
                               TeamService teamService) {
     super(teamService);
-    this.controllerHelperService = controllerHelperService;
     this.addTeamMemberValidator = addTeamMemberValidator;
     this.energyPortalUserService = energyPortalUserService;
     this.energyPortalConfiguration = energyPortalConfiguration;
@@ -71,19 +67,16 @@ public class IndustryAddMemberController extends AbstractTeamController {
     var team = getTeam(teamId, TEAM_TYPE);
     addTeamMemberValidator.validate(form, bindingResult);
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getAddTeamMemberModelAndView(form, team),
-        form,
-        () -> {
-          var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername(), USER_TO_ADD_PURPOSE).get(0);
-          var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
-          if (teamService.isMemberOfTeam(wuaId, teamId)) {
-            return ReverseRouter.redirect(on(IndustryEditMemberController.class).renderEditMember(teamId, wuaId));
-          }
-          return ReverseRouter.redirect(on(IndustryAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId));
-        }
-    );
+    if (bindingResult.hasErrors()) {
+      return getAddTeamMemberModelAndView(form, team);
+    }
+
+    var userToAdd = energyPortalUserService.findUserByUsername(form.getUsername(), USER_TO_ADD_PURPOSE).get(0);
+    var wuaId = new WebUserAccountId(userToAdd.webUserAccountId());
+    if (teamService.isMemberOfTeam(wuaId, teamId)) {
+      return ReverseRouter.redirect(on(IndustryEditMemberController.class).renderEditMember(teamId, wuaId));
+    }
+    return ReverseRouter.redirect(on(IndustryAddRolesController.class).renderAddTeamMemberRoles(teamId, wuaId));
   }
 
   private ModelAndView getAddTeamMemberModelAndView(AddTeamMemberForm form, Team team) {

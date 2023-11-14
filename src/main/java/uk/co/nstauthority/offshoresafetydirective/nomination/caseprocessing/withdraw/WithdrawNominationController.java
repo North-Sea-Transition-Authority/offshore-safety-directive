@@ -18,7 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -46,7 +45,6 @@ public class WithdrawNominationController {
   public static final String FORM_NAME = "withdrawNominationForm";
 
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final CaseEventService caseEventService;
   private final WithdrawNominationValidator withdrawNominationValidator;
@@ -54,11 +52,10 @@ public class WithdrawNominationController {
   @Autowired
   public WithdrawNominationController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      ControllerHelperService controllerHelperService, NominationDetailService nominationDetailService,
+      NominationDetailService nominationDetailService,
       CaseEventService caseEventService,
       WithdrawNominationValidator withdrawNominationValidator) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.caseEventService = caseEventService;
     this.withdrawNominationValidator = withdrawNominationValidator;
@@ -87,30 +84,29 @@ public class WithdrawNominationController {
         Objects.requireNonNull(bindingResult)
     );
 
-    var modelAndViewDto = CaseProcessingFormDto.builder()
-        .withWithdrawNominationForm(withdrawNominationForm)
-        .build();
+    if (bindingResult.hasErrors()) {
+      var modelAndViewDto = CaseProcessingFormDto.builder()
+          .withWithdrawNominationForm(withdrawNominationForm)
+          .build();
 
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-        nominationDetail,
-        modelAndViewDto
-    );
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+          nominationDetail,
+          modelAndViewDto
+      );
+    }
 
-    return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, withdrawNominationForm, () -> {
+    caseEventService.createWithdrawEvent(nominationDetail, withdrawNominationForm.getReason().getInputValue());
+    nominationDetailService.withdrawNominationDetail(nominationDetail);
 
-      caseEventService.createWithdrawEvent(nominationDetail, withdrawNominationForm.getReason().getInputValue());
-      nominationDetailService.withdrawNominationDetail(nominationDetail);
+    if (redirectAttributes != null) {
+      var notificationBanner = NotificationBanner.builder()
+          .withBannerType(NotificationBannerType.SUCCESS)
+          .withHeading("Withdrawn nomination %s".formatted(nominationDetail.getNomination().getReference()))
+          .build();
 
-      if (redirectAttributes != null) {
-        var notificationBanner = NotificationBanner.builder()
-            .withBannerType(NotificationBannerType.SUCCESS)
-            .withHeading("Withdrawn nomination %s".formatted(nominationDetail.getNomination().getReference()))
-            .build();
+      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    }
 
-        NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
-      }
-
-      return ReverseRouter.redirect(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-    });
+    return ReverseRouter.redirect(on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
   }
 }

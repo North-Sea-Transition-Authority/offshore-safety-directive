@@ -17,7 +17,6 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
@@ -42,7 +41,6 @@ public class NominatedWellDetailController {
   static final RequestPurpose ALREADY_ADDED_WELLS_PURPOSE =
       new RequestPurpose("Wells already added to list for nomination");
 
-  private final ControllerHelperService controllerHelperService;
   private final NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final WellQueryService wellQueryService;
@@ -50,13 +48,11 @@ public class NominatedWellDetailController {
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
-  public NominatedWellDetailController(ControllerHelperService controllerHelperService,
-                                       NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
+  public NominatedWellDetailController(NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService,
                                        NominationDetailService nominationDetailService,
                                        WellQueryService wellQueryService,
                                        NominatedWellDetailFormService nominatedWellDetailFormService,
                                        AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
-    this.controllerHelperService = controllerHelperService;
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.wellQueryService = wellQueryService;
@@ -77,16 +73,15 @@ public class NominatedWellDetailController {
   public ModelAndView saveNominatedWellDetail(@PathVariable("nominationId") NominationId nominationId,
                                               @ModelAttribute("form") NominatedWellDetailForm form,
                                               BindingResult bindingResult) {
-    return controllerHelperService.checkErrorsAndRedirect(
-        nominatedWellDetailFormService.validate(form, bindingResult),
-        getNominatedWellDetailModelAndView(form, nominationId),
-        form,
-        () -> {
-          var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nominatedWellDetailPersistenceService.createOrUpdateNominatedWellDetail(nominationDetail, form);
-          return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
-        }
-    );
+    bindingResult = nominatedWellDetailFormService.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      return getNominatedWellDetailModelAndView(form, nominationId);
+    }
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    nominatedWellDetailPersistenceService.createOrUpdateNominatedWellDetail(nominationDetail, form);
+    return ReverseRouter.redirect(on(ManageWellsController.class).getWellManagementPage(nominationId));
+
   }
 
   private ModelAndView getNominatedWellDetailModelAndView(NominatedWellDetailForm form,

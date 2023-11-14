@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -30,19 +29,16 @@ public class WellSelectionSetupController {
 
   private final WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
   private final NominationDetailService nominationDetailService;
-  private final ControllerHelperService controllerHelperService;
   private final WellSelectionSetupFormService wellSelectionSetupFormService;
   private final WellSelectionSetupValidationService wellSelectionSetupValidationService;
 
   @Autowired
   public WellSelectionSetupController(WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService,
                                       NominationDetailService nominationDetailService,
-                                      ControllerHelperService controllerHelperService,
                                       WellSelectionSetupFormService wellSelectionSetupFormService,
                                       WellSelectionSetupValidationService wellSelectionSetupValidationService) {
     this.wellSelectionSetupPersistenceService = wellSelectionSetupPersistenceService;
     this.nominationDetailService = nominationDetailService;
-    this.controllerHelperService = controllerHelperService;
     this.wellSelectionSetupFormService = wellSelectionSetupFormService;
     this.wellSelectionSetupValidationService = wellSelectionSetupValidationService;
   }
@@ -58,25 +54,22 @@ public class WellSelectionSetupController {
                                     @ModelAttribute("form") WellSelectionSetupForm form,
                                     BindingResult bindingResult) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return controllerHelperService.checkErrorsAndRedirect(
-        wellSelectionSetupValidationService.validate(form, bindingResult, nominationDetail),
-        getWellSetupModelAndView(form, nominationId),
-        form,
-        () -> {
-          wellSelectionSetupPersistenceService.createOrUpdateWellSelectionSetup(form, nominationDetail);
-          return switch (WellSelectionType.valueOf(form.getWellSelectionType())) {
-            case SPECIFIC_WELLS ->
-                ReverseRouter.redirect(on(NominatedWellDetailController.class)
-                    .renderNominatedWellDetail(nominationId));
-            case LICENCE_BLOCK_SUBAREA ->
-                ReverseRouter.redirect(on(NominatedBlockSubareaController.class)
-                    .getLicenceBlockSubareas(nominationId));
-            case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
-          };
-        }
-    );
-  }
+    bindingResult = wellSelectionSetupValidationService.validate(form, bindingResult, nominationDetail);
 
+    if (bindingResult.hasErrors()) {
+      return getWellSetupModelAndView(form, nominationId);
+    }
+
+    wellSelectionSetupPersistenceService.createOrUpdateWellSelectionSetup(form, nominationDetail);
+
+    return switch (WellSelectionType.valueOf(form.getWellSelectionType())) {
+      case SPECIFIC_WELLS -> ReverseRouter.redirect(on(NominatedWellDetailController.class)
+          .renderNominatedWellDetail(nominationId));
+      case LICENCE_BLOCK_SUBAREA -> ReverseRouter.redirect(on(NominatedBlockSubareaController.class)
+          .getLicenceBlockSubareas(nominationId));
+      case NO_WELLS -> ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+    };
+  }
 
 
   private ModelAndView getWellSetupModelAndView(WellSelectionSetupForm form, NominationId nominationId) {

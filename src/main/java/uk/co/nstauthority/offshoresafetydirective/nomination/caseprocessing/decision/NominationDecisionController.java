@@ -19,7 +19,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNoUpdateReque
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -51,7 +50,6 @@ public class NominationDecisionController {
 
   private final NominationDecisionValidator nominationDecisionValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final FileUploadService fileUploadService;
   private final NominationDecisionSubmissionService nominationDecisionSubmissionService;
@@ -59,13 +57,11 @@ public class NominationDecisionController {
   @Autowired
   public NominationDecisionController(NominationDecisionValidator nominationDecisionValidator,
                                       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-                                      ControllerHelperService controllerHelperService,
                                       NominationDetailService nominationDetailService,
                                       FileUploadService fileUploadService,
                                       NominationDecisionSubmissionService nominationDecisionSubmissionService) {
     this.nominationDecisionValidator = nominationDecisionValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.fileUploadService = fileUploadService;
     this.nominationDecisionSubmissionService = nominationDecisionSubmissionService;
@@ -96,40 +92,36 @@ public class NominationDecisionController {
         new NominationDecisionValidatorHint(nominationDetail)
     );
 
-    var files = nominationDecisionForm.getDecisionFiles()
-        .stream()
-        .map(FileUploadForm::getUploadedFileId)
-        .map(UploadedFileId::new)
-        .toList();
+    if (bindingResult.hasErrors()) {
+      var files = nominationDecisionForm.getDecisionFiles()
+          .stream()
+          .map(FileUploadForm::getUploadedFileId)
+          .map(UploadedFileId::new)
+          .toList();
 
-    var modelAndViewDto = CaseProcessingFormDto.builder()
-        .withNominationDecisionForm(nominationDecisionForm)
-        .build();
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-            nominationDetail,
-            modelAndViewDto
-        )
-        .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files));
+      var modelAndViewDto = CaseProcessingFormDto.builder()
+          .withNominationDecisionForm(nominationDecisionForm)
+          .build();
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+              nominationDetail,
+              modelAndViewDto
+          )
+          .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files));
+    }
 
-    return controllerHelperService.checkErrorsAndRedirect(bindingResult, modelAndView, nominationDecisionForm,
-        () -> {
+    nominationDecisionSubmissionService.submitNominationDecision(nominationDetail, nominationDecisionForm);
 
-          nominationDecisionSubmissionService.submitNominationDecision(nominationDetail, nominationDecisionForm);
+    if (redirectAttributes != null) {
+      var notificationBanner = NotificationBanner.builder()
+          .withHeading("Decision submitted for %s".formatted(
+              nominationDetail.getNomination().getReference()))
+          .withBannerType(NotificationBannerType.SUCCESS)
+          .build();
 
-          if (redirectAttributes != null) {
-            var notificationBanner = NotificationBanner.builder()
-                .withHeading("Decision submitted for %s".formatted(
-                    nominationDetail.getNomination().getReference()))
-                .withBannerType(NotificationBannerType.SUCCESS)
-                .build();
+      NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
+    }
 
-            NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
-          }
-
-          return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-        });
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
   }
-
-
 }

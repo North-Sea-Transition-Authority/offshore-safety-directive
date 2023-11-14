@@ -19,7 +19,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -44,7 +43,6 @@ public class ApplicantDetailController {
 
   private final ApplicantDetailFormService applicantDetailFormService;
   private final NominationService nominationService;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
@@ -54,13 +52,11 @@ public class ApplicantDetailController {
   public ApplicantDetailController(
       ApplicantDetailFormService applicantDetailFormService,
       NominationService nominationService,
-      ControllerHelperService controllerHelperService,
       NominationDetailService nominationDetailService,
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
       ApplicantDetailPersistenceService applicantDetailPersistenceService) {
     this.applicantDetailFormService = applicantDetailFormService;
     this.nominationService = nominationService;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.applicantDetailPersistenceService = applicantDetailPersistenceService;
@@ -75,17 +71,15 @@ public class ApplicantDetailController {
   public ModelAndView createApplicantDetails(@ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
     bindingResult = applicantDetailFormService.validate(form, bindingResult);
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getCreateApplicantDetailModelAndView(form),
-        form,
-        () -> {
-          var nominationDetail = nominationService.startNomination();
-          applicantDetailPersistenceService.createOrUpdateApplicantDetail(form, nominationDetail);
-          return ReverseRouter.redirect(on(NominationTaskListController.class)
-              .getTaskList(new NominationId(nominationDetail)));
-        }
-    );
+
+    if (bindingResult.hasErrors()) {
+      return getCreateApplicantDetailModelAndView(form);
+    }
+
+    var nominationDetail = nominationService.startNomination();
+    applicantDetailPersistenceService.createOrUpdateApplicantDetail(form, nominationDetail);
+    return ReverseRouter.redirect(on(NominationTaskListController.class)
+        .getTaskList(new NominationId(nominationDetail)));
   }
 
   @GetMapping("/{nominationId}/applicant-details")
@@ -101,16 +95,15 @@ public class ApplicantDetailController {
                                              @ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
     bindingResult = applicantDetailFormService.validate(form, bindingResult);
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getUpdateApplicantDetailModelAndView(form, nominationId),
-        form,
-        () -> {
-          var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          applicantDetailPersistenceService.createOrUpdateApplicantDetail(form, nominationDetail);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
-        }
-    );
+
+    if (bindingResult.hasErrors()) {
+      return getUpdateApplicantDetailModelAndView(form, nominationId);
+    }
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    applicantDetailPersistenceService.createOrUpdateApplicantDetail(form, nominationDetail);
+    return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+
   }
 
   private ModelAndView getCreateApplicantDetailModelAndView(ApplicantDetailForm form) {

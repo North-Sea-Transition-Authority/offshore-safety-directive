@@ -21,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfiguration
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldAddToListItem;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
@@ -48,7 +47,6 @@ public class RelatedInformationController {
   private final NominationDetailService nominationDetailService;
   private final RelatedInformationFormService relatedInformationFormService;
   private final RelatedInformationValidator relatedInformationValidator;
-  private final ControllerHelperService controllerHelperService;
 
   @Autowired
   public RelatedInformationController(
@@ -57,15 +55,13 @@ public class RelatedInformationController {
       RelatedInformationPersistenceService relatedInformationPersistenceService,
       NominationDetailService nominationDetailService,
       RelatedInformationFormService relatedInformationFormService,
-      RelatedInformationValidator relatedInformationValidator,
-      ControllerHelperService controllerHelperService) {
+      RelatedInformationValidator relatedInformationValidator) {
     this.fieldQueryService = fieldQueryService;
     this.customerConfigurationProperties = customerConfigurationProperties;
     this.relatedInformationPersistenceService = relatedInformationPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.relatedInformationFormService = relatedInformationFormService;
     this.relatedInformationValidator = relatedInformationValidator;
-    this.controllerHelperService = controllerHelperService;
   }
 
   @GetMapping
@@ -81,14 +77,13 @@ public class RelatedInformationController {
                                                BindingResult bindingResult) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     relatedInformationValidator.validate(form, bindingResult);
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getRelatedInformationModelAndView(nominationId, form),
-        form,
-        () -> {
-          relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
-          return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
-        });
+
+    if (bindingResult.hasErrors()) {
+      return getRelatedInformationModelAndView(nominationId, form);
+    }
+    relatedInformationPersistenceService.createOrUpdateRelatedInformation(nominationDetail, form);
+    return ReverseRouter.redirect(on(NominationTaskListController.class).getTaskList(nominationId));
+
   }
 
   private ModelAndView getRelatedInformationModelAndView(NominationId nominationId, RelatedInformationForm form) {

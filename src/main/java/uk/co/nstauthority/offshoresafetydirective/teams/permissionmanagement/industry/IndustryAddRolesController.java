@@ -21,7 +21,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -49,21 +48,16 @@ class IndustryAddRolesController extends AbstractTeamController {
 
   static final RequestPurpose ROLES_TO_ADD_PURPOSE = new RequestPurpose("Get user to add roles to");
 
-  private final ControllerHelperService controllerHelperService;
   private final EnergyPortalUserService energyPortalUserService;
   private final IndustryTeamMemberRolesValidator industryTeamMemberRolesValidator;
   private final IndustryTeamService industryTeamService;
 
   @Autowired
-  protected IndustryAddRolesController(
-      ControllerHelperService controllerHelperService,
-      EnergyPortalUserService energyPortalUserService,
-      IndustryTeamMemberRolesValidator industryTeamMemberRolesValidator,
-      IndustryTeamService industryTeamService,
-      TeamService teamService
-  ) {
+  protected IndustryAddRolesController(EnergyPortalUserService energyPortalUserService,
+                                       IndustryTeamMemberRolesValidator industryTeamMemberRolesValidator,
+                                       IndustryTeamService industryTeamService,
+                                       TeamService teamService) {
     super(teamService);
-    this.controllerHelperService = controllerHelperService;
     this.energyPortalUserService = energyPortalUserService;
     this.industryTeamMemberRolesValidator = industryTeamMemberRolesValidator;
     this.industryTeamService = industryTeamService;
@@ -89,27 +83,25 @@ class IndustryAddRolesController extends AbstractTeamController {
     var team = getTeam(teamId, TEAM_TYPE);
     var energyPortalUser = getEnergyPortalUser(webUserAccountId);
     industryTeamMemberRolesValidator.validate(form, bindingResult);
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
-        form,
-        () -> {
-          var regulatorRoles = getRolesToAdd(form.getRoles());
-          industryTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
-              .build();
+    if (bindingResult.hasErrors()) {
+      return getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form);
+    }
 
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
+    var regulatorRoles = getRolesToAdd(form.getRoles());
+    industryTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
 
-          return ReverseRouter.redirect(on(IndustryTeamManagementController.class).renderMemberList(teamId));
-        }
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+        .build();
+
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
     );
+
+    return ReverseRouter.redirect(on(IndustryTeamManagementController.class).renderMemberList(teamId));
   }
 
   private Set<IndustryTeamRole> getRolesToAdd(Set<String> rolesToAdd) {

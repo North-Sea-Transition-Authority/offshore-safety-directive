@@ -1,4 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -154,9 +155,9 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   void getNewApplicantDetails_assertModelProperties() throws Exception {
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
-            .with(user(NOMINATION_CREATOR_USER))
-    )
+            get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
         .andExpect(model().attribute(
@@ -183,7 +184,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationService.startNomination()).thenReturn(nominationDetail);
-    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
+    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(
+        applicationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))
@@ -280,7 +282,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
-    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(applicationDetail);
+    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail)))
+        .thenReturn(applicationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(

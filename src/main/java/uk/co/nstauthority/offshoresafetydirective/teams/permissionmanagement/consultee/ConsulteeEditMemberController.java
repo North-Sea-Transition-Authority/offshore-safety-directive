@@ -17,7 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -50,7 +49,6 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
   private final TeamMemberService teamMemberService;
   private final TeamMemberViewService teamMemberViewService;
   private final TeamMemberRoleService teamMemberRoleService;
-  private final ControllerHelperService controllerHelperService;
   private final ConsulteeTeamMemberEditRolesValidator consulteeTeamMemberEditRolesValidator;
 
   @Autowired
@@ -58,14 +56,12 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
       TeamMemberService teamMemberService,
       TeamMemberViewService teamMemberViewService,
       TeamMemberRoleService teamMemberRoleService,
-      ControllerHelperService controllerHelperService,
       ConsulteeTeamMemberEditRolesValidator consulteeTeamMemberEditRolesValidator,
       TeamService teamService) {
     super(teamService);
     this.teamMemberService = teamMemberService;
     this.teamMemberViewService = teamMemberViewService;
     this.teamMemberRoleService = teamMemberRoleService;
-    this.controllerHelperService = controllerHelperService;
     this.consulteeTeamMemberEditRolesValidator = consulteeTeamMemberEditRolesValidator;
   }
 
@@ -110,26 +106,23 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
     consulteeTeamMemberEditRolesValidator.validate(form, bindingResult,
         new TeamMemberEditRolesValidatorHint(team, teamMember));
 
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getEditModelAndView(teamId, userView, form),
-        form,
-        () -> {
-          teamMemberRoleService.updateUserTeamRoles(team, teamMember.wuaId(), form.getRoles());
+    if (bindingResult.hasErrors()) {
+      return getEditModelAndView(teamId, userView, form);
+    }
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Roles updated for %s".formatted(userView.getDisplayName()))
-              .build();
+    teamMemberRoleService.updateUserTeamRoles(team, teamMember.wuaId(), form.getRoles());
 
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Roles updated for %s".formatted(userView.getDisplayName()))
+        .build();
 
-          return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
-        });
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
+    );
 
+    return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
   }
 
   private ModelAndView getEditModelAndView(TeamId teamId, TeamMemberView userView, TeamMemberRolesForm form) {
@@ -138,7 +131,7 @@ public class ConsulteeEditMemberController extends AbstractTeamController {
         .addObject("pageTitle", userView.getDisplayName())
         .addObject("roles", DisplayableEnumOptionUtil.getDisplayableOptionsWithDescription(ConsulteeTeamRole.class))
         .addObject("backLinkUrl",
-          ReverseRouter.route(on(ConsulteeTeamManagementController.class).renderMemberList(teamId))
+            ReverseRouter.route(on(ConsulteeTeamManagementController.class).renderMemberList(teamId))
         );
   }
 }

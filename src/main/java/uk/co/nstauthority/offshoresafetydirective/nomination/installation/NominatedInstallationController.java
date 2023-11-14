@@ -19,7 +19,6 @@ import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationRestController;
@@ -63,7 +62,6 @@ public class NominatedInstallationController {
   static final RequestPurpose ALREADY_ADDED_LICENCES_PURPOSE =
       new RequestPurpose("Get licences already added to list for nomination");
 
-  private final ControllerHelperService controllerHelperService;
   private final NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
   private final NominationDetailService nominationDetailService;
   private final InstallationQueryService installationQueryService;
@@ -72,15 +70,13 @@ public class NominatedInstallationController {
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
-  public NominatedInstallationController(ControllerHelperService controllerHelperService,
-                                         NominatedInstallationDetailPersistenceService
+  public NominatedInstallationController(NominatedInstallationDetailPersistenceService
                                              nominatedInstallationDetailPersistenceService,
                                          NominationDetailService nominationDetailService,
                                          InstallationQueryService installationQueryService,
                                          LicenceQueryService licenceQueryService, NominatedInstallationDetailFormService
                                              nominatedInstallationDetailFormService,
                                          AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
-    this.controllerHelperService = controllerHelperService;
     this.nominatedInstallationDetailPersistenceService = nominatedInstallationDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.installationQueryService = installationQueryService;
@@ -99,16 +95,14 @@ public class NominatedInstallationController {
   public ModelAndView saveNominatedInstallationDetail(@PathVariable("nominationId") NominationId nominationId,
                                                       @ModelAttribute("form") NominatedInstallationDetailForm form,
                                                       BindingResult bindingResult) {
-    return controllerHelperService.checkErrorsAndRedirect(
-        nominatedInstallationDetailFormService.validate(form, bindingResult),
-        getModelAndView(nominationId, form),
-        form,
-        () -> {
-          var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-          nominatedInstallationDetailPersistenceService.createOrUpdateNominatedInstallationDetail(nominationDetail, form);
-          return ReverseRouter.redirect(on(ManageInstallationsController.class).getManageInstallations(nominationId));
-        }
-    );
+    bindingResult = nominatedInstallationDetailFormService.validate(form, bindingResult);
+
+    if (bindingResult.hasErrors()) {
+      return getModelAndView(nominationId, form);
+    }
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+    nominatedInstallationDetailPersistenceService.createOrUpdateNominatedInstallationDetail(nominationDetail, form);
+    return ReverseRouter.redirect(on(ManageInstallationsController.class).getManageInstallations(nominationId));
   }
 
   private ModelAndView getModelAndView(NominationId nominationId, NominatedInstallationDetailForm form) {

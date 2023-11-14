@@ -10,10 +10,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
@@ -31,11 +29,12 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInt
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
+import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
@@ -47,7 +46,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Per
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
-import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrderingService;
 
 @ActiveProfiles({"test", "development"})
 @AutoConfigureMockMvc
@@ -72,7 +70,8 @@ import uk.co.nstauthority.offshoresafetydirective.validation.ValidationErrorOrde
     HasAssetStatusInterceptor.class,
     RequestLogFilter.class,
     PostAuthenticationRequestMdcFilter.class,
-    MetricsProvider.class
+    MetricsProvider.class,
+    ErrorListHandlerInterceptor.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -125,6 +124,9 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected MeterRegistry registry;
 
+  @MockBean
+  protected FormErrorSummaryService formErrorSummaryService;
+
   @BeforeEach
   void setupAbstractControllerTest() {
     doCallRealMethod().when(userDetailService).getUserDetail();
@@ -132,23 +134,6 @@ public abstract class AbstractControllerTest {
 
   @TestConfiguration
   public static class TestConfig {
-    @Bean
-    public ControllerHelperService controllerHelperService() {
-      return new ControllerHelperService(validationErrorOrderingService());
-    }
-
-    @Bean
-    public ValidationErrorOrderingService validationErrorOrderingService() {
-      return new ValidationErrorOrderingService(messageSource());
-    }
-
-    @Bean("messageSource")
-    public MessageSource messageSource() {
-      ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-      messageSource.setBasename("messages");
-      messageSource.setDefaultEncoding("UTF-8");
-      return messageSource;
-    }
 
     @Bean
     public HibernateQueryCounterImpl hibernateQueryInterceptor() {

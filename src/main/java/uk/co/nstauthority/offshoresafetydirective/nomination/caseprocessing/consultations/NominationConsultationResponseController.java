@@ -18,7 +18,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -51,7 +50,6 @@ public class NominationConsultationResponseController {
   private final NominationConsultationResponseValidator nominationConsultationResponseValidator;
   private final NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
   private final FileUploadService fileUploadService;
-  private final ControllerHelperService controllerHelperService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
@@ -60,14 +58,11 @@ public class NominationConsultationResponseController {
       NominationConsultationResponseValidator nominationConsultationResponseValidator,
       NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService,
       FileUploadService fileUploadService,
-      ControllerHelperService controllerHelperService,
-      NominationDetailService nominationDetailService
-  ) {
+      NominationDetailService nominationDetailService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationConsultationResponseValidator = nominationConsultationResponseValidator;
     this.nominationConsultationResponseSubmissionService = nominationConsultationResponseSubmissionService;
     this.fileUploadService = fileUploadService;
-    this.controllerHelperService = controllerHelperService;
     this.nominationDetailService = nominationDetailService;
   }
 
@@ -96,39 +91,37 @@ public class NominationConsultationResponseController {
 
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
-    var files = Objects.requireNonNull(form).getConsultationResponseFiles()
-        .stream()
-        .map(FileUploadForm::getUploadedFileId)
-        .map(UploadedFileId::new)
-        .toList();
+    if (Objects.requireNonNull(bindingResult).hasErrors()) {
+      var files = Objects.requireNonNull(form).getConsultationResponseFiles()
+          .stream()
+          .map(FileUploadForm::getUploadedFileId)
+          .map(UploadedFileId::new)
+          .toList();
 
-    var modelAndViewDto = CaseProcessingFormDto.builder()
-        .withNominationConsultationResponseForm(form)
+      var modelAndViewDto = CaseProcessingFormDto.builder()
+          .withNominationConsultationResponseForm(form)
+          .build();
+      return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
+              nominationDetail,
+              modelAndViewDto
+          )
+          .addObject("existingConsultationResponseFiles", fileUploadService.getUploadedFileViewList(files));
+    }
+
+    nominationConsultationResponseSubmissionService.submitConsultationResponse(nominationDetail, Objects.requireNonNull(form));
+
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added consultation response")
         .build();
-    var modelAndView = nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-            nominationDetail,
-            modelAndViewDto
-        )
-        .addObject("existingConsultationResponseFiles", fileUploadService.getUploadedFileViewList(files));
 
-    return controllerHelperService.checkErrorsAndRedirect(Objects.requireNonNull(bindingResult), modelAndView, form,
-        () -> {
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
+    );
 
-          nominationConsultationResponseSubmissionService.submitConsultationResponse(nominationDetail, form);
-
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Added consultation response")
-              .build();
-
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
-
-          return ReverseRouter.redirect(
-              on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-        });
+    return ReverseRouter.redirect(
+        on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
   }
 
 }

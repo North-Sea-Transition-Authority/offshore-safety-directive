@@ -21,7 +21,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermission;
-import uk.co.nstauthority.offshoresafetydirective.controllerhelper.ControllerHelperService;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -48,20 +47,16 @@ class ConsulteeAddRolesController extends AbstractTeamController {
   static final TeamType TEAM_TYPE = TeamType.CONSULTEE;
   static final RequestPurpose ROLES_TO_ADD_PURPOSE = new RequestPurpose("Get user to add roles to");
 
-  private final ControllerHelperService controllerHelperService;
   private final EnergyPortalUserService energyPortalUserService;
   private final ConsulteeTeamMemberRolesValidator consulteeTeamMemberRolesValidator;
   private final ConsulteeTeamService consulteeTeamService;
 
   @Autowired
-  protected ConsulteeAddRolesController(
-      ControllerHelperService controllerHelperService,
-      EnergyPortalUserService energyPortalUserService,
-      ConsulteeTeamMemberRolesValidator consulteeTeamMemberRolesValidator,
-      ConsulteeTeamService consulteeTeamService,
-      TeamService teamService) {
+  protected ConsulteeAddRolesController(EnergyPortalUserService energyPortalUserService,
+                                        ConsulteeTeamMemberRolesValidator consulteeTeamMemberRolesValidator,
+                                        ConsulteeTeamService consulteeTeamService,
+                                        TeamService teamService) {
     super(teamService);
-    this.controllerHelperService = controllerHelperService;
     this.energyPortalUserService = energyPortalUserService;
     this.consulteeTeamMemberRolesValidator = consulteeTeamMemberRolesValidator;
     this.consulteeTeamService = consulteeTeamService;
@@ -87,27 +82,26 @@ class ConsulteeAddRolesController extends AbstractTeamController {
     var team = getTeam(teamId, TEAM_TYPE);
     var energyPortalUser = getEnergyPortalUser(webUserAccountId);
     consulteeTeamMemberRolesValidator.validate(form, bindingResult);
-    return controllerHelperService.checkErrorsAndRedirect(
-        bindingResult,
-        getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form),
-        form,
-        () -> {
-          var regulatorRoles = getRolesToAdd(form.getRoles());
-          consulteeTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
 
-          var notificationBanner = NotificationBanner.builder()
-              .withBannerType(NotificationBannerType.SUCCESS)
-              .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
-              .build();
+    if (bindingResult.hasErrors()) {
+      return getAddTeamMemberRolesModelAndView(teamId, energyPortalUser, form);
+    }
 
-          NotificationBannerUtil.applyNotificationBanner(
-              Objects.requireNonNull(redirectAttributes),
-              notificationBanner
-          );
+    var regulatorRoles = getRolesToAdd(form.getRoles());
+    consulteeTeamService.addUserTeamRoles(team, energyPortalUser, regulatorRoles);
 
-          return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
-        }
+    var notificationBanner = NotificationBanner.builder()
+        .withBannerType(NotificationBannerType.SUCCESS)
+        .withHeading("Added %s to team".formatted(energyPortalUser.displayName()))
+        .build();
+
+    NotificationBannerUtil.applyNotificationBanner(
+        Objects.requireNonNull(redirectAttributes),
+        notificationBanner
     );
+
+    return ReverseRouter.redirect(on(ConsulteeTeamManagementController.class).renderMemberList(teamId));
+
   }
 
   private Set<ConsulteeTeamRole> getRolesToAdd(Set<String> rolesToAdd) {
