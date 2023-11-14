@@ -2,7 +2,6 @@
 
 <#macro confirmAppointmentSlideout panelId headingText postUrl postParam fileUploadTemplate errorList uploadedFiles>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
-        <#-- TODO OSDOP-343 - Change errorList attribute to be slideout specific -->
         <@fdsError.errorSummary errorItems=errorList![]/>
         <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsDateInput.dateInput

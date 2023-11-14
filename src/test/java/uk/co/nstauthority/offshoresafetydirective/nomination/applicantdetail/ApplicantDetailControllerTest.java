@@ -184,8 +184,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
     when(nominationService.startNomination()).thenReturn(nominationDetail);
-    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail))).thenReturn(
-        applicationDetail);
+    when(applicantDetailPersistenceService.createOrUpdateApplicantDetail(any(), eq(nominationDetail)))
+        .thenReturn(applicationDetail);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(ApplicantDetailController.class).createApplicantDetails(form, null)))

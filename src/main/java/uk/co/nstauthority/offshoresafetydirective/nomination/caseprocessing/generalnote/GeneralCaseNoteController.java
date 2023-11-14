@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -54,18 +55,20 @@ public class GeneralCaseNoteController {
   private final GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final FileUploadService fileUploadService;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   public GeneralCaseNoteController(
       NominationDetailService nominationDetailService,
       GeneralCaseNoteValidator generalCaseNoteValidator,
       GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      FileUploadService fileUploadService) {
+      FileUploadService fileUploadService, FormErrorSummaryService formErrorSummaryService) {
     this.nominationDetailService = nominationDetailService;
     this.generalCaseNoteValidator = generalCaseNoteValidator;
     this.generalCaseNoteSubmissionService = generalCaseNoteSubmissionService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.fileUploadService = fileUploadService;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.GENERAL_NOTE)
@@ -110,7 +113,9 @@ public class GeneralCaseNoteController {
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           formDto
-      ).addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files));
+      )
+          .addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("caseNoteErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     generalCaseNoteSubmissionService.submitCaseNote(nominationDetail,

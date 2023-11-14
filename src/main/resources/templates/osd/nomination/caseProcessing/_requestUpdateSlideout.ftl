@@ -1,11 +1,9 @@
-<#import '../../../fds/components/slideOutPanel/slideOutPanel.ftl' as fdsSlideOutPanel>
-<#import '../../../fds/components/form/htmlForm.ftl' as fdsForm>
-<#import '../../../fds/components/button/button.ftl' as fdsAction>
-<#import '../../../fds/components/textarea/textarea.ftl' as fdsTextarea>
 <#include '../../util/url.ftl'>
+<#include "../../../fds/layout.ftl"/>
 
-<#macro requestUpdateSlideout panelId headingText postUrl postParam>
+<#macro requestUpdateSlideout panelId headingText postUrl postParam errorList>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
+        <@fdsError.errorSummary errorItems=errorList![]/>
         <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsTextarea.textarea
                 path="nominationRequestUpdateForm.reason.inputValue"

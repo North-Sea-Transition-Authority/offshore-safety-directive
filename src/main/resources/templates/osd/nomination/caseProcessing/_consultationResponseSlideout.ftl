@@ -9,7 +9,6 @@
 
 <#macro consultationResponseSlideout panelId headingText postUrl postParam errorList fileUploadTemplate uploadedFiles>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
-    <#-- TODO OSDOP-343 - Change errorList attribute to be slideout specific -->
         <@fdsError.errorSummary errorItems=errorList![]/>
         <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsTextarea.textarea

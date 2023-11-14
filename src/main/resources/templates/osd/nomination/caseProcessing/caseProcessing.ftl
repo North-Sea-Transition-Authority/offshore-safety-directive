@@ -31,7 +31,13 @@
 <#-- @ftlvariable name="nominationVersionForm" type="uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingVersionForm" -->
 <#-- @ftlvariable name="versionOptions" type="java.util.Map<String, String>" -->
 <#-- @ftlvariable name="updateRequestReason" type="String" -->
-
+<#-- @ftlvariable name="withdrawNominationErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="confirmAppointmentErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="requestUpdateErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="qaChecksErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="consultationResponseErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="decisionErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="caseNoteErrorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 
 <#assign pageTitle = headerInformation.nominationReference().reference() />
 
@@ -151,6 +157,7 @@ errorItems=[]
             panelId=qaChecksSlideoutPanelId
             headingText=qaChecksAction.item.actionText
             postUrl=qaChecksAction.submitUrl
+            errorList=qaChecksErrorList![]
             postParam=qaChecksAction.caseProcessingActionIdentifier.value()
         />
     </#if>
@@ -163,7 +170,7 @@ errorItems=[]
             postParam=decisionAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=decisionAction.modelProperties["fileUploadTemplate"]
             decisionOptions=decisionAction.modelProperties["decisionOptions"]
-            errorList=errorList![]
+            errorList=decisionErrorList![]
             uploadedFiles=decisionFiles![]
         />
     </#if>
@@ -173,7 +180,7 @@ errorItems=[]
             panelId=withdrawSlideoutPanelId
             headingText=withdrawAction.item.actionText
             postUrl=withdrawAction.submitUrl
-            errorList=errorList![]
+            errorList=withdrawNominationErrorList![]
             postParam=withdrawAction.caseProcessingActionIdentifier.value()
         />
     </#if>
@@ -185,7 +192,7 @@ errorItems=[]
             postUrl=confirmAppointmentAction.submitUrl
             postParam=confirmAppointmentAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=confirmAppointmentAction.modelProperties["fileUploadTemplate"]
-            errorList=errorList![]
+            errorList=confirmAppointmentErrorList![]
             uploadedFiles=confirmNominationFiles![]
         />
     </#if>
@@ -197,7 +204,7 @@ errorItems=[]
             postUrl=generalCaseNoteAction.submitUrl
             postParam=generalCaseNoteAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
-            errorList=errorList![]
+            errorList=caseNoteErrorList![]
             uploadedFiles=existingCaseNoteFiles![]
         />
     </#if>
@@ -236,7 +243,7 @@ errorItems=[]
             postUrl=consultationResponseAction.submitUrl
             postParam=consultationResponseAction.caseProcessingActionIdentifier.value()
             fileUploadTemplate=generalCaseNoteAction.modelProperties["fileUploadTemplate"]
-            errorList=errorList![]
+            errorList=consultationResponseErrorList![]
             uploadedFiles=existingConsultationResponseFiles![]
         />
     </#if>
@@ -246,6 +253,7 @@ errorItems=[]
             panelId=requestUpdateSlideoutPanelId
             headingText=requestUpdateAction.item.actionText
             postUrl=requestUpdateAction.submitUrl
+            errorList=requestUpdateErrorList![]
             postParam=requestUpdateAction.caseProcessingActionIdentifier.value()
         />
     </#if>

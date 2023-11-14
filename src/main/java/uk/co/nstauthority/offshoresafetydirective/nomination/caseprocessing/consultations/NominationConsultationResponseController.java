@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -51,6 +52,7 @@ public class NominationConsultationResponseController {
   private final NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
   private final FileUploadService fileUploadService;
   private final NominationDetailService nominationDetailService;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   public NominationConsultationResponseController(
@@ -58,12 +60,14 @@ public class NominationConsultationResponseController {
       NominationConsultationResponseValidator nominationConsultationResponseValidator,
       NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService,
       FileUploadService fileUploadService,
-      NominationDetailService nominationDetailService) {
+      NominationDetailService nominationDetailService,
+      FormErrorSummaryService formErrorSummaryService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationConsultationResponseValidator = nominationConsultationResponseValidator;
     this.nominationConsultationResponseSubmissionService = nominationConsultationResponseSubmissionService;
     this.fileUploadService = fileUploadService;
     this.nominationDetailService = nominationDetailService;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.CONSULTATION_RESPONSE)
@@ -105,7 +109,8 @@ public class NominationConsultationResponseController {
               nominationDetail,
               modelAndViewDto
           )
-          .addObject("existingConsultationResponseFiles", fileUploadService.getUploadedFileViewList(files));
+          .addObject("existingConsultationResponseFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("consultationResponseErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     nominationConsultationResponseSubmissionService.submitConsultationResponse(nominationDetail, Objects.requireNonNull(form));

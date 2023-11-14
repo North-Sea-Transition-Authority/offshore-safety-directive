@@ -60,6 +60,7 @@ class RegulatorAddMemberController extends AbstractTeamController {
 
   private final RegulatorTeamService regulatorTeamService;
 
+
   @Autowired
   RegulatorAddMemberController(RegulatorTeamService regulatorTeamService,
                                CustomerConfigurationProperties customerConfigurationProperties,

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -17,6 +18,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBanner
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -32,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -186,10 +189,14 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
 
   @Test
   void requestUpdate_whenInvalidForm_verifyCalls() throws Exception {
+    var errorList = List.of(new ErrorItem(0, "field", "message"));
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
       bindingResult.addError(new ObjectError("error", "error"));
+
+      when(formErrorSummaryService.getErrorItems(bindingResult))
+          .thenReturn(errorList);
       return invocation;
     }).when(nominationRequestUpdateValidator).validate(any(), any());
 
@@ -207,7 +214,8 @@ class NominationRequestUpdateControllerTest extends AbstractControllerTest {
             .with(csrf())
         )
         .andExpect(status().isOk())
-        .andExpect(view().name(Objects.requireNonNull(modelAndView.getViewName())));
+        .andExpect(view().name(Objects.requireNonNull(modelAndView.getViewName())))
+        .andExpect(model().attribute("requestUpdateErrorList", errorList));
 
     verifyNoInteractions(nominationRequestUpdateSubmissionService);
   }

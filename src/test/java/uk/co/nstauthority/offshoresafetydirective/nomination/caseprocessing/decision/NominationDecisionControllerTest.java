@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -20,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -34,6 +36,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
@@ -151,6 +154,7 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
   @Test
   void submitDecision_whenFormInvalid_verifyOk() throws Exception {
+    var errorList = List.of(new ErrorItem(0, "field", "message"));
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
@@ -159,6 +163,10 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
           NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_CODE,
           NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE
       );
+
+      when(formErrorSummaryService.getErrorItems(bindingResult))
+          .thenReturn(errorList);
+
       return bindingResult;
     }).when(nominationDecisionValidator).validate(any(), any(), any());
 
@@ -175,8 +183,8 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             .with(csrf())
         )
         .andExpect(status().isOk())
-        .andExpect(view().name(expectedViewName));
-
+        .andExpect(view().name(expectedViewName))
+        .andExpect(model().attribute("decisionErrorList", errorList));
   }
 
   @Test

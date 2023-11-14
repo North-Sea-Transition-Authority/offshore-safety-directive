@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -53,6 +54,7 @@ public class ConfirmNominationAppointmentController {
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final FileUploadService fileUploadService;
   private final ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   public ConfirmNominationAppointmentController(
@@ -60,12 +62,14 @@ public class ConfirmNominationAppointmentController {
       ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       FileUploadService fileUploadService,
-      ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService) {
+      ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService,
+      FormErrorSummaryService formErrorSummaryService) {
     this.nominationDetailService = nominationDetailService;
     this.confirmNominationAppointmentValidator = confirmNominationAppointmentValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.fileUploadService = fileUploadService;
     this.confirmNominationAppointmentSubmissionService = confirmNominationAppointmentSubmissionService;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT)
@@ -107,7 +111,9 @@ public class ConfirmNominationAppointmentController {
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           modelAndViewDto
-      ).addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files));
+      )
+          .addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("confirmAppointmentErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     var appointmentDate = Objects.requireNonNull(confirmNominationAppointmentForm).getAppointmentDate()
@@ -136,7 +142,5 @@ public class ConfirmNominationAppointmentController {
 
     return ReverseRouter.redirect(
         on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));
-
   }
-
 }

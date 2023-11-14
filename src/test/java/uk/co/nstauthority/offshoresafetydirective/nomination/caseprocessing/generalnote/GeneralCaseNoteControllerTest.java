@@ -34,6 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
@@ -177,12 +178,17 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
 
   @Test
   void submitGeneralCaseNote_whenInvalid_verifyNoCallsAndOk() throws Exception {
+    var errorList = List.of(new ErrorItem(0, "field", "message"));
 
     var viewName = "test_view";
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
       bindingResult.addError(new ObjectError("error", "error"));
+
+      when(formErrorSummaryService.getErrorItems(bindingResult))
+          .thenReturn(errorList);
+
       return bindingResult;
     }).when(generalCaseNoteValidator).validate(any(), any());
 
@@ -204,7 +210,8 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             .param("caseNoteFiles[0].uploadedFileId", uploadedFileId.uuid().toString()))
         .andExpect(status().isOk())
         .andExpect(view().name(viewName))
-        .andExpect(model().attribute("existingCaseNoteFiles", List.of(uploadedFileView)));
+        .andExpect(model().attribute("existingCaseNoteFiles", List.of(uploadedFileView)))
+        .andExpect(model().attribute("caseNoteErrorList", errorList));
 
     verify(generalCaseNoteSubmissionService, never()).submitCaseNote(eq(nominationDetail),
         any(GeneralCaseNoteForm.class));

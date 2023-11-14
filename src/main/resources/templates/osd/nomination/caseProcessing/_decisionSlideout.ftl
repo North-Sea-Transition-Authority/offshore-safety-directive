@@ -2,7 +2,6 @@
 
 <#macro decisionSlideout panelId headingText postUrl postParam fileUploadTemplate decisionOptions errorList uploadedFiles>
     <@fdsSlideOutPanel.slideOutPanel panelId=panelId headingText=headingText>
-        <#-- TODO OSDOP-343 - Change errorList attribute to be slideout specific -->
         <@fdsError.errorSummary errorItems=errorList![]/>
         <@fdsForm.htmlForm actionUrl=springUrl(postUrl)>
             <@fdsRadio.radioGroup path="form.nominationDecision" labelText="What decision was made on this nomination?">

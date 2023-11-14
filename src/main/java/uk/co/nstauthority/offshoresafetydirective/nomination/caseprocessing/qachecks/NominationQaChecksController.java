@@ -18,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -47,16 +48,19 @@ public class NominationQaChecksController {
   private final NominationDetailService nominationDetailService;
   private final NominationQaChecksValidator nominationQaChecksValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   public NominationQaChecksController(
       CaseEventService caseEventService,
       NominationDetailService nominationDetailService,
       NominationQaChecksValidator nominationQaChecksValidator,
-      NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator) {
+      NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
+      FormErrorSummaryService formErrorSummaryService) {
     this.caseEventService = caseEventService;
     this.nominationDetailService = nominationDetailService;
     this.nominationQaChecksValidator = nominationQaChecksValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.QA)
@@ -89,7 +93,7 @@ public class NominationQaChecksController {
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           formDto
-      );
+      ).addObject("qaChecksErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     caseEventService.createCompletedQaChecksEvent(

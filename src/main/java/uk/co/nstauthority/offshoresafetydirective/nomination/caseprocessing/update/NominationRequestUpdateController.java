@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -49,17 +50,20 @@ public class NominationRequestUpdateController {
   private final NominationDetailService nominationDetailService;
   private final NominationRequestUpdateValidator nominationRequestUpdateValidator;
   private final NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   public NominationRequestUpdateController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       NominationDetailService nominationDetailService,
       NominationRequestUpdateValidator nominationRequestUpdateValidator,
-      NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService) {
+      NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService,
+      FormErrorSummaryService formErrorSummaryService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationDetailService = nominationDetailService;
     this.nominationRequestUpdateValidator = nominationRequestUpdateValidator;
     this.nominationRequestUpdateSubmissionService = nominationRequestUpdateSubmissionService;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.REQUEST_UPDATE)
@@ -91,7 +95,7 @@ public class NominationRequestUpdateController {
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           modelAndViewDto
-      );
+      ).addObject("requestUpdateErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     var notificationBanner = NotificationBanner.builder()
@@ -106,7 +110,7 @@ public class NominationRequestUpdateController {
         notificationBanner
     );
 
-    nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
+    nominationRequestUpdateSubmissionService.submit(nominationDetail, Objects.requireNonNull(form));
 
     return ReverseRouter.redirect(
         on(NominationCaseProcessingController.class).renderCaseProcessing(nominationId, null));

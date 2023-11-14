@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -48,17 +49,19 @@ public class WithdrawNominationController {
   private final NominationDetailService nominationDetailService;
   private final CaseEventService caseEventService;
   private final WithdrawNominationValidator withdrawNominationValidator;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   public WithdrawNominationController(
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       NominationDetailService nominationDetailService,
       CaseEventService caseEventService,
-      WithdrawNominationValidator withdrawNominationValidator) {
+      WithdrawNominationValidator withdrawNominationValidator, FormErrorSummaryService formErrorSummaryService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationDetailService = nominationDetailService;
     this.caseEventService = caseEventService;
     this.withdrawNominationValidator = withdrawNominationValidator;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.WITHDRAW)
@@ -92,7 +95,7 @@ public class WithdrawNominationController {
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           modelAndViewDto
-      );
+      ).addObject("withdrawNominationErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     caseEventService.createWithdrawEvent(nominationDetail, withdrawNominationForm.getReason().getInputValue());

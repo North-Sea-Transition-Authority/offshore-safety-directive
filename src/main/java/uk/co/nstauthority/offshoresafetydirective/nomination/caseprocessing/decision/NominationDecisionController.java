@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
+import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -53,18 +54,21 @@ public class NominationDecisionController {
   private final NominationDetailService nominationDetailService;
   private final FileUploadService fileUploadService;
   private final NominationDecisionSubmissionService nominationDecisionSubmissionService;
+  private final FormErrorSummaryService formErrorSummaryService;
 
   @Autowired
   public NominationDecisionController(NominationDecisionValidator nominationDecisionValidator,
                                       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
                                       NominationDetailService nominationDetailService,
                                       FileUploadService fileUploadService,
-                                      NominationDecisionSubmissionService nominationDecisionSubmissionService) {
+                                      NominationDecisionSubmissionService nominationDecisionSubmissionService,
+                                      FormErrorSummaryService formErrorSummaryService) {
     this.nominationDecisionValidator = nominationDecisionValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationDetailService = nominationDetailService;
     this.fileUploadService = fileUploadService;
     this.nominationDecisionSubmissionService = nominationDecisionSubmissionService;
+    this.formErrorSummaryService = formErrorSummaryService;
   }
 
   @PostMapping(params = CaseProcessingActionIdentifier.DECISION)
@@ -106,7 +110,8 @@ public class NominationDecisionController {
               nominationDetail,
               modelAndViewDto
           )
-          .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files));
+          .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("decisionErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
     nominationDecisionSubmissionService.submitNominationDecision(nominationDetail, nominationDecisionForm);
