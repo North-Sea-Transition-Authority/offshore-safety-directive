@@ -2,13 +2,16 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -16,12 +19,13 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.EnergyPortalAccessService;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.InstigatingWebUserAccountId;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.ResourceType;
+import uk.co.fivium.digital.energyportalteamaccesslibrary.team.TargetWebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.AddedToTeamEventPublisher;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRemovedEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class TeamMemberRoleServiceTest {
@@ -30,7 +34,7 @@ class TeamMemberRoleServiceTest {
   private TeamMemberRoleRepository teamMemberRoleRepository;
 
   @Mock
-  private AddedToTeamEventPublisher addedToTeamEventPublisher;
+  private EnergyPortalAccessService energyPortalAccessService;
 
   @Mock
   private UserDetailService userDetailService;
@@ -38,14 +42,11 @@ class TeamMemberRoleServiceTest {
   @Captor
   private ArgumentCaptor<List<TeamMemberRole>> teamMemberRoleCaptor;
 
-  @Mock
-  private TeamMemberRemovedEventPublisher teamMemberRemovedEventPublisher;
-
   @InjectMocks
   private TeamMemberRoleService teamMemberRoleService;
 
   @Test
-  void addUserTeamRoles_whenAddingUser_thenVerifyCalls() {
+  void addUserTeamRoles_whenAddingUser_andUserIsNew_thenVerifyCalls() {
 
     var team = TeamTestUtil.Builder().build();
 
@@ -60,6 +61,8 @@ class TeamMemberRoleServiceTest {
         .build();
 
     when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+    when(teamMemberRoleRepository.findAllByWuaId(userToAdd.webUserAccountId()))
+        .thenReturn(List.of());
 
     teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role));
 
@@ -70,12 +73,46 @@ class TeamMemberRoleServiceTest {
         .extracting(TeamMemberRole::getTeam, TeamMemberRole::getWuaId, TeamMemberRole::getRole)
         .containsExactly(tuple(team, userToAdd.webUserAccountId(), role));
 
-    verify(addedToTeamEventPublisher, times(1)).publish(
-        new TeamId(team.getUuid()),
-        new WebUserAccountId(userToAdd.webUserAccountId()),
-        Set.of(role),
-        instigatingUser
+    var targetWebUserAccountIdCaptor = ArgumentCaptor.forClass(TargetWebUserAccountId.class);
+    var instigatingWebUserAccountIdCaptor = ArgumentCaptor.forClass(InstigatingWebUserAccountId.class);
+
+    verify(energyPortalAccessService).addUserToAccessTeam(
+        eq(new ResourceType(TeamMemberRoleService.RESOURCE_TYPE_NAME)),
+        targetWebUserAccountIdCaptor.capture(),
+        instigatingWebUserAccountIdCaptor.capture()
     );
+
+    assertThat(targetWebUserAccountIdCaptor.getValue().getId())
+        .isEqualTo(userToAdd.webUserAccountId());
+
+    assertThat(instigatingWebUserAccountIdCaptor.getValue().getId())
+        .isEqualTo(instigatingUser.wuaId());
+  }
+
+  @Test
+  void addUserTeamRoles_whenAddingUser_andUserExists_thenVerifyCalls() {
+
+    var team = TeamTestUtil.Builder().build();
+
+    var userToAdd = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(100)
+        .build();
+
+    var role = "ROLE_NAME";
+
+    when(teamMemberRoleRepository.findAllByWuaId(userToAdd.webUserAccountId()))
+        .thenReturn(List.of(new TeamMemberRole(UUID.randomUUID())));
+
+    teamMemberRoleService.addUserTeamRoles(team, userToAdd, Set.of(role));
+
+    verify(teamMemberRoleRepository, times(1)).deleteAllByTeamAndWuaId(team, userToAdd.webUserAccountId());
+    verify(teamMemberRoleRepository, times(1)).saveAll(teamMemberRoleCaptor.capture());
+
+    assertThat(teamMemberRoleCaptor.getValue())
+        .extracting(TeamMemberRole::getTeam, TeamMemberRole::getWuaId, TeamMemberRole::getRole)
+        .containsExactly(tuple(team, userToAdd.webUserAccountId(), role));
+
+    verify(energyPortalAccessService, never()).addUserToAccessTeam(any(), any(), any());
   }
 
   @Test
@@ -95,8 +132,6 @@ class TeamMemberRoleServiceTest {
     assertThat(teamMemberRoleCaptor.getValue())
         .extracting(TeamMemberRole::getTeam, TeamMemberRole::getWuaId, TeamMemberRole::getRole)
         .containsExactly(tuple(team, existingUser.wuaId().id(), role));
-
-    verifyNoInteractions(addedToTeamEventPublisher);
   }
 
   @Test
@@ -124,13 +159,11 @@ class TeamMemberRoleServiceTest {
             tuple(team, existingUser.wuaId().id(), secondRole)
         );
 
-    verifyNoInteractions(addedToTeamEventPublisher);
-
     verify(teamMemberRoleRepository).deleteAllByTeamAndWuaId(team, existingUser.wuaId().id());
   }
 
   @Test
-  void removeMemberFromTeam_verifyInteractions() {
+  void removeMemberFromTeam_whenUserExistsInNoTeams_verifyInteractions() {
 
     var team = TeamTestUtil.Builder().build();
     var teamMember = TeamMemberTestUtil.Builder().build();
@@ -140,15 +173,38 @@ class TeamMemberRoleServiceTest {
         .build();
 
     when(userDetailService.getUserDetail()).thenReturn(instigatingUser);
+    when(teamMemberRoleRepository.findAllByWuaId(teamMember.wuaId().id()))
+        .thenReturn(List.of());
 
     teamMemberRoleService.removeMemberFromTeam(team, teamMember);
 
     verify(teamMemberRoleRepository).deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
 
-    verify(teamMemberRemovedEventPublisher, times(1)).publish(
-        teamMember,
-        new WebUserAccountId(instigatingUser.wuaId())
+    var targetWebUserAccountIdCaptor = ArgumentCaptor.forClass(TargetWebUserAccountId.class);
+    var instigatingWebUserAccountIdCaptor = ArgumentCaptor.forClass(InstigatingWebUserAccountId.class);
+
+    verify(energyPortalAccessService, times(1)).removeUserFromAccessTeam(
+        eq(new ResourceType(TeamMemberRoleService.RESOURCE_TYPE_NAME)),
+        targetWebUserAccountIdCaptor.capture(),
+        instigatingWebUserAccountIdCaptor.capture()
     );
+
+    assertThat(targetWebUserAccountIdCaptor.getValue().getId()).isEqualTo(teamMember.wuaId().id());
+    assertThat(instigatingWebUserAccountIdCaptor.getValue().getId()).isEqualTo(instigatingUser.wuaId());
   }
 
+  @Test
+  void removeMemberFromTeam_whenUserStillExistsInTeams_noCallToFox_verifyInteractions() {
+
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberTestUtil.Builder().build();
+
+    when(teamMemberRoleRepository.findAllByWuaId(teamMember.wuaId().id()))
+        .thenReturn(List.of(new TeamMemberRole(UUID.randomUUID())));
+
+    teamMemberRoleService.removeMemberFromTeam(team, teamMember);
+
+    verify(teamMemberRoleRepository).deleteAllByTeamAndWuaId(team, teamMember.wuaId().id());
+    verify(energyPortalAccessService, never()).removeUserFromAccessTeam(any(), any(), any());
+  }
 }
