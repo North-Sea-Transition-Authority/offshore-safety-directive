@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,7 +73,7 @@ public class WellQueryService {
       return Collections.emptyList();
     }
 
-    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->  {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
       var wellboreIdLiterals = wellboreIds
           .stream()
@@ -115,8 +116,7 @@ public class WellQueryService {
               )
               .stream()
               .map(WellDto::fromPortalWellbore)
-              .collect(Collectors.toSet())
-      );
+              .collect(Collectors.toCollection(LinkedHashSet::new)));
     } else {
 
       // if licence filter is provided then we need to check both origin licence and total depth licence
@@ -127,18 +127,17 @@ public class WellQueryService {
       Set<WellDto> totalDepthLicenceWellbores = energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
 
           wellboreApi.searchWellbores(
-                      wellboreIdApiInput,
-                      registrationNumberApiInput,
-                      licenceIdApiInput,
-                      null,
-                      WELLBORES_PROJECTION_ROOT,
-                      requestPurpose,
-                      logCorrelationId
-                  )
-                  .stream()
-                  .map(WellDto::fromPortalWellbore)
-                  .collect(Collectors.toSet())
-      );
+                  wellboreIdApiInput,
+                  registrationNumberApiInput,
+                  licenceIdApiInput,
+                  null,
+                  WELLBORES_PROJECTION_ROOT,
+                  requestPurpose,
+                  logCorrelationId
+              )
+              .stream()
+              .map(WellDto::fromPortalWellbore)
+              .collect(Collectors.toCollection(LinkedHashSet::new)));
 
       Set<WellDto> originLicenceWellbores =
           energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
@@ -153,11 +152,26 @@ public class WellQueryService {
                   )
                   .stream()
                   .map(WellDto::fromPortalWellbore)
-                  .collect(Collectors.toSet())
-          );
+                  .collect(Collectors.toCollection(LinkedHashSet::new)));
 
-      return Stream.concat(totalDepthLicenceWellbores.stream(), originLicenceWellbores.stream())
-          .collect(Collectors.toSet());
+      var wellboreIdsForLicence = Stream.concat(totalDepthLicenceWellbores.stream(), originLicenceWellbores.stream())
+          .map(wellDto -> wellDto.wellboreId().id())
+          .distinct()
+          .toList();
+
+      return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+          wellboreApi.searchWellbores(
+                  wellboreIdsForLicence,
+                  registrationNumberApiInput,
+                  null,
+                  null,
+                  WELLBORES_PROJECTION_ROOT,
+                  requestPurpose,
+                  logCorrelationId
+              )
+              .stream()
+              .map(WellDto::fromPortalWellbore)
+              .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
   }
 

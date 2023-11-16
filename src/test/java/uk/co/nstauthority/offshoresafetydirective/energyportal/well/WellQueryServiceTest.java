@@ -13,6 +13,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOn
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,6 +23,7 @@ import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
 import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
+import uk.co.fivium.energyportalapi.generated.types.Wellbore;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 
@@ -510,6 +512,17 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
+    given(wellboreApi.searchWellbores(
+        eq(List.of(expectedWellbore.getId())),
+        eq(registrationNumber.value()),
+        eq(null),
+        eq(null),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedWellbore));
+
     var resultingWellbores = wellQueryService.searchWellbores(
         List.of(wellboreId),
         registrationNumber,
@@ -566,11 +579,13 @@ class WellQueryServiceTest {
     var licenceId = new LicenceId(456);
 
     var seawardWellbore = EpaWellboreTestUtil.builder()
+        .withId(1)
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.SEAWARD)
         .withRegistrationNumber("seaward wellbore")
         .build();
 
     var landwardWellbore = EpaWellboreTestUtil.builder()
+        .withId(2)
         .withRegulatoryJurisdiction(RegulatoryJurisdiction.LANDWARD)
         .withRegistrationNumber("landward wellbore")
         .build();
@@ -579,6 +594,17 @@ class WellQueryServiceTest {
         eq(List.of(wellboreId.id())),
         eq(registrationNumber.value()),
         eq(List.of(licenceId.id())),
+        eq(null),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(landwardWellbore, seawardWellbore));
+
+    given(wellboreApi.searchWellbores(
+        eq(List.of(landwardWellbore.getId(), seawardWellbore.getId())),
+        eq(registrationNumber.value()),
+        eq(null),
         eq(null),
         eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
         any(RequestPurpose.class),
@@ -631,6 +657,17 @@ class WellQueryServiceTest {
     ))
         .willReturn(List.of(expectedWellbore));
 
+    given(wellboreApi.searchWellbores(
+        eq(List.of(expectedWellbore.getId())),
+        eq(null),
+        eq(null),
+        eq(null),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(List.of(expectedWellbore));
+
     var resultingWellbores = wellQueryService.searchWellbores(
         null,
         null,
@@ -641,5 +678,98 @@ class WellQueryServiceTest {
     assertThat(resultingWellbores)
         .extracting(wellbore -> wellbore.wellboreId().id())
         .containsExactly(expectedWellbore.getId());
+  }
+
+  @Test
+  void searchWellbores_assertSortOrder() {
+    var licenceId = new LicenceId(456);
+
+    var firstWellbore = EpaWellboreTestUtil.builder()
+        .withId(1)
+        .withRegistrationNumber("1")
+        .build();
+
+    var thirdWellbore = EpaWellboreTestUtil.builder()
+        .withId(10)
+        .withRegistrationNumber("10")
+        .build();
+
+    var fifthWellbore = EpaWellboreTestUtil.builder()
+        .withId(100)
+        .withRegistrationNumber("100")
+        .build();
+
+    var totalDepthWellbores = List.of(firstWellbore, thirdWellbore, fifthWellbore);
+
+    var secondWellbore = EpaWellboreTestUtil.builder()
+        .withId(2)
+        .withRegistrationNumber("2")
+        .build();
+
+    var fourthWellbore = EpaWellboreTestUtil.builder()
+        .withId(11)
+        .withRegistrationNumber("11")
+        .build();
+
+    var originWellbores = List.of(secondWellbore, fourthWellbore);
+
+    // total depth licence request
+    given(wellboreApi.searchWellbores(
+        eq(Collections.emptyList()),
+        eq(null),
+        eq(List.of(licenceId.id())),
+        eq(null),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(totalDepthWellbores);
+
+    // origin licence request
+    given(wellboreApi.searchWellbores(
+        eq(Collections.emptyList()),
+        eq(null),
+        eq(null),
+        eq(List.of(licenceId.id())),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(originWellbores);
+
+    var wellboreIds = Stream.concat(totalDepthWellbores.stream(), originWellbores.stream())
+        .map(Wellbore::getId)
+        .toList();
+
+    given(wellboreApi.searchWellbores(
+        eq(wellboreIds),
+        eq(null),
+        eq(null),
+        eq(null),
+        eq(WellQueryService.WELLBORES_PROJECTION_ROOT),
+        any(RequestPurpose.class),
+        any(LogCorrelationId.class)
+    ))
+        .willReturn(
+            List.of(
+                firstWellbore, secondWellbore, thirdWellbore, fourthWellbore, fifthWellbore
+            )
+        );
+
+    var resultingWellbores = wellQueryService.searchWellbores(
+        null,
+        null,
+        List.of(licenceId),
+        REQUEST_PURPOSE
+    );
+
+    assertThat(resultingWellbores)
+        .extracting(wellDto -> wellDto.wellboreId().id())
+        .containsExactly(
+            firstWellbore.getId(),
+            secondWellbore.getId(),
+            thirdWellbore.getId(),
+            fourthWellbore.getId(),
+            fifthWellbore.getId());
   }
 }

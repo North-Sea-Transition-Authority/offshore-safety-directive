@@ -151,7 +151,6 @@ class AppointmentSearchService {
     List<Integer> wellboreIdsToFilter = resultingWellbores
         .stream()
         .map(wellbore -> wellbore.wellboreId().id())
-        .sorted()
         .toList();
 
     var searchFilter = SystemOfRecordSearchFilter.builder()
