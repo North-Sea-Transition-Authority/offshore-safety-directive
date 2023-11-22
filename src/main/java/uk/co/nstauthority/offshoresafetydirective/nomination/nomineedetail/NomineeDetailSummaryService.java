@@ -74,7 +74,7 @@ public class NomineeDetailSummaryService {
           var appendixDocumentsList = fileService.findAll(
               nominationDetail.getId().toString(),
               FileUsageType.NOMINATION_DETAIL.getUsageType(),
-              FileDocumentType.APPENDIX_C.getDocumentType()
+              FileDocumentType.APPENDIX_C.name()
           )
               .stream()
               .map(uploadedFile -> new FileSummaryView(
@@ -130,12 +130,12 @@ public class NomineeDetailSummaryService {
       case DRAFT -> ReverseRouter.route(
           on(NominationDraftFileController.class).download(
               nominationDetailDto.nominationId(),
-              fileId
+              fileId.toString()
           ));
       case SUBMITTED, AWAITING_CONFIRMATION, APPOINTED, WITHDRAWN, OBJECTED -> ReverseRouter.route(
           on(NominationFileDownloadController.class).download(
               nominationId,
-              fileId
+              fileId.toString()
           ));
       case DELETED -> throw new IllegalStateException(
           "Attempted to download uploaded file with ID %s on nomination with ID %s and status %s"

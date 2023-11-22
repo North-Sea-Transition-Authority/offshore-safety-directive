@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.util.Objects;
-import java.util.UUID;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -21,6 +20,7 @@ import uk.co.fivium.fileuploadlibrary.fds.FileUploadResponse;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @RestController
 @RequestMapping("/file")
@@ -36,8 +36,15 @@ public class UnlinkedFileController {
   }
 
   @GetMapping("/download/{fileId}")
-  public ResponseEntity<InputStreamResource> download(@PathVariable UUID fileId) {
-    return fileService.find(fileId)
+  public ResponseEntity<InputStreamResource> download(@PathVariable String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
+
+    return fileService.find(fileUuid)
         .filter(uploadedFile -> canAccessFile(uploadedFile, userDetailService.getUserDetail()))
         .map(fileService::download)
         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
@@ -69,16 +76,23 @@ public class UnlinkedFileController {
   }
 
   @PostMapping("/delete/{fileId}")
-  public FileDeleteResponse delete(@PathVariable UUID fileId) {
+  public FileDeleteResponse delete(@PathVariable String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
+
     var user = userDetailService.getUserDetail();
-    return fileService.find(fileId)
+    return fileService.find(fileUuid)
         .stream()
         .filter(uploadedFile -> canAccessFile(uploadedFile, user))
         .map(fileService::delete)
         .findFirst()
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
-            "No file found with ID [%s] belonging to user [%d]".formatted(fileId, user.wuaId())
+            "No file found with ID [%s] belonging to user [%d]".formatted(fileUuid, user.wuaId())
         ));
   }
 

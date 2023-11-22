@@ -20,7 +20,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -74,7 +73,7 @@ public class CaseEventFileService {
           builder -> builder
               .withUsageId(caseEvent.getUuid().toString())
               .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
-              .withDocumentType(fileDocumentType.getDocumentType())
+              .withDocumentType(fileDocumentType.name())
               .build(),
           fileIdAndFileFormMap.get(file.getId()).getFileDescription()
       );
@@ -132,7 +131,7 @@ public class CaseEventFileService {
         ReverseRouter.route(on(CaseEventFileDownloadController.class).download(
             new NominationId(caseEvent.getNomination().getId()),
             new CaseEventId(caseEvent.getUuid()),
-            new UploadedFileId(file.getId())
+            file.getId().toString()
         ))
     );
   }

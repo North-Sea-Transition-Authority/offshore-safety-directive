@@ -72,7 +72,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void delete_whenNotAuthenticated_verifyUnauthenticated() throws Exception {
     mockMvc.perform(post(
-            ReverseRouter.route(on(UnlinkedFileController.class).delete(UUID.randomUUID())))
+            ReverseRouter.route(on(UnlinkedFileController.class).delete(UUID.randomUUID().toString())))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -80,7 +80,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void download_whenNotAuthenticated_verifyRedirectedToLogin() throws Exception {
     mockMvc.perform(get(
-            ReverseRouter.route(on(UnlinkedFileController.class).download(UUID.randomUUID()))))
+            ReverseRouter.route(on(UnlinkedFileController.class).download(UUID.randomUUID().toString()))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -134,7 +134,27 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid.toString())))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf()))
+        .andExpect(status().isNotFound());
+
+    verify(fileService, never()).delete(any());
+  }
+
+  @Test
+  void delete_whenInvalidUuid_thenNotFound() throws Exception {
+
+    var fileId = "invalid uuid";
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(NOMINATION_CREATOR_USER)
+        .setSecurityContext();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(NOMINATION_CREATOR_USER);
+
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileId)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -165,7 +185,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -196,7 +216,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -230,7 +250,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.delete(uploadedFile))
         .thenReturn(FileDeleteResponse.success(fileUuid));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isOk());
@@ -261,7 +281,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenAnswer(invocation -> response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(UnlinkedFileController.class).download(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -286,7 +306,27 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid)))
+    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid.toString())))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf()))
+        .andExpect(status().isNotFound());
+
+    verify(fileService, never()).download(any());
+  }
+
+  @Test
+  void download_whenInvalidUuid_thenNotFound() throws Exception {
+
+    var fileId = "invalid uuid";
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(NOMINATION_CREATOR_USER)
+        .setSecurityContext();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(NOMINATION_CREATOR_USER);
+
+    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileId)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -316,7 +356,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid)))
+    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -332,7 +372,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(UnlinkedFileController.class).download(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -351,7 +391,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(UnlinkedFileController.class).download(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -373,7 +413,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(UnlinkedFileController.class).delete(fileUuid)))
+            on(UnlinkedFileController.class).delete(fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());

@@ -5,29 +5,22 @@ import java.util.Set;
 
 public enum FileDocumentType {
 
-  CASE_NOTE("CASE-NOTE"),
-  DECISION("DECISION", Set.of("pdf")),
-  CONSULTATION_RESPONSE("CONSULTATION-RESPONSE"),
-  APPOINTMENT_CONFIRMATION("APPOINTMENT-CONFIRMATION"),
-  APPENDIX_C("APPENDIX-C"),
-  TERMINATION("TERMINATION")
+  CASE_NOTE,
+  DECISION(Set.of("pdf")),
+  CONSULTATION_RESPONSE,
+  APPOINTMENT_CONFIRMATION,
+  APPENDIX_C,
+  TERMINATION
   ;
 
-  private final String documentType;
   private final Set<String> allowedExtensions;
 
-  FileDocumentType(String documentType) {
-    this.documentType = documentType;
+  FileDocumentType() {
     this.allowedExtensions = null;
   }
 
-  FileDocumentType(String documentType, Set<String> allowedExtensions) {
-    this.documentType = documentType;
+  FileDocumentType(Set<String> allowedExtensions) {
     this.allowedExtensions = allowedExtensions;
-  }
-
-  public String getDocumentType() {
-    return documentType;
   }
 
   /**

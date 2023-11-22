@@ -62,7 +62,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -93,7 +93,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, fileUuid)),
+                    .download(NOMINATION_ID, fileUuid.toString())),
             status().isOk(),
             status().isForbidden()
         )
@@ -112,7 +112,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -144,7 +144,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, fileUuid)),
+                    .download(NOMINATION_ID, fileUuid.toString())),
             status().isOk(),
             status().isForbidden()
         )
@@ -166,7 +166,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -189,7 +189,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .thenReturn(response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileUuid)))
+            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -197,6 +197,34 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
+  }
+
+  @Test
+  void download_whenInvalidUuid_verifyNotFound() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileId = "invalid uuid";
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileId)))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
   }
 
 }

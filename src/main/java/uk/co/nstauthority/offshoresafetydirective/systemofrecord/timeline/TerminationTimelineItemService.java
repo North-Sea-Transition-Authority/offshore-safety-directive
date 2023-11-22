@@ -67,14 +67,13 @@ class TerminationTimelineItemService {
           var terminationFiles = fileService.findAll(
                   termination.getId().toString(),
                   FileUsageType.TERMINATION.getUsageType(),
-                  FileDocumentType.TERMINATION.getDocumentType()
+                  FileDocumentType.TERMINATION.name()
               )
               .stream()
               .map(uploadedFile -> new FileSummaryView(
                   UploadedFileView.from(uploadedFile),
                   ReverseRouter.route(on(AppointmentTerminationFileController.class)
                       .download(
-                          termination.getAppointment().getId(),
                           termination.getId(),
                           uploadedFile.getId()
                       ))))

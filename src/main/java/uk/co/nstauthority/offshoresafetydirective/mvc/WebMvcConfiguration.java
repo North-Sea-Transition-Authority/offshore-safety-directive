@@ -102,7 +102,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(hasAppointmentStatusInterceptor)
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(isMemberOfTeamTypeInterceptor)
-        .addPathPatterns("/appointment/**", "/nomination/**");
+        .addPathPatterns("/appointment/**", "/nomination/**", "/termination/**");
     registry.addInterceptor(hasAssetStatusInterceptor)
         .addPathPatterns("/asset/**", "/appointment/**");
     registry.addInterceptor(errorListHandlerInterceptor)

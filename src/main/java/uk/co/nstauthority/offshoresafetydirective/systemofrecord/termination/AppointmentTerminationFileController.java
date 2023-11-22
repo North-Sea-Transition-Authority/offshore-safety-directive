@@ -20,7 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
-@RequestMapping("/appointment/{appointmentId}/termination/{terminationId}")
+@RequestMapping("/termination/{terminationId}")
 @IsMemberOfTeamType(TeamType.REGULATOR)
 public class AppointmentTerminationFileController {
 
@@ -36,12 +36,10 @@ public class AppointmentTerminationFileController {
 
   @ResponseBody
   @GetMapping("/download/{fileId}")
-  public ResponseEntity<InputStreamResource> download(@PathVariable UUID appointmentId,
-                                                      @PathVariable UUID terminationId,
+  public ResponseEntity<InputStreamResource> download(@PathVariable UUID terminationId,
                                                       @PathVariable UUID fileId) {
 
     var termination = appointmentTerminationService.getTermination(terminationId)
-        .filter(appointmentTermination -> appointmentTermination.getAppointment().getId().equals(appointmentId))
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "No termination with ID [%s] found for appointment [%s]"
@@ -56,6 +54,6 @@ public class AppointmentTerminationFileController {
   private boolean canAccessFile(UploadedFile uploadedFile, AppointmentTermination termination) {
     return Objects.equals(uploadedFile.getUsageId(), termination.getId().toString())
         && Objects.equals(uploadedFile.getUsageType(), FileUsageType.TERMINATION.getUsageType())
-        && Objects.equals(uploadedFile.getDocumentType(), FileDocumentType.TERMINATION.getDocumentType());
+        && Objects.equals(uploadedFile.getDocumentType(), FileDocumentType.TERMINATION.name());
   }
 }

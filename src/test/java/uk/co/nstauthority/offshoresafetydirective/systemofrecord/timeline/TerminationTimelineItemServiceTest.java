@@ -91,7 +91,7 @@ class TerminationTimelineItemServiceTest {
     given(fileService.findAll(
         termination.getId().toString(),
         FileUsageType.TERMINATION.getUsageType(),
-        FileDocumentType.TERMINATION.getDocumentType()
+        FileDocumentType.TERMINATION.name()
     ))
         .willReturn(List.of(file));
 
@@ -168,7 +168,7 @@ class TerminationTimelineItemServiceTest {
     given(fileService.findAll(
         termination.getId().toString(),
         FileUsageType.TERMINATION.getUsageType(),
-        FileDocumentType.TERMINATION.getDocumentType()
+        FileDocumentType.TERMINATION.name()
     ))
         .willReturn(List.of(secondFile, firstFile, thirdFile));
 
@@ -195,7 +195,6 @@ class TerminationTimelineItemServiceTest {
                 UploadedFileView.from(firstFile),
                 ReverseRouter.route(on(AppointmentTerminationFileController.class)
                     .download(
-                        termination.getAppointment().getId(),
                         termination.getId(),
                         firstFile.getId()
                     ))
@@ -204,7 +203,6 @@ class TerminationTimelineItemServiceTest {
                 UploadedFileView.from(secondFile),
                 ReverseRouter.route(on(AppointmentTerminationFileController.class)
                     .download(
-                        termination.getAppointment().getId(),
                         termination.getId(),
                         secondFile.getId()
                     ))
@@ -213,7 +211,6 @@ class TerminationTimelineItemServiceTest {
                 UploadedFileView.from(thirdFile),
                 ReverseRouter.route(on(AppointmentTerminationFileController.class)
                     .download(
-                        termination.getAppointment().getId(),
                         termination.getId(),
                         thirdFile.getId()
                     ))
@@ -251,7 +248,7 @@ class TerminationTimelineItemServiceTest {
     given(fileService.findAll(
         termination.getId().toString(),
         FileUsageType.TERMINATION.getUsageType(),
-        FileDocumentType.TERMINATION.getDocumentType()
+        FileDocumentType.TERMINATION.name()
     ))
         .willReturn(List.of(file));
 
@@ -295,7 +292,7 @@ class TerminationTimelineItemServiceTest {
     given(fileService.findAll(
         termination.getId().toString(),
         FileUsageType.TERMINATION.getUsageType(),
-        FileDocumentType.TERMINATION.getDocumentType()
+        FileDocumentType.TERMINATION.name()
     ))
         .willReturn(List.of(file));
 
@@ -332,7 +329,7 @@ class TerminationTimelineItemServiceTest {
     given(fileService.findAll(
         termination.getId().toString(),
         FileUsageType.TERMINATION.getUsageType(),
-        FileDocumentType.TERMINATION.getDocumentType()
+        FileDocumentType.TERMINATION.name()
     ))
         .willReturn(List.of(file));
 

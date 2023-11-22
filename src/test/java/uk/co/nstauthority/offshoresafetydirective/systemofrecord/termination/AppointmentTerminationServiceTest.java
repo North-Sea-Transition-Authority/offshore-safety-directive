@@ -462,7 +462,7 @@ class AppointmentTerminationServiceTest {
         .containsExactly(
             appointmentTerminationArgumentCaptor.getValue().getId().toString(),
             FileUsageType.TERMINATION.getUsageType(),
-            FileDocumentType.TERMINATION.getDocumentType()
+            FileDocumentType.TERMINATION.name()
         );
   }
 

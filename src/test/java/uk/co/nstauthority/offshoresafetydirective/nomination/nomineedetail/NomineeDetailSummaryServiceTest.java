@@ -113,7 +113,7 @@ class NomineeDetailSummaryServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of(firstUploadedFile, thirdUploadedFile, secondUploadedFile));
 
@@ -157,21 +157,21 @@ class NomineeDetailSummaryServiceTest {
                 firstUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    firstUploadedFile.getId()
+                    firstUploadedFile.getId().toString()
                 ))
             ),
             new FileSummaryView(
                 secondUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    secondUploadedFile.getId()
+                    secondUploadedFile.getId().toString()
                 ))
             ),
             new FileSummaryView(
                 thirdUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    thirdUploadedFile.getId()
+                    thirdUploadedFile.getId().toString()
                 ))
             )
         );
@@ -222,7 +222,7 @@ class NomineeDetailSummaryServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of(uploadedFile));
 
@@ -237,7 +237,7 @@ class NomineeDetailSummaryServiceTest {
                 UploadedFileView.from(uploadedFile),
                 ReverseRouter.route(on(NominationDraftFileController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    uploadedFile.getId()
+                    uploadedFile.getId().toString()
                 ))
             )
         );
@@ -287,7 +287,7 @@ class NomineeDetailSummaryServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of(uploadedFile));
 
@@ -302,7 +302,7 @@ class NomineeDetailSummaryServiceTest {
                 UploadedFileView.from(uploadedFile),
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    uploadedFile.getId()
+                    uploadedFile.getId().toString()
                 ))
             )
         );
@@ -351,7 +351,7 @@ class NomineeDetailSummaryServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of(uploadedFile));
 
@@ -499,7 +499,7 @@ class NomineeDetailSummaryServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of());
 

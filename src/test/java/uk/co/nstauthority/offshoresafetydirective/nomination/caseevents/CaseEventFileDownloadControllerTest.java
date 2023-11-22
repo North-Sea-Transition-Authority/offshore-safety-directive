@@ -23,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -101,7 +100,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(CaseEventFileDownloadController.class)
-                    .download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))),
+                    .download(NOMINATION_ID, caseEventId, fileUuid.toString())),
             status().isOk(),
             status().isForbidden()
         )
@@ -158,7 +157,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(CaseEventFileDownloadController.class)
-                    .download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))),
+                    .download(NOMINATION_ID, caseEventId, fileUuid.toString())),
             status().isOk(),
             status().isForbidden()
         )
@@ -213,7 +212,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(caseEvent));
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -221,6 +220,37 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
+  }
+
+  @Test
+  void download_whenInvalidUuid_thenNotFound() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var fileId = "invalid uuid";
+    var caseEventUuid = UUID.randomUUID();
+    var caseEventId = new CaseEventId(caseEventUuid);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    // return a valid nomination detail in order to pass the @HasNominationStatus check
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileId)))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -251,7 +281,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
   }
@@ -284,7 +314,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
+            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
   }

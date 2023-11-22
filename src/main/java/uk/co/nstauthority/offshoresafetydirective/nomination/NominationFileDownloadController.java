@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Objects;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -18,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -50,7 +50,13 @@ public class NominationFileDownloadController {
   @ResponseBody
   @GetMapping("/download/{fileId}")
   public ResponseEntity<InputStreamResource> download(@PathVariable NominationId nominationId,
-                                                      @PathVariable UUID fileId) {
+                                                      @PathVariable String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
@@ -61,7 +67,7 @@ public class NominationFileDownloadController {
             nominationId
         )));
 
-    return fileService.find(fileId)
+    return fileService.find(fileUuid)
         .filter(uploadedFile -> canAccessFile(uploadedFile, nominationDetail))
         .map(fileService::download)
         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());

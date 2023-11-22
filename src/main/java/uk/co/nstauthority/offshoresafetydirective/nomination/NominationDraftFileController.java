@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.EnumSet;
 import java.util.Objects;
-import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -23,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageUtil;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @RestController
@@ -45,27 +45,40 @@ public class NominationDraftFileController {
 
   @GetMapping("/download/{fileId}")
   public ResponseEntity<InputStreamResource> download(@PathVariable NominationId nominationId,
-                                                      @PathVariable UUID fileId) {
+                                                      @PathVariable String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
 
     var nominationDetail = getLatestDraftNominationDetail(nominationId);
-    return fileService.find(fileId)
+    return fileService.find(fileUuid)
         .filter(uploadedFile -> canAccessFile(uploadedFile, userDetailService.getUserDetail(), nominationDetail))
         .map(fileService::download)
         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   @PostMapping("/delete/{fileId}")
-  public FileDeleteResponse delete(@PathVariable NominationId nominationId, @PathVariable UUID fileId) {
+  public FileDeleteResponse delete(@PathVariable NominationId nominationId, @PathVariable String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
+
     var nominationDetail = getLatestDraftNominationDetail(nominationId);
     var user = userDetailService.getUserDetail();
-    return fileService.find(fileId)
+    return fileService.find(fileUuid)
         .stream()
         .filter(uploadedFile -> canAccessFile(uploadedFile, user, nominationDetail))
         .map(fileService::delete)
         .findFirst()
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
-            "No file found with ID [%s] belonging to user [%d]".formatted(fileId, user.wuaId())
+            "No file found with ID [%s] belonging to user [%d]".formatted(fileUuid, user.wuaId())
         ));
   }
 

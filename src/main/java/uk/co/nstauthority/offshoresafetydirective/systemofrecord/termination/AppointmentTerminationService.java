@@ -133,7 +133,7 @@ public class AppointmentTerminationService {
           builder -> builder
               .withUsageId(termination.getId().toString())
               .withUsageType(FileUsageType.TERMINATION.getUsageType())
-              .withDocumentType(FileDocumentType.TERMINATION.getDocumentType())
+              .withDocumentType(FileDocumentType.TERMINATION.name())
               .build(),
           fileForm.getUploadedFileDescription()
       );

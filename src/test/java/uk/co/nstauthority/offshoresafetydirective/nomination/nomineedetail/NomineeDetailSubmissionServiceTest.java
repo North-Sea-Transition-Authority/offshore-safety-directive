@@ -134,7 +134,7 @@ class NomineeDetailSubmissionServiceTest {
         .containsExactly(
             detail.getId().toString(),
             FileUsageType.NOMINATION_DETAIL.getUsageType(),
-            FileDocumentType.APPENDIX_C.getDocumentType()
+            FileDocumentType.APPENDIX_C.name()
         );
 
     verify(nomineeDetailPersistenceService).createOrUpdateNomineeDetail(detail, form);

@@ -64,7 +64,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void delete_whenNotAuthenticated_verifyUnauthenticated() throws Exception {
     mockMvc.perform(post(
-            ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, UUID.randomUUID())))
+            ReverseRouter.route(
+                on(NominationDraftFileController.class).delete(NOMINATION_ID, UUID.randomUUID().toString())))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -72,7 +73,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void download_whenNotAuthenticated_verifyRedirectedToLogin() throws Exception {
     mockMvc.perform(get(
-            ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, UUID.randomUUID()))))
+            ReverseRouter.route(
+                on(NominationDraftFileController.class).download(NOMINATION_ID, UUID.randomUUID().toString()))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -97,9 +99,10 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
-            .with(user(NOMINATION_CREATOR_USER))
-            .with(csrf()))
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
         .andExpect(status().isNotFound());
 
     verify(fileService, never()).delete(any());
@@ -134,9 +137,10 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
-            .with(user(NOMINATION_CREATOR_USER))
-            .with(csrf()))
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
         .andExpect(status().isNotFound());
 
     verify(fileService, never()).delete(any());
@@ -171,7 +175,34 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
+        .andExpect(status().isNotFound());
+
+    verify(fileService, never()).delete(any());
+  }
+
+  @Test
+  void delete_whenInvalidUuid_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var fileId = "invalid uuid";
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(NOMINATION_CREATOR_USER)
+        .setSecurityContext();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(NOMINATION_CREATOR_USER);
+
+    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileId)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -211,9 +242,10 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.delete(uploadedFile))
         .thenReturn(FileDeleteResponse.success(fileUuid));
 
-    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
-            .with(user(NOMINATION_CREATOR_USER))
-            .with(csrf()))
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
         .andExpect(status().isOk());
 
     verify(fileService).delete(uploadedFile);
@@ -254,7 +286,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenAnswer(invocation -> response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -262,6 +294,29 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
+  }
+
+  @Test
+  void download_whenInvalidUuid_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var fileId = "invalid uuid";
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileId)))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -285,9 +340,10 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
-            .with(user(NOMINATION_CREATOR_USER))
-            .with(csrf()))
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
         .andExpect(status().isNotFound());
 
     verify(fileService, never()).download(any());
@@ -322,9 +378,10 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
-            .with(user(NOMINATION_CREATOR_USER))
-            .with(csrf()))
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
+                .with(user(NOMINATION_CREATOR_USER))
+                .with(csrf()))
         .andExpect(status().isNotFound());
 
     verify(fileService, never()).download(any());
@@ -350,7 +407,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -382,7 +439,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -415,7 +472,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -451,7 +508,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -478,7 +535,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(NOMINATION_DETAIL.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -488,7 +545,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(FileDeleteResponse.success(fileUuid));
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isOk());
@@ -515,7 +572,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(NOMINATION_DETAIL.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -529,7 +586,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenAnswer(invocation -> response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString())))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()

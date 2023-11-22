@@ -140,7 +140,7 @@ class CaseEventFileServiceTest {
               .containsExactly(
                   caseEvent.getUuid().toString(),
                   FileUsageType.CASE_EVENT.getUsageType(),
-                  FileDocumentType.CASE_NOTE.getDocumentType()
+                  FileDocumentType.CASE_NOTE.name()
               );
         });
   }

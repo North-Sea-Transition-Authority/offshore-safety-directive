@@ -79,7 +79,7 @@ class NomineeDetailSubmissionService implements NominationSectionSubmissionServi
           builder -> builder
               .withUsageId(nominationDetail.getId().toString())
               .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-              .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+              .withDocumentType(FileDocumentType.APPENDIX_C.name())
               .build(),
           fileForm.getFileDescription());
     });
@@ -95,7 +95,7 @@ class NomineeDetailSubmissionService implements NominationSectionSubmissionServi
     var belongsToNominationDetail =
         nominationDetail.getId().toString().equals(uploadedFile.getUsageId())
             && FileUsageType.NOMINATION_DETAIL.getUsageType().equals(uploadedFile.getUsageType())
-            && FileDocumentType.APPENDIX_C.getDocumentType().equals(uploadedFile.getDocumentType());
+            && FileDocumentType.APPENDIX_C.name().equals(uploadedFile.getDocumentType());
 
     return hasNoUsagesAndIsOwnedByUser || belongsToNominationDetail;
   }

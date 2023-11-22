@@ -17,11 +17,11 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -55,7 +55,14 @@ public class CaseEventFileDownloadController {
   @GetMapping("/download/{uploadedFileId}")
   public ResponseEntity<InputStreamResource> download(@PathVariable("nominationId") NominationId nominationId,
                                                       @PathVariable("caseEventId") CaseEventId caseEventId,
-                                                      @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
+                                                      @PathVariable("uploadedFileId") String fileId) {
+
+    var fileUuid = StringUtil.toUuid(fileId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Unable to convert file id [%s] to UUID".formatted(fileId)
+        ));
+
     var nominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND,
@@ -71,7 +78,7 @@ public class CaseEventFileDownloadController {
             )
         ));
 
-    return fileService.find(uploadedFileId.uuid())
+    return fileService.find(fileUuid)
         .filter(uploadedFile -> canAccessFile(uploadedFile, caseEvent))
         .map(fileService::download)
         .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());

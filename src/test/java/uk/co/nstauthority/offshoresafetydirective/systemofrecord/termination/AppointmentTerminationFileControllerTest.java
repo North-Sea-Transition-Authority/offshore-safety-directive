@@ -50,7 +50,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
   void download_whenNotAuthenticated_thenRedirectedToLogin() throws Exception {
     mockMvc.perform(get(
             ReverseRouter.route(
-                on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, TERMINATION_ID, null))))
+                on(AppointmentTerminationFileController.class).download(TERMINATION_ID, null))))
         .andExpect(redirectionToLoginUrl());
   }
 
@@ -60,7 +60,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     when(consulteeTeamService.isMemberOfConsulteeTeam(USER)).thenReturn(true);
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, TERMINATION_ID, UUID.randomUUID())))
+            on(AppointmentTerminationFileController.class).download(TERMINATION_ID, UUID.randomUUID())))
             .with(user(USER)))
         .andExpect(status().isForbidden());
   }
@@ -87,7 +87,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     var file = UploadedFileTestUtil.builder()
         .withUsageId(termination.getId().toString())
         .withUsageType(FileUsageType.TERMINATION.getUsageType())
-        .withDocumentType(FileDocumentType.TERMINATION.getDocumentType())
+        .withDocumentType(FileDocumentType.TERMINATION.name())
         .build();
 
     when(fileService.find(fileUuid))
@@ -102,7 +102,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .download(file);
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, TERMINATION_ID, fileUuid)))
+            on(AppointmentTerminationFileController.class).download(TERMINATION_ID, fileUuid)))
             .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(content().string(streamContent));
@@ -137,7 +137,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, TERMINATION_ID, fileUuid)))
+            on(AppointmentTerminationFileController.class).download(TERMINATION_ID, fileUuid)))
             .with(user(USER)))
         .andExpect(status().isNotFound());
   }
@@ -163,15 +163,15 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
     var fileUuid = UUID.randomUUID();
     var file = UploadedFileTestUtil.builder()
         .withUsageId(termination.getId().toString())
-        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
-        .withDocumentType(FileDocumentType.TERMINATION.getDocumentType())
+        .withUsageType(FileUsageType.TERMINATION.getUsageType())
+        .withDocumentType(FileDocumentType.TERMINATION.name())
         .build();
 
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, TERMINATION_ID, fileUuid)))
+            on(AppointmentTerminationFileController.class).download(TERMINATION_ID, fileUuid)))
             .with(user(USER)))
         .andExpect(status().isNotFound());
   }

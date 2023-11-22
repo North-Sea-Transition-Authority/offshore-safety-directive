@@ -51,7 +51,7 @@ class NomineeDetailFormService {
     var appendixDocuments = fileService.findAll(
         entity.getNominationDetail().getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     );
 
     var appendixDocumentForms = appendixDocuments.stream()

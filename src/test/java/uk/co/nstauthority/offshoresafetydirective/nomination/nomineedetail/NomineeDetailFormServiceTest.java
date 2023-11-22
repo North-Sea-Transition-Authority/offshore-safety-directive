@@ -119,7 +119,7 @@ class NomineeDetailFormServiceTest {
     when(fileService.findAll(
         nominationDetail.getId().toString(),
         FileUsageType.NOMINATION_DETAIL.getUsageType(),
-        FileDocumentType.APPENDIX_C.getDocumentType()
+        FileDocumentType.APPENDIX_C.name()
     ))
         .thenReturn(List.of(uploadedFile));
 
