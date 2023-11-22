@@ -16,13 +16,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentTerminationValidatorTest {
+
+  private static final String VALID_EXTENSION = UploadedFileFormTestUtil.VALID_FILE_EXTENSION;
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of(VALID_EXTENSION))
+      .build();
 
   private AppointmentTerminationValidator appointmentTerminationValidator;
   private AppointmentTerminationValidatorHint validatorHint;
@@ -33,7 +40,7 @@ class AppointmentTerminationValidatorTest {
   void setUp() {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
     validatorHint = new AppointmentTerminationValidatorHint(appointmentDto);
-    appointmentTerminationValidator = new AppointmentTerminationValidator();
+    appointmentTerminationValidator = new AppointmentTerminationValidator(FILE_UPLOAD_PROPERTIES);
   }
 
   @Test
@@ -78,13 +85,13 @@ class AppointmentTerminationValidatorTest {
     var form = new AppointmentTerminationForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    var fileUploadForm = FileUploadFormTestUtil.builder()
-        .withUploadedFileDescription("test")
+    var uploadedFileForm = UploadedFileFormTestUtil.builder()
+        .withFileDescription("test")
         .build();
 
     form.getTerminationDate().setDate(LocalDate.now());
     form.getReason().setInputValue("reason");
-    form.setTerminationDocuments(List.of(fileUploadForm));
+    form.setTerminationDocuments(List.of(uploadedFileForm));
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
     assertFalse(bindingResult.hasErrors());
@@ -259,11 +266,11 @@ class AppointmentTerminationValidatorTest {
 
   @Test
   void validate_whenNoFileDescription_thenValidationErrors() {
-    var fileUploadForm = FileUploadFormTestUtil.builder()
-        .withUploadedFileDescription(null)
+    var uploadedFileForm = UploadedFileFormTestUtil.builder()
+        .withFileDescription(null)
         .build();
     var form = AppointmentTerminationFormTestUtil.builder()
-        .withTerminationDocuments(List.of(fileUploadForm))
+        .withTerminationDocuments(List.of(uploadedFileForm))
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 

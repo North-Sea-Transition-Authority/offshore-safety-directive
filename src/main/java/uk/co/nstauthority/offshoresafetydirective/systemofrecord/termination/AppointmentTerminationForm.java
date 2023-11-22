@@ -2,9 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import java.util.ArrayList;
 import java.util.List;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 
 class AppointmentTerminationForm {
 
@@ -12,7 +12,7 @@ class AppointmentTerminationForm {
   private ThreeFieldDateInput terminationDate =
       new ThreeFieldDateInput("terminationDate", "Termination date");
 
-  private List<FileUploadForm> terminationDocuments = new ArrayList<>();
+  private List<UploadedFileForm> terminationDocuments = new ArrayList<>();
 
   public StringInput getReason() {
     return reason;
@@ -30,12 +30,11 @@ class AppointmentTerminationForm {
     this.terminationDate = terminationDate;
   }
 
-  public List<FileUploadForm> getTerminationDocuments() {
+  public List<UploadedFileForm> getTerminationDocuments() {
     return terminationDocuments;
   }
 
-  public void setTerminationDocuments(
-      List<FileUploadForm> terminationDocuments) {
+  public void setTerminationDocuments(List<UploadedFileForm> terminationDocuments) {
     this.terminationDocuments = terminationDocuments;
   }
 }

@@ -6,12 +6,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
@@ -22,13 +22,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortal
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
@@ -45,6 +45,7 @@ class TerminationTimelineItemService {
   private final UserDetailService userDetailService;
   private final RegulatorTeamService regulatorTeamService;
   private final AppointmentTerminationService appointmentTerminationService;
+  private final FileService fileService;
 
   @Autowired
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
@@ -52,20 +53,20 @@ class TerminationTimelineItemService {
                                  FileAssociationService fileAssociationService,
                                  FileUploadService fileUploadService,
                                  UserDetailService userDetailService,
-                                 RegulatorTeamService regulatorTeamService) {
+                                 RegulatorTeamService regulatorTeamService, FileService fileService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
     this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
     this.userDetailService = userDetailService;
     this.regulatorTeamService = regulatorTeamService;
+    this.fileService = fileService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments) {
 
     var terminations = appointmentTerminationService.getTerminations(appointments);
     var users = getUsers(terminations);
-    var uploadedFileViewsMap = getFilesAssociatedWithAppointments(appointments);
 
     return terminations.stream()
         .map(termination -> {
@@ -73,19 +74,24 @@ class TerminationTimelineItemService {
               .map(EnergyPortalUserDto::displayName)
               .orElse("Unknown");
 
-          var files = uploadedFileViewsMap.getOrDefault(termination.getAppointment().getId().toString(), List.of())
+          var terminationFiles = fileService.findAll(
+              termination.getId().toString(),
+              FileUsageType.TERMINATION.getUsageType(),
+              FileDocumentType.TERMINATION.getDocumentType()
+          )
               .stream()
-              .map(fileView -> new FileSummaryView(
-                  fileView,
-                  ReverseRouter.route(on(AppointmentTerminationFileController.class)
-                      .download(
-                          new AppointmentId(termination.getAppointment().getId()),
-                          new UploadedFileId(UUID.fromString(fileView.fileId()))))))
-              .sorted(
-                  Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
+              .map(uploadedFile -> new FileSummaryView(
+                    UploadedFileView.from(uploadedFile),
+                    ReverseRouter.route(on(AppointmentTerminationFileController.class)
+                        .download(
+                            termination.getAppointment().getId(),
+                            termination.getId(),
+                            uploadedFile.getId()
+                        ))))
+              .sorted(Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
               .toList();
 
-          return convertToTimelineItemView(termination, terminatedByUserName, files);
+          return convertToTimelineItemView(termination, terminatedByUserName, terminationFiles);
         })
         .toList();
 

@@ -83,13 +83,7 @@ public class UnlinkedFileController {
   }
 
   protected boolean canAccessFile(UploadedFile uploadedFile, ServiceUserDetail serviceUserDetail) {
-    return !fileHasUsage(uploadedFile) && fileBelongsToUser(uploadedFile, serviceUserDetail);
-  }
-
-  private boolean fileHasUsage(UploadedFile uploadedFile) {
-    return Objects.nonNull(uploadedFile.getUsageId())
-        || Objects.nonNull(uploadedFile.getUsageType())
-        || Objects.nonNull(uploadedFile.getDocumentType());
+    return FileUsageUtil.hasNoUsage(uploadedFile) && fileBelongsToUser(uploadedFile, serviceUserDetail);
   }
 
   private boolean fileBelongsToUser(UploadedFile uploadedFile, ServiceUserDetail serviceUserDetail) {

@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,16 +24,22 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
@@ -73,13 +82,13 @@ class AppointmentTerminationServiceTest {
   private AppointmentTerminationRepository appointmentTerminationRepository;
 
   @Mock
-  private FileAssociationService fileAssociationService;
-
-  @Mock
   private AppointmentTerminationEventPublisher appointmentTerminationEventPublisher;
 
   @Mock
   private AppointmentService appointmentService;
+
+  @Mock
+  private FileService fileService;
 
   @InjectMocks
   private AppointmentTerminationService appointmentTerminationService;
@@ -114,7 +123,7 @@ class AppointmentTerminationServiceTest {
         .thenReturn(Optional.of(appointment));
 
     when(appointmentTerminationRepository.findTerminationByAppointment(appointment))
-        .thenReturn( Optional.empty());
+        .thenReturn(Optional.empty());
 
     var hasNotBeenTerminated = appointmentTerminationService.hasNotBeenTerminated(appointmentId);
     assertTrue(hasNotBeenTerminated);
@@ -381,7 +390,128 @@ class AppointmentTerminationServiceTest {
             user.wuaId(),
             appointment
         );
+  }
 
-    verify(fileAssociationService).submitFiles(form.getTerminationDocuments());
+  @Test
+  void terminateAppointment_whenValidAndHasFiles_thenVerifyFilesLinked() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    var terminationDate = LocalDate.now().minusDays(1);
+
+    var form = new AppointmentTerminationForm();
+    form.getTerminationDate().setDate(terminationDate);
+    form.getReason().setInputValue("reason");
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(user);
+
+    var fileId = UUID.randomUUID();
+    var fileDesc = "desc";
+    var fileForm = UploadedFileFormTestUtil.builder()
+        .withFileId(fileId)
+        .withFileDescription(fileDesc)
+        .build();
+    form.setTerminationDocuments(List.of(fileForm));
+
+    var file = UploadedFileTestUtil.newBuilder()
+        .withId(fileId)
+        .withUsageId(null)
+        .withUsageType(null)
+        .withDocumentType(null)
+        .withUploadedBy(user.wuaId().toString())
+        .build();
+
+    when(fileService.findAll(List.of(fileId)))
+        .thenReturn(List.of(file));
+
+    doAnswer(invocation -> {
+      var termination = (AppointmentTermination) invocation.getArgument(0);
+      termination.setId(UUID.randomUUID());
+      return termination;
+    })
+        .when(appointmentTerminationRepository)
+        .save(any());
+
+    appointmentTerminationService.terminateAppointment(appointment, form);
+
+    var appointmentTerminationArgumentCaptor = ArgumentCaptor.forClass(AppointmentTermination.class);
+    verify(appointmentTerminationRepository).save(appointmentTerminationArgumentCaptor.capture());
+
+    var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
+
+    verify(appointmentService).setAppointmentStatus(appointment, AppointmentStatus.TERMINATED);
+    verify(appointmentService).endAppointment(appointment, terminationDate);
+    verify(appointmentTerminationEventPublisher).publish(appointmentId);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Function<FileUsage.Builder, FileUsage>> fileUsageFunctionCaptor =
+        ArgumentCaptor.forClass(Function.class);
+    verify(fileService).updateUsageAndDescription(eq(file), fileUsageFunctionCaptor.capture(), eq(fileDesc));
+
+    assertThat(fileUsageFunctionCaptor.getValue().apply(FileUsage.newBuilder()))
+        .extracting(
+            FileUsage::usageId,
+            FileUsage::usageType,
+            FileUsage::documentType
+        )
+        .containsExactly(
+            appointmentTerminationArgumentCaptor.getValue().getId().toString(),
+            FileUsageType.TERMINATION.getUsageType(),
+            FileDocumentType.TERMINATION.getDocumentType()
+        );
+  }
+
+  @Test
+  void terminateAppointment_whenNoFilesFound_thenVerifyThrowsError() {
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withId(appointmentId.id())
+        .build();
+
+    var terminationDate = LocalDate.now().minusDays(1);
+
+    var form = new AppointmentTerminationForm();
+    form.getTerminationDate().setDate(terminationDate);
+    form.getReason().setInputValue("reason");
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(user);
+
+    var firstFileId = UUID.randomUUID();
+    var secondFileId = UUID.randomUUID();
+
+    var firstFileForm = UploadedFileFormTestUtil.builder()
+        .withFileId(firstFileId)
+        .build();
+
+    var secondFileForm = UploadedFileFormTestUtil.builder()
+        .withFileId(secondFileId)
+        .build();
+    form.setTerminationDocuments(List.of(firstFileForm, secondFileForm));
+
+    when(fileService.findAll(List.of(firstFileId, secondFileId)))
+        .thenReturn(List.of());
+
+    doAnswer(invocation -> {
+      var termination = (AppointmentTermination) invocation.getArgument(0);
+      termination.setId(UUID.randomUUID());
+      return termination;
+    })
+        .when(appointmentTerminationRepository)
+        .save(any());
+
+    assertThatThrownBy(() -> appointmentTerminationService.terminateAppointment(appointment, form))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Not all files [%s] are accessible for termination by user [%s]".formatted(
+            "%s,%s".formatted(firstFileId, secondFileId),
+            user.wuaId().toString()
+        ));
   }
 }

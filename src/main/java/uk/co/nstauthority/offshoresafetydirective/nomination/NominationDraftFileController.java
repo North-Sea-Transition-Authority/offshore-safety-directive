@@ -22,6 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationSta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @RestController
@@ -70,14 +71,8 @@ public class NominationDraftFileController {
 
   protected boolean canAccessFile(UploadedFile uploadedFile, ServiceUserDetail serviceUserDetail,
                                   NominationDetail nominationDetail) {
-    return !fileHasUsage(uploadedFile) && fileBelongsToUser(uploadedFile, serviceUserDetail)
+    return FileUsageUtil.hasNoUsage(uploadedFile) && fileBelongsToUser(uploadedFile, serviceUserDetail)
         || fileBelongsToNomination(uploadedFile, nominationDetail);
-  }
-
-  private boolean fileHasUsage(UploadedFile uploadedFile) {
-    return Objects.nonNull(uploadedFile.getUsageId())
-        || Objects.nonNull(uploadedFile.getUsageType())
-        || Objects.nonNull(uploadedFile.getDocumentType());
   }
 
   private boolean fileBelongsToUser(UploadedFile uploadedFile, ServiceUserDetail serviceUserDetail) {

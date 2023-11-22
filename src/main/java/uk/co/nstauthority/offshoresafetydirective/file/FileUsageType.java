@@ -3,7 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.file;
 public enum FileUsageType {
 
   CASE_EVENT("CASE-EVENT"),
-  NOMINATION_DETAIL("NOMINATION-DETAIL")
+  NOMINATION_DETAIL("NOMINATION-DETAIL"),
+  TERMINATION("TERMINATION")
   ;
 
   private final String usageType;

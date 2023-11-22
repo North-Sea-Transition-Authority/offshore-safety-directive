@@ -28,25 +28,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.util.unit.DataSize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
@@ -80,15 +81,18 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   private static final String APPOINTED_OPERATOR_NAME = "appointed org name";
   private static final String RESPONSIBLE_FROM_DATE = "4 August 2023";
   private static final String CREATED_BY_DEEMED_APPOINTMENT = "Deemed appointment";
+  private static final String VALID_EXTENSION = UploadedFileFormTestUtil.VALID_FILE_EXTENSION;
+  private static final DataSize DATA_SIZE = DataSize.ofBytes(100);
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultMaximumFileSize(DATA_SIZE)
+      .withDefaultPermittedFileExtensions(Set.of(VALID_EXTENSION))
+      .build();
 
   @MockBean
   private AppointmentTerminationValidator appointmentTerminationValidator;
 
   @MockBean
-  private FileUploadConfig fileUploadConfig;
-
-  @MockBean
-  private FileUploadService fileUploadService;
+  private FileService fileService;
 
   @BeforeEach
   void setUp() {
@@ -129,6 +133,15 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void testPermissions_onlyManageAppointmentPermitted() {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
@@ -175,6 +188,15 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void renderTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_andHasExtantAssetStatus_thenAssertOk() throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var asset = AssetTestUtil.builder().withAssetStatus(AssetStatus.EXTANT).build();
     var currentAppointment = AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -303,6 +325,15 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
   @ParameterizedTest
   @EnumSource(PortalAssetType.class)
   void renderTermination_assertModelProperties(PortalAssetType portalAssetType) throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
@@ -358,23 +389,25 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
         .getModelAndView();
 
     assertThat(modelAndView).isNotNull();
-    var fileUploadTemplate = (FileUploadTemplate) modelAndView.getModel().get("fileUploadTemplate");
+    var fileUploadTemplate = (FileUploadComponentAttributes) modelAndView.getModel().get("fileUploadTemplate");
     assertThat(fileUploadTemplate)
         .extracting(
-            FileUploadTemplate::downloadUrl,
-            FileUploadTemplate::uploadUrl,
-            FileUploadTemplate::deleteUrl,
-            FileUploadTemplate::maxAllowedSize,
-            FileUploadTemplate::allowedExtensions
+            FileUploadComponentAttributes::downloadUrl,
+            FileUploadComponentAttributes::uploadUrl,
+            FileUploadComponentAttributes::deleteUrl,
+            FileUploadComponentAttributes::maxAllowedSize,
+            FileUploadComponentAttributes::allowedExtensions
         ).containsExactly(
             ReverseRouter.route(
-                on(AppointmentTerminationFileController.class).download(APPOINTMENT_ID, null)),
+                on(UnlinkedFileController.class).download(null)),
             ReverseRouter.route(
-                on(AppointmentTerminationFileController.class).upload(APPOINTMENT_ID, null)),
+                on(UnlinkedFileController.class).upload(null, FileDocumentType.TERMINATION.name())),
             ReverseRouter.route(
-                on(AppointmentTerminationFileController.class).delete(APPOINTMENT_ID, null)),
-            fileUploadConfig.getMaxFileUploadBytes().toString(),
-            String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
+                on(UnlinkedFileController.class).delete(null)),
+            String.valueOf(DATA_SIZE.toBytes()),
+            String.join(",", FileUploadLibraryUtils.getFdsCompatibleFileExtensions(
+                FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
+            ))
 
         );
   }
@@ -447,6 +480,15 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @SecurityTest
   void submitTermination_whenAppointmentIsCurrent_andHasNotBeenTerminated_thenAssertOk() throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var asset = AssetTestUtil.builder()
         .withAssetStatus(AssetStatus.EXTANT)
         .build();
@@ -503,6 +545,15 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @Test
   void submitTermination_whenHasError_thenOk() throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
@@ -538,19 +589,19 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
 
   @Test
   void submitTermination_whenHasExistingFiles_thenAssertProperties() throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));
 
     var uploadedFileId = new UploadedFileId(UUID.randomUUID());
-    var uploadedFile = UploadedFileTestUtil.builder()
-        .withId(uploadedFileId.uuid())
-        .build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
-
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<FileUploadForm>> fileUploadFormListCaptor = ArgumentCaptor.forClass(List.class);
-    when(fileUploadService.getUploadedFileViewListFromForms(fileUploadFormListCaptor.capture()))
-        .thenReturn(List.of(uploadedFileView));
 
     doAnswer(invocation -> {
       var bindingResult = (BindingResult) invocation.getArgument(1);
@@ -573,11 +624,11 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
     when(appointmentAccessService.getAppointment(APPOINTMENT_ID))
         .thenReturn(Optional.of(appointment));
 
-    var files = FileUploadFormTestUtil.builder()
-        .withUploadedFileId(uploadedFileId.uuid())
+    var fileForm = UploadedFileFormTestUtil.builder()
+        .withFileId(uploadedFileId.uuid())
         .build();
     var form = AppointmentTerminationFormTestUtil.builder()
-        .withTerminationDocuments(List.of(files))
+        .withTerminationDocuments(List.of(fileForm))
         .build();
 
     mockMvc.perform(post(
@@ -588,16 +639,20 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
             .flashAttr("form", form))
         .andExpect(status().isOk())
         .andExpect(view().name("osd/systemofrecord/termination/terminateAppointment"))
-        .andExpect(model().attribute("uploadedFiles", List.of(uploadedFileView)));
-
-    assertThat(fileUploadFormListCaptor.getValue())
-        .extracting(FileUploadForm::getUploadedFileId)
-        .containsExactly(uploadedFileId.uuid());
+        .andExpect(model().attribute("uploadedFiles", List.of(fileForm)));
   }
 
   @ParameterizedTest
   @EnumSource(PortalAssetType.class)
   void submitTermination_verifySubmitRedirect_andVerfiyMethodCalls(PortalAssetType portalAssetType) throws Exception {
+
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(APPOINTMENT_MANAGER));

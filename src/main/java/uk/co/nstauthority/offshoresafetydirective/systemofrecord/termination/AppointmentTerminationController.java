@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
@@ -25,10 +26,8 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
@@ -47,18 +46,15 @@ public class AppointmentTerminationController {
 
   private final AppointmentTerminationService appointmentTerminationService;
   private final AppointmentTerminationValidator appointmentTerminationValidator;
-  private final FileUploadConfig fileUploadConfig;
-  private final FileUploadService fileUploadService;
+  private final FileService fileService;
 
   @Autowired
   public AppointmentTerminationController(AppointmentTerminationService appointmentTerminationService,
                                           AppointmentTerminationValidator appointmentTerminationValidator,
-                                          FileUploadConfig fileUploadConfig,
-                                          FileUploadService fileUploadService) {
+                                          FileService fileService) {
     this.appointmentTerminationService = appointmentTerminationService;
     this.appointmentTerminationValidator = appointmentTerminationValidator;
-    this.fileUploadConfig = fileUploadConfig;
-    this.fileUploadService = fileUploadService;
+    this.fileService = fileService;
   }
 
   @GetMapping
@@ -96,15 +92,9 @@ public class AppointmentTerminationController {
     );
 
     if (bindingResult.hasErrors()) {
-      List<UploadedFileView> uploadedFiles = List.of();
-      var modelAndView = getModelAndView(appointment, form);
-
-      if (!Objects.requireNonNull(form).getTerminationDocuments().isEmpty()) {
-        uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getTerminationDocuments());
-      }
-
-      return modelAndView.addObject("uploadedFiles", uploadedFiles);
+      return getModelAndView(appointment, form);
     }
+
     appointmentTerminationService.terminateAppointment(appointment, form);
     var assetName = appointmentTerminationService.getAssetName(appointmentDto.assetDto());
 
@@ -125,7 +115,8 @@ public class AppointmentTerminationController {
 
     return new ModelAndView("osd/systemofrecord/termination/terminateAppointment")
         .addObject("assetName", assetName.value())
-        .addObject("appointedOperator", appointmentTerminationService.getAppointedOperator(appointmentDto.appointedOperatorId()))
+        .addObject("appointedOperator",
+            appointmentTerminationService.getAppointedOperator(appointmentDto.appointedOperatorId()))
         .addObject("responsibleFromDate", DateUtil.formatLongDate(appointmentDto.appointmentFromDate().value()))
         .addObject("phases", appointmentTerminationService.getAppointmentPhases(appointment, assetDto))
         .addObject("createdBy", appointmentTerminationService.getCreatedByDisplayString(appointmentDto))
@@ -134,7 +125,8 @@ public class AppointmentTerminationController {
             ReverseRouter.route(on(AppointmentTerminationController.class)
                 .submitTermination(new AppointmentId(appointment.getId()), null, null, null)))
         .addObject("timelineUrl", getTimelineRoute(appointmentDto))
-        .addObject("fileUploadTemplate", buildFileUploadTemplate(new AppointmentId(appointment.getId())));
+        .addObject("fileUploadTemplate", buildFileUploadComponentAttributes())
+        .addObject("uploadedFiles", Objects.requireNonNull(form).getTerminationDocuments());
   }
 
   ModelAndView getSubmitRedirectRoute(AppointmentDto appointmentDto) {
@@ -159,16 +151,14 @@ public class AppointmentTerminationController {
     };
   }
 
-  private FileUploadTemplate buildFileUploadTemplate(AppointmentId appointmentId) {
-    return new FileUploadTemplate(
-        ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).download(appointmentId, null)),
-        ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).upload(appointmentId, null)),
-        ReverseRouter.route(
-            on(AppointmentTerminationFileController.class).delete(appointmentId, null)),
-        fileUploadConfig.getMaxFileUploadBytes().toString(),
-        String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
-    );
+  private FileUploadComponentAttributes buildFileUploadComponentAttributes() {
+    return fileService.getFileUploadAttributes()
+        .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+        .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+        .withUploadUrl(
+            ReverseRouter.route(
+                on(UnlinkedFileController.class).upload(null, FileDocumentType.TERMINATION.name()))
+        )
+        .build();
   }
 }
