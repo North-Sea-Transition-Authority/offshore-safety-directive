@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 
 @ExtendWith(MockitoExtension.class)
 class FileAssociationServiceTest {
@@ -40,47 +38,6 @@ class FileAssociationServiceTest {
 
   @InjectMocks
   private FileAssociationService fileAssociationService;
-
-  @Test
-  void createDraftDetail() {
-    var nominationDetailId = UUID.randomUUID();
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withId(nominationDetailId)
-        .build();
-    var uploadedFile = UploadedFileTestUtil.builder().build();
-
-    var uploadedInstant = Instant.now();
-    when(clock.instant()).thenReturn(uploadedInstant);
-
-    fileAssociationService.createDraftAssociation(
-        uploadedFile,
-        new TestFileAssociationReference(nominationDetail),
-        NominationDecisionFileController.PURPOSE
-    );
-
-    var captor = ArgumentCaptor.forClass(FileAssociation.class);
-
-    verify(fileAssociationRepository).save(captor.capture());
-
-    assertThat(captor.getValue())
-        .hasOnlyFields("uuid", "referenceType", "referenceId", "purpose", "fileStatus", "uploadedInstant",
-            "uploadedFile")
-        .extracting(
-            FileAssociation::getReferenceType,
-            FileAssociation::getReferenceId,
-            FileAssociation::getPurpose,
-            FileAssociation::getFileStatus,
-            FileAssociation::getUploadedInstant,
-            FileAssociation::getUploadedFile
-        ).containsExactly(
-            FileAssociationType.NOMINATION_DETAIL,
-            String.valueOf(nominationDetailId),
-            NominationDecisionFileController.PURPOSE,
-            FileStatus.DRAFT,
-            uploadedInstant,
-            uploadedFile
-        );
-  }
 
   @Test
   void findFileAssociation() {

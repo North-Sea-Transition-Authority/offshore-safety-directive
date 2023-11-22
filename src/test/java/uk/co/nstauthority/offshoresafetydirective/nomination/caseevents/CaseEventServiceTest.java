@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -139,7 +140,7 @@ class CaseEventServiceTest {
     var nominationVersion = 5;
     var decisionDate = LocalDate.now();
     var comment = "comment text";
-    var fileUploadForm = new FileUploadForm();
+    var uploadedFileForm = new UploadedFileForm();
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
@@ -150,8 +151,13 @@ class CaseEventServiceTest {
 
     when(caseEventRepository.save(any(CaseEvent.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-    caseEventService.createDecisionEvent(nominationDetail, decisionDate, comment, nominationDecision,
-        List.of(fileUploadForm));
+    caseEventService.createDecisionEvent(
+        nominationDetail,
+        decisionDate,
+        comment,
+        nominationDecision,
+        List.of(uploadedFileForm)
+    );
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
 
@@ -183,7 +189,11 @@ class CaseEventServiceTest {
             nominationVersion
         );
 
-    verify(caseEventFileService).finalizeFileUpload(nominationDetail, captor.getValue(), List.of(fileUploadForm));
+    verify(caseEventFileService).linkFilesToCaseEvent(
+        captor.getValue(),
+        List.of(uploadedFileForm),
+        FileDocumentType.DECISION
+    );
   }
 
   @ParameterizedTest

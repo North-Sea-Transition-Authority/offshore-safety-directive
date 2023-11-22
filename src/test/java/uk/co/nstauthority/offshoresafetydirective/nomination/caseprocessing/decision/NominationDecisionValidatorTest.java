@@ -20,14 +20,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationDecisionValidatorTest {
+
+  private static final String VALID_EXTENSION = "pdf";
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of("default-extension", VALID_EXTENSION))
+      .build();
 
   private static final int SUBMITTED_DAYS_PRIOR = 5;
 
@@ -39,7 +47,7 @@ class NominationDecisionValidatorTest {
   @BeforeEach
   void setUp() {
     clockNow = Clock.fixed(Instant.now(), ZoneId.systemDefault());
-    nominationDecisionValidator = new NominationDecisionValidator(clockNow);
+    nominationDecisionValidator = new NominationDecisionValidator(FILE_UPLOAD_PROPERTIES, clockNow);
     nominationDetail = NominationDetailTestUtil.builder()
         .withSubmittedInstant(clockNow.instant().minus(Period.ofDays(SUBMITTED_DAYS_PRIOR)))
         .build();
@@ -74,15 +82,20 @@ class NominationDecisionValidatorTest {
     var nominationDecisionForm = new NominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
-    var uploadedFileForm = new FileUploadForm();
-    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
-    uploadedFileForm.setUploadedFileInstant(Instant.now());
-    uploadedFileForm.setUploadedFileDescription("File description");
-
     nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
     nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
     nominationDecisionForm.getComments().setInputValue("comment text");
-    nominationDecisionForm.setDecisionFiles(List.of(uploadedFileForm));
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.%s".formatted(VALID_EXTENSION))
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    nominationDecisionForm.getDecisionFiles().add(uploadedFileForm);
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
     assertFalse(bindingResult.hasErrors());
@@ -250,9 +263,10 @@ class NominationDecisionValidatorTest {
     var nominationDecisionForm = new NominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
-    var uploadedFileForm = new FileUploadForm();
+    var uploadedFileForm = new UploadedFileForm();
     uploadedFileForm.setUploadedFileId(UUID.randomUUID());
     uploadedFileForm.setUploadedFileInstant(Instant.now());
+    uploadedFileForm.setFileName("document.%s".formatted(VALID_EXTENSION));
 
     nominationDecisionForm.setDecisionFiles(List.of(uploadedFileForm));
 
@@ -270,11 +284,11 @@ class NominationDecisionValidatorTest {
     var nominationDecisionForm = new NominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
-    var firstUploadedFileForm = new FileUploadForm();
+    var firstUploadedFileForm = new UploadedFileForm();
     firstUploadedFileForm.setUploadedFileId(UUID.randomUUID());
     firstUploadedFileForm.setUploadedFileInstant(Instant.now());
 
-    var secondUploadedFileForm = new FileUploadForm();
+    var secondUploadedFileForm = new UploadedFileForm();
     secondUploadedFileForm.setUploadedFileId(UUID.randomUUID());
     secondUploadedFileForm.setUploadedFileInstant(Instant.now());
 
@@ -287,6 +301,40 @@ class NominationDecisionValidatorTest {
     assertThat(errors).contains(
         entry("decisionFiles", Set.of("Only one decision document can be uploaded"))
     );
+  }
+
+  @Test
+  void validate_whenFileExtensionIsUnsupported_thenVerifyErrors() {
+    var nominationDecisionForm = new NominationDecisionForm();
+    nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
+    nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
+    nominationDecisionForm.getComments().setInputValue("comment text");
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.invalid-extension")
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    nominationDecisionForm.getDecisionFiles().add(uploadedFileForm);
+
+    var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
+
+    nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
+
+    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var allowedExtensions = "pdf";
+
+    assertThat(errors)
+        .containsExactly(
+            entry("decisionFiles", Set.of(
+                "The selected files must be a %s".formatted(allowedExtensions)
+            ))
+        );
   }
 
   @Test

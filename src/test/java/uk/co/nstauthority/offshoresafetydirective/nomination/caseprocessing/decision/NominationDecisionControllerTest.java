@@ -32,6 +32,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -241,9 +242,9 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
     var files = captor.getValue().getDecisionFiles();
     assertThat(files)
         .extracting(
-            FileUploadForm::getUploadedFileId,
-            FileUploadForm::getUploadedFileDescription,
-            FileUploadForm::getUploadedFileInstant
+            UploadedFileForm::getUploadedFileId,
+            UploadedFileForm::getUploadedFileDescription,
+            UploadedFileForm::getUploadedFileInstant
         ).containsExactly(
             tuple(fileUuid, fileDescription, fileUploadInstant)
         );

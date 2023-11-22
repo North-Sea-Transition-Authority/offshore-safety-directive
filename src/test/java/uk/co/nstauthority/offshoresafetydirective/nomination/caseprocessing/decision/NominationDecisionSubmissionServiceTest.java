@@ -10,8 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -47,11 +47,11 @@ class NominationDecisionSubmissionServiceTest {
     var date = LocalDate.now();
     var comment = "comment";
     var decision = NominationDecision.NO_OBJECTION;
-    var fileUploadForm = new FileUploadForm();
+    var uploadedFileForm = new UploadedFileForm();
 
     var form = new NominationDecisionForm();
     form.setNominationDecision(decision);
-    form.setDecisionFiles(List.of(fileUploadForm));
+    form.setDecisionFiles(List.of(uploadedFileForm));
     form.getDecisionDate().setDate(date);
     form.getComments().setInputValue(comment);
 
@@ -59,15 +59,7 @@ class NominationDecisionSubmissionServiceTest {
 
     then(caseEventService)
         .should(onlyOnce())
-        .createDecisionEvent(nominationDetail, date, comment, decision, List.of(fileUploadForm));
-
-    then(fileUploadService)
-        .should(onlyOnce())
-        .updateFileUploadDescriptions(List.of(fileUploadForm));
-
-    then(fileAssociationService)
-        .should(onlyOnce())
-        .submitFiles(List.of(fileUploadForm));
+        .createDecisionEvent(nominationDetail, date, comment, decision, List.of(uploadedFileForm));
 
     then(nominationDetailService)
         .should(onlyOnce())

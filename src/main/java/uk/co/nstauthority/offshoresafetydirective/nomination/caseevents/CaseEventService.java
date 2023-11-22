@@ -51,20 +51,20 @@ public class CaseEventService {
   @Transactional
   public void createDecisionEvent(NominationDetail nominationDetail, LocalDate decisionDate,
                                   String decisionComment,
-                                  NominationDecision nominationDecision, List<FileUploadForm> fileUploadForms) {
+                                  NominationDecision nominationDecision, List<UploadedFileForm> fileUploadForms) {
     var eventType = switch (nominationDecision) {
       case NO_OBJECTION -> CaseEventType.NO_OBJECTION_DECISION;
       case OBJECTION -> CaseEventType.OBJECTION_DECISION;
     };
 
-    var caseEvent = createEvent(eventType, decisionComment,
-        decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
-
-    caseEventFileService.finalizeFileUpload(
-        nominationDetail,
-        caseEvent,
-        fileUploadForms
+    var caseEvent = createEvent(
+        eventType,
+        decisionComment,
+        decisionDate.atStartOfDay().toInstant(ZoneOffset.UTC),
+        nominationDetail
     );
+
+    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.DECISION);
   }
 
   @Transactional

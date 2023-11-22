@@ -34,7 +34,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.cons
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -111,6 +110,16 @@ class CaseProcessingActionServiceTest {
 
   @Test
   void createNominationDecisionAction() {
+
+    var maxBytes = 100;
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
     var result = caseProcessingActionService.createNominationDecisionAction(nominationId);
 
@@ -134,13 +143,23 @@ class CaseProcessingActionServiceTest {
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
             Map.entry("decisionOptions", List.of(NominationDecision.NO_OBJECTION, NominationDecision.OBJECTION)),
-            Map.entry("fileUploadTemplate", new FileUploadTemplate(
-                ReverseRouter.route(on(NominationDecisionFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(NominationDecisionFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(NominationDecisionFileController.class).delete(nominationId, null)),
-                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
-                ".pdf"
-            ))
+            Map.entry("fileUploadTemplate", FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(
+                    FileDocumentType.DECISION.getAllowedExtensions()
+                    .orElseThrow(() -> new IllegalStateException(
+                        "Expected specific extensions for DECISION FileDocumentType"
+                    ))
+                )
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CASE_NOTE.name()
+                    )))
+                .build()
+            )
         );
   }
 

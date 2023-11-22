@@ -21,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.cons
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
@@ -31,8 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.with
 
 @Service
 public class CaseProcessingActionService {
-
-  public static final String ALLOWED_NOMINATION_DECISION_EXTENSIONS_CSV = ".pdf";
 
   private final FileUploadConfig fileUploadConfig;
   private final FileUploadProperties fileUploadProperties;
@@ -94,13 +91,19 @@ public class CaseProcessingActionService {
         )
         .withAdditionalProperty(
             "fileUploadTemplate",
-            new FileUploadTemplate(
-                ReverseRouter.route(on(NominationDecisionFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(NominationDecisionFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(NominationDecisionFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                ALLOWED_NOMINATION_DECISION_EXTENSIONS_CSV
-            )
+            fileService.getFileUploadAttributes()
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CASE_NOTE.name()
+                    )))
+                .withAllowedExtensions(
+                    FileDocumentType.DECISION.getAllowedExtensions()
+                        .orElse(fileUploadProperties.defaultPermittedFileExtensions())
+                )
+                .build()
         )
         .withAdditionalProperty("decisionOptions", decisions)
         .build();

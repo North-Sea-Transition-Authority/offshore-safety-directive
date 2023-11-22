@@ -24,9 +24,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -52,7 +49,6 @@ public class NominationDecisionController {
   private final NominationDecisionValidator nominationDecisionValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final NominationDetailService nominationDetailService;
-  private final FileUploadService fileUploadService;
   private final NominationDecisionSubmissionService nominationDecisionSubmissionService;
   private final FormErrorSummaryService formErrorSummaryService;
 
@@ -60,13 +56,11 @@ public class NominationDecisionController {
   public NominationDecisionController(NominationDecisionValidator nominationDecisionValidator,
                                       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
                                       NominationDetailService nominationDetailService,
-                                      FileUploadService fileUploadService,
                                       NominationDecisionSubmissionService nominationDecisionSubmissionService,
                                       FormErrorSummaryService formErrorSummaryService) {
     this.nominationDecisionValidator = nominationDecisionValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationDetailService = nominationDetailService;
-    this.fileUploadService = fileUploadService;
     this.nominationDecisionSubmissionService = nominationDecisionSubmissionService;
     this.formErrorSummaryService = formErrorSummaryService;
   }
@@ -97,11 +91,7 @@ public class NominationDecisionController {
     );
 
     if (bindingResult.hasErrors()) {
-      var files = nominationDecisionForm.getDecisionFiles()
-          .stream()
-          .map(FileUploadForm::getUploadedFileId)
-          .map(UploadedFileId::new)
-          .toList();
+      var files = Objects.requireNonNull(nominationDecisionForm).getDecisionFiles();
 
       var modelAndViewDto = CaseProcessingFormDto.builder()
           .withNominationDecisionForm(nominationDecisionForm)
@@ -110,7 +100,7 @@ public class NominationDecisionController {
               nominationDetail,
               modelAndViewDto
           )
-          .addObject("decisionFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("decisionFiles", files)
           .addObject("decisionErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 

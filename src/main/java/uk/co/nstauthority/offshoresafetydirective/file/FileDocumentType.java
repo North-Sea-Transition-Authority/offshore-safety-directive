@@ -6,6 +6,7 @@ import java.util.Set;
 public enum FileDocumentType {
 
   CASE_NOTE("CASE-NOTE"),
+  DECISION("DECISION", Set.of("pdf")),
   ;
 
   private final String documentType;

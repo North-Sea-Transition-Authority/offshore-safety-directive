@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @Service
@@ -29,10 +31,12 @@ class NominationDecisionValidator implements SmartValidator {
   private static final String FILES_TOO_MANY_ERROR_MESSAGE = "Only one decision document can be uploaded";
 
 
+  private final FileUploadProperties fileUploadProperties;
   private final Clock clock;
 
   @Autowired
-  NominationDecisionValidator(Clock clock) {
+  NominationDecisionValidator(FileUploadProperties fileUploadProperties, Clock clock) {
+    this.fileUploadProperties = fileUploadProperties;
     this.clock = clock;
   }
 
@@ -64,10 +68,13 @@ class NominationDecisionValidator implements SmartValidator {
     StringInputValidator.builder()
         .validate(form.getComments(), errors);
 
+    var allowedFileExtensions = FileDocumentType.DECISION.getAllowedExtensions()
+        .orElse(fileUploadProperties.defaultPermittedFileExtensions());
+
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, FILES_EMPTY_ERROR_MESSAGE)
         .withMaximumNumberOfFiles(1, FILES_TOO_MANY_ERROR_MESSAGE)
-        .validate(errors, form.getDecisionFiles(), FILES_FIELD_NAME);
+        .validate2(errors, form.getDecisionFiles(), FILES_FIELD_NAME, allowedFileExtensions);
 
   }
 
