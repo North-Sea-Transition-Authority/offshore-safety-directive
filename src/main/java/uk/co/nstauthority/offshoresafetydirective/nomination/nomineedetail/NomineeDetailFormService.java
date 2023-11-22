@@ -6,9 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
@@ -17,19 +15,14 @@ class NomineeDetailFormService {
 
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
   private final NomineeDetailFormValidator nomineeDetailFormValidator;
-  private final FileAssociationService fileAssociationService;
-  private final FileUploadService fileUploadService;
   private final FileService fileService;
 
   @Autowired
   NomineeDetailFormService(NomineeDetailPersistenceService nomineeDetailPersistenceService,
                            NomineeDetailFormValidator nomineeDetailFormValidator,
-                           FileAssociationService fileAssociationService, FileUploadService fileUploadService,
                            FileService fileService) {
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
     this.nomineeDetailFormValidator = nomineeDetailFormValidator;
-    this.fileAssociationService = fileAssociationService;
-    this.fileUploadService = fileUploadService;
     this.fileService = fileService;
   }
 

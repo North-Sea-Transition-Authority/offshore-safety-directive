@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,7 +73,7 @@ class NominationConsultationResponseValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.%s".formatted(VALID_EXTENSION))
         .build();
 
@@ -96,7 +97,7 @@ class NominationConsultationResponseValidatorTest {
     var form = new NominationConsultationResponseForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.%s".formatted(VALID_EXTENSION))
         .build();
 
@@ -119,7 +120,7 @@ class NominationConsultationResponseValidatorTest {
     var form = new NominationConsultationResponseForm();
     form.getResponse().setInputValue("response");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.invalid-extension")
         .build();
 
@@ -136,7 +137,10 @@ class NominationConsultationResponseValidatorTest {
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
-    var allowedExtensions = String.join(", ", FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions());
+    var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
+        .stream()
+        .sorted(String::compareToIgnoreCase)
+        .collect(Collectors.joining(", "));
 
     assertThat(errors)
         .containsExactly(

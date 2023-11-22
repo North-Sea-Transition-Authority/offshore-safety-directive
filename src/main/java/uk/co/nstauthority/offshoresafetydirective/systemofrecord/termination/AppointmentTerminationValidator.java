@@ -58,6 +58,6 @@ class AppointmentTerminationValidator implements SmartValidator {
 
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, TERMINATION_DOCUMENT_ERROR_MESSAGE)
-        .validate2(errors, form.getTerminationDocuments(), "terminationDocuments", allowedFileExtensions);
+        .validate(errors, form.getTerminationDocuments(), "terminationDocuments", allowedFileExtensions);
   }
 }

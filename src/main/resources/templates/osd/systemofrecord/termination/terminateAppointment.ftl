@@ -6,7 +6,7 @@
 <#-- @ftlvariable name="phases" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase>" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
 <#-- @ftlvariable name="timelineUrl" type="java.lang.String" -->
-<#-- @ftlvariable name="fileUploadTemplate" type="uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate" -->
+<#-- @ftlvariable name="fileUploadTemplate" type="uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes" -->
 <#-- @ftlvariable name="uploadedFiles" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView>" -->
 
 <@defaultPage

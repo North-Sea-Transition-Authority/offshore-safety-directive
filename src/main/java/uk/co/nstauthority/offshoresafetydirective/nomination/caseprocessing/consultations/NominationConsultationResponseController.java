@@ -23,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -48,7 +47,6 @@ public class NominationConsultationResponseController {
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
   private final NominationConsultationResponseValidator nominationConsultationResponseValidator;
   private final NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
-  private final FileUploadService fileUploadService;
   private final NominationDetailService nominationDetailService;
   private final FormErrorSummaryService formErrorSummaryService;
 
@@ -57,13 +55,11 @@ public class NominationConsultationResponseController {
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
       NominationConsultationResponseValidator nominationConsultationResponseValidator,
       NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService,
-      FileUploadService fileUploadService,
       NominationDetailService nominationDetailService,
       FormErrorSummaryService formErrorSummaryService) {
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
     this.nominationConsultationResponseValidator = nominationConsultationResponseValidator;
     this.nominationConsultationResponseSubmissionService = nominationConsultationResponseSubmissionService;
-    this.fileUploadService = fileUploadService;
     this.nominationDetailService = nominationDetailService;
     this.formErrorSummaryService = formErrorSummaryService;
   }

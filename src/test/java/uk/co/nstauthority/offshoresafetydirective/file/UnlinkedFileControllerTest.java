@@ -23,14 +23,12 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.unit.DataSize;
-import org.springframework.util.unit.DataUnit;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
@@ -45,7 +43,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = UnlinkedFileController.class)
-@EnableConfigurationProperties(FileUploadConfig.class)
 class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
@@ -114,7 +111,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
     var builder = FileUploadRequest.newBuilder()
         .withBucket("bucket")
-        .withMaximumSize(DataSize.of(100, DataUnit.BYTES))
+        .withMaximumSize(DataSize.ofBytes(100))
         .withFileExtensions(Set.of("extension"));
 
     assertThat(actionCaptor.getValue().apply(builder))
@@ -157,7 +154,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -188,7 +185,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(UUID.randomUUID().toString())
         .withUsageType(UUID.randomUUID().toString())
@@ -219,7 +216,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -246,7 +243,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
     var fileUuid = UUID.randomUUID();
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(null)
         .withUsageType(null)
         .withDocumentType(null)
@@ -308,7 +305,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -346,7 +343,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   void download_whenFileUsageIdIsNotLinkedToNomination() throws Exception {
     var fileUuid = UUID.randomUUID();
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(UUID.randomUUID().toString())
         .build();
 
@@ -365,7 +362,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   void delete_whenFileHasDifferentUploader_thenNotFound() throws Exception {
     var fileUuid = UUID.randomUUID();
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(null)
         .withUsageType(null)
         .withDocumentType(null)

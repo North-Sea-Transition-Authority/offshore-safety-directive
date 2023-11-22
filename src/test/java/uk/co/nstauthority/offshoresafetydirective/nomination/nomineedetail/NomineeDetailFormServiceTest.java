@@ -20,9 +20,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -38,12 +36,6 @@ class NomineeDetailFormServiceTest {
 
   @Mock
   private NomineeDetailFormValidator nomineeDetailFormValidator;
-
-  @Mock
-  private FileAssociationService fileAssociationService;
-
-  @Mock
-  private FileUploadService fileUploadService;
 
   @Mock
   private FileService fileService;
@@ -122,7 +114,7 @@ class NomineeDetailFormServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder().build();
+    var uploadedFile = UploadedFileTestUtil.builder().build();
 
     when(fileService.findAll(
         nominationDetail.getId().toString(),

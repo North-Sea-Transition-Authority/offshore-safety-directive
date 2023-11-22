@@ -15,7 +15,6 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageUtil;
@@ -50,7 +49,6 @@ public class AppointmentTerminationService {
   private final AppointmentTerminationRepository appointmentTerminationRepository;
   private final UserDetailService userDetailService;
   private final AppointmentPhasesService appointmentPhasesService;
-  private final FileAssociationService fileAssociationService;
   private final AppointmentTerminationEventPublisher appointmentTerminationEventPublisher;
   private final FileService fileService;
 
@@ -64,7 +62,6 @@ public class AppointmentTerminationService {
                                        AppointmentTerminationRepository appointmentTerminationRepository,
                                        UserDetailService userDetailService,
                                        AppointmentPhasesService appointmentPhasesService,
-                                       FileAssociationService fileAssociationService,
                                        AppointmentTerminationEventPublisher appointmentTerminationEventPublisher,
                                        FileService fileService) {
     this.portalAssetNameService = portalAssetNameService;
@@ -76,7 +73,6 @@ public class AppointmentTerminationService {
     this.appointmentTerminationRepository = appointmentTerminationRepository;
     this.userDetailService = userDetailService;
     this.appointmentPhasesService = appointmentPhasesService;
-    this.fileAssociationService = fileAssociationService;
     this.appointmentTerminationEventPublisher = appointmentTerminationEventPublisher;
     this.fileService = fileService;
   }

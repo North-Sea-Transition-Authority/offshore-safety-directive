@@ -9,7 +9,6 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import com.amazonaws.util.StringInputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -60,7 +59,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
@@ -102,7 +101,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void download_assertPermissionsPermitted() throws UnsupportedEncodingException {
+  void download_assertPermissionsPermitted() {
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withNominationId(NOMINATION_ID)
@@ -110,7 +109,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
@@ -164,7 +163,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(nominationDetail.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())

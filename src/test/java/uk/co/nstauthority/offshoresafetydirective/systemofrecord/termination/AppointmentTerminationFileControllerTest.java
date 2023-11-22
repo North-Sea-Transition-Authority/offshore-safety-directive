@@ -84,7 +84,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(termination));
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(termination.getId().toString())
         .withUsageType(FileUsageType.TERMINATION.getUsageType())
         .withDocumentType(FileDocumentType.TERMINATION.getDocumentType())
@@ -127,7 +127,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(termination));
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(null)
         .withUsageType(null)
         .withDocumentType(null)
@@ -161,7 +161,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(termination));
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(termination.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.TERMINATION.getDocumentType())

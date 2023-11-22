@@ -103,7 +103,7 @@ class NomineeDetailFormValidator implements SmartValidator {
 
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE)
-        .validate2(errors, form.getAppendixDocuments(), "appendixDocuments", allowedFileExtensions);
+        .validate(errors, form.getAppendixDocuments(), "appendixDocuments", allowedFileExtensions);
 
     //Need to individually check which checkboxes have not been ticked and assign an error to that specific field
     //This will make sure the error link points to the right unchecked checkbox

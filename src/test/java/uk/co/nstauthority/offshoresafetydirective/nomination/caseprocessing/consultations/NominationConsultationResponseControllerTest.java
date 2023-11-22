@@ -34,7 +34,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -72,9 +71,6 @@ class NominationConsultationResponseControllerTest extends AbstractControllerTes
 
   @MockBean
   NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
-
-  @MockBean
-  FileUploadService fileUploadService;
 
   private NominationDetail nominationDetail;
 

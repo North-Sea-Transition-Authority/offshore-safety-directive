@@ -97,15 +97,15 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var firstUploadedFile = UploadedFileTestUtil.newBuilder()
+    var firstUploadedFile = UploadedFileTestUtil.builder()
         .withName("file_a")
         .build();
     var firstUploadedFileViewByName = UploadedFileView.from(firstUploadedFile);
-    var secondUploadedFile = UploadedFileTestUtil.newBuilder()
+    var secondUploadedFile = UploadedFileTestUtil.builder()
         .withName("file_B")
         .build();
     var secondUploadedFileViewByName = UploadedFileView.from(secondUploadedFile);
-    var thirdUploadedFile = UploadedFileTestUtil.newBuilder()
+    var thirdUploadedFile = UploadedFileTestUtil.builder()
         .withName("file_c")
         .build();
     var thirdUploadedFileViewByName = UploadedFileView.from(thirdUploadedFile);
@@ -215,7 +215,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("file_a")
         .build();
 
@@ -280,7 +280,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("file_a")
         .build();
 
@@ -344,7 +344,7 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("file_a")
         .build();
 

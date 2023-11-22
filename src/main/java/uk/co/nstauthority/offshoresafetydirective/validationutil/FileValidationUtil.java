@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.util.CollectionUtils;
 import org.springframework.validation.Errors;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadValidationUtils;
 
 public class FileValidationUtil {
@@ -48,36 +48,8 @@ public class FileValidationUtil {
       return this;
     }
 
-    public void validate(Errors errors, List<FileUploadForm> fileUploadForms, String fieldName) {
-
-      if (minimumNumberOfFiles > 0 && CollectionUtils.isEmpty(fileUploadForms)) {
-        errors.rejectValue(
-            fieldName,
-            FILES_EMPTY_ERROR_CODE.formatted(fieldName),
-            minErrorMessage
-        );
-        return;
-      }
-
-      if (fileUploadForms != null && fileUploadForms.size() > maximumNumberOfFiles) {
-        errors.rejectValue(
-            fieldName,
-            FILES_TOO_MANY_ERROR_CODE.formatted(fieldName),
-            maxErrorMessage
-        );
-        return;
-      }
-
-      FileUploadValidationUtils.rejectIfFileDescriptionsAreEmptyOrWhitespace(
-          errors,
-          Objects.requireNonNull(fileUploadForms),
-          fieldName
-      );
-    }
-
-    // TODO OSDOP-457 - Replace original validate method with this
-    public void validate2(Errors errors, List<UploadedFileForm> fileUploadForms, String fieldName,
-                          Set<String> allowedExtensions) {
+    public void validate(Errors errors, List<UploadedFileForm> fileUploadForms, String fieldName,
+                         Set<String> allowedExtensions) {
 
       if (minimumNumberOfFiles > 0 && CollectionUtils.isEmpty(fileUploadForms)) {
         errors.rejectValue(
@@ -104,7 +76,9 @@ public class FileValidationUtil {
               .anyMatch(s -> fileExtension.isPresent() && fileExtension.get().equalsIgnoreCase(s));
 
           if (!fileHasAllowedExtension) {
-            var allowedExtensionsString = String.join(", ", allowedExtensions);
+            var allowedExtensionsString = allowedExtensions.stream()
+                .sorted(String::compareToIgnoreCase)
+                .collect(Collectors.joining(", "));
             errors.rejectValue(
                 fieldName,
                 FILES_INVALID_EXTENSION_ERROR_CODE.formatted(fieldName),

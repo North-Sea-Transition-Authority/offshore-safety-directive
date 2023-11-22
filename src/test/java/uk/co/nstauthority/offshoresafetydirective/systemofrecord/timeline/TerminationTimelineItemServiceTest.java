@@ -86,7 +86,7 @@ class TerminationTimelineItemServiceTest {
     given(appointmentTerminationService.getTerminations(appointments))
         .willReturn(List.of(termination));
 
-    var file = UploadedFileTestUtil.newBuilder().build();
+    var file = UploadedFileTestUtil.builder().build();
 
     given(fileService.findAll(
         termination.getId().toString(),
@@ -155,13 +155,13 @@ class TerminationTimelineItemServiceTest {
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
     given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
 
-    var firstFile = UploadedFileTestUtil.newBuilder()
+    var firstFile = UploadedFileTestUtil.builder()
         .withName("file_a")
         .build();
-    var secondFile = UploadedFileTestUtil.newBuilder()
+    var secondFile = UploadedFileTestUtil.builder()
         .withName("file_B")
         .build();
-    var thirdFile = UploadedFileTestUtil.newBuilder()
+    var thirdFile = UploadedFileTestUtil.builder()
         .withName("file_c")
         .build();
 
@@ -246,7 +246,7 @@ class TerminationTimelineItemServiceTest {
     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
-    var file = UploadedFileTestUtil.newBuilder().build();
+    var file = UploadedFileTestUtil.builder().build();
 
     given(fileService.findAll(
         termination.getId().toString(),
@@ -290,7 +290,7 @@ class TerminationTimelineItemServiceTest {
     given(energyPortalUserService.findByWuaIds(Set.of(new WebUserAccountId(wuaId)), TerminationTimelineItemService.TERMINATED_BY_USER_PURPOSE))
         .willReturn(List.of(energyPortalUser));
 
-    var file = UploadedFileTestUtil.newBuilder().build();
+    var file = UploadedFileTestUtil.builder().build();
 
     given(fileService.findAll(
         termination.getId().toString(),
@@ -327,7 +327,7 @@ class TerminationTimelineItemServiceTest {
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
     given(regulatorTeamService.isMemberOfRegulatorTeam(loggedInUser)).willReturn(true);
 
-    var file = UploadedFileTestUtil.newBuilder().build();
+    var file = UploadedFileTestUtil.builder().build();
 
     given(fileService.findAll(
         termination.getId().toString(),

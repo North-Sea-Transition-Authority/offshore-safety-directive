@@ -11,8 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -23,12 +21,6 @@ class NominationDecisionSubmissionServiceTest {
 
   @Mock
   private CaseEventService caseEventService;
-
-  @Mock
-  private FileUploadService fileUploadService;
-
-  @Mock
-  private FileAssociationService fileAssociationService;
 
   @Mock
   private NominationDetailService nominationDetailService;

@@ -74,7 +74,7 @@ class NominationDecisionValidator implements SmartValidator {
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, FILES_EMPTY_ERROR_MESSAGE)
         .withMaximumNumberOfFiles(1, FILES_TOO_MANY_ERROR_MESSAGE)
-        .validate2(errors, form.getDecisionFiles(), FILES_FIELD_NAME, allowedFileExtensions);
+        .validate(errors, form.getDecisionFiles(), FILES_FIELD_NAME, allowedFileExtensions);
 
   }
 

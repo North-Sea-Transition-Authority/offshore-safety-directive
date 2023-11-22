@@ -75,7 +75,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(caseEventUuid.toString())
         .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
         .build();
@@ -135,7 +135,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(caseEventUuid.toString())
         .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
         .build();
@@ -195,7 +195,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(caseEventUuid.toString())
         .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
         .build();

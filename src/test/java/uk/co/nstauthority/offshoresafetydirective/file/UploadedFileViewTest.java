@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,7 +11,7 @@ class UploadedFileViewTest {
 
   @Test
   void from_verifyMapping() {
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(UUID.randomUUID())
         .withName("file name")
         .withContentLength(100)

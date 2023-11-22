@@ -38,8 +38,8 @@ class FileDuplicationServiceTest {
         .withId(targetNominationDetailId)
         .build();
 
-    var uploadedFileA = UploadedFileTestUtil.newBuilder().build();
-    var uploadedFileB = UploadedFileTestUtil.newBuilder().build();
+    var uploadedFileA = UploadedFileTestUtil.builder().build();
+    var uploadedFileB = UploadedFileTestUtil.builder().build();
 
     when(fileService.findAll(
         sourceNominationDetailId.toString(),

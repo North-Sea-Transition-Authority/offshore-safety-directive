@@ -15,9 +15,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadUtils;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -33,7 +33,7 @@ class DeemedLetterDownloadControllerTest extends AbstractControllerTest {
         DeemedLetterDownloadController.class.getClassLoader()
     );
 
-    var expectedSize = FileUploadUtils.fileSizeFormatter((long) expectedResource.getInputStream().available());
+    var expectedSize = FileUploadLibraryUtils.formatSize(expectedResource.getInputStream().available());
 
     var uploadedFileView = DeemedLetterDownloadController.getAsUploadedFileView();
     assertThat(uploadedFileView)

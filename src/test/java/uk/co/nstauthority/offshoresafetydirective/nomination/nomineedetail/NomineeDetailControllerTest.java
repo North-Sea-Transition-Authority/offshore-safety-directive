@@ -47,16 +47,13 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDraftFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -90,9 +87,6 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
   @MockBean
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-
-  @MockBean
-  private FileUploadConfig fileUploadConfig;
 
   @MockBean
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
@@ -195,8 +189,6 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     var uploadedFileForm = UploadedFileFormTestUtil.builder().build();
     form.setAppendixDocuments(List.of(uploadedFileForm));
 
-    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    var nominationDetailId = nominationDetailDto.nominationDetailId();
     var portalOrganisationUnit = PortalOrganisationDtoTestUtil.builder()
         .withId(20)
         .withName("name")
@@ -208,9 +200,6 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         NomineeDetailController.PRE_SELECTED_OPERATOR_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrganisationUnit));
-
-    var uploadedFile = UploadedFileTestUtil.builder().build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(nominationId)))
@@ -297,7 +286,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     when(nomineeDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     var uploadedFileId = new UploadedFileId(UUID.randomUUID());
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(uploadedFileId.uuid())
         .build();
 

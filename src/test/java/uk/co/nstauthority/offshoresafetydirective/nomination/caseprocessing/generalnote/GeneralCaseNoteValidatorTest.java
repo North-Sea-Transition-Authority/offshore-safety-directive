@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,7 @@ class GeneralCaseNoteValidatorTest {
     form.getCaseNoteSubject().setInputValue("Subject");
     form.getCaseNoteText().setInputValue("Case note body text");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.%s".formatted(VALID_EXTENSION))
         .build();
 
@@ -90,7 +91,7 @@ class GeneralCaseNoteValidatorTest {
     form.getCaseNoteSubject().setInputValue("Subject");
     form.getCaseNoteText().setInputValue("Case note body text");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.invalid-extension")
         .build();
 
@@ -107,7 +108,10 @@ class GeneralCaseNoteValidatorTest {
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
-    var allowedExtensions = String.join(", ", FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions());
+    var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
+        .stream()
+        .sorted(String::compareToIgnoreCase)
+        .collect(Collectors.joining(", "));
 
     assertThat(errors)
         .containsExactly(

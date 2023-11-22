@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -42,7 +40,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationDraftFileController.class)
-@EnableConfigurationProperties(FileUploadConfig.class)
 class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
@@ -126,7 +123,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -163,7 +160,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(UUID.randomUUID().toString())
         .withUsageType(UUID.randomUUID().toString())
@@ -200,7 +197,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -239,7 +236,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(null)
         .withUsageType(null)
         .withDocumentType(null)
@@ -314,7 +311,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     when(userDetailService.getUserDetail())
         .thenReturn(NOMINATION_CREATOR_USER);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(fileUuid)
         .withUsageId(null)
         .withUsageType(null)
@@ -377,7 +374,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(UUID.randomUUID().toString())
         .build();
 
@@ -409,7 +406,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(UUID.randomUUID().toString())
         .withUploadedBy(NOMINATION_CREATOR_USER.wuaId().toString())
         .build();
@@ -443,7 +440,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(null)
         .withUsageType(null)
         .withDocumentType(null)
@@ -478,7 +475,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(NOMINATION_DETAIL.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
@@ -515,7 +512,7 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withUsageId(NOMINATION_DETAIL.getId().toString())
         .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
         .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())

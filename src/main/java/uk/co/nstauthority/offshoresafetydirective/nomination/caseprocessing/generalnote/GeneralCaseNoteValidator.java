@@ -41,6 +41,6 @@ class GeneralCaseNoteValidator implements Validator {
         .orElse(fileUploadProperties.defaultPermittedFileExtensions());
 
     FileValidationUtil.validator()
-        .validate2(errors, form.getCaseNoteFiles(), "caseNoteFiles", allowedFileExtensions);
+        .validate(errors, form.getCaseNoteFiles(), "caseNoteFiles", allowedFileExtensions);
   }
 }

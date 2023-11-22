@@ -38,6 +38,6 @@ class NominationConsultationResponseValidator implements Validator {
         .orElse(fileUploadProperties.defaultPermittedFileExtensions());
 
     FileValidationUtil.validator()
-        .validate2(errors, form.getConsultationResponseFiles(), "consultationResponseFiles", allowedFileExtensions);
+        .validate(errors, form.getConsultationResponseFiles(), "consultationResponseFiles", allowedFileExtensions);
   }
 }

@@ -25,7 +25,6 @@ import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
@@ -36,13 +35,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 class NomineeDetailSubmissionServiceTest {
 
   @Mock
-  private NomineeDetailFormService nomineeDetailFormService;
-
-  @Mock
   private NomineeDetailPersistenceService nomineeDetailPersistenceService;
 
   @Mock
-  private FileAssociationService fileAssociationService;
+  private NomineeDetailFormService nomineeDetailFormService;
 
   @Mock
   private FileService fileService;
@@ -109,7 +105,7 @@ class NomineeDetailSubmissionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(user);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(uploadedFileForm.getUploadedFileId())
         .withUsageId(null)
         .withUsageType(null)
@@ -140,6 +136,8 @@ class NomineeDetailSubmissionServiceTest {
             FileUsageType.NOMINATION_DETAIL.getUsageType(),
             FileDocumentType.APPENDIX_C.getDocumentType()
         );
+
+    verify(nomineeDetailPersistenceService).createOrUpdateNomineeDetail(detail, form);
   }
 
   @Test
@@ -161,7 +159,7 @@ class NomineeDetailSubmissionServiceTest {
     when(userDetailService.getUserDetail())
         .thenReturn(user);
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withId(firstUploadedFileForm.getUploadedFileId())
         .withUsageId(null)
         .withUsageType(null)

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -107,7 +108,7 @@ class ConfirmNominationAppointmentValidatorTest {
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
         .thenReturn(Optional.of(decisionDate));
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.%s".formatted(VALID_EXTENSION))
         .build();
 
@@ -247,7 +248,7 @@ class ConfirmNominationAppointmentValidatorTest {
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
         .thenReturn(Optional.of(decisionDate));
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.invalid-extension")
         .build();
 
@@ -265,7 +266,10 @@ class ConfirmNominationAppointmentValidatorTest {
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
-    var allowedExtensions = String.join(", ", FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions());
+    var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
+        .stream()
+        .sorted(String::compareToIgnoreCase)
+        .collect(Collectors.joining(", "));
 
     assertThat(errors)
         .containsExactly(

@@ -40,8 +40,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -76,9 +74,6 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-
-  @MockBean
-  FileUploadService fileUploadService;
 
   @MockBean
   private NominationDecisionSubmissionService nominationDecisionSubmissionService;
@@ -197,10 +192,10 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
     var fileDescription = "description";
     var fileUploadInstant = Instant.now();
 
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(fileUuid);
-    fileUploadForm.setUploadedFileInstant(fileUploadInstant);
-    fileUploadForm.setUploadedFileDescription(fileDescription);
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setUploadedFileId(fileUuid);
+    uploadedFileForm.setUploadedFileInstant(fileUploadInstant);
+    uploadedFileForm.setUploadedFileDescription(fileDescription);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID,
         EnumSet.of(NominationStatus.SUBMITTED)))
@@ -226,9 +221,9 @@ class NominationDecisionControllerTest extends AbstractControllerTest {
             .param("decisionDate.yearInput.inputValue", String.valueOf(decisionDate.getYear()))
             .param("comments.inputValue", commentText)
             .param("nominationDecision", NominationDecision.OBJECTION.name())
-            .param("decisionFiles[0].uploadedFileId", fileUploadForm.getUploadedFileId().toString())
-            .param("decisionFiles[0].uploadedFileDescription", fileUploadForm.getUploadedFileDescription())
-            .param("decisionFiles[0].uploadedFileInstant", fileUploadForm.getUploadedFileInstant().toString())
+            .param("decisionFiles[0].uploadedFileId", uploadedFileForm.getUploadedFileId().toString())
+            .param("decisionFiles[0].uploadedFileDescription", uploadedFileForm.getUploadedFileDescription())
+            .param("decisionFiles[0].uploadedFileInstant", uploadedFileForm.getUploadedFileInstant().toString())
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(notificationBanner(expectedNotificationBanner))

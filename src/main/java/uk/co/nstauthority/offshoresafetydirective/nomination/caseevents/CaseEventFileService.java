@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -15,33 +16,26 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @Service
 public class CaseEventFileService {
 
-  private final FileAssociationService fileAssociationService;
-  private final FileUploadService fileUploadService;
   private final FileService fileService;
+  private final UserDetailService userDetailService;
 
   @Autowired
-  public CaseEventFileService(FileAssociationService fileAssociationService,
-                              FileUploadService fileUploadService,
-                              FileService fileService) {
-    this.fileAssociationService = fileAssociationService;
-    this.fileUploadService = fileUploadService;
+  public CaseEventFileService(FileService fileService,
+                              UserDetailService userDetailService) {
     this.fileService = fileService;
+    this.userDetailService = userDetailService;
   }
 
   @Transactional
@@ -51,7 +45,28 @@ public class CaseEventFileService {
     Map<UUID, UploadedFileForm> fileIdAndFileFormMap = uploadedFileForms.stream()
         .collect(Collectors.toMap(UploadedFileForm::getFileId, Function.identity()));
 
+    var user = userDetailService.getUserDetail();
+
     var files = fileService.findAll(fileIdAndFileFormMap.keySet());
+
+    var filesToUpdate = files.stream()
+        .filter(uploadedFile -> Objects.equals(uploadedFile.getUploadedBy(), user.wuaId().toString()))
+        .toList();
+
+    if (filesToUpdate.size() != files.size() || files.isEmpty()) {
+
+      var filesAsString = uploadedFileForms.stream()
+          .map(UploadedFileForm::getFileId)
+          .map(UUID::toString)
+          .collect(Collectors.joining(","));
+
+      throw new IllegalStateException(
+          "Not all files [%s] are allowed to be linked to the case event [%s] by user [%d]".formatted(
+              filesAsString,
+              caseEvent.getUuid(),
+              user.wuaId()
+          ));
+    }
 
     for (UploadedFile file : files) {
       fileService.updateUsageAndDescription(
@@ -66,55 +81,21 @@ public class CaseEventFileService {
     }
   }
 
-  // TODO OSDOP-457 - Remove this once all usages removed
-  @Transactional
-  public void finalizeFileUpload(NominationDetail nominationDetail, CaseEvent caseEvent,
-                                 List<FileUploadForm> fileUploadForms) {
-
-    var fileIds = fileUploadForms.stream()
-        .map(FileUploadForm::getUploadedFileId)
-        .map(UploadedFileId::new)
-        .toList();
-
-    var uploadedFiles = fileUploadService.getUploadedFiles(fileIds);
-
-    // Ensure file count is identical
-    if (fileUploadForms.size() != uploadedFiles.size()) {
-      throw new IllegalStateException(
-          "Unable to find all uploaded files. Expected IDs [%s] got [%s] for CaseEvent [%s]".formatted(
-              fileIds.stream()
-                  .map(uploadedFileId -> uploadedFileId.uuid().toString())
-                  .collect(Collectors.joining()),
-              uploadedFiles.stream()
-                  .map(uploadedFile -> uploadedFile.getId().toString())
-                  .collect(Collectors.joining()),
-              caseEvent.getUuid()
-          ));
-    }
-
-    var submittedDecisionFiles = fileAssociationService.getAllByFileReferenceAndUploadedFileIds(
-        new NominationDetailFileReference(nominationDetail),
-        fileIds
-    );
-
-    fileAssociationService.updateFileReferences(submittedDecisionFiles, new CaseEventFileReference(caseEvent));
-  }
-
   public Map<CaseEvent, List<FileSummaryView>> getFileViewMapFromCaseEvents(Collection<CaseEvent> caseEvents) {
     Map<String, CaseEvent> caseEventIdMap = caseEvents.stream()
         .collect(Collectors.toMap(
-            caseEvent -> new CaseEventFileReference(caseEvent).getReferenceId(),
+            caseEvent -> caseEvent.getUuid().toString(),
             Function.identity()
         ));
 
     var caseEventIds = caseEvents.stream()
-        .map(CaseEvent::getUuid)
-        .map(UUID::toString)
+        .map(caseEvent -> caseEvent.getUuid().toString())
         .toList();
 
-    var files = fileService.findAllByUsageIdsWithUsageType(caseEventIds, FileUsageType.CASE_EVENT.getUsageType())
-        .stream()
-        .toList();
+    var files = fileService.findAllByUsageIdsWithUsageType(
+        caseEventIds,
+        FileUsageType.CASE_EVENT.getUsageType()
+    );
 
     Map<String, List<UploadedFile>> caseEventReferenceAndLinkedFileMap = files.stream()
         .collect(Collectors.groupingBy(UploadedFile::getUsageId));
@@ -139,8 +120,15 @@ public class CaseEventFileService {
       CaseEvent caseEvent,
       UploadedFile file
   ) {
+    var uploadedFileView = new UploadedFileView(
+        file.getId().toString(),
+        file.getName(),
+        String.valueOf(file.getContentLength()),
+        file.getDescription(),
+        file.getUploadedAt()
+    );
     return new FileSummaryView(
-        UploadedFileView.from(file),
+        uploadedFileView,
         ReverseRouter.route(on(CaseEventFileDownloadController.class).download(
             new NominationId(caseEvent.getNomination().getId()),
             new CaseEventId(caseEvent.getUuid()),

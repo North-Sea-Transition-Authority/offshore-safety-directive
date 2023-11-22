@@ -60,7 +60,7 @@ class ConfirmNominationAppointmentValidator implements SmartValidator {
         .orElse(fileUploadProperties.defaultPermittedFileExtensions());
 
     FileValidationUtil.validator()
-        .validate2(errors, form.getFiles(), "files", allowedFileExtensions);
+        .validate(errors, form.getFiles(), "files", allowedFileExtensions);
   }
 
   @Override

@@ -19,12 +19,8 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -40,8 +36,6 @@ class TerminationTimelineItemService {
   static final RequestPurpose TERMINATED_BY_USER_PURPOSE = new RequestPurpose("User who terminated the appointment");
 
   private final EnergyPortalUserService energyPortalUserService;
-  private final FileAssociationService fileAssociationService;
-  private final FileUploadService fileUploadService;
   private final UserDetailService userDetailService;
   private final RegulatorTeamService regulatorTeamService;
   private final AppointmentTerminationService appointmentTerminationService;
@@ -50,14 +44,10 @@ class TerminationTimelineItemService {
   @Autowired
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
                                  AppointmentTerminationService appointmentTerminationService,
-                                 FileAssociationService fileAssociationService,
-                                 FileUploadService fileUploadService,
                                  UserDetailService userDetailService,
                                  RegulatorTeamService regulatorTeamService, FileService fileService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
-    this.fileAssociationService = fileAssociationService;
-    this.fileUploadService = fileUploadService;
     this.userDetailService = userDetailService;
     this.regulatorTeamService = regulatorTeamService;
     this.fileService = fileService;
@@ -75,19 +65,19 @@ class TerminationTimelineItemService {
               .orElse("Unknown");
 
           var terminationFiles = fileService.findAll(
-              termination.getId().toString(),
-              FileUsageType.TERMINATION.getUsageType(),
-              FileDocumentType.TERMINATION.getDocumentType()
-          )
+                  termination.getId().toString(),
+                  FileUsageType.TERMINATION.getUsageType(),
+                  FileDocumentType.TERMINATION.getDocumentType()
+              )
               .stream()
               .map(uploadedFile -> new FileSummaryView(
-                    UploadedFileView.from(uploadedFile),
-                    ReverseRouter.route(on(AppointmentTerminationFileController.class)
-                        .download(
-                            termination.getAppointment().getId(),
-                            termination.getId(),
-                            uploadedFile.getId()
-                        ))))
+                  UploadedFileView.from(uploadedFile),
+                  ReverseRouter.route(on(AppointmentTerminationFileController.class)
+                      .download(
+                          termination.getAppointment().getId(),
+                          termination.getId(),
+                          uploadedFile.getId()
+                      ))))
               .sorted(Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
               .toList();
 
@@ -129,44 +119,6 @@ class TerminationTimelineItemService {
     return energyPortalUserService.findByWuaIds(wuaIds, TERMINATED_BY_USER_PURPOSE)
         .stream()
         .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
-  }
-
-  private Map<String, List<UploadedFileView>> getFilesAssociatedWithAppointments(List<Appointment> appointments) {
-    Map<String, Appointment> appointmentIdMap = appointments.stream()
-        .collect(Collectors.toMap(
-            appointment -> appointment.getId().toString(),
-            Function.identity()
-        ));
-
-    List<FileAssociationDto> linkedFileAssociationDtos =
-        fileAssociationService.getSubmittedUploadedFileAssociations(
-            FileAssociationType.APPOINTMENT,
-            appointmentIdMap.keySet()
-        );
-
-    var uploadedFileIds = linkedFileAssociationDtos.stream()
-        .map(FileAssociationDto::uploadedFileId)
-        .toList();
-
-    var uploadedFileViews = fileUploadService.getUploadedFileViewList(uploadedFileIds);
-
-    Map<String, List<FileAssociationDto>> referenceAndFilesMap = linkedFileAssociationDtos.stream()
-        .collect(Collectors.groupingBy(FileAssociationDto::referenceId));
-
-    return referenceAndFilesMap.entrySet().stream()
-        .collect(Collectors.toMap(
-            Map.Entry::getKey,
-            entry -> getUploadedFileViews(entry.getValue(), uploadedFileViews)
-        ));
-  }
-
-  private List<UploadedFileView> getUploadedFileViews(List<FileAssociationDto> fileAssociationDtos,
-                                                      List<UploadedFileView> uploadedFileViews) {
-    return uploadedFileViews.stream()
-        .filter(
-            uploadedFileView -> fileAssociationDtos.stream()
-                .anyMatch(dto -> dto.uploadedFileId().toString().equals(uploadedFileView.getFileId())))
-        .toList();
   }
 
   private boolean isMemberOfRegulatorTeam() {

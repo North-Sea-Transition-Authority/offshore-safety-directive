@@ -418,7 +418,7 @@ class AppointmentTerminationServiceTest {
         .build();
     form.setTerminationDocuments(List.of(fileForm));
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withId(fileId)
         .withUsageId(null)
         .withUsageType(null)

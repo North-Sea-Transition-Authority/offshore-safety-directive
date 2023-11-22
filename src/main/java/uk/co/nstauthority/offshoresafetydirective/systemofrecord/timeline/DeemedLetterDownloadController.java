@@ -12,8 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadUtils;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 
 @Controller
@@ -30,7 +30,7 @@ class DeemedLetterDownloadController {
       return new UploadedFileView(
           "note-concerning-deemed-appointments",
           FILE_NAME,
-          FileUploadUtils.fileSizeFormatter((long) resource.getInputStream().available()),
+          FileUploadLibraryUtils.formatSize(resource.getInputStream().available()),
           null,
           null
       );

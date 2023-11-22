@@ -86,7 +86,7 @@ class NominationDecisionValidatorTest {
     nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
     nominationDecisionForm.getComments().setInputValue("comment text");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.%s".formatted(VALID_EXTENSION))
         .build();
 
@@ -310,7 +310,7 @@ class NominationDecisionValidatorTest {
     nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
     nominationDecisionForm.getComments().setInputValue("comment text");
 
-    var uploadedFile = UploadedFileTestUtil.newBuilder()
+    var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.invalid-extension")
         .build();
 

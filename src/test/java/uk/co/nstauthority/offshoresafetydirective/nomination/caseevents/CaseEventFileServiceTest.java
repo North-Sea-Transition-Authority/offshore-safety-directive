@@ -22,121 +22,38 @@ import uk.co.fivium.fileuploadlibrary.core.FileUsage;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
-import uk.co.nstauthority.offshoresafetydirective.file.OldUploadedFile;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {
 
-  private static ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
-  @Mock
-  private FileAssociationService fileAssociationService;
-
-  @Mock
-  private FileUploadService fileUploadService;
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
   private FileService fileService;
+
+  @Mock
+  private UserDetailService userDetailService;
 
   @InjectMocks
   private CaseEventFileService caseEventFileService;
 
   @Test
-  void finalizeFileUpload_whenFilesNotFound_thenError() {
-    var nominationDetail = NominationDetailTestUtil.builder().build();
-    var caseEventUuid = UUID.randomUUID();
-    var caseEvent = new CaseEvent();
-    caseEvent.setUuid(caseEventUuid);
-
-    var fileUuid = UUID.randomUUID();
-    var uploadedFileId = new UploadedFileId(fileUuid);
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(fileUuid);
-
-    when(fileUploadService.getUploadedFiles(List.of(uploadedFileId)))
-        .thenReturn(List.of());
-
-    assertThatThrownBy(
-        () -> caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, List.of(fileUploadForm)))
-        .hasMessage(
-            "Unable to find all uploaded files. Expected IDs [%s] got [] for CaseEvent [%s]".formatted(
-                fileUuid,
-                caseEventUuid
-            ));
-  }
-
-  @Test
-  void finalizeFileUpload_verifyFileReferencesUpdated() {
-
-    var nominationDetailVersion = 2;
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withVersion(nominationDetailVersion)
-        .build();
-
-    var fileUuid = UUID.randomUUID();
-    var uploadedFileId = new UploadedFileId(fileUuid);
-
-    var caseEvent = CaseEventTestUtil.builder().build();
-    caseEvent.setNomination(nominationDetail.getNomination());
-    caseEvent.setNominationVersion(nominationDetailVersion);
-
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(fileUuid);
-
-    var uploadedFile = new OldUploadedFile();
-    var fileAssociation = FileAssociationTestUtil.builder()
-        .withUploadedFile(uploadedFile)
-        .build();
-
-    when(fileUploadService.getUploadedFiles(List.of(uploadedFileId)))
-        .thenReturn(List.of(uploadedFile));
-
-    var nominationDetailFileReferenceCaptor = ArgumentCaptor.forClass(NominationDetailFileReference.class);
-    when(fileAssociationService.getAllByFileReferenceAndUploadedFileIds(
-        nominationDetailFileReferenceCaptor.capture(),
-        eq(List.of(uploadedFileId))
-    )).thenReturn(List.of(fileAssociation));
-
-    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, List.of(fileUploadForm));
-
-    var caseEventFileReferenceCaptor = ArgumentCaptor.forClass(CaseEventFileReference.class);
-    verify(fileAssociationService).updateFileReferences(
-        eq(List.of(fileAssociation)),
-        caseEventFileReferenceCaptor.capture()
-    );
-
-    assertThat(nominationDetailFileReferenceCaptor.getValue())
-        .extracting(NominationDetailFileReference::getReferenceId)
-        .isEqualTo(new NominationDetailFileReference(nominationDetail).getReferenceId());
-
-    assertThat(caseEventFileReferenceCaptor.getValue())
-        .extracting(CaseEventFileReference::getReferenceId)
-        .isEqualTo(new CaseEventFileReference(caseEvent).getReferenceId());
-  }
-
-  @Test
   void getFileViewMapFromCaseEvents_whenMultipleLinkedFiles_thenAssertResult() {
     var caseEvent = CaseEventTestUtil.builder().build();
-    var firstFile = UploadedFileTestUtil.newBuilder()
+    var firstFile = UploadedFileTestUtil.builder()
         .withName("File a")
         .withUsageId(caseEvent.getUuid().toString())
         .build();
-    var secondFile = UploadedFileTestUtil.newBuilder()
+    var secondFile = UploadedFileTestUtil.builder()
         .withName("File B") // Ensure sort is not case-sensitive
         .withUsageId(caseEvent.getUuid().toString())
         .build();
-    var thirdFile = UploadedFileTestUtil.newBuilder()
+    var thirdFile = UploadedFileTestUtil.builder()
         .withName("File c")
         .withUsageId(caseEvent.getUuid().toString())
         .build();
@@ -190,13 +107,16 @@ class CaseEventFileServiceTest {
     uploadedFileForm.setFileDescription(formDescription);
     uploadedFileForm.setFileId(formFileId);
 
-    var file = UploadedFileTestUtil.newBuilder()
+    var file = UploadedFileTestUtil.builder()
         .withId(formFileId)
         .withUploadedBy(USER.wuaId().toString())
         .build();
 
     when(fileService.findAll(Set.of(formFileId)))
         .thenReturn(List.of(file));
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(USER);
 
     caseEventFileService.linkFilesToCaseEvent(
         caseEvent,
@@ -223,6 +143,92 @@ class CaseEventFileServiceTest {
                   FileDocumentType.CASE_NOTE.getDocumentType()
               );
         });
+  }
+
+  @Test
+  void linkFilesToCaseEvent_whenFileWasUploadedByAnotherUser_thenError() {
+
+    var caseEvent = CaseEventTestUtil.builder().build();
+
+    var firstFormDescription = "first description";
+    var secondFormDescription = "second description";
+    var firstFormFileId = UUID.randomUUID();
+    var secondFormFileId = UUID.randomUUID();
+
+    var firstUploadedFileForm = new UploadedFileForm();
+    firstUploadedFileForm.setFileDescription(firstFormDescription);
+    firstUploadedFileForm.setFileId(firstFormFileId);
+
+    var secondUploadedFileForm = new UploadedFileForm();
+    secondUploadedFileForm.setFileDescription(secondFormDescription);
+    secondUploadedFileForm.setFileId(secondFormFileId);
+
+    var firstFile = UploadedFileTestUtil.builder()
+        .withId(firstFormFileId)
+        .withUploadedBy(UUID.randomUUID().toString())
+        .build();
+
+    var secondFile = UploadedFileTestUtil.builder()
+        .withId(secondFormFileId)
+        .withUploadedBy(UUID.randomUUID().toString())
+        .build();
+
+    when(fileService.findAll(Set.of(firstFormFileId, secondFormFileId)))
+        .thenReturn(List.of(firstFile, secondFile));
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(USER);
+
+    assertThatThrownBy(() -> caseEventFileService.linkFilesToCaseEvent(
+        caseEvent,
+        List.of(firstUploadedFileForm, secondUploadedFileForm),
+        FileDocumentType.CASE_NOTE
+    ))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Not all files [%s] are allowed to be linked to the case event [%s] by user [%d]".formatted(
+            "%s,%s".formatted(firstFormFileId, secondFormFileId),
+            caseEvent.getUuid(),
+            USER.wuaId()
+        ));
+
+  }
+
+  @Test
+  void linkFilesToCaseEvent_whenNoMatchingFiles_thenError() {
+
+    var caseEvent = CaseEventTestUtil.builder().build();
+
+    var firstFormDescription = "first description";
+    var secondFormDescription = "second description";
+    var firstFormFileId = UUID.randomUUID();
+    var secondFormFileId = UUID.randomUUID();
+
+    var firstUploadedFileForm = new UploadedFileForm();
+    firstUploadedFileForm.setFileDescription(firstFormDescription);
+    firstUploadedFileForm.setFileId(firstFormFileId);
+
+    var secondUploadedFileForm = new UploadedFileForm();
+    secondUploadedFileForm.setFileDescription(secondFormDescription);
+    secondUploadedFileForm.setFileId(secondFormFileId);
+
+    when(fileService.findAll(Set.of(firstFormFileId, secondFormFileId)))
+        .thenReturn(List.of());
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(USER);
+
+    assertThatThrownBy(() -> caseEventFileService.linkFilesToCaseEvent(
+        caseEvent,
+        List.of(firstUploadedFileForm, secondUploadedFileForm),
+        FileDocumentType.CASE_NOTE
+    ))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Not all files [%s] are allowed to be linked to the case event [%s] by user [%d]".formatted(
+            "%s,%s".formatted(firstFormFileId, secondFormFileId),
+            caseEvent.getUuid(),
+            USER.wuaId()
+        ));
+
   }
 
 }
