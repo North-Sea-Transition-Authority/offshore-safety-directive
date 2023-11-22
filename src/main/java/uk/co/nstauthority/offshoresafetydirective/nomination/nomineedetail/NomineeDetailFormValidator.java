@@ -8,8 +8,10 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
 import org.springframework.validation.ValidationUtils;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.DateValidationUtil;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
@@ -38,10 +40,13 @@ class NomineeDetailFormValidator implements SmartValidator {
   );
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+  private final FileUploadProperties fileUploadProperties;
 
   @Autowired
-  NomineeDetailFormValidator(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+  NomineeDetailFormValidator(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+                             FileUploadProperties fileUploadProperties) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
+    this.fileUploadProperties = fileUploadProperties;
   }
 
   @Override
@@ -93,9 +98,12 @@ class NomineeDetailFormValidator implements SmartValidator {
         errors
     );
 
+    var allowedFileExtensions = FileDocumentType.APPENDIX_C.getAllowedExtensions()
+        .orElse(fileUploadProperties.defaultPermittedFileExtensions());
+
     FileValidationUtil.validator()
         .withMinimumNumberOfFiles(1, NO_APPENDIX_C_DOCUMENT_ERROR_MESSAGE)
-        .validate(errors, form.getAppendixDocuments(), "appendixDocuments");
+        .validate2(errors, form.getAppendixDocuments(), "appendixDocuments", allowedFileExtensions);
 
     //Need to individually check which checkboxes have not been ticked and assign an error to that specific field
     //This will make sure the error link points to the right unchecked checkbox

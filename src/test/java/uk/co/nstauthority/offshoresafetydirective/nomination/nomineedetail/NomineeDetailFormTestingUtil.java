@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 
 public class NomineeDetailFormTestingUtil {
 
@@ -30,7 +30,7 @@ public class NomineeDetailFormTestingUtil {
     private String operatorHasCapacity = "true";
     private String licenseeAcknowledgeOperatorRequirements = "true";
     @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    private List<FileUploadForm> appendixDocuments = Arrays.asList(FileUploadFormTestUtil.builder().build());
+    private List<UploadedFileForm> appendixDocuments = Arrays.asList(UploadedFileFormTestUtil.builder().build());
 
     private Builder() {
     }
@@ -97,13 +97,13 @@ public class NomineeDetailFormTestingUtil {
       return this;
     }
 
-    public Builder withAppendixDocuments(Collection<FileUploadForm> fileUploadForms) {
-      this.appendixDocuments = new ArrayList<>(fileUploadForms);
+    public Builder withAppendixDocuments(Collection<UploadedFileForm> uploadedFileForms) {
+      this.appendixDocuments = new ArrayList<>(uploadedFileForms);
       return this;
     }
 
-    public Builder addAppendixDocument(FileUploadForm fileUploadForm) {
-      this.appendixDocuments.add(fileUploadForm);
+    public Builder addAppendixDocument(UploadedFileForm uploadedFileForm) {
+      this.appendixDocuments.add(uploadedFileForm);
       return this;
     }
 

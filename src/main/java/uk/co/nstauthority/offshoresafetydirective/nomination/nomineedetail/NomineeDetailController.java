@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
@@ -23,17 +25,11 @@ import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDraftFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
@@ -55,43 +51,34 @@ public class NomineeDetailController {
   private final NominationDetailService nominationDetailService;
   private final NomineeDetailFormService nomineeDetailFormService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-  private final FileUploadConfig fileUploadConfig;
-  private final FileUploadService fileUploadService;
-  private final FileAssociationService fileAssociationService;
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
+  private final FileService fileService;
+  private final FileUploadProperties fileUploadProperties;
 
   @Autowired
   public NomineeDetailController(
       NominationDetailService nominationDetailService,
       NomineeDetailFormService nomineeDetailFormService,
       PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-      FileUploadConfig fileUploadConfig, FileUploadService fileUploadService,
-      FileAssociationService fileAssociationService,
       NomineeDetailSubmissionService nomineeDetailSubmissionService,
-      AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
+      AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties, FileService fileService,
+      FileUploadProperties fileUploadProperties) {
     this.nominationDetailService = nominationDetailService;
     this.nomineeDetailFormService = nomineeDetailFormService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
-    this.fileUploadConfig = fileUploadConfig;
-    this.fileUploadService = fileUploadService;
-    this.fileAssociationService = fileAssociationService;
     this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
     this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
+    this.fileService = fileService;
+    this.fileUploadProperties = fileUploadProperties;
   }
 
   @GetMapping
   public ModelAndView getNomineeDetail(@PathVariable("nominationId") NominationId nominationId) {
     var detail = nominationDetailService.getLatestNominationDetail(nominationId);
-    var previouslySubmittedFiles = fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        new NominationDetailFileReference(detail),
-        List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
-    );
-    return getModelAndView(nomineeDetailFormService.getForm(detail), nominationId, detail)
-        .addObject(
-            "uploadedFiles",
-            previouslySubmittedFiles.getOrDefault(NomineeDetailAppendixFileController.PURPOSE, List.of())
-        );
+    var form = nomineeDetailFormService.getForm(detail);
+    return getModelAndView(form, nominationId)
+        .addObject("uploadedFiles", form.getAppendixDocuments());
   }
 
   @PostMapping
@@ -103,13 +90,7 @@ public class NomineeDetailController {
     bindingResult = nomineeDetailFormService.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      var modelAndView = getModelAndView(form, nominationId, detail);
-      List<UploadedFileView> uploadedFiles = List.of();
-
-      if (!form.getAppendixDocuments().isEmpty()) {
-        uploadedFiles = fileUploadService.getUploadedFileViewListFromForms(form.getAppendixDocuments());
-      }
-      return modelAndView.addObject("uploadedFiles", uploadedFiles);
+      return getModelAndView(form, nominationId);
     }
 
     nomineeDetailSubmissionService.submit(detail, form);
@@ -117,10 +98,7 @@ public class NomineeDetailController {
   }
 
   private ModelAndView getModelAndView(NomineeDetailForm form,
-                                       NominationId nominationId,
-                                       NominationDetail nominationDetail) {
-    var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    var nominationDetailId = nominationDetailDto.nominationDetailId();
+                                       NominationId nominationId) {
     var modelAndView = new ModelAndView("osd/nomination/nomineeDetails/nomineeDetail")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_NAME)
@@ -133,8 +111,9 @@ public class NomineeDetailController {
         )
         .addObject(
             "appendixDocumentFileUploadTemplate",
-            buildAppendixFileUploadTemplate(nominationId, nominationDetailId)
-        );
+            buildAppendixFileUploadComponentAttributes(nominationId)
+        )
+        .addObject("uploadedFiles", form.getAppendixDocuments());
     var breadcrumbs = new Breadcrumbs.BreadcrumbsBuilder(PAGE_NAME)
         .addWorkAreaBreadcrumb()
         .addBreadcrumb(NominationBreadcrumbUtil.getNominationTaskListBreadcrumb(nominationId))
@@ -143,18 +122,21 @@ public class NomineeDetailController {
     return modelAndView;
   }
 
-  private FileUploadTemplate buildAppendixFileUploadTemplate(NominationId nominationId,
-                                                             NominationDetailId nominationDetailId) {
-    return new FileUploadTemplate(
-        ReverseRouter.route(
-            on(NomineeDetailAppendixFileController.class).download(nominationId, nominationDetailId, null)),
-        ReverseRouter.route(
-            on(NomineeDetailAppendixFileController.class).upload(nominationId, nominationDetailId, null)),
-        ReverseRouter.route(
-            on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
-        fileUploadConfig.getMaxFileUploadBytes().toString(),
-        String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
-    );
+  private FileUploadComponentAttributes buildAppendixFileUploadComponentAttributes(NominationId nominationId) {
+    return fileService.getFileUploadAttributes()
+        .withDownloadUrl(ReverseRouter.route(on(NominationDraftFileController.class).download(nominationId, null)))
+        .withDeleteUrl(ReverseRouter.route(on(NominationDraftFileController.class).delete(nominationId, null)))
+        .withUploadUrl(
+            ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                null,
+                FileDocumentType.APPENDIX_C.name()
+            )))
+        .withMaximumSize(fileUploadProperties.defaultMaximumFileSize())
+        .withAllowedExtensions(
+            FileDocumentType.APPENDIX_C.getAllowedExtensions()
+                .orElse(fileUploadProperties.defaultPermittedFileExtensions())
+        )
+        .build();
   }
 
   private Map<String, String> getPreselectedPortalOrganisation(NomineeDetailForm form) {

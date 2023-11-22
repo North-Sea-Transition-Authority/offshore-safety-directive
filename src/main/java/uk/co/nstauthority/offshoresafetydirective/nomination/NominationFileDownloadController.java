@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
+import java.util.Objects;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -10,11 +12,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
@@ -35,29 +38,38 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 )
 public class NominationFileDownloadController {
 
-  private final FileControllerHelperService fileControllerHelperService;
+  private final FileService fileService;
   private final NominationDetailService nominationDetailService;
 
   @Autowired
-  public NominationFileDownloadController(FileControllerHelperService fileControllerHelperService,
-                                          NominationDetailService nominationDetailService) {
-    this.fileControllerHelperService = fileControllerHelperService;
+  public NominationFileDownloadController(FileService fileService, NominationDetailService nominationDetailService) {
+    this.fileService = fileService;
     this.nominationDetailService = nominationDetailService;
   }
 
   @ResponseBody
-  @GetMapping("/download/{uploadedFileId}")
-  public ResponseEntity<InputStreamResource> download(@PathVariable("nominationId") NominationId nominationId,
-                                                      @PathVariable("uploadedFileId") UploadedFileId uploadedFileId) {
-    var nominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No latest NominationDetail for Nomination [%s]".formatted(
-                nominationId.id()
-            )
-        ));
-    return fileControllerHelperService.downloadFile(new NominationDetailFileReference(nominationDetail),
-        uploadedFileId);
+  @GetMapping("/download/{fileId}")
+  public ResponseEntity<InputStreamResource> download(@PathVariable NominationId nominationId,
+                                                      @PathVariable UUID fileId) {
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+        nominationId,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ).orElseThrow(() -> new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "Nomination [%s] has no NominationDetail with a post submission status".formatted(
+            nominationId
+        )));
+
+    return fileService.find(fileId)
+        .filter(uploadedFile -> canAccessFile(uploadedFile, nominationDetail))
+        .map(fileService::download)
+        .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+  }
+
+  private boolean canAccessFile(UploadedFile uploadedFile, NominationDetail nominationDetail) {
+    return Objects.equals(uploadedFile.getUsageId(), nominationDetail.getId().toString())
+        && Objects.equals(uploadedFile.getUsageType(), FileUsageType.NOMINATION_DETAIL.getUsageType());
   }
 
 }

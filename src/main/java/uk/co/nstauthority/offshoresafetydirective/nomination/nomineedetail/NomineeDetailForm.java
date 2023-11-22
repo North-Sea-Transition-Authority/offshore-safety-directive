@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import java.util.ArrayList;
 import java.util.List;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 
 class NomineeDetailForm {
 
@@ -11,7 +11,7 @@ class NomineeDetailForm {
   private String plannedStartDay;
   private String plannedStartMonth;
   private String plannedStartYear;
-  private List<FileUploadForm> appendixDocuments = new ArrayList<>();
+  private List<UploadedFileForm> appendixDocuments = new ArrayList<>();
   private String licenseeAcknowledgeOperatorRequirements;
   private String operatorHasCapacity;
   private String operatorHasAuthority;
@@ -56,22 +56,6 @@ class NomineeDetailForm {
     this.plannedStartYear = plannedStartYear;
   }
 
-  public List<FileUploadForm> getAppendixDocuments() {
-    return appendixDocuments;
-  }
-
-  public void setAppendixDocuments(List<FileUploadForm> appendixDocuments) {
-    this.appendixDocuments = appendixDocuments;
-  }
-
-  public String getLicenseeAcknowledgeOperatorRequirements() {
-    return licenseeAcknowledgeOperatorRequirements;
-  }
-
-  public void setLicenseeAcknowledgeOperatorRequirements(String licenseeAcknowledgeOperatorRequirements) {
-    this.licenseeAcknowledgeOperatorRequirements = licenseeAcknowledgeOperatorRequirements;
-  }
-
   public String getOperatorHasCapacity() {
     return operatorHasCapacity;
   }
@@ -86,5 +70,21 @@ class NomineeDetailForm {
 
   public void setOperatorHasAuthority(String operatorHasAuthority) {
     this.operatorHasAuthority = operatorHasAuthority;
+  }
+
+  public List<UploadedFileForm> getAppendixDocuments() {
+    return appendixDocuments;
+  }
+
+  public void setAppendixDocuments(List<UploadedFileForm> appendixDocuments) {
+    this.appendixDocuments = appendixDocuments;
+  }
+
+  public String getLicenseeAcknowledgeOperatorRequirements() {
+    return licenseeAcknowledgeOperatorRequirements;
+  }
+
+  public void setLicenseeAcknowledgeOperatorRequirements(String licenseeAcknowledgeOperatorRequirements) {
+    this.licenseeAcknowledgeOperatorRequirements = licenseeAcknowledgeOperatorRequirements;
   }
 }

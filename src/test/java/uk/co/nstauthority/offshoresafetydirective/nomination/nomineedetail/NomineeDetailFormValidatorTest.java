@@ -12,6 +12,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -22,9 +23,11 @@ import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadFormTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
@@ -32,11 +35,22 @@ import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationU
 @ExtendWith(SpringExtension.class)
 class NomineeDetailFormValidatorTest {
 
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of(UploadedFileFormTestUtil.VALID_FILE_EXTENSION))
+      .build();
+
   @Mock
   private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
-  @InjectMocks
   private NomineeDetailFormValidator nomineeDetailFormValidator;
+
+  @BeforeEach
+  void setUp() {
+    nomineeDetailFormValidator = new NomineeDetailFormValidator(
+        portalOrganisationUnitQueryService,
+        FILE_UPLOAD_PROPERTIES
+    );
+  }
 
   @Test
   void supports_whenValidClass_assertTrue() {
@@ -311,8 +325,8 @@ class NomineeDetailFormValidatorTest {
 
   @Test
   void validate_whenNoFileDescription_thenValidationErrors() {
-    var fileUploadForm = FileUploadFormTestUtil.builder()
-        .withUploadedFileDescription(null)
+    var fileUploadForm = UploadedFileFormTestUtil.builder()
+        .withFileDescription(null)
         .build();
     var form = NomineeDetailFormTestingUtil.builder()
         .withAppendixDocuments(List.of(fileUploadForm))

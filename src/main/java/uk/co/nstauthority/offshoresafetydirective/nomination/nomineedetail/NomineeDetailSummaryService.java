@@ -4,23 +4,23 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.UUID;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDraftFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummarySectionError;
@@ -34,17 +34,17 @@ public class NomineeDetailSummaryService {
   private final NomineeDetailSubmissionService nomineeDetailSubmissionService;
   private final NomineeDetailPersistenceService nomineeDetailPersistenceService;
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-  private final FileAssociationService fileAssociationService;
+  private final FileService fileService;
 
   @Autowired
   public NomineeDetailSummaryService(NomineeDetailSubmissionService nomineeDetailSubmissionService,
                                      NomineeDetailPersistenceService nomineeDetailPersistenceService,
                                      PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                     FileAssociationService fileAssociationService) {
+                                     FileService fileService) {
     this.nomineeDetailSubmissionService = nomineeDetailSubmissionService;
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
-    this.fileAssociationService = fileAssociationService;
+    this.fileService = fileService;
   }
 
   public NomineeDetailSummaryView getNomineeDetailSummaryView(NominationDetail nominationDetail,
@@ -69,15 +69,26 @@ public class NomineeDetailSummaryService {
 
           var conditionsAccepted = getConditionsAccepted(nomineeDetail);
 
-          var purposeAndFileViewMap = fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-              new NominationDetailFileReference(nominationDetail),
-              List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
-          );
+          var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
-          var appendixDocuments = convertFileViewsToAppendixDocuments(
-              NominationDetailDto.fromNominationDetail(nominationDetail),
-              purposeAndFileViewMap
-          );
+          var appendixDocumentsList = fileService.findAll(
+              nominationDetail.getId().toString(),
+              FileUsageType.NOMINATION_DETAIL.getUsageType(),
+              FileDocumentType.APPENDIX_C.getDocumentType()
+          )
+              .stream()
+              .map(uploadedFile -> new FileSummaryView(
+                  UploadedFileView.from(uploadedFile),
+                  getFileDownloadUrl(nominationDetailDto, uploadedFile.getId())
+              ))
+              .sorted(Comparator.comparing(
+                  fileSummaryView -> fileSummaryView.uploadedFileView().fileName().toLowerCase()
+              ))
+              .toList();
+
+          var appendixDocuments = !CollectionUtils.isEmpty(appendixDocumentsList)
+              ? new AppendixDocuments(appendixDocumentsList)
+              : null;
 
           return new NomineeDetailSummaryView(
               organisationUnitView,
@@ -111,41 +122,24 @@ public class NomineeDetailSummaryService {
         .orElseGet(NominatedOrganisationUnitView::new);
   }
 
-  private AppendixDocuments convertFileViewsToAppendixDocuments(NominationDetailDto nominationDetailDto,
-                                                                Map<FilePurpose, List<UploadedFileView>> purposeAndFileListMap) {
-    var files = purposeAndFileListMap.getOrDefault(NomineeDetailAppendixFileController.PURPOSE, List.of());
-    if (files.isEmpty()) {
-      return null;
-    }
-
-    return files.stream()
-        .map(uploadedFileView -> new FileSummaryView(
-            uploadedFileView,
-            getFileDownloadUrl(nominationDetailDto, UploadedFileId.valueOf(uploadedFileView.getFileId()))
-        ))
-        .sorted(Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
-        .collect(Collectors.collectingAndThen(Collectors.toList(), AppendixDocuments::new));
-  }
-
-  private String getFileDownloadUrl(NominationDetailDto nominationDetailDto, UploadedFileId uploadedFileId) {
+  private String getFileDownloadUrl(NominationDetailDto nominationDetailDto, UUID fileId) {
 
     var nominationId = nominationDetailDto.nominationId();
 
     return switch (nominationDetailDto.nominationStatus()) {
       case DRAFT -> ReverseRouter.route(
-          on(NomineeDetailAppendixFileController.class).download(
-              nominationId,
-              nominationDetailDto.nominationDetailId(),
-              uploadedFileId
+          on(NominationDraftFileController.class).download(
+              nominationDetailDto.nominationId(),
+              fileId
           ));
       case SUBMITTED, AWAITING_CONFIRMATION, APPOINTED, WITHDRAWN, OBJECTED -> ReverseRouter.route(
           on(NominationFileDownloadController.class).download(
               nominationId,
-              uploadedFileId
+              fileId
           ));
       case DELETED -> throw new IllegalStateException(
           "Attempted to download uploaded file with ID %s on nomination with ID %s and status %s"
-              .formatted(uploadedFileId.uuid(), nominationId.id(), NominationStatus.DELETED)
+              .formatted(fileId, nominationId.id(), NominationStatus.DELETED)
       );
     };
   }

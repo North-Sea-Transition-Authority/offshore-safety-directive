@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,21 +8,23 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
@@ -43,6 +44,9 @@ class NomineeDetailFormServiceTest {
 
   @Mock
   private FileUploadService fileUploadService;
+
+  @Mock
+  private FileService fileService;
 
   @InjectMocks
   private NomineeDetailFormService nomineeDetailFormService;
@@ -106,6 +110,7 @@ class NomineeDetailFormServiceTest {
     var licenseeAcknowledgeOperatorRequirements = true;
 
     var nomineeDetail = NomineeDetailTestingUtil.builder()
+        .withNominationDetail(nominationDetail)
         .withNominatedOrganisationId(nominatedOrganisationId)
         .withReasonForNomination(reasonForNomination)
         .withPlannedStartDate(plannedStartDate)
@@ -117,19 +122,14 @@ class NomineeDetailFormServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    var uploadedFile = UploadedFileTestUtil.builder().build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(Map.of(
-        NomineeDetailAppendixFileController.PURPOSE, List.of(uploadedFileView)
-    ));
+    var uploadedFile = UploadedFileTestUtil.newBuilder().build();
 
-    var fileUploadForm = new FileUploadForm();
-    when(fileUploadService.getFileUploadFormsFromUploadedFileViews(List.of(uploadedFileView)))
-        .thenReturn(List.of(fileUploadForm));
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of(uploadedFile));
 
     var form = nomineeDetailFormService.getForm(nominationDetail);
     assertThat(form)
@@ -141,8 +141,7 @@ class NomineeDetailFormServiceTest {
             NomineeDetailForm::getPlannedStartYear,
             NomineeDetailForm::getOperatorHasCapacity,
             NomineeDetailForm::getOperatorHasAuthority,
-            NomineeDetailForm::getLicenseeAcknowledgeOperatorRequirements,
-            NomineeDetailForm::getAppendixDocuments
+            NomineeDetailForm::getLicenseeAcknowledgeOperatorRequirements
         )
         .containsExactly(
             nominatedOrganisationId,
@@ -152,8 +151,27 @@ class NomineeDetailFormServiceTest {
             String.valueOf(plannedStartDate.getYear()),
             String.valueOf(operatorHasCapacity),
             String.valueOf(operatorHasAuthority),
-            String.valueOf(licenseeAcknowledgeOperatorRequirements),
-            List.of(fileUploadForm)
+            String.valueOf(licenseeAcknowledgeOperatorRequirements)
+        );
+
+    assertThat(form)
+        .extracting(NomineeDetailForm::getAppendixDocuments)
+        .asInstanceOf(InstanceOfAssertFactories.list(UploadedFileForm.class))
+        .extracting(
+            UploadedFileForm::getFileId,
+            UploadedFileForm::getFileName,
+            UploadedFileForm::getFileDescription,
+            UploadedFileForm::getFileSize,
+            UploadedFileForm::getFileUploadedAt
+        )
+        .containsExactly(
+            Tuple.tuple(
+                uploadedFile.getId(),
+                uploadedFile.getName(),
+                uploadedFile.getDescription(),
+                FileUploadLibraryUtils.formatSize(uploadedFile.getContentLength()),
+                uploadedFile.getUploadedAt()
+            )
         );
   }
 

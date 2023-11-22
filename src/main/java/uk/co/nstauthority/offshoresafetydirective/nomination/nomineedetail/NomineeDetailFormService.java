@@ -1,17 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
+import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FilePurpose;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 
 @Service
 class NomineeDetailFormService {
@@ -20,15 +19,18 @@ class NomineeDetailFormService {
   private final NomineeDetailFormValidator nomineeDetailFormValidator;
   private final FileAssociationService fileAssociationService;
   private final FileUploadService fileUploadService;
+  private final FileService fileService;
 
   @Autowired
   NomineeDetailFormService(NomineeDetailPersistenceService nomineeDetailPersistenceService,
                            NomineeDetailFormValidator nomineeDetailFormValidator,
-                           FileAssociationService fileAssociationService, FileUploadService fileUploadService) {
+                           FileAssociationService fileAssociationService, FileUploadService fileUploadService,
+                           FileService fileService) {
     this.nomineeDetailPersistenceService = nomineeDetailPersistenceService;
     this.nomineeDetailFormValidator = nomineeDetailFormValidator;
     this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
+    this.fileService = fileService;
   }
 
   NomineeDetailForm getForm(NominationDetail nominationDetail) {
@@ -53,13 +55,17 @@ class NomineeDetailFormService {
     form.setOperatorHasCapacity(Objects.toString(entity.getOperatorHasCapacity(), null));
     form.setLicenseeAcknowledgeOperatorRequirements(Objects.toString(entity.getLicenseeAcknowledgeOperatorRequirements(), null));
 
-    Map<FilePurpose, List<UploadedFileView>> viewMap =
-        fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-            new NominationDetailFileReference(entity.getNominationDetail()),
-            List.of(NomineeDetailAppendixFileController.PURPOSE.purpose())
-        );
-    var appendixFileViews = viewMap.getOrDefault(NomineeDetailAppendixFileController.PURPOSE, List.of());
-    form.setAppendixDocuments(fileUploadService.getFileUploadFormsFromUploadedFileViews(appendixFileViews));
+    var appendixDocuments = fileService.findAll(
+        entity.getNominationDetail().getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    );
+
+    var appendixDocumentForms = appendixDocuments.stream()
+        .map(FileUploadLibraryUtils::asForm)
+        .toList();
+
+    form.setAppendixDocuments(appendixDocumentForms);
 
     return form;
   }

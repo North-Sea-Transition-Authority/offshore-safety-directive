@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,7 +13,6 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -24,22 +22,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDraftFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationFileDownloadController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -61,7 +57,7 @@ class NomineeDetailSummaryServiceTest {
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
   @Mock
-  private FileAssociationService fileAssociationService;
+  private FileService fileService;
 
   @InjectMocks
   private NomineeDetailSummaryService nomineeDetailSummaryService;
@@ -101,28 +97,25 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var firstUploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_a")
+    var firstUploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_a")
         .build();
-    var firstUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(firstUploadedFile);
-    var secondUploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_B")
+    var firstUploadedFileViewByName = UploadedFileView.from(firstUploadedFile);
+    var secondUploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_B")
         .build();
-    var secondUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(secondUploadedFile);
-    var thirdUploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_c")
+    var secondUploadedFileViewByName = UploadedFileView.from(secondUploadedFile);
+    var thirdUploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_c")
         .build();
-    var thirdUploadedFileViewByName = UploadedFileViewTestUtil.fromUploadedFile(thirdUploadedFile);
+    var thirdUploadedFileViewByName = UploadedFileView.from(thirdUploadedFile);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(
-        Map.of(
-            NomineeDetailAppendixFileController.PURPOSE,
-            List.of(secondUploadedFileViewByName, thirdUploadedFileViewByName, firstUploadedFileViewByName)
-        ));
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of(firstUploadedFile, thirdUploadedFile, secondUploadedFile));
 
     var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
@@ -164,35 +157,26 @@ class NomineeDetailSummaryServiceTest {
                 firstUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    UploadedFileId.valueOf(firstUploadedFileViewByName.fileId())
+                    firstUploadedFile.getId()
                 ))
             ),
             new FileSummaryView(
                 secondUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    UploadedFileId.valueOf(secondUploadedFileViewByName.fileId())
+                    secondUploadedFile.getId()
                 ))
             ),
             new FileSummaryView(
                 thirdUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    UploadedFileId.valueOf(thirdUploadedFileViewByName.fileId())
+                    thirdUploadedFile.getId()
                 ))
             )
         );
 
     assertThat(result).hasNoNullFieldsOrPropertiesExcept("summarySectionError");
-
-    assertThat(fileReferenceCaptor.getValue())
-        .extracting(
-            FileAssociationReference::getFileReferenceType,
-            FileAssociationReference::getReferenceId
-        ).containsExactly(
-            new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
-            new NominationDetailFileReference(nominationDetail).getReferenceId()
-        );
   }
 
   @Test
@@ -231,21 +215,16 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_a")
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_a")
         .build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(
-        Map.of(
-            NomineeDetailAppendixFileController.PURPOSE,
-            List.of(uploadedFileView)
-        ));
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of(uploadedFile));
 
     var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
@@ -255,11 +234,10 @@ class NomineeDetailSummaryServiceTest {
         .asList()
         .containsExactly(
             new FileSummaryView(
-                uploadedFileView,
-                ReverseRouter.route(on(NomineeDetailAppendixFileController.class).download(
+                UploadedFileView.from(uploadedFile),
+                ReverseRouter.route(on(NominationDraftFileController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    NominationDetailId.fromNominationDetail(nominationDetail),
-                    UploadedFileId.valueOf(uploadedFileView.fileId())
+                    uploadedFile.getId()
                 ))
             )
         );
@@ -302,21 +280,16 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_a")
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_a")
         .build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(
-        Map.of(
-            NomineeDetailAppendixFileController.PURPOSE,
-            List.of(uploadedFileView)
-        ));
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of(uploadedFile));
 
     var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
@@ -326,10 +299,10 @@ class NomineeDetailSummaryServiceTest {
         .asList()
         .containsExactly(
             new FileSummaryView(
-                uploadedFileView,
+                UploadedFileView.from(uploadedFile),
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
-                    UploadedFileId.valueOf(uploadedFileView.fileId())
+                    uploadedFile.getId()
                 ))
             )
         );
@@ -371,21 +344,16 @@ class NomineeDetailSummaryServiceTest {
 
     when(nomineeDetailSubmissionService.isSectionSubmittable(nominationDetail)).thenReturn(true);
 
-    var uploadedFile = UploadedFileTestUtil.builder()
-        .withFilename("file_a")
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("file_a")
         .build();
-    var uploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(uploadedFile);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(
-        Map.of(
-            NomineeDetailAppendixFileController.PURPOSE,
-            List.of(uploadedFileView)
-        ));
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of(uploadedFile));
 
     assertThrowsExactly(IllegalStateException.class,
         () -> nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR));
@@ -518,7 +486,7 @@ class NomineeDetailSummaryServiceTest {
   }
 
   @Test
-  void getNomineeDetailSummaryView_whenEmptyMapFileMap_thenNoAppendixDocuments() {
+  void getNomineeDetailSummaryView_whenNoFiles_thenNoAppendixDocuments() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
     var nomineeDetail = NomineeDetailTestingUtil.builder()
@@ -528,26 +496,18 @@ class NomineeDetailSummaryServiceTest {
     when(nomineeDetailPersistenceService.getNomineeDetail(nominationDetail))
         .thenReturn(Optional.of(nomineeDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileAssociationService.getSubmittedUploadedFileViewsForReferenceAndPurposes(
-        fileReferenceCaptor.capture(),
-        eq(List.of(NomineeDetailAppendixFileController.PURPOSE.purpose()))
-    )).thenReturn(Map.of());
+    when(fileService.findAll(
+        nominationDetail.getId().toString(),
+        FileUsageType.NOMINATION_DETAIL.getUsageType(),
+        FileDocumentType.APPENDIX_C.getDocumentType()
+    ))
+        .thenReturn(List.of());
 
     var result = nomineeDetailSummaryService.getNomineeDetailSummaryView(nominationDetail, VALIDATION_BEHAVIOUR);
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::appendixDocuments)
         .isNull();
-
-    assertThat(fileReferenceCaptor.getValue())
-        .extracting(
-            FileAssociationReference::getFileReferenceType,
-            FileAssociationReference::getReferenceId
-        ).containsExactly(
-            new NominationDetailFileReference(nominationDetail).getFileReferenceType(),
-            new NominationDetailFileReference(nominationDetail).getReferenceId()
-        );
   }
 
   @Test

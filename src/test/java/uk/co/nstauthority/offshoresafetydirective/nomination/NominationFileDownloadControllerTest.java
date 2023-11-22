@@ -1,8 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,24 +9,25 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import com.amazonaws.util.StringInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
@@ -47,7 +47,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileControllerHelperService fileControllerHelperService;
+  private FileService fileService;
 
   @SecurityTest
   void download_assertStatusesPermitted() {
@@ -60,6 +60,14 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -70,16 +78,13 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
-        .thenAnswer(invocation -> {
-          var streamContent = "abc";
-          var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
-          return ResponseEntity.ok(inputStreamResource);
-        });
+    doAnswer(invocation -> {
+      var streamContent = "abc";
+      var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+      return ResponseEntity.ok(inputStreamResource);
+    })
+        .when(fileService)
+        .download(file);
 
     var smokeTester = NominationStatusSecurityTestUtil.smokeTester(mockMvc);
     ALLOWED_STATUSES.forEach(smokeTester::withPermittedNominationStatus);
@@ -89,7 +94,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, new UploadedFileId(fileUuid))),
+                    .download(NOMINATION_ID, fileUuid)),
             status().isOk(),
             status().isForbidden()
         )
@@ -97,7 +102,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void download_assertPermissionsPermitted() {
+  void download_assertPermissionsPermitted() throws UnsupportedEncodingException {
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withNominationId(NOMINATION_ID)
@@ -105,6 +110,14 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -115,16 +128,13 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
-        .thenAnswer(invocation -> {
-          var streamContent = "abc";
-          var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
-          return ResponseEntity.ok(inputStreamResource);
-        });
+    doAnswer(invocation -> {
+      var streamContent = "abc";
+      var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+      return ResponseEntity.ok(inputStreamResource);
+    })
+        .when(fileService)
+        .download(file);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(
@@ -135,7 +145,7 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, new UploadedFileId(fileUuid))),
+                    .download(NOMINATION_ID, fileUuid)),
             status().isOk(),
             status().isForbidden()
         )
@@ -154,6 +164,14 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .build();
 
     var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -168,15 +186,11 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
+    when(fileService.download(file))
         .thenReturn(response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(NominationFileDownloadController.class).download(NOMINATION_ID, new UploadedFileId(fileUuid))))
+            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -184,36 +198,6 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
-  }
-
-  @Test
-  void download_whenNoLatestDetailOptional_verifyCalls() throws Exception {
-
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
-
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
-        .withNominationId(NOMINATION_ID)
-        .build();
-
-    var fileUuid = UUID.randomUUID();
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
-
-    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
-        .thenReturn(Optional.empty());
-
-    mockMvc.perform(get(ReverseRouter.route(
-            on(NominationFileDownloadController.class).download(NOMINATION_ID, new UploadedFileId(fileUuid))))
-            .with(user(NOMINATION_CREATOR_USER)))
-        .andExpect(status().isNotFound());
-
-    verifyNoInteractions(fileControllerHelperService);
   }
 
 }

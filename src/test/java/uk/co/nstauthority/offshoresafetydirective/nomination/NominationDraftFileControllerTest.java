@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.file;
+package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -16,41 +15,44 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 
 import com.amazonaws.util.StringInputStream;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.util.unit.DataSize;
-import org.springframework.util.unit.DataUnit;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
-import uk.co.fivium.fileuploadlibrary.core.FileUploadRequest;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
-@ContextConfiguration(classes = UnlinkedFileController.class)
+@ContextConfiguration(classes = NominationDraftFileController.class)
 @EnableConfigurationProperties(FileUploadConfig.class)
-class UnlinkedFileControllerTest extends AbstractControllerTest {
+class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
   private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
       .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .build();
+
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
+  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil.builder()
+      .withNominationId(NOMINATION_ID)
       .build();
 
   @MockBean
@@ -63,19 +65,9 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void upload_whenNotAuthenticated_verifyRedirectedToLogin() throws Exception {
-    MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
-    mockMvc.perform(multipart(
-            ReverseRouter.route(on(UnlinkedFileController.class).upload(null, FileDocumentType.CASE_NOTE.name())))
-            .file(mockMultipartFile)
-            .with(csrf()))
-        .andExpect(redirectionToLoginUrl());
-  }
-
-  @SecurityTest
   void delete_whenNotAuthenticated_verifyUnauthenticated() throws Exception {
     mockMvc.perform(post(
-            ReverseRouter.route(on(UnlinkedFileController.class).delete(UUID.randomUUID())))
+            ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, UUID.randomUUID())))
             .with(csrf()))
         .andExpect(redirectionToLoginUrl());
   }
@@ -83,47 +75,18 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   @SecurityTest
   void download_whenNotAuthenticated_verifyRedirectedToLogin() throws Exception {
     mockMvc.perform(get(
-            ReverseRouter.route(on(UnlinkedFileController.class).download(UUID.randomUUID()))))
+            ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, UUID.randomUUID()))))
         .andExpect(redirectionToLoginUrl());
   }
 
   @Test
-  void upload_verifyCalls() throws Exception {
-
-    MockMultipartFile mockMultipartFile = new MockMultipartFile("file", (byte[]) null);
-
-    SamlAuthenticationUtil.Builder()
-        .withUser(NOMINATION_CREATOR_USER)
-        .setSecurityContext();
-
-    when(userDetailService.getUserDetail())
-        .thenReturn(NOMINATION_CREATOR_USER);
-
-    mockMvc.perform(
-            multipart(ReverseRouter.route(on(UnlinkedFileController.class).upload(null, FileDocumentType.CASE_NOTE.name())))
-                .file(mockMultipartFile)
-                .with(user(NOMINATION_CREATOR_USER))
-                .with(csrf()))
-        .andExpect(status().isOk());
-
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<Function<FileUploadRequest.Builder, FileUploadRequest>> actionCaptor =
-        ArgumentCaptor.forClass(Function.class);
-
-    verify(fileService).upload(actionCaptor.capture());
-
-    var builder = FileUploadRequest.newBuilder()
-        .withBucket("bucket")
-        .withMaximumSize(DataSize.of(100, DataUnit.BYTES))
-        .withFileExtensions(Set.of("extension"));
-
-    assertThat(actionCaptor.getValue().apply(builder))
-        .extracting(FileUploadRequest::multipartFile)
-        .isEqualTo(mockMultipartFile);
-  }
-
-  @Test
   void delete_whenNoFileFound_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
 
@@ -137,7 +100,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -147,6 +110,12 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenUserDidNotUploadFile_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
 
@@ -168,7 +137,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -178,6 +147,12 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenFileHasUsages_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
 
@@ -199,7 +174,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -209,6 +184,12 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_verifyCalls() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
 
@@ -233,7 +214,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.delete(uploadedFile))
         .thenReturn(FileDeleteResponse.success(fileUuid));
 
-    mockMvc.perform(post(ReverseRouter.route(on(UnlinkedFileController.class).delete(fileUuid)))
+    mockMvc.perform(post(ReverseRouter.route(on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isOk());
@@ -244,7 +225,19 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   @Test
   void download_verifyCalls() throws Exception {
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
     var fileUuid = UUID.randomUUID();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var file = UploadedFileTestUtil.newBuilder()
         .withUsageId(null)
@@ -264,7 +257,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenAnswer(invocation -> response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -276,6 +269,12 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenNoFileFound_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var fileUuid = UUID.randomUUID();
 
@@ -289,7 +288,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid)))
+    mockMvc.perform(get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -299,6 +298,13 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenUserDidNotUploadFile_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
     var fileUuid = UUID.randomUUID();
 
     SamlAuthenticationUtil.Builder()
@@ -319,7 +325,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(uploadedFile));
 
-    mockMvc.perform(get(ReverseRouter.route(on(UnlinkedFileController.class).download(fileUuid)))
+    mockMvc.perform(get(ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
@@ -329,13 +335,25 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenFileIdNotFound() throws Exception {
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
     var fileUuid = UUID.randomUUID();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     when(fileService.find(fileUuid))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -344,7 +362,20 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenFileUsageIdIsNotLinkedToNomination() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
     var fileUuid = UUID.randomUUID();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var file = UploadedFileTestUtil.newBuilder()
         .withUsageId(UUID.randomUUID().toString())
@@ -354,7 +385,7 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(UnlinkedFileController.class).download(fileUuid)))
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
 
@@ -362,8 +393,55 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void delete_whenFileHasDifferentUploader_thenNotFound() throws Exception {
+  void delete_whenFileHasUsage_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
     var fileUuid = UUID.randomUUID();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(UUID.randomUUID().toString())
+        .withUploadedBy(NOMINATION_CREATOR_USER.wuaId().toString())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf()))
+        .andExpect(status().isNotFound());
+
+    verify(fileService, never()).delete(any());
+  }
+
+  @Test
+  void delete_whenFileHasDifferentUploader_thenNotFound() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var fileUuid = UUID.randomUUID();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
 
     var file = UploadedFileTestUtil.newBuilder()
         .withUsageId(null)
@@ -376,12 +454,92 @@ class UnlinkedFileControllerTest extends AbstractControllerTest {
         .thenReturn(Optional.of(file));
 
     mockMvc.perform(post(ReverseRouter.route(
-            on(UnlinkedFileController.class).delete(fileUuid)))
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
             .with(user(NOMINATION_CREATOR_USER))
             .with(csrf()))
         .andExpect(status().isNotFound());
 
     verify(fileService, never()).delete(any());
+  }
+
+  @Test
+  void delete_whenFileIsLinkedToNomination_thenIsOk() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(NOMINATION_DETAIL.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.delete(file))
+        .thenReturn(FileDeleteResponse.success(fileUuid));
+
+    mockMvc.perform(post(ReverseRouter.route(
+            on(NominationDraftFileController.class).delete(NOMINATION_ID, fileUuid)))
+            .with(user(NOMINATION_CREATOR_USER))
+            .with(csrf()))
+        .andExpect(status().isOk());
+
+    verify(fileService).delete(file);
+  }
+
+  @Test
+  void download_whenFileIsLinkedToNomination_thenIsOk() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(NOMINATION_DETAIL));
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(NOMINATION_DETAIL.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.getDocumentType())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    var streamContent = "abc";
+    var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+    var response = ResponseEntity.ok(inputStreamResource);
+
+    when(fileService.download(file))
+        .thenAnswer(invocation -> response);
+
+    var result = mockMvc.perform(get(ReverseRouter.route(
+            on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid)))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    assertThat(result).isEqualTo(streamContent);
   }
 
 }
