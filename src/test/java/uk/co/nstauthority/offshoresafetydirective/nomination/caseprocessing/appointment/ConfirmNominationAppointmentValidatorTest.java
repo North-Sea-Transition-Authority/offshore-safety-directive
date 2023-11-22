@@ -13,13 +13,17 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -27,27 +31,35 @@ import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 @ExtendWith(MockitoExtension.class)
 class ConfirmNominationAppointmentValidatorTest {
 
-  @Mock
-  private Clock clock;
+  private static final String VALID_EXTENSION = "valid-extension";
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of("default-extension", VALID_EXTENSION))
+      .build();
+  private static final Instant INSTANT_NOW = Instant.now();
+  private static final LocalDate LOCAL_DATE_NOW = LocalDate.ofInstant(INSTANT_NOW, ZoneId.systemDefault());
+  private static final Clock CLOCK = Clock.fixed(INSTANT_NOW, ZoneId.systemDefault());
 
   @Mock
   private CaseEventQueryService caseEventQueryService;
 
-  @InjectMocks
   private ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
+
+  @BeforeEach
+  void setUp() {
+    confirmNominationAppointmentValidator = new ConfirmNominationAppointmentValidator(
+        CLOCK,
+        caseEventQueryService,
+        FILE_UPLOAD_PROPERTIES
+    );
+  }
 
   @Test
   void validate_emptyForm() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
-
-    when(clock.instant())
-        .thenReturn(instantNow);
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(localDateNow));
+        .thenReturn(Optional.of(LOCAL_DATE_NOW));
 
     var form = new ConfirmNominationAppointmentForm();
 
@@ -68,19 +80,14 @@ class ConfirmNominationAppointmentValidatorTest {
 
   @Test
   void validate_validForm() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
-
-    when(clock.instant())
-        .thenReturn(instantNow);
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(localDateNow));
+        .thenReturn(Optional.of(LOCAL_DATE_NOW));
 
     var form = new ConfirmNominationAppointmentForm();
-    form.getAppointmentDate().setDate(localDateNow);
+    form.getAppointmentDate().setDate(LOCAL_DATE_NOW);
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
@@ -90,20 +97,45 @@ class ConfirmNominationAppointmentValidatorTest {
   }
 
   @Test
-  void validate_whenDecisionDateAndAppointmentDateAreTheSame_thenNoError() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
+  void validate_whenFormIsFullyPopulated_andDocumentHasValidExtension_thenVerifyErrors() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var form = new ConfirmNominationAppointmentForm();
+    form.getComments().setInputValue("Subject");
+    form.getAppointmentDate().setDate(LOCAL_DATE_NOW);
 
-    when(clock.instant())
-        .thenReturn(instantNow);
+    var decisionDate = LOCAL_DATE_NOW.minusDays(2);
+    when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
+        .thenReturn(Optional.of(decisionDate));
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.%s".formatted(VALID_EXTENSION))
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    form.getFiles().add(uploadedFileForm);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
+
+    confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenDecisionDateAndAppointmentDateAreTheSame_thenNoError() {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(localDateNow));
+        .thenReturn(Optional.of(LOCAL_DATE_NOW));
 
     var form = new ConfirmNominationAppointmentForm();
-    form.getAppointmentDate().setDate(localDateNow);
+    form.getAppointmentDate().setDate(LOCAL_DATE_NOW);
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
@@ -121,25 +153,20 @@ class ConfirmNominationAppointmentValidatorTest {
 
   @Test
   void validate_whenAppointmentDateInFuture_thenVerifyError() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
-
-    when(clock.instant())
-        .thenReturn(instantNow);
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(localDateNow));
+        .thenReturn(Optional.of(LOCAL_DATE_NOW));
 
     var form = new ConfirmNominationAppointmentForm();
-    form.getAppointmentDate().setDate(localDateNow.plusDays(1));
+    form.getAppointmentDate().setDate(LOCAL_DATE_NOW.plusDays(1));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var formattedDate = DateUtil.formatShortDate(localDateNow);
+    var formattedDate = DateUtil.formatShortDate(LOCAL_DATE_NOW);
 
     var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
 
@@ -154,12 +181,7 @@ class ConfirmNominationAppointmentValidatorTest {
 
   @Test
   void validate_whenAppointmentDateIsBeforeDecisionDate_thenVerifyError() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
-    var decisionDate = localDateNow.minusDays(2);
-
-    when(clock.instant())
-        .thenReturn(instantNow);
+    var decisionDate = LOCAL_DATE_NOW.minusDays(2);
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
@@ -188,16 +210,11 @@ class ConfirmNominationAppointmentValidatorTest {
 
   @Test
   void validate_whenAppointmentDateHasInvalidCharacters_thenVerifyError() {
-    var instantNow = Instant.now();
-    var localDateNow = LocalDate.ofInstant(instantNow, ZoneId.systemDefault());
-
-    when(clock.instant())
-        .thenReturn(instantNow);
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
-        .thenReturn(Optional.of(localDateNow));
+        .thenReturn(Optional.of(LOCAL_DATE_NOW));
 
     var form = new ConfirmNominationAppointmentForm();
     form.getAppointmentDate().getDayInput().setInputValue("a");
@@ -216,6 +233,45 @@ class ConfirmNominationAppointmentValidatorTest {
                 Set.of("Appointment date must be a real date")),
             entry("appointmentDate.monthInput.inputValue", Set.of("")),
             entry("appointmentDate.yearInput.inputValue", Set.of(""))
+        );
+  }
+
+  @Test
+  void validate_whenFileExtensionIsUnsupported_thenVerifyErrors() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var form = new ConfirmNominationAppointmentForm();
+    form.getComments().setInputValue("Subject");
+    form.getAppointmentDate().setDate(LOCAL_DATE_NOW);
+
+    var decisionDate = LOCAL_DATE_NOW.minusDays(2);
+    when(caseEventQueryService.getDecisionDateForNominationDetail(nominationDetail))
+        .thenReturn(Optional.of(decisionDate));
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.invalid-extension")
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    form.getFiles().add(uploadedFileForm);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
+
+    confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
+
+    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var allowedExtensions = String.join(", ", FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions());
+
+    assertThat(errors)
+        .containsExactly(
+            entry("files", Set.of(
+                "The selected files must be a %s".formatted(allowedExtensions)
+            ))
         );
   }
 

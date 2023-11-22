@@ -25,9 +25,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -52,7 +49,6 @@ public class ConfirmNominationAppointmentController {
   private final NominationDetailService nominationDetailService;
   private final ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final FileUploadService fileUploadService;
   private final ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
   private final FormErrorSummaryService formErrorSummaryService;
 
@@ -61,13 +57,11 @@ public class ConfirmNominationAppointmentController {
       NominationDetailService nominationDetailService,
       ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      FileUploadService fileUploadService,
       ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService,
       FormErrorSummaryService formErrorSummaryService) {
     this.nominationDetailService = nominationDetailService;
     this.confirmNominationAppointmentValidator = confirmNominationAppointmentValidator;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.fileUploadService = fileUploadService;
     this.confirmNominationAppointmentSubmissionService = confirmNominationAppointmentSubmissionService;
     this.formErrorSummaryService = formErrorSummaryService;
   }
@@ -102,17 +96,13 @@ public class ConfirmNominationAppointmentController {
           .withConfirmNominationAppointmentForm(confirmNominationAppointmentForm)
           .build();
 
-      var files = Objects.requireNonNull(confirmNominationAppointmentForm).getFiles()
-          .stream()
-          .map(FileUploadForm::getUploadedFileId)
-          .map(UploadedFileId::new)
-          .toList();
+      var files = Objects.requireNonNull(confirmNominationAppointmentForm).getFiles();
 
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
           nominationDetail,
           modelAndViewDto
       )
-          .addObject("confirmNominationFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("confirmNominationFiles", files)
           .addObject("confirmAppointmentErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 

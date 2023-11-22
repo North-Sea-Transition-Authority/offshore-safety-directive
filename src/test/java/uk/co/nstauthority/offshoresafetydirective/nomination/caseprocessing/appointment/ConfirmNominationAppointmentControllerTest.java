@@ -34,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -202,9 +203,9 @@ class ConfirmNominationAppointmentControllerTest extends AbstractControllerTest 
 
     assertThat(formCaptor.getValue().getFiles())
         .extracting(
-            FileUploadForm::getUploadedFileId,
-            FileUploadForm::getUploadedFileInstant,
-            FileUploadForm::getUploadedFileDescription
+            UploadedFileForm::getUploadedFileId,
+            UploadedFileForm::getUploadedFileInstant,
+            UploadedFileForm::getUploadedFileDescription
         )
         .containsExactly(
             tuple(fileId, fileInstant, fileDescription)

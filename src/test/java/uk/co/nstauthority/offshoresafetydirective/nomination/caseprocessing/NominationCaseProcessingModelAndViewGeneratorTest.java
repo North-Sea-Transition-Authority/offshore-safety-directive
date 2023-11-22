@@ -31,8 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -73,7 +71,6 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @ExtendWith(MockitoExtension.class)
 class NominationCaseProcessingModelAndViewGeneratorTest {
 
-  private final FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder().build();
   private final FileUploadProperties fileUploadProperties = FileUploadPropertiesTestUtil.builder()
       .withDefaultPermittedFileExtensions(Set.of("default-extension"))
       .build();
@@ -118,7 +115,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .build();
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
-    var nominationManagementInteractableService = new CaseProcessingActionService(fileUploadConfig,
+    var nominationManagementInteractableService = new CaseProcessingActionService(
         fileUploadProperties, fileService);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,

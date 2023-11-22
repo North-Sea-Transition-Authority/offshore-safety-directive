@@ -10,8 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailStatusService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -22,9 +21,6 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
 
   @Mock
   private CaseEventService caseEventService;
-
-  @Mock
-  private FileAssociationService fileAssociationService;
 
   @Mock
   private NominationDetailStatusService nominationDetailStatusService;
@@ -40,20 +36,22 @@ class ConfirmNominationAppointmentSubmissionServiceTest {
 
     var date = LocalDate.now();
     var comment = "comment text";
-    var fileUploadForm = new FileUploadForm();
+    var uploadedFileForm = new UploadedFileForm();
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
     var form = new ConfirmNominationAppointmentForm();
     form.getAppointmentDate().setDate(date);
     form.getComments().setInputValue(comment);
-    form.setFiles(List.of(fileUploadForm));
+    form.setFiles(List.of(uploadedFileForm));
 
     confirmNominationAppointmentSubmissionService.submitAppointmentConfirmation(nominationDetail, form);
 
-    verify(caseEventService).createAppointmentConfirmationEvent(nominationDetail, date, comment,
-        List.of(fileUploadForm));
-
-    verify(fileAssociationService).submitFiles(List.of(fileUploadForm));
+    verify(caseEventService).createAppointmentConfirmationEvent(
+        nominationDetail,
+        date,
+        comment,
+        List.of(uploadedFileForm)
+    );
 
     verify(nominationDetailStatusService).confirmAppointment(nominationDetail);
     verify(appointmentConfirmedEventPublisher).publish(new NominationId(nominationDetail));

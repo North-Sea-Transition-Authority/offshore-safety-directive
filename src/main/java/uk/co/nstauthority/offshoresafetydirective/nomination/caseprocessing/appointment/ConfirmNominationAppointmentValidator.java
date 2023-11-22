@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 import org.springframework.validation.SmartValidator;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.formlibrary.validator.date.ThreeFieldDateInputValidator;
 import uk.co.fivium.formlibrary.validator.string.StringInputValidator;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
@@ -20,12 +22,15 @@ class ConfirmNominationAppointmentValidator implements SmartValidator {
 
   private final Clock clock;
   private final CaseEventQueryService caseEventQueryService;
+  private final FileUploadProperties fileUploadProperties;
 
   @Autowired
   ConfirmNominationAppointmentValidator(Clock clock,
-                                        CaseEventQueryService caseEventQueryService) {
+                                        CaseEventQueryService caseEventQueryService,
+                                        FileUploadProperties fileUploadProperties) {
     this.clock = clock;
     this.caseEventQueryService = caseEventQueryService;
+    this.fileUploadProperties = fileUploadProperties;
   }
 
   @Override
@@ -51,8 +56,11 @@ class ConfirmNominationAppointmentValidator implements SmartValidator {
         .isOptional()
         .validate(form.getComments(), errors);
 
+    var allowedFileExtensions = FileDocumentType.APPOINTMENT_CONFIRMATION.getAllowedExtensions()
+        .orElse(fileUploadProperties.defaultPermittedFileExtensions());
+
     FileValidationUtil.validator()
-        .validate(errors, form.getFiles(), "files");
+        .validate2(errors, form.getFiles(), "files", allowedFileExtensions);
   }
 
   @Override

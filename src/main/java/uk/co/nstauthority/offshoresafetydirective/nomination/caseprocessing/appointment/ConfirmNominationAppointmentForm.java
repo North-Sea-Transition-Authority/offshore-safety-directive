@@ -2,9 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.app
 
 import java.util.ArrayList;
 import java.util.List;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 
 public class ConfirmNominationAppointmentForm {
 
@@ -12,7 +12,7 @@ public class ConfirmNominationAppointmentForm {
 
   private StringInput comments = new StringInput("comments", "comments");
 
-  private List<FileUploadForm> files = new ArrayList<>();
+  private List<UploadedFileForm> files = new ArrayList<>();
 
   public ThreeFieldDateInput getAppointmentDate() {
     return appointmentDate;
@@ -30,11 +30,11 @@ public class ConfirmNominationAppointmentForm {
     this.comments = comments;
   }
 
-  public List<FileUploadForm> getFiles() {
+  public List<UploadedFileForm> getFiles() {
     return files;
   }
 
-  public void setFiles(List<FileUploadForm> files) {
+  public void setFiles(List<UploadedFileForm> files) {
     this.files = files;
   }
 }

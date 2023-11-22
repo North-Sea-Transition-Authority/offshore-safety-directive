@@ -26,7 +26,6 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 
@@ -269,7 +268,7 @@ class CaseEventServiceTest {
     var nominationVersion = 2;
     var date = LocalDate.now();
     var comment = "comment text";
-    var fileUploadForm = new FileUploadForm();
+    var uploadedFileForm = new UploadedFileForm();
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
@@ -277,7 +276,7 @@ class CaseEventServiceTest {
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
-    caseEventService.createAppointmentConfirmationEvent(detail, date, comment, List.of(fileUploadForm));
+    caseEventService.createAppointmentConfirmationEvent(detail, date, comment, List.of(uploadedFileForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
     verify(caseEventRepository).save(captor.capture());

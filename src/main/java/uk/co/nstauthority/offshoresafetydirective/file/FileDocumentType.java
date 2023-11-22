@@ -8,6 +8,7 @@ public enum FileDocumentType {
   CASE_NOTE("CASE-NOTE"),
   DECISION("DECISION", Set.of("pdf")),
   CONSULTATION_RESPONSE("CONSULTATION-RESPONSE"),
+  APPOINTMENT_CONFIRMATION("APPOINTMENT-CONFIRMATION")
   ;
 
   private final String documentType;

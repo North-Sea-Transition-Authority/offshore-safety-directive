@@ -9,13 +9,10 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
 import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -30,14 +27,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.with
 @Service
 public class CaseProcessingActionService {
 
-  private final FileUploadConfig fileUploadConfig;
   private final FileUploadProperties fileUploadProperties;
   private final FileService fileService;
 
   @Autowired
-  public CaseProcessingActionService(FileUploadConfig fileUploadConfig, FileUploadProperties fileUploadProperties,
+  public CaseProcessingActionService(FileUploadProperties fileUploadProperties,
                                      FileService fileService) {
-    this.fileUploadConfig = fileUploadConfig;
     this.fileUploadProperties = fileUploadProperties;
     this.fileService = fileService;
   }
@@ -127,13 +122,19 @@ public class CaseProcessingActionService {
         )
         .withAdditionalProperty(
             "fileUploadTemplate",
-            new FileUploadTemplate(
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).delete(nominationId, null)),
-                String.valueOf(fileUploadConfig.getMaxFileUploadBytes()),
-                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
-            )
+            fileService.getFileUploadAttributes()
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.APPOINTMENT_CONFIRMATION.name()
+                    )))
+                .withAllowedExtensions(
+                    FileDocumentType.APPOINTMENT_CONFIRMATION.getAllowedExtensions()
+                        .orElse(fileUploadProperties.defaultPermittedFileExtensions())
+                )
+                .build()
         )
         .build();
   }

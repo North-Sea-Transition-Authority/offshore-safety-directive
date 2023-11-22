@@ -19,16 +19,12 @@ import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
 import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -43,10 +39,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.with
 @ExtendWith(MockitoExtension.class)
 class CaseProcessingActionServiceTest {
 
-  private static final FileUploadConfig FILE_UPLOAD_CONFIG = FileUploadConfigTestUtil.builder()
-      .withAllowedFileExtensions(Set.of(".txt", ".pdf", ".png"))
-      .build();
-
   private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
       .withDefaultPermittedFileExtensions(Set.of(".txt", ".pdf", ".png"))
       .build();
@@ -58,7 +50,7 @@ class CaseProcessingActionServiceTest {
 
   @BeforeEach
   void setUp() {
-    caseProcessingActionService = new CaseProcessingActionService(FILE_UPLOAD_CONFIG, FILE_UPLOAD_PROPERTIES, fileService);
+    caseProcessingActionService = new CaseProcessingActionService(FILE_UPLOAD_PROPERTIES, fileService);
   }
 
   @Test
@@ -164,6 +156,14 @@ class CaseProcessingActionServiceTest {
 
   @Test
   void createConfirmNominationAppointmentAction() {
+    var maxBytes = 100;
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
     var result = caseProcessingActionService.createConfirmNominationAppointmentAction(nominationId);
 
@@ -186,14 +186,18 @@ class CaseProcessingActionServiceTest {
         .extracting(CaseProcessingAction::getModelProperties)
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
-            Map.entry("fileUploadTemplate", new FileUploadTemplate(
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).delete(nominationId, null)),
-                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
-                String.join(",", FILE_UPLOAD_CONFIG.getDefaultPermittedFileExtensions())
-            ))
-        );
+            Map.entry("fileUploadTemplate", FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.APPOINTMENT_CONFIRMATION.name()
+                    )))
+                .build()
+            ));
   }
 
   @Test

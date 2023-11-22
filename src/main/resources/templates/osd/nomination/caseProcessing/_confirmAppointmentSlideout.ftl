@@ -26,13 +26,15 @@
                 <@fdsFileUpload.fileUpload
                     id="confirm-appointment-files"
                     path="confirmAppointmentForm.files"
+                    formName="confirmAppointmentForm"
                     uploadUrl=fileUploadTemplate.uploadUrl()
                     deleteUrl=fileUploadTemplate.deleteUrl()
                     downloadUrl=fileUploadTemplate.downloadUrl()
-                    maxAllowedSize=fileUploadTemplate.maxAllowedSize()
                     allowedExtensions=fileUploadTemplate.allowedExtensions()
-                    formName="confirmAppointmentForm"
+                    maxAllowedSize=fileUploadTemplate.maxAllowedSize()
+                    showAllowedExtensions=true
                     existingFiles=uploadedFiles
+                    multiFile=false
                 />
             </@fdsFieldset.fieldset>
             <@fdsAction.button buttonName=postParam buttonText="Confirm appointment"/>

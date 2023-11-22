@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
@@ -76,11 +75,10 @@ public class CaseEventService {
   public void createAppointmentConfirmationEvent(NominationDetail nominationDetail,
                                                  LocalDate appointmentEffectiveDate,
                                                  @Nullable String comments,
-                                                 List<FileUploadForm> fileUploadForms) {
+                                                 List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
         appointmentEffectiveDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
-
-    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
+    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.APPOINTMENT_CONFIRMATION);
   }
 
   @Transactional
