@@ -21,13 +21,13 @@ public class FileTestUtil {
     throw new AssertionError();
   }
 
-  public static UploadedFile createValidUploadedFile() {
+  public static OldUploadedFile createValidUploadedFile() {
     return createValidUploadedFile(VALID_FILENAME, VALID_FILE_SIZE, VALID_CONTENT_TYPE);
   }
 
-  public static UploadedFile createValidUploadedFile(String filename, long fileSize, String contentType) {
+  public static OldUploadedFile createValidUploadedFile(String filename, long fileSize, String contentType) {
     var uuid = UUID.randomUUID();
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
     uploadedFile.setId(uuid);
     uploadedFile.setFileKey(VALID_S3_KEY);
     uploadedFile.setBucketName(VALID_BUCKET_NAME);

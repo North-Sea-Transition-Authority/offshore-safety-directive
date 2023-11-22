@@ -30,7 +30,7 @@ class FileUploadStorageServiceTest {
   @InjectMocks
   private FileUploadStorageService fileUploadStorageService;
   private static MultipartFile multipartFile;
-  private static final UploadedFile uploadedFile = FileTestUtil.createValidUploadedFile();
+  private static final OldUploadedFile uploadedFile = FileTestUtil.createValidUploadedFile();
 
   @BeforeAll
   static void beforeAll() throws IOException {

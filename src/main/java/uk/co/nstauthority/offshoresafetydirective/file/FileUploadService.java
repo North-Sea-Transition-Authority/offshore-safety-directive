@@ -26,31 +26,31 @@ public class FileUploadService {
     this.fileUploadConfig = fileUploadConfig;
   }
 
-  public void uploadFile(MultipartFile multipartFile, UploadedFile uploadedFile) {
+  public void uploadFile(MultipartFile multipartFile, OldUploadedFile uploadedFile) {
     fileUploadStorageService.uploadFile(multipartFile, uploadedFile);
   }
 
   @Transactional
-  public UploadedFile createUploadedFile(VirtualFolder virtualFolder, long fileSize, String filename,
-                                         String contentType) {
+  public OldUploadedFile createUploadedFile(VirtualFolder virtualFolder, long fileSize, String filename,
+                                            String contentType) {
     return uploadedFilePersistenceService.createUploadedFile(virtualFolder, fileSize, filename, contentType);
   }
 
   @Transactional
-  public void deleteFile(UploadedFile uploadedFile) {
+  public void deleteFile(OldUploadedFile uploadedFile) {
     uploadedFilePersistenceService.deleteFile(uploadedFile);
     fileUploadStorageService.deleteFile(uploadedFile);
   }
 
-  public InputStream downloadFile(UploadedFile uploadedFile) {
+  public InputStream downloadFile(OldUploadedFile uploadedFile) {
     return fileUploadStorageService.downloadFile(uploadedFile);
   }
 
-  public Optional<UploadedFile> findUploadedFile(UploadedFileId uploadedFileId) {
+  public Optional<OldUploadedFile> findUploadedFile(UploadedFileId uploadedFileId) {
     return uploadedFilePersistenceService.findUploadedFile(uploadedFileId);
   }
 
-  public List<UploadedFile> getUploadedFiles(List<UploadedFileId> uploadedFileIds) {
+  public List<OldUploadedFile> getUploadedFiles(List<UploadedFileId> uploadedFileIds) {
     return uploadedFilePersistenceService.getUploadedFilesByIdList(uploadedFileIds);
   }
 
@@ -109,7 +109,7 @@ public class FileUploadService {
     return filename.replaceAll(disallowedCharactersString, "_");
   }
 
-  public FileUploadForm createFileUploadForm(UploadedFile uploadedFile) {
+  public FileUploadForm createFileUploadForm(OldUploadedFile uploadedFile) {
     var fileUploadForm = new FileUploadForm();
     fileUploadForm.setUploadedFileId(uploadedFile.getId());
     fileUploadForm.setUploadedFileDescription(uploadedFile.getDescription());
@@ -117,7 +117,7 @@ public class FileUploadService {
     return fileUploadForm;
   }
 
-  private UploadedFileView createUploadedFileView(UploadedFile uploadedFile) {
+  private UploadedFileView createUploadedFileView(OldUploadedFile uploadedFile) {
     return new UploadedFileView(
         uploadedFile.getId().toString(),
         uploadedFile.getFilename(),

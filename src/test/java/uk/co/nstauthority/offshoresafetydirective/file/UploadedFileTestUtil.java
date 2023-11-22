@@ -74,8 +74,8 @@ public class UploadedFileTestUtil {
       return this;
     }
 
-    public UploadedFile build() {
-      var uploadedFile = new UploadedFile();
+    public OldUploadedFile build() {
+      var uploadedFile = new OldUploadedFile();
       uploadedFile.setId(id);
       uploadedFile.setFileKey(s3Key);
       uploadedFile.setBucketName(bucketName);

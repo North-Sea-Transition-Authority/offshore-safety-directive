@@ -24,7 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFile;
+import uk.co.nstauthority.offshoresafetydirective.file.OldUploadedFile;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
@@ -87,7 +87,7 @@ class CaseEventFileServiceTest {
     var fileUploadForm = new FileUploadForm();
     fileUploadForm.setUploadedFileId(fileUuid);
 
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
     var fileAssociation = FileAssociationTestUtil.builder()
         .withUploadedFile(uploadedFile)
         .build();

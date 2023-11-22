@@ -28,7 +28,7 @@ class FileAssociation {
   @ManyToOne
   @JoinColumn(name = "file_uuid")
   @NotAudited
-  private UploadedFile uploadedFile;
+  private OldUploadedFile uploadedFile;
 
   @Enumerated(EnumType.STRING)
   private FileStatus fileStatus;
@@ -55,11 +55,11 @@ class FileAssociation {
     return uuid;
   }
 
-  public UploadedFile getUploadedFile() {
+  public OldUploadedFile getUploadedFile() {
     return uploadedFile;
   }
 
-  public void setUploadedFile(UploadedFile uploadedFile) {
+  public void setUploadedFile(OldUploadedFile uploadedFile) {
     this.uploadedFile = uploadedFile;
   }
 

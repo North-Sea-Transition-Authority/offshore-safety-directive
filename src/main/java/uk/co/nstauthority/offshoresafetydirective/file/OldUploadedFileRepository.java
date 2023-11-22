@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface UploadedFileRepository extends CrudRepository<UploadedFile, UUID> {
+interface OldUploadedFileRepository extends CrudRepository<OldUploadedFile, UUID> {
 
-  List<UploadedFile> findAllByIdIn(Collection<UUID> id);
+  List<OldUploadedFile> findAllByIdIn(Collection<UUID> id);
 }

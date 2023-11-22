@@ -20,7 +20,7 @@ class FileUploadStorageService {
     this.s3ClientService = s3ClientService;
   }
 
-  void uploadFile(MultipartFile multipartFile, UploadedFile uploadedFile) {
+  void uploadFile(MultipartFile multipartFile, OldUploadedFile uploadedFile) {
     var objectMetadata = new ObjectMetadata();
     objectMetadata.setContentLength(uploadedFile.getFileSizeBytes());
     objectMetadata.setContentType(uploadedFile.getFileContentType());
@@ -34,11 +34,11 @@ class FileUploadStorageService {
     }
   }
 
-  void deleteFile(UploadedFile uploadedFile) {
+  void deleteFile(OldUploadedFile uploadedFile) {
     s3ClientService.deleteFile(uploadedFile.getBucketName(), uploadedFile.getFileKey());
   }
 
-  InputStream downloadFile(UploadedFile uploadedFile) {
+  InputStream downloadFile(OldUploadedFile uploadedFile) {
     return s3ClientService.fetchFile(uploadedFile.getBucketName(), uploadedFile.getFileKey());
   }
 }

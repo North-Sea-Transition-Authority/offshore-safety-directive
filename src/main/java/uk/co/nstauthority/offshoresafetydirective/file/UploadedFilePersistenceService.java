@@ -13,12 +13,12 @@ import uk.co.nstauthority.offshoresafetydirective.file.s3.S3ClientService;
 @Service
 class UploadedFilePersistenceService {
   private final S3ClientService s3ClientService;
-  private final UploadedFileRepository uploadedFileRepository;
+  private final OldUploadedFileRepository uploadedFileRepository;
   private final Clock clock;
 
   @Autowired
   UploadedFilePersistenceService(S3ClientService s3ClientService,
-                                 UploadedFileRepository uploadedFileRepository,
+                                 OldUploadedFileRepository uploadedFileRepository,
                                  Clock clock) {
     this.s3ClientService = s3ClientService;
     this.uploadedFileRepository = uploadedFileRepository;
@@ -26,8 +26,8 @@ class UploadedFilePersistenceService {
   }
 
   @Transactional
-  public UploadedFile createUploadedFile(VirtualFolder virtualFolder, long fileSize, String filename,
-                                  String contentType) {
+  public OldUploadedFile createUploadedFile(VirtualFolder virtualFolder, long fileSize, String filename,
+                                            String contentType) {
     var s3Key = createS3KeyWithPath(virtualFolder);
 
     var uploadedFile = createUploadedFile(
@@ -43,16 +43,16 @@ class UploadedFilePersistenceService {
     return uploadedFile;
   }
 
-  Optional<UploadedFile> findUploadedFile(UploadedFileId uploadedFileId) {
+  Optional<OldUploadedFile> findUploadedFile(UploadedFileId uploadedFileId) {
     return uploadedFileRepository.findById(uploadedFileId.uuid());
   }
 
   @Transactional
-  public void deleteFile(UploadedFile uploadedFile) {
+  public void deleteFile(OldUploadedFile uploadedFile) {
     uploadedFileRepository.deleteById(uploadedFile.getId());
   }
 
-  public List<UploadedFile> getUploadedFilesByIdList(Collection<UploadedFileId> uploadedFileIdList) {
+  public List<OldUploadedFile> getUploadedFilesByIdList(Collection<UploadedFileId> uploadedFileIdList) {
     var fileIds = uploadedFileIdList.stream()
         .map(UploadedFileId::uuid)
         .toList();
@@ -60,7 +60,7 @@ class UploadedFilePersistenceService {
   }
 
   @Transactional
-  public void updateFileDescription(UploadedFile uploadedFile, String uploadedFileDescription) {
+  public void updateFileDescription(OldUploadedFile uploadedFile, String uploadedFileDescription) {
     uploadedFile.setDescription(uploadedFileDescription);
     uploadedFileRepository.save(uploadedFile);
   }
@@ -69,14 +69,14 @@ class UploadedFilePersistenceService {
     return virtualFolder + "/" + UUID.randomUUID();
   }
 
-  private UploadedFile createUploadedFile(String bucketName,
-                                          VirtualFolder virtualFolder,
-                                          String s3Key,
-                                          String filename,
-                                          String contentType,
-                                          long fileSize) {
+  private OldUploadedFile createUploadedFile(String bucketName,
+                                             VirtualFolder virtualFolder,
+                                             String s3Key,
+                                             String filename,
+                                             String contentType,
+                                             long fileSize) {
 
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
     uploadedFile.setFileKey(s3Key);
     uploadedFile.setBucketName(bucketName);
     uploadedFile.setVirtualFolder(virtualFolder);

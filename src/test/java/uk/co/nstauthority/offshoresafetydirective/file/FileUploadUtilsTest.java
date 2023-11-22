@@ -38,7 +38,7 @@ class FileUploadUtilsTest {
 
   @Test
   void getFileResourceResponseEntity() throws IOException {
-    var uploadedFile = mock(UploadedFile.class);
+    var uploadedFile = mock(OldUploadedFile.class);
     var fileContent = new byte[]{1, 2, 3, 4, 5};
 
     when(uploadedFile.getFileSizeBytes()).thenReturn(5L);

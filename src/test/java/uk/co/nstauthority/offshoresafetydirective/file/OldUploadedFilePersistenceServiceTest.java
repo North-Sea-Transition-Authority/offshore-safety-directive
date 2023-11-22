@@ -20,12 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.file.s3.S3ClientService;
 
 @ExtendWith(MockitoExtension.class)
-class UploadedFilePersistenceServiceTest {
+class OldUploadedFilePersistenceServiceTest {
 
   @Mock
   private S3ClientService s3ClientService;
   @Mock
-  private UploadedFileRepository uploadedFileRepository;
+  private OldUploadedFileRepository uploadedFileRepository;
   @Mock
   private Clock clock;
 
@@ -36,14 +36,14 @@ class UploadedFilePersistenceServiceTest {
   void createUploadedFile() {
     uploadedFilePersistenceService.createUploadedFile(FileTestUtil.VALID_VIRTUAL_FOLDER, FileTestUtil.VALID_FILE_SIZE, FileTestUtil.VALID_FILENAME,
         FileTestUtil.VALID_CONTENT_TYPE);
-    verify(uploadedFileRepository).save(any(UploadedFile.class));
+    verify(uploadedFileRepository).save(any(OldUploadedFile.class));
   }
 
   @Test
   void createUploadedFile_UploadedFileRecordSaved() {
     when(s3ClientService.getBucketName()).thenReturn(FileTestUtil.VALID_BUCKET_NAME);
 
-    var argumentCaptor = ArgumentCaptor.forClass(UploadedFile.class);
+    var argumentCaptor = ArgumentCaptor.forClass(OldUploadedFile.class);
     uploadedFilePersistenceService.createUploadedFile(FileTestUtil.VALID_VIRTUAL_FOLDER, FileTestUtil.VALID_FILE_SIZE, FileTestUtil.VALID_FILENAME,
         FileTestUtil.VALID_CONTENT_TYPE);
 
@@ -52,13 +52,13 @@ class UploadedFilePersistenceServiceTest {
 
     assertThat(file)
         .extracting(
-            UploadedFile::getBucketName,
-            UploadedFile::getVirtualFolder,
-            UploadedFile::getFilename,
-            UploadedFile::getFileContentType,
-            UploadedFile::getFileSizeBytes,
-            UploadedFile::getUploadedTimeStamp,
-            UploadedFile::getDescription
+            OldUploadedFile::getBucketName,
+            OldUploadedFile::getVirtualFolder,
+            OldUploadedFile::getFilename,
+            OldUploadedFile::getFileContentType,
+            OldUploadedFile::getFileSizeBytes,
+            OldUploadedFile::getUploadedTimeStamp,
+            OldUploadedFile::getDescription
         )
         .contains(
             FileTestUtil.VALID_BUCKET_NAME,
@@ -74,7 +74,7 @@ class UploadedFilePersistenceServiceTest {
   @Test
   void findUploadedFile_UploadedFileFound_VerifyInteractions() {
     var uuid = UUID.randomUUID();
-    when(uploadedFileRepository.findById(uuid)).thenReturn(Optional.of(mock(UploadedFile.class)));
+    when(uploadedFileRepository.findById(uuid)).thenReturn(Optional.of(mock(OldUploadedFile.class)));
     var uploadedFile = uploadedFilePersistenceService.findUploadedFile(new UploadedFileId(uuid));
     verify(uploadedFileRepository).findById(uuid);
   }
@@ -100,7 +100,7 @@ class UploadedFilePersistenceServiceTest {
 
   @Test
   void updateFileDescription() {
-    var file = new UploadedFile();
+    var file = new OldUploadedFile();
     var uploadedFileDescription = "desc";
 
     assertThat(file.getDescription()).isNull();
@@ -114,7 +114,7 @@ class UploadedFilePersistenceServiceTest {
   @Test
   void deleteFile() {
     var expectedUuid = UUID.randomUUID();
-    var uploadedFile = mock(UploadedFile.class);
+    var uploadedFile = mock(OldUploadedFile.class);
     when(uploadedFile.getId()).thenReturn(expectedUuid);
 
     uploadedFilePersistenceService.deleteFile(uploadedFile);

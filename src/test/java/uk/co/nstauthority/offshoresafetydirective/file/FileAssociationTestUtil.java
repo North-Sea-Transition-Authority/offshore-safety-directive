@@ -17,7 +17,7 @@ public class FileAssociationTestUtil {
   public static class Builder {
 
     private UUID uuid = UUID.randomUUID();
-    private UploadedFile uploadedFile = UploadedFileTestUtil.builder().build();
+    private OldUploadedFile uploadedFile = UploadedFileTestUtil.builder().build();
     private FileStatus fileStatus = FileStatus.DRAFT;
     private FileAssociationType referenceType = FileAssociationType.NOMINATION_DETAIL;
     private String referenceId = "reference id";
@@ -33,7 +33,7 @@ public class FileAssociationTestUtil {
       return this;
     }
 
-    public Builder withUploadedFile(UploadedFile uploadedFile) {
+    public Builder withUploadedFile(OldUploadedFile uploadedFile) {
       this.uploadedFile = uploadedFile;
       return this;
     }

@@ -37,7 +37,7 @@ public class FileUploadUtils {
     return formatSize(size, BYTE, "B");
   }
 
-  public static ResponseEntity<InputStreamResource> getFileResourceResponseEntity(UploadedFile uploadedFile,
+  public static ResponseEntity<InputStreamResource> getFileResourceResponseEntity(OldUploadedFile uploadedFile,
                                                                                   InputStreamResource inputStreamResource) {
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)

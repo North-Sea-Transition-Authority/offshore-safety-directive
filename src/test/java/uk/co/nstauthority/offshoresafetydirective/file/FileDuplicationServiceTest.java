@@ -22,7 +22,7 @@ import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectA
 class FileDuplicationServiceTest {
 
   @Mock
-  private UploadedFileRepository uploadedFileRepository;
+  private OldUploadedFileRepository uploadedFileRepository;
 
   @Mock
   private FileAssociationService fileAssociationService;
@@ -83,7 +83,7 @@ class FileDuplicationServiceTest {
     fileDuplicationService.duplicateFiles(sourceNominationDetail, targetNominationDetail);
 
     @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<UploadedFile>> uploadedFileCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<List<OldUploadedFile>> uploadedFileCaptor = ArgumentCaptor.forClass(List.class);
     verify(uploadedFileRepository).saveAll(uploadedFileCaptor.capture());
 
     var duplicateUploadedFileA = uploadedFileCaptor.getValue()
@@ -104,7 +104,7 @@ class FileDuplicationServiceTest {
         .hasAssertedAllPropertiesExcept("id");
 
     assertThat(duplicateUploadedFileA)
-        .extracting(UploadedFile::getId)
+        .extracting(OldUploadedFile::getId)
         .isNotEqualTo(uploadedFileA.getId());
 
     var duplicateUploadedFileB = uploadedFileCaptor.getValue()
@@ -125,7 +125,7 @@ class FileDuplicationServiceTest {
         .hasAssertedAllPropertiesExcept("id");
 
     assertThat(duplicateUploadedFileB)
-        .extracting(UploadedFile::getId)
+        .extracting(OldUploadedFile::getId)
         .isNotEqualTo(uploadedFileB.getId());
 
     @SuppressWarnings("unchecked")

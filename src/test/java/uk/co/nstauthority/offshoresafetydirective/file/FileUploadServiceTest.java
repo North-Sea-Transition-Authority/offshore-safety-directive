@@ -22,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 @ExtendWith(MockitoExtension.class)
 class FileUploadServiceTest {
 
-  private static final UploadedFile UPLOADED_FILE = FileTestUtil.createValidUploadedFile();
+  private static final OldUploadedFile UPLOADED_FILE = FileTestUtil.createValidUploadedFile();
   private static final FileUploadConfig FILE_UPLOAD_CONFIG = FileTestUtil.validFileUploadConfig();
 
   @Mock
@@ -32,7 +32,7 @@ class FileUploadServiceTest {
   private UploadedFilePersistenceService uploadedFilePersistenceService;
 
   @Mock
-  private UploadedFileRepository uploadedFileRepository;
+  private OldUploadedFileRepository uploadedFileRepository;
 
   private FileUploadService fileUploadService;
 
@@ -164,7 +164,7 @@ class FileUploadServiceTest {
 
   @Test
   void createFileUploadForm() {
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
     uploadedFile.setId(UUID.randomUUID());
     uploadedFile.setDescription("description");
     uploadedFile.setUploadedTimeStamp(Instant.now());
@@ -179,7 +179,7 @@ class FileUploadServiceTest {
   void getUploadedFiles() {
     var uuid = UUID.randomUUID();
     var uploadedFileId = new UploadedFileId(uuid);
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
 
     when(uploadedFilePersistenceService.getUploadedFilesByIdList(List.of(uploadedFileId)))
         .thenReturn(List.of(uploadedFile));
@@ -196,7 +196,7 @@ class FileUploadServiceTest {
     var fileUploadForm = new FileUploadForm();
     fileUploadForm.setUploadedFileId(fileUuid);
 
-    var uploadedFile = new UploadedFile();
+    var uploadedFile = new OldUploadedFile();
     uploadedFile.setId(fileUuid);
     uploadedFile.setFileSizeBytes(1L);
 

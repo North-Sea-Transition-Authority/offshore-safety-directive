@@ -15,7 +15,7 @@ import org.hibernate.envers.Audited;
 @Entity
 @Table(name = "uploaded_files")
 @Audited
-public class UploadedFile {
+public class OldUploadedFile {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

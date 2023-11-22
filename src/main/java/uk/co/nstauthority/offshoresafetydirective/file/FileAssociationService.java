@@ -27,7 +27,7 @@ public class FileAssociationService {
   }
 
   @Transactional
-  public void createDraftAssociation(UploadedFile uploadedFile, FileAssociationReference fileReference,
+  public void createDraftAssociation(OldUploadedFile uploadedFile, FileAssociationReference fileReference,
                                      String purpose) {
     var draftDetail = new FileAssociation();
     draftDetail.setUploadedFile(uploadedFile);

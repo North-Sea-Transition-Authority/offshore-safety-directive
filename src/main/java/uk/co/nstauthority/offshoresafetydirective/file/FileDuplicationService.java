@@ -17,11 +17,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.duplication.Duplica
 @Service
 public class FileDuplicationService {
 
-  private final UploadedFileRepository uploadedFileRepository;
+  private final OldUploadedFileRepository uploadedFileRepository;
   private final FileAssociationService fileAssociationService;
   private final FileAssociationRepository fileAssociationRepository;
 
-  public FileDuplicationService(UploadedFileRepository uploadedFileRepository,
+  public FileDuplicationService(OldUploadedFileRepository uploadedFileRepository,
                                 FileAssociationService fileAssociationService,
                                 FileAssociationRepository fileAssociationRepository) {
     this.uploadedFileRepository = uploadedFileRepository;
@@ -43,11 +43,11 @@ public class FileDuplicationService {
     duplicateFileAssociations(nominationDetailToCascadeTo, fileAssociations, duplicatedUploadedFiles);
   }
 
-  private List<UploadedFile> duplicateUploadedFiles(Collection<UploadedFile> uploadedFilesToDuplicate) {
-    var duplicatedFiles = new ArrayList<UploadedFile>();
+  private List<OldUploadedFile> duplicateUploadedFiles(Collection<OldUploadedFile> uploadedFilesToDuplicate) {
+    var duplicatedFiles = new ArrayList<OldUploadedFile>();
 
     uploadedFilesToDuplicate.forEach(file -> {
-      var newFile = BeanUtils.instantiateClass(UploadedFile.class);
+      var newFile = BeanUtils.instantiateClass(OldUploadedFile.class);
       DuplicationUtil.copyProperties(file, newFile, "id");
       duplicatedFiles.add(newFile);
     });
@@ -57,7 +57,7 @@ public class FileDuplicationService {
 
   private void duplicateFileAssociations(NominationDetail nominationDetailToCascadeTo,
                                          Collection<FileAssociation> fileAssociations,
-                                         Collection<UploadedFile> duplicatedUploadedFiles) {
+                                         Collection<OldUploadedFile> duplicatedUploadedFiles) {
     var fileAssociationToUploadedFileMap = fileAssociations.stream()
         .collect(Collectors.toMap(
             Function.identity(),
@@ -79,9 +79,9 @@ public class FileDuplicationService {
     fileAssociationRepository.saveAll(duplicatedFileAssociations);
   }
 
-  private UploadedFile getUploadedFileForFileAssociation(NominationDetail nominationDetail,
-                                                         FileAssociation fileAssociation,
-                                                         Collection<UploadedFile> uploadedFiles) {
+  private OldUploadedFile getUploadedFileForFileAssociation(NominationDetail nominationDetail,
+                                                            FileAssociation fileAssociation,
+                                                            Collection<OldUploadedFile> uploadedFiles) {
     return uploadedFiles.stream().filter(uploadedFile ->
             uploadedFile.getFileKey().equals(fileAssociation.getUploadedFile().getFileKey()))
         .findFirst()
