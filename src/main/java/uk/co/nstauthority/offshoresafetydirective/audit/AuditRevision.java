@@ -19,7 +19,7 @@ class AuditRevision {
   @Id
   @RevisionNumber
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "audit_revision_id")
+  @Column(name = "rev")
   private long id;
 
   @RevisionTimestamp
