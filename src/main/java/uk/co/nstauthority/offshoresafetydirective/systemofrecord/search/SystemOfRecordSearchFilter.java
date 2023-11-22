@@ -1,13 +1,14 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 record SystemOfRecordSearchFilter(
     Integer appointedOperatorId,
     Integer installationId,
-    List<Integer> wellboreIds,
+    Set<Integer> wellboreIds,
     String subareaId
 ) {
 
@@ -15,7 +16,7 @@ record SystemOfRecordSearchFilter(
     return new SystemOfRecordSearchFilter(
         searchForm.getAppointedOperatorId(),
         searchForm.getInstallationId(),
-        Optional.ofNullable(searchForm.getWellboreId()).stream().toList(),
+        Optional.ofNullable(searchForm.getWellboreId()).stream().collect(Collectors.toSet()),
         searchForm.getSubareaId()
     );
   }
@@ -28,7 +29,7 @@ record SystemOfRecordSearchFilter(
 
     private Integer appointedOperatorId;
     private Integer installationId;
-    private List<Integer> wellboreIds = new ArrayList<>();
+    private Set<Integer> wellboreIds = new HashSet<>();
     private String subareaId;
 
     private Builder() {
@@ -51,7 +52,7 @@ record SystemOfRecordSearchFilter(
       return this;
     }
 
-    Builder withWellboreIds(List<Integer> wellboreIds) {
+    Builder withWellboreIds(Set<Integer> wellboreIds) {
       this.wellboreIds = wellboreIds;
       return this;
     }

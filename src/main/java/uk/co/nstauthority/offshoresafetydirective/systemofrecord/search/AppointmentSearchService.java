@@ -148,10 +148,10 @@ class AppointmentSearchService {
         SEARCH_WELLBORE_APPOINTMENTS_PURPOSE
     );
 
-    List<Integer> wellboreIdsToFilter = resultingWellbores
+    Set<Integer> wellboreIdsToFilter = resultingWellbores
         .stream()
         .map(wellbore -> wellbore.wellboreId().id())
-        .toList();
+        .collect(Collectors.toSet());
 
     var searchFilter = SystemOfRecordSearchFilter.builder()
         .withWellboreIds(wellboreIdsToFilter)

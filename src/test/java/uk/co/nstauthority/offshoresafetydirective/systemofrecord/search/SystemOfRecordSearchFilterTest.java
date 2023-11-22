@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
@@ -17,7 +16,7 @@ class SystemOfRecordSearchFilterTest {
     PropertyObjectAssert.thenAssertThat(resultingFilter)
         .hasFieldOrPropertyWithValue("appointedOperatorId", null)
         .hasFieldOrPropertyWithValue("installationId", null)
-        .hasFieldOrPropertyWithValue("wellboreIds", Collections.emptyList())
+        .hasFieldOrPropertyWithValue("wellboreIds", Set.of())
         .hasFieldOrPropertyWithValue("subareaId", null)
         .hasAssertedAllProperties();
   }
@@ -35,7 +34,7 @@ class SystemOfRecordSearchFilterTest {
     var resultingFilter = SystemOfRecordSearchFilter.fromSearchForm(searchForm);
 
     PropertyObjectAssert.thenAssertThat(resultingFilter)
-        .hasFieldOrPropertyWithValue("wellboreIds", List.of(1))
+        .hasFieldOrPropertyWithValue("wellboreIds", Set.of(1))
         .hasFieldOrPropertyWithValue("installationId", 2)
         .hasFieldOrPropertyWithValue("appointedOperatorId", 3)
         .hasFieldOrPropertyWithValue("subareaId", "4")
