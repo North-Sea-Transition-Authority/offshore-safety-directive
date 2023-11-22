@@ -2,14 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.con
 
 import java.util.ArrayList;
 import java.util.List;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.fivium.formlibrary.input.StringInput;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 
 public class NominationConsultationResponseForm {
 
   private StringInput response = new StringInput("response", "response");
 
-  private List<FileUploadForm> consultationResponseFiles = new ArrayList<>();
+  private List<UploadedFileForm> consultationResponseFiles = new ArrayList<>();
 
   public StringInput getResponse() {
     return response;
@@ -19,11 +19,11 @@ public class NominationConsultationResponseForm {
     this.response = response;
   }
 
-  public List<FileUploadForm> getConsultationResponseFiles() {
+  public List<UploadedFileForm> getConsultationResponseFiles() {
     return consultationResponseFiles;
   }
 
-  public void setConsultationResponseFiles(List<FileUploadForm> consultationResponseFiles) {
+  public void setConsultationResponseFiles(List<UploadedFileForm> consultationResponseFiles) {
     this.consultationResponseFiles = consultationResponseFiles;
   }
 }

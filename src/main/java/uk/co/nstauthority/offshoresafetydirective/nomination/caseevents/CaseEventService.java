@@ -97,9 +97,9 @@ public class CaseEventService {
 
   @Transactional
   public void createConsultationResponseEvent(NominationDetail nominationDetail, String responseText,
-                                              List<FileUploadForm> fileUploadForms) {
+                                              List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.CONSULTATION_RESPONSE, responseText, clock.instant(), nominationDetail);
-    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
+    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CONSULTATION_RESPONSE);
   }
 
   @Transactional

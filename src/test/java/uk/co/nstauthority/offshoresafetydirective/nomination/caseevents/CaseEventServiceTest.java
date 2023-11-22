@@ -393,13 +393,13 @@ class CaseEventServiceTest {
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
     var responseText = "response";
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(UUID.randomUUID());
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
 
     // Return same arg as passed in to call
     when(caseEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-    caseEventService.createConsultationResponseEvent(detail, responseText, List.of(fileUploadForm));
+    caseEventService.createConsultationResponseEvent(detail, responseText, List.of(uploadedFileForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
     verify(caseEventRepository).save(captor.capture());
@@ -425,7 +425,11 @@ class CaseEventServiceTest {
             nominationVersion
         );
 
-    verify(caseEventFileService).finalizeFileUpload(detail, captor.getValue(), List.of(fileUploadForm));
+    verify(caseEventFileService).linkFilesToCaseEvent(
+        captor.getValue(),
+        List.of(uploadedFileForm),
+        FileDocumentType.CONSULTATION_RESPONSE
+    );
   }
 
   @Test

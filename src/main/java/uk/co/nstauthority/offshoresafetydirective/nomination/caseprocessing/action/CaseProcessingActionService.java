@@ -17,7 +17,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
@@ -218,16 +217,19 @@ public class CaseProcessingActionService {
         )
         .withAdditionalProperty(
             "fileUploadTemplate",
-            new FileUploadTemplate(
-                ReverseRouter.route(
-                    on(NominationConsultationResponseFileController.class).download(nominationId, null)),
-                ReverseRouter.route(
-                    on(NominationConsultationResponseFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(
-                    on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
-            )
+            fileService.getFileUploadAttributes()
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CONSULTATION_RESPONSE.name()
+                    )))
+                .withAllowedExtensions(
+                    FileDocumentType.CONSULTATION_RESPONSE.getAllowedExtensions()
+                        .orElse(fileUploadProperties.defaultPermittedFileExtensions())
+                )
+                .build()
         )
         .build();
   }

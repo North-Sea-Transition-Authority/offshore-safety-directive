@@ -30,7 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.NominationConsultationResponseFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.NominationConsultationRequestController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecision;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
@@ -318,6 +317,16 @@ class CaseProcessingActionServiceTest {
   @Test
   void createConsultationResponseAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+
+    var maxBytes = 100;
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var result = caseProcessingActionService.createConsultationResponseAction(nominationId);
 
     assertThat(result)
@@ -334,14 +343,18 @@ class CaseProcessingActionServiceTest {
             ReverseRouter.route(
                 on(NominationConsultationResponseController.class).addConsultationResponse(nominationId, true,
                     CaseProcessingActionIdentifier.CONSULTATION_RESPONSE, null, null, null)),
-            Map.of("fileUploadTemplate", new FileUploadTemplate(
-                ReverseRouter.route(on(NominationConsultationResponseFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(NominationConsultationResponseFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
-                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
-                String.join(",", FILE_UPLOAD_CONFIG.getDefaultPermittedFileExtensions())
-            ))
-        );
+            Map.of("fileUploadTemplate", FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CONSULTATION_RESPONSE.name()
+                    )))
+                .build()
+            ));
   }
 
   @Test

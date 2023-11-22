@@ -27,10 +27,6 @@ class NominationConsultationResponseSubmissionService {
 
   @Transactional
   public void submitConsultationResponse(NominationDetail nominationDetail, NominationConsultationResponseForm form) {
-    fileUploadService.updateFileUploadDescriptions(form.getConsultationResponseFiles());
-
-    fileAssociationService.submitFiles(form.getConsultationResponseFiles());
-
     caseEventService.createConsultationResponseEvent(
         nominationDetail,
         form.getResponse().getInputValue(),

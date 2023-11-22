@@ -23,9 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -96,11 +94,7 @@ public class NominationConsultationResponseController {
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
     if (Objects.requireNonNull(bindingResult).hasErrors()) {
-      var files = Objects.requireNonNull(form).getConsultationResponseFiles()
-          .stream()
-          .map(FileUploadForm::getUploadedFileId)
-          .map(UploadedFileId::new)
-          .toList();
+      var files = Objects.requireNonNull(form).getConsultationResponseFiles();
 
       var modelAndViewDto = CaseProcessingFormDto.builder()
           .withNominationConsultationResponseForm(form)
@@ -109,7 +103,7 @@ public class NominationConsultationResponseController {
               nominationDetail,
               modelAndViewDto
           )
-          .addObject("existingConsultationResponseFiles", fileUploadService.getUploadedFileViewList(files))
+          .addObject("existingConsultationResponseFiles", files)
           .addObject("consultationResponseErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 
