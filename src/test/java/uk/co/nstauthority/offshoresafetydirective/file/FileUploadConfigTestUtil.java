@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class FileUploadConfigTestUtil {
@@ -17,8 +17,7 @@ public class FileUploadConfigTestUtil {
   public static class Builder {
 
     private Integer maxFileUploadBytes = 52428800;
-    private List<String> allowedFileExtensions = new ArrayList<>();
-    private String filenameDisallowedCharactersRegex = null;
+    private Set<String> allowedFileExtensions = new HashSet<>();
 
     private Builder() {
     }
@@ -28,7 +27,7 @@ public class FileUploadConfigTestUtil {
       return this;
     }
 
-    public Builder withAllowedFileExtensions(List<String> extensions) {
+    public Builder withAllowedFileExtensions(Set<String> extensions) {
       this.allowedFileExtensions = extensions;
       return this;
     }
@@ -38,13 +37,8 @@ public class FileUploadConfigTestUtil {
       return this;
     }
 
-    public Builder withFilenameDisallowedCharactersRegex(String filenameDisallowedCharactersRegex) {
-      this.filenameDisallowedCharactersRegex = filenameDisallowedCharactersRegex;
-      return this;
-    }
-
     public FileUploadConfig build() {
-      return new FileUploadConfig(maxFileUploadBytes, allowedFileExtensions, filenameDisallowedCharactersRegex);
+      return new FileUploadConfig(maxFileUploadBytes, allowedFileExtensions);
     }
   }
 }

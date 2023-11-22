@@ -61,10 +61,10 @@ public class CaseEventQueryService {
   public Optional<String> getLatestReasonForUpdate(NominationDetail nominationDetail) {
     var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
     return caseEventRepository.findFirstByCaseEventTypeInAndNominationAndNominationVersion(
-        EnumSet.of(CaseEventType.UPDATE_REQUESTED),
-        nominationDetail.getNomination(),
-        dto.version()
-    )
+            EnumSet.of(CaseEventType.UPDATE_REQUESTED),
+            nominationDetail.getNomination(),
+            dto.version()
+        )
         .map(CaseEvent::getComment);
   }
 
@@ -109,13 +109,11 @@ public class CaseEventQueryService {
         .toList();
   }
 
-  public Optional<CaseEvent> getCaseEventForNominationDetail(CaseEventId caseEventId,
-                                                             NominationDetail nominationDetail) {
-    var dto = NominationDetailDto.fromNominationDetail(nominationDetail);
-    return caseEventRepository.findByUuidAndNominationAndNominationVersion(
+  public Optional<CaseEvent> getCaseEventForNomination(CaseEventId caseEventId,
+                                                       Nomination nomination) {
+    return caseEventRepository.findByUuidAndNomination(
         caseEventId.uuid(),
-        nominationDetail.getNomination(),
-        dto.version()
+        nomination
     );
   }
 

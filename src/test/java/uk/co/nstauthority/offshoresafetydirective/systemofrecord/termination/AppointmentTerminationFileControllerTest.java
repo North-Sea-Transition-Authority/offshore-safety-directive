@@ -74,7 +74,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         AppointmentTerminationFileController.PURPOSE,
         AppointmentTerminationFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     when(regulatorTeamService.isMemberOfRegulatorTeam(USER)).thenReturn(true);
@@ -123,7 +123,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         AppointmentTerminationFileController.PURPOSE,
         AppointmentTerminationFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(
@@ -156,7 +156,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         AppointmentTerminationFileController.PURPOSE,
         AppointmentTerminationFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(
@@ -189,7 +189,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         AppointmentTerminationFileController.PURPOSE,
         AppointmentTerminationFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(
@@ -217,7 +217,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
         AppointmentTerminationFileController.PURPOSE,
         AppointmentTerminationFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(

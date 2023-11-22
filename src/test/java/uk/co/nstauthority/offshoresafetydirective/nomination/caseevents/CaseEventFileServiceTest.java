@@ -2,45 +2,52 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.FileUsage;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.OldUploadedFile;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileViewTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailFileReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventFileServiceTest {
 
-  @Mock
-  FileAssociationService fileAssociationService;
+  private static ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @Mock
-  FileUploadService fileUploadService;
+  private FileAssociationService fileAssociationService;
+
+  @Mock
+  private FileUploadService fileUploadService;
+
+  @Mock
+  private FileService fileService;
 
   @InjectMocks
   private CaseEventFileService caseEventFileService;
@@ -120,87 +127,39 @@ class CaseEventFileServiceTest {
 
   @Test
   void getFileViewMapFromCaseEvents_whenMultipleLinkedFiles_thenAssertResult() {
-    var firstFile = UploadedFileTestUtil.builder()
-        .withFilename("File a")
-        .build();
-    var secondFile = UploadedFileTestUtil.builder()
-        .withFilename("File B") // Ensure sort is not case-sensitive
-        .build();
-    var thirdFile = UploadedFileTestUtil.builder()
-        .withFilename("File c")
-        .build();
-    var firstUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(firstFile);
-    var secondUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(secondFile);
-    var thirdUploadedFileView = UploadedFileViewTestUtil.fromUploadedFile(thirdFile);
     var caseEvent = CaseEventTestUtil.builder().build();
+    var firstFile = UploadedFileTestUtil.newBuilder()
+        .withName("File a")
+        .withUsageId(caseEvent.getUuid().toString())
+        .build();
+    var secondFile = UploadedFileTestUtil.newBuilder()
+        .withName("File B") // Ensure sort is not case-sensitive
+        .withUsageId(caseEvent.getUuid().toString())
+        .build();
+    var thirdFile = UploadedFileTestUtil.newBuilder()
+        .withName("File c")
+        .withUsageId(caseEvent.getUuid().toString())
+        .build();
 
-    var firstFileAssociationDtoByFileName = new FileAssociationDto(
-        new UploadedFileId(firstFile.getId()),
-        caseEvent.getUuid().toString()
-    );
-    var secondFileAssociationDtoByFileName = new FileAssociationDto(
-        new UploadedFileId(secondFile.getId()),
-        caseEvent.getUuid().toString()
-    );
-    var thirdFileAssociationDtoByFileName = new FileAssociationDto(
-        new UploadedFileId(thirdFile.getId()),
-        caseEvent.getUuid().toString()
-    );
-
-    when(fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
-        FileAssociationType.CASE_EVENT,
-        Set.of(caseEvent.getUuid().toString())
+    when(fileService.findAllByUsageIdsWithUsageType(
+        List.of(caseEvent.getUuid().toString()),
+        FileUsageType.CASE_EVENT.getUsageType()
     ))
-        .thenReturn(
-            List.of(secondFileAssociationDtoByFileName, thirdFileAssociationDtoByFileName,
-                firstFileAssociationDtoByFileName)
-        );
-
-    when(fileUploadService.getUploadedFileViewList(List.of(
-        new UploadedFileId(secondFile.getId()),
-        new UploadedFileId(thirdFile.getId()),
-        new UploadedFileId(firstFile.getId())
-    )))
-        .thenReturn(List.of(secondUploadedFileView, thirdUploadedFileView, firstUploadedFileView));
+        .thenReturn(List.of(firstFile, thirdFile, secondFile));
 
     var result = caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent));
-
-    var expectedFirstFileView = new FileSummaryView(
-        firstUploadedFileView,
-        ReverseRouter.route(on(CaseEventFileDownloadController.class)
-            .download(
-                new NominationId(caseEvent.getNomination().getId()),
-                new CaseEventId(caseEvent.getUuid()),
-                new UploadedFileId(UUID.fromString(firstUploadedFileView.fileId()))
-            ))
-    );
-    var expectedSecondFileView = new FileSummaryView(
-        secondUploadedFileView,
-        ReverseRouter.route(on(CaseEventFileDownloadController.class)
-            .download(
-                new NominationId(caseEvent.getNomination().getId()),
-                new CaseEventId(caseEvent.getUuid()),
-                new UploadedFileId(UUID.fromString(secondUploadedFileView.fileId()))
-            ))
-    );
-    var expectedThirdFileView = new FileSummaryView(
-        thirdUploadedFileView,
-        ReverseRouter.route(on(CaseEventFileDownloadController.class)
-            .download(
-                new NominationId(caseEvent.getNomination().getId()),
-                new CaseEventId(caseEvent.getUuid()),
-                new UploadedFileId(UUID.fromString(thirdUploadedFileView.fileId()))
-            ))
-    );
 
     assertThat(result)
         .containsOnlyKeys(caseEvent)
         .extractingByKey(caseEvent)
-        .asList()
+        .asInstanceOf(InstanceOfAssertFactories.list(FileSummaryView.class))
+        .extracting(
+            fileSummaryView -> fileSummaryView.uploadedFileView().fileName()
+        )
         .containsExactly(
-            expectedFirstFileView,
-            expectedSecondFileView,
-            expectedThirdFileView
+            firstFile.getName(),
+            secondFile.getName(),
+            thirdFile.getName()
         );
   }
 
@@ -208,21 +167,62 @@ class CaseEventFileServiceTest {
   void getFileViewMapFromCaseEvents_whenNoLinkedFiles_thenAssertResult() {
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    when(fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
-        FileAssociationType.CASE_EVENT,
-        Set.of(caseEvent.getUuid().toString())
+    when(fileService.findAllByUsageIdsWithUsageType(
+        List.of(caseEvent.getUuid().toString()),
+        FileUsageType.CASE_EVENT.getUsageType()
     ))
-        .thenReturn(List.of());
-
-    when(fileUploadService.getUploadedFileViewList(List.of()))
         .thenReturn(List.of());
 
     var result = caseEventFileService.getFileViewMapFromCaseEvents(List.of(caseEvent));
 
-    assertThat(result)
-        .containsExactly(
-            entry(caseEvent, List.of())
-        );
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void linkFilesToCaseEvent_whenValidFile_thenVerifyFileIsLinked() {
+
+    var caseEvent = CaseEventTestUtil.builder().build();
+
+    var formDescription = "description";
+    var formFileId = UUID.randomUUID();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileDescription(formDescription);
+    uploadedFileForm.setFileId(formFileId);
+
+    var file = UploadedFileTestUtil.newBuilder()
+        .withId(formFileId)
+        .withUploadedBy(USER.wuaId().toString())
+        .build();
+
+    when(fileService.findAll(Set.of(formFileId)))
+        .thenReturn(List.of(file));
+
+    caseEventFileService.linkFilesToCaseEvent(
+        caseEvent,
+        List.of(uploadedFileForm),
+        FileDocumentType.CASE_NOTE
+    );
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Function<FileUsage.Builder, FileUsage>> fileUsageCaptor = ArgumentCaptor.forClass(Function.class);
+    verify(fileService).updateUsageAndDescription(eq(file), fileUsageCaptor.capture(), eq(formDescription));
+
+    fileUsageCaptor.getAllValues()
+        .forEach(builderFileUsageFunction -> {
+          var builder = FileUsage.newBuilder();
+          assertThat(builderFileUsageFunction.apply(builder))
+              .extracting(
+                  FileUsage::usageId,
+                  FileUsage::usageType,
+                  FileUsage::documentType
+              )
+              .containsExactly(
+                  caseEvent.getUuid().toString(),
+                  FileUsageType.CASE_EVENT.getUsageType(),
+                  FileDocumentType.CASE_NOTE.getDocumentType()
+              );
+        });
   }
 
 }

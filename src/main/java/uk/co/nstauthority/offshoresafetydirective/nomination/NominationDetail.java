@@ -72,7 +72,7 @@ public class NominationDetail implements Serializable {
     return this;
   }
 
-  Integer getVersion() {
+  public Integer getVersion() {
     return version;
   }
 

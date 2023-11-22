@@ -53,7 +53,7 @@ public class AppointmentTerminationFileController {
                                  @RequestParam("file") MultipartFile multipartFile) {
     var fileReference = new AppointmentFileReference(appointmentId);
     return fileControllerHelperService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
   }
 
   @ResponseBody

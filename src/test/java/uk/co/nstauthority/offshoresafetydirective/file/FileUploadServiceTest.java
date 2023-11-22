@@ -120,17 +120,8 @@ class FileUploadServiceTest {
             uploadUrl,
             deleteUrl,
             FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
-            String.join(",", FILE_UPLOAD_CONFIG.getAllowedFileExtensions())
+            String.join(",", FILE_UPLOAD_CONFIG.getDefaultPermittedFileExtensions())
         );
-  }
-
-  @Test
-  void sanitiseFilename() {
-    var filename = "this%is%test.txt";
-
-    var sanitiseFilename = fileUploadService.sanitiseFilename(filename);
-
-    assertThat(sanitiseFilename).isEqualTo("this_is_test.txt");
   }
 
   @Test

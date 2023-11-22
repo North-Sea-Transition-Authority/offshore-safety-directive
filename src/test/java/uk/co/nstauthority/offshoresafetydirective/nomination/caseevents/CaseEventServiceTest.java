@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
@@ -301,13 +302,13 @@ class CaseEventServiceTest {
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(UUID.randomUUID());
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
 
-    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(fileUploadForm));
+    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(uploadedFileForm));
 
     var captor = ArgumentCaptor.forClass(CaseEvent.class);
     verify(caseEventRepository).save(captor.capture());

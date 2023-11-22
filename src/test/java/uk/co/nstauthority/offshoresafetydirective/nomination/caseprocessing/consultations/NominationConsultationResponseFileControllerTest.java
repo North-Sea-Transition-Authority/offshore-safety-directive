@@ -174,7 +174,7 @@ class NominationConsultationResponseFileControllerTest extends AbstractControlle
         eq(NominationConsultationResponseFileController.PURPOSE),
         eq(VirtualFolder.CONSULTATIONS),
         eq(mockMultipartFile),
-        eq(fileUploadConfig.getAllowedFileExtensions())
+        eq(fileUploadConfig.getDefaultPermittedFileExtensions())
     );
 
     assertThat(fileReferenceCaptor.getValue())

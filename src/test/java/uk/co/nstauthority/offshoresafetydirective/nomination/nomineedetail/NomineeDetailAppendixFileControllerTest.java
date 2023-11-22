@@ -15,8 +15,8 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import com.amazonaws.util.StringInputStream;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -152,7 +152,7 @@ class NomineeDetailAppendixFileControllerTest extends AbstractControllerTest {
         .andExpect(status().isOk());
 
     var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    var allowedExtensions = List.copyOf(fileUploadConfig.getAllowedFileExtensions());
+    var allowedExtensions = Set.copyOf(fileUploadConfig.getDefaultPermittedFileExtensions());
     verify(fileControllerHelperService).processFileUpload(
         fileReferenceCaptor.capture(),
         eq(NomineeDetailAppendixFileController.PURPOSE.purpose()),

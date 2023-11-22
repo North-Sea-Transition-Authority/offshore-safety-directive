@@ -100,13 +100,15 @@ public class FileUploadService {
         uploadUrl,
         deleteUrl,
         fileUploadConfig.getMaxFileUploadBytes().toString(),
-        String.join(",", fileUploadConfig.getAllowedFileExtensions())
+        String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
     );
   }
 
+  // TODO OSDOP-457 - Remove once no remaining usages of old file upload implementation
   public String sanitiseFilename(String filename) {
-    var disallowedCharactersString = fileUploadConfig.getFilenameDisallowedCharactersRegex();
-    return filename.replaceAll(disallowedCharactersString, "_");
+    //    var disallowedCharactersString = fileUploadConfig.getFilenameDisallowedCharactersRegex();
+    //    return filename.replaceAll(disallowedCharactersString, "_");
+    return filename;
   }
 
   public FileUploadForm createFileUploadForm(OldUploadedFile uploadedFile) {

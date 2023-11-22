@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,19 +13,18 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationReference;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileControllerHelperService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -49,7 +47,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
       .build();
 
   @MockBean
-  private FileControllerHelperService fileControllerHelperService;
+  private FileService fileService;
 
   @SecurityTest
   void download_assertStatusesPermitted() {
@@ -77,18 +75,21 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(caseEventUuid.toString())
+        .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
+        .build();
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.download(file))
         .thenAnswer(invocation -> {
           var streamContent = "abc";
           var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
           return ResponseEntity.ok(inputStreamResource);
         });
 
-    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+    when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
         .thenReturn(Optional.of(caseEvent));
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
@@ -105,16 +106,6 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
             status().isForbidden()
         )
         .test();
-
-    assertThat(fileReferenceCaptor.getValue())
-        .extracting(
-            FileAssociationReference::getFileReferenceType,
-            FileAssociationReference::getReferenceId
-        )
-        .containsExactly(
-            FileAssociationType.CASE_EVENT,
-            caseEventUuid.toString()
-        );
   }
 
   @SecurityTest
@@ -124,6 +115,9 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withNominationId(NOMINATION_ID)
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
         .build();
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
 
     var fileUuid = UUID.randomUUID();
     var caseEventUuid = UUID.randomUUID();
@@ -141,18 +135,21 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(caseEventUuid.toString())
+        .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
+        .build();
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.download(file))
         .thenAnswer(invocation -> {
           var streamContent = "abc";
           var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
           return ResponseEntity.ok(inputStreamResource);
         });
 
-    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+    when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
         .thenReturn(Optional.of(caseEvent));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
@@ -166,16 +163,6 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
             status().isForbidden()
         )
         .test();
-
-    assertThat(fileReferenceCaptor.getValue())
-        .extracting(
-            FileAssociationReference::getFileReferenceType,
-            FileAssociationReference::getReferenceId
-        )
-        .containsExactly(
-            FileAssociationType.CASE_EVENT,
-            caseEventUuid.toString()
-        );
   }
 
   @Test
@@ -189,9 +176,15 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .withNominationId(NOMINATION_ID)
         .build();
 
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
     var fileUuid = UUID.randomUUID();
     var caseEventUuid = UUID.randomUUID();
     var caseEventId = new CaseEventId(caseEventUuid);
+    var caseEvent = CaseEventTestUtil.builder()
+        .withUuid(caseEventUuid)
+        .build();
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -199,26 +192,25 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     ))
         .thenReturn(Optional.of(nominationDetail));
 
-    var caseEvent = CaseEventTestUtil.builder()
-        .withUuid(caseEventUuid)
-        .build();
-
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
-        .thenReturn(Optional.of(caseEvent));
+    var file = UploadedFileTestUtil.newBuilder()
+        .withUsageId(caseEventUuid.toString())
+        .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
+        .build();
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
 
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
 
-    var fileReferenceCaptor = ArgumentCaptor.forClass(FileAssociationReference.class);
-    when(fileControllerHelperService.downloadFile(
-        fileReferenceCaptor.capture(),
-        eq(new UploadedFileId(fileUuid))
-    ))
-        .thenReturn(response);
+    when(fileService.download(file))
+        .thenAnswer(invocation -> response);
+
+    when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
 
     var result = mockMvc.perform(get(ReverseRouter.route(
             on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, new UploadedFileId(fileUuid))))
@@ -229,16 +221,6 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
         .getContentAsString();
 
     assertThat(result).isEqualTo(streamContent);
-
-    assertThat(fileReferenceCaptor.getValue())
-        .extracting(
-            FileAssociationReference::getFileReferenceType,
-            FileAssociationReference::getReferenceId
-        )
-        .containsExactly(
-            FileAssociationType.CASE_EVENT,
-            caseEventUuid.toString()
-        );
   }
 
   @Test
@@ -298,7 +280,7 @@ class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    when(caseEventQueryService.getCaseEventForNominationDetail(caseEventId, nominationDetail))
+    when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
         .thenReturn(Optional.empty());
 
     mockMvc.perform(get(ReverseRouter.route(

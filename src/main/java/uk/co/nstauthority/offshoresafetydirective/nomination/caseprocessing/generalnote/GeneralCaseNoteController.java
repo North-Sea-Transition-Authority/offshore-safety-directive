@@ -24,9 +24,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -54,7 +51,6 @@ public class GeneralCaseNoteController {
   private final GeneralCaseNoteValidator generalCaseNoteValidator;
   private final GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
   private final NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-  private final FileUploadService fileUploadService;
   private final FormErrorSummaryService formErrorSummaryService;
 
   public GeneralCaseNoteController(
@@ -62,12 +58,11 @@ public class GeneralCaseNoteController {
       GeneralCaseNoteValidator generalCaseNoteValidator,
       GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService,
       NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator,
-      FileUploadService fileUploadService, FormErrorSummaryService formErrorSummaryService) {
+      FormErrorSummaryService formErrorSummaryService) {
     this.nominationDetailService = nominationDetailService;
     this.generalCaseNoteValidator = generalCaseNoteValidator;
     this.generalCaseNoteSubmissionService = generalCaseNoteSubmissionService;
     this.nominationCaseProcessingModelAndViewGenerator = nominationCaseProcessingModelAndViewGenerator;
-    this.fileUploadService = fileUploadService;
     this.formErrorSummaryService = formErrorSummaryService;
   }
 
@@ -104,17 +99,13 @@ public class GeneralCaseNoteController {
           .withGeneralCaseNoteForm(generalCaseNoteForm)
           .build();
 
-      var files = Objects.requireNonNull(generalCaseNoteForm).getCaseNoteFiles()
-          .stream()
-          .map(FileUploadForm::getUploadedFileId)
-          .map(UploadedFileId::new)
-          .toList();
+      var caseNoteFiles = Objects.requireNonNull(generalCaseNoteForm).getCaseNoteFiles();
 
       return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
-          nominationDetail,
-          formDto
-      )
-          .addObject("existingCaseNoteFiles", fileUploadService.getUploadedFileViewList(files))
+              nominationDetail,
+              formDto
+          )
+          .addObject("existingCaseNoteFiles", caseNoteFiles)
           .addObject("caseNoteErrorList", formErrorSummaryService.getErrorItems(bindingResult));
     }
 

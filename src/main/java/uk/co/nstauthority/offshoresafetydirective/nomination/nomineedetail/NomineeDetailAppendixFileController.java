@@ -63,7 +63,7 @@ public class NomineeDetailAppendixFileController {
     var nominationDetail = getNominationDetail(nominationId, nominationDetailId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
     return fileControllerHelperService.processFileUpload(fileReference, PURPOSE.purpose(), VIRTUAL_FOLDER,
-        Objects.requireNonNull(multipartFile), fileUploadConfig.getAllowedFileExtensions());
+        Objects.requireNonNull(multipartFile), fileUploadConfig.getDefaultPermittedFileExtensions());
   }
 
   @ResponseBody

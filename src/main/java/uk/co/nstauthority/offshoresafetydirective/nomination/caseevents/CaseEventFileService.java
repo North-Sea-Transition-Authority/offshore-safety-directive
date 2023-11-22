@@ -12,12 +12,15 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationDto;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationType;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -30,14 +33,40 @@ public class CaseEventFileService {
 
   private final FileAssociationService fileAssociationService;
   private final FileUploadService fileUploadService;
+  private final FileService fileService;
 
   @Autowired
   public CaseEventFileService(FileAssociationService fileAssociationService,
-                              FileUploadService fileUploadService) {
+                              FileUploadService fileUploadService,
+                              FileService fileService) {
     this.fileAssociationService = fileAssociationService;
     this.fileUploadService = fileUploadService;
+    this.fileService = fileService;
   }
 
+  @Transactional
+  public void linkFilesToCaseEvent(CaseEvent caseEvent, Collection<UploadedFileForm> uploadedFileForms,
+                                   FileDocumentType fileDocumentType) {
+
+    Map<UUID, UploadedFileForm> fileIdAndFileFormMap = uploadedFileForms.stream()
+        .collect(Collectors.toMap(UploadedFileForm::getFileId, Function.identity()));
+
+    var files = fileService.findAll(fileIdAndFileFormMap.keySet());
+
+    for (UploadedFile file : files) {
+      fileService.updateUsageAndDescription(
+          file,
+          builder -> builder
+              .withUsageId(caseEvent.getUuid().toString())
+              .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
+              .withDocumentType(fileDocumentType.getDocumentType())
+              .build(),
+          fileIdAndFileFormMap.get(file.getId()).getFileDescription()
+      );
+    }
+  }
+
+  // TODO OSDOP-457 - Remove this once all usages removed
   @Transactional
   public void finalizeFileUpload(NominationDetail nominationDetail, CaseEvent caseEvent,
                                  List<FileUploadForm> fileUploadForms) {
@@ -78,69 +107,46 @@ public class CaseEventFileService {
             Function.identity()
         ));
 
-    List<FileAssociationDto> linkedFileAssociationDtos =
-        fileAssociationService.getUploadedFileAssociationDtosByReferenceTypeAndReferenceIds(
-            FileAssociationType.CASE_EVENT,
-            caseEventIdMap.keySet()
-        );
-
-    Map<String, List<FileAssociationDto>> caseEventReferenceAndLinkedFileMap = linkedFileAssociationDtos.stream()
-        .collect(Collectors.groupingBy(FileAssociationDto::referenceId));
-
-    var uploadedFileIds = linkedFileAssociationDtos.stream()
-        .map(FileAssociationDto::uploadedFileId)
+    var caseEventIds = caseEvents.stream()
+        .map(CaseEvent::getUuid)
+        .map(UUID::toString)
         .toList();
 
-    var uploadedFileViews = fileUploadService.getUploadedFileViewList(uploadedFileIds);
+    var files = fileService.findAllByUsageIdsWithUsageType(caseEventIds, FileUsageType.CASE_EVENT.getUsageType())
+        .stream()
+        .toList();
 
-    Map<CaseEvent, List<FileSummaryView>> caseEventAndFileViewMap = caseEventReferenceAndLinkedFileMap.entrySet()
+    Map<String, List<UploadedFile>> caseEventReferenceAndLinkedFileMap = files.stream()
+        .collect(Collectors.groupingBy(UploadedFile::getUsageId));
+
+    return caseEventReferenceAndLinkedFileMap.entrySet()
         .stream()
         .collect(Collectors.toMap(
             entry -> caseEventIdMap.get(entry.getKey()),
-            entry -> getCaseEventFileViewsLinkedToCaseEvent(
-                caseEventIdMap.get(entry.getKey()),
-                entry.getValue(),
-                uploadedFileViews
-            )
-        ));
-
-    return caseEventIdMap.values()
-        .stream()
-        .collect(Collectors.toMap(
-            caseEvent -> caseEvent,
-            caseEvent -> caseEventAndFileViewMap.getOrDefault(caseEvent, List.of())
+            entry -> entry.getValue()
+                .stream()
+                .map(uploadedFile -> createFileSummaryView(
+                    caseEventIdMap.get(entry.getKey()),
+                    uploadedFile
+                ))
+                .sorted(Comparator.comparing(summaryView -> summaryView.uploadedFileView().fileName().toLowerCase()))
+                .toList()
         ));
 
   }
 
-  private List<FileSummaryView> getCaseEventFileViewsLinkedToCaseEvent(
+  private FileSummaryView createFileSummaryView(
       CaseEvent caseEvent,
-      Collection<FileAssociationDto> fileAssociationDtos,
-      Collection<UploadedFileView> uploadedFileViews
+      UploadedFile file
   ) {
-    var caseEventReference = new CaseEventFileReference(caseEvent);
-    var filteredFileAssociationDtos = fileAssociationDtos.stream()
-        .filter(view -> view.referenceId().equals(caseEventReference.getReferenceId()))
-        .toList();
-
-    var relevantUploadedFileViews = uploadedFileViews.stream()
-        .filter(
-            fileView -> filteredFileAssociationDtos.stream()
-                .anyMatch(view -> UUID.fromString(fileView.fileId()).equals(view.uploadedFileId().uuid())))
-        .toList();
-
-    return relevantUploadedFileViews.stream()
-        .map(fileView -> new FileSummaryView(
-            fileView,
-            ReverseRouter.route(on(CaseEventFileDownloadController.class)
-                .download(
-                    new NominationId(caseEvent.getNomination().getId()),
-                    new CaseEventId(caseEvent.getUuid()),
-                    new UploadedFileId(UUID.fromString(fileView.fileId()))
-                ))
+    return new FileSummaryView(
+        UploadedFileView.from(file),
+        ReverseRouter.route(on(CaseEventFileDownloadController.class).download(
+            new NominationId(caseEvent.getNomination().getId()),
+            new CaseEventId(caseEvent.getUuid()),
+            new UploadedFileId(file.getId())
         ))
-        .sorted(Comparator.comparing(view -> view.uploadedFileView().fileName(), String::compareToIgnoreCase))
-        .toList();
+    );
   }
 
 }

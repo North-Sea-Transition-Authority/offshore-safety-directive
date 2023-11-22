@@ -84,7 +84,7 @@ dependencies {
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:develop-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:develop-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
-	implementation 'uk.co.fivium:file-upload-spring-boot-starter:OSDOP-457-inherit-flyway-enabled-during-configuration-SNAPSHOT'
+	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.1.0'
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'

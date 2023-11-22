@@ -62,7 +62,7 @@ public class NominationConsultationResponseFileController {
     var nominationDetail = getLatestSubmittedNominationDetail(nominationId);
     var fileReference = new NominationDetailFileReference(nominationDetail);
     return fileControllerHelperService.processFileUpload(fileReference, PURPOSE, VIRTUAL_FOLDER, multipartFile,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
   }
 
   @ResponseBody

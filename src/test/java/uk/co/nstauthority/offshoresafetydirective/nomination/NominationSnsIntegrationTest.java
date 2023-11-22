@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityManager;
+import java.time.Duration;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -15,8 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
+import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
-import uk.co.nstauthority.offshoresafetydirective.ApplicationIntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.epmqmessage.NominationSubmittedOsdEpmqMessage;
@@ -27,7 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
-@ApplicationIntegrationTest
+@DatabaseIntegrationTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class NominationSnsIntegrationTest {
 
@@ -84,7 +86,8 @@ class NominationSnsIntegrationTest {
 
     var nominationSubmittedMessageArgumentCaptor = ArgumentCaptor.forClass(NominationSubmittedOsdEpmqMessage.class);
 
-    verify(snsService).publishMessage(eq(nominationsTopicArn), nominationSubmittedMessageArgumentCaptor.capture());
+    Awaitility.waitAtMost(Duration.ofSeconds(10))
+        .untilAsserted(() -> verify(snsService).publishMessage(eq(nominationsTopicArn), nominationSubmittedMessageArgumentCaptor.capture()));
 
     var publishedMessage = nominationSubmittedMessageArgumentCaptor.getValue();
 

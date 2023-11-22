@@ -168,7 +168,7 @@ public class AppointmentTerminationController {
         ReverseRouter.route(
             on(AppointmentTerminationFileController.class).delete(appointmentId, null)),
         fileUploadConfig.getMaxFileUploadBytes().toString(),
-        String.join(",", fileUploadConfig.getAllowedFileExtensions())
+        String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
     );
   }
 }

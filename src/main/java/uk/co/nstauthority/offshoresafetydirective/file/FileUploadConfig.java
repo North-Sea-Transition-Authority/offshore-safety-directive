@@ -1,7 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.file;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.validation.annotation.Validated;
@@ -11,35 +12,25 @@ import org.springframework.validation.annotation.Validated;
 public class FileUploadConfig {
 
   private final Integer maxFileUploadBytes;
-  private final List<String> allowedFileExtensions;
-  private final String filenameDisallowedCharactersRegex;
+  private final Set<String> defaultPermittedFileExtensions;
 
   @ConstructorBinding
-  FileUploadConfig(Integer maxFileUploadBytes, String allowedFileExtensionsCsv,
-                   String filenameDisallowedCharactersRegex) {
-
+  FileUploadConfig(Integer maxFileUploadBytes, String allowedFileExtensionsCsv) {
     this.maxFileUploadBytes = maxFileUploadBytes;
-    this.allowedFileExtensions = Arrays.stream(allowedFileExtensionsCsv.split(",")).toList();
-    this.filenameDisallowedCharactersRegex = filenameDisallowedCharactersRegex;
+    this.defaultPermittedFileExtensions = Arrays.stream(allowedFileExtensionsCsv.split(",")).collect(Collectors.toSet());
   }
 
-  FileUploadConfig(Integer maxFileUploadBytes, List<String> allowedFileExtensions,
-                   String filenameDisallowedCharactersRegex) {
-
+  FileUploadConfig(Integer maxFileUploadBytes, Set<String> defaultPermittedFileExtensions) {
     this.maxFileUploadBytes = maxFileUploadBytes;
-    this.allowedFileExtensions = allowedFileExtensions;
-    this.filenameDisallowedCharactersRegex = filenameDisallowedCharactersRegex;
+    this.defaultPermittedFileExtensions = defaultPermittedFileExtensions;
   }
 
   public Integer getMaxFileUploadBytes() {
     return maxFileUploadBytes;
   }
 
-  public List<String> getAllowedFileExtensions() {
-    return allowedFileExtensions;
+  public Set<String> getDefaultPermittedFileExtensions() {
+    return defaultPermittedFileExtensions;
   }
 
-  public String getFilenameDisallowedCharactersRegex() {
-    return filenameDisallowedCharactersRegex;
-  }
 }

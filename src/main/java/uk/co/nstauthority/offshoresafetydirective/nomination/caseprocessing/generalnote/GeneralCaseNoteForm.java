@@ -2,8 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gen
 
 import java.util.ArrayList;
 import java.util.List;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.fivium.formlibrary.input.StringInput;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 
 public class GeneralCaseNoteForm {
 
@@ -11,7 +11,7 @@ public class GeneralCaseNoteForm {
 
   private StringInput caseNoteText = new StringInput("caseNoteText", "case note text");
 
-  private List<FileUploadForm> caseNoteFiles = new ArrayList<>();
+  private List<UploadedFileForm> caseNoteFiles = new ArrayList<>();
 
   public StringInput getCaseNoteSubject() {
     return caseNoteSubject;
@@ -29,11 +29,11 @@ public class GeneralCaseNoteForm {
     this.caseNoteText = caseNoteText;
   }
 
-  public List<FileUploadForm> getCaseNoteFiles() {
+  public List<UploadedFileForm> getCaseNoteFiles() {
     return caseNoteFiles;
   }
 
-  public void setCaseNoteFiles(List<FileUploadForm> caseNoteFiles) {
+  public void setCaseNoteFiles(List<UploadedFileForm> caseNoteFiles) {
     this.caseNoteFiles = caseNoteFiles;
   }
 }

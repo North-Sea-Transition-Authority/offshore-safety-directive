@@ -230,7 +230,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
                 ReverseRouter.route(
                     on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
                 fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
             )
         ));
   }
@@ -284,7 +284,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
                 ReverseRouter.route(
                     on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
                 fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
             )
         ))
         .andExpect(model().attribute("uploadedFiles", List.of(uploadedFileView)));

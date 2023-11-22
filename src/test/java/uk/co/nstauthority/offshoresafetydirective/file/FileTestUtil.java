@@ -95,6 +95,6 @@ public class FileTestUtil {
   }
 
   public static FileUploadConfig validFileUploadConfig() {
-    return new FileUploadConfig(1024, ".txt, .jpg, .jpeg", "[/\\\\?%*:|\\\"<>]");
+    return new FileUploadConfig(1024, ".txt, .jpg, .jpeg");
   }
 }

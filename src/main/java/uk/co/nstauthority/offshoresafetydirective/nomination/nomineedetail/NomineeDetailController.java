@@ -153,7 +153,7 @@ public class NomineeDetailController {
         ReverseRouter.route(
             on(NomineeDetailAppendixFileController.class).delete(nominationId, nominationDetailId, null)),
         fileUploadConfig.getMaxFileUploadBytes().toString(),
-        String.join(",", fileUploadConfig.getAllowedFileExtensions())
+        String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
     );
   }
 

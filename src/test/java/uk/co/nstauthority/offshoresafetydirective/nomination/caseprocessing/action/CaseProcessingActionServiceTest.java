@@ -1,19 +1,29 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.unit.DataSize;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -26,7 +36,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
@@ -36,14 +45,22 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.with
 @ExtendWith(MockitoExtension.class)
 class CaseProcessingActionServiceTest {
 
-  private final FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder()
-      .withAllowedFileExtensions(List.of(".txt", ".pdf", ".png"))
+  private static final FileUploadConfig FILE_UPLOAD_CONFIG = FileUploadConfigTestUtil.builder()
+      .withAllowedFileExtensions(Set.of(".txt", ".pdf", ".png"))
       .build();
+
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of(".txt", ".pdf", ".png"))
+      .build();
+
+  @Mock
+  private FileService fileService;
+
   private CaseProcessingActionService caseProcessingActionService;
 
   @BeforeEach
   void setUp() {
-    caseProcessingActionService = new CaseProcessingActionService(fileUploadConfig);
+    caseProcessingActionService = new CaseProcessingActionService(FILE_UPLOAD_CONFIG, FILE_UPLOAD_PROPERTIES, fileService);
   }
 
   @Test
@@ -121,7 +138,7 @@ class CaseProcessingActionServiceTest {
                 ReverseRouter.route(on(NominationDecisionFileController.class).download(nominationId, null)),
                 ReverseRouter.route(on(NominationDecisionFileController.class).upload(nominationId, null)),
                 ReverseRouter.route(on(NominationDecisionFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
+                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
                 ".pdf"
             ))
         );
@@ -155,8 +172,8 @@ class CaseProcessingActionServiceTest {
                 ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).download(nominationId, null)),
                 ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).upload(nominationId, null)),
                 ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
+                String.join(",", FILE_UPLOAD_CONFIG.getDefaultPermittedFileExtensions())
             ))
         );
   }
@@ -164,6 +181,16 @@ class CaseProcessingActionServiceTest {
   @Test
   void createGeneralCaseNoteAction() {
     var nominationId = new NominationId(NominationDetailTestUtil.builder().build());
+
+    var maxBytes = 100;
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+        );
+
     var result = caseProcessingActionService.createGeneralCaseNoteAction(nominationId);
 
     assertThat(result)
@@ -185,14 +212,18 @@ class CaseProcessingActionServiceTest {
         .extracting(CaseProcessingAction::getModelProperties)
         .asInstanceOf(InstanceOfAssertFactories.map(String.class, Object.class))
         .containsExactly(
-            Map.entry("fileUploadTemplate", new FileUploadTemplate(
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
-            ))
-        );
+            Map.entry("fileUploadTemplate", FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(maxBytes))
+                .withAllowedExtensions(FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions())
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CASE_NOTE.name()
+                    )))
+                .build()
+            ));
   }
 
   @Test
@@ -288,8 +319,8 @@ class CaseProcessingActionServiceTest {
                 ReverseRouter.route(on(NominationConsultationResponseFileController.class).download(nominationId, null)),
                 ReverseRouter.route(on(NominationConsultationResponseFileController.class).upload(nominationId, null)),
                 ReverseRouter.route(on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                FILE_UPLOAD_CONFIG.getMaxFileUploadBytes().toString(),
+                String.join(",", FILE_UPLOAD_CONFIG.getDefaultPermittedFileExtensions())
             ))
         );
   }

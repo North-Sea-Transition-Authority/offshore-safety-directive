@@ -35,7 +35,7 @@ class FileUploadValidationServiceTest {
 
   @BeforeAll
   static void beforeAll() throws IOException {
-    fileUploadConfig = new FileUploadConfig(1024, ".txt, .jpg, .jpeg", "");
+    fileUploadConfig = new FileUploadConfig(1024, ".txt, .jpg, .jpeg");
 
     multipartFile = Mockito.mock(MultipartFile.class);
     when(multipartFile.getInputStream()).thenReturn(mock(InputStream.class));
@@ -56,7 +56,7 @@ class FileUploadValidationServiceTest {
     String filename = "text.exe";
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.EXTENSION_NOT_ALLOWED);
   }
@@ -68,7 +68,7 @@ class FileUploadValidationServiceTest {
     var filename = allowedFilenameAndExtension;
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -80,7 +80,7 @@ class FileUploadValidationServiceTest {
     var filename = allowedFilenameAndExtension;
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.MAX_FILE_SIZE_EXCEEDED);
   }
@@ -92,7 +92,7 @@ class FileUploadValidationServiceTest {
     var filename = allowedFilenameAndExtension;
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -104,7 +104,7 @@ class FileUploadValidationServiceTest {
     when(virusCheckService.hasVirus(any(InputStream.class))).thenReturn(true);
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).contains(UploadErrorType.VIRUS_FOUND_IN_FILE);
   }
@@ -117,7 +117,7 @@ class FileUploadValidationServiceTest {
     when(virusCheckService.hasVirus(any(InputStream.class))).thenReturn(false);
 
     var uploadErrorType = fileUploadValidationService.validateFileUpload(multipartFile, fileSize, filename,
-        fileUploadConfig.getAllowedFileExtensions());
+        fileUploadConfig.getDefaultPermittedFileExtensions());
 
     assertThat(uploadErrorType).isEmpty();
   }
@@ -127,7 +127,7 @@ class FileUploadValidationServiceTest {
 
     long fileSize = allowedFileSize;
     var filename = allowedFilenameAndExtension;
-    var allowedFileExtensions = fileUploadConfig.getAllowedFileExtensions();
+    var allowedFileExtensions = fileUploadConfig.getDefaultPermittedFileExtensions();
 
     when(virusCheckService.hasVirus(any(InputStream.class))).thenThrow(MockitoException.class);
 

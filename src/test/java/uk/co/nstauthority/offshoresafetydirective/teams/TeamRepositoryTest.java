@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +42,7 @@ class TeamRepositoryTest {
 
     // AND the same user is a member of both teams
     var memberInRegulatorTeam = TeamMemberRoleTestUtil.Builder()
-        .withWebUserAccountId(100)
+        .withWebUserAccountId(new Random().nextInt(Integer.MAX_VALUE))
         .withTeam(regulatorTeam)
         .withUuid(null)
         .build();

@@ -21,14 +21,19 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfigTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
@@ -69,6 +74,9 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 class NominationCaseProcessingModelAndViewGeneratorTest {
 
   private final FileUploadConfig fileUploadConfig = FileUploadConfigTestUtil.builder().build();
+  private final FileUploadProperties fileUploadProperties = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of("default-extension"))
+      .build();
 
   @Mock
   private NominationCaseProcessingService nominationCaseProcessingService;
@@ -94,6 +102,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   @Mock
   private NominationCaseProcessingSelectionService nominationCaseProcessingSelectionService;
 
+  @Mock
+  private FileService fileService;
+
   private NominationCaseProcessingModelAndViewGenerator modelAndViewGenerator;
 
   private NominationDetail nominationDetail;
@@ -107,7 +118,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .build();
     userDetail = ServiceUserDetailTestUtil.Builder().build();
 
-    var nominationManagementInteractableService = new CaseProcessingActionService(fileUploadConfig);
+    var nominationManagementInteractableService = new CaseProcessingActionService(fileUploadConfig,
+        fileUploadProperties, fileService);
 
     modelAndViewGenerator = new NominationCaseProcessingModelAndViewGenerator(nominationCaseProcessingService,
         nominationSummaryService, permissionService, userDetailService, caseEventQueryService,
@@ -324,6 +336,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(100))
+                .withAllowedExtensions(Set.of("ext"))
+        );
+
     nominationDetail = NominationDetailTestUtil.builder()
         .withId(UUID.randomUUID())
         .withStatus(NominationStatus.SUBMITTED)
@@ -447,6 +466,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         userDetail.displayName()).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(100))
+                .withAllowedExtensions(Set.of("ext"))
+        );
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withId(UUID.randomUUID())
@@ -578,6 +604,13 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         userDetail.displayName()).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(100))
+                .withAllowedExtensions(Set.of("ext"))
+        );
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withId(UUID.randomUUID())

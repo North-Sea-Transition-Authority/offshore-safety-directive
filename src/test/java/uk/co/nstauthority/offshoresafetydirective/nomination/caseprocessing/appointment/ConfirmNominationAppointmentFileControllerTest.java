@@ -101,7 +101,7 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
         ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
@@ -148,7 +148,7 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
         ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
@@ -193,7 +193,7 @@ class ConfirmNominationAppointmentFileControllerTest extends AbstractControllerT
         ConfirmNominationAppointmentFileController.PURPOSE,
         ConfirmNominationAppointmentFileController.VIRTUAL_FOLDER,
         mockMultipartFile,
-        fileUploadConfig.getAllowedFileExtensions()
+        fileUploadConfig.getDefaultPermittedFileExtensions()
     )).thenReturn(validUploadResult);
 
     mockMvc.perform(multipart(ReverseRouter.route(

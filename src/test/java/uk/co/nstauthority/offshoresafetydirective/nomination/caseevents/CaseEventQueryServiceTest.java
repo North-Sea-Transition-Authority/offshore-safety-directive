@@ -570,43 +570,41 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
-  void getCaseEventForNominationDetail_whenFound_thenAssert() {
+  void getCaseEventForNomination_whenFound_thenAssert() {
     var nominationDetailVersion = 2;
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationDetailVersion)
         .build();
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    when(caseEventRepository.findByUuidAndNominationAndNominationVersion(
+    when(caseEventRepository.findByUuidAndNomination(
         caseEvent.getUuid(),
-        nominationDetail.getNomination(),
-        nominationDetailVersion
+        nominationDetail.getNomination()
     )).thenReturn(Optional.of(caseEvent));
 
-    var result = caseEventQueryService.getCaseEventForNominationDetail(
+    var result = caseEventQueryService.getCaseEventForNomination(
         new CaseEventId(caseEvent.getUuid()),
-        nominationDetail
+        nominationDetail.getNomination()
     );
     assertThat(result).contains(caseEvent);
   }
 
   @Test
-  void getCaseEventForNominationDetail_whenNotFound_thenAssertEmpty() {
+  void getCaseEventForNomination_whenNotFound_thenAssertEmpty() {
     var nominationDetailVersion = 2;
     var nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(nominationDetailVersion)
         .build();
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    when(caseEventRepository.findByUuidAndNominationAndNominationVersion(
+    when(caseEventRepository.findByUuidAndNomination(
         caseEvent.getUuid(),
-        nominationDetail.getNomination(),
-        nominationDetailVersion
+        nominationDetail.getNomination()
     )).thenReturn(Optional.empty());
 
-    var result = caseEventQueryService.getCaseEventForNominationDetail(
+    var result = caseEventQueryService.getCaseEventForNomination(
         new CaseEventId(caseEvent.getUuid()),
-        nominationDetail
+        nominationDetail.getNomination()
     );
     assertThat(result).isEmpty();
   }

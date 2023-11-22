@@ -374,7 +374,7 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
             ReverseRouter.route(
                 on(AppointmentTerminationFileController.class).delete(APPOINTMENT_ID, null)),
             fileUploadConfig.getMaxFileUploadBytes().toString(),
-            String.join(",", fileUploadConfig.getAllowedFileExtensions())
+            String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
 
         );
   }

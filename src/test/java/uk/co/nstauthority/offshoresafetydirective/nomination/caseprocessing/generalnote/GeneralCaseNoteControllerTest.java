@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -16,13 +17,13 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,6 +31,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
@@ -37,9 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
-import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -78,9 +78,6 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
-
-  @MockBean
-  private FileUploadService fileUploadService;
 
   private NominationDetail nominationDetail;
 
@@ -170,7 +167,8 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             .with(user(NOMINATION_MANAGER_USER)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
-            ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
+            ReverseRouter.route(
+                on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))))
         .andExpect(notificationBanner(expectedNotificationBanner));
 
     verify(generalCaseNoteSubmissionService).submitCaseNote(eq(nominationDetail), any(GeneralCaseNoteForm.class));
@@ -198,11 +196,8 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
     ).thenReturn(new ModelAndView(viewName));
 
     var uploadedFileId = new UploadedFileId(UUID.randomUUID());
-    var uploadedFileView = new UploadedFileView("fileId", "fileName", "fileSize", "fileDescription", Instant.now());
-    when(fileUploadService.getUploadedFileViewList(List.of(uploadedFileId)))
-        .thenReturn(List.of(uploadedFileView));
 
-    mockMvc.perform(post(ReverseRouter.route(
+    var result = mockMvc.perform(post(ReverseRouter.route(
             on(GeneralCaseNoteController.class).submitGeneralCaseNote(NOMINATION_ID, true,
                 CaseProcessingActionIdentifier.GENERAL_NOTE, null, null, null)))
             .with(csrf())
@@ -210,8 +205,16 @@ class GeneralCaseNoteControllerTest extends AbstractControllerTest {
             .param("caseNoteFiles[0].uploadedFileId", uploadedFileId.uuid().toString()))
         .andExpect(status().isOk())
         .andExpect(view().name(viewName))
-        .andExpect(model().attribute("existingCaseNoteFiles", List.of(uploadedFileView)))
-        .andExpect(model().attribute("caseNoteErrorList", errorList));
+        .andExpect(model().attribute("caseNoteErrorList", errorList))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(result).isNotNull();
+
+    assertThat(result.getModel().get("existingCaseNoteFiles"))
+        .asInstanceOf(InstanceOfAssertFactories.list(UploadedFileForm.class))
+        .extracting(UploadedFileForm::getFileId)
+        .containsExactly(uploadedFileId.uuid());
 
     verify(generalCaseNoteSubmissionService, never()).submitCaseNote(eq(nominationDetail),
         any(GeneralCaseNoteForm.class));

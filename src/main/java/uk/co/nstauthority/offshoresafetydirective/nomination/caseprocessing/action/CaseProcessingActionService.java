@@ -6,8 +6,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadConfig;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadTemplate;
+import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.ConfirmNominationAppointmentController;
@@ -19,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.deci
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteController;
-import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote.GeneralCaseNoteFileController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.NominationPortalReferenceController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks.NominationQaChecksController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.update.NominationRequestUpdateController;
@@ -32,10 +35,15 @@ public class CaseProcessingActionService {
   public static final String ALLOWED_NOMINATION_DECISION_EXTENSIONS_CSV = ".pdf";
 
   private final FileUploadConfig fileUploadConfig;
+  private final FileUploadProperties fileUploadProperties;
+  private final FileService fileService;
 
   @Autowired
-  public CaseProcessingActionService(FileUploadConfig fileUploadConfig) {
+  public CaseProcessingActionService(FileUploadConfig fileUploadConfig, FileUploadProperties fileUploadProperties,
+                                     FileService fileService) {
     this.fileUploadConfig = fileUploadConfig;
+    this.fileUploadProperties = fileUploadProperties;
+    this.fileService = fileService;
   }
 
   public CaseProcessingAction createQaChecksAction(NominationId nominationId) {
@@ -122,7 +130,7 @@ public class CaseProcessingActionService {
                 ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).upload(nominationId, null)),
                 ReverseRouter.route(on(ConfirmNominationAppointmentFileController.class).delete(nominationId, null)),
                 String.valueOf(fileUploadConfig.getMaxFileUploadBytes()),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
             )
         )
         .build();
@@ -141,13 +149,19 @@ public class CaseProcessingActionService {
         )
         .withAdditionalProperty(
             "fileUploadTemplate",
-            new FileUploadTemplate(
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).download(nominationId, null)),
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).upload(nominationId, null)),
-                ReverseRouter.route(on(GeneralCaseNoteFileController.class).delete(nominationId, null)),
-                fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
-            )
+            fileService.getFileUploadAttributes()
+                .withDownloadUrl(ReverseRouter.route(on(UnlinkedFileController.class).download(null)))
+                .withDeleteUrl(ReverseRouter.route(on(UnlinkedFileController.class).delete(null)))
+                .withUploadUrl(
+                    ReverseRouter.route(on(UnlinkedFileController.class).upload(
+                        null,
+                        FileDocumentType.CASE_NOTE.name()
+                    )))
+                .withAllowedExtensions(
+                    FileDocumentType.CASE_NOTE.getAllowedExtensions()
+                        .orElse(fileUploadProperties.defaultPermittedFileExtensions())
+                )
+                .build()
         )
         .build();
   }
@@ -159,7 +173,8 @@ public class CaseProcessingActionService {
             CaseProcessingActionGroup.RELATED_APPLICATIONS,
             caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(on(NominationPortalReferenceController.class)
-                .updatePearsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null, null))
+                .updatePearsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null,
+                    null))
         )
         .build();
   }
@@ -171,7 +186,8 @@ public class CaseProcessingActionService {
             CaseProcessingActionGroup.RELATED_APPLICATIONS,
             caseProcessingActionItem.getIdentifier(),
             ReverseRouter.route(on(NominationPortalReferenceController.class)
-                .updateWonsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null, null))
+                .updateWonsReferences(nominationId, true, caseProcessingActionItem.getIdentifier().value(), null, null,
+                    null))
         )
         .build();
   }
@@ -207,7 +223,7 @@ public class CaseProcessingActionService {
                 ReverseRouter.route(
                     on(NominationConsultationResponseFileController.class).delete(nominationId, null)),
                 fileUploadConfig.getMaxFileUploadBytes().toString(),
-                String.join(",", fileUploadConfig.getAllowedFileExtensions())
+                String.join(",", fileUploadConfig.getDefaultPermittedFileExtensions())
             )
         )
         .build();

@@ -1,4 +1,5 @@
 [submodule "fivium-design-system-core"]
 	path = fivium-design-system-core
 	url = git@bitbucket.org:fiviumuk/fivium-design-system-core.git
-	branch = release/v5.4.6-govuk-4.4.1
+	; TODO OSDOP-437 - Change to release branch
+	branch = develop

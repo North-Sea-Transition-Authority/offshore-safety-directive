@@ -11,7 +11,9 @@ import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
@@ -83,9 +85,9 @@ public class CaseEventService {
 
   @Transactional
   public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body,
-                                         List<FileUploadForm> fileUploadForms) {
+                                         List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
-    caseEventFileService.finalizeFileUpload(nominationDetail, caseEvent, fileUploadForms);
+    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CASE_NOTE);
   }
 
   @Transactional

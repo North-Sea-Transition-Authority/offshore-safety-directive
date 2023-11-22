@@ -2,27 +2,65 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.gen
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralCaseNoteValidatorTest {
 
-  @InjectMocks
+  private static final String VALID_EXTENSION = "valid-extension";
+  private static final FileUploadProperties FILE_UPLOAD_PROPERTIES = FileUploadPropertiesTestUtil.builder()
+      .withDefaultPermittedFileExtensions(Set.of("default-extension", VALID_EXTENSION))
+      .build();
   private GeneralCaseNoteValidator generalCaseNoteValidator;
+
+  @BeforeEach
+  void setUp() {
+    generalCaseNoteValidator = new GeneralCaseNoteValidator(FILE_UPLOAD_PROPERTIES);
+  }
 
   @Test
   void validate_whenFormIsValid_thenVerifyNoErrors() {
     var form = new GeneralCaseNoteForm();
     form.getCaseNoteSubject().setInputValue("Subject");
     form.getCaseNoteText().setInputValue("Case note body text");
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.%s".formatted(VALID_EXTENSION))
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    form.getCaseNoteFiles().add(uploadedFileForm);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    generalCaseNoteValidator.validate(form, bindingResult);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenFormIsValid_andHasNoDocuments_thenVerifyNoErrors() {
+    var form = new GeneralCaseNoteForm();
+    form.getCaseNoteSubject().setInputValue("Subject");
+    form.getCaseNoteText().setInputValue("Case note body text");
+
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     generalCaseNoteValidator.validate(form, bindingResult);
@@ -45,6 +83,40 @@ class GeneralCaseNoteValidatorTest {
             entry("caseNoteText.inputValue", Set.of("Enter case note text"))
         );
   }
+
+  @Test
+  void validate_whenFileExtensionIsUnsupported_thenVerifyErrors() {
+    var form = new GeneralCaseNoteForm();
+    form.getCaseNoteSubject().setInputValue("Subject");
+    form.getCaseNoteText().setInputValue("Case note body text");
+
+    var uploadedFile = UploadedFileTestUtil.newBuilder()
+        .withName("document.invalid-extension")
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    form.getCaseNoteFiles().add(uploadedFileForm);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    generalCaseNoteValidator.validate(form, bindingResult);
+
+    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var allowedExtensions = String.join(", ", FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions());
+
+    assertThat(errors)
+        .containsExactly(
+            entry("caseNoteFiles", Set.of(
+                "The selected files must be a %s".formatted(allowedExtensions)
+            ))
+        );
+  }
+
 
   @Test
   void supports_unsupportedClass() {

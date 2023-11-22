@@ -10,23 +10,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadForm;
-import uk.co.nstauthority.offshoresafetydirective.file.FileUploadService;
+import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
-import uk.co.nstauthority.offshoresafetydirective.file.FileAssociationService;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralCaseNoteSubmissionServiceTest {
 
   @Mock
   private CaseEventService caseEventService;
-
-  @Mock
-  private FileUploadService fileUploadService;
-
-  @Mock
-  private FileAssociationService fileAssociationService;
 
   @InjectMocks
   private GeneralCaseNoteSubmissionService generalCaseNoteSubmissionService;
@@ -36,23 +28,19 @@ class GeneralCaseNoteSubmissionServiceTest {
     var subject = "Test subject";
     var caseNoteText = "Test text";
     var detail = NominationDetailTestUtil.builder().build();
-    var fileUploadForm = new FileUploadForm();
-    fileUploadForm.setUploadedFileId(UUID.randomUUID());
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
     var form = new GeneralCaseNoteForm();
     form.getCaseNoteSubject().setInputValue(subject);
     form.getCaseNoteText().setInputValue(caseNoteText);
-    form.setCaseNoteFiles(List.of(fileUploadForm));
+    form.setCaseNoteFiles(List.of(uploadedFileForm));
 
 
     generalCaseNoteSubmissionService.submitCaseNote(detail, form);
 
-    verify(caseEventService).createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(fileUploadForm));
-    verify(fileUploadService).updateFileUploadDescriptions(List.of(fileUploadForm));
-    verify(fileAssociationService).submitFiles(List.of(fileUploadForm));
+    verify(caseEventService).createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of(uploadedFileForm));
 
     verifyNoMoreInteractions(caseEventService);
-    verifyNoMoreInteractions(fileUploadService);
-    verifyNoMoreInteractions(fileAssociationService);
 
   }
 }
