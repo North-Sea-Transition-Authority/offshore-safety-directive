@@ -30,7 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manage
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = InstallationJourneyManagerController.class)
 class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
@@ -40,7 +40,7 @@ class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
       .build();
 
   @MockBean

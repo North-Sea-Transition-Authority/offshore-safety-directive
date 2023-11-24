@@ -49,7 +49,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSec
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = RelatedInformationController.class)
 class RelatedInformationControllerTest extends AbstractControllerTest {
@@ -87,7 +87,7 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
         .thenReturn(nominationDetail);
 
     var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
-        .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
         .build();
 
     when(teamMemberService.getUserAsTeamMembers(user))

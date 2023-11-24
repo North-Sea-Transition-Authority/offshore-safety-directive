@@ -150,8 +150,7 @@ class PermissionServiceTest {
         .containsOnlyKeys(TeamType.REGULATOR, TeamType.INDUSTRY)
         .containsEntry(TeamType.REGULATOR, Set.of(
             RolePermission.VIEW_NOMINATIONS,
-            RolePermission.MANAGE_NOMINATIONS,
-            RolePermission.CREATE_NOMINATION
+            RolePermission.MANAGE_NOMINATIONS
         ))
         .containsEntry(TeamType.INDUSTRY, Set.of(RolePermission.GRANT_ROLES));
   }
