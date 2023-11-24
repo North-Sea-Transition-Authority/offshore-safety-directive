@@ -37,7 +37,7 @@ class ApplicantDetailPersistenceService {
   private ApplicantDetail createApplicantDetail(NominationDetail nominationDetail, ApplicantDetailForm form) {
     return new ApplicantDetail(
         nominationDetail,
-        form.getPortalOrganisationId(),
+        Integer.valueOf(form.getPortalOrganisationId()),
         form.getApplicantReference()
     );
   }
@@ -46,7 +46,7 @@ class ApplicantDetailPersistenceService {
                                                 ApplicantDetail applicantDetail,
                                                 ApplicantDetailForm form) {
     applicantDetail.setNominationDetail(nominationDetail);
-    applicantDetail.setPortalOrganisationId(form.getPortalOrganisationId());
+    applicantDetail.setPortalOrganisationId(Integer.valueOf(form.getPortalOrganisationId()));
     applicantDetail.setApplicantReference(form.getApplicantReference());
     return applicantDetail;
   }

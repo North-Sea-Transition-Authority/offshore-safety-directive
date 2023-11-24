@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -59,14 +60,13 @@ class NomineeDetailFormValidator implements SmartValidator {
 
     var form = (NomineeDetailForm) target;
 
-    if (noNomineeProvided(form)) {
-
+    if (noNomineeProvided(form) || !NumberUtils.isDigits(form.getNominatedOrganisationId())) {
       rejectValue(errors, NOMINEE_REQUIRED_ERROR);
 
     } else {
 
       var energyPortalOrganisation = portalOrganisationUnitQueryService
-          .getOrganisationById(form.getNominatedOrganisationId(), NOMINATED_ORGANISATION_VALIDATION_PURPOSE);
+          .getOrganisationById(Integer.valueOf(form.getNominatedOrganisationId()), NOMINATED_ORGANISATION_VALIDATION_PURPOSE);
 
       if (energyPortalOrganisation.isEmpty()) {
 

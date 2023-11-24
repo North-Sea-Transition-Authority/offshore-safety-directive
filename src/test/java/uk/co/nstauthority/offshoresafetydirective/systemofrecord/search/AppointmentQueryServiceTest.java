@@ -175,7 +175,7 @@ class AppointmentQueryServiceTest {
 
     // given a search filter with an appointed operator filter
     var searchFilter = SystemOfRecordSearchFilter.builder()
-        .withAppointedOperatorId(filteredAppointedOperatorId)
+        .withAppointedOperatorId(String.valueOf(filteredAppointedOperatorId))
         .build();
 
     var installationAsset = AssetTestUtil.builder()
@@ -231,7 +231,7 @@ class AppointmentQueryServiceTest {
   @Test
   void search_whenAppointedOperatorFilterAddedAndNoMatchingAppointments_thenNoResultsReturned() {
 
-    var filteredAppointedOperatorId = 10;
+    var filteredAppointedOperatorId = "10";
 
     // given a search form with an appointed operator filter
     var searchFilter = SystemOfRecordSearchFilter.builder()
@@ -507,7 +507,7 @@ class AppointmentQueryServiceTest {
 
     // given a search form with an installation ID provided
     var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
-        .withInstallationId(100)
+        .withInstallationId("100")
         .build();
 
     // and an asset with a different installation ID exists
@@ -539,7 +539,7 @@ class AppointmentQueryServiceTest {
   @Test
   void search_whenInstallationIdFilterAndMatchingAppointments_thenPopulatedListReturned() {
 
-    var filteredInstallationId = 100;
+    var filteredInstallationId = "100";
 
     // given a search form with an installation ID provided
     var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
@@ -548,7 +548,7 @@ class AppointmentQueryServiceTest {
 
     // and an asset with that installation ID exists
     var matchedInstallationAsset = AssetTestUtil.builder()
-        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetId(filteredInstallationId)
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .withId(null)
         .build();
@@ -576,7 +576,7 @@ class AppointmentQueryServiceTest {
         )
         .contains(
             tuple(
-                String.valueOf(filteredInstallationId),
+                filteredInstallationId,
                 PortalAssetType.INSTALLATION
             )
         );
@@ -585,7 +585,7 @@ class AppointmentQueryServiceTest {
   @Test
   void search_whenInstallationIdFilterAndNoInstallationAssetTypeRestriction_thenVerifyOnlyInstallationsReturned() {
 
-    var filteredInstallationId = 100;
+    var filteredInstallationId = "100";
 
     // given a search form with an installation ID provided
     var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
@@ -594,7 +594,7 @@ class AppointmentQueryServiceTest {
 
     // and an asset with that wellbore ID exists
     var matchedInstallationAsset = AssetTestUtil.builder()
-        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetId(filteredInstallationId)
         .withPortalAssetType(PortalAssetType.INSTALLATION)
         .withId(null)
         .build();
@@ -612,7 +612,7 @@ class AppointmentQueryServiceTest {
 
     // and a non installation asset exists with the same ID as a installation asset
     var installationAssetWithSameIdAsWellbore = AssetTestUtil.builder()
-        .withPortalAssetId(String.valueOf(filteredInstallationId))
+        .withPortalAssetId(filteredInstallationId)
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .withId(null)
         .build();
@@ -641,7 +641,7 @@ class AppointmentQueryServiceTest {
         )
         .contains(
             tuple(
-                String.valueOf(filteredInstallationId),
+                filteredInstallationId,
                 PortalAssetType.INSTALLATION
             )
         );
@@ -653,7 +653,7 @@ class AppointmentQueryServiceTest {
         )
         .doesNotContain(
             tuple(
-                String.valueOf(filteredInstallationId),
+                filteredInstallationId,
                 PortalAssetType.WELLBORE
             )
         );
@@ -850,7 +850,7 @@ class AppointmentQueryServiceTest {
 
     // given a search form with an installation ID provided
     var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
-        .withInstallationId(123)
+        .withInstallationId("123")
         .build();
 
     // and an installation asset exists
@@ -887,7 +887,7 @@ class AppointmentQueryServiceTest {
 
     // given a search form with an installation ID provided
     var searchFilterWithInstallationId = SystemOfRecordSearchFilter.builder()
-        .withInstallationId(123)
+        .withInstallationId("123")
         .build();
 
     // and an installation asset exists

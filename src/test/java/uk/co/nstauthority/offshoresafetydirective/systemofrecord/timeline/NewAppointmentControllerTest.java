@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -432,6 +433,42 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
                 portalOrganisationDto.displayName()
             )
         ));
+  }
+
+  @Test
+  void createAppointment_whenInvalidPreviouslySelectedItem_thenEmptyMap() throws Exception {
+    var assetDto = AssetDtoTestUtil.builder().build();
+    when(assetAccessService.getAsset(assetDto.assetId()))
+        .thenReturn(Optional.of(assetDto));
+
+    var assetName = "asset name";
+    when(portalAssetRetrievalService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
+        .thenReturn(Optional.of(assetName));
+
+    var phaseMap = Map.of("key", "value");
+    when(appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
+        .thenReturn(phaseMap);
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId("FISH")
+        .build();
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("error", "error", "error.message"));
+      return invocation;
+    }).when(appointmentCorrectionValidator).validate(any(), any(), any());
+
+    mockMvc.perform(post(
+            ReverseRouter.route(
+                on(NewAppointmentController.class).createNewAppointment(assetDto.assetId(), null, null, null)))
+            .with(user(USER))
+            .with(csrf())
+            .flashAttr("form", form))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("preselectedOperator", Map.of()));
+
+    verify(portalOrganisationUnitQueryService, never()).getOrganisationById(any(), any());
   }
 
   @ParameterizedTest

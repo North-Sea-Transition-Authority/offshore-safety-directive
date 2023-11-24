@@ -10,6 +10,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,7 +56,7 @@ class ApplicantDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getPortalOrganisationId(),
+        Integer.valueOf(form.getPortalOrganisationId()),
         ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(validOrganisation));
@@ -79,7 +82,7 @@ class ApplicantDetailFormValidatorTest {
     var form = ApplicantDetailFormTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getPortalOrganisationId(),
+            Integer.valueOf(form.getPortalOrganisationId()),
         ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.empty());
@@ -99,7 +102,7 @@ class ApplicantDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getPortalOrganisationId(),
+            Integer.valueOf(form.getPortalOrganisationId()),
         ApplicantDetailFormValidator.APPLICANT_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(inactiveOrganisation));
@@ -113,6 +116,17 @@ class ApplicantDetailFormValidatorTest {
     );
 
     assertErrorCodesAndMessages(bindingResult, expectedError);
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenApplicantOrganisationNotValid_thenError(String invalidValue) {
+    var form = ApplicantDetailFormTestUtil.builder().withOrganisationId(invalidValue).build();
+
+    var bindingResult = validateApplicantDetailsForm(form);
+
+    assertErrorCodesAndMessages(bindingResult, ApplicantDetailFormValidator.APPLICANT_REQUIRED_ERROR);
   }
 
   private void assertErrorCodesAndMessages(BindingResult bindingResult, FrontEndErrorMessage frontEndErrorMessage) {

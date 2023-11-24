@@ -59,7 +59,7 @@ class NomineeDetailFormServiceTest {
             NomineeDetailForm::getLicenseeAcknowledgeOperatorRequirements
         )
         .containsExactly(
-            nomineeDetail.getReasonForNomination(),
+            String.valueOf(nomineeDetail.getReasonForNomination()),
             String.valueOf(nomineeDetail.getPlannedStartDate().getDayOfMonth()),
             String.valueOf(nomineeDetail.getPlannedStartDate().getMonthValue()),
             String.valueOf(nomineeDetail.getPlannedStartDate().getYear()),
@@ -136,7 +136,7 @@ class NomineeDetailFormServiceTest {
             NomineeDetailForm::getLicenseeAcknowledgeOperatorRequirements
         )
         .containsExactly(
-            nominatedOrganisationId,
+            String.valueOf(nominatedOrganisationId),
             reasonForNomination,
             String.valueOf(plannedStartDate.getDayOfMonth()),
             String.valueOf(plannedStartDate.getMonthValue()),

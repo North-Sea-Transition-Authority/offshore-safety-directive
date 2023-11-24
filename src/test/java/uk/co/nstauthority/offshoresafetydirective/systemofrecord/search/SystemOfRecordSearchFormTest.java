@@ -64,14 +64,14 @@ class SystemOfRecordSearchFormTest {
   @Test
   void isEmptyExcept_whenPopulatedFormNoExceptions_thenFalse() {
     var form = new SystemOfRecordSearchForm();
-    form.setAppointedOperatorId(100);
+    form.setAppointedOperatorId("100");
     assertFalse(form.isEmptyExcept());
   }
 
   @Test
   void isEmptyExcept_whenExcludingNonNullFields_thenTrue() {
     var form = new SystemOfRecordSearchForm();
-    form.setAppointedOperatorId(100);
+    form.setAppointedOperatorId("100");
     assertTrue(form.isEmptyExcept("appointedOperatorId"));
   }
 
@@ -152,10 +152,10 @@ class SystemOfRecordSearchFormTest {
             SystemOfRecordSearchForm::getSubareaId
         )
         .containsExactly(
-            100,
-            200,
-            300,
-            400,
+            "100",
+            "200",
+            "300",
+            "400",
             "500"
         );
   }

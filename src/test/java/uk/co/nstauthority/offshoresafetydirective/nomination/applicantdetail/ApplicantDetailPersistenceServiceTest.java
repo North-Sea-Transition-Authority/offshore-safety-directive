@@ -56,7 +56,7 @@ class ApplicantDetailPersistenceServiceTest {
   void createOrUpdateApplicantDetail_whenNoEntityFound_verifyCreatedEntityProperties() {
 
     var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(1);
+    form.setPortalOrganisationId("1");
     form.setApplicantReference("ref#1");
 
     var applicantDetailArgumentCaptor = ArgumentCaptor.forClass(ApplicantDetail.class);
@@ -74,7 +74,7 @@ class ApplicantDetailPersistenceServiceTest {
             ApplicantDetail::getNominationDetail
         )
         .containsExactly(
-            form.getPortalOrganisationId(),
+            Integer.valueOf(form.getPortalOrganisationId()),
             form.getApplicantReference(),
             NOMINATION_DETAIL
         );
@@ -88,7 +88,7 @@ class ApplicantDetailPersistenceServiceTest {
     applicantDetail.setApplicantReference("previous reference");
 
     var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(1);
+    form.setPortalOrganisationId("1");
     form.setApplicantReference("new reference");
 
     var applicantDetailArgumentCaptor = ArgumentCaptor.forClass(ApplicantDetail.class);
@@ -106,7 +106,7 @@ class ApplicantDetailPersistenceServiceTest {
             ApplicantDetail::getNominationDetail
         )
         .containsExactly(
-            form.getPortalOrganisationId(),
+            Integer.valueOf(form.getPortalOrganisationId()),
             form.getApplicantReference(),
             NOMINATION_DETAIL
         );

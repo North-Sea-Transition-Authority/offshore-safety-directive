@@ -6,7 +6,7 @@ import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 
 public class AppointmentCorrectionForm {
 
-  private Integer appointedOperatorId;
+  private String appointedOperatorId;
   private String forAllPhases;
   private Set<String> phases;
   private String appointmentType;
@@ -22,11 +22,11 @@ public class AppointmentCorrectionForm {
 
   private StringInput reason = new StringInput("reason", "a reason for the correction");
 
-  public Integer getAppointedOperatorId() {
+  public String getAppointedOperatorId() {
     return appointedOperatorId;
   }
 
-  public void setAppointedOperatorId(Integer appointedOperatorId) {
+  public void setAppointedOperatorId(String appointedOperatorId) {
     this.appointedOperatorId = appointedOperatorId;
   }
 

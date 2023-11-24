@@ -49,23 +49,43 @@ record SystemOfRecordSearchUrlParams(
 
     private String subarea = "";
 
-    Builder withAppointedOperatorId(Integer appointedOperatorId) {
-      this.appointedOperator = (appointedOperatorId != null) ? String.valueOf(appointedOperatorId) : "";
+    Builder withAppointedOperatorId(String appointedOperatorId) {
+      try {
+        Integer.parseInt(appointedOperatorId);
+        this.appointedOperator = appointedOperatorId;
+      } catch (NumberFormatException e) {
+        this.appointedOperator = "";
+      }
       return this;
     }
 
-    Builder withWellboreId(Integer wellboreId) {
-      this.wellbore = (wellboreId != null) ? String.valueOf(wellboreId) : "";
+    Builder withWellboreId(String wellboreId) {
+      try {
+        Integer.parseInt(wellboreId);
+        this.wellbore = wellboreId;
+      } catch (NumberFormatException e) {
+        this.wellbore = "";
+      }
       return this;
     }
 
-    Builder withInstallationId(Integer installationId) {
-      this.installation = (installationId != null) ? String.valueOf(installationId) : "";
+    Builder withInstallationId(String installationId) {
+      try {
+        Integer.parseInt(installationId);
+        this.installation = installationId;
+      } catch (NumberFormatException e) {
+        this.installation = "";
+      }
       return this;
     }
 
-    Builder withLicenceId(Integer licenceId) {
-      this.licence = (licenceId != null) ? String.valueOf(licenceId) : "";
+    Builder withLicenceId(String licenceId) {
+      try {
+        Integer.parseInt(licenceId);
+        this.licence = licenceId;
+      } catch (NumberFormatException e) {
+        this.licence = "";
+      }
       return this;
     }
 

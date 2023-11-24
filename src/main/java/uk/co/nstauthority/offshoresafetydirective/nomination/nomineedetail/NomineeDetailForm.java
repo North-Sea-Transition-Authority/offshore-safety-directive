@@ -6,7 +6,7 @@ import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 
 class NomineeDetailForm {
 
-  private Integer nominatedOrganisationId;
+  private String nominatedOrganisationId;
   private String reasonForNomination;
   private String plannedStartDay;
   private String plannedStartMonth;
@@ -16,11 +16,11 @@ class NomineeDetailForm {
   private String operatorHasCapacity;
   private String operatorHasAuthority;
 
-  public Integer getNominatedOrganisationId() {
+  public String getNominatedOrganisationId() {
     return nominatedOrganisationId;
   }
 
-  public void setNominatedOrganisationId(Integer nominatedOrganisationId) {
+  public void setNominatedOrganisationId(String nominatedOrganisationId) {
     this.nominatedOrganisationId = nominatedOrganisationId;
   }
 

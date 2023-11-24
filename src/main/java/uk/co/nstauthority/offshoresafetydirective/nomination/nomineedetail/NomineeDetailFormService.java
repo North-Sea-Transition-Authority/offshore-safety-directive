@@ -39,7 +39,7 @@ class NomineeDetailFormService {
 
   private NomineeDetailForm nomineeDetailEntityToForm(NomineeDetail entity) {
     var form = new NomineeDetailForm();
-    form.setNominatedOrganisationId(entity.getNominatedOrganisationId());
+    form.setNominatedOrganisationId(String.valueOf(entity.getNominatedOrganisationId()));
     form.setReasonForNomination(entity.getReasonForNomination());
     form.setPlannedStartDay(String.valueOf(entity.getPlannedStartDate().getDayOfMonth()));
     form.setPlannedStartMonth(String.valueOf(entity.getPlannedStartDate().getMonthValue()));

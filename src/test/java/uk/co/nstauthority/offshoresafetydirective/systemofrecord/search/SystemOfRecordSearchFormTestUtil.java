@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import java.util.Objects;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 class SystemOfRecordSearchFormTestUtil {
@@ -54,10 +55,10 @@ class SystemOfRecordSearchFormTestUtil {
 
     SystemOfRecordSearchForm build() {
       var form = new SystemOfRecordSearchForm();
-      form.setAppointedOperatorId(appointedOperatorId);
-      form.setWellboreId(wellboreId);
-      form.setInstallationId(installationId);
-      form.setLicenceId(licenceId);
+      form.setAppointedOperatorId(Objects.toString(appointedOperatorId, null));
+      form.setWellboreId(Objects.toString(wellboreId, null));
+      form.setInstallationId(Objects.toString(installationId, null));
+      form.setLicenceId(Objects.toString(licenceId, null));
       form.setSubareaId(subareaId);
       return form;
     }

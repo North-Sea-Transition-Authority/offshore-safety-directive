@@ -55,11 +55,12 @@ public class CreateIndustryTeamController {
       return getModelAndView(form);
     }
 
-    var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(form.getOrgGroupId(), INDUSTRY_TEAM_PURPOSE)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            "Organisation group with id [%d] does not exist".formatted(form.getOrgGroupId())
-        ));
+    var orgGroup =
+        portalOrganisationGroupQueryService.findOrganisationById(Integer.parseInt(form.getOrgGroupId()), INDUSTRY_TEAM_PURPOSE)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Organisation group with id [%s] does not exist".formatted(form.getOrgGroupId())
+            ));
 
     var existingTeam = industryTeamService.findIndustryTeamForOrganisationGroup(orgGroup);
 

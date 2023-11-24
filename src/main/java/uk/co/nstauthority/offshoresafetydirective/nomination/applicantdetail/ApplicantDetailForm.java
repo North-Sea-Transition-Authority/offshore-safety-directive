@@ -2,14 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
 class ApplicantDetailForm {
 
-  private Integer portalOrganisationId;
+  private String portalOrganisationId;
   private String applicantReference;
 
-  public Integer getPortalOrganisationId() {
+  public String getPortalOrganisationId() {
     return portalOrganisationId;
   }
 
-  public void setPortalOrganisationId(Integer portalOrganisationId) {
+  public void setPortalOrganisationId(String portalOrganisationId) {
     this.portalOrganisationId = portalOrganisationId;
   }
 

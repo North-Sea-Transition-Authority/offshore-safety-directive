@@ -56,7 +56,7 @@ class ApplicantDetailFormServiceTest {
             ApplicantDetailForm::getApplicantReference
         )
         .containsExactly(
-            applicantDetail.getPortalOrganisationId(),
+            String.valueOf(applicantDetail.getPortalOrganisationId()),
             applicantDetail.getApplicantReference()
         );
   }

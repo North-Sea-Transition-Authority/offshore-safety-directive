@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -14,9 +15,11 @@ record SystemOfRecordSearchFilter(
 
   static SystemOfRecordSearchFilter fromSearchForm(SystemOfRecordSearchForm searchForm) {
     return new SystemOfRecordSearchFilter(
-        searchForm.getAppointedOperatorId(),
-        searchForm.getInstallationId(),
-        Optional.ofNullable(searchForm.getWellboreId()).stream().collect(Collectors.toSet()),
+        searchForm.getAppointedOperatorId() != null ? Integer.parseInt(searchForm.getAppointedOperatorId()) : null,
+        searchForm.getInstallationId() != null ? Integer.parseInt(searchForm.getInstallationId()) : null,
+        searchForm.getWellboreId() != null
+            ? Optional.of(Integer.parseInt(searchForm.getWellboreId())).stream().collect(Collectors.toSet())
+            : Collections.emptySet(),
         searchForm.getSubareaId()
     );
   }
@@ -35,13 +38,21 @@ record SystemOfRecordSearchFilter(
     private Builder() {
     }
 
-    Builder withAppointedOperatorId(Integer appointedOperatorId) {
-      this.appointedOperatorId = appointedOperatorId;
+    Builder withAppointedOperatorId(String appointedOperatorId) {
+      try {
+        this.appointedOperatorId = Integer.parseInt(appointedOperatorId);
+      } catch (NumberFormatException e) {
+        this.appointedOperatorId = null;
+      }
       return this;
     }
 
-    Builder withInstallationId(Integer installationId) {
-      this.installationId = installationId;
+    Builder withInstallationId(String installationId) {
+      try {
+        this.installationId = Integer.parseInt(installationId);
+      } catch (NumberFormatException e) {
+        this.installationId = null;
+      }
       return this;
     }
 

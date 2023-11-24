@@ -12,7 +12,7 @@ public class ApplicantDetailTestUtil {
 
   static ApplicantDetailForm getValidApplicantDetailForm() {
     var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(1);
+    form.setPortalOrganisationId("1");
     form.setApplicantReference("ref #1");
     return form;
   }

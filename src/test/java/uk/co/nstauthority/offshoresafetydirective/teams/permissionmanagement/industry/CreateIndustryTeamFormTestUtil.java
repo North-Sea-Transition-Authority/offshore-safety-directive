@@ -1,7 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class CreateIndustryTeamFormTestUtil {
@@ -16,12 +14,17 @@ public class CreateIndustryTeamFormTestUtil {
 
   public static class Builder {
 
-    private Integer orgGroupId = 110;
+    private String orgGroupId = "110";
 
     private Builder() {
     }
 
     public Builder withOrgGroupId(Integer orgGroupId) {
+      this.orgGroupId = String.valueOf(orgGroupId);
+      return this;
+    }
+
+    public Builder withOrgGroupId(String orgGroupId) {
       this.orgGroupId = orgGroupId;
       return this;
     }

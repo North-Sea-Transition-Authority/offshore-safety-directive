@@ -22,7 +22,7 @@ public class AppointmentCorrectionFormTestUtil {
 
   public static class Builder {
 
-    private Integer appointedOperatorId = 123;
+    private String appointedOperatorId = "123";
     private String forAllPhases = "false";
     private Set<String> phases = new HashSet<>();
     private String appointmentType = AppointmentType.ONLINE_NOMINATION.name();
@@ -41,6 +41,11 @@ public class AppointmentCorrectionFormTestUtil {
     }
 
     public Builder withAppointedOperatorId(Integer appointedOperatorId) {
+      this.appointedOperatorId = String.valueOf(appointedOperatorId);
+      return this;
+    }
+
+    public Builder withAppointedOperatorId(String appointedOperatorId) {
       this.appointedOperatorId = appointedOperatorId;
       return this;
     }

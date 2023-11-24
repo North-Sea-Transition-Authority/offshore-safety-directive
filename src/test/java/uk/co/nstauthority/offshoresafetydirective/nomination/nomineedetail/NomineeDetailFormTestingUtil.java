@@ -20,7 +20,7 @@ public class NomineeDetailFormTestingUtil {
   }
 
   public static class Builder {
-    private Integer nominatedOrganisationId = 200;
+    private String nominatedOrganisationId = "200";
     private String reasonForNomination = "reason for nomination";
     private final LocalDate plannedStartDate = LocalDate.now().plusYears(1L);
     private String plannedStartDateDay = String.valueOf(plannedStartDate.getDayOfMonth());
@@ -35,7 +35,7 @@ public class NomineeDetailFormTestingUtil {
     private Builder() {
     }
 
-    public Builder withNominatedOrganisationId(Integer nominatedOrganisationId) {
+    public Builder withNominatedOrganisationId(String nominatedOrganisationId) {
       this.nominatedOrganisationId = nominatedOrganisationId;
       return this;
     }
@@ -109,7 +109,7 @@ public class NomineeDetailFormTestingUtil {
 
     public NomineeDetailForm build() {
     var form = new NomineeDetailForm();
-    form.setNominatedOrganisationId(nominatedOrganisationId);
+    form.setNominatedOrganisationId(Objects.toString(nominatedOrganisationId));
     form.setReasonForNomination(reasonForNomination);
     form.setPlannedStartDay(plannedStartDateDay);
     form.setPlannedStartMonth(plannedStartDateMonth);

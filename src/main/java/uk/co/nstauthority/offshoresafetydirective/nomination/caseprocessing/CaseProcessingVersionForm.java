@@ -2,13 +2,13 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 public class CaseProcessingVersionForm {
 
-  private Integer nominationDetailVersion;
+  private String nominationDetailVersion;
 
-  public Integer getNominationDetailVersion() {
+  public String getNominationDetailVersion() {
     return nominationDetailVersion;
   }
 
-  public void setNominationDetailVersion(Integer nominationDetailVersion) {
+  public void setNominationDetailVersion(String nominationDetailVersion) {
     this.nominationDetailVersion = nominationDetailVersion;
   }
 }

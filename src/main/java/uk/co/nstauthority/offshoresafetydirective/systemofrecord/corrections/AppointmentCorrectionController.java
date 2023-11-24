@@ -237,15 +237,28 @@ public class AppointmentCorrectionController {
   }
 
   private Map<String, String> getPreselectedOperator(AppointmentCorrectionForm form) {
-    var operator = portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
-        PRE_SELECTED_OPERATOR_NAME_PURPOSE
-    );
-    return operator.stream()
-        .collect(Collectors.toMap(
-            portalOrganisationDto -> String.valueOf(portalOrganisationDto.id()),
-            OrganisationUnitDisplayUtil::getOrganisationUnitDisplayName
-        ));
+    Integer operatorId;
+
+    try {
+      operatorId = Integer.parseInt(form.getAppointedOperatorId());
+    } catch (Exception ignored) {
+      operatorId = null;
+    }
+
+    if (operatorId != null) {
+      var operator = portalOrganisationUnitQueryService.getOrganisationById(
+          operatorId,
+          PRE_SELECTED_OPERATOR_NAME_PURPOSE
+      );
+
+      return operator.stream()
+          .collect(Collectors.toMap(
+              portalOrganisationDto -> Objects.toString(portalOrganisationDto.id(), null),
+              OrganisationUnitDisplayUtil::getOrganisationUnitDisplayName
+          ));
+    }
+
+    return Map.of();
   }
 
   private Appointment getAppointment(AppointmentId appointmentId) {

@@ -9,6 +9,9 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,7 +36,7 @@ class CreateIndustryTeamValidatorTest {
 
     var portalOrganisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder().build();
     when(portalOrganisationGroupQueryService.findOrganisationById(
-        form.getOrgGroupId(),
+        Integer.parseInt(form.getOrgGroupId()),
         CreateIndustryTeamValidator.INDUSTRY_TEAM_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrganisationGroupDto));
@@ -65,7 +68,7 @@ class CreateIndustryTeamValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(portalOrganisationGroupQueryService.findOrganisationById(
-        form.getOrgGroupId(),
+            Integer.parseInt(form.getOrgGroupId()),
         CreateIndustryTeamValidator.INDUSTRY_TEAM_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.empty());
@@ -78,4 +81,25 @@ class CreateIndustryTeamValidatorTest {
             entry("orgGroupId", Set.of("Select an organisation"))
         );
   }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenOrganisationNotValid_thenError(String invalidValue) {
+    var form = CreateIndustryTeamFormTestUtil.builder()
+        .withOrgGroupId(invalidValue)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    createIndustryTeamValidator.validate(form, bindingResult);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .contains(
+            entry("orgGroupId", Set.of("Select an organisation"))
+        );
+  }
+
 }

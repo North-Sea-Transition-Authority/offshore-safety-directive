@@ -71,7 +71,7 @@ public class NominationCaseProcessingController {
     var foundVersion = NominationDetailDto.fromNominationDetail(nominationDetail).version();
 
     var form = new CaseProcessingVersionForm();
-    form.setNominationDetailVersion(foundVersion);
+    form.setNominationDetailVersion(Objects.toString(foundVersion, null));
 
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withCaseProcessingVersionForm(form)

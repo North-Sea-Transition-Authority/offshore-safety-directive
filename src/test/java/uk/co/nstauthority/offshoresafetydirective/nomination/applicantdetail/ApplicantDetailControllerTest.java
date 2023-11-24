@@ -178,7 +178,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   void createApplicantDetails_whenValidForm_assertRedirection() throws Exception {
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
     var applicationDetail = new ApplicantDetail(UUID.randomUUID());
-    applicationDetail.setPortalOrganisationId(form.getPortalOrganisationId());
+    applicationDetail.setPortalOrganisationId(Integer.valueOf(form.getPortalOrganisationId()));
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -232,7 +232,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getPortalOrganisationId(),
+        Integer.valueOf(form.getPortalOrganisationId()),
         ApplicantDetailController.PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrganisationUnit));
@@ -273,10 +273,32 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void getUpdateApplicantDetails_whenInvalidPreviouslySelectedItem_thenEmptyMap() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+
+    var form = new ApplicantDetailForm();
+    form.setPortalOrganisationId("non numeric id");
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(
+                on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId)
+            ))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
+        .andExpect(model().attribute("preselectedItems", Map.of()));
+
+    verify(portalOrganisationUnitQueryService, never()).getOrganisationById(any(), any());
+  }
+
+  @Test
   void updateApplicantDetails_whenValidForm_assertRedirection() throws Exception {
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
     var applicationDetail = new ApplicantDetail(UUID.randomUUID());
-    applicationDetail.setPortalOrganisationId(form.getPortalOrganisationId());
+    applicationDetail.setPortalOrganisationId(Integer.valueOf(form.getPortalOrganisationId()));
     applicationDetail.setApplicantReference(form.getApplicantReference());
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 

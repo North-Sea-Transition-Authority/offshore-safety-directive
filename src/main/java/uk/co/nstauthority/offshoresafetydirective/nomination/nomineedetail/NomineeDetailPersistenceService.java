@@ -40,7 +40,7 @@ class NomineeDetailPersistenceService {
   private NomineeDetail newNomineeDetailEntityFromForm(NominationDetail detail, NomineeDetailForm form) {
     return new NomineeDetail(
         detail,
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         form.getReasonForNomination(),
         createProposedStartDate(form),
         BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),
@@ -53,7 +53,7 @@ class NomineeDetailPersistenceService {
                                                           NomineeDetail nomineeDetail,
                                                           NomineeDetailForm form) {
     nomineeDetail.setNominationDetail(nominationDetail);
-    nomineeDetail.setNominatedOrganisationId(form.getNominatedOrganisationId());
+    nomineeDetail.setNominatedOrganisationId(Integer.valueOf(form.getNominatedOrganisationId()));
     nomineeDetail.setReasonForNomination(form.getReasonForNomination());
     nomineeDetail.setPlannedStartDate(createProposedStartDate(form));
     nomineeDetail.setOperatorHasAuthority(BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()));

@@ -1268,12 +1268,12 @@ class AppointmentSearchServiceTest {
         .willReturn(Collections.emptyList());
 
     var expectedInstallation = InstallationDtoTestUtil.builder()
-        .withId(searchFormWithInstallationId.getInstallationId())
+        .withId(Integer.parseInt(searchFormWithInstallationId.getInstallationId()))
         .build();
 
     // and the installation is a valid installation
     given(installationQueryService.getInstallation(
-        new InstallationId(searchFormWithInstallationId.getInstallationId()),
+        new InstallationId(Integer.parseInt(searchFormWithInstallationId.getInstallationId())),
         AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.of(expectedInstallation));
 
@@ -1343,7 +1343,7 @@ class AppointmentSearchServiceTest {
 
     // and the installation doesn't exist
     given(installationQueryService.getInstallation(
-        new InstallationId(searchFormWithInstallationId.getInstallationId()),
+        new InstallationId(Integer.parseInt(searchFormWithInstallationId.getInstallationId())),
         AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.empty());
 

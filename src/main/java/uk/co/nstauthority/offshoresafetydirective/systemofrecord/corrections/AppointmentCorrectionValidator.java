@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -132,10 +133,14 @@ public class AppointmentCorrectionValidator implements SmartValidator {
         "Select the appointed operator"
     );
 
-    if (form.getAppointedOperatorId() != null) {
+    var operatorId = NumberUtils.isDigits(form.getAppointedOperatorId())
+        ? NumberUtils.toInt(form.getAppointedOperatorId())
+        : null;
+
+    if (operatorId != null) {
 
       var operator = portalOrganisationUnitQueryService.getOrganisationById(
-          form.getAppointedOperatorId(),
+          Integer.valueOf(form.getAppointedOperatorId()),
           APPOINTED_OPERATOR_VALIDATION_PURPOSE);
 
       if (operator.isEmpty() || operator.get().isDuplicate()) {
@@ -145,7 +150,14 @@ public class AppointmentCorrectionValidator implements SmartValidator {
             "Select a valid operator"
         );
       }
+    } else {
+      bindingResult.rejectValue(
+          APPOINTED_OPERATOR_FIELD_NAME,
+          FIELD_REQUIRED_ERROR.formatted(APPOINTED_OPERATOR_FIELD_NAME),
+          "Select the appointed operator"
+      );
     }
+
   }
 
   private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form, PortalAssetType portalAssetType) {

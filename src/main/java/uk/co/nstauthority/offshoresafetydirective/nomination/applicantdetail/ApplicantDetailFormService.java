@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -31,7 +32,7 @@ class ApplicantDetailFormService {
 
   private ApplicantDetailForm applicantDetailEntityToForm(ApplicantDetail applicantDetail) {
     var form = new ApplicantDetailForm();
-    form.setPortalOrganisationId(applicantDetail.getPortalOrganisationId());
+    form.setPortalOrganisationId(Objects.toString(applicantDetail.getPortalOrganisationId(), null));
     form.setApplicantReference(applicantDetail.getApplicantReference());
     return form;
   }

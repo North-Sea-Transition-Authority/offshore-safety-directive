@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -347,6 +348,50 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 .with(user(USER)))
         .andExpect(status().isOk())
         .andExpect(model().attribute("preselectedOperator", Map.of()));
+  }
+
+  @Test
+  void renderCorrection_whenInvalidPreviouslySelectedItem_thenEmptyMap() throws Exception {
+
+    var appointmentId = new AppointmentId(UUID.randomUUID());
+
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId("FISH")
+        .build();
+
+    var asset = AssetTestUtil.builder().build();
+    var assetDto = AssetDto.fromAsset(asset);
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+
+    when(appointmentAccessService.getAppointment(appointmentId))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentCorrectionService.getForm(appointment))
+        .thenReturn(form);
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(APPOINTMENT_MANAGER));
+
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
+        .thenReturn(Optional.of(new AssetName(assetName)));
+
+    when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
+        .thenReturn(true);
+
+    mockMvc.perform(
+            get(
+                ReverseRouter.route(
+                    on(AppointmentCorrectionController.class).renderCorrection(appointmentId)
+                )
+            )
+                .with(user(USER)))
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("preselectedOperator", Map.of()));
+
+    verify(portalOrganisationUnitQueryService, never()).getOrganisationById(any(), any());
   }
 
   @ParameterizedTest

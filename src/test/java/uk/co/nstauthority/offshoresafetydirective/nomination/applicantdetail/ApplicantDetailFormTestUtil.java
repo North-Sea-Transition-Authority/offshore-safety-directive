@@ -14,11 +14,16 @@ class ApplicantDetailFormTestUtil {
 
   static class Builder {
 
-    private Integer portalOrganisationId = 300;
+    private String portalOrganisationId = "300";
 
     private String applicantReference = "applicant reference";
 
     Builder withOrganisationId(Integer organisationId) {
+      this.portalOrganisationId = String.valueOf(organisationId);
+      return this;
+    }
+
+    Builder withOrganisationId(String organisationId) {
       this.portalOrganisationId = organisationId;
       return this;
     }

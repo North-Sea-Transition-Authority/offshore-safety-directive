@@ -13,10 +13,10 @@ class SystemOfRecordSearchUrlParamsTest {
   void getUrlQueryParams_whenNoNullInputs_thenAllFieldValuesInMap() {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withWellboreId(100)
-        .withAppointedOperatorId(200)
-        .withInstallationId(300)
-        .withLicenceId(400)
+        .withWellboreId("100")
+        .withAppointedOperatorId("200")
+        .withInstallationId("300")
+        .withLicenceId("400")
         .withSubareaId("500")
         .build();
 
@@ -36,7 +36,7 @@ class SystemOfRecordSearchUrlParamsTest {
   void getUrlQueryParams_whenSomeNullInputs_thenOnlyNonNullFieldValuesInMap() {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withWellboreId(123)
+        .withWellboreId("123")
         .withAppointedOperatorId(null)
         .build();
 
@@ -80,10 +80,10 @@ class SystemOfRecordSearchUrlParamsTest {
   void build_whenNonNullInput_thenPopulatedStringReturned() {
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withAppointedOperatorId(100)
-        .withWellboreId(200)
-        .withInstallationId(300)
-        .withLicenceId(400)
+        .withAppointedOperatorId("100")
+        .withWellboreId("200")
+        .withInstallationId("300")
+        .withLicenceId("400")
         .withSubareaId("500")
         .build();
 

@@ -112,7 +112,7 @@ class AppointmentSearchService {
             && searchForm.isEmptyExcept("installationId")
     ) {
       installationQueryService.getInstallation(
-              new InstallationId(searchForm.getInstallationId()),
+              new InstallationId(Integer.parseInt(searchForm.getInstallationId())),
               NO_INSTALLATION_APPOINTMENT_PURPOSE
           )
           .ifPresent(installation ->
@@ -136,10 +136,10 @@ class AppointmentSearchService {
     List<LicenceId> licenceIds = new ArrayList<>();
 
     Optional.ofNullable(searchForm.getWellboreId())
-        .ifPresent(wellboreId -> wellboreIds.add(new WellboreId(wellboreId)));
+        .ifPresent(wellboreId -> wellboreIds.add(new WellboreId(Integer.parseInt(wellboreId))));
 
     Optional.ofNullable(searchForm.getLicenceId())
-        .ifPresent(licenceId -> licenceIds.add(new LicenceId(licenceId)));
+        .ifPresent(licenceId -> licenceIds.add(new LicenceId(Integer.parseInt(licenceId))));
 
     Set<WellDto> resultingWellbores = wellQueryService.searchWellbores(
         wellboreIds,

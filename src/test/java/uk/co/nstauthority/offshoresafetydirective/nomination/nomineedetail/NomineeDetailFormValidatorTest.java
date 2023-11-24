@@ -68,7 +68,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        validForm.getNominatedOrganisationId(),
+        Integer.valueOf(validForm.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -106,7 +106,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        invalidForm.getNominatedOrganisationId(),
+            Integer.valueOf(invalidForm.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -129,7 +129,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        invalidForm.getNominatedOrganisationId(),
+            Integer.valueOf(invalidForm.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -151,7 +151,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        invalidForm.getNominatedOrganisationId(),
+            Integer.valueOf(invalidForm.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -173,7 +173,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+            Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -197,7 +197,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -221,7 +221,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -245,7 +245,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -263,7 +263,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.empty());
@@ -296,7 +296,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(inactiveOrganisation));
@@ -333,7 +333,7 @@ class NomineeDetailFormValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailFormValidator.NOMINATED_ORGANISATION_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
@@ -344,6 +344,22 @@ class NomineeDetailFormValidatorTest {
     assertThat(extractedErrors).containsExactly(
         entry("appendixDocuments[0].uploadedFileDescription", Set.of("appendixDocuments[0].uploadedFileDescription.required"))
     );
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenNominatedOrganisationNotValid_thenError(String invalidValue) {
+    var form = NomineeDetailFormTestingUtil.builder()
+        .withNominatedOrganisationId(invalidValue)
+        .build();
+
+    var bindingResult = validateNomineeDetailsForm(form);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    assertThat(extractedErrors).containsExactly(
+        entry("nominatedOrganisationId", Set.of("nominatedOrganisationId.required")));
   }
 
   private BindingResult validateNomineeDetailsForm(NomineeDetailForm form) {

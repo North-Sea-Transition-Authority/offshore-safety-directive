@@ -89,7 +89,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder().build();
 
     given(portalOrganisationUnitQueryService.getOrganisationById(
-        searchForm.getAppointedOperatorId(),
+        Integer.valueOf(searchForm.getAppointedOperatorId()),
         SystemOfRecordSearchController.OPERATOR_SEARCH_FILTER_PURPOSE
     ))
         .willReturn(Optional.of(expectedAppointedOperator));
@@ -161,7 +161,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             SystemOfRecordSearchForm::getWellboreId
         )
         .containsExactly(
-            123,
+            "123",
             null // the wellbore id param is not passed to the form
         );
   }
@@ -188,7 +188,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     var searchForm = new SystemOfRecordSearchForm();
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withAppointedOperatorId(123)
+        .withAppointedOperatorId("123")
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)
@@ -328,7 +328,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             SystemOfRecordSearchForm::getWellboreId
         )
         .containsExactly(
-            123,
+            "123",
             null // the wellbore id param is not passed to the form
         );
   }
@@ -354,7 +354,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     var searchForm = new SystemOfRecordSearchForm();
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withInstallationId(123)
+        .withInstallationId("123")
         .build();
 
     mockMvc.perform(
@@ -509,7 +509,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
             SystemOfRecordSearchForm::getAppointedOperatorId
         )
         .containsExactly(
-            123,
+            "123",
             null // the operator id param is not passed to the form
         );
   }
@@ -536,8 +536,8 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
     var searchForm = new SystemOfRecordSearchForm();
 
     var searchUrlParams = SystemOfRecordSearchUrlParams.builder()
-        .withWellboreId(123)
-        .withLicenceId(456)
+        .withWellboreId("123")
+        .withLicenceId("456")
         .build();
 
     mockMvc.perform(post(ReverseRouter.route(on(SystemOfRecordSearchController.class)

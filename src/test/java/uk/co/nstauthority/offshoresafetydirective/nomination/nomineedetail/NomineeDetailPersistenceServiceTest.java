@@ -82,7 +82,7 @@ class NomineeDetailPersistenceServiceTest {
         )
         .containsExactly(
             nominationDetail,
-            form.getNominatedOrganisationId(),
+            Integer.valueOf(form.getNominatedOrganisationId()),
             form.getReasonForNomination(),
             expectedStartDate,
             BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),
@@ -124,7 +124,7 @@ class NomineeDetailPersistenceServiceTest {
         )
         .containsExactly(
             nominationDetail,
-            form.getNominatedOrganisationId(),
+            Integer.valueOf(form.getNominatedOrganisationId()),
             form.getReasonForNomination(),
             expectedStartDate,
             BooleanUtils.toBooleanObject(form.getOperatorHasAuthority()),

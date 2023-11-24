@@ -127,7 +127,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -170,7 +170,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -207,7 +207,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -249,7 +249,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -437,7 +437,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -488,7 +488,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -540,7 +540,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -590,7 +590,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -652,7 +652,7 @@ class AppointmentCorrectionValidatorTest {
         .thenReturn(Optional.of(nominationDetail));
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -698,7 +698,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -750,7 +750,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -795,7 +795,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -858,7 +858,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -905,7 +905,7 @@ class AppointmentCorrectionValidatorTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(duplicatePortalOrganisationUnit));
@@ -955,7 +955,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -1001,7 +1001,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -1042,7 +1042,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -1096,7 +1096,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -1215,7 +1215,7 @@ class AppointmentCorrectionValidatorTest {
     var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getAppointedOperatorId(),
+        Integer.valueOf(form.getAppointedOperatorId()),
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrgDto));
@@ -1229,6 +1229,29 @@ class AppointmentCorrectionValidatorTest {
 
     assertThat(errorMessages)
         .containsEntry("reason.inputValue", Set.of("Enter a reason for the correction"));
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "FISH")
+  void validate_whenAppointedOrganisationNotValid_thenError(String invalidValue) {
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointedOperatorId(invalidValue)
+        .build();
+
+    var appointmentDto = AppointmentDtoTestUtil.builder().build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages).containsEntry("appointedOperatorId", Set.of("Select the appointed operator"));
   }
 
   private static class UnsupportedClass {

@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -146,15 +147,22 @@ public class ApplicantDetailController {
 
   private Map<String, String> getPreselectedPortalOrganisation(ApplicantDetailForm form) {
     var selectedItem = new HashMap<String, String>();
+    Integer organisationId;
+
     if (form.getPortalOrganisationId() != null) {
-      portalOrganisationUnitQueryService.getOrganisationById(
-              form.getPortalOrganisationId(),
-              PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE
-          )
-          .ifPresent(portalOrganisationDto -> selectedItem.put(
-              String.valueOf(portalOrganisationDto.id()),
-              OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationDto)
-          ));
+      try {
+        organisationId = Integer.valueOf(form.getPortalOrganisationId());
+      } catch (NumberFormatException ignored) {
+        organisationId = null;
+      }
+
+      if (organisationId != null) {
+        portalOrganisationUnitQueryService.getOrganisationById(organisationId, PRE_SELECTED_APPLICANT_ORGANISATION_PURPOSE)
+            .ifPresent(portalOrganisationDto -> selectedItem.put(
+                Objects.toString(portalOrganisationDto.id(), null),
+                OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(portalOrganisationDto)
+            ));
+      }
     }
     return selectedItem;
   }

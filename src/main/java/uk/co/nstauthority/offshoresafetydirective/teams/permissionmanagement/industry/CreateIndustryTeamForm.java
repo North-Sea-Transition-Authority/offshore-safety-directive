@@ -2,13 +2,13 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.in
 
 public class CreateIndustryTeamForm {
 
-  private Integer orgGroupId;
+  private String orgGroupId;
 
-  public Integer getOrgGroupId() {
+  public String getOrgGroupId() {
     return orgGroupId;
   }
 
-  public void setOrgGroupId(Integer orgGroupId) {
+  public void setOrgGroupId(String orgGroupId) {
     this.orgGroupId = orgGroupId;
   }
 }

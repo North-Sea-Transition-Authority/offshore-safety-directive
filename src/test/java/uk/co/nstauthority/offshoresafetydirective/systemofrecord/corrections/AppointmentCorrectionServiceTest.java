@@ -153,7 +153,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(appointmentArgumentCaptor.getValue())
         .hasFieldOrPropertyWithValue("id", originalAppointment.getId())
-        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", form.getAppointedOperatorId())
+        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", Integer.valueOf(form.getAppointedOperatorId()))
         .hasFieldOrPropertyWithValue("responsibleFromDate", startDate)
         .hasFieldOrPropertyWithValue("responsibleToDate", endDate)
         .hasFieldOrPropertyWithValue("createdDatetime", originalAppointment.getCreatedDatetime())
@@ -227,7 +227,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(appointmentArgumentCaptor.getValue())
         .hasFieldOrPropertyWithValue("id", originalAppointment.getId())
-        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", form.getAppointedOperatorId())
+        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", Integer.valueOf(form.getAppointedOperatorId()))
         .hasFieldOrPropertyWithValue("responsibleFromDate", startDate)
         .hasFieldOrPropertyWithValue("responsibleToDate", endDate)
         .hasFieldOrPropertyWithValue("createdDatetime", originalAppointment.getCreatedDatetime())
@@ -300,7 +300,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(appointmentArgumentCaptor.getValue())
         .hasFieldOrPropertyWithValue("id", originalAppointment.getId())
-        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", form.getAppointedOperatorId())
+        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", Integer.valueOf(form.getAppointedOperatorId()))
         .hasFieldOrPropertyWithValue("responsibleFromDate", startDate)
         .hasFieldOrPropertyWithValue("responsibleToDate", endDate)
         .hasFieldOrPropertyWithValue("createdDatetime", originalAppointment.getCreatedDatetime())
@@ -370,7 +370,7 @@ class AppointmentCorrectionServiceTest {
 
     PropertyObjectAssert.thenAssertThat(appointmentArgumentCaptor.getValue())
         .hasFieldOrPropertyWithValue("id", originalAppointment.getId())
-        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", form.getAppointedOperatorId())
+        .hasFieldOrPropertyWithValue("appointedPortalOperatorId", Integer.valueOf(form.getAppointedOperatorId()))
         .hasFieldOrPropertyWithValue("responsibleFromDate", DEEMED_DATE)
         .hasFieldOrPropertyWithValue("responsibleToDate", endDate)
         .hasFieldOrPropertyWithValue("createdDatetime", originalAppointment.getCreatedDatetime())
@@ -433,7 +433,7 @@ class AppointmentCorrectionServiceTest {
         .build();
 
     var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
+    form.setAppointedOperatorId("123");
     form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.FORWARD_APPROVED;
@@ -472,7 +472,7 @@ class AppointmentCorrectionServiceTest {
         .build();
 
     var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
+    form.setAppointedOperatorId("123");
     form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.FORWARD_APPROVED;
@@ -511,7 +511,7 @@ class AppointmentCorrectionServiceTest {
         .build();
 
     var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(123);
+    form.setAppointedOperatorId("123");
     form.setForAllPhases("true");
 
     var newAppointmentType = AppointmentType.OFFLINE_NOMINATION;
@@ -675,7 +675,7 @@ class AppointmentCorrectionServiceTest {
     var form = new AppointmentCorrectionForm();
     var appointmentType = "INVALID_APPOINTMENT_TYPE";
     form.setAppointmentType(appointmentType);
-    form.setAppointedOperatorId(123);
+    form.setAppointedOperatorId("123");
     form.setForAllPhases("true");
 
     assertThatThrownBy(() -> appointmentCorrectionService.applyCorrectionToAppointment(form, AssetDto.fromAsset(asset), originalAppointment))

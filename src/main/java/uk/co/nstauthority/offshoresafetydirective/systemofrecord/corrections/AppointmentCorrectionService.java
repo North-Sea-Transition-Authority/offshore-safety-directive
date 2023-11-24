@@ -77,7 +77,7 @@ public class AppointmentCorrectionService {
   AppointmentCorrectionForm getForm(Appointment appointment) {
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var form = new AppointmentCorrectionForm();
-    form.setAppointedOperatorId(Integer.valueOf(appointmentDto.appointedOperatorId().id()));
+    form.setAppointedOperatorId(appointmentDto.appointedOperatorId().id());
     form.setAppointmentType(appointmentDto.appointmentType().name());
     form.getOfflineNominationReference().setInputValue(appointmentDto.legacyNominationReference());
 
@@ -197,7 +197,7 @@ public class AppointmentCorrectionService {
     var appointmentType = AppointmentType.valueOf(form.getAppointmentType());
 
     appointment.setAsset(asset);
-    appointment.setAppointedPortalOperatorId(form.getAppointedOperatorId());
+    appointment.setAppointedPortalOperatorId(Integer.valueOf(form.getAppointedOperatorId()));
     appointment.setResponsibleFromDate(startDate);
     appointment.setResponsibleToDate(endDate);
     appointment.setAppointmentType(appointmentType);

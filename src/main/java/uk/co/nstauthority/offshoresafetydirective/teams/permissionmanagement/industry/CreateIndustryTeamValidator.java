@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
@@ -15,6 +16,8 @@ class CreateIndustryTeamValidator {
 
   private static final String ORGANISATION_GROUP_ID_FIELD_NAME = "orgGroupId";
 
+  private static final String ORGANISATION_GROUP_ID_REQUIRED_ERROR_MESSAGE = "Select an organisation";
+
   private final PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @Autowired
@@ -27,22 +30,31 @@ class CreateIndustryTeamValidator {
         bindingResult,
         ORGANISATION_GROUP_ID_FIELD_NAME,
         "%s.required".formatted(ORGANISATION_GROUP_ID_FIELD_NAME),
-        "Select an organisation"
+        ORGANISATION_GROUP_ID_REQUIRED_ERROR_MESSAGE
     );
 
+    var organisationGroupId = NumberUtils.isDigits(form.getOrgGroupId()) ? NumberUtils.toInt(form.getOrgGroupId()) : null;
+
     if (!bindingResult.hasFieldErrors(ORGANISATION_GROUP_ID_FIELD_NAME)) {
-      var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(
-          form.getOrgGroupId(),
-          INDUSTRY_TEAM_VALIDATION_PURPOSE
-      );
-      if (orgGroup.isEmpty()) {
+      if (organisationGroupId != null) {
+        var orgGroup = portalOrganisationGroupQueryService.findOrganisationById(
+            Integer.parseInt(form.getOrgGroupId()),
+            INDUSTRY_TEAM_VALIDATION_PURPOSE
+        );
+        if (orgGroup.isEmpty()) {
+          bindingResult.rejectValue(
+              ORGANISATION_GROUP_ID_FIELD_NAME,
+              "%s.invalid".formatted(ORGANISATION_GROUP_ID_FIELD_NAME),
+              ORGANISATION_GROUP_ID_REQUIRED_ERROR_MESSAGE
+          );
+        }
+      } else {
         bindingResult.rejectValue(
             ORGANISATION_GROUP_ID_FIELD_NAME,
             "%s.invalid".formatted(ORGANISATION_GROUP_ID_FIELD_NAME),
-            "Select an organisation"
+            ORGANISATION_GROUP_ID_REQUIRED_ERROR_MESSAGE
         );
       }
     }
   }
-
 }

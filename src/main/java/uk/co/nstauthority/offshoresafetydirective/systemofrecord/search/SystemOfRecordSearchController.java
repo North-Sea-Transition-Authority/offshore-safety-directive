@@ -226,7 +226,7 @@ public class SystemOfRecordSearchController {
 
     if (searchForm.getAppointedOperatorId() != null) {
       filteredAppointedOperator = portalOrganisationUnitQueryService
-          .getOrganisationById(searchForm.getAppointedOperatorId(), OPERATOR_SEARCH_FILTER_PURPOSE)
+          .getOrganisationById(Integer.valueOf(searchForm.getAppointedOperatorId()), OPERATOR_SEARCH_FILTER_PURPOSE)
           .stream()
           .collect(Collectors.toMap(
               operator -> String.valueOf(operator.id()),
@@ -257,7 +257,7 @@ public class SystemOfRecordSearchController {
 
     if (searchForm.getWellboreId() != null) {
       filteredWellbore = portalAssetRetrievalService
-          .getWellbore(new WellboreId(searchForm.getWellboreId()))
+          .getWellbore(new WellboreId(Integer.parseInt(searchForm.getWellboreId())))
           .stream()
           .collect(Collectors.toMap(
               wellbore -> String.valueOf(wellbore.wellboreId().id()),
@@ -268,7 +268,7 @@ public class SystemOfRecordSearchController {
     if (searchForm.getLicenceId() != null) {
       filteredLicence = portalAssetRetrievalService
           .getLicence(
-              new LicenceId(searchForm.getLicenceId()),
+              new LicenceId(Integer.parseInt(searchForm.getLicenceId())),
               LICENCE_SEARCH_FILTER_PURPOSE)
           .stream()
           .collect(Collectors.toMap(
@@ -298,7 +298,7 @@ public class SystemOfRecordSearchController {
 
     if (searchForm.getInstallationId() != null) {
       filteredInstallation = portalAssetRetrievalService
-          .getInstallation(new InstallationId(searchForm.getInstallationId()))
+          .getInstallation(new InstallationId(Integer.parseInt(searchForm.getInstallationId())))
           .stream()
           .collect(Collectors.toMap(
               installation -> String.valueOf(installation.id()),

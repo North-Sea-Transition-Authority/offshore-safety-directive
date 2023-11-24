@@ -9,45 +9,45 @@ import org.springframework.util.ReflectionUtils;
 
 public class SystemOfRecordSearchForm {
 
-  private Integer appointedOperatorId;
+  private String appointedOperatorId;
 
-  private Integer wellboreId;
+  private String wellboreId;
 
-  private Integer installationId;
+  private String installationId;
 
-  private Integer licenceId;
+  private String licenceId;
 
   private String subareaId;
 
-  public Integer getAppointedOperatorId() {
+  public String getAppointedOperatorId() {
     return appointedOperatorId;
   }
 
-  public void setAppointedOperatorId(Integer appointedOperatorId) {
+  public void setAppointedOperatorId(String appointedOperatorId) {
     this.appointedOperatorId = appointedOperatorId;
   }
 
-  public Integer getWellboreId() {
+  public String getWellboreId() {
     return wellboreId;
   }
 
-  public void setWellboreId(Integer wellboreId) {
+  public void setWellboreId(String wellboreId) {
     this.wellboreId = wellboreId;
   }
 
-  public Integer getInstallationId() {
+  public String getInstallationId() {
     return installationId;
   }
 
-  public void setInstallationId(Integer installationId) {
+  public void setInstallationId(String installationId) {
     this.installationId = installationId;
   }
 
-  public Integer getLicenceId() {
+  public String getLicenceId() {
     return licenceId;
   }
 
-  public void setLicenceId(Integer licenceId) {
+  public void setLicenceId(String licenceId) {
     this.licenceId = licenceId;
   }
 
@@ -95,20 +95,21 @@ public class SystemOfRecordSearchForm {
 
   static class Builder {
 
-    private Integer appointedOperator;
+    private String appointedOperator;
 
-    private Integer wellbore;
+    private String wellbore;
 
-    private Integer installation;
+    private String installation;
 
-    private Integer licence;
+    private String licence;
 
     private String subarea;
 
     Builder withAppointedOperatorId(String appointedOperatorId) {
       try {
-        this.appointedOperator = Integer.parseInt(appointedOperatorId);
-      } catch (Exception e) {
+        Integer.parseInt(appointedOperatorId);
+        this.appointedOperator = appointedOperatorId;
+      } catch (NumberFormatException e) {
         this.appointedOperator = null;
       }
       return this;
@@ -116,8 +117,9 @@ public class SystemOfRecordSearchForm {
 
     Builder withWellbore(String wellboreId) {
       try {
-        this.wellbore = Integer.parseInt(wellboreId);
-      } catch (Exception e) {
+        Integer.parseInt(wellboreId);
+        this.wellbore = wellboreId;
+      } catch (NumberFormatException e) {
         this.wellbore = null;
       }
 
@@ -126,8 +128,9 @@ public class SystemOfRecordSearchForm {
 
     Builder withInstallation(String installationId) {
       try {
-        this.installation = Integer.parseInt(installationId);
-      } catch (Exception e) {
+        Integer.parseInt(installationId);
+        this.installation = installationId;
+      } catch (NumberFormatException e) {
         this.installation = null;
       }
       return this;
@@ -135,8 +138,9 @@ public class SystemOfRecordSearchForm {
 
     Builder withLicence(String licenceId) {
       try {
-        this.licence = Integer.parseInt(licenceId);
-      } catch (Exception e) {
+        Integer.parseInt(licenceId);
+        this.licence = licenceId;
+      } catch (NumberFormatException e) {
         this.licence = null;
       }
       return this;

@@ -184,7 +184,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
                 .withAllowedExtensions(fileUploadProperties.defaultPermittedFileExtensions())
         );
 
-    form.setNominatedOrganisationId(100);
+    form.setNominatedOrganisationId("100");
 
     var uploadedFileForm = UploadedFileFormTestUtil.builder().build();
     form.setAppendixDocuments(List.of(uploadedFileForm));
@@ -196,7 +196,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .build();
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
-        form.getNominatedOrganisationId(),
+        Integer.valueOf(form.getNominatedOrganisationId()),
         NomineeDetailController.PRE_SELECTED_OPERATOR_PURPOSE
     ))
         .thenReturn(Optional.of(portalOrganisationUnit));
@@ -252,6 +252,32 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
             )
             .build()
         ));
+  }
+
+  @Test
+  void getNomineeDetail_whenInvalidPreviouslySelectedItem_thenEmptyMap() throws Exception {
+
+    form.setNominatedOrganisationId("FISH");
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(fileUploadProperties.defaultMaximumFileSize())
+                .withAllowedExtensions(fileUploadProperties.defaultPermittedFileExtensions())
+        );
+
+    var uploadedFileForm = UploadedFileFormTestUtil.builder().build();
+    form.setAppendixDocuments(List.of(uploadedFileForm));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(nominationId)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/nomineeDetails/nomineeDetail"))
+        .andExpect(model().attribute("preselectedItems", Map.of()));
+
+    verify(portalOrganisationUnitQueryService, never()).getOrganisationById(any(), any());
   }
 
   @Test

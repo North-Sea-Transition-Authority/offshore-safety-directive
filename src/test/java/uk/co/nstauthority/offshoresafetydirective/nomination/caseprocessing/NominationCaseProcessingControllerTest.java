@@ -188,7 +188,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
 
     when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
-    Integer version = 5;
+    int version = 5;
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
         .withStatus(NominationStatus.SUBMITTED)
@@ -210,7 +210,7 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
                 .with(user(NOMINATION_MANAGE_USER))
-                .queryParam("version", version.toString())
+                .queryParam("version", Integer.toString(version))
         )
         .andExpect(status().isOk())
         .andExpect(view().name(viewName));
@@ -222,11 +222,6 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
     when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     Integer version = 5;
-    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
-        .withNominationId(NOMINATION_ID)
-        .withStatus(NominationStatus.SUBMITTED)
-        .withVersion(version)
-        .build();
 
     when(nominationDetailService.getVersionedNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -240,6 +235,36 @@ class NominationCaseProcessingControllerTest extends AbstractControllerTest {
                 .queryParam("version", version.toString())
         )
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void renderCaseProcessing_whenVersionNumberInvalid_verifyCatchAndOk() throws Exception {
+
+    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
+
+    nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.SUBMITTED)
+        .withVersion(1)
+        .build();
+
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        1,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.empty());
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
+                .with(user(NOMINATION_MANAGE_USER))
+                .queryParam("version", "abcde")
+        )
+        .andExpect(status().isOk());
   }
 
   @Test
