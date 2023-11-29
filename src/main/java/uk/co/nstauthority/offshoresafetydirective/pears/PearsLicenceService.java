@@ -103,9 +103,7 @@ class PearsLicenceService {
 
     switch (operationType.get()) {
       case COPY_FORWARD -> pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation);
-      case END ->
-          // TODO OSDOP-114 - Only end assets, do not rebuild.
-          LOGGER.info("Hit END operation type - Do nothing");
+      case END -> pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation);
     }
   }
 

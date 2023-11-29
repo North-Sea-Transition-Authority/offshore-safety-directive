@@ -62,6 +62,50 @@ class PearsSubareaMessageHandlerService {
   }
 
   @Transactional
+  public void endAppointmentsAndAssets(PearsTransaction.Operation operation) {
+    var operationType = PearsTransactionOperationType.fromOperationName(operation.type())
+        .orElseThrow(() -> new IllegalArgumentException(
+            "Unable to end appointment and assets for operation [%s] with type [%s]".formatted(
+                operation.id(),
+                operation.type()
+            )
+        ));
+
+    if (PearsTransactionOperationType.COPY_FORWARD.equals(operationType)) {
+      throw new IllegalArgumentException(
+          "Cannot rebuild appointments for operation [%s] as [%s] operation types are not supported".formatted(
+              operation.id(),
+              PearsTransactionOperationType.COPY_FORWARD
+          )
+      );
+    }
+
+    var appointmentsToSave = new ArrayList<Appointment>();
+
+    for (PearsTransaction.Operation.SubareaChange subareaChange : operation.subareas()) {
+      var originalSubareaPortalAssetId = new PortalAssetId(subareaChange.originalSubarea().id());
+      var originalSubareaAsset = assetPersistenceService.getOrCreateAsset(
+          originalSubareaPortalAssetId,
+          PortalAssetType.SUBAREA
+      );
+
+      assetPersistenceService.endAssetsWithAssetType(
+          List.of(originalSubareaPortalAssetId),
+          PortalAssetType.SUBAREA,
+          operation.id()
+      );
+
+      var appointments = appointmentAccessService.getActiveAppointmentsForAsset(originalSubareaAsset.assetId());
+      appointments.forEach(appointment -> {
+        appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
+        appointmentsToSave.add(appointment);
+      });
+    }
+
+    appointmentRepository.saveAll(appointmentsToSave);
+  }
+
+  @Transactional
   public void rebuildAppointmentsAndAssets(PearsTransaction.Operation operation) {
     var operationType = PearsTransactionOperationType.fromOperationName(operation.type())
         .orElseThrow(() -> new IllegalArgumentException(

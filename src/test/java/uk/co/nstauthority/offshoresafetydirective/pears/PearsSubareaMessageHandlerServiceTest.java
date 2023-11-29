@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -499,5 +500,100 @@ class PearsSubareaMessageHandlerServiceTest {
             newAppointment.getAsset(),
             assetPhase.getPhase()
         );
+  }
+
+  @Test
+  void endAppointmentsAndAssets_whenOperationTypeCannotBeMapped_thenError() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType("unknown operation type")
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+
+    assertThatThrownBy(() -> pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "Unable to end appointment and assets for operation [%s] with type [%s]".formatted(
+                operation.id(),
+                operation.type()
+            ));
+
+    verify(pearsSubareaMessageHandlerService, never()).copyForwardAppointmentAndAssets(any(), any());
+  }
+
+  @Test
+  void endAppointmentsAndAssets_whenOperationTypeIsCopyForward_thenError() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+    
+    assertThatThrownBy(() -> pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "Cannot rebuild appointments for operation [%s] as [%s] operation types are not supported".formatted(
+                operation.id(),
+                PearsTransactionOperationType.COPY_FORWARD
+            ));
+
+    verify(pearsSubareaMessageHandlerService, never()).copyForwardAppointmentAndAssets(any(), any());
+  }
+
+  @Test
+  void endAppointmentsAndAssets() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.END.getOperations().get(0))
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+
+    var firstSubareaPortalId = new PortalAssetId(firstSubareaChange.originalSubarea().id());
+    var secondSubareaPortalId = new PortalAssetId(secondSubareaChange.originalSubarea().id());
+
+    var firstAssetDto = AssetDtoTestUtil.builder().build();
+    var secondAssetDto = AssetDtoTestUtil.builder().build();
+
+    when(assetPersistenceService.getOrCreateAsset(firstSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(firstAssetDto);
+
+    when(assetPersistenceService.getOrCreateAsset(secondSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(secondAssetDto);
+
+    var firstActiveAppointment = spy(AppointmentTestUtil.builder().build());
+    var secondActiveAppointment = spy(AppointmentTestUtil.builder().build());
+
+    when(appointmentAccessService.getActiveAppointmentsForAsset(firstAssetDto.assetId()))
+        .thenReturn(List.of(firstActiveAppointment));
+
+    when(appointmentAccessService.getActiveAppointmentsForAsset(secondAssetDto.assetId()))
+        .thenReturn(List.of(secondActiveAppointment));
+
+    pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation);
+
+    verify(assetPersistenceService)
+        .endAssetsWithAssetType(List.of(firstSubareaPortalId),
+            PortalAssetType.SUBAREA,
+            operation.id()
+        );
+
+    verify(assetPersistenceService)
+        .endAssetsWithAssetType(List.of(secondSubareaPortalId),
+            PortalAssetType.SUBAREA,
+            operation.id()
+        );
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Appointment>> appointmentListCaptor = ArgumentCaptor.forClass(List.class);
+    verify(appointmentRepository).saveAll(appointmentListCaptor.capture());
+
+    assertThat(appointmentListCaptor.getValue())
+        .containsExactlyInAnyOrder(firstActiveAppointment, secondActiveAppointment);
+
+    verify(firstActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
+    verify(secondActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
   }
 }
