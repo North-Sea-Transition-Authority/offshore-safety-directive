@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,10 @@ public class PermissionService {
         .flatMap(teamMember -> teamMember.roles().stream())
         .flatMap(teamRole -> teamRole.getRolePermissions().stream())
         .anyMatch(requiredPermissions::contains);
+  }
+
+  public boolean hasPermission(ServiceUserDetail user, RolePermission requiredPermission) {
+    return hasPermission(user, Collections.singleton(requiredPermission));
   }
 
   public Map<TeamType, Collection<RolePermission>> getTeamTypePermissionMap(ServiceUserDetail user) {

@@ -24,8 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -35,9 +35,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
-
 @ContextConfiguration(classes = CaseEventFileDownloadController.class)
-class CaseEventFileDownloadControllerTest extends AbstractControllerTest {
+class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());

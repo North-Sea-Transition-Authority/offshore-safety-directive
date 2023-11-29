@@ -19,29 +19,22 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = InstallationJourneyManagerController.class)
-class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
+class InstallationJourneyManagerControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
 
   @MockBean
   private InstallationInclusionAccessService installationInclusionAccessService;
@@ -65,8 +58,7 @@ class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
     given(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .willReturn(Optional.of(nominationDetail));
 
-    given(teamMemberService.getUserAsTeamMembers(USER))
-        .willReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    givenUserHasNominationPermission(nominationDetail, USER);
   }
 
   @SecurityTest
@@ -84,10 +76,11 @@ class InstallationJourneyManagerControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void installationJourneyManager_onlyCreateNominationPermissionPermitted() {
+  void installationJourneyManager_onlyEditNominationPermissionPermitted() {
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(InstallationJourneyManagerController.class).installationJourneyManager(NOMINATION_ID)),
             status().is3xxRedirection(),

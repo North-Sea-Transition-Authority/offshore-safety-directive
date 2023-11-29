@@ -39,20 +39,18 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldAddTo
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldRestController;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = RelatedInformationController.class)
-class RelatedInformationControllerTest extends AbstractControllerTest {
+class RelatedInformationControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
@@ -86,12 +84,7 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
         .thenReturn(nominationDetail);
 
-    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
-        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-        .build();
-
-    when(teamMemberService.getUserAsTeamMembers(user))
-        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+    givenUserHasNominationPermission(nominationDetail, user);
   }
 
   @SecurityTest
@@ -116,13 +109,14 @@ class RelatedInformationControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
 
     when(relatedInformationFormService.getForm(nominationDetail)).thenReturn(new RelatedInformationForm());
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(user)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(RelatedInformationController.class).renderRelatedInformation(NOMINATION_ID))
         )

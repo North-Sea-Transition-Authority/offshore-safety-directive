@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
@@ -25,15 +24,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/wells/block-subarea")
-@HasNominationStatus(statuses = NominationStatus.DRAFT)
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+@CanAccessDraftNomination
 public class NominatedBlockSubareaController {
 
   static final String PAGE_TITLE = "Licence block subarea nominations";

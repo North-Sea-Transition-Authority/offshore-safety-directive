@@ -27,7 +27,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -35,7 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationFileDownloadController.class)
-class NominationFileDownloadControllerTest extends AbstractControllerTest {
+class NominationFileDownloadControllerTest extends AbstractNominationControllerTest {
 
   private static final Set<NominationStatus> ALLOWED_STATUSES =
       NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);
@@ -47,7 +46,6 @@ class NominationFileDownloadControllerTest extends AbstractControllerTest {
 
   @MockBean
   private FileService fileService;
-
   @SecurityTest
   void download_assertStatusesPermitted() {
 

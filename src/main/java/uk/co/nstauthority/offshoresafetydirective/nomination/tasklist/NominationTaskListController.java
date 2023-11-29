@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -26,8 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/task-list")
-@HasNominationStatus(statuses = NominationStatus.DRAFT)
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+@CanAccessDraftNomination
 public class NominationTaskListController {
 
   public static final String PAGE_NAME = "Task list";
@@ -38,16 +38,22 @@ public class NominationTaskListController {
 
   private final List<NominationTaskListItem> nominationTaskListItems;
   private final CaseEventQueryService caseEventQueryService;
+  private final UserDetailService userDetailService;
+  private final PermissionService permissionService;
 
   @Autowired
   public NominationTaskListController(NominationDetailService nominationDetailService,
                                       List<NominationTaskListSection> nominationTaskListSections,
                                       List<NominationTaskListItem> nominationTaskListItems,
-                                      CaseEventQueryService caseEventQueryService) {
+                                      CaseEventQueryService caseEventQueryService,
+                                      UserDetailService userDetailService,
+                                      PermissionService permissionService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationTaskListSections = nominationTaskListSections;
     this.nominationTaskListItems = nominationTaskListItems;
     this.caseEventQueryService = caseEventQueryService;
+    this.userDetailService = userDetailService;
+    this.permissionService = permissionService;
   }
 
   @GetMapping
@@ -57,13 +63,6 @@ public class NominationTaskListController {
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
 
     var modelAndView = new ModelAndView("osd/nomination/tasklist/taskList")
-        .addObject("deleteNominationUrl",
-            ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(nominationId))
-        )
-        .addObject(
-            "deleteNominationButtonPrompt",
-            (nominationDetailDto.version() == 1) ? "Delete nomination" : "Delete draft update"
-        )
         .addObject(
             "taskListSections",
             TaskListSectionUtil.createSectionViews(
@@ -72,6 +71,20 @@ public class NominationTaskListController {
                 new NominationTaskListItemType(nominationDetail)
             )
         );
+
+    var user = userDetailService.getUserDetail();
+    var canDeleteNomination = permissionService.hasPermission(user, RolePermission.CREATE_NOMINATION);
+
+    if (canDeleteNomination) {
+      modelAndView
+          .addObject("deleteNominationUrl",
+              ReverseRouter.route(on(DeleteNominationController.class).renderDeleteNomination(nominationId))
+          )
+          .addObject(
+              "deleteNominationButtonPrompt",
+              (nominationDetailDto.version() == 1) ? "Delete nomination" : "Delete draft update"
+          );
+    }
 
     // The first version of the nomination would not have been submitted at this point
     // so no need to check if an update request has been made.

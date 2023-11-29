@@ -36,8 +36,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -54,7 +54,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationQaChecksController.class)
-class NominationQaChecksControllerTest extends AbstractControllerTest {
+class NominationQaChecksControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 

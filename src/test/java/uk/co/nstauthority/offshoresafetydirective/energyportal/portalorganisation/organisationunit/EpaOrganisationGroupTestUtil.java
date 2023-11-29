@@ -6,17 +6,18 @@ import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
-class EpaOrganisationGroupTestUtil {
+public class EpaOrganisationGroupTestUtil {
 
   private EpaOrganisationGroupTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
+
     private Integer organisationGroupId = 123;
 
     private String name = "group name";
@@ -32,42 +33,43 @@ class EpaOrganisationGroupTestUtil {
     private Builder() {
     }
 
-    Builder withId(Integer id) {
+    public Builder withId(Integer id) {
+
       this.organisationGroupId = id;
       return this;
     }
 
-    Builder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    Builder withShortName(String shortName) {
+    public Builder withShortName(String shortName) {
       this.shortName = shortName;
       return this;
     }
 
-    Builder withWebAddress(String webAddress) {
+    public Builder withWebAddress(String webAddress) {
       this.webAddress = webAddress;
       return this;
     }
 
-    Builder withOperatorStatus(String operatorStatus) {
+    public Builder withOperatorStatus(String operatorStatus) {
       this.operatorStatus = operatorStatus;
       return this;
     }
 
-    Builder withOrganisationUnit(OrganisationUnit organisationUnit) {
+    public Builder withOrganisationUnit(OrganisationUnit organisationUnit) {
       this.organisationUnits.add(organisationUnit);
       return this;
     }
 
-    Builder withOrganisationUnits(List<OrganisationUnit> organisationUnits) {
+    public Builder withOrganisationUnits(List<OrganisationUnit> organisationUnits) {
       this.organisationUnits.addAll(organisationUnits);
       return this;
     }
 
-    OrganisationGroup build() {
+    public OrganisationGroup build() {
       return OrganisationGroup.newBuilder()
           .organisationGroupId(organisationGroupId)
           .name(name)

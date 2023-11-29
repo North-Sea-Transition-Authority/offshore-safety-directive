@@ -5,12 +5,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Security
-public @interface HasNominationStatus {
-
-  NominationDetailFetchType fetchType() default NominationDetailFetchType.LATEST;
-  NominationStatus[] statuses() default {};
+@HasNominationPermission(permissions = RolePermission.EDIT_NOMINATION)
+@HasNominationStatus(statuses = NominationStatus.DRAFT)
+public @interface CanAccessDraftNomination {
 }

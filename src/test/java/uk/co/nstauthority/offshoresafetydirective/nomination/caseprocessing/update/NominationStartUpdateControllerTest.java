@@ -25,8 +25,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -41,7 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationStartUpdateController.class)
-class NominationStartUpdateControllerTest extends AbstractControllerTest {
+class NominationStartUpdateControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 

@@ -9,8 +9,11 @@ import java.util.Set;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
+import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
@@ -28,6 +31,7 @@ public class HasPermissionSecurityTestUtil {
 
     private final TeamMemberService teamMemberService;
 
+    private Team team = TeamTestUtil.Builder().build();
     private Set<RolePermission> requiredPermissions = new HashSet<>();
 
     public SmokeTester(MockMvc mockMvc, TeamMemberService teamMemberService) {
@@ -37,6 +41,11 @@ public class HasPermissionSecurityTestUtil {
 
     public SmokeTester withUser(ServiceUserDetail user) {
       super.withUser(user);
+      return this;
+    }
+
+    public SmokeTester withTeam(Team team) {
+      this.team = team;
       return this;
     }
 
@@ -54,6 +63,8 @@ public class HasPermissionSecurityTestUtil {
             var teamMember = TeamMemberTestUtil.Builder()
                 .withWebUserAccountId(userToTestWith.wuaId())
                 .withRole(new TestTeamRole(rolePermission))
+                .withTeamId(team.toTeamId())
+                .withTeamType(TeamType.INDUSTRY)
                 .build();
 
             when(teamMemberService.getUserAsTeamMembers(userToTestWith))

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -31,7 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @Controller
 @RequestMapping("nomination/{nominationId}/delete")
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+@HasNominationPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class DeleteNominationController {
 
   private final NominationDetailService nominationDetailService;

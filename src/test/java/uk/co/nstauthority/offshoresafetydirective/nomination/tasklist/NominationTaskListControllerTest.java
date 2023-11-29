@@ -29,9 +29,10 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -43,20 +44,13 @@ import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabel;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabelType;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = NominationTaskListController.class)
-class NominationTaskListControllerTest extends AbstractControllerTest {
+class NominationTaskListControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
@@ -68,6 +62,9 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationTaskListItem nominationTaskListItem;
 
+  @MockBean
+  private PermissionService permissionService;
+
   @BeforeEach
   void setup() {
 
@@ -76,13 +73,11 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
   @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     setupMockTaskListSection("sectionName", 10, "sectionWarningText");
 
@@ -104,7 +99,8 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     setupMockTaskListSection("sectionName", 10, "sectionWarningText");
 
@@ -116,8 +112,9 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
     setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID))
         )
@@ -126,6 +123,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
 
   @Test
   void getTaskList_assertModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     var sectionName = "section name";
     var sectionDisplayOrder = 10;
@@ -143,6 +141,8 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .build();
 
     setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+
+    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
@@ -206,14 +206,49 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
   }
 
   @Test
+  void getTaskList_assertModelProperties_whenWrongPermission_thenNoAccessToDeleteAttributes() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
+    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(false);
+
+    var sectionName = "section name";
+    var sectionDisplayOrder = 10;
+    var sectionWarningText = "section warning text";
+
+    setupMockTaskListSection(sectionName, sectionDisplayOrder, sectionWarningText);
+
+    var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
+
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
+        .withTaskListLabels(true)
+        .withNotCompletedLabel(false)
+        .withItemValid(true)
+        .withCustomTaskListLabel(new TaskListLabel("label text", TaskListLabelType.GREY))
+        .build();
+
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/tasklist/taskList"))
+        .andExpect(model().attributeDoesNotExist("deleteNominationButtonPrompt"))
+        .andExpect(model().attributeDoesNotExist("deleteNominationUrl"));
+  }
+
+  @Test
   void getTaskList_whenFirstNominationVersion_thenAssertModelProperties() throws Exception {
 
     givenTaskListSectionsExist();
+    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(1)
         .withStatus(NominationStatus.DRAFT)
         .build();
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
@@ -226,13 +261,15 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
 
   @Test
   void getTaskList_whenNotFirstNominationVersion_thenAssertModelProperties() throws Exception {
-
     givenTaskListSectionsExist();
+    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(2)
         .withStatus(NominationStatus.DRAFT)
         .build();
+
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
@@ -251,6 +288,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .withVersion(1)
         .withStatus(NominationStatus.DRAFT)
         .build();
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
@@ -271,6 +309,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .withVersion(2)
         .withStatus(NominationStatus.DRAFT)
         .build();
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
@@ -298,6 +337,7 @@ class NominationTaskListControllerTest extends AbstractControllerTest {
         .withVersion(2)
         .withStatus(NominationStatus.DRAFT)
         .build();
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 

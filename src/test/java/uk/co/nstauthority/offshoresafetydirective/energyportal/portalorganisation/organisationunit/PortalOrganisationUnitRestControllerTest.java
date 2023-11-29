@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -22,7 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 
 @ContextConfiguration(classes = PortalOrganisationUnitRestController.class)
@@ -31,12 +29,6 @@ class PortalOrganisationUnitRestControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-
-  @MockBean
-  private TeamScopeService teamScopeService;
 
   @SecurityTest
   void searchPortalOrganisations_whenNotLoggedIn_thenOk() throws Exception {

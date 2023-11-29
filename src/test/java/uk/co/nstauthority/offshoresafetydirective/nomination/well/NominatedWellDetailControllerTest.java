@@ -38,8 +38,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestU
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -47,20 +47,13 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = NominatedWellDetailController.class)
 @IncludeAccidentRegulatorConfigurationProperties
-class NominatedWellDetailControllerTest extends AbstractControllerTest {
+class NominatedWellDetailControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
 
   private final NominationId nominationId = new NominationId(UUID.randomUUID());
 
@@ -84,8 +77,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
   }
 
@@ -115,7 +107,7 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
 
     var form = NominatedWellFormTestUtil.builder().build();
     when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(form);
@@ -124,8 +116,9 @@ class NominatedWellDetailControllerTest extends AbstractControllerTest {
     when(nominatedWellDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId))
         )

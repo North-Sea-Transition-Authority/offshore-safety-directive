@@ -36,4 +36,8 @@ public class TeamScopeService {
     teamScope.setPortalId(portalOrgGroupId);
     teamScopeRepository.save(teamScope);
   }
+
+  public List<TeamScope> getTeamScope(List<String> portalIds, PortalTeamType portalTeamType) {
+    return teamScopeRepository.findAllByPortalIdInAndPortalTeamType(portalIds, portalTeamType);
+  }
 }

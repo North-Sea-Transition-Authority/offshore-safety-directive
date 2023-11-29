@@ -20,10 +20,13 @@
     </@fdsDetails.summaryDetails>
   </#if>
 
-  <@fdsAction.link
-    linkText=deleteNominationButtonPrompt
-    linkClass="govuk-button govuk-button--secondary"
-    linkUrl=springUrl(deleteNominationUrl)
-  />
+  <#if deleteNominationUrl?has_content>
+    <@fdsAction.link
+      linkText=deleteNominationButtonPrompt
+      linkClass="govuk-button govuk-button--secondary"
+      linkUrl=springUrl(deleteNominationUrl)
+    />
+  </#if>
+
   <@taskList.standardTaskList taskListSections=taskListSections />
 </@defaultPage>

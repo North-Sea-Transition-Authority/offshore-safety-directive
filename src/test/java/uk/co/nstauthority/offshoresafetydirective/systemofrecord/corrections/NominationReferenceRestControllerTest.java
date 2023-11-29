@@ -23,8 +23,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -34,7 +34,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = {NominationReferenceRestController.class})
-class NominationReferenceRestControllerTest extends AbstractControllerTest {
+class NominationReferenceRestControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail APPOINTMENT_MANAGER = ServiceUserDetailTestUtil.Builder().build();
   private static final TeamMember APPOINTMENT_MANAGER_MEMBER = TeamMemberTestUtil.Builder()

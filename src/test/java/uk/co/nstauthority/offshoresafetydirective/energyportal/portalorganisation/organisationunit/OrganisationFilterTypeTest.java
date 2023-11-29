@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class OrganisationFilterTypeTest {
 
   @ParameterizedTest
+
   @EnumSource(OrganisationFilterType.class)
   void getValue_validString(OrganisationFilterType organisationFilterType) {
     var value = OrganisationFilterType.getValue(organisationFilterType.name());

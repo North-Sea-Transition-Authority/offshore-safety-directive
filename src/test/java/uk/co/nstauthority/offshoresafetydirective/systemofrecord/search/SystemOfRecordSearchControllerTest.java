@@ -34,7 +34,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
@@ -49,9 +48,6 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AppointmentSearchService appointmentSearchService;
-
-  @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @MockBean
   private PortalAssetRetrievalService portalAssetRetrievalService;

@@ -45,15 +45,14 @@ import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConf
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.UnlinkedFileController;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDraftFileController;
@@ -62,22 +61,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = NomineeDetailController.class)
 @IncludeAccidentRegulatorConfigurationProperties
 @EnableConfigurationProperties(value = FileUploadProperties.class)
-class NomineeDetailControllerTest extends AbstractControllerTest {
+class NomineeDetailControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
 
   private final NominationId nominationId = new NominationId(UUID.randomUUID());
   private NominationDetail nominationDetail;
@@ -85,9 +77,6 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
 
   @MockBean
   private NomineeDetailFormService nomineeDetailFormService;
-
-  @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @MockBean
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
@@ -113,9 +102,7 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
     when(nomineeDetailFormService.getForm(nominationDetail)).thenReturn(form);
     when(portalOrganisationUnitQueryService.getOrganisationById(any(), any())).thenReturn(Optional.empty());
-
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
   }
 
   @SecurityTest
@@ -148,7 +135,8 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(fileService.getFileUploadAttributes())
         .thenReturn(
@@ -161,8 +149,9 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
     when(nomineeDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NomineeDetailController.class).getNomineeDetail(nominationId))
         )
@@ -379,11 +368,11 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         )
         .containsExactly(
             Tuple.tuple(
-              uploadedFileForm.getFileId(),
-              uploadedFileForm.getFileName(),
-              uploadedFileForm.getFileSize(),
-              uploadedFileForm.getFileDescription(),
-              uploadedFileForm.getFileUploadedAt()
+                uploadedFileForm.getFileId(),
+                uploadedFileForm.getFileName(),
+                uploadedFileForm.getFileSize(),
+                uploadedFileForm.getFileDescription(),
+                uploadedFileForm.getFileUploadedAt()
             ));
   }
 }

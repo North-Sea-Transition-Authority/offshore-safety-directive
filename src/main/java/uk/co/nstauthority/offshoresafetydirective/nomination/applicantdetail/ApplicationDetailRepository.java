@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Repository
-interface ApplicationDetailRepository extends CrudRepository<ApplicantDetail, UUID> {
+public interface ApplicationDetailRepository extends CrudRepository<ApplicantDetail, UUID> {
 
   Optional<ApplicantDetail> findByNominationDetail(NominationDetail nominationDetail);
 }

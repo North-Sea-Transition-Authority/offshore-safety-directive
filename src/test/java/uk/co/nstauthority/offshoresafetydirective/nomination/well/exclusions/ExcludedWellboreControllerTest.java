@@ -34,8 +34,8 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -44,22 +44,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSec
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = ExcludedWellboreController.class)
-class ExcludedWellboreControllerTest extends AbstractControllerTest {
+class ExcludedWellboreControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
-
   private NominationDetail nominationDetail;
 
   @MockBean
@@ -91,8 +83,7 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
         .thenReturn(nominationDetail);
 
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
   }
 
   @SecurityTest
@@ -119,14 +110,15 @@ class ExcludedWellboreControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
 
     given(excludedWellFormService.getExcludedWellForm(any()))
         .willReturn(WellExclusionFormTestUtil.builder().build());
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
         .withBodyParam("hasWellsToExclude", "false")
         .withGetEndpoint(
             ReverseRouter.route(on(ExcludedWellboreController.class).renderPossibleWellsToExclude(NOMINATION_ID))

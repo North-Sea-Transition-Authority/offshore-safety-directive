@@ -41,7 +41,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -78,9 +77,6 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
   @MockBean
   private PortalAssetNameService portalAssetNameService;
-
-  @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @MockBean
   private AppointmentCorrectionService appointmentCorrectionService;

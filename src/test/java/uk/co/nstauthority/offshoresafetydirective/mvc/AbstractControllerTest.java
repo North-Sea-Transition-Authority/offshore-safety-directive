@@ -30,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandin
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
@@ -37,11 +38,13 @@ import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamService;
@@ -60,7 +63,6 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
     HasTeamPermissionInterceptor.class,
     NominationInterceptor.class,
     HasPermissionInterceptor.class,
-    UpdateRequestInterceptor.class,
     IsCurrentAppointmentInterceptor.class,
     HasNotBeenTerminatedInterceptor.class,
     HasAppointmentStatusInterceptor.class,
@@ -71,7 +73,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
     RequestLogFilter.class,
     PostAuthenticationRequestMdcFilter.class,
     MetricsProvider.class,
-    ErrorListHandlerInterceptor.class
+    ErrorListHandlerInterceptor.class,
+    UpdateRequestInterceptor.class
 })
 @EnableConfigurationProperties(SamlProperties.class)
 public abstract class AbstractControllerTest {
@@ -87,9 +90,6 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected UserDetailService userDetailService;
-
-  @MockBean
-  protected NominationDetailService nominationDetailService;
 
   @MockBean
   protected SamlResponseParser samlResponseParser;
@@ -126,6 +126,18 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected FormErrorSummaryService formErrorSummaryService;
+
+  @MockBean
+  protected PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @MockBean
+  protected TeamScopeService teamScopeService;
+
+  @MockBean
+  protected NominationDetailService nominationDetailService;
+
+  @MockBean
+  protected ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

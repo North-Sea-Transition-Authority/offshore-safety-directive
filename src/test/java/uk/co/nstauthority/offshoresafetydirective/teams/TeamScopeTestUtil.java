@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
-import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class TeamScopeTestUtil {
@@ -16,7 +15,7 @@ public class TeamScopeTestUtil {
   public static class Builder {
 
     private Team team = TeamTestUtil.Builder().build();
-    private String portalId = UUID.randomUUID().toString();
+    private String portalId = "123";
 
     private Builder() {
     }

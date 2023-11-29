@@ -30,7 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -71,9 +70,6 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AppointmentTimelineItemService appointmentTimelineItemService;
-
-  @MockBean
-  private PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
   @MockBean
   private AppointmentService appointmentService;

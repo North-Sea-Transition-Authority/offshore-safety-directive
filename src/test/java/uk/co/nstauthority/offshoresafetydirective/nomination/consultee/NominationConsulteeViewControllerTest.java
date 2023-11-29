@@ -22,8 +22,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -41,7 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamRole;
 
 @ContextConfiguration(classes = {NominationConsulteeViewController.class})
-class NominationConsulteeViewControllerTest extends AbstractControllerTest {
+class NominationConsulteeViewControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
   private static final ServiceUserDetail CONSULTEE_NOMINATION_VIEW_USER = ServiceUserDetailTestUtil.Builder()

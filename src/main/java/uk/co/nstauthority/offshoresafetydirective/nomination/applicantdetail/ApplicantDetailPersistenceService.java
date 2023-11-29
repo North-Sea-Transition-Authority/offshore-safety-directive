@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class ApplicantDetailPersistenceService {
+public class ApplicantDetailPersistenceService {
 
   private final ApplicationDetailRepository applicationDetailRepository;
 
@@ -16,7 +16,7 @@ class ApplicantDetailPersistenceService {
     this.applicationDetailRepository = applicationDetailRepository;
   }
 
-  Optional<ApplicantDetail> getApplicantDetail(NominationDetail nominationDetail) {
+  public Optional<ApplicantDetail> getApplicantDetail(NominationDetail nominationDetail) {
     return applicationDetailRepository.findByNominationDetail(nominationDetail);
   }
 

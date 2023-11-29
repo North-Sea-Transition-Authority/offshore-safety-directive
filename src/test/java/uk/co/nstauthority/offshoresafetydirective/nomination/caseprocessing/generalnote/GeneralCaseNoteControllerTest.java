@@ -41,7 +41,9 @@ import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.Notific
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -58,7 +60,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = GeneralCaseNoteController.class)
-class GeneralCaseNoteControllerTest extends AbstractControllerTest {
+class GeneralCaseNoteControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 

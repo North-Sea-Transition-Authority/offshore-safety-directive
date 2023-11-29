@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -18,13 +19,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = NominationInterceptorTest.TestController.class)
-class NominationInterceptorTest extends AbstractControllerTest {
+class NominationInterceptorTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
@@ -108,7 +114,8 @@ class NominationInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestFetchType_andWrongStatus_thenForbiddenRequest()
+      throws Exception {
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -124,7 +131,8 @@ class NominationInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andSubmitted_thenOkRequest() throws Exception {
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andSubmitted_thenOkRequest()
+      throws Exception {
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.SUBMITTED)
@@ -143,7 +151,8 @@ class NominationInterceptorTest extends AbstractControllerTest {
   }
 
   @Test
-  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andWrongStatus_thenForbiddenRequest() throws Exception {
+  void preHandle_whenMethodHasNominationStatusAnnotationWithLatestPostSubmissionFetchType_andWrongStatus_thenForbiddenRequest()
+      throws Exception {
 
     var nominationDetail = NominationDetailTestUtil.builder()
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -159,6 +168,235 @@ class NominationInterceptorTest extends AbstractControllerTest {
         ))
             .with(user(USER)))
         .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_andWrongPermission_thenForbiddenRequest() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_VIEWER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_andCorrectPermission_thenOk() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_andNoNominationDetail_thenBadRequest() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(null);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_withMultiplePermissions_andWrongPermission_thenForbiddenRequest()
+      throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_VIEWER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withMultipleHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_withMultiplePermissions_andCorrectPermission_thenOk()
+      throws Exception {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withMultipleHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodHasNominationPermissionAnnotation_withMultiplePermissions_andNoNominationDetail_thenBadRequest()
+      throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(null);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withMultipleHasNominationPermission(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void preHandle_whenMethodCanAccessDraftNominationAnnotation_andWrongPermission_thenForbiddenRequest() throws Exception {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_VIEWER)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withCanAccessDraftNominations(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodCanAccessDraftNominationAnnotation_andWrongStatus_thenForbiddenRequest() throws Exception {
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withCanAccessDraftNominations(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_whenMethodCanAccessDraftNominationAnnotation_andCorrectPermission_thenOk() throws Exception {
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withCanAccessDraftNominations(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_whenMethodCanAccessDraftNominationAnnotation_andNoNominationDetail_thenBadRequest() throws Exception {
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(null);
+
+    givenUserHasNominationPermission(null, USER);
+
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+            .withCanAccessDraftNominations(NOMINATION_ID)
+        ))
+            .with(user(USER)))
+        .andExpect(status().isBadRequest());
   }
 
   @Controller
@@ -201,6 +439,27 @@ class NominationInterceptorTest extends AbstractControllerTest {
         statuses = NominationStatus.SUBMITTED
     )
     ModelAndView withLatestPostSubmissionAndSubmittedStatus(@PathVariable("nominationId") NominationId nominationId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("nominationId", nominationId);
+    }
+
+    @GetMapping("/with-has-edit-permission/{nominationId}")
+    @HasNominationPermission(permissions = RolePermission.EDIT_NOMINATION)
+    ModelAndView withHasNominationPermission(@PathVariable("nominationId") NominationId nominationId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("nominationId", nominationId);
+    }
+
+    @GetMapping("/with-has-multiple-permissions/{nominationId}")
+    @HasNominationPermission(permissions = {RolePermission.EDIT_NOMINATION, RolePermission.MANAGE_NOMINATIONS})
+    ModelAndView withMultipleHasNominationPermission(@PathVariable("nominationId") NominationId nominationId) {
+      return new ModelAndView(VIEW_NAME)
+          .addObject("nominationId", nominationId);
+    }
+
+    @GetMapping("/with-can-access-draft-nominations/{nominationId}")
+    @CanAccessDraftNomination
+    ModelAndView withCanAccessDraftNominations(@PathVariable("nominationId") NominationId nominationId) {
       return new ModelAndView(VIEW_NAME)
           .addObject("nominationId", nominationId);
     }

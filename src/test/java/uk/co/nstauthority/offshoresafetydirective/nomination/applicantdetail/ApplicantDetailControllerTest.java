@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,10 +31,9 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -47,18 +45,20 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 
 @ContextConfiguration(classes = ApplicantDetailController.class)
-class ApplicantDetailControllerTest extends AbstractControllerTest {
+class ApplicantDetailControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
       .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+      .withTeamType(TeamType.INDUSTRY)
       .build();
 
   private static final NominationId nominationId = new NominationId(UUID.randomUUID());
@@ -74,20 +74,9 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   @MockBean
   private NominationService nominationService;
 
-  @MockBean
-  PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-
-  @MockBean
-  private ApplicantDetailPersistenceService applicantDetailPersistenceService;
-
-  @BeforeEach
-  void setup() {
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
-  }
-
   @SecurityTest
   void smokeTestNominationStatuses_onlyDraftPermitted() {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
 
@@ -119,6 +108,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
 
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
     when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
 
@@ -132,15 +123,6 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId))
-        )
-        .withPostEndpoint(
-            ReverseRouter.route(on(ApplicantDetailController.class)
-                .updateApplicantDetails(nominationId, form, bindingResult)),
-            status().is3xxRedirection(),
-            status().isForbidden()
-        )
-        .withGetEndpoint(
             ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails())
         )
         .withPostEndpoint(
@@ -152,8 +134,41 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .test();
   }
 
+  @SecurityTest
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
+    var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
+
+    when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    when(applicantDetailFormService.getForm(nominationDetail)).thenReturn(form);
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(applicantDetailFormService.validate(any(), any())).thenReturn(bindingResult);
+
+    when(nominationService.startNomination()).thenReturn(nominationDetail);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
+        .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
+        .withGetEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class).getUpdateApplicantDetails(nominationId))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(ApplicantDetailController.class)
+                .updateApplicantDetails(nominationId, form, bindingResult)),
+            status().is3xxRedirection(),
+            status().isForbidden()
+        )
+        .test();
+  }
+
   @Test
   void getNewApplicantDetails_assertModelProperties() throws Exception {
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(ApplicantDetailController.class).getNewApplicantDetails()))
@@ -178,6 +193,10 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void createApplicantDetails_whenValidForm_assertRedirection() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
     var applicationDetail = new ApplicantDetail(UUID.randomUUID());
     applicationDetail.setPortalOrganisationId(Integer.valueOf(form.getPortalOrganisationId()));
@@ -203,6 +222,10 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void createApplicantDetails_whenInvalidForm_assertOk() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+
     var form = new ApplicantDetailForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));
@@ -222,6 +245,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void getUpdateApplicantDetails_assertModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
 
@@ -279,6 +303,7 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
   void getUpdateApplicantDetails_whenInvalidPreviouslySelectedItem_thenEmptyMap() throws Exception {
 
     when(nominationDetailService.getLatestNominationDetail(nominationId)).thenReturn(nominationDetail);
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     var form = new ApplicantDetailForm();
     form.setPortalOrganisationId("non numeric id");
@@ -299,6 +324,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void updateApplicantDetails_whenValidForm_assertRedirection() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
     var form = ApplicantDetailTestUtil.getValidApplicantDetailForm();
     var applicationDetail = new ApplicantDetail(UUID.randomUUID());
     applicationDetail.setPortalOrganisationId(Integer.valueOf(form.getPortalOrganisationId()));
@@ -326,6 +353,9 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
 
   @Test
   void updateApplicantDetails_whenInvalidForm_assertOk() throws Exception {
+
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
     var form = new ApplicantDetailForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     bindingResult.addError(new FieldError("Error", "ErrorMessage", "default message"));

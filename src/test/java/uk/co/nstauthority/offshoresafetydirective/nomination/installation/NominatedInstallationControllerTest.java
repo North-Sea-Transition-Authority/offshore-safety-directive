@@ -41,8 +41,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRestController;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -51,22 +51,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSec
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.LicenceAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @IncludeAccidentRegulatorConfigurationProperties
 @ContextConfiguration(classes = NominatedInstallationController.class)
-class NominatedInstallationControllerTest extends AbstractControllerTest {
+class NominatedInstallationControllerTest extends AbstractNominationControllerTest {
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
 
   private NominationDetail nominationDetail;
 
@@ -92,8 +85,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
 
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
   }
 
   @SecurityTest
@@ -124,7 +116,7 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .build();
@@ -135,8 +127,9 @@ class NominatedInstallationControllerTest extends AbstractControllerTest {
     when(nominatedInstallationDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NominatedInstallationController.class).getNominatedInstallationDetail(NOMINATION_ID))
         )

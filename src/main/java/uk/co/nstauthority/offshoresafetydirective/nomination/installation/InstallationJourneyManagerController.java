@@ -9,21 +9,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/installations")
-@HasNominationStatus(statuses = NominationStatus.DRAFT)
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+@CanAccessDraftNomination
 class InstallationJourneyManagerController {
 
   private final NominationDetailService nominationDetailService;

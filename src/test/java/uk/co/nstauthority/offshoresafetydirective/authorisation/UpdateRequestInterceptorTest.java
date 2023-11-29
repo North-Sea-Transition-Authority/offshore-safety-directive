@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -28,7 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 
 @ContextConfiguration(classes = UpdateRequestInterceptorTest.UpdateRequestInterceptorTestController.class)
-class UpdateRequestInterceptorTest extends AbstractControllerTest {
+class UpdateRequestInterceptorTest extends AbstractNominationControllerTest {
 
   private static final Set<NominationStatus> POST_SUBMISSION_NOMINATION_STATUSES
       = NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);

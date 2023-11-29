@@ -18,19 +18,19 @@ public enum IndustryTeamRole implements TeamRole {
       "Nomination submitter",
       "Can create, edit, submit, view and manage nominations linked to this organisation",
       20,
-      Set.of(RolePermission.CREATE_NOMINATION, RolePermission.EDIT_NOMINATION)
+      Set.of(RolePermission.CREATE_NOMINATION, RolePermission.EDIT_NOMINATION, RolePermission.VIEW_NOMINATIONS)
   ),
   NOMINATION_EDITOR(
       "Nomination editor",
       "Can edit and view nominations linked to this organisation",
       30,
-      Set.of()
+      Set.of(RolePermission.EDIT_NOMINATION, RolePermission.VIEW_NOMINATIONS)
   ),
   NOMINATION_VIEWER(
       "Nomination viewer",
       "Can view nominations linked to this organisation",
       40,
-      Set.of()
+      Set.of(RolePermission.VIEW_NOMINATIONS)
   );
 
   private final String screenDisplayText;

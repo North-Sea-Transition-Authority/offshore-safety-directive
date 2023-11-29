@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -20,14 +21,15 @@ public abstract class AbstractHandlerInterceptor implements HandlerInterceptor {
   }
 
   public boolean hasAnnotation(HandlerMethod handlerMethod, Class<? extends Annotation> annotation) {
-    return handlerMethod.hasMethodAnnotation(annotation)
-        || handlerMethod.getMethod().getDeclaringClass().isAnnotationPresent(annotation);
+    return Optional.ofNullable(AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation)).isPresent()
+        || Optional.ofNullable(AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation))
+        .isPresent();
   }
 
   public Annotation getAnnotation(HandlerMethod handlerMethod, Class<? extends Annotation> annotation) {
     return Objects.requireNonNullElse(
-        handlerMethod.getMethodAnnotation(annotation),
-        handlerMethod.getMethod().getDeclaringClass().getAnnotation(annotation)
+        AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation),
+        AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation)
     );
   }
 
