@@ -26,7 +26,7 @@
           path="searchForm.subareaId"
           restUrl=springUrl(subareaRestUrl)
           labelText=""
-          selectorMinInputLength=3
+          selectorMinInputLength=2
           inputClass="govuk-!-width-three-quarters govuk-!-margin-bottom-0"
           formGroupClass="govuk-!-margin-bottom-0"
           preselectedItems=filteredSubarea

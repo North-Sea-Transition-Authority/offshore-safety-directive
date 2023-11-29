@@ -63,16 +63,44 @@ public class LicenceBlockSubareaQueryService {
           .status().root();
 
   private final SubareaApi subareaApi;
-
   private final EnergyPortalApiWrapper energyPortalApiWrapper;
+  private final SubareaSearchParamService subareaSearchParamService;
 
   @Autowired
-  public LicenceBlockSubareaQueryService(SubareaApi subareaApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
+  public LicenceBlockSubareaQueryService(SubareaApi subareaApi, EnergyPortalApiWrapper energyPortalApiWrapper,
+                                         SubareaSearchParamService subareaSearchParamService) {
     this.subareaApi = subareaApi;
     this.energyPortalApiWrapper = energyPortalApiWrapper;
+    this.subareaSearchParamService = subareaSearchParamService;
   }
 
-  public List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName,
+  List<LicenceBlockSubareaDto> searchSubareas(String subareaName,
+                                              String licenceReference,
+                                              String blockReference,
+                                              List<SubareaStatus> subareaStatuses,
+                                              RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
+
+      var energyPortalSubareas = subareaApi.searchSubareas(
+              null,
+              subareaName,
+              null,
+              blockReference,
+              licenceReference,
+              subareaStatuses,
+              SUBAREAS_PROJECTION_ROOT,
+              requestPurpose,
+              logCorrelationId
+          )
+          .stream()
+          .filter(subarea -> SubareaShoreLocation.OFFSHORE.equals(subarea.getShoreLocation()))
+          .toList();
+
+      return convertToLicenceBlockSubareaDtoList(energyPortalSubareas);
+    });
+  }
+
+  List<LicenceBlockSubareaDto> searchSubareasByName(String subareaName,
                                                            List<SubareaStatus> subareaStatuses,
                                                            RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
@@ -180,41 +208,78 @@ public class LicenceBlockSubareaQueryService {
     return searchSubareasByDisplayName(searchTerm, List.of(SubareaStatus.values()), requestPurpose);
   }
 
-  public Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm,
+  Set<LicenceBlockSubareaDto> searchSubareasByDisplayName(String searchTerm,
                                                                  List<SubareaStatus> statuses,
                                                                  RequestPurpose requestPurpose) {
+    var subareaSearchParams = subareaSearchParamService.parseSearchTerm(searchTerm);
+
+    var subareaName = subareaSearchParams.subareaName();
+    var licenceRef = subareaSearchParams.licenceRef();
+    var blockRef = subareaSearchParams.blockRef();
 
     Map<LicenceBlockSubareaId, LicenceBlockSubareaDto> matchedSubareaMap = new HashMap<>();
 
-    var matchedSubareasByName = searchSubareasByName(searchTerm, statuses, requestPurpose);
+    if (SubareaSearchParamService.SearchMode.AND.equals(subareaSearchParams.searchMode())) {
 
-    if (!CollectionUtils.isEmpty(matchedSubareasByName)) {
+      var matchedSubareas = searchSubareas(
+          subareaName.orElse(null),
+          licenceRef.orElse(null),
+          blockRef.orElse(null),
+          statuses,
+          requestPurpose
+      );
+
       matchedSubareaMap.putAll(
-          matchedSubareasByName
-              .stream()
+          matchedSubareas.stream()
               .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
       );
+
+      return new HashSet<>(matchedSubareaMap.values());
     }
 
-    var matchedSubareasByLicence = searchSubareasByLicenceReferenceWithStatuses(searchTerm, statuses, requestPurpose);
+    subareaSearchParams.subareaName().ifPresent(s -> {
+      var matchedSubareasByName = searchSubareasByName(subareaSearchParams.subareaName().get(), statuses, requestPurpose);
 
-    if (!CollectionUtils.isEmpty(matchedSubareasByLicence)) {
-      matchedSubareaMap.putAll(
-          matchedSubareasByLicence
-              .stream()
-              .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+      if (!CollectionUtils.isEmpty(matchedSubareasByName)) {
+        matchedSubareaMap.putAll(
+            matchedSubareasByName
+                .stream()
+                .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+        );
+      }
+    });
+
+    subareaSearchParams.licenceRef().ifPresent(s -> {
+      var matchedSubareasByLicence = searchSubareasByLicenceReferenceWithStatuses(
+          subareaSearchParams.licenceRef().get(),
+          statuses,
+          requestPurpose
       );
-    }
 
-    var matchedSubareasByBlockReference = searchSubareasByBlockReference(searchTerm, statuses, requestPurpose);
+      if (!CollectionUtils.isEmpty(matchedSubareasByLicence)) {
+        matchedSubareaMap.putAll(
+            matchedSubareasByLicence
+                .stream()
+                .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+        );
+      }
+    });
 
-    if (!CollectionUtils.isEmpty(matchedSubareasByBlockReference)) {
-      matchedSubareaMap.putAll(
-          matchedSubareasByBlockReference
-              .stream()
-              .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+    subareaSearchParams.blockRef().ifPresent(s -> {
+      var matchedSubareasByBlockReference = searchSubareasByBlockReference(
+          subareaSearchParams.blockRef().get(),
+          statuses,
+          requestPurpose
       );
-    }
+
+      if (!CollectionUtils.isEmpty(matchedSubareasByBlockReference)) {
+        matchedSubareaMap.putAll(
+            matchedSubareasByBlockReference
+                .stream()
+                .collect(Collectors.toMap(LicenceBlockSubareaDto::subareaId, Function.identity()))
+        );
+      }
+    });
 
     return new HashSet<>(matchedSubareaMap.values());
   }
