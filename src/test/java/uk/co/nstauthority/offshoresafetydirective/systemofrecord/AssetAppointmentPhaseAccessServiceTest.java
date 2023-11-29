@@ -206,4 +206,43 @@ class AssetAppointmentPhaseAccessServiceTest {
 
     assertThat(resultingPhases).isEqualTo(expectedPhases);
   }
+
+  @Test
+  void getPhasesByAppointments_verifyMapping() {
+    var firstAppointmentId = UUID.randomUUID();
+    var firstAppointment = AppointmentTestUtil.builder()
+        .withId(firstAppointmentId)
+        .build();
+    var secondAppointmentId = UUID.randomUUID();
+    var secondAppointment = AppointmentTestUtil.builder()
+        .withId(secondAppointmentId)
+        .build();
+
+    var firstAssetPhase = AssetPhaseTestUtil.builder()
+        .withAppointment(firstAppointment)
+        .build();
+
+    var secondAssetPhase = AssetPhaseTestUtil.builder()
+        .withAppointment(secondAppointment)
+        .build();
+
+    when(assetPhaseRepository.findAllByAppointment_IdIn(List.of(firstAppointmentId, secondAppointmentId)))
+        .thenReturn(List.of(firstAssetPhase, secondAssetPhase));
+
+    var result = assetAppointmentPhaseAccessService.getPhasesByAppointments(
+        List.of(firstAppointment, secondAppointment)
+    );
+
+    assertThat(result)
+        .containsAllEntriesOf(
+            Map.of(
+                new AppointmentId(firstAppointmentId),
+                List.of(firstAssetPhase),
+
+                new AppointmentId(secondAppointmentId),
+                List.of(secondAssetPhase)
+            )
+        );
+
+  }
 }

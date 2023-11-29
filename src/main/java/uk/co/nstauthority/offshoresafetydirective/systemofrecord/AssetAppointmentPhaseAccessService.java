@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -56,5 +57,20 @@ public class AssetAppointmentPhaseAccessService {
         .stream()
         .map(AssetAppointmentPhase::new)
         .toList();
+  }
+
+  public Map<AppointmentId, List<AssetPhase>> getPhasesByAppointments(
+      Collection<Appointment> appointmentDtos
+  ) {
+    var appointmentIds = appointmentDtos.stream()
+        .map(Appointment::getId)
+        .toList();
+
+    return assetPhaseRepository.findAllByAppointment_IdIn(appointmentIds)
+        .stream()
+        .collect(Collectors.groupingBy(
+            assetPhase -> new AppointmentId(assetPhase.getAppointment().getId()),
+            Collectors.mapping(assetPhase -> assetPhase, Collectors.toList())
+        ));
   }
 }

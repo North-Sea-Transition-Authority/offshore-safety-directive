@@ -1,0 +1,503 @@
+package uk.co.nstauthority.offshoresafetydirective.pears;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhase;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseRepository;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
+
+@ExtendWith(MockitoExtension.class)
+class PearsSubareaMessageHandlerServiceTest {
+
+  @Mock
+  private AssetPersistenceService assetPersistenceService;
+
+  @Mock
+  private AppointmentAccessService appointmentAccessService;
+
+  @Mock
+  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+
+  @Mock
+  private AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
+
+  @Mock
+  private AppointmentRepository appointmentRepository;
+
+  @Mock
+  private AssetPhaseRepository assetPhaseRepository;
+
+  private Instant now;
+  private Clock clock;
+  private PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
+
+  @BeforeEach
+  void setUp() {
+    now = Instant.now();
+    clock = Clock.fixed(now, ZoneId.systemDefault());
+    var realService = new PearsSubareaMessageHandlerService(
+        assetPersistenceService, appointmentAccessService, licenceBlockSubareaQueryService,
+        assetAppointmentPhaseAccessService, appointmentRepository, assetPhaseRepository, clock
+    );
+    pearsSubareaMessageHandlerService = spy(realService);
+  }
+
+  @Test
+  void rebuildAppointmentsAndAssets() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+
+    doNothing().when(pearsSubareaMessageHandlerService).copyForwardAppointmentAndAssets(eq(operation), any());
+
+    pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation);
+
+    verify(pearsSubareaMessageHandlerService).copyForwardAppointmentAndAssets(operation, firstSubareaChange);
+    verify(pearsSubareaMessageHandlerService).copyForwardAppointmentAndAssets(operation, secondSubareaChange);
+  }
+
+  @Test
+  void rebuildAppointmentsAndAssets_whenOperationTypeCannotBeMapped_thenError() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType("unknown operation type")
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+
+    assertThatThrownBy(() -> pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "Unable to end appointment and assets for operation [%s] with type [%s]".formatted(
+                operation.id(),
+                operation.type()
+            ));
+
+    verify(pearsSubareaMessageHandlerService, never()).copyForwardAppointmentAndAssets(any(), any());
+  }
+
+  @Test
+  void rebuildAppointmentsAndAssets_whenOperationTypeIsEnd_thenError() {
+    var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.END.getOperations().get(0))
+        .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
+        .build();
+
+    assertThatThrownBy(() -> pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(
+            "Cannot rebuild appointments for operation [%s] as [%s] operation types are not supported".formatted(
+                operation.id(),
+                PearsTransactionOperationType.END
+            ));
+
+    verify(pearsSubareaMessageHandlerService, never()).copyForwardAppointmentAndAssets(any(), any());
+  }
+
+  @Test
+  void copyForwardAppointmentAndAssets_whenResultingSubareasDoesNotContainOriginalSubarea_thenVerifyCalls() {
+    var portalAssetId = new PortalAssetId(UUID.randomUUID().toString());
+    var originalSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(portalAssetId.id());
+    var firstResultingSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+    var secondResultingSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+    var subareaChange = PearsTransactionSubareaChangeTestUtil.builder()
+        .withOriginalSubarea(originalSubarea)
+        .withResultingSubareas(Set.of(firstResultingSubarea, secondResultingSubarea))
+        .build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(subareaChange))
+        .build();
+
+    var persistedAssetDto = AssetDtoTestUtil.builder().build();
+    when(assetPersistenceService.getOrCreateAsset(portalAssetId, PortalAssetType.SUBAREA))
+        .thenReturn(persistedAssetDto);
+
+    var firstLicenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var secondLicenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        Set.of(
+            new LicenceBlockSubareaId(firstResultingSubarea.id()),
+            new LicenceBlockSubareaId(secondResultingSubarea.id())
+        ),
+        PearsSubareaMessageHandlerService.LICENCE_BLOCK_SUBAREA_REQUEST_PURPOSE
+    ))
+        .thenReturn(List.of(firstLicenceBlockSubareaDto, secondLicenceBlockSubareaDto));
+
+    var firstAsset = AssetTestUtil.builder().build();
+    var secondAsset = AssetTestUtil.builder().build();
+    when(assetPersistenceService.createAssetsForSubareas(
+        List.of(firstLicenceBlockSubareaDto, secondLicenceBlockSubareaDto))
+    )
+        .thenReturn(List.of(firstAsset, secondAsset));
+
+    var firstAppointment = AppointmentTestUtil.builder().build();
+    var secondAppointment = AppointmentTestUtil.builder().build();
+    when(appointmentAccessService.getActiveAppointmentsForAsset(persistedAssetDto.assetId()))
+        .thenReturn(List.of(firstAppointment, secondAppointment));
+
+    var assetPhase = AssetPhaseTestUtil.builder().build();
+    var appointmentIdAndPhaseListMap = Map.of(
+        new AppointmentId(firstAppointment.getId()),
+        List.of(assetPhase)
+    );
+    when(assetAppointmentPhaseAccessService.getPhasesByAppointments(List.of(firstAppointment, secondAppointment)))
+        .thenReturn(appointmentIdAndPhaseListMap);
+
+    doNothing().when(pearsSubareaMessageHandlerService).rebuildAppointments(
+        List.of(firstAppointment, secondAppointment),
+        appointmentIdAndPhaseListMap,
+        List.of(firstAsset, secondAsset)
+    );
+
+    pearsSubareaMessageHandlerService.copyForwardAppointmentAndAssets(operation, subareaChange);
+
+    verify(assetPersistenceService).endAssetsWithAssetType(
+        List.of(portalAssetId),
+        PortalAssetType.SUBAREA,
+        operation.id()
+    );
+
+    verify(appointmentRepository).saveAll(List.of(firstAppointment, secondAppointment));
+  }
+
+  @Test
+  void copyForwardAppointmentAndAssets_whenResultingSubareasContainsOriginalSubarea_thenVerifyCalls() {
+    var portalAssetId = new PortalAssetId(UUID.randomUUID().toString());
+    var originalSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(portalAssetId.id());
+    var firstResultingSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(portalAssetId.id());
+    var secondResultingSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+    var subareaChange = PearsTransactionSubareaChangeTestUtil.builder()
+        .withOriginalSubarea(originalSubarea)
+        .withResultingSubareas(Set.of(firstResultingSubarea, secondResultingSubarea))
+        .build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(subareaChange))
+        .build();
+
+    var persistedAssetDto = AssetDtoTestUtil.builder().build();
+    when(assetPersistenceService.getOrCreateAsset(portalAssetId, PortalAssetType.SUBAREA))
+        .thenReturn(persistedAssetDto);
+
+    var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        Set.of(
+            new LicenceBlockSubareaId(secondResultingSubarea.id())
+        ),
+        PearsSubareaMessageHandlerService.LICENCE_BLOCK_SUBAREA_REQUEST_PURPOSE
+    ))
+        .thenReturn(List.of(licenceBlockSubareaDto));
+
+    var asset = AssetTestUtil.builder().build();
+    when(assetPersistenceService.createAssetsForSubareas(
+        List.of(licenceBlockSubareaDto))
+    )
+        .thenReturn(List.of(asset));
+
+    var appointment = AppointmentTestUtil.builder().build();
+    when(appointmentAccessService.getActiveAppointmentsForAsset(persistedAssetDto.assetId()))
+        .thenReturn(List.of(appointment));
+
+    var assetPhase = AssetPhaseTestUtil.builder().build();
+    var appointmentIdAndPhaseListMap = Map.of(
+        new AppointmentId(appointment.getId()),
+        List.of(assetPhase)
+    );
+    when(assetAppointmentPhaseAccessService.getPhasesByAppointments(List.of(appointment)))
+        .thenReturn(appointmentIdAndPhaseListMap);
+
+    doNothing().when(pearsSubareaMessageHandlerService).rebuildAppointments(
+        List.of(appointment),
+        appointmentIdAndPhaseListMap,
+        List.of(asset)
+    );
+
+    pearsSubareaMessageHandlerService.copyForwardAppointmentAndAssets(operation, subareaChange);
+
+    verify(appointmentRepository).saveAll(List.of(appointment));
+  }
+
+  @Test
+  void copyForwardAppointmentAndAssets_whenResultingSubareaContainsOnlyOriginalSubarea_thenVerifyNoInteractions() {
+    var portalAssetId = new PortalAssetId(UUID.randomUUID().toString());
+    var originalSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(portalAssetId.id());
+    var firstResultingSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(portalAssetId.id());
+    var subareaChange = PearsTransactionSubareaChangeTestUtil.builder()
+        .withOriginalSubarea(originalSubarea)
+        .withResultingSubareas(Set.of(firstResultingSubarea))
+        .build();
+    var operation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(subareaChange))
+        .build();
+
+    verifyNoInteractions(
+        assetPersistenceService,
+        licenceBlockSubareaQueryService,
+        appointmentAccessService,
+        assetAppointmentPhaseAccessService,
+        appointmentRepository
+    );
+
+    pearsSubareaMessageHandlerService.copyForwardAppointmentAndAssets(operation, subareaChange);
+  }
+
+  @Test
+  void rebuildAppointments() {
+    var firstAppointment = AppointmentTestUtil.builder().build();
+    var secondAppointment = AppointmentTestUtil.builder().build();
+
+    var firstAddedAppointment = AppointmentTestUtil.builder().build();
+    var secondAddedAppointment = AppointmentTestUtil.builder().build();
+    var thirdAddedAppointment = AppointmentTestUtil.builder().build();
+    var fourthAddedAppointment = AppointmentTestUtil.builder().build();
+
+    var firstAssetPhase = AssetPhaseTestUtil.builder().build();
+    var secondAssetPhase = AssetPhaseTestUtil.builder().build();
+
+    var firstAddedAssetPhase = AssetPhaseTestUtil.builder().build();
+    var secondAddedAssetPhase = AssetPhaseTestUtil.builder().build();
+    var thirdAddedAssetPhase = AssetPhaseTestUtil.builder().build();
+    var fourthAddedAssetPhase = AssetPhaseTestUtil.builder().build();
+
+    var appointmentIdAndPhaseListMap = Map.of(
+        new AppointmentId(firstAppointment.getId()),
+        List.of(firstAssetPhase),
+        new AppointmentId(secondAppointment.getId()),
+        List.of(secondAssetPhase)
+    );
+
+    var firstAsset = AssetTestUtil.builder().build();
+    var secondAsset = AssetTestUtil.builder().build();
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Collection<Appointment>> persistAppointmentListCaptor = ArgumentCaptor.forClass(Collection.class);
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Collection<AssetPhase>> persistAssetPhaseListCaptor = ArgumentCaptor.forClass(Collection.class);
+
+    doAnswer(invocation -> {
+      persistAppointmentListCaptor.getValue().add(firstAddedAppointment);
+      persistAssetPhaseListCaptor.getValue().add(firstAddedAssetPhase);
+      return invocation;
+    })
+        .when(pearsSubareaMessageHandlerService)
+        .duplicateAppointment(
+            eq(firstAppointment),
+            any(),
+            persistAppointmentListCaptor.capture(),
+            persistAssetPhaseListCaptor.capture(),
+            eq(firstAsset)
+        );
+
+    doAnswer(invocation -> {
+      persistAppointmentListCaptor.getValue().add(secondAddedAppointment);
+      persistAssetPhaseListCaptor.getValue().add(secondAddedAssetPhase);
+      return invocation;
+    })
+        .when(pearsSubareaMessageHandlerService)
+        .duplicateAppointment(
+            eq(secondAppointment),
+            any(),
+            persistAppointmentListCaptor.capture(),
+            persistAssetPhaseListCaptor.capture(),
+            eq(firstAsset)
+        );
+
+    doAnswer(invocation -> {
+      persistAppointmentListCaptor.getValue().add(thirdAddedAppointment);
+      persistAssetPhaseListCaptor.getValue().add(thirdAddedAssetPhase);
+      return invocation;
+    })
+        .when(pearsSubareaMessageHandlerService)
+        .duplicateAppointment(
+            eq(firstAppointment),
+            any(),
+            persistAppointmentListCaptor.capture(),
+            persistAssetPhaseListCaptor.capture(),
+            eq(secondAsset)
+        );
+
+    doAnswer(invocation -> {
+      persistAppointmentListCaptor.getValue().add(fourthAddedAppointment);
+      persistAssetPhaseListCaptor.getValue().add(fourthAddedAssetPhase);
+      return invocation;
+    })
+        .when(pearsSubareaMessageHandlerService)
+        .duplicateAppointment(
+            eq(secondAppointment),
+            any(),
+            persistAppointmentListCaptor.capture(),
+            persistAssetPhaseListCaptor.capture(),
+            eq(secondAsset)
+        );
+
+    pearsSubareaMessageHandlerService.rebuildAppointments(
+        List.of(firstAppointment, secondAppointment),
+        appointmentIdAndPhaseListMap,
+        List.of(firstAsset, secondAsset)
+    );
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Collection<Appointment>> savedAppointmentListCaptor = ArgumentCaptor.forClass(Collection.class);
+    verify(appointmentRepository).saveAll(savedAppointmentListCaptor.capture());
+
+    assertThat(savedAppointmentListCaptor.getValue())
+        .containsExactly(
+            firstAddedAppointment,
+            secondAddedAppointment,
+            thirdAddedAppointment,
+            fourthAddedAppointment
+        );
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Collection<AssetPhase>> savedAssetPhaseListCaptor = ArgumentCaptor.forClass(Collection.class);
+    verify(assetPhaseRepository).saveAll(savedAssetPhaseListCaptor.capture());
+
+    assertThat(savedAssetPhaseListCaptor.getValue())
+        .containsExactlyInAnyOrder(
+            firstAddedAssetPhase,
+            secondAddedAssetPhase,
+            thirdAddedAssetPhase,
+            fourthAddedAssetPhase
+        );
+
+  }
+
+  @Test
+  void duplicateAppointments() {
+    var appointment = AppointmentTestUtil.builder().build();
+    var asset = AssetTestUtil.builder().build();
+
+    var firstPhase = AssetPhaseTestUtil.builder().build();
+    var secondPhase = AssetPhaseTestUtil.builder().build();
+
+    var appointmentList = new ArrayList<Appointment>();
+    var assetPhaseList = new ArrayList<AssetPhase>();
+
+    var appointmentIdAndPhaseListMap = Map.of(
+        new AppointmentId(appointment.getId()),
+        List.of(firstPhase, secondPhase)
+    );
+
+    doNothing()
+        .when(pearsSubareaMessageHandlerService)
+        .duplicateAssetPhases(any(), any(), any());
+
+    pearsSubareaMessageHandlerService.duplicateAppointment(
+        appointment,
+        appointmentIdAndPhaseListMap,
+        appointmentList,
+        assetPhaseList,
+        asset
+    );
+
+    ArgumentCaptor<Appointment> appointmentCaptor = ArgumentCaptor.forClass(Appointment.class);
+
+    verify(pearsSubareaMessageHandlerService).duplicateAssetPhases(
+        eq(firstPhase),
+        eq(assetPhaseList),
+        appointmentCaptor.capture()
+    );
+
+    verify(pearsSubareaMessageHandlerService).duplicateAssetPhases(
+        eq(secondPhase),
+        eq(assetPhaseList),
+        eq(appointmentCaptor.getValue())
+    );
+
+    // Verify these were the only two calls
+    verify(pearsSubareaMessageHandlerService, times(2)).duplicateAssetPhases(any(), any(), any());
+
+    assertThat(appointmentCaptor.getValue())
+        .usingRecursiveComparison()
+        .ignoringFields("id", "createdByAppointmentId", "asset")
+        .isEqualTo(appointment);
+
+    assertThat(appointmentCaptor.getValue())
+        .extracting(
+            Appointment::getAsset,
+            Appointment::getCreatedByAppointmentId
+        )
+        .containsExactly(
+            asset,
+            appointment.getId()
+        );
+
+    assertThat(appointmentList).containsExactly(appointmentCaptor.getValue());
+  }
+
+  @Test
+  void duplicateAssetPhases() {
+    var assetPhase = AssetPhaseTestUtil.builder().build();
+    var assetPhaseList = new ArrayList<AssetPhase>();
+    var newAppointment = AppointmentTestUtil.builder().build();
+
+    pearsSubareaMessageHandlerService.duplicateAssetPhases(
+        assetPhase,
+        assetPhaseList,
+        newAppointment
+    );
+
+    assertThat(assetPhaseList)
+        .hasSize(1)
+        .first()
+        .extracting(
+            AssetPhase::getAppointment,
+            AssetPhase::getAsset,
+            AssetPhase::getPhase
+        )
+        .containsExactly(
+            newAppointment,
+            newAppointment.getAsset(),
+            assetPhase.getPhase()
+        );
+  }
+}

@@ -60,8 +60,8 @@ public record AppointmentDto(
   public static class Builder {
 
     private Builder(AppointmentId appointmentId, AppointedOperatorId appointedOperatorId,
-                   AppointmentFromDate appointmentFromDate, AppointmentToDate appointmentToDate,
-                   Instant appointmentCreatedDate, AppointmentType appointmentType, AssetDto assetDto,
+                    AppointmentFromDate appointmentFromDate, AppointmentToDate appointmentToDate,
+                    Instant appointmentCreatedDate, AppointmentType appointmentType, AssetDto assetDto,
                     AppointmentStatus appointmentStatus) {
       this.appointmentId = appointmentId;
       this.appointedOperatorId = appointedOperatorId;
@@ -97,6 +97,11 @@ public record AppointmentDto(
 
     public Builder withCreatedByAppointmentId(AppointmentId appointmentId) {
       this.createdByAppointmentId = appointmentId;
+      return this;
+    }
+
+    public Builder withAppointmentStatus(AppointmentStatus appointmentStatus) {
+      this.appointmentStatus = appointmentStatus;
       return this;
     }
 

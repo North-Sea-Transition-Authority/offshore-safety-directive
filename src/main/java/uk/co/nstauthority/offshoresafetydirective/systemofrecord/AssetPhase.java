@@ -15,7 +15,7 @@ import org.hibernate.envers.NotAudited;
 @Entity
 @Table(name = "asset_phases")
 @Audited
-class AssetPhase {
+public class AssetPhase {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)

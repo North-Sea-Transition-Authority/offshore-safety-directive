@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransactionAppliedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -55,12 +57,15 @@ class PearsLicenceSqsService {
     LOGGER.debug("Process received PEARS licence messages");
     sqsService.receiveQueueMessages(
         licencesOsdQueueUrl,
-        // TODO OSDOP-114 - Change this to support multiple messages on the same topic
-        PearsCorrectionAppliedEpmqMessage.class,
-        message -> {
-          pearsLicenceService.handlePearsCorrectionApplied(message);
+        EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES),
+        epmqMessage -> {
           metricsProvider.getPearsLicenceMessagesReceivedCounter().increment();
-        }
-    );
+          if (epmqMessage instanceof PearsCorrectionAppliedEpmqMessage message) {
+            // TODO - Log start/end
+            pearsLicenceService.handlePearsCorrectionApplied(message);
+          } else if (epmqMessage instanceof PearsTransactionAppliedEpmqMessage message) {
+            pearsLicenceService.handlePearsTransactionApplied(message);
+          }
+        });
   }
 }

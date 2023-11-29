@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
@@ -42,7 +43,7 @@ class PearsLicenceSqsServiceIntegrationTest {
       return invocation;
     }).when(sqsService).receiveQueueMessages(
         any(),
-        eq(PearsCorrectionAppliedEpmqMessage.class),
+        eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
         any()
     );
 

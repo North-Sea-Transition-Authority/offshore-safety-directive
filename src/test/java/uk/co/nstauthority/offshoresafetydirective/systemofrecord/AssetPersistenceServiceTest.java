@@ -6,18 +6,22 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
@@ -273,6 +277,62 @@ class AssetPersistenceServiceTest {
             portalAssetType,
             assetName.value(),
             AssetStatus.EXTANT
+        );
+  }
+
+  @Test
+  void endAssetsWithAssetType() {
+    var portalEventId = "test portal event id";
+    var portalAssetType = PortalAssetType.SUBAREA;
+    var firstPortalAssetId = new PortalAssetId(UUID.randomUUID().toString());
+    var secondPortalAssetId = new PortalAssetId(UUID.randomUUID().toString());
+
+    var firstAsset = spy(AssetTestUtil.builder().build());
+    var secondAsset = spy(AssetTestUtil.builder().build());
+
+    when(assetRepository.findByPortalAssetIdInAndPortalAssetType(
+        List.of(firstPortalAssetId.id(), secondPortalAssetId.id()),
+        portalAssetType
+    )).thenReturn(List.of(firstAsset, secondAsset));
+
+    assetPersistenceService.endAssetsWithAssetType(
+        List.of(firstPortalAssetId, secondPortalAssetId),
+        portalAssetType,
+        portalEventId
+    );
+
+    verify(assetRepository).saveAll(List.of(firstAsset, secondAsset));
+
+    verify(firstAsset).setStatus(AssetStatus.REMOVED);
+    verify(firstAsset).setPortalEventType(PortalEventType.PEARS_TRANSACTION_OPERATION);
+    verify(firstAsset).setPortalEventId(portalEventId);
+
+    verify(secondAsset).setStatus(AssetStatus.REMOVED);
+    verify(secondAsset).setPortalEventType(PortalEventType.PEARS_TRANSACTION_OPERATION);
+    verify(secondAsset).setPortalEventId(portalEventId);
+  }
+
+  @Test
+  void createAssetsForSubareas() {
+    var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    doAnswer(invocation -> invocation.getArgument(0)).when(assetRepository).saveAll(any());
+    var result = assetPersistenceService.createAssetsForSubareas(List.of(licenceBlockSubareaDto));
+
+    assertThat(result)
+        .extracting(
+            Asset::getPortalAssetId,
+            Asset::getPortalAssetType,
+            Asset::getAssetName,
+            Asset::getStatus
+        )
+        .containsExactly(
+            Tuple.tuple(
+                licenceBlockSubareaDto.subareaId().id(),
+                PortalAssetType.SUBAREA,
+                licenceBlockSubareaDto.displayName(),
+                AssetStatus.EXTANT
+            )
         );
   }
 

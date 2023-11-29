@@ -20,8 +20,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransactionAppliedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -45,6 +48,9 @@ class PearsLicenceSqsServiceTest {
 
   @Captor
   private ArgumentCaptor<Consumer<PearsCorrectionAppliedEpmqMessage>> correctionAppliedEpmqMessageConsumerCaptor;
+
+  @Captor
+  private ArgumentCaptor<Consumer<PearsTransactionAppliedEpmqMessage>> transactionAppliedEpmqMessageConsumerCaptor;
 
   private final SnsTopicArn licencesSnsTopicArn = new SnsTopicArn("test-licences-sns-topic-arn");
   private final SqsQueueUrl licencesOsdQueueUrl = new SqsQueueUrl("test-licences-osd-queue-url");
@@ -77,13 +83,13 @@ class PearsLicenceSqsServiceTest {
 
     verify(sqsService).receiveQueueMessages(
         eq(licencesOsdQueueUrl),
-        eq(PearsCorrectionAppliedEpmqMessage.class),
+        eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
         any()
     );
   }
 
   @Test
-  void receiveMessages_verifyCalls() {
+  void receiveMessages_whenCorrectionAppliedMessage_verifyCalls() {
 
     var createdInstantOfMessage1 = Instant.now();
     var createdInstantOfMessage2 = Instant.now().plusSeconds(10);
@@ -110,12 +116,11 @@ class PearsLicenceSqsServiceTest {
         .when(sqsService)
         .receiveQueueMessages(
             eq(licencesOsdQueueUrl),
-            eq(PearsCorrectionAppliedEpmqMessage.class),
+            eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
             correctionAppliedEpmqMessageConsumerCaptor.capture()
         );
 
     when(metricsProvider.getPearsLicenceMessagesReceivedCounter()).thenReturn(counter);
-
 
     pearsLicenceSqsService.receiveMessages();
 
@@ -124,6 +129,47 @@ class PearsLicenceSqsServiceTest {
 
     verify(metricsProvider, times(2)).getPearsLicenceMessagesReceivedCounter();
     verify(counter, times(2)).increment();
-    verifyNoMoreInteractions(metricsProvider);
+
+    verifyNoMoreInteractions(pearsLicenceService, metricsProvider);
+  }
+
+  @Test
+  void receiveMessages_whenTransactionAppliedMessage_verifyCalls() {
+
+    var createdInstantOfMessage1 = Instant.now();
+    var createdInstantOfMessage2 = Instant.now().plusSeconds(10);
+
+    var pearsTransaction = new PearsTransaction(null, null, null);
+    var message1 = PearsTransactionAppliedEpmqMessageTestUtil.builder(pearsTransaction)
+        .withCreatedAt(createdInstantOfMessage1)
+        .build();
+    var message2 = PearsTransactionAppliedEpmqMessageTestUtil.builder(pearsTransaction)
+        .withCreatedAt(createdInstantOfMessage2)
+        .build();
+
+    doAnswer(invocation -> {
+      var onMessage = transactionAppliedEpmqMessageConsumerCaptor.getValue();
+      onMessage.accept(message1);
+      onMessage.accept(message2);
+      return null;
+    })
+        .when(sqsService)
+        .receiveQueueMessages(
+            eq(licencesOsdQueueUrl),
+            eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
+            transactionAppliedEpmqMessageConsumerCaptor.capture()
+        );
+
+    when(metricsProvider.getPearsLicenceMessagesReceivedCounter()).thenReturn(counter);
+
+    pearsLicenceSqsService.receiveMessages();
+
+    verify(pearsLicenceService, times(1)).handlePearsTransactionApplied(message1);
+    verify(pearsLicenceService, times(1)).handlePearsTransactionApplied(message2);
+
+    verify(metricsProvider, times(2)).getPearsLicenceMessagesReceivedCounter();
+    verify(counter, times(2)).increment();
+
+    verifyNoMoreInteractions(pearsLicenceService, metricsProvider);
   }
 }

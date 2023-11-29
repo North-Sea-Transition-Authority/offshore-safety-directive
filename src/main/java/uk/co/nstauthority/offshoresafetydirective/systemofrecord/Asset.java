@@ -42,7 +42,7 @@ public class Asset {
     this.id = id;
   }
 
-  protected Asset() {
+  public Asset() {
   }
 
   public UUID getId() {

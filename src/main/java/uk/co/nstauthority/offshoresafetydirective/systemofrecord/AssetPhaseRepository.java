@@ -7,7 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface AssetPhaseRepository extends CrudRepository<AssetPhase, UUID> {
+public interface AssetPhaseRepository extends CrudRepository<AssetPhase, UUID> {
 
   List<AssetPhase> findByAsset_Id(UUID assetId);
 
@@ -16,5 +16,7 @@ interface AssetPhaseRepository extends CrudRepository<AssetPhase, UUID> {
   List<AssetPhase> findByAppointmentIn(Collection<Appointment> appointments);
 
   List<AssetPhase> findAllByAppointment(Appointment appointment);
+
+  List<AssetPhase> findAllByAppointment_IdIn(Collection<UUID> appointments);
 
 }

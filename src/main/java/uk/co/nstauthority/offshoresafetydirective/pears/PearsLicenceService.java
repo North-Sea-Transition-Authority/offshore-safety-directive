@@ -1,14 +1,18 @@
 package uk.co.nstauthority.offshoresafetydirective.pears;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransactionAppliedEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
@@ -29,15 +33,18 @@ class PearsLicenceService {
   private final LicenceQueryService licenceQueryService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final AppointmentService appointmentService;
+  private final PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
 
 
   @Autowired
   PearsLicenceService(LicenceQueryService licenceQueryService,
                       LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
-                      AppointmentService appointmentService) {
+                      AppointmentService appointmentService,
+                      PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService) {
     this.licenceQueryService = licenceQueryService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
     this.appointmentService = appointmentService;
+    this.pearsSubareaMessageHandlerService = pearsSubareaMessageHandlerService;
   }
 
   public void handlePearsCorrectionApplied(PearsCorrectionAppliedEpmqMessage message) {
@@ -68,6 +75,37 @@ class PearsLicenceService {
 
     if (!nonExtantSubareas.isEmpty()) {
       appointmentService.endAppointmentsForSubareas(nonExtantSubareas, message.getCorrectionId());
+    }
+  }
+
+  @Transactional
+  public void handlePearsTransactionApplied(PearsTransactionAppliedEpmqMessage message) {
+    message.getTransaction()
+        .operations()
+        .stream()
+        .sorted(Comparator.comparing(PearsTransaction.Operation::executionOrder))
+        .forEachOrdered(this::handlePearsTransactionOperation);
+  }
+
+  private void handlePearsTransactionOperation(PearsTransaction.Operation operation) {
+    LOGGER.info("Preparing to handle operation with ID [{}]", operation.id());
+    var operationType = PearsTransactionOperationType.fromOperationName(operation.type());
+    if (operationType.isEmpty()) {
+      throw new IllegalStateException(
+          "Operation with ID [%s] has an unresolvable type of [%s]".formatted(
+              operation.id(),
+              operation.type()
+          )
+      );
+    }
+
+    LOGGER.info("Handling operation with ID [{}] using operation type [{}]", operation.id(), operationType.get());
+
+    switch (operationType.get()) {
+      case COPY_FORWARD -> pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation);
+      case END ->
+          // TODO OSDOP-114 - Only end assets, do not rebuild.
+          LOGGER.info("Hit END operation type - Do nothing");
     }
   }
 
