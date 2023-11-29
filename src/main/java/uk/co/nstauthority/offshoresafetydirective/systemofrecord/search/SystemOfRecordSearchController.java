@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRe
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -245,7 +246,8 @@ public class SystemOfRecordSearchController {
         .addObject("filteredAppointedOperator", filteredAppointedOperator)
         .addObject(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name()))
         );
   }
 

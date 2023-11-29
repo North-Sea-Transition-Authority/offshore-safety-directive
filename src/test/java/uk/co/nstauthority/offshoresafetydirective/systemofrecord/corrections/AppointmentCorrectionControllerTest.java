@@ -39,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -460,7 +461,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null))))
         .andExpect(model().attribute("portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(null))))
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name()))))
         .andExpect(model().attribute("preselectedOperator", Map.of(
             organisationDto.id().toString(),
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)
@@ -548,7 +549,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).submitCorrection(appointmentId, null, null, null))))
         .andExpect(model().attribute("portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(null))))
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name()))))
         .andExpect(model().attribute("preselectedOperator", Map.of(
             organisationDto.id().toString(),
             OrganisationUnitDisplayUtil.getOrganisationUnitDisplayName(organisationDto)

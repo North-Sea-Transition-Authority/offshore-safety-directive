@@ -42,6 +42,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.Inst
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -235,7 +236,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(null))
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name()))
         ))
         .andExpect(model().attribute("phases", phaseMap))
         .andExpect(model().attribute("appointmentTypes", appointmentTypes))
@@ -373,7 +374,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
             RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-                .searchAllPortalOrganisations(null))
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name()))
         ))
         .andExpect(model().attribute("phases", phaseMap))
         .andExpect(model().attribute("appointmentTypes", appointmentTypes))

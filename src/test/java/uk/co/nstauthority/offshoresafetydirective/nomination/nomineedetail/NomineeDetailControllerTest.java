@@ -43,6 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegulatorConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -212,7 +213,8 @@ class NomineeDetailControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("accidentRegulatorBranding", accidentRegulatorConfigurationProperties))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
+                .searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name()))
         ))
         .andExpect(model().attribute(
             "preselectedItems",

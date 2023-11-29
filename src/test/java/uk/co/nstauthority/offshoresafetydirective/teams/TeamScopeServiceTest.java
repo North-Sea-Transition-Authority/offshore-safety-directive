@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -66,5 +67,30 @@ class TeamScopeServiceTest {
             orgGroupId,
             portalTeamType
         );
+  }
+
+  @Test
+  void getPortalIds_whenNoTeamScopeFound_thenEmpty() {
+    var team = TeamTestUtil.Builder().build();
+    var resultingPortalId = teamScopeService.getPortalIds(List.of(team), PortalTeamType.ORGANISATION_GROUP);
+
+    assertThat(resultingPortalId).isEmpty();
+  }
+
+  @Test
+  void getPortalIds_whenTeamScopeFound_thenPopulatedList() {
+    var team = TeamTestUtil.Builder().build();
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(team)
+        .withPortalId(123)
+        .build();
+    var teams = List.of(team);
+
+    when(teamScopeRepository.findAllByTeamInAndPortalTeamType(teams, PortalTeamType.ORGANISATION_GROUP))
+        .thenReturn(List.of(teamScope));
+
+    var resultingPortalIds = teamScopeService.getPortalIds(teams, PortalTeamType.ORGANISATION_GROUP);
+
+    assertThat(resultingPortalIds).containsExactly(Integer.valueOf(teamScope.getPortalId()));
   }
 }

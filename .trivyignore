@@ -8,6 +8,7 @@ CVE-2023-41080
 # org.springframework.security:spring-security-saml2-service-provider -> 6.1.5
 CVE-2023-44483
 CVE-2023-33201
+CVE-2023-33202
 
 # com.google.guava:guava
 CVE-2023-2976

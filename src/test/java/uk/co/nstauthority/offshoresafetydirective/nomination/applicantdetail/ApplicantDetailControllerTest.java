@@ -30,6 +30,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -162,7 +163,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
+                .searchOrganisationsRelatedToUser(null, OrganisationFilterType.ACTIVE.name()))
         ))
         .andExpect(model().attribute(
             "actionUrl",
@@ -247,7 +249,8 @@ class ApplicantDetailControllerTest extends AbstractControllerTest {
         .andExpect(view().name("osd/nomination/applicantdetails/applicantDetails"))
         .andExpect(model().attribute(
             "portalOrganisationsRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
+                .searchOrganisationsRelatedToUser(null, OrganisationFilterType.ACTIVE.name()))
         ))
         .andExpect(model().attribute(
             "actionUrl",

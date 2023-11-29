@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConf
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
@@ -165,6 +166,6 @@ public class NomineeDetailController {
 
   private String getPortalOrganisationSearchUrl() {
     return RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-        .searchPortalOrganisations(null));
+        .searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name()));
   }
 }

@@ -32,6 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRe
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -74,7 +75,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", false))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()));
   }
@@ -113,7 +114,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", true))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute(
             "filteredAppointedOperator",
@@ -260,7 +261,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", true))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
@@ -288,7 +289,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", false))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", Collections.emptyList()))
@@ -430,7 +431,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", true))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
@@ -465,7 +466,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", false))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", Collections.emptyList()))
@@ -614,7 +615,7 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         .andExpect(model().attribute("hasAddedFilter", true))
         .andExpect(model().attribute(
             "appointedOperatorRestUrl",
-            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchPortalOrganisations(null)))
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
         )
         .andExpect(model().attribute("filteredAppointedOperator", Collections.emptyMap()))
         .andExpect(model().attribute("appointments", List.of(expectedAppointment)))

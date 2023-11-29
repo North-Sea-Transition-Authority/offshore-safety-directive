@@ -31,6 +31,11 @@ public class TeamScopeTestUtil {
       return this;
     }
 
+    public Builder withPortalId(int portalId) {
+      this.portalId = String.valueOf(portalId);
+      return this;
+    }
+
     public TeamScope build() {
       var teamScope = new TeamScope();
       teamScope.setTeam(team);

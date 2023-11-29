@@ -3,14 +3,17 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -26,8 +29,8 @@ class PortalOrganisationUnitQueryServiceTest {
 
   private static PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
-  @BeforeAll
-  static void setup() {
+  @BeforeEach
+  void setup() {
 
     organisationApi = mock(OrganisationApi.class);
 
@@ -79,7 +82,7 @@ class PortalOrganisationUnitQueryServiceTest {
 
     when(organisationApi.searchOrganisationUnits(
         eq(nameToSearchFor),
-        eq(null),
+        isNull(),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
         any()
@@ -98,7 +101,7 @@ class PortalOrganisationUnitQueryServiceTest {
 
     when(organisationApi.searchOrganisationUnits(
         eq(nameToSearchFor),
-        eq(null),
+        isNull(),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
         any()
@@ -131,7 +134,7 @@ class PortalOrganisationUnitQueryServiceTest {
 
     when(organisationApi.searchOrganisationUnits(
         eq(nameToSearchFor),
-        eq(null),
+        isNull(),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
         any()
@@ -145,7 +148,7 @@ class PortalOrganisationUnitQueryServiceTest {
             activeOrganisationUnit.getOrganisationUnitId(),
             inactiveOrganisationUnit.getOrganisationUnitId(),
             unknownActiveStateOrganisationUnit.getOrganisationUnitId()
-    );
+        );
   }
 
 
@@ -155,14 +158,15 @@ class PortalOrganisationUnitQueryServiceTest {
     var registeredNumberToSearchFor = "no matching number";
 
     when(organisationApi.searchOrganisationUnits(
-        eq(null),
+        isNull(),
         eq(registeredNumberToSearchFor),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
         any()
     )).thenReturn(Collections.emptyList());
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
+    var result =
+        portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).isEmpty();
   }
@@ -174,14 +178,15 @@ class PortalOrganisationUnitQueryServiceTest {
     var expectedOrganisationUnit = EpaOrganisationUnitTestUtil.builder().build();
 
     when(organisationApi.searchOrganisationUnits(
-        eq(null),
+        isNull(),
         eq(registeredNumberToSearchFor),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
         any()
     )).thenReturn(List.of(expectedOrganisationUnit));
 
-    var result = portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
+    var result =
+        portalOrganisationUnitQueryService.queryOrganisationByRegisteredNumber(registeredNumberToSearchFor, REQUEST_PURPOSE);
 
     assertThat(result).contains(PortalOrganisationDto.fromOrganisationUnit(expectedOrganisationUnit));
   }
@@ -207,7 +212,7 @@ class PortalOrganisationUnitQueryServiceTest {
         .build();
 
     when(organisationApi.searchOrganisationUnits(
-        eq(null),
+        isNull(),
         eq(numberToSearchFor),
         eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
         any(),
@@ -236,7 +241,8 @@ class PortalOrganisationUnitQueryServiceTest {
         new EnergyPortalApiWrapper()
     );
 
-    var resultingOrganisationUnits = portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds, REQUEST_PURPOSE);
+    var resultingOrganisationUnits =
+        portalOrganisationUnitQueryService.getOrganisationByIds(organisationUnitIds, REQUEST_PURPOSE);
 
     assertThat(resultingOrganisationUnits).isEmpty();
 
@@ -283,6 +289,194 @@ class PortalOrganisationUnitQueryServiceTest {
     assertThat(resultingOrganisationUnits)
         .extracting(PortalOrganisationDto::id)
         .containsExactly(matchedOrganisationUnitId.id());
+  }
 
+  @ParameterizedTest
+  @NullAndEmptySource
+  void searchOrganisationsByGroups_whenNullOrEmptyIdInput_thenNoApiInteraction(List<Integer> invalidInput) {
+    var resultingOrganisationDto = portalOrganisationUnitQueryService.searchOrganisationsByGroups(
+        invalidInput,
+        REQUEST_PURPOSE
+    );
+
+    assertThat(resultingOrganisationDto).isEmpty();
+    verifyNoInteractions(organisationApi);
+  }
+
+  @Test
+  void searchOrganisationsByGroups_whenMatch_thenPopulatedListReturned() {
+    var matchedOrganisationGroupId = new PortalOrganisationUnitId(100);
+    var organisationUnit = EpaOrganisationUnitTestUtil.builder()
+        .withId(matchedOrganisationGroupId.id())
+        .build();
+
+    var organisationGroupId = 10;
+    var expectedOrganisationGroup = EpaOrganisationGroupTestUtil.builder()
+        .withId(organisationGroupId)
+        .withOrganisationUnit(organisationUnit)
+        .build();
+
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(expectedOrganisationGroup.getOrganisationGroupId())),
+        eq(PortalOrganisationUnitQueryService.ORGANISATION_GROUPS_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(List.of(expectedOrganisationGroup));
+
+    var resultingOrganisationDto = portalOrganisationUnitQueryService.searchOrganisationsByGroups(
+        List.of(expectedOrganisationGroup.getOrganisationGroupId()),
+        REQUEST_PURPOSE
+    );
+
+    assertThat(resultingOrganisationDto)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(matchedOrganisationGroupId.id());
+  }
+
+  @Test
+  void searchOrganisationsByNameAndNumbers_whenSameOrganisationsMatchesNameAndNumber_thenDistinct() {
+    var searchTerm = "duplicate search";
+    var organisation = EpaOrganisationUnitTestUtil.builder().build();
+
+    given(organisationApi.searchOrganisationUnits(
+        eq(searchTerm),
+        isNull(),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(organisation));
+
+    given(organisationApi.searchOrganisationUnits(
+        isNull(),
+        eq(searchTerm),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(organisation));
+
+    var resultingOrganisation = portalOrganisationUnitQueryService.searchOrganisationsByNameAndNumber(searchTerm, REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisation)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(organisation.getOrganisationUnitId());
+  }
+
+  @Test
+  void searchOrganisationsByNameAndNumber_whenNoNameOrNumberMatchesAndEmptyResponseFromService_thenEmptyList() {
+    var searchTerm = "no matches";
+
+    given(organisationApi.searchOrganisationUnits(
+        eq(searchTerm),
+        isNull(),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of());
+
+    given(organisationApi.searchOrganisationUnits(
+        isNull(),
+        eq(searchTerm),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of());
+
+    var resultingOrganisation = portalOrganisationUnitQueryService.searchOrganisationsByNameAndNumber(searchTerm, REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisation).isEmpty();
+  }
+
+  @Test
+  void searchOrganisationsByNameAndNumber_whenNameOnlyMatches_thenPopulatedList() {
+    var searchTerm = "duplicate search";
+    var expectedOrganisation = EpaOrganisationUnitTestUtil.builder().build();
+
+    given(organisationApi.searchOrganisationUnits(
+        eq(searchTerm),
+        isNull(),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(expectedOrganisation));
+
+    given(organisationApi.searchOrganisationUnits(
+        isNull(),
+        eq(searchTerm),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of());
+
+    var resultingOrganisation = portalOrganisationUnitQueryService.searchOrganisationsByNameAndNumber(searchTerm, REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisation)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(expectedOrganisation.getOrganisationUnitId());
+  }
+
+  @Test
+  void searchOrganisationsByNameAndNumber_whenNumberOnlyMatches_thenPopulatedList() {
+    var searchTerm = "duplicate search";
+    var expectedOrganisation = EpaOrganisationUnitTestUtil.builder().build();
+
+    given(organisationApi.searchOrganisationUnits(
+        eq(searchTerm),
+        isNull(),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of());
+
+    given(organisationApi.searchOrganisationUnits(
+        isNull(),
+        eq(searchTerm),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(expectedOrganisation));
+
+    var resultingOrganisation = portalOrganisationUnitQueryService.searchOrganisationsByNameAndNumber(searchTerm, REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisation)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(expectedOrganisation.getOrganisationUnitId());
+  }
+
+  @Test
+  void searchOrganisationsByNameAndNumber_whenNameAndNumberMatches_thenPopulatedList() {
+    var searchTerm = "search";
+    var expectedNumberOrganisation = EpaOrganisationUnitTestUtil.builder()
+        .withId(1)
+        .withName("company 1")
+        .build();
+    var expectedNameOrganisation = EpaOrganisationUnitTestUtil.builder()
+        .withId(2)
+        .withName("company 2")
+        .build();
+
+    given(organisationApi.searchOrganisationUnits(
+        eq(searchTerm),
+        isNull(),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(expectedNameOrganisation));
+
+    given(organisationApi.searchOrganisationUnits(
+        isNull(),
+        eq(searchTerm),
+        eq(PortalOrganisationUnitQueryService.MULTI_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).willReturn(List.of(expectedNumberOrganisation));
+
+    var resultingOrganisation = portalOrganisationUnitQueryService.searchOrganisationsByNameAndNumber(searchTerm, REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisation)
+        .extracting(PortalOrganisationDto::id)
+        .containsExactly(
+            expectedNameOrganisation.getOrganisationUnitId(),
+            expectedNumberOrganisation.getOrganisationUnitId()
+        );
   }
 }

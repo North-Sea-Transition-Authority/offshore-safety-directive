@@ -339,4 +339,24 @@ class TeamMemberServiceTest {
         );
   }
 
+  @Test
+  void getTeamsFromWuaId_whenMatch_thenPopulatedList() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var team = TeamTestUtil.Builder().build();
+    var teamMember = TeamMemberRoleTestUtil.Builder().withTeam(team).build();
+
+    when(teamMemberRoleRepository.findAllByWuaId(user.wuaId())).thenReturn(List.of(teamMember));
+
+    var resultingTeams = teamMemberService.getTeamsFromWuaId(user);
+
+    assertThat(resultingTeams).containsExactly(team);
+  }
+
+  @Test
+  void getTeamsFromWuaId_whenNoMatch_thenEmptyList() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    var resultingTeams = teamMemberService.getTeamsFromWuaId(user);
+
+    assertThat(resultingTeams).isEmpty();
+  }
 }

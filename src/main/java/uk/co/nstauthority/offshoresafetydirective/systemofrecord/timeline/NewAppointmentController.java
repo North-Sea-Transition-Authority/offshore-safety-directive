@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -207,7 +208,7 @@ public class NewAppointmentController {
         .addObject("submitUrl", ReverseRouter.route(on(NewAppointmentController.class)
             .createNewAppointment(assetDto.assetId(), null, null, null)))
         .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-            .searchAllPortalOrganisations(null)))
+            .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name())))
         .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
         .addObject("appointmentTypes", appointmentTypes)
         .addObject("form", form)

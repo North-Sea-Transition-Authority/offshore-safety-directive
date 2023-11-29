@@ -4,11 +4,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
+import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
@@ -21,6 +23,7 @@ public class PortalOrganisationUnitQueryService {
           .organisationUnitId()
           .name()
           .registeredNumber()
+          .isDuplicate()
           .isActive();
 
   static final OrganisationUnitsProjectionRoot MULTI_ORGANISATION_PROJECTION_ROOT =
@@ -28,7 +31,18 @@ public class PortalOrganisationUnitQueryService {
           .organisationUnitId()
           .name()
           .registeredNumber()
+          .isDuplicate()
           .isActive();
+
+  static final OrganisationGroupsProjectionRoot ORGANISATION_GROUPS_PROJECTION_ROOT =
+      new OrganisationGroupsProjectionRoot()
+          .organisationUnits()
+            .organisationUnitId()
+            .name()
+            .registeredNumber()
+            .isDuplicate()
+            .isActive()
+          .root();
 
   private final OrganisationApi organisationApi;
 
@@ -109,6 +123,38 @@ public class PortalOrganisationUnitQueryService {
         )
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
+        .toList();
+  }
+
+  List<PortalOrganisationDto> searchOrganisationsByGroups(Collection<Integer> organisationGroupIds,
+                                                          RequestPurpose requestPurpose) {
+
+    if (CollectionUtils.isEmpty(organisationGroupIds)) {
+      return Collections.emptyList();
+    }
+
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+            organisationApi.getAllOrganisationGroupsByIds(
+                organisationGroupIds.stream().toList(),
+                ORGANISATION_GROUPS_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
+        )
+        .stream()
+        .flatMap(organisationGroup -> organisationGroup.getOrganisationUnits().stream())
+        .map(PortalOrganisationDto::fromOrganisationUnit)
+        .toList();
+  }
+
+  public List<PortalOrganisationDto> searchOrganisationsByNameAndNumber(String searchTerm, RequestPurpose requestPurpose) {
+    var matchedOrganisationsByName = queryOrganisationByName(searchTerm, requestPurpose);
+
+    var matchedOrganisationsByNumber = queryOrganisationByRegisteredNumber(searchTerm, requestPurpose);
+
+    return Stream.of(matchedOrganisationsByName, matchedOrganisationsByNumber)
+        .flatMap(Collection::stream)
+        .distinct()
         .toList();
   }
 }
