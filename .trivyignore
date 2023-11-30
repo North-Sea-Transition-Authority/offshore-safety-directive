@@ -13,3 +13,6 @@ CVE-2023-33202
 # com.google.guava:guava
 CVE-2023-2976
 CVE-2020-8908
+
+# org.springframework.boot:spring-boot-starter-freemarker
+CVE-2023-6378
