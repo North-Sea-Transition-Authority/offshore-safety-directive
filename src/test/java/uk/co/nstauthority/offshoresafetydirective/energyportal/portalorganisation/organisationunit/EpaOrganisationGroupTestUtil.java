@@ -34,7 +34,6 @@ public class EpaOrganisationGroupTestUtil {
     }
 
     public Builder withId(Integer id) {
-
       this.organisationGroupId = id;
       return this;
     }
