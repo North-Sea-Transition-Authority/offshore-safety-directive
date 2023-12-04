@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -86,6 +87,8 @@ public class RelatedInformationController {
 
     var fieldIds = form.getFields()
         .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
         .map(FieldId::new)
         .collect(Collectors.toSet());
 

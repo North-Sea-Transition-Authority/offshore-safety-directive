@@ -4,9 +4,9 @@ import java.util.List;
 
 public class NominatedInstallationDetailForm {
 
-  private List<Integer> installations;
+  private List<String> installations;
   private String installationsSelect;
-  private List<Integer> licences;
+  private List<String> licences;
   private String licencesSelect;
   private String forAllInstallationPhases;
   private String developmentDesignPhase;
@@ -16,11 +16,11 @@ public class NominatedInstallationDetailForm {
   private String developmentProductionPhase;
   private String decommissioningPhase;
 
-  public List<Integer> getInstallations() {
+  public List<String> getInstallations() {
     return installations;
   }
 
-  public void setInstallations(List<Integer> installations) {
+  public void setInstallations(List<String> installations) {
     this.installations = installations;
   }
 
@@ -32,11 +32,11 @@ public class NominatedInstallationDetailForm {
     this.installationsSelect = installationsSelect;
   }
 
-  public List<Integer> getLicences() {
+  public List<String> getLicences() {
     return licences;
   }
 
-  public void setLicences(List<Integer> licences) {
+  public void setLicences(List<String> licences) {
     this.licences = licences;
   }
 

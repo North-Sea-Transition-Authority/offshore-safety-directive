@@ -43,7 +43,7 @@ class NominationLicenceServiceTest {
         .thenReturn(List.of(licenceDto));
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withLicences(List.of(licenceId, licenceId))
+        .withLicences(List.of(String.valueOf(licenceId), String.valueOf(licenceId)))
         .build();
 
     nominationLicenceService.saveNominationLicence(NOMINATION_DETAIL, form);

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation.licen
 
 import jakarta.transaction.Transactional;
 import java.util.List;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -27,6 +28,8 @@ public class NominationLicenceService {
   public void saveNominationLicence(NominationDetail nominationDetail, NominatedInstallationDetailForm form) {
     var licenceIds = form.getLicences().stream()
         .distinct()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
         .toList();
 
     var nominationLicences = licenceQueryService.getLicencesByIdIn(licenceIds, SAVE_LICENCES_PURPOSE)

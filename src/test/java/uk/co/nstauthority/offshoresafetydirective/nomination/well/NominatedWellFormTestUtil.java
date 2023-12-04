@@ -21,7 +21,7 @@ class NominatedWellFormTestUtil {
     private String isExplorationAndAppraisalPhase = "false";
     private String isDevelopmentPhase = "false";
     private String isDecommissioningPhase = "false";
-    private List<Integer> wells = new ArrayList<>();
+    private List<String> wells = new ArrayList<>();
 
     Builder isForAllWellPhases(Boolean isForAllWellPhases) {
       this.isForAllWellPhases = String.valueOf(isForAllWellPhases);
@@ -63,13 +63,12 @@ class NominatedWellFormTestUtil {
       return this;
     }
 
-
     Builder withWell(int wellId) {
-      wells.add(wellId);
+      wells.add(Objects.toString(wellId, null));
       return this;
     }
 
-    Builder withWells(List<Integer> wellIds) {
+    Builder withWells(List<String> wellIds) {
       wells = wellIds;
       return this;
     }
@@ -80,11 +79,6 @@ class NominatedWellFormTestUtil {
       form.setExplorationAndAppraisalPhase(Objects.toString(isExplorationAndAppraisalPhase, null));
       form.setDevelopmentPhase(Objects.toString(isDevelopmentPhase, null));
       form.setDecommissioningPhase(Objects.toString(isDecommissioningPhase, null));
-
-      if (wells.isEmpty()) {
-        wells.add(10);
-        wells.add(20);
-      }
 
       form.setWells(wells);
 

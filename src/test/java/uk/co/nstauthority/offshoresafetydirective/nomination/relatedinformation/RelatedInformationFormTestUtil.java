@@ -20,7 +20,7 @@ class RelatedInformationFormTestUtil {
 
     private Boolean relatedToAnyFields = true;
 
-    private List<Integer> fields = new ArrayList<>();
+    private List<String> fields = new ArrayList<>();
 
     private String fieldSelector;
 
@@ -45,12 +45,12 @@ class RelatedInformationFormTestUtil {
     }
 
     Builder withField(int fieldId) {
-      this.fields.add(fieldId);
+      this.fields.add(String.valueOf(fieldId));
       fieldsListInitialised = true;
       return this;
     }
 
-    Builder withFields(List<Integer> fields) {
+    Builder withFields(List<String> fields) {
       this.fields = fields;
       fieldsListInitialised = true;
       return this;
@@ -92,10 +92,10 @@ class RelatedInformationFormTestUtil {
       form.setRelatedToAnyFields(String.valueOf(relatedToAnyFields));
 
       if (!fieldsListInitialised) {
-        fields.add(100);
+        fields.add("100");
       }
 
-      form.setFields(fields);
+      form.setFields(fields.stream().map(Objects::toString).toList());
       form.setRelatedToAnyLicenceApplications(Objects.toString(relatedToAnyLicenceApplications, null));
       form.setRelatedLicenceApplications(relatedLicenceApplications);
       form.setRelatedToAnyWellApplications(Objects.toString(relatedToAnyWellApplications, null));

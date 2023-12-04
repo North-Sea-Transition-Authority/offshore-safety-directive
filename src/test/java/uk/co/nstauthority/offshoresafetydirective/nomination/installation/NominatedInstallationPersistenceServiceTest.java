@@ -43,7 +43,7 @@ class NominatedInstallationPersistenceServiceTest {
         .build();
 
     var formWithDuplicateInstallation = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withInstallations(List.of(installationId, installationId))
+        .withInstallations(List.of(String.valueOf(installationId), String.valueOf(installationId)))
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import java.util.Collection;
 import java.util.List;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,8 @@ class NominatedInstallationPersistenceService {
   public void saveNominatedInstallations(NominationDetail nominationDetail, NominatedInstallationDetailForm form) {
     List<Integer> installationIds = form.getInstallations().stream()
         .distinct()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
         .toList();
     List<NominatedInstallation> nominatedInstallations = installationQueryService.getInstallationsByIdIn(
             installationIds,

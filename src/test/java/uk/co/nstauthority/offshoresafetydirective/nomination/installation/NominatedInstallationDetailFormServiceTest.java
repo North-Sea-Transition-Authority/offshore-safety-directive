@@ -86,7 +86,9 @@ class NominatedInstallationDetailFormServiceTest {
             NominatedInstallationDetailForm::getLicences
         )
         .containsExactly(
-            List.of(nominatedInstallation1.getInstallationId(), nominatedInstallation2.getInstallationId()),
+            List.of(
+                Objects.toString(nominatedInstallation1.getInstallationId(), null),
+                Objects.toString(nominatedInstallation2.getInstallationId(), null)),
             Objects.toString(nominatedInstallationDetail.getForAllInstallationPhases(), null),
             Objects.toString(nominatedInstallationDetail.getDevelopmentDesignPhase(), null),
             Objects.toString(nominatedInstallationDetail.getDevelopmentConstructionPhase(), null),
@@ -94,7 +96,8 @@ class NominatedInstallationDetailFormServiceTest {
             Objects.toString(nominatedInstallationDetail.getDevelopmentCommissioningPhase(), null),
             Objects.toString(nominatedInstallationDetail.getDevelopmentProductionPhase(), null),
             Objects.toString(nominatedInstallationDetail.getDecommissioningPhase(), null),
-            List.of(nominationLicence.getLicenceId())
+            List.of(
+                Objects.toString(nominationLicence.getLicenceId(), null))
         );
   }
 

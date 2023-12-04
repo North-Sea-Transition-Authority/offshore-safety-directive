@@ -18,11 +18,8 @@ public class NominatedInstallationDetailFormTestUtil {
 
   public static class NominatedInstallationDetailFormBuilder {
 
-    private List<Integer> installations = new ArrayList<>();
-    private boolean hasAddedInstallations = false;
-
-    private List<Integer> licences = new ArrayList<>();
-    private boolean hasAddedLicences = false;
+    private List<String> installations = new ArrayList<>();
+    private List<String> licences = new ArrayList<>();
     private Boolean forAllInstallationPhases = true;
     private Boolean developmentDesignPhase;
     private Boolean developmentConstructionPhase;
@@ -31,27 +28,23 @@ public class NominatedInstallationDetailFormTestUtil {
     private Boolean developmentProductionPhase;
     private Boolean decommissioningPhase;
 
-    public NominatedInstallationDetailFormBuilder withInstallations(List<Integer> installations) {
+    public NominatedInstallationDetailFormBuilder withInstallations(List<String> installations) {
       this.installations = installations;
-      hasAddedInstallations = true;
       return this;
     }
 
     public NominatedInstallationDetailFormBuilder withInstallation(int installationId) {
-      this.installations.add(installationId);
-      hasAddedInstallations = true;
+      this.installations.add(String.valueOf(installationId));
       return this;
     }
 
-    public NominatedInstallationDetailFormBuilder withLicences(List<Integer> licences) {
+    public NominatedInstallationDetailFormBuilder withLicences(List<String> licences) {
       this.licences = licences;
-      hasAddedLicences = true;
       return this;
     }
 
     public NominatedInstallationDetailFormBuilder withLicence(Integer licenceId) {
-      this.licences.add(licenceId);
-      hasAddedLicences = true;
+      this.licences.add(String.valueOf(licenceId));
       return this;
     }
 
@@ -126,16 +119,6 @@ public class NominatedInstallationDetailFormTestUtil {
     }
 
     public NominatedInstallationDetailForm build() {
-
-      if (!hasAddedInstallations) {
-        installations.add(1);
-        installations.add(2);
-      }
-
-      if (!hasAddedLicences) {
-        licences.add(1);
-        licences.add(2);
-      }
 
       var form = new NominatedInstallationDetailForm();
       form.setInstallations(installations);

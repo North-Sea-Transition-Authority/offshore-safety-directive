@@ -20,6 +20,7 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -192,6 +193,8 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
 
     var wellboreIdsFromForm = formWithWells.getWells()
         .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
         .map(WellboreId::new)
         .toList();
 

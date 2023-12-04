@@ -49,16 +49,18 @@ class NominatedInstallationDetailFormService {
     form.setDevelopmentCommissioningPhase(Objects.toString(installationDetail.getDevelopmentCommissioningPhase(), null));
     form.setDevelopmentProductionPhase(Objects.toString(installationDetail.getDevelopmentProductionPhase(), null));
     form.setDecommissioningPhase(Objects.toString(installationDetail.getDecommissioningPhase(), null));
-    List<Integer> installationIds =
+    List<String> installationIds =
         nominatedInstallationAccessService.getNominatedInstallations(installationDetail.getNominationDetail())
             .stream()
             .map(NominatedInstallation::getInstallationId)
+            .map(String::valueOf)
             .toList();
     form.setInstallations(installationIds);
 
     var licenceIds = nominationLicenceService.getRelatedLicences(installationDetail.getNominationDetail())
         .stream()
         .map(NominationLicence::getLicenceId)
+        .map(String::valueOf)
         .toList();
     form.setLicences(licenceIds);
     return form;

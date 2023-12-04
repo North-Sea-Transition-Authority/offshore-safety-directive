@@ -70,7 +70,7 @@ class RelatedInformationFormServiceTest {
     var result = relatedInformationFormService.getForm(nominationDetail);
 
     assertThat(result).extracting(RelatedInformationForm::getRelatedToAnyFields, RelatedInformationForm::getFields)
-        .containsExactly("true", List.of(field.getFieldId()));
+        .containsExactly("true", List.of(String.valueOf(field.getFieldId())));
   }
 
   @Test

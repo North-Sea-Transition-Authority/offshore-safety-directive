@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation
 import java.util.Comparator;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -97,11 +98,20 @@ class RelatedInformationValidator implements SmartValidator {
           RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE
       );
     } else if (BooleanUtils.isTrue(relatedToAnyFields)) {
+
+      var numericFields = form.getFields()
+          .stream()
+          .filter(NumberUtils::isDigits)
+          .toList();
+
+      form.setFields(numericFields);
+
       if (form.getFields().isEmpty()) {
         errors.rejectValue(FIELDS_FIELD_NAME, FIELDS_REQUIRED_CODE, FIELDS_REQUIRED_MESSAGE);
       } else {
-        var fieldIds = form.getFields()
+        var fieldIds = numericFields
             .stream()
+            .map(Integer::parseInt)
             .map(FieldId::new)
             .collect(Collectors.toSet());
 

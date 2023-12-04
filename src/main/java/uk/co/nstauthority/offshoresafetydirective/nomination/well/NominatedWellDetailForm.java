@@ -4,7 +4,7 @@ import java.util.List;
 
 public class NominatedWellDetailForm {
 
-  List<Integer> wells;
+  List<String> wells;
 
   String wellsSelect;
 
@@ -16,11 +16,11 @@ public class NominatedWellDetailForm {
 
   private String decommissioningPhase;
 
-  public List<Integer> getWells() {
+  public List<String> getWells() {
     return wells;
   }
 
-  public void setWells(List<Integer> wells) {
+  public void setWells(List<String> wells) {
     this.wells = wells;
   }
 

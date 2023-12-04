@@ -7,7 +7,7 @@ class RelatedInformationForm {
 
   private String relatedToAnyFields;
 
-  private List<Integer> fields = new ArrayList<>();
+  private List<String> fields = new ArrayList<>();
 
   private String fieldSelector;
 
@@ -23,11 +23,11 @@ class RelatedInformationForm {
     return relatedToAnyFields;
   }
 
-  public List<Integer> getFields() {
+  public List<String> getFields() {
     return fields;
   }
 
-  public void setFields(List<Integer> fields) {
+  public void setFields(List<String> fields) {
     this.fields = fields;
   }
 

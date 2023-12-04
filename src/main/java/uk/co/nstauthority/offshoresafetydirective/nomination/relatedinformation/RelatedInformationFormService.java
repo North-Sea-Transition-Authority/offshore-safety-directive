@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation;
 
+import java.util.Objects;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ class RelatedInformationFormService {
     var fields = relatedInformationFieldRepository.findAllByRelatedInformation(relatedInformation)
         .stream()
         .map(RelatedInformationField::getFieldId)
+        .map(Objects::toString)
         .toList();
 
     form.setRelatedToAnyFields(String.valueOf(relatedInformation.getRelatedToFields()));

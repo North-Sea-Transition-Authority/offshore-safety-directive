@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -90,12 +91,20 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
   public void validate(@NotNull Object target, @NotNull Errors errors, @NotNull Object... validationHints) {
     var form = (NominatedInstallationDetailForm) target;
 
+    if (form.getInstallations() != null) {
+      var numericInstallations = form.getInstallations()
+          .stream()
+          .filter(NumberUtils::isDigits)
+          .toList();
+      form.setInstallations(numericInstallations);
+    }
+
     if (noInstallationsSelected(form)) {
       rejectValue(errors, INSTALLATIONS_REQUIRED_ERROR);
     } else {
-      var distinctInstallations = form.getInstallations()
-          .stream()
+      var distinctInstallations = form.getInstallations().stream()
           .distinct()
+          .map(Integer::parseInt)
           .toList();
 
       var installations = installationQueryService.getInstallationsByIdIn(
@@ -117,6 +126,14 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
       }
     }
 
+    if (form.getLicences() !=  null) {
+      var numericLicences = form.getLicences()
+          .stream()
+          .filter(NumberUtils::isDigits)
+          .toList();
+      form.setLicences(numericLicences);
+    }
+
     if (noLicencesSelected(form)) {
       rejectValue(errors, LICENCE_REQUIRED_ERROR);
     } else {
@@ -124,6 +141,7 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
       var distinctLicences = form.getLicences()
           .stream()
           .distinct()
+          .map(Integer::parseInt)
           .toList();
 
       var licencesInPortal = licenceQueryService.getLicencesByIdIn(distinctLicences, LICENCES_SELECTED_VALIDATION_PURPOSE);

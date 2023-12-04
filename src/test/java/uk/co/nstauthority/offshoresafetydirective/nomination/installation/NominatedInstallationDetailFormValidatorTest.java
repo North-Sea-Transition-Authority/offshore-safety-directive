@@ -90,12 +90,14 @@ class NominatedInstallationDetailFormValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
         .thenReturn(List.of(licence));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
@@ -118,12 +120,15 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -151,12 +156,15 @@ class NominatedInstallationDetailFormValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
@@ -197,12 +205,15 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -239,12 +250,15 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -284,12 +298,15 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        formWithoutDuplicates.getInstallations(),
+        formWithoutDuplicates.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(formWithoutDuplicates.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        formWithoutDuplicates.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(formWithDuplicates, "form");
@@ -318,12 +335,15 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        formWithoutDuplicates.getInstallations(),
+        formWithoutDuplicates.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
 
-    when(licenceQueryService.getLicencesByIdIn(formWithoutDuplicates.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        formWithoutDuplicates.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(formWithDuplicates, "form");
@@ -349,11 +369,14 @@ class NominatedInstallationDetailFormValidatorTest {
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installation));
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(knownLicence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -387,16 +410,19 @@ class NominatedInstallationDetailFormValidatorTest {
     var licence = LicenceDtoTestUtil.builder().build();
 
     var form = NominatedInstallationDetailFormTestUtil.builder()
-        .withInstallations(List.of(installationWithValidType.id(), invalidInstallation.id()))
+        .withInstallations(List.of(String.valueOf(installationWithValidType.id()), String.valueOf(invalidInstallation.id())))
         .withLicence(licence.licenceId().id())
         .build();
 
     when(installationQueryService.getInstallationsByIdIn(
-        form.getInstallations(),
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
         NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
     ))
         .thenReturn(List.of(installationWithValidType, invalidInstallation));
-    when(licenceQueryService.getLicencesByIdIn(form.getLicences(), NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE))
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
         .thenReturn(List.of(licence));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -417,6 +443,80 @@ class NominatedInstallationDetailFormValidatorTest {
         entry(errorMessage.field(), Set.of(errorMessage.message()))
     );
   }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidArguments")
+  void validate_whenInvaliInstallationsSelected_thenHasError(List<String> invalidValue) {
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallations(invalidValue)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsEntry(
+        NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.field(),
+            Set.of(NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.code())
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidArguments")
+  void validate_whenInvalidLicencesSelected_thenHasError(List<String> invalidValue) {
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallations(invalidValue)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsEntry(
+        NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.field(),
+        Set.of(NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.code())
+    );
+  }
+
+  @Test
+  void validate_whenInvalidInstallationsAndLicencesSelected_thenHasError() {
+    var form = NominatedInstallationDetailFormTestUtil.builder()
+        .withInstallations(List.of("123"))
+        .withLicences(List.of("12"))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
+
+    when(installationQueryService.getInstallationsByIdIn(
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(installation));
+
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(licence));
+
+    form.setInstallations(List.of("123", "fish"));
+    form.setLicences(List.of("12", "invalid"));
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).isEmpty();
+  }
+
+  static Stream<Arguments> getInvalidArguments() {
+    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
+  }
+
 
   private static Stream<Arguments> getInvalidInstallationArguments() {
 

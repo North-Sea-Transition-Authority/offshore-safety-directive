@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -135,7 +136,13 @@ public class NominatedInstallationController {
       return Collections.emptyList();
     }
 
-    return installationQueryService.getInstallationsByIdIn(form.getInstallations(), ALREADY_ADDED_INSTALLATIONS_PURPOSE)
+    var installationIds = form.getInstallations()
+        .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
+        .toList();
+
+    return installationQueryService.getInstallationsByIdIn(installationIds, ALREADY_ADDED_INSTALLATIONS_PURPOSE)
         .stream()
         .map(InstallationAddToListView::new)
         .sorted(Comparator.comparing(InstallationAddToListView::getName))
@@ -147,7 +154,13 @@ public class NominatedInstallationController {
       return Collections.emptyList();
     }
 
-    return licenceQueryService.getLicencesByIdIn(form.getLicences(), ALREADY_ADDED_LICENCES_PURPOSE)
+    var licenceIds = form.getLicences()
+        .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
+        .toList();
+
+    return licenceQueryService.getLicencesByIdIn(licenceIds, ALREADY_ADDED_LICENCES_PURPOSE)
         .stream()
         .map(LicenceAddToListView::new)
         .sorted(Comparator.comparing(LicenceAddToListView::getName))

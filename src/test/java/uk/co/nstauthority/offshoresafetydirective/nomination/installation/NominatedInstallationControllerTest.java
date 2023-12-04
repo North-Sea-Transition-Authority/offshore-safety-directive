@@ -162,7 +162,9 @@ class NominatedInstallationControllerTest extends AbstractNominationControllerTe
         .build();
 
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
-        .withInstallations(List.of(firstInstallationAlphabeticallyByName.id(), lastInstallationAlphabeticallyByName.id()))
+        .withInstallations(List.of(
+            String.valueOf(firstInstallationAlphabeticallyByName.id()),
+            String.valueOf(lastInstallationAlphabeticallyByName.id())))
         .withLicence(firstLicence.licenceId().id())
         .build();
 
@@ -232,7 +234,7 @@ class NominatedInstallationControllerTest extends AbstractNominationControllerTe
 
   @ParameterizedTest
   @NullAndEmptySource
-  void getNominatedInstallationDetail_whenAlreadyAddedLicencesNull_assertEmptyList(List<Integer> nullOrEmptyList)
+  void getNominatedInstallationDetail_whenAlreadyAddedLicencesNull_assertEmptyList(List<String> nullOrEmptyList)
       throws Exception {
     var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
         .withLicences(nullOrEmptyList)

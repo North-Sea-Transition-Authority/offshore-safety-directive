@@ -6,11 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +43,9 @@ class NominatedWellDetailFormValidatorTest {
 
   @Test
   void validate_whenValidForm_thenNoErrors() {
-    var form = NominatedWellFormTestUtil.builder().build();
+    var form = NominatedWellFormTestUtil.builder()
+        .withWell(10)
+        .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
@@ -68,6 +74,7 @@ class NominatedWellDetailFormValidatorTest {
   void validate_whenForAllWellPhasesInvalidValue_thenError(String value) {
     var form = NominatedWellFormTestUtil.builder()
         .isForAllWellPhases(value)
+        .withWell(10)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -85,6 +92,7 @@ class NominatedWellDetailFormValidatorTest {
   @ValueSource(strings = "FISH")
   void validate_whenNotForAllWellPhasesNotSelectedAndNoPhaseSelected_thenError(String value) {
     var form = NominatedWellFormTestUtil.builder()
+        .withWell(10)
         .isForAllWellPhases(false)
         .isExplorationAndAppraisalPhase(value)
         .isDevelopmentPhase(value)
@@ -99,6 +107,41 @@ class NominatedWellDetailFormValidatorTest {
     assertThat(extractedErrors).containsExactly(
         entry("explorationAndAppraisalPhase", Set.of("explorationAndAppraisalPhase.required"))
     );
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidArguments")
+  void validate_whenInvalidWellsSelected_thenHasError(List<String> invalidValue) {
+    var form = NominatedWellFormTestUtil.builder()
+        .withWells(invalidValue)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
+    );
+  }
+
+  @Test
+  void validate_whenInvalidWellsSelected_thenHasError() {
+    var form = NominatedWellFormTestUtil.builder()
+        .withWells(List.of("123", "fish"))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).isEmpty();
+  }
+
+  static Stream<Arguments> getInvalidArguments() {
+    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
   }
 
   private static class NonSupportedClass {

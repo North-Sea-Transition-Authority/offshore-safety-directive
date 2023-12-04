@@ -67,6 +67,7 @@ class RelatedInformationPersistenceService {
 
       var fieldIds = relatedInformationForm.getFields()
           .stream()
+          .map(Integer::parseInt)
           .map(FieldId::new)
           .collect(Collectors.toSet());
 

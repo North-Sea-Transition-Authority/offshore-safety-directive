@@ -73,7 +73,7 @@ class NominatedWellDetailFormServiceTest {
             Objects.toString(nominatedWellDetail.getExplorationAndAppraisalPhase(), null),
             Objects.toString(nominatedWellDetail.getDevelopmentPhase(), null),
             Objects.toString(nominatedWellDetail.getDecommissioningPhase(), null),
-            List.of(well1.getWellId(), well2.getWellId())
+            List.of(Objects.toString(well1.getWellId(), null), Objects.toString(well2.getWellId(), null))
         );
   }
 

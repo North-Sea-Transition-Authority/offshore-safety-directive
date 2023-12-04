@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -107,6 +108,8 @@ public class NominatedWellDetailController {
 
     var wellboreIds = form.getWells()
         .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
         .map(WellboreId::new)
         .toList();
 

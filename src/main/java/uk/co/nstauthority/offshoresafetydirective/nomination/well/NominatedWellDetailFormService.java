@@ -40,9 +40,10 @@ class NominatedWellDetailFormService {
     form.setExplorationAndAppraisalPhase(Objects.toString(entity.getExplorationAndAppraisalPhase(), null));
     form.setDevelopmentPhase(Objects.toString(entity.getDevelopmentPhase(), null));
     form.setDecommissioningPhase(Objects.toString(entity.getDecommissioningPhase(), null));
-    List<Integer> wellIds = nominatedWellAccessService.getNominatedWells(entity.getNominationDetail())
+    List<String> wellIds = nominatedWellAccessService.getNominatedWells(entity.getNominationDetail())
         .stream()
         .map(NominatedWell::getWellId)
+        .map(String::valueOf)
         .toList();
     form.setWells(wellIds);
     return form;

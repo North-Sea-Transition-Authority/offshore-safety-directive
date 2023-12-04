@@ -10,10 +10,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
@@ -103,6 +106,28 @@ class RelatedInformationValidatorTest {
             RelatedInformationValidator.FIELDS_FIELD_NAME,
             Set.of(RelatedInformationValidator.FIELDS_REQUIRED_CODE)
         ));
+  }
+
+  @ParameterizedTest
+  @MethodSource("getInvalidArguments")
+  void validate_whenFieldRelationTrue_andInvalidFieldsSelected_thenHasError(List<String> invalidValue) {
+    var form = RelatedInformationFormTestUtil.builder()
+        .withRelatedToAnyFields(true)
+        .withFields(invalidValue)
+        .build();
+
+    var bindingResult = validate(form);
+
+    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
+        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+        .containsExactly(Tuple.tuple(
+            RelatedInformationValidator.FIELDS_FIELD_NAME,
+            Set.of(RelatedInformationValidator.FIELDS_REQUIRED_CODE)
+        ));
+  }
+
+  static Stream<Arguments> getInvalidArguments() {
+    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
   }
 
   @Test
