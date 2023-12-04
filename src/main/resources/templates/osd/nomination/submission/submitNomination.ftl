@@ -3,12 +3,25 @@
 
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
 <#-- @ftlvariable name="actionUrl" type="String" -->
+<#-- @ftlvariable name="organisationUrl" type="String" -->
 <#-- @ftlvariable name="isSubmittable" type="Boolean" -->
+<#-- @ftlvariable name="userCanSubmitNominations" type="Boolean" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
 
 <#assign pageHeading = "Check your answers before submitting your nomination" />
 
-<@defaultPageWithSubNavigation pageHeading=pageHeading>
+<#assign notificationBannerContent>
+  <#if organisationUrl??>
+    <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Information">
+      <@fdsNotificationBanner.notificationBannerContent>
+        You must ask a nomination submitter within your <@fdsNotificationBanner.notificationBannerLink bannerLinkUrl="${springUrl(organisationUrl)}" bannerLinkText="organisation"/>
+        to submit the nomination on your behalf
+      </@fdsNotificationBanner.notificationBannerContent>
+    </@fdsNotificationBanner.notificationBannerInfo>
+  </#if>
+</#assign>
+
+<@defaultPageWithSubNavigation pageHeading=pageHeading >
 
   <@fdsLeftSubNavPageTemplateSubNav smallSubnav=true>
     <@fdsSubNavigation.subNavigation>
@@ -26,7 +39,8 @@
 
   <@fdsLeftSubNavPageTemplateContent
     pageHeading=pageHeading
-    singleErrorMessage=isSubmittable?then("", "You cannot submit your nomination until all sections shown on the task list are completed")
+    singleErrorMessage=isSubmittable?then("", "The nomination cannot be submitted until all sections shown on the task list are completed")
+    notificationBannerContent=notificationBannerContent
   >
     <@fdsForm.htmlForm actionUrl=springUrl(actionUrl)>
 
@@ -46,7 +60,7 @@
         </@fdsWarning.warning>
       </#if>
 
-      <#if isSubmittable>
+      <#if isSubmittable && userCanSubmitNominations>
         <@fdsAction.submitButtons
           linkSecondaryAction=true
           linkSecondaryActionUrl=springUrl(backLinkUrl)

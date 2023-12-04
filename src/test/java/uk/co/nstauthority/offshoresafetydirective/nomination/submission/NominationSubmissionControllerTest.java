@@ -16,6 +16,7 @@ import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOn
 
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,9 +44,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.Exc
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamTypeSelectionController;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = NominationSubmissionController.class)
@@ -53,11 +55,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
-  private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
-
-  private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-      .build();
+  private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private NominationDetail nominationDetail;
 
@@ -78,17 +76,17 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
-
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
   }
 
   @SecurityTest
   void getSubmissionPage_whenDraft_thenRenderSubmissionPage() throws Exception {
+
     var draftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
         .withStatus(NominationStatus.DRAFT)
         .build();
+
+    givenUserHasNominationPermission(draftNominationDetail, USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
 
@@ -99,7 +97,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"));
@@ -112,10 +110,13 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
       names = {"DRAFT", "DELETED"}
   )
   void getSubmissionPage_wheNotDraft_thenRenderSubmissionPage(NominationStatus nominationStatus) throws Exception {
+
     var nonDraftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
         .withStatus(nominationStatus)
         .build();
+
+    givenUserHasNominationPermission(nonDraftNominationDetail, USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nonDraftNominationDetail);
 
@@ -126,7 +127,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationCaseProcessingController.class)
@@ -149,13 +150,15 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isForbidden());
   }
 
   @SecurityTest
   void submitNomination_smokeTestNominationStatuses_onlyDraftPermitted() {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
@@ -164,7 +167,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.DRAFT)
         .withNominationDetail(nominationDetail)
-        .withUser(NOMINATION_CREATOR_USER)
+        .withUser(USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationSubmissionController.class)
                 .submitNomination(NOMINATION_ID)),
@@ -175,7 +178,27 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed_onGet() {
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
+        .withTeam(getTeam())
+        .withUser(USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
+        )
+        .test();
+  }
+
+  @SecurityTest
+  void smokeTestPermissions_onlySubmitNominationPermissionAllowed_onPost() {
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
@@ -183,11 +206,9 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
-        .withUser(NOMINATION_CREATOR_USER)
-        .withGetEndpoint(
-            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
-        )
+        .withRequiredPermissions(Collections.singleton(RolePermission.SUBMIT_NOMINATION))
+        .withTeam(getTeam())
+        .withUser(USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationSubmissionController.class)
                 .submitNomination(NOMINATION_ID)),
@@ -199,6 +220,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_assertModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     var isSubmittable = false;
 
@@ -206,9 +228,18 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(getTeam().toTeamId())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(teamMember));
+
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -220,11 +251,42 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
             "actionUrl",
             ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID))
         ))
-        .andExpect(model().attribute("isSubmittable", isSubmittable));
+        .andExpect(model().attribute("isSubmittable", isSubmittable))
+        .andExpect(model().attribute("userCanSubmitNominations", true))
+        .andExpect(model().attributeDoesNotExist("organisationUrl"));
+  }
+
+  @Test
+  void getSubmissionPage_whenUserIsAnEditor_thenUserCannotSubmitNominations() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(getTeam().toTeamId())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(teamMember));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("userCanSubmitNominations", false))
+        .andExpect(model().attribute("organisationUrl",
+            ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection())));
   }
 
   @Test
   void getSubmissionPage_assertIsLicenceBlockSubareaTrueInModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     var wellSummaryView = WellSummaryView
         .builder(WellSelectionType.LICENCE_BLOCK_SUBAREA)
         .withSubareaSummary(NominatedBlockSubareaDetailViewTestUtil.builder().build())
@@ -240,7 +302,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -249,6 +311,8 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_whenWellSelectionTypeIsNull_thenAssertIsLicenceBlockSubareaFalseInModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     var wellSummaryView = WellSummaryView.builder(null)
         .withSubareaSummary(NominatedBlockSubareaDetailViewTestUtil.builder().build())
         .withExcludedWellSummaryView(new ExcludedWellView())
@@ -263,7 +327,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -272,6 +336,8 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_assertIsLicenceBlockSubareaFalseInModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     var wellSummaryView = WellSummaryView
         .builder(WellSelectionType.NO_WELLS)
         .build();
@@ -285,7 +351,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -297,6 +363,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
   void getSubmissionPage_whenHasUpdateRequest_assertReasonInModelProperties() throws Exception {
 
     var isSubmittable = false;
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(isSubmittable);
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
@@ -318,7 +385,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -327,6 +394,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_whenNoSubmittedNominationDetailFound_thenAssertNoReasonInModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     var isSubmittable = false;
 
@@ -341,7 +409,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -350,6 +418,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_whenHasNoUpdateReason_thenAssertNoReasonInModelProperties() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     var isSubmittable = false;
 
@@ -372,7 +441,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"))
@@ -381,13 +450,14 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void getSubmissionPage_verifyNominatedWellsFinalised() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
 
     when(nominationSummaryService.getNominationSummaryView(nominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     mockMvc.perform(
         get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-            .with(user(NOMINATION_CREATOR_USER))
+            .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"));
@@ -405,23 +475,23 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
   )
   void getSubmissionPage_whenNotDraftStatus_thenRedirect(NominationStatus nominationStatus) throws Exception {
 
-    var nominationDetail1 = new NominationDetailTestUtil.NominationDetailBuilder()
+    var nonDraftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
         .withStatus(nominationStatus)
         .build();
 
-    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail1);
+    givenUserHasNominationPermission(nonDraftNominationDetail, USER);
 
-    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_CREATOR_TEAM_MEMBER));
-    when(nominationSummaryService.getNominationSummaryView(nominationDetail1))
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nonDraftNominationDetail);
+
+    when(nominationSummaryService.getNominationSummaryView(nonDraftNominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
-    var nominationId =  nominationDetail1.getNomination().getId();
+    var nominationId =  nonDraftNominationDetail.getNomination().getId();
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(
@@ -431,26 +501,30 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   @Test
   void submitNomination_whenCannotBeSubmitted_thenForbidden() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
                 .with(csrf())
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().isForbidden());
   }
 
   @Test
   void submitNomination_verifyMethodCallAndRedirection() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
     mockMvc.perform(
             post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
                 .with(csrf())
-                .with(user(NOMINATION_CREATOR_USER))
+                .with(user(USER))
         )
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)

@@ -12,8 +12,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -25,10 +27,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamTypeSelectionController;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/submit")
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
 public class NominationSubmissionController {
 
   private final NominationSubmissionService nominationSubmissionService;
@@ -36,18 +38,23 @@ public class NominationSubmissionController {
   private final NominationSummaryService nominationSummaryService;
   private final FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
   private final CaseEventQueryService caseEventQueryService;
+  private final UserDetailService userDetailService;
+  private final PermissionService permissionService;
 
   @Autowired
   public NominationSubmissionController(NominationSubmissionService nominationSubmissionService,
                                         NominationDetailService nominationDetailService,
                                         NominationSummaryService nominationSummaryService,
                                         FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService,
-                                        CaseEventQueryService caseEventQueryService) {
+                                        CaseEventQueryService caseEventQueryService, UserDetailService userDetailService,
+                                        PermissionService permissionService) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
     this.nominationSummaryService = nominationSummaryService;
     this.finaliseNominatedSubareaWellsService = finaliseNominatedSubareaWellsService;
     this.caseEventQueryService = caseEventQueryService;
+    this.userDetailService = userDetailService;
+    this.permissionService = permissionService;
   }
 
   @GetMapping
@@ -59,6 +66,7 @@ public class NominationSubmissionController {
       NominationStatus.OBJECTED,
       NominationStatus.WITHDRAWN
   })
+  @HasNominationPermission(permissions = RolePermission.EDIT_NOMINATION)
   public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
@@ -78,6 +86,7 @@ public class NominationSubmissionController {
 
   @PostMapping
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
+  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView submitNomination(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
@@ -93,13 +102,23 @@ public class NominationSubmissionController {
 
     var summaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
+    var user = userDetailService.getUserDetail();
+    var userCanSubmitNominations = permissionService.hasPermission(user, RolePermission.CREATE_NOMINATION);
+    var isSubmittable = nominationSubmissionService.canSubmitNomination(nominationDetail);
+
     var modelAndView = new ModelAndView("osd/nomination/submission/submitNomination")
         .addObject("backLinkUrl", ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)))
         .addObject("actionUrl", ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(nominationId)))
-        .addObject("isSubmittable", nominationSubmissionService.canSubmitNomination(nominationDetail))
+        .addObject("isSubmittable", isSubmittable)
         .addObject("summaryView", summaryView)
+        .addObject("userCanSubmitNominations", userCanSubmitNominations)
         .addObject("hasLicenceBlockSubareas",
             WellSelectionType.LICENCE_BLOCK_SUBAREA.equals(summaryView.wellSummaryView().getWellSelectionType()));
+
+    if (isSubmittable && !userCanSubmitNominations) {
+      modelAndView.addObject("organisationUrl",
+          ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()));
+    }
 
     var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,

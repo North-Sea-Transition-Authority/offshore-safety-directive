@@ -18,7 +18,12 @@ public enum IndustryTeamRole implements TeamRole {
       "Nomination submitter",
       "Can create, edit, submit, view and manage nominations linked to this organisation",
       20,
-      Set.of(RolePermission.CREATE_NOMINATION, RolePermission.EDIT_NOMINATION, RolePermission.VIEW_NOMINATIONS)
+      Set.of(
+          RolePermission.CREATE_NOMINATION,
+          RolePermission.SUBMIT_NOMINATION,
+          RolePermission.EDIT_NOMINATION,
+          RolePermission.VIEW_NOMINATIONS
+      )
   ),
   NOMINATION_EDITOR(
       "Nomination editor",
