@@ -24,7 +24,7 @@ class RelatedInformationValidator implements SmartValidator {
   static final String RELATED_TO_ANY_FIELDS_FIELD_NAME = "relatedToAnyFields";
   static final String RELATED_TO_ANY_FIELDS_REQUIRED_CODE
       = "%s.%s".formatted(RELATED_TO_ANY_FIELDS_FIELD_NAME, REQUIRED_FIELD_CODE);
-  static final String RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE = "Select yes if your nomination is related to any fields";
+  static final String RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE = "Select Yes if your nomination is related to any fields";
 
   static final String FIELDS_FIELD_NAME = "fieldSelector";
   static final String FIELDS_REQUIRED_CODE = "%s.%s".formatted(FIELDS_FIELD_NAME, REQUIRED_FIELD_CODE);
@@ -36,7 +36,7 @@ class RelatedInformationValidator implements SmartValidator {
       = "%s.%s".formatted(RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME, REQUIRED_FIELD_CODE);
 
   static final String RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE =
-      "Select yes if any PEARS applications relate to this nomination";
+      "Select Yes if any PEARS applications relate to this nomination";
 
   static final String RELATED_LICENCE_APPLICATIONS_FIELD_NAME = "relatedLicenceApplications";
 
@@ -52,7 +52,7 @@ class RelatedInformationValidator implements SmartValidator {
       = "%s.%s".formatted(RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME, REQUIRED_FIELD_CODE);
 
   static final String RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE =
-      "Select yes if any WONS applications relate to this nomination";
+      "Select Yes if any WONS applications relate to this nomination";
 
   static final String RELATED_WELL_APPLICATIONS_FIELD_NAME = "relatedWellApplications";
 
