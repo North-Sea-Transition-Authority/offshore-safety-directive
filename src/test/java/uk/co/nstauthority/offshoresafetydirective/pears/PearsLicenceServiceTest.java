@@ -1,12 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -16,15 +17,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalEventType;
 
 @ExtendWith(MockitoExtension.class)
 class PearsLicenceServiceTest {
@@ -54,53 +54,21 @@ class PearsLicenceServiceTest {
         PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
         .thenReturn(Optional.of(licenceDto));
 
-    var blockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
-    when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
-        licenceDto.licenceReference().value(),
-        List.of(SubareaStatus.NOT_EXTANT),
-        PearsLicenceService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
-    ))
-        .thenReturn(List.of(blockSubareaDto));
+    var correlationId = "correlation-id";
 
     var message = new PearsCorrectionAppliedEpmqMessage(
         String.valueOf(licenceId),
         null,
-        null,
+        correlationId,
         null
     );
 
     pearsLicenceService.handlePearsCorrectionApplied(message);
-
-    verify(appointmentService).endAppointmentsForSubareas(List.of(blockSubareaDto), message.getCorrectionId());
-  }
-
-  @Test
-  void handlePearsCorrectionApplied_whenHasNoNonExtantSubareas_thenVerifyCalls() {
-    var licenceId = 123;
-    var licenceDto = LicenceDtoTestUtil.builder().build();
-
-    when(licenceQueryService.getLicenceById(
-        new LicenceId(licenceId),
-        PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
-        .thenReturn(Optional.of(licenceDto));
-
-    when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
+    verify(appointmentService).endAppointmentsForNonExtantSubareasWithLicenceReference(
         licenceDto.licenceReference().value(),
-        List.of(SubareaStatus.NOT_EXTANT),
-        PearsLicenceService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
-    ))
-        .thenReturn(List.of());
-
-    var message = new PearsCorrectionAppliedEpmqMessage(
-        String.valueOf(licenceId),
-        null,
-        null,
-        null
+        correlationId,
+        PortalEventType.PEARS_CORRECTION
     );
-
-    pearsLicenceService.handlePearsCorrectionApplied(message);
-
-    verifyNoInteractions(appointmentService);
   }
 
   @Test
@@ -108,8 +76,8 @@ class PearsLicenceServiceTest {
     var licenceId = 123;
 
     when(licenceQueryService.getLicenceById(
-            new LicenceId(licenceId),
-            PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
+        new LicenceId(licenceId),
+        PearsLicenceService.PEARS_CORRECTION_APPLIED_PURPOSE))
         .thenReturn(Optional.empty());
 
     var message = new PearsCorrectionAppliedEpmqMessage(
@@ -184,5 +152,91 @@ class PearsLicenceServiceTest {
                 operation.id(),
                 operation.type()
             ));
+  }
+
+  @Test
+  void handlePearsTransactionApplied_whenLicenceIdOnPortal_thenVerifyNonExtantSubareasEnded() {
+    var oldSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+    var newSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+
+    var subareaChange = new PearsTransaction.Operation.SubareaChange(oldSubarea, Set.of(newSubarea));
+    var copyForwardOperation = new PearsTransaction.Operation(
+        UUID.randomUUID().toString(),
+        1,
+        PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0),
+        Set.of(subareaChange)
+    );
+    var pearsTransaction = new PearsTransaction(
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        Set.of(copyForwardOperation)
+    );
+
+    var licenceId = 123;
+    var message = PearsTransactionAppliedEpmqMessageTestUtil.builder(pearsTransaction)
+        .withLicenceId(String.valueOf(licenceId))
+        .build();
+
+    var licenceDto = LicenceDtoTestUtil.builder()
+        .withLicenceId(licenceId)
+        .build();
+    when(licenceQueryService.getLicenceById(
+        new LicenceId(licenceId),
+        PearsLicenceService.PEARS_TRANSACTION_GET_LICENCE_PURPOSE
+    ))
+        .thenReturn(Optional.of(licenceDto));
+
+    pearsLicenceService.handlePearsTransactionApplied(message);
+
+    var orderedVerify = Mockito.inOrder(pearsSubareaMessageHandlerService, appointmentService);
+
+    orderedVerify.verify(pearsSubareaMessageHandlerService).rebuildAppointmentsAndAssets(copyForwardOperation);
+    orderedVerify.verify(appointmentService).endAppointmentsForNonExtantSubareasWithLicenceReference(
+        licenceDto.licenceReference().value(),
+        message.getTransaction().id(),
+        PortalEventType.PEARS_TRANSACTION
+    );
+    verifyNoMoreInteractions(pearsSubareaMessageHandlerService);
+  }
+
+  @Test
+  void handlePearsTransactionApplied_whenLicenceNotFound_thenVerifyInteractions() {
+    var oldSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+    var newSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
+
+    var subareaChange = new PearsTransaction.Operation.SubareaChange(oldSubarea, Set.of(newSubarea));
+    var copyForwardOperation = new PearsTransaction.Operation(
+        UUID.randomUUID().toString(),
+        1,
+        PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0),
+        Set.of(subareaChange)
+    );
+    var pearsTransaction = new PearsTransaction(
+        UUID.randomUUID().toString(),
+        UUID.randomUUID().toString(),
+        Set.of(copyForwardOperation)
+    );
+
+    var licenceId = 123;
+    var message = PearsTransactionAppliedEpmqMessageTestUtil.builder(pearsTransaction)
+        .withLicenceId(String.valueOf(licenceId))
+        .build();
+    when(licenceQueryService.getLicenceById(
+        new LicenceId(licenceId),
+        PearsLicenceService.PEARS_TRANSACTION_GET_LICENCE_PURPOSE
+    ))
+        .thenReturn(Optional.empty());
+
+    pearsLicenceService.handlePearsTransactionApplied(message);
+
+    var orderedVerify = Mockito.inOrder(pearsSubareaMessageHandlerService);
+
+    orderedVerify.verify(pearsSubareaMessageHandlerService).rebuildAppointmentsAndAssets(copyForwardOperation);
+    verify(appointmentService, never()).endAppointmentsForNonExtantSubareasWithLicenceReference(
+        any(),
+        any(),
+        any()
+    );
+    verifyNoMoreInteractions(pearsSubareaMessageHandlerService);
   }
 }

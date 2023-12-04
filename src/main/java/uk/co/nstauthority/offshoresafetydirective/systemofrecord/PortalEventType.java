@@ -1,8 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-enum PortalEventType {
+public enum PortalEventType {
   PEARS_CORRECTION,
-  PEARS_TRANSACTION_OPERATION
+  PEARS_TRANSACTION_OPERATION,
+  PEARS_TRANSACTION
   ;
 
 }

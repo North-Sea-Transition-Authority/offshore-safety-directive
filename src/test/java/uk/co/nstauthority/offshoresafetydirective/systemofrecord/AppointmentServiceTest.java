@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,13 +18,16 @@ import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
@@ -59,7 +63,11 @@ class AppointmentServiceTest {
   @Mock
   private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
+  @Mock
+  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+
   private AppointmentService appointmentService;
+  private AppointmentService appointmentServiceSpy;
 
   @BeforeEach
   void setup() {
@@ -73,7 +81,11 @@ class AppointmentServiceTest {
         clock,
         appointmentRemovedEventPublisher,
         appointmentAddedEventPublisher,
-        appointmentCorrectionService);
+        appointmentCorrectionService,
+        licenceBlockSubareaQueryService
+    );
+
+    appointmentServiceSpy = spy(appointmentService);
   }
 
   @Test
@@ -327,6 +339,58 @@ class AppointmentServiceTest {
   }
 
   @Test
+  void endAppointmentsForNonExtantSubareasWithLicenceReference_whenHasNonExtantSubareas_thenVerifyEnded() {
+    var licenceReference = "reference";
+    var correlationId = UUID.randomUUID().toString();
+
+    var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
+        licenceReference,
+        List.of(SubareaStatus.NOT_EXTANT),
+        AppointmentService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
+    ))
+        .thenReturn(List.of(
+            licenceBlockSubareaDto
+        ));
+
+    var portalEventType = PortalEventType.PEARS_CORRECTION;
+    appointmentServiceSpy.endAppointmentsForNonExtantSubareasWithLicenceReference(
+        licenceReference,
+        correlationId,
+        portalEventType
+    );
+
+    verify(appointmentServiceSpy).endAppointmentsForSubareas(
+        List.of(licenceBlockSubareaDto),
+        correlationId,
+        portalEventType
+    );
+  }
+
+  @Test
+  void endAppointmentsForNonExtantSubareasWithLicenceReference_whenNoNonExtantSubareas_thenVerifyNoAction() {
+    var licenceReference = "reference";
+    var correlationId = UUID.randomUUID().toString();
+
+    when(licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
+        licenceReference,
+        List.of(SubareaStatus.NOT_EXTANT),
+        AppointmentService.SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
+    ))
+        .thenReturn(List.of());
+
+    var portalEventType = PortalEventType.PEARS_CORRECTION;
+    appointmentServiceSpy.endAppointmentsForNonExtantSubareasWithLicenceReference(
+        licenceReference,
+        correlationId,
+        portalEventType
+    );
+
+    verify(appointmentServiceSpy, never()).endAppointmentsForSubareas(any(), any(), any());
+  }
+
+  @Test
   void endAppointmentsForSubareas_whenActiveAppointmentsWithExtantStatus_thenEndAppointment_andRemoveAssets() {
     var licenceBlockSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
     var asset = AssetTestUtil.builder()
@@ -353,7 +417,12 @@ class AppointmentServiceTest {
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Asset>> assetCaptor = ArgumentCaptor.forClass(List.class);
 
-    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+    var portalEventType = PortalEventType.PEARS_CORRECTION;
+    appointmentService.endAppointmentsForSubareas(
+        List.of(licenceBlockSubarea),
+        "correctionId",
+        portalEventType
+    );
 
     verify(appointmentRepository).saveAll(appointmentCaptor.capture());
 
@@ -369,7 +438,7 @@ class AppointmentServiceTest {
     var resultingAsset = assetCaptor.getValue().get(0);
     assertThat(resultingAsset.getId()).isEqualTo(asset.getId());
     assertThat(resultingAsset.getStatus()).isEqualTo(asset.getStatus());
-    assertThat(resultingAsset.getPortalEventType()).isEqualTo(PortalEventType.PEARS_CORRECTION);
+    assertThat(resultingAsset.getPortalEventType()).isEqualTo(portalEventType);
     assertThat(resultingAsset.getPortalEventId()).isEqualTo("correctionId");
   }
 
@@ -389,7 +458,12 @@ class AppointmentServiceTest {
         EnumSet.of(AppointmentStatus.EXTANT)
     )).thenReturn(List.of());
 
-    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+    var portalEventType = PortalEventType.PEARS_CORRECTION;
+    appointmentService.endAppointmentsForSubareas(
+        List.of(licenceBlockSubarea),
+        "correctionId",
+        portalEventType
+    );
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Asset>> assetCaptor = ArgumentCaptor.forClass(List.class);
@@ -400,7 +474,7 @@ class AppointmentServiceTest {
     var resultingAsset = assetCaptor.getValue().get(0);
     assertThat(resultingAsset.getId()).isEqualTo(asset.getId());
     assertThat(resultingAsset.getStatus()).isEqualTo(AssetStatus.REMOVED);
-    assertThat(resultingAsset.getPortalEventType()).isEqualTo(PortalEventType.PEARS_CORRECTION);
+    assertThat(resultingAsset.getPortalEventType()).isEqualTo(portalEventType);
     assertThat(resultingAsset.getPortalEventId()).isEqualTo("correctionId");
   }
 
@@ -417,7 +491,12 @@ class AppointmentServiceTest {
         EnumSet.of(AppointmentStatus.EXTANT)
     )).thenReturn(List.of());
 
-    appointmentService.endAppointmentsForSubareas(List.of(licenceBlockSubarea), "correctionId");
+    var portalEventType = PortalEventType.PEARS_CORRECTION;
+    appointmentService.endAppointmentsForSubareas(
+        List.of(licenceBlockSubarea),
+        "correctionId",
+        portalEventType
+    );
 
     verify(appointmentRepository, never()).saveAll(any());
     verify(assetRepository, never()).saveAll(any());

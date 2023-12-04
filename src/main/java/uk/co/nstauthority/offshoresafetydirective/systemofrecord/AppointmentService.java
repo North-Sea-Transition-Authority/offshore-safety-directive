@@ -12,7 +12,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
@@ -23,14 +26,17 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 public class AppointmentService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentService.class);
+  static final RequestPurpose SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE =
+      new RequestPurpose("Find non-extant subareas by licence reference to end appointments in system of record");
+
   private final AppointmentRepository appointmentRepository;
   private final NomineeDetailAccessService nomineeDetailAccessService;
   private final AssetRepository assetRepository;
   private final Clock clock;
   private final AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
-
   private final AppointmentCorrectionService appointmentCorrectionService;
+  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
@@ -39,7 +45,8 @@ public class AppointmentService {
                      Clock clock,
                      AppointmentRemovedEventPublisher appointmentRemovedEventPublisher,
                      AppointmentAddedEventPublisher appointmentAddedEventPublisher,
-                     AppointmentCorrectionService appointmentCorrectionService) {
+                     AppointmentCorrectionService appointmentCorrectionService,
+                     LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
     this.assetRepository = assetRepository;
@@ -47,6 +54,7 @@ public class AppointmentService {
     this.appointmentRemovedEventPublisher = appointmentRemovedEventPublisher;
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
     this.appointmentCorrectionService = appointmentCorrectionService;
+    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   @Transactional
@@ -129,7 +137,23 @@ public class AppointmentService {
   }
 
   @Transactional
-  public void endAppointmentsForSubareas(Collection<LicenceBlockSubareaDto> subareaDtos, String correctionId) {
+  public void endAppointmentsForNonExtantSubareasWithLicenceReference(String licenceReference, String eventId,
+                                                                      PortalEventType portalEventType) {
+    List<LicenceBlockSubareaDto> nonExtantSubareas =
+        licenceBlockSubareaQueryService.searchSubareasByLicenceReferenceWithStatuses(
+            licenceReference,
+            List.of(SubareaStatus.NOT_EXTANT),
+            SEARCH_SUBAREAS_BY_LICENCE_REFERENCE_PURPOSE
+        );
+
+    if (!nonExtantSubareas.isEmpty()) {
+      this.endAppointmentsForSubareas(nonExtantSubareas, eventId, portalEventType);
+    }
+  }
+
+  @Transactional
+  public void endAppointmentsForSubareas(Collection<LicenceBlockSubareaDto> subareaDtos, String eventId,
+                                         PortalEventType portalEventType) {
     var portalAssetIds = subareaDtos.stream()
         .map(licenceBlockSubareaDto -> licenceBlockSubareaDto.subareaId().id())
         .toList();
@@ -146,20 +170,20 @@ public class AppointmentService {
     }
 
     if (!assets.isEmpty()) {
-      assets.forEach(asset -> removeAsset(asset, correctionId));
+      assets.forEach(asset -> removeAsset(asset, eventId, portalEventType));
       assetRepository.saveAll(assets);
     }
   }
 
-  private void removeAsset(Asset asset, String correctionId) {
+  private void removeAsset(Asset asset, String eventId, PortalEventType portalEventType) {
     switch (asset.getStatus()) {
       case REMOVED -> LOGGER.warn(
           "Attempting to remove asset with ID [%s] but asset already has a non-extant status".formatted(asset.getId())
       );
       case EXTANT -> {
         asset.setStatus(AssetStatus.REMOVED);
-        asset.setPortalEventId(correctionId);
-        asset.setPortalEventType(PortalEventType.PEARS_CORRECTION);
+        asset.setPortalEventId(eventId);
+        asset.setPortalEventType(portalEventType);
       }
     }
   }
