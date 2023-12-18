@@ -132,7 +132,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
   enum TestTeamRole implements TeamRole {
 
     CREATE_NOMINATION_ROLE(RolePermission.CREATE_NOMINATION),
-    NON_CREATE_NOMINATION_ROLE(RolePermission.VIEW_NOMINATIONS);
+    NON_CREATE_NOMINATION_ROLE(RolePermission.VIEW_ALL_NOMINATIONS);
 
     private final RolePermission rolePermission;
 

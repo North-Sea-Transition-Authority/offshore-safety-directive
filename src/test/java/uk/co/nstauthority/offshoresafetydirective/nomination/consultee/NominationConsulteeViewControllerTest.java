@@ -106,7 +106,7 @@ class NominationConsulteeViewControllerTest extends AbstractNominationController
     when(consulteeTeamService.isMemberOfConsulteeTeam(CONSULTEE_NOMINATION_VIEW_USER)).thenReturn(true);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.VIEW_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.VIEW_ALL_NOMINATIONS))
         .withUser(CONSULTEE_NOMINATION_VIEW_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))

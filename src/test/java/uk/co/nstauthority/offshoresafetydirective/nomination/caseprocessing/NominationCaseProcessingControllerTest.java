@@ -133,7 +133,7 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
     when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))

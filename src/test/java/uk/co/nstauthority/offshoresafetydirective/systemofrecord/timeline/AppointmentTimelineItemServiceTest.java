@@ -869,7 +869,7 @@ class AppointmentTimelineItemServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = RolePermission.class, names = {"VIEW_NOMINATIONS", "MANAGE_NOMINATIONS"})
+  @EnumSource(value = RolePermission.class, names = {"VIEW_ALL_NOMINATIONS", "MANAGE_NOMINATIONS"})
   void getTimelineItemViews_whenUserLoggedAndCanViewNominations_thenNominationUrlIsNotNull(
       RolePermission rolePermission
   ) {
@@ -907,7 +907,7 @@ class AppointmentTimelineItemServiceTest {
   @ParameterizedTest
   @EnumSource(
       value = RolePermission.class,
-      names = {"VIEW_NOMINATIONS", "MANAGE_NOMINATIONS"},
+      names = {"VIEW_ALL_NOMINATIONS", "MANAGE_NOMINATIONS"},
       mode = EnumSource.Mode.EXCLUDE
   )
   void getTimelineItemViews_whenUserLoggedAndCannotViewNominations_thenNominationUrlIsNull(
@@ -954,7 +954,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(loggedInUser);
 
     given(permissionService.getTeamTypePermissionMap(loggedInUser))
-        .willReturn(Map.of(TeamType.CONSULTEE, Set.of(RolePermission.VIEW_NOMINATIONS)));
+        .willReturn(Map.of(TeamType.CONSULTEE, Set.of(RolePermission.VIEW_ALL_NOMINATIONS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -1098,7 +1098,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(loggedInUser);
 
     given(permissionService.getTeamTypePermissionMap(loggedInUser))
-        .willReturn(Map.of(TeamType.INDUSTRY, Set.of(RolePermission.VIEW_NOMINATIONS)));
+        .willReturn(Map.of(TeamType.INDUSTRY, Set.of(RolePermission.VIEW_ALL_NOMINATIONS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
         List.of(appointment),
@@ -1505,7 +1505,7 @@ class AppointmentTimelineItemServiceTest {
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
 
     given(permissionService.getTeamTypePermissionMap(loggedInUser))
-        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)));
+        .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.VIEW_ALL_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)));
 
     given(nominationAccessService.getNomination(new NominationId(createdByAppointment.getCreatedByNominationId())))
         .willReturn(Optional.of(nomination));

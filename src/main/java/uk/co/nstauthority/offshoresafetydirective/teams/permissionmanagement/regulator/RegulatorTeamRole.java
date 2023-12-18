@@ -30,7 +30,7 @@ public enum RegulatorTeamRole implements TeamRole {
       "View nominations",
       "Can view nominations",
       40,
-      Set.of(RolePermission.VIEW_NOMINATIONS)
+      Set.of(RolePermission.VIEW_ALL_NOMINATIONS)
   ),
   MANAGE_ASSET_APPOINTMENTS(
       "Manage well and installation appointments",

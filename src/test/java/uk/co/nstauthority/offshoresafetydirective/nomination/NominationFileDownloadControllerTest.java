@@ -136,7 +136,7 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(
             RolePermission.MANAGE_NOMINATIONS,
-            RolePermission.VIEW_NOMINATIONS
+            RolePermission.VIEW_ALL_NOMINATIONS
         ))
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(

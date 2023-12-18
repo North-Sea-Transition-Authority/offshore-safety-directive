@@ -151,7 +151,7 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
         .thenReturn(Optional.of(caseEvent));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS))
+        .withRequiredPermissions(EnumSet.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS))
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
             ReverseRouter.route(

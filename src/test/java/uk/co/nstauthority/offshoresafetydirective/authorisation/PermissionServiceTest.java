@@ -149,7 +149,7 @@ class PermissionServiceTest {
     assertThat(result)
         .containsOnlyKeys(TeamType.REGULATOR, TeamType.INDUSTRY)
         .containsEntry(TeamType.REGULATOR, Set.of(
-            RolePermission.VIEW_NOMINATIONS,
+            RolePermission.VIEW_ALL_NOMINATIONS,
             RolePermission.MANAGE_NOMINATIONS
         ))
         .containsEntry(TeamType.INDUSTRY, Set.of(RolePermission.GRANT_ROLES));
@@ -170,7 +170,7 @@ class PermissionServiceTest {
   enum TestTeamRole implements TeamRole {
 
     CREATE_NOMINATION_ROLE(RolePermission.CREATE_NOMINATION),
-    NON_CREATE_NOMINATION_ROLE(RolePermission.VIEW_NOMINATIONS);
+    NON_CREATE_NOMINATION_ROLE(RolePermission.VIEW_ALL_NOMINATIONS);
 
     private final RolePermission rolePermission;
 

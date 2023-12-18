@@ -20,7 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/consultation")
-@HasPermission(permissions = {RolePermission.VIEW_NOMINATIONS})
+@HasPermission(permissions = {RolePermission.VIEW_ALL_NOMINATIONS})
 @IsMemberOfTeamType(TeamType.CONSULTEE)
 @HasNominationStatus(
     statuses = {

@@ -26,7 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/case-event/{caseEventId}")
-@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_NOMINATIONS})
+@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS})
 @HasNominationStatus(
     statuses = {
         NominationStatus.SUBMITTED,

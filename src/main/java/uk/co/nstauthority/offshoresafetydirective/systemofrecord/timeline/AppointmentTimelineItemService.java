@@ -159,12 +159,12 @@ public class AppointmentTimelineItemService {
       canManageAppointments = regulatorRolePermissions.contains(RolePermission.MANAGE_APPOINTMENTS);
       isMemberOfRegulatorTeam = teamTypePermissionMap.containsKey(TeamType.REGULATOR);
 
-      canViewNominations = Set.of(RolePermission.VIEW_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
+      canViewNominations = Set.of(RolePermission.VIEW_ALL_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
           .stream()
           .anyMatch(regulatorRolePermissions::contains);
 
       canViewConsultations = teamTypePermissionMap.getOrDefault(TeamType.CONSULTEE, Set.of())
-          .contains(RolePermission.VIEW_NOMINATIONS);
+          .contains(RolePermission.VIEW_ALL_NOMINATIONS);
 
       if (isMemberOfRegulatorTeam) {
 
