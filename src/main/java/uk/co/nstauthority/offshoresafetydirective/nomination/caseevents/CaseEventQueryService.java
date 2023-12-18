@@ -7,11 +7,12 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -21,6 +22,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Service
 public class CaseEventQueryService {
@@ -30,14 +35,21 @@ public class CaseEventQueryService {
   private final CaseEventRepository caseEventRepository;
   private final CaseEventFileService caseEventFileService;
   private final EnergyPortalUserService energyPortalUserService;
+  private final UserDetailService userDetailService;
+  private final PermissionService permissionService;
+  private final TeamMemberService teamMemberService;
 
   @Autowired
   CaseEventQueryService(CaseEventRepository caseEventRepository,
                         CaseEventFileService caseEventFileService,
-                        EnergyPortalUserService energyPortalUserService) {
+                        EnergyPortalUserService energyPortalUserService, UserDetailService userDetailService,
+                        PermissionService permissionService, TeamMemberService teamMemberService) {
     this.caseEventRepository = caseEventRepository;
     this.caseEventFileService = caseEventFileService;
     this.energyPortalUserService = energyPortalUserService;
+    this.userDetailService = userDetailService;
+    this.permissionService = permissionService;
+    this.teamMemberService = teamMemberService;
   }
 
   public Optional<LocalDate> getDecisionDateForNominationDetail(NominationDetail nominationDetail) {
@@ -103,8 +115,25 @@ public class CaseEventQueryService {
 
     var files = caseEventFileService.getFileViewMapFromCaseEvents(events);
 
+    var user = userDetailService.getUserDetail();
+    var hasManageNominationsPermission = permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS);
+
+    if (hasManageNominationsPermission) {
+      return events.stream()
+          .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
+          .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
+          .toList();
+    }
+
+    var teamTypesForUser = teamMemberService.getUserAsTeamMembers(user)
+        .stream()
+        .map(TeamMember::teamView)
+        .map(TeamView::teamType)
+        .collect(Collectors.toSet());
+
     return events.stream()
-        .map(caseEvent -> buildCaseEventView(userIdAndDtoMap, files.get(caseEvent)).apply(caseEvent))
+        .filter(caseEvent -> CaseEventType.isValidForTeamType(teamTypesForUser, caseEvent.getCaseEventType()))
+        .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
         .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
         .toList();
   }
@@ -117,73 +146,72 @@ public class CaseEventQueryService {
     );
   }
 
-  private Function<CaseEvent, CaseEventView> buildCaseEventView(Map<Integer, EnergyPortalUserDto> userIdAndNameMap,
-                                                                List<FileSummaryView> uploadedFileViews) {
-    return caseEvent -> {
-      var caseEventBuilder = CaseEventView.builder(
-          Optional.ofNullable(caseEvent.getTitle()).orElse(caseEvent.getCaseEventType().getScreenDisplayText()),
-          caseEvent.getNominationVersion(),
-          caseEvent.getCreatedInstant(),
-          caseEvent.getEventInstant(),
-          userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName()
-      );
+  private CaseEventView buildCaseEventView(CaseEvent caseEvent, Map<Integer, EnergyPortalUserDto> userIdAndNameMap,
+                                           List<FileSummaryView> uploadedFileViews) {
 
-      return switch (caseEvent.getCaseEventType()) {
-        case QA_CHECKS -> caseEventBuilder
-            .withCustomDatePrompt("Completion date")
-            .withCustomCreatorPrompt("Completed by")
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("QA comments")
-            .build();
-        case NO_OBJECTION_DECISION, OBJECTION_DECISION -> caseEventBuilder
-            .withCustomDatePrompt("Decision date")
-            .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("Decision comment")
-            .withFileViews(uploadedFileViews)
-            .withCustomFilePrompt("Decision document")
-            .build();
-        case WITHDRAWN -> caseEventBuilder
-            .withCustomDatePrompt("Withdrawal date")
-            .withCustomCreatorPrompt("Withdrawn by")
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("Withdrawal reason")
-            .build();
-        case CONFIRM_APPOINTMENT -> caseEventBuilder
-            .withCustomDatePrompt("Appointment date")
-            .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("Appointment comments")
-            .withFileViews(uploadedFileViews)
-            .withCustomFilePrompt("Appointment documents")
-            .build();
-        case GENERAL_NOTE -> caseEventBuilder
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("Case note text")
-            .withFileViews(uploadedFileViews)
-            .withCustomFilePrompt("Case note documents")
-            .build();
-        case NOMINATION_SUBMITTED -> caseEventBuilder
-            .withCustomDatePrompt("Submitted on")
-            .withCustomCreatorPrompt("Submitted by")
-            .build();
-        case SENT_FOR_CONSULTATION -> caseEventBuilder
-            .withCustomDatePrompt("Date requested")
-            .build();
-        case CONSULTATION_RESPONSE -> caseEventBuilder
-            .withCustomDatePrompt("Response date")
-            .withBody(caseEvent.getComment())
-            .withCustomBodyPrompt("Consultation response")
-            .withFileViews(uploadedFileViews)
-            .withCustomFilePrompt("Consultation response documents")
-            .build();
-        case UPDATE_REQUESTED -> caseEventBuilder
-            .withCustomBodyPrompt("Reason for update")
-            .withBody(caseEvent.getComment())
-            .withCustomDatePrompt("Date requested")
-            .withCustomCreatorPrompt("Requested by")
-            .build();
-      };
+    var caseEventBuilder = CaseEventView.builder(
+        Optional.ofNullable(caseEvent.getTitle()).orElse(caseEvent.getCaseEventType().getScreenDisplayText()),
+        caseEvent.getNominationVersion(),
+        caseEvent.getCreatedInstant(),
+        caseEvent.getEventInstant(),
+        userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName()
+    );
+
+    return switch (caseEvent.getCaseEventType()) {
+      case QA_CHECKS -> caseEventBuilder
+          .withCustomDatePrompt("Completion date")
+          .withCustomCreatorPrompt("Completed by")
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("QA comments")
+          .build();
+      case NO_OBJECTION_DECISION, OBJECTION_DECISION -> caseEventBuilder
+          .withCustomDatePrompt("Decision date")
+          .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("Decision comment")
+          .withFileViews(uploadedFileViews)
+          .withCustomFilePrompt("Decision document")
+          .build();
+      case WITHDRAWN -> caseEventBuilder
+          .withCustomDatePrompt("Withdrawal date")
+          .withCustomCreatorPrompt("Withdrawn by")
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("Withdrawal reason")
+          .build();
+      case CONFIRM_APPOINTMENT -> caseEventBuilder
+          .withCustomDatePrompt("Appointment date")
+          .withEventInstant(caseEvent.getEventInstant(), DateUtil.formatLongDate(caseEvent.getEventInstant()))
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("Appointment comments")
+          .withFileViews(uploadedFileViews)
+          .withCustomFilePrompt("Appointment documents")
+          .build();
+      case GENERAL_NOTE -> caseEventBuilder
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("Case note text")
+          .withFileViews(uploadedFileViews)
+          .withCustomFilePrompt("Case note documents")
+          .build();
+      case NOMINATION_SUBMITTED -> caseEventBuilder
+          .withCustomDatePrompt("Submitted on")
+          .withCustomCreatorPrompt("Submitted by")
+          .build();
+      case SENT_FOR_CONSULTATION -> caseEventBuilder
+          .withCustomDatePrompt("Date requested")
+          .build();
+      case CONSULTATION_RESPONSE -> caseEventBuilder
+          .withCustomDatePrompt("Response date")
+          .withBody(caseEvent.getComment())
+          .withCustomBodyPrompt("Consultation response")
+          .withFileViews(uploadedFileViews)
+          .withCustomFilePrompt("Consultation response documents")
+          .build();
+      case UPDATE_REQUESTED -> caseEventBuilder
+          .withCustomBodyPrompt("Reason for update")
+          .withBody(caseEvent.getComment())
+          .withCustomDatePrompt("Date requested")
+          .withCustomCreatorPrompt("Requested by")
+          .build();
     };
   }
 }
