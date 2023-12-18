@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,10 @@ public class TeamScopeService {
         .map(TeamScope::getPortalId)
         .map(Integer::parseInt)
         .toList();
+  }
+
+  public List<TeamScope> getTeamScopesFromTeamIds(Collection<UUID> teamIds, PortalTeamType portalTeamType) {
+    return teamScopeRepository.findAllByTeam_UuidInAndPortalTeamType(teamIds, portalTeamType);
   }
 
   @Transactional

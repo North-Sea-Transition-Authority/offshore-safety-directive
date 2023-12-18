@@ -1,6 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class PortalOrganisationGroupDtoTestUtil {
@@ -18,6 +21,8 @@ public class PortalOrganisationGroupDtoTestUtil {
     private String name = "Organisation name";
     private String organisationGroupId = UUID.randomUUID().toString();
 
+    private Set<PortalOrganisationDto> organisations = new HashSet<>();
+
     private Builder() {
     }
 
@@ -31,10 +36,26 @@ public class PortalOrganisationGroupDtoTestUtil {
       return this;
     }
 
+    public Builder withOrganisationGroupId(Integer organisationGroupId) {
+      this.organisationGroupId = String.valueOf(organisationGroupId);
+      return this;
+    }
+
+    public Builder withOrganisation(PortalOrganisationDto organisation) {
+      organisations.add(organisation);
+      return this;
+    }
+
+    public Builder withOrganisations(Set<PortalOrganisationDto> organisations) {
+      this.organisations = organisations;
+      return this;
+    }
+
     public PortalOrganisationGroupDto build() {
       return new PortalOrganisationGroupDto(
           organisationGroupId,
-          name
+          name,
+          organisations
       );
     }
 

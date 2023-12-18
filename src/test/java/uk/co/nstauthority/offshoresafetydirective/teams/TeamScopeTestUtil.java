@@ -16,6 +16,7 @@ public class TeamScopeTestUtil {
 
     private Team team = TeamTestUtil.Builder().build();
     private String portalId = "123";
+    private PortalTeamType portalTeamType = PortalTeamType.ORGANISATION_GROUP;
 
     private Builder() {
     }
@@ -35,10 +36,16 @@ public class TeamScopeTestUtil {
       return this;
     }
 
+    public Builder withPortalTeamType(PortalTeamType portalTeamType) {
+      this.portalTeamType = portalTeamType;
+      return this;
+    }
+
     public TeamScope build() {
       var teamScope = new TeamScope();
       teamScope.setTeam(team);
       teamScope.setPortalId(portalId);
+      teamScope.setPortalTeamType(portalTeamType);
       return teamScope;
     }
 

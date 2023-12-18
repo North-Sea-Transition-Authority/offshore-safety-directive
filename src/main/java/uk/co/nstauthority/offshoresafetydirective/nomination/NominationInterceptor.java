@@ -42,7 +42,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptor.class);
 
-  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("get organisations that applicant is a part of");
+  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Get organisations that applicant is a part of");
 
   private final NominationDetailService nominationDetailService;
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;

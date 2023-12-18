@@ -10,7 +10,7 @@ public record PortalOrganisationDto(Integer id,
                                     boolean isActive,
                                     boolean isDuplicate) {
 
-  static PortalOrganisationDto fromOrganisationUnit(OrganisationUnit organisationUnit) {
+  public static PortalOrganisationDto fromOrganisationUnit(OrganisationUnit organisationUnit) {
     return new PortalOrganisationDto(
         organisationUnit.getOrganisationUnitId(),
         organisationUnit.getName(),

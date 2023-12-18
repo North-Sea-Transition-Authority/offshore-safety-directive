@@ -5,17 +5,17 @@ import java.util.Collections;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
-class EpaOrganisationUnitTestUtil {
+public class EpaOrganisationUnitTestUtil {
 
   private EpaOrganisationUnitTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private Integer organisationUnitId = 100;
 
@@ -41,67 +41,67 @@ class EpaOrganisationUnitTestUtil {
 
     private Boolean isActive = true;
 
-    Builder withId(Integer id) {
+    public Builder withId(Integer id) {
       this.organisationUnitId = id;
       return this;
     }
 
-    Builder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    Builder withShortName(String shortName) {
+    public Builder withShortName(String shortName) {
       this.shortName = shortName;
       return this;
     }
 
-    Builder withRegisteredNumber(String registeredNumber) {
+    public Builder withRegisteredNumber(String registeredNumber) {
       this.registeredNumber = registeredNumber;
       return this;
     }
 
-    Builder withForeignRegisteredNumber(String foreignRegisteredNumber) {
+    public Builder withForeignRegisteredNumber(String foreignRegisteredNumber) {
       this.foreignRegisteredNumber = foreignRegisteredNumber;
       return this;
     }
 
-    Builder withForeignRegisteredName(String foreignRegisteredName) {
+    public Builder withForeignRegisteredName(String foreignRegisteredName) {
       this.foreignRegisteredName = foreignRegisteredName;
       return this;
     }
 
-    Builder withCountryOfOrigin(String countryOfOrigin) {
+    public Builder withCountryOfOrigin(String countryOfOrigin) {
       this.countryOfOrigin = countryOfOrigin;
       return this;
     }
 
-    Builder withOriginCountryCode(Integer originCountryCode) {
+    public Builder withOriginCountryCode(Integer originCountryCode) {
       this.originCountryCode = originCountryCode;
       return this;
     }
 
-    Builder withStartDate(LocalDate startDate) {
+    public Builder withStartDate(LocalDate startDate) {
       this.startDate = startDate;
       return this;
     }
 
-    Builder withEndDate(LocalDate endDate) {
+    public Builder withEndDate(LocalDate endDate) {
       this.endDate = endDate;
       return this;
     }
 
-    Builder isDuplicate(Boolean isDuplicate) {
+    public Builder isDuplicate(Boolean isDuplicate) {
       this.isDuplicate = isDuplicate;
       return this;
     }
 
-    Builder isActive(Boolean isActive) {
+    public Builder isActive(Boolean isActive) {
       this.isActive = isActive;
       return this;
     }
 
-    OrganisationUnit build() {
+    public OrganisationUnit build() {
 
       return OrganisationUnit.newBuilder()
           .organisationUnitId(organisationUnitId)

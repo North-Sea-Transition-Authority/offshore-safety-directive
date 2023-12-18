@@ -16,6 +16,7 @@ import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjection
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 
 @Service
 public class PortalOrganisationUnitQueryService {
@@ -45,6 +46,7 @@ public class PortalOrganisationUnitQueryService {
 
   static final OrganisationGroupsProjectionRoot ORGANISATION_GROUPS_PROJECTION_ROOT =
       new OrganisationGroupsProjectionRoot()
+          .organisationGroupId()
           .organisationUnits()
             .organisationUnitId()
             .name()
@@ -88,6 +90,20 @@ public class PortalOrganisationUnitQueryService {
             )
         ).map(OrganisationUnit::getOrganisationGroups)
         .orElse(List.of());
+  }
+
+  public List<PortalOrganisationGroupDto> getOrganisationGroupsById(Collection<Integer> ids, RequestPurpose requestPurpose) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+            organisationApi.getAllOrganisationGroupsByIds(
+                ids.stream().toList(),
+                ORGANISATION_GROUPS_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
+        )
+        .stream()
+        .map(PortalOrganisationGroupDto::fromOrganisationGroup)
+        .toList();
   }
 
   public List<PortalOrganisationDto> getOrganisationByIds(Collection<PortalOrganisationUnitId> organisationUnitIds,
