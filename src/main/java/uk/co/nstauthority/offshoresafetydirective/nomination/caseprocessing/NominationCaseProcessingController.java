@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamType;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmission;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -29,20 +26,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/review")
-@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS})
-@IsMemberOfTeamType(value = {TeamType.INDUSTRY, TeamType.REGULATOR})
-@HasNominationStatus(
-    fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION,
-    statuses = {
-        NominationStatus.SUBMITTED, NominationStatus.APPOINTED, NominationStatus.AWAITING_CONFIRMATION,
-        NominationStatus.WITHDRAWN, NominationStatus.OBJECTED
-    }
-)
+@CanViewNominationPostSubmission
 public class NominationCaseProcessingController {
 
   public static final String VERSION_FORM_NAME = "nominationVersionForm";

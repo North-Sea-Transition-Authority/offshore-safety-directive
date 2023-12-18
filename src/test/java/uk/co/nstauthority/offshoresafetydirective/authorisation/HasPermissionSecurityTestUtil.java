@@ -31,7 +31,10 @@ public class HasPermissionSecurityTestUtil {
 
     private final TeamMemberService teamMemberService;
 
-    private Team team = TeamTestUtil.Builder().build();
+    private Team team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
     private Set<RolePermission> requiredPermissions = new HashSet<>();
 
     public SmokeTester(MockMvc mockMvc, TeamMemberService teamMemberService) {
@@ -64,7 +67,7 @@ public class HasPermissionSecurityTestUtil {
                 .withWebUserAccountId(userToTestWith.wuaId())
                 .withRole(new TestTeamRole(rolePermission))
                 .withTeamId(team.toTeamId())
-                .withTeamType(TeamType.INDUSTRY)
+                .withTeamType(team.getTeamType())
                 .build();
 
             when(teamMemberService.getUserAsTeamMembers(userToTestWith))

@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
@@ -46,6 +47,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor;
   private final HasAssetStatusInterceptor hasAssetStatusInterceptor;
   private final ErrorListHandlerInterceptor errorListHandlerInterceptor;
+  private final CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor;
 
   @Autowired
   WebMvcConfiguration(PermissionManagementHandlerInterceptor permissionManagementHandlerInterceptor,
@@ -58,7 +60,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       IsMemberOfTeamTypeInterceptor isMemberOfTeamTypeInterceptor,
                       HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor,
                       HasAssetStatusInterceptor hasAssetStatusInterceptor,
-                      ErrorListHandlerInterceptor errorListHandlerInterceptor) {
+                      ErrorListHandlerInterceptor errorListHandlerInterceptor,
+                      CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor) {
     this.permissionManagementHandlerInterceptor = permissionManagementHandlerInterceptor;
     this.nominationInterceptor = nominationInterceptor;
     this.hasPermissionInterceptor = hasPermissionInterceptor;
@@ -70,6 +73,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.hasAppointmentStatusInterceptor = hasAppointmentStatusInterceptor;
     this.hasAssetStatusInterceptor = hasAssetStatusInterceptor;
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
+    this.canViewNominationPostSubmissionInterceptor = canViewNominationPostSubmissionInterceptor;
   }
 
   @Override
@@ -92,6 +96,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(nominationInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(updateRequestInterceptor)
+        .addPathPatterns("/nomination/**");
+    registry.addInterceptor(canViewNominationPostSubmissionInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(hasPermissionInterceptor)
         .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);

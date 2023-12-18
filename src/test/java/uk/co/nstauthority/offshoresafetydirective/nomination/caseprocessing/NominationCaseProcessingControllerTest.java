@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -14,6 +15,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +28,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -34,11 +38,17 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
+import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamScope;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
@@ -96,7 +106,16 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
   @SecurityTest
   void smokeTestNominationStatuses_ensurePermittedStatuses() {
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
+    doAnswer(invocation -> {
+      if (!NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+          .contains(nominationDetail.getStatus())) {
+        return Optional.empty();
+      }
+      return Optional.of(nominationDetail);
+    }).when(nominationDetailService).getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    );
 
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatuses(
@@ -117,24 +136,19 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
   }
 
   @SecurityTest
-  void renderCaseProcessing_whenIsNotAMemberOfRegulatorTeams_thenForbidden() throws Exception {
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(false);
-
-    mockMvc.perform(
-            get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
-                .with(user(NOMINATION_MANAGE_USER))
-        )
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
   void smokeTestPermissions_onlyManageNominationAndViewPermissionsAllowed() {
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
+    var team = TeamTestUtil.Builder()
+        .withId(NOMINATION_MANAGER_TEAM_MEMBER.teamView().teamId().uuid())
+        .withTeamType(NOMINATION_MANAGER_TEAM_MEMBER.teamView().teamType())
+        .build();
+
+    givenCanViewNominationPostSubmission(team);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.VIEW_NOMINATION, RolePermission.VIEW_ALL_NOMINATIONS))
         .withUser(NOMINATION_MANAGE_USER)
+        .withTeam(team)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null))
         )
@@ -149,8 +163,6 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
 
   @Test
   void renderCaseProcessing_verifyReturn() throws Exception {
-
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     var viewName = "test_view";
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
@@ -167,7 +179,7 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
   }
 
   @Test
-  void renderCaseProcessing_whenNoSubmittedNomination_thenIsBadRequest() throws Exception {
+  void renderCaseProcessing_whenNoSubmittedNomination_thenIsForbidden() throws Exception {
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -178,15 +190,13 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
             get(ReverseRouter.route(on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, null)))
                 .with(user(NOMINATION_MANAGE_USER))
         )
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isForbidden());
 
     verifyNoInteractions(nominationCaseProcessingModelAndViewGenerator);
   }
 
   @Test
   void renderCaseProcessing_whenVersionNumberProvided_ensureSpecificVersionUsed() throws Exception {
-
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     int version = 5;
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
@@ -219,8 +229,6 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
   @Test
   void renderCaseProcessing_whenVersionNumberProvidedAndDoesNotExist_verifyError() throws Exception {
 
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
-
     Integer version = 5;
 
     when(nominationDetailService.getVersionedNominationDetailWithStatuses(
@@ -239,8 +247,6 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
 
   @Test
   void renderCaseProcessing_whenVersionNumberInvalid_verifyCatchAndOk() throws Exception {
-
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
         .withNominationId(NOMINATION_ID)
@@ -268,7 +274,7 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
   }
 
   @Test
-  void changeCaseProcessingVersion_whenNoSubmittedNomination_thenIsBadRequest() throws Exception {
+  void changeCaseProcessingVersion_whenNoSubmittedNomination_thenIsForbidden() throws Exception {
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -280,13 +286,11 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
             .with(user(NOMINATION_MANAGE_USER))
             .with(csrf())
         )
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isForbidden());
   }
 
   @Test
   void changeCaseProcessingVersion_verifyRedirect() throws Exception {
-
-    when(regulatorTeamService.isMemberOfRegulatorTeam(NOMINATION_MANAGE_USER)).thenReturn(true);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -306,4 +310,32 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
             on(NominationCaseProcessingController.class).renderCaseProcessing(NOMINATION_ID, version.toString()))));
   }
 
+  private void givenCanViewNominationPostSubmission(Team team) {
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    var applicantDetail = ApplicantDetailTestUtil.builder().build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var organisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withId(applicantDetail.getPortalOrganisationId())
+        .build();
+    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisation(organisationUnit)
+        .build();
+
+    TeamScope teamScope = TeamScopeTestUtil.builder().build();
+
+    when(teamScopeService.getTeamScopesFromTeamIds(
+        List.of(team.toTeamId().uuid()),
+        PortalTeamType.ORGANISATION_GROUP)
+    )
+        .thenReturn(List.of(teamScope));
+
+    when(portalOrganisationUnitQueryService.getOrganisationGroupsById(
+        eq(List.of(Integer.valueOf(teamScope.getPortalId()))), any())
+    ).thenReturn(List.of(organisationGroup));
+  }
 }
