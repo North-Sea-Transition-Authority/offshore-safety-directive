@@ -94,7 +94,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     registry.addInterceptor(hasTeamPermissionInterceptor)
         .addPathPatterns("/permission-management/**");
     registry.addInterceptor(nominationInterceptor)
-        .addPathPatterns("/nomination/**");
+        .addPathPatterns("/nomination/**", "/draft-nomination/**");
     registry.addInterceptor(updateRequestInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(canViewNominationPostSubmissionInterceptor)

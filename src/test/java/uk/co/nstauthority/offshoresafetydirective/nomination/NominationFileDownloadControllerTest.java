@@ -46,6 +46,7 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
 
   @MockBean
   private FileService fileService;
+
   @SecurityTest
   void download_assertStatusesPermitted() {
 
@@ -66,15 +67,6 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(file));
 
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
-
-    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
-        .thenReturn(Optional.of(nominationDetail));
-
     doAnswer(invocation -> {
       var streamContent = "abc";
       var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
@@ -82,6 +74,16 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     })
         .when(fileService)
         .download(file);
+
+    doAnswer(invocation -> {
+      if (!ALLOWED_STATUSES.contains(nominationDetail.getStatus())) {
+        return Optional.empty();
+      }
+      return Optional.of(nominationDetail);
+    }).when(nominationDetailService).getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    );
 
     var smokeTester = NominationStatusSecurityTestUtil.smokeTester(mockMvc);
     ALLOWED_STATUSES.forEach(smokeTester::withPermittedNominationStatus);
@@ -100,7 +102,6 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
 
   @SecurityTest
   void download_assertPermissionsPermitted() {
-
     var nominationDetail = NominationDetailTestUtil.builder()
         .withNominationId(NOMINATION_ID)
         .withStatus(NominationStatus.AWAITING_CONFIRMATION)
@@ -116,11 +117,7 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(file));
 
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
+    givenUserHasViewPermissionForPostSubmissionNominations(nominationDetail, NOMINATION_CREATOR_USER);
 
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
@@ -135,9 +132,10 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withRequiredPermissions(EnumSet.of(
-            RolePermission.MANAGE_NOMINATIONS,
+            RolePermission.VIEW_NOMINATION,
             RolePermission.VIEW_ALL_NOMINATIONS
         ))
+        .withTeam(getTeam())
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
             ReverseRouter.route(

@@ -8,7 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.EpaOrganisationGroupTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
@@ -38,6 +40,46 @@ public abstract class AbstractNominationControllerTest extends AbstractControlle
     when(teamScopeService.getTeamScope(List.of(organisationGroup.getOrganisationGroupId().toString()),
         PortalTeamType.ORGANISATION_GROUP))
         .thenReturn(List.of(TEAM_SCOPE));
+
+    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(TEAM_SCOPE.getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(user))
+        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
+  }
+
+  public void givenUserHasViewPermissionForPostSubmissionNominations(NominationDetail nominationDetail, ServiceUserDetail user) {
+    var portalOrgId = 1;
+    var organisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(portalOrgId)
+        .build();
+
+    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisation(organisation)
+        .build();
+
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(portalOrgId)
+        .build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
+
+    when(portalOrganisationUnitQueryService.getOrganisationGroupsById(
+        eq(List.of(Integer.valueOf(TEAM_SCOPE.getPortalId()))), any()))
+        .thenReturn(List.of(organisationGroup));
+
+    when(teamScopeService.getTeamScopesFromTeamIds(List.of(TEAM_SCOPE.getTeam().getUuid()),
+        PortalTeamType.ORGANISATION_GROUP))
+        .thenReturn(List.of(TEAM_SCOPE));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail.getNomination().getId()),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
 
     var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
         .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)

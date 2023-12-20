@@ -17,18 +17,14 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageUtil;
 import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/draft-nomination/{nominationId}/file")
-@HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
-@HasNominationStatus(statuses = NominationStatus.DRAFT, fetchType = NominationDetailFetchType.LATEST)
+@CanAccessDraftNomination
 public class NominationDraftFileController {
 
   private final FileService fileService;

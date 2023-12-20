@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,18 +30,19 @@ import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @ContextConfiguration(classes = NominationDraftFileController.class)
-class NominationDraftFileControllerTest extends AbstractControllerTest {
+class NominationDraftFileControllerTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail NOMINATION_CREATOR_USER = ServiceUserDetailTestUtil.Builder().build();
   private static final TeamMember NOMINATION_CREATOR_TEAM_MEMBER = TeamMemberTestUtil.Builder()
@@ -78,8 +80,121 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
         .andExpect(redirectionToLoginUrl());
   }
 
+  @SecurityTest
+  void smokeTestNominationStatuses_onlyDraftPermitted() {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.builder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.delete(file))
+        .thenReturn(FileDeleteResponse.success(fileUuid));
+
+    doAnswer(invocation -> {
+      var streamContent = "abc";
+      var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+      return ResponseEntity.ok(inputStreamResource);
+    })
+        .when(fileService)
+        .download(file);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    NominationStatusSecurityTestUtil.smokeTester(mockMvc)
+        .withPermittedNominationStatus(NominationStatus.DRAFT)
+        .withNominationDetail(nominationDetail)
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString()))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominationDraftFileController.class)
+                .delete(NOMINATION_ID, fileUuid.toString())),
+            status().isOk(),
+            status().isForbidden()
+        )
+        .test();
+
+    verify(fileService).delete(file);
+  }
+
+  @SecurityTest
+  void smokeTestPermissions_onlyEditNominationPermissionAllowed() {
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.builder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.delete(file))
+        .thenReturn(FileDeleteResponse.success(fileUuid));
+
+    doAnswer(invocation -> {
+      var streamContent = "abc";
+      var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+      return ResponseEntity.ok(inputStreamResource);
+    })
+        .when(fileService)
+        .download(file);
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        EnumSet.of(NominationStatus.DRAFT)
+    )).thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
+        .withRequiredPermissions(Collections.singleton(RolePermission.EDIT_NOMINATION))
+        .withTeam(getTeam())
+        .withUser(NOMINATION_CREATOR_USER)
+        .withGetEndpoint(
+            ReverseRouter.route(on(NominationDraftFileController.class).download(NOMINATION_ID, fileUuid.toString()))
+        )
+        .withPostEndpoint(
+            ReverseRouter.route(on(NominationDraftFileController.class)
+                .delete(NOMINATION_ID, fileUuid.toString())),
+            status().isOk(),
+            status().isForbidden()
+        )
+        .test();
+
+    verify(fileService).delete(file);
+  }
+
+
   @Test
   void delete_whenNoFileFound_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -110,6 +225,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenUserDidNotUploadFile_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -148,6 +265,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenFileHasUsages_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -186,6 +305,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenInvalidUuid_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -212,6 +333,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_verifyCalls() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -253,6 +376,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_verifyCalls() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -298,6 +423,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenInvalidUuid_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -321,6 +448,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenNoFileFound_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -351,6 +480,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenUserDidNotUploadFile_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -389,6 +520,9 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenFileIdNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
+
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         EnumSet.of(NominationStatus.DRAFT)
@@ -416,6 +550,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenFileUsageIdIsNotLinkedToNomination() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -448,6 +584,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenFileHasUsage_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -482,6 +620,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenFileHasDifferentUploader_thenNotFound() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -518,6 +658,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void delete_whenFileIsLinkedToNomination_thenIsOk() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
@@ -555,6 +697,8 @@ class NominationDraftFileControllerTest extends AbstractControllerTest {
 
   @Test
   void download_whenFileIsLinkedToNomination_thenIsOk() throws Exception {
+    givenUserHasNominationPermission(NOMINATION_DETAIL, NOMINATION_CREATOR_USER);
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(NOMINATION_DETAIL);
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
