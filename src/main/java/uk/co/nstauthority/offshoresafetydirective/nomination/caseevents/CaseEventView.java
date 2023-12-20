@@ -20,12 +20,14 @@ public class CaseEventView {
   private final String customDatePrompt;
   private final List<FileSummaryView> fileViews;
   private final String customFilePrompt;
+  private final CaseEventType caseEventType;
 
   private CaseEventView(int nominationVersion, String customVersionPrompt, String title, String body,
                         String customBodyPrompt,
                         String createdBy, String customCreatorPrompt, Instant createdInstant,
                         Instant eventInstant, String formattedEventTime,
-                        String customDatePrompt, List<FileSummaryView> fileViews, String customFilePrompt) {
+                        String customDatePrompt, List<FileSummaryView> fileViews, String customFilePrompt,
+                        CaseEventType caseEventType) {
     this.nominationVersion = nominationVersion;
     this.customVersionPrompt = customVersionPrompt;
     this.title = title;
@@ -39,6 +41,7 @@ public class CaseEventView {
     this.customDatePrompt = customDatePrompt;
     this.fileViews = fileViews;
     this.customFilePrompt = customFilePrompt;
+    this.caseEventType = caseEventType;
   }
 
   public int getNominationVersion() {
@@ -93,9 +96,13 @@ public class CaseEventView {
     return customFilePrompt;
   }
 
+  public CaseEventType getCaseEventType() {
+    return caseEventType;
+  }
+
   public static Builder builder(String title, int nominationVersion, Instant createdInstant, Instant eventInstant,
-                                String createdBy) {
-    return new Builder(title, nominationVersion, createdInstant, eventInstant, createdBy);
+                                String createdBy, CaseEventType caseEventType) {
+    return new Builder(title, nominationVersion, createdInstant, eventInstant, createdBy, caseEventType);
   }
 
   public static class Builder {
@@ -113,15 +120,17 @@ public class CaseEventView {
     private String customDatePrompt;
     private List<FileSummaryView> fileViews;
     private String customFilePrompt;
+    private CaseEventType caseEventType;
 
     private Builder(String title, int nominationVersion, Instant createdInstant, Instant eventInstant,
-                    String createdBy) {
+                    String createdBy, CaseEventType caseEventType) {
       this.title = title;
       this.nominationVersion = nominationVersion;
       this.createdInstant = createdInstant;
       this.eventInstant = eventInstant;
       this.formattedEventTime = DateUtil.formatLongDateTime(eventInstant);
       this.createdBy = createdBy;
+      this.caseEventType = caseEventType;
     }
 
     public Builder withCustomVersionPrompt(String versionPrompt) {
@@ -168,7 +177,7 @@ public class CaseEventView {
     public CaseEventView build() {
       return new CaseEventView(
           nominationVersion, customVersionPrompt, title, body, customBodyPrompt, createdBy, customCreatorPrompt,
-          createdInstant, eventInstant, formattedEventTime, customDatePrompt, fileViews, customFilePrompt);
+          createdInstant, eventInstant, formattedEventTime, customDatePrompt, fileViews, customFilePrompt, caseEventType);
     }
   }
 

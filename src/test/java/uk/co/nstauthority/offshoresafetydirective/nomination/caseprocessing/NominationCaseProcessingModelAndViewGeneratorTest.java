@@ -41,6 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionGroup;
@@ -131,8 +132,9 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var eventCreatedDateInstant = Instant.now();
     var eventDateInstant = Instant.now();
+
     var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
-        userDetail.displayName()).build();
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
@@ -233,7 +235,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var eventCreatedDateInstant = Instant.now();
     var eventDateInstant = Instant.now();
     var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
-        userDetail.displayName()).build();
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
@@ -329,7 +331,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var eventCreatedDateInstant = Instant.now();
     var eventDateInstant = Instant.now();
     var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
-        userDetail.displayName()).build();
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
@@ -460,7 +462,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var eventCreatedDateInstant = Instant.now();
     var eventDateInstant = Instant.now();
     var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
-        userDetail.displayName()).build();
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 
@@ -598,7 +600,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var eventCreatedDateInstant = Instant.now();
     var eventDateInstant = Instant.now();
     var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
-        userDetail.displayName()).build();
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
 
     var activePortalReferencesView = new ActivePortalReferencesView(null, null);
 

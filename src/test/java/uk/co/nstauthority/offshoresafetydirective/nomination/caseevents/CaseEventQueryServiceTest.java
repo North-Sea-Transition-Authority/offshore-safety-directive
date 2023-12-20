@@ -7,19 +7,17 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -37,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventQueryServiceTest {
@@ -58,6 +57,9 @@ class CaseEventQueryServiceTest {
 
   @Mock
   private TeamMemberService teamMemberService;
+
+  @Mock
+  private RegulatorTeamService regulatorTeamService;
 
   @InjectMocks
   private CaseEventQueryService caseEventQueryService;
@@ -443,29 +445,14 @@ class CaseEventQueryServiceTest {
     assertFalse(hasUpdateRequest);
   }
 
-  @ParameterizedTest
-  @MethodSource("getCaseEventTypes")
-  void getCaseViews_whenNominationManager_thenShowAllCaseEvents(CaseEventType hiddenFromOperators, CaseEventType visibleToOperators) {
+  @Test
+  void getCaseViews_whenRegulator_thenShowCaseEventsVisibleToUser() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(user);
     when(permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)).thenReturn(true);
+    when(regulatorTeamService.isMemberOfRegulatorTeam(user)).thenReturn(true);
 
     var nomination = NominationTestUtil.builder().build();
-
-    var onlyManagePermissionCaseEvent = CaseEventTestUtil.builder()
-        .withCaseEventType(hiddenFromOperators)
-        .withCreatedBy(user.wuaId())
-        .withCreatedInstant(Instant.now())
-        .build();
-
-    var anyPermissionCaseEvent = CaseEventTestUtil.builder()
-        .withCaseEventType(visibleToOperators)
-        .withCreatedBy(user.wuaId())
-        .withCreatedInstant(Instant.now().minus(Period.ofDays(1)))
-        .build();
-
-    when(caseEventRepository.findAllByNomination(nomination))
-        .thenReturn(List.of(onlyManagePermissionCaseEvent, anyPermissionCaseEvent));
 
     var epaUser = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(user.wuaId())
@@ -476,41 +463,109 @@ class CaseEventQueryServiceTest {
         CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE)
     ).thenReturn(Collections.singletonList(epaUser));
 
+    List<CaseEvent> allCaseEvents = new ArrayList<>();
+
+    // GIVEN a nomination which has all the case events associated
+    Arrays.stream(CaseEventType.values()).forEach(caseEventType -> {
+
+      var caseEvent = CaseEventTestUtil.builder()
+          .withCaseEventType(caseEventType)
+          .withCreatedBy(user.wuaId())
+          .build();
+
+      allCaseEvents.add(caseEvent);
+    });
+
+    when(caseEventRepository.findAllByNomination(nomination))
+        .thenReturn(allCaseEvents);
+
+    // WHEN I get the case events I can see
     var resultingCaseEventViews = caseEventQueryService.getCaseEventViews(nomination);
 
+    // THEN as a regulator team member
     assertThat(resultingCaseEventViews)
-        .extracting(CaseEventView::getTitle)
-        .containsExactly(
-            hiddenFromOperators.getScreenDisplayText(),
-            visibleToOperators.getScreenDisplayText()
+        .extracting(CaseEventView::getCaseEventType)
+        .containsExactlyInAnyOrder(
+            CaseEventType.NO_OBJECTION_DECISION,
+            CaseEventType.OBJECTION_DECISION,
+            CaseEventType.WITHDRAWN,
+            CaseEventType.CONFIRM_APPOINTMENT,
+            CaseEventType.NOMINATION_SUBMITTED,
+            CaseEventType.UPDATE_REQUESTED,
+            CaseEventType.CONSULTATION_RESPONSE,
+            CaseEventType.SENT_FOR_CONSULTATION,
+            CaseEventType.GENERAL_NOTE,
+            CaseEventType.QA_CHECKS
         );
   }
 
-  @ParameterizedTest
-  @MethodSource("getCaseEventTypes")
-  void getCaseViews_whenNotNominationManager_thenShowCaseEventsVisibleToUser(CaseEventType hiddenFromOperators, CaseEventType visibleToOperators) {
+  @Test
+  void getCaseViews_whenIndustry_thenShowCaseEventsVisibleToUser() {
     var user = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(user);
+
     when(permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)).thenReturn(false);
-    var teamMember = TeamMemberTestUtil.Builder().withTeamType(TeamType.INDUSTRY).build();
+
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
     when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
 
     var nomination = NominationTestUtil.builder().build();
 
-    var onlyManagePermissionCaseEvent = CaseEventTestUtil.builder()
-        .withCaseEventType(hiddenFromOperators)
-        .withCreatedBy(user.wuaId())
-        .withCreatedInstant(Instant.now())
+    var epaUser = EnergyPortalUserDtoTestUtil.Builder()
+        .withWebUserAccountId(user.wuaId())
         .build();
 
-    var anyPermissionCaseEvent = CaseEventTestUtil.builder()
-        .withCaseEventType(visibleToOperators)
-        .withCreatedBy(user.wuaId())
-        .withCreatedInstant(Instant.now().minus(Period.ofDays(1)))
-        .build();
+    when(energyPortalUserService.findByWuaIds(
+        List.of(new WebUserAccountId(user.wuaId())),
+        CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE)
+    ).thenReturn(Collections.singletonList(epaUser));
+
+    List<CaseEvent> allCaseEvents = new ArrayList<>();
+
+    // GIVEN a nomination which has all the case events associated
+    Arrays.stream(CaseEventType.values()).forEach(caseEventType -> {
+
+      var caseEvent = CaseEventTestUtil.builder()
+          .withCaseEventType(caseEventType)
+          .withCreatedBy(user.wuaId())
+          .build();
+
+      allCaseEvents.add(caseEvent);
+    });
 
     when(caseEventRepository.findAllByNomination(nomination))
-        .thenReturn(List.of(onlyManagePermissionCaseEvent, anyPermissionCaseEvent));
+        .thenReturn(allCaseEvents);
+
+    // WHEN I get the case events I can see
+    var resultingCaseEventViews = caseEventQueryService.getCaseEventViews(nomination);
+
+    // THEN as an industry team member
+    assertThat(resultingCaseEventViews)
+        .extracting(CaseEventView::getCaseEventType)
+        .containsExactlyInAnyOrder(
+            CaseEventType.NO_OBJECTION_DECISION,
+            CaseEventType.OBJECTION_DECISION,
+            CaseEventType.WITHDRAWN,
+            CaseEventType.CONFIRM_APPOINTMENT,
+            CaseEventType.NOMINATION_SUBMITTED,
+            CaseEventType.UPDATE_REQUESTED
+        );
+  }
+
+  @Test
+  void getCaseViews_whenConsultee_thenShowCaseEventsVisibleToUser() {
+    var user = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(user);
+    when(permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)).thenReturn(false);
+    var teamMember = TeamMemberTestUtil.Builder()
+        .withTeamType(TeamType.CONSULTEE)
+        .build();
+    when(teamMemberService.getUserAsTeamMembers(user)).thenReturn(List.of(teamMember));
+
+    var nomination = NominationTestUtil.builder().build();
 
     var epaUser = EnergyPortalUserDtoTestUtil.Builder()
         .withWebUserAccountId(user.wuaId())
@@ -521,23 +576,35 @@ class CaseEventQueryServiceTest {
         CaseEventQueryService.CASE_EVENT_CREATED_BY_USER_PURPOSE)
     ).thenReturn(Collections.singletonList(epaUser));
 
+    List<CaseEvent> allCaseEvents = new ArrayList<>();
+
+    // GIVEN a nomination which has all the case events associated
+    Arrays.stream(CaseEventType.values()).forEach(caseEventType -> {
+
+      var caseEvent = CaseEventTestUtil.builder()
+          .withCaseEventType(caseEventType)
+          .withCreatedBy(user.wuaId())
+          .build();
+
+      allCaseEvents.add(caseEvent);
+    });
+
+    when(caseEventRepository.findAllByNomination(nomination))
+        .thenReturn(allCaseEvents);
+
+    // WHEN I get the case events I can see
     var resultingCaseEventViews = caseEventQueryService.getCaseEventViews(nomination);
 
+    // THEN as an industry team member
     assertThat(resultingCaseEventViews)
-        .extracting(CaseEventView::getTitle)
-        .containsExactly(visibleToOperators.getScreenDisplayText());
-
-    assertThat(resultingCaseEventViews)
-        .extracting(CaseEventView::getTitle)
-        .doesNotContain(hiddenFromOperators.getScreenDisplayText());
-  }
-
-  private static Stream<Arguments> getCaseEventTypes() {
-    return Stream.of(
-        Arguments.of(CaseEventType.QA_CHECKS, CaseEventType.NO_OBJECTION_DECISION),
-        Arguments.of(CaseEventType.GENERAL_NOTE, CaseEventType.WITHDRAWN),
-        Arguments.of(CaseEventType.SENT_FOR_CONSULTATION, CaseEventType.CONFIRM_APPOINTMENT),
-        Arguments.of(CaseEventType.CONSULTATION_RESPONSE, CaseEventType.UPDATE_REQUESTED)
-    );
+        .extracting(CaseEventView::getCaseEventType)
+        .containsExactlyInAnyOrder(
+            CaseEventType.NO_OBJECTION_DECISION,
+            CaseEventType.OBJECTION_DECISION,
+            CaseEventType.WITHDRAWN,
+            CaseEventType.CONFIRM_APPOINTMENT,
+            CaseEventType.NOMINATION_SUBMITTED,
+            CaseEventType.UPDATE_REQUESTED
+        );
   }
 }

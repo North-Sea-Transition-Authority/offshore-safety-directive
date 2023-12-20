@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 public class CaseEventQueryService {
@@ -37,18 +38,23 @@ public class CaseEventQueryService {
   private final EnergyPortalUserService energyPortalUserService;
   private final UserDetailService userDetailService;
   private final PermissionService permissionService;
+  private final RegulatorTeamService regulatorTeamService;
   private final TeamMemberService teamMemberService;
 
   @Autowired
   CaseEventQueryService(CaseEventRepository caseEventRepository,
                         CaseEventFileService caseEventFileService,
-                        EnergyPortalUserService energyPortalUserService, UserDetailService userDetailService,
-                        PermissionService permissionService, TeamMemberService teamMemberService) {
+                        EnergyPortalUserService energyPortalUserService,
+                        UserDetailService userDetailService,
+                        PermissionService permissionService,
+                        RegulatorTeamService regulatorTeamService,
+                        TeamMemberService teamMemberService) {
     this.caseEventRepository = caseEventRepository;
     this.caseEventFileService = caseEventFileService;
     this.energyPortalUserService = energyPortalUserService;
     this.userDetailService = userDetailService;
     this.permissionService = permissionService;
+    this.regulatorTeamService = regulatorTeamService;
     this.teamMemberService = teamMemberService;
   }
 
@@ -116,9 +122,10 @@ public class CaseEventQueryService {
     var files = caseEventFileService.getFileViewMapFromCaseEvents(events);
 
     var user = userDetailService.getUserDetail();
-    var hasManageNominationsPermission = permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS);
+    var canViewAllCaseEvents = permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)
+        && regulatorTeamService.isMemberOfRegulatorTeam(user);
 
-    if (hasManageNominationsPermission) {
+    if (canViewAllCaseEvents) {
       return events.stream()
           .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
           .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
@@ -154,7 +161,8 @@ public class CaseEventQueryService {
         caseEvent.getNominationVersion(),
         caseEvent.getCreatedInstant(),
         caseEvent.getEventInstant(),
-        userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName()
+        userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName(),
+        caseEvent.getCaseEventType()
     );
 
     return switch (caseEvent.getCaseEventType()) {

@@ -79,7 +79,7 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
       var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(nominationId, postSubmissionStatuses)
           .orElseThrow(() -> new ResponseStatusException(
               HttpStatus.FORBIDDEN,
-              "No post submission nomination exists"
+              "No post submission nomination exists with id [%s]".formatted(nominationId)
           ));
 
       var hasViewAllNominationsPermission = teamMembers.stream()
@@ -94,7 +94,7 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
       if (!hasViewNominationPermission(teamMembers, nominationDetail)) {
         throw new ResponseStatusException(
             HttpStatus.FORBIDDEN,
-            "User does not have required permissions {%s%s} in applicants team".formatted(
+            "User does not have required permissions {%s, %s} in applicants team".formatted(
                 RolePermission.VIEW_NOMINATION.name(), RolePermission.VIEW_ALL_NOMINATIONS));
       }
     }
