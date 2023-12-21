@@ -19,19 +19,27 @@ class NominatedWellDetailFormValidator implements Validator {
   public void validate(@NonNull Object target, @NonNull Errors errors) {
     var form = (NominatedWellDetailForm) target;
 
-    var numericWellIds = form.getWells()
-        .stream()
-        .filter(NumberUtils::isDigits)
-        .toList();
-
-    form.setWells(numericWellIds);
-
-    if (form.getWells() == null || form.getWells().isEmpty()) {
+    if (form.getWells() == null) {
       errors.rejectValue(
           "wellsSelect",
           "wellsSelect.notEmpty",
           "You must select at least one well"
       );
+    } else {
+      var numericWellIds = form.getWells()
+          .stream()
+          .filter(NumberUtils::isDigits)
+          .toList();
+
+      form.setWells(numericWellIds);
+
+      if (form.getWells().isEmpty()) {
+        errors.rejectValue(
+            "wellsSelect",
+            "wellsSelect.notEmpty",
+            "You must select at least one well"
+        );
+      }
     }
 
     if (BooleanUtils.toBooleanObject(form.getForAllWellPhases()) == null) {

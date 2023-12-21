@@ -8,13 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -110,8 +107,8 @@ class NominatedWellDetailFormValidatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getInvalidArguments")
-  void validate_whenInvalidWellsSelected_thenHasError(List<String> invalidValue) {
+  @NullAndEmptySource
+  void validate_whenInvalidWellsSelected_nullAndEmptySource_thenHasError(List<String> invalidValue) {
     var form = NominatedWellFormTestUtil.builder()
         .withWells(invalidValue)
         .build();
@@ -127,7 +124,39 @@ class NominatedWellDetailFormValidatorTest {
   }
 
   @Test
-  void validate_whenInvalidWellsSelected_thenHasError() {
+  void validate_whenInvalidWellsSelected_emptyList_thenHasError() {
+    var form = NominatedWellFormTestUtil.builder()
+        .withWells(List.of())
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
+    );
+  }
+
+  @Test
+  void validate_whenInvalidWellsSelected_nonNumericTypeOnly_thenHasError() {
+    var form = NominatedWellFormTestUtil.builder()
+        .withWells(List.of("fish"))
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
+    );
+  }
+
+  @Test
+  void validate_whenInvalidWellsSelected_andMultipleValues_thenHasError() {
     var form = NominatedWellFormTestUtil.builder()
         .withWells(List.of("123", "fish"))
         .build();
@@ -138,10 +167,6 @@ class NominatedWellDetailFormValidatorTest {
 
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
     assertThat(extractedErrors).isEmpty();
-  }
-
-  static Stream<Arguments> getInvalidArguments() {
-    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
   }
 
   private static class NonSupportedClass {
