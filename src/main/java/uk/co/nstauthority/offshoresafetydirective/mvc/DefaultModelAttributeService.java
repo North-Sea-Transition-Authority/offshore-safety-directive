@@ -15,6 +15,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -54,7 +55,10 @@ public class DefaultModelAttributeService {
     attributes.put("navigationItems", topNavigationService.getTopNavigationItems());
     attributes.put("footerItems", List.of(
         new FooterItem(AccessibilityStatementController.PAGE_NAME,
-            ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))));
+            ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+        new FooterItem(ContactInformationController.PAGE_NAME,
+            ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+    ));
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
 
 

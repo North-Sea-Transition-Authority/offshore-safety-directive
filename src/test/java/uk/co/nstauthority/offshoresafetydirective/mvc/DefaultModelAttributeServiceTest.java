@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfig
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
@@ -81,7 +82,9 @@ class DefaultModelAttributeServiceTest {
                 "navigationItems", List.of(topNavigationItem),
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+                    new FooterItem("Contact us",
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
@@ -112,7 +115,9 @@ class DefaultModelAttributeServiceTest {
                 "navigationItems", List.of(topNavigationItem),
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+                    new FooterItem("Contact us",
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
@@ -150,7 +155,9 @@ class DefaultModelAttributeServiceTest {
                 "currentEndPoint", "/request-uri",
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+                    new FooterItem("Contact us",
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
@@ -185,7 +192,9 @@ class DefaultModelAttributeServiceTest {
                 "currentEndPoint", "/request-uri",
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+                    new FooterItem("Contact us",
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
@@ -221,7 +230,9 @@ class DefaultModelAttributeServiceTest {
                 "navigationItems", List.of(topNavigationItem),
                 "footerItems", List.of(
                     new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement()))
+                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+                    new FooterItem("Contact us",
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )

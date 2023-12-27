@@ -19,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfi
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 
-@ContextConfiguration(classes = {AccessibilityStatementController.class})
+@ContextConfiguration(classes = AccessibilityStatementController.class)
 @EnableConfigurationProperties(value = {
     TechnicalSupportConfigurationProperties.class,
     AccessibilityStatementConfigurationProperties.class})
