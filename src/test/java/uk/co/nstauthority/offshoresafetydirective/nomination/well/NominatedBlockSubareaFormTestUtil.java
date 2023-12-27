@@ -20,7 +20,7 @@ class NominatedBlockSubareaFormTestUtil {
     private String forAllWellPhases = "false";
     private String explorationAndAppraisalPhase = "true";
     private String developmentPhase = "true";
-    private String decommissioningPhase = "true";
+    private String decommissioningPhase = "false";
 
     NominatedBlockSubareaFormBuilder withSubareas(List<String> subareas) {
       this.subareas = subareas;

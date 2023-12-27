@@ -8,10 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -167,6 +169,30 @@ class NominatedWellDetailFormValidatorTest {
 
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
     assertThat(extractedErrors).isEmpty();
+  }
+
+  @Test
+  void validate_whenNotForAllWellPhases_andAllPhasesSelected_thenError() {
+    var form = NominatedWellFormTestUtil.builder()
+        .isForAllWellPhases(false)
+        .isExplorationAndAppraisalPhase(true)
+        .isDevelopmentPhase(true)
+        .isDecommissioningPhase(true)
+        .withWell(10)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedWellDetailFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("forAllWellPhases", Set.of("forAllWellPhases.selectedAll"))
+    );
+  }
+
+  static Stream<Arguments> getInvalidArguments() {
+    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
   }
 
   private static class NonSupportedClass {

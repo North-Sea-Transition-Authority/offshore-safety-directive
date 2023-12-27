@@ -513,6 +513,56 @@ class NominatedInstallationDetailFormValidatorTest {
     assertThat(extractedErrors).isEmpty();
   }
 
+  @Test
+  void validate_whenNotForAllWellPhases_andAllPhasesSelected_thenError() {
+
+    var installation = InstallationDtoTestUtil.builder().build();
+    var licence = LicenceDtoTestUtil.builder().build();
+
+    var form = new NominatedInstallationDetailFormTestUtil.NominatedInstallationDetailFormBuilder()
+        .withForAllInstallationPhases(false)
+        .withInstallation(installation.id())
+        .withLicence(licence.licenceId().id())
+        .withDevelopmentDesignPhase(true)
+        .withDevelopmentConstructionPhase(true)
+        .withDevelopmentInstallationPhase(true)
+        .withDevelopmentCommissioningPhase(true)
+        .withDevelopmentProductionPhase(true)
+        .withDecommissioningPhase(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    when(installationQueryService.getInstallationsByIdIn(
+        form.getInstallations().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(installation));
+
+    when(licenceQueryService.getLicencesByIdIn(
+        form.getLicences().stream().map(Integer::parseInt).toList(),
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(licence));
+
+    nominatedInstallationDetailFormValidator.validate(form, bindingResult);
+
+    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
+
+    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    var errorMessage = NominatedInstallationDetailFormValidator.FOR_ALL_PHASES_ERROR;
+
+    assertThat(resultingErrorCodes).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.code()))
+    );
+
+    assertThat(resultingErrorMessages).containsExactly(
+        entry(errorMessage.field(), Set.of(errorMessage.message()))
+    );
+  }
+
+
   static Stream<Arguments> getInvalidArguments() {
     return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
   }

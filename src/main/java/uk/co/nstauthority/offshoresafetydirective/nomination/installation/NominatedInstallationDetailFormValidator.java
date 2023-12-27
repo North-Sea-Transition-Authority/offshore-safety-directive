@@ -72,6 +72,12 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
       "Select which installation activity phases this nomination is for"
   );
 
+  static final FrontEndErrorMessage FOR_ALL_PHASES_ERROR = new FrontEndErrorMessage(
+      ALL_PHASES_FIELD_NAME,
+      "%s.required".formatted(ALL_PHASES_FIELD_NAME),
+      "Select Yes if all phases are applicable"
+  );
+
   private final InstallationQueryService installationQueryService;
   private final LicenceQueryService licenceQueryService;
 
@@ -155,6 +161,8 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
       rejectValue(errors, ALL_PHASES_REQUIRED_ERROR);
     } else if (notForAllPhases(form) && noSpecificPhaseSelected(form)) {
       rejectValue(errors, SPECIFIC_PHASES_REQUIRED_ERROR);
+    } else if (notForAllPhases(form) && allPhasesSelected(form)) {
+      rejectValue(errors, FOR_ALL_PHASES_ERROR);
     }
   }
 
@@ -170,6 +178,15 @@ class NominatedInstallationDetailFormValidator implements SmartValidator {
         && form.getDevelopmentCommissioningPhase() == null
         && form.getDevelopmentProductionPhase() == null
         && form.getDecommissioningPhase() == null;
+  }
+
+  private boolean allPhasesSelected(NominatedInstallationDetailForm form) {
+    return BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentDesignPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentConstructionPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentInstallationPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentCommissioningPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentProductionPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()));
   }
 
   private boolean noInstallationsSelected(NominatedInstallationDetailForm form) {

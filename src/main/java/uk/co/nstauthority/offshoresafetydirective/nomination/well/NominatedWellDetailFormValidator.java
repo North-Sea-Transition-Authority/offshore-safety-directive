@@ -55,6 +55,13 @@ class NominatedWellDetailFormValidator implements Validator {
           "explorationAndAppraisalPhase.required",
           "Select which well activity phases this nomination is for"
       );
+    } else if (BooleanUtils.isFalse(BooleanUtils.toBooleanObject(form.getForAllWellPhases()))
+        && allNominationPhasesSelected(form)) {
+      errors.rejectValue(
+          "forAllWellPhases",
+          "forAllWellPhases.selectedAll",
+          "Select Yes if all phases are applicable"
+      );
     }
   }
 
@@ -62,5 +69,11 @@ class NominatedWellDetailFormValidator implements Validator {
     return !(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()) == null
         && BooleanUtils.toBooleanObject(form.getDevelopmentPhase()) == null
         && BooleanUtils.toBooleanObject(form.getDecommissioningPhase()) == null);
+  }
+
+  private boolean allNominationPhasesSelected(NominatedWellDetailForm form) {
+    return (BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDevelopmentPhase()))
+        && BooleanUtils.isTrue(BooleanUtils.toBooleanObject(form.getDecommissioningPhase())));
   }
 }

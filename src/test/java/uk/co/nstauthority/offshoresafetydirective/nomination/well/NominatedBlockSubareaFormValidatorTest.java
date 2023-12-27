@@ -137,6 +137,24 @@ class NominatedBlockSubareaFormValidatorTest {
     );
   }
 
+  @Test
+  void validate_whenNotForAllWellPhases_andAllPhasesSelected_thenError() {
+    var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(true)
+        .withDevelopmentPhase(true)
+        .withDecommissioningPhase(true)
+        .build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    nominatedBlockSubareaFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("forAllWellPhases", Set.of("forAllWellPhases.selectedAll"))
+    );
+  }
+
   private static class NonSupportedClass {
 
   }
