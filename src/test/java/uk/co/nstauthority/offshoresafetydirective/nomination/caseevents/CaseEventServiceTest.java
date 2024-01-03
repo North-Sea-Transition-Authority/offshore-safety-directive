@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -269,12 +270,16 @@ class CaseEventServiceTest {
     var date = LocalDate.now();
     var comment = "comment text";
     var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setUploadedFileId(UUID.randomUUID());
     var detail = NominationDetailTestUtil.builder()
         .withVersion(nominationVersion)
         .build();
 
     var serviceUser = ServiceUserDetailTestUtil.Builder().build();
     when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    // Return same arg as passed in to call
+    when(caseEventRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
     caseEventService.createAppointmentConfirmationEvent(detail, date, comment, List.of(uploadedFileForm));
 
@@ -301,6 +306,53 @@ class CaseEventServiceTest {
             detail.getNomination(),
             nominationVersion
         );
+
+    verify(caseEventFileService).linkFilesToCaseEvent(
+        captor.getValue(),
+        List.of(uploadedFileForm),
+        FileDocumentType.APPOINTMENT_CONFIRMATION
+    );
+  }
+
+  @Test
+  void createAppointmentConfirmationEvent_whenNoFile_verifyNoCalls() {
+    var nominationVersion = 2;
+    var date = LocalDate.now();
+    var comment = "comment text";
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createAppointmentConfirmationEvent(detail, date, comment, List.of());
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.CONFIRM_APPOINTMENT,
+            null,
+            comment,
+            serviceUser.wuaId(),
+            clockInstant,
+            date.atStartOfDay().toInstant(ZoneOffset.UTC),
+            detail.getNomination(),
+            nominationVersion
+        );
+
+    verify(caseEventFileService, never()).linkFilesToCaseEvent(any(), any(), any());
   }
 
   @Test
@@ -342,6 +394,47 @@ class CaseEventServiceTest {
             detail.getNomination(),
             nominationVersion
         );
+  }
+
+  @Test
+  void createGeneralCaseNoteEvent_whenNoFilesUploaded_thenVerifyCalls() {
+    var nominationVersion = 2;
+    var subject = "Test case note";
+    var caseNoteText = "Body text";
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    caseEventService.createGeneralCaseNoteEvent(detail, subject, caseNoteText, List.of());
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.GENERAL_NOTE,
+            subject,
+            caseNoteText,
+            serviceUser.wuaId(),
+            clockInstant,
+            clockInstant,
+            detail.getNomination(),
+            nominationVersion
+        );
+
+    verify(caseEventFileService, never()).linkFilesToCaseEvent(any(), any(), any());
   }
 
   @Test
@@ -429,6 +522,47 @@ class CaseEventServiceTest {
         List.of(uploadedFileForm),
         FileDocumentType.CONSULTATION_RESPONSE
     );
+  }
+
+  @Test
+  void createConsultationResponseEvent_whenNoFile_verifyCalls() {
+    var nominationVersion = 2;
+    var detail = NominationDetailTestUtil.builder()
+        .withVersion(nominationVersion)
+        .build();
+
+    var serviceUser = ServiceUserDetailTestUtil.Builder().build();
+    when(userDetailService.getUserDetail()).thenReturn(serviceUser);
+
+    var responseText = "response";
+
+    caseEventService.createConsultationResponseEvent(detail, responseText, List.of());
+
+    var captor = ArgumentCaptor.forClass(CaseEvent.class);
+    verify(caseEventRepository).save(captor.capture());
+
+    assertThat(captor.getValue())
+        .extracting(
+            CaseEvent::getCaseEventType,
+            CaseEvent::getTitle,
+            CaseEvent::getComment,
+            CaseEvent::getCreatedBy,
+            CaseEvent::getCreatedInstant,
+            CaseEvent::getEventInstant,
+            CaseEvent::getNomination,
+            CaseEvent::getNominationVersion
+        ).containsExactly(
+            CaseEventType.CONSULTATION_RESPONSE,
+            null,
+            responseText,
+            serviceUser.wuaId(),
+            clockInstant,
+            clockInstant,
+            detail.getNomination(),
+            nominationVersion
+        );
+
+    verify(caseEventFileService, never()).linkFilesToCaseEvent(any(), any(), any());
   }
 
   @Test

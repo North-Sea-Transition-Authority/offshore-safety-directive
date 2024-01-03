@@ -190,7 +190,6 @@ class CaseEventFileServiceTest {
             caseEvent.getUuid(),
             USER.wuaId()
         ));
-
   }
 
   @Test
@@ -198,37 +197,12 @@ class CaseEventFileServiceTest {
 
     var caseEvent = CaseEventTestUtil.builder().build();
 
-    var firstFormDescription = "first description";
-    var secondFormDescription = "second description";
-    var firstFormFileId = UUID.randomUUID();
-    var secondFormFileId = UUID.randomUUID();
-
-    var firstUploadedFileForm = new UploadedFileForm();
-    firstUploadedFileForm.setFileDescription(firstFormDescription);
-    firstUploadedFileForm.setFileId(firstFormFileId);
-
-    var secondUploadedFileForm = new UploadedFileForm();
-    secondUploadedFileForm.setFileDescription(secondFormDescription);
-    secondUploadedFileForm.setFileId(secondFormFileId);
-
-    when(fileService.findAll(Set.of(firstFormFileId, secondFormFileId)))
-        .thenReturn(List.of());
-
-    when(userDetailService.getUserDetail())
-        .thenReturn(USER);
-
     assertThatThrownBy(() -> caseEventFileService.linkFilesToCaseEvent(
         caseEvent,
-        List.of(firstUploadedFileForm, secondUploadedFileForm),
+        List.of(),
         FileDocumentType.CASE_NOTE
     ))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Not all files [%s] are allowed to be linked to the case event [%s] by user [%d]".formatted(
-            "%s,%s".formatted(firstFormFileId, secondFormFileId),
-            caseEvent.getUuid(),
-            USER.wuaId()
-        ));
-
+        .hasMessage("No files to link to case event [%s]".formatted(caseEvent.getUuid()));
   }
-
 }

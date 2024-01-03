@@ -41,6 +41,11 @@ public class CaseEventFileService {
   public void linkFilesToCaseEvent(CaseEvent caseEvent, Collection<UploadedFileForm> uploadedFileForms,
                                    FileDocumentType fileDocumentType) {
 
+    if (uploadedFileForms.isEmpty()) {
+      throw new IllegalStateException(
+          "No files to link to case event [%s]".formatted(caseEvent.getUuid()));
+    }
+
     Map<UUID, UploadedFileForm> fileIdAndFileFormMap = uploadedFileForms.stream()
         .collect(Collectors.toMap(UploadedFileForm::getFileId, Function.identity()));
 
@@ -52,7 +57,7 @@ public class CaseEventFileService {
         .filter(uploadedFile -> Objects.equals(uploadedFile.getUploadedBy(), user.wuaId().toString()))
         .toList();
 
-    if (filesToUpdate.size() != files.size() || files.isEmpty()) {
+    if (filesToUpdate.size() != files.size()) {
 
       var filesAsString = uploadedFileForms.stream()
           .map(UploadedFileForm::getFileId)

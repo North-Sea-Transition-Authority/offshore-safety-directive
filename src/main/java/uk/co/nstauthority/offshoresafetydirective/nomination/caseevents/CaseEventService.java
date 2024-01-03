@@ -78,14 +78,18 @@ public class CaseEventService {
                                                  List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.CONFIRM_APPOINTMENT, comments,
         appointmentEffectiveDate.atStartOfDay().toInstant(ZoneOffset.UTC), nominationDetail);
-    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.APPOINTMENT_CONFIRMATION);
+    if (!fileUploadForms.isEmpty()) {
+      caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.APPOINTMENT_CONFIRMATION);
+    }
   }
 
   @Transactional
   public void createGeneralCaseNoteEvent(NominationDetail nominationDetail, String subject, String body,
                                          List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.GENERAL_NOTE, subject, body, clock.instant(), nominationDetail);
-    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CASE_NOTE);
+    if (!fileUploadForms.isEmpty()) {
+      caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CASE_NOTE);
+    }
   }
 
   @Transactional
@@ -97,7 +101,10 @@ public class CaseEventService {
   public void createConsultationResponseEvent(NominationDetail nominationDetail, String responseText,
                                               List<UploadedFileForm> fileUploadForms) {
     var caseEvent = createEvent(CaseEventType.CONSULTATION_RESPONSE, responseText, clock.instant(), nominationDetail);
-    caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CONSULTATION_RESPONSE);
+
+    if (!fileUploadForms.isEmpty()) {
+      caseEventFileService.linkFilesToCaseEvent(caseEvent, fileUploadForms, FileDocumentType.CONSULTATION_RESPONSE);
+    }
   }
 
   @Transactional
