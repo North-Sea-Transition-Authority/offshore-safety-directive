@@ -115,7 +115,7 @@ public class CaseEventQueryService {
 
     var userIdAndDtoMap = users.stream()
         .collect(Collectors.toMap(
-            user -> (int) user.webUserAccountId(),
+            user -> user.webUserAccountId(),
             user -> user
         ));
 
@@ -153,15 +153,15 @@ public class CaseEventQueryService {
     );
   }
 
-  private CaseEventView buildCaseEventView(CaseEvent caseEvent, Map<Integer, EnergyPortalUserDto> userIdAndNameMap,
-                                           List<FileSummaryView> uploadedFileViews) {
+  CaseEventView buildCaseEventView(CaseEvent caseEvent, Map<Long, EnergyPortalUserDto> userIdAndNameMap,
+                                   List<FileSummaryView> uploadedFileViews) {
 
     var caseEventBuilder = CaseEventView.builder(
         Optional.ofNullable(caseEvent.getTitle()).orElse(caseEvent.getCaseEventType().getScreenDisplayText()),
         caseEvent.getNominationVersion(),
         caseEvent.getCreatedInstant(),
         caseEvent.getEventInstant(),
-        userIdAndNameMap.get(caseEvent.getCreatedBy().intValue()).displayName(),
+        userIdAndNameMap.get(caseEvent.getCreatedBy()).displayName(),
         caseEvent.getCaseEventType()
     );
 

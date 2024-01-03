@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,9 +25,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
+import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
+import uk.co.nstauthority.offshoresafetydirective.file.FileSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -36,6 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.PropertyObjectAssert;
 
 @ExtendWith(MockitoExtension.class)
 class CaseEventQueryServiceTest {
@@ -607,4 +613,367 @@ class CaseEventQueryServiceTest {
             CaseEventType.UPDATE_REQUESTED
         );
   }
+
+  @Test
+  void buildCaseEventView_qaChecks_assertView() {
+    var caseEventType = CaseEventType.QA_CHECKS;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "qa body comment";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "QA comments")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Completed by")
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Completion date")
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = CaseEventType.class, names = {"NO_OBJECTION_DECISION", "OBJECTION_DECISION"})
+  void buildCaseEventView_objectionDecision_assertView(CaseEventType caseEventType) {
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "objection body comment";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Decision comment")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Decision date")
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Decision document")
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileSummaryView))
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
+        .hasAssertedAllProperties();
+  }
+
+  @Test
+  void buildCaseEventView_withdrawn_assertView() {
+    var caseEventType = CaseEventType.WITHDRAWN;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "withdrawn reason";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Withdrawal reason")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Withdrawn by")
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Withdrawal date")
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
+  void buildCaseEventView_confirmAppointment_assertView() {
+    var caseEventType = CaseEventType.CONFIRM_APPOINTMENT;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "confirmation";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Appointment comments")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Appointment date")
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileSummaryView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Appointment documents")
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("formattedEventTime", DateUtil.formatLongDate(caseEvent.getEventInstant()))
+        .hasAssertedAllProperties();
+  }
+
+  @Test
+  void buildCaseEventView_generalNote_assertView() {
+    var caseEventType = CaseEventType.GENERAL_NOTE;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "case note text";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Case note text")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileSummaryView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Case note documents")
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("customDatePrompt", null)
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
+  void buildCaseEventView_nominationSubmitted_assertView() {
+    var caseEventType = CaseEventType.NOMINATION_SUBMITTED;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "submitted body";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", null)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", null)
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Submitted by")
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Submitted on")
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
+  void buildCaseEventView_sentForConsultation_assertView() {
+    var caseEventType = CaseEventType.SENT_FOR_CONSULTATION;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "unassigned comment text";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", null)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", null)
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Date requested")
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
+  void buildCaseEventView_consultationResponse_assertView() {
+    var caseEventType = CaseEventType.CONSULTATION_RESPONSE;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "consultation response";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Consultation response")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", null)
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", List.of(fileSummaryView))
+        .hasFieldOrPropertyWithValue("customFilePrompt", "Consultation response documents")
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Response date")
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
+  @Test
+  void buildCaseEventView_updateRequested_assertView() {
+    var caseEventType = CaseEventType.UPDATE_REQUESTED;
+    var creatorId = 123L;
+    var nominationVersion = 2;
+    var comment = "reason for update request";
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(caseEventType)
+        .withCreatedBy(creatorId)
+        .withNominationVersion(nominationVersion)
+        .withComment(comment)
+        .build();
+
+    var fileSummaryView = new FileSummaryView(
+        UploadedFileView.from(UploadedFileTestUtil.builder().build()),
+        "/"
+    );
+
+    var creatorDto = EnergyPortalUserDtoTestUtil.Builder().build();
+    var creatorMap = Map.of(creatorId, creatorDto);
+
+    var result = caseEventQueryService.buildCaseEventView(caseEvent, creatorMap, List.of(fileSummaryView));
+
+    PropertyObjectAssert.thenAssertThat(result)
+        .hasFieldOrPropertyWithValue("title", caseEventType.getScreenDisplayText())
+        .hasFieldOrPropertyWithValue("nominationVersion", nominationVersion)
+        .hasFieldOrPropertyWithValue("body", comment)
+        .hasFieldOrPropertyWithValue("customBodyPrompt", "Reason for update")
+        .hasFieldOrPropertyWithValue("createdBy", creatorDto.displayName())
+        .hasFieldOrPropertyWithValue("customCreatorPrompt", "Requested by")
+        .hasFieldOrPropertyWithValue("eventInstant", caseEvent.getEventInstant())
+        .hasFieldOrPropertyWithValue("createdInstant", caseEvent.getCreatedInstant())
+        .hasFieldOrPropertyWithValue("caseEventType", caseEventType)
+        .hasFieldOrPropertyWithValue("fileViews", null)
+        .hasFieldOrPropertyWithValue("customFilePrompt", null)
+        .hasFieldOrPropertyWithValue("customVersionPrompt", null)
+        .hasFieldOrPropertyWithValue("customDatePrompt", "Date requested")
+        .hasAssertedAllPropertiesExcept("formattedEventTime");
+  }
+
 }
