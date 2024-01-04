@@ -334,7 +334,7 @@ class NominationCaseProcessingControllerTest extends AbstractNominationControlle
     )
         .thenReturn(List.of(teamScope));
 
-    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
         eq(List.of(Integer.valueOf(teamScope.getPortalId()))), any())
     ).thenReturn(List.of(organisationGroup));
   }

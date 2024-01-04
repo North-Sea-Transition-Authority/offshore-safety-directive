@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -170,7 +171,14 @@ public class NominationCaseProcessingModelAndViewGenerator {
     var nominationDetailDto = NominationDetailDto.fromNominationDetail(nominationDetail);
     var actions = new ArrayList<CaseProcessingAction>();
 
-    if (permissionService.hasPermission(userDetailService.getUserDetail(), Set.of(RolePermission.MANAGE_NOMINATIONS))) {
+    var user = userDetailService.getUserDetail();
+
+    var hasManageNominationsPermission = permissionService.hasPermission(
+        user,
+        RolePermission.MANAGE_NOMINATIONS
+    );
+
+    if (hasManageNominationsPermission) {
       if (canSubmitQaChecks(nominationDetailDto)) {
         actions.add(caseProcessingActionService.createQaChecksAction(nominationId));
       }
@@ -207,22 +215,30 @@ public class NominationCaseProcessingModelAndViewGenerator {
       if (canAddConsultationResponse(nominationDetailDto)) {
         actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
       }
+    }
 
-      caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
-          .ifPresentOrElse(
-              reason -> {
-                if (canUpdateNomination(nominationDetailDto)) {
-                  actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
-                  modelAndView.addObject("updateRequestReason", reason);
-                }
-              },
-              () -> {
-                if (canRequestNominationUpdate(nominationDetailDto)) {
-                  actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
-                }
+    var hasSubmitPermission = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        user,
+        Set.of(RolePermission.SUBMIT_NOMINATION)
+    );
+
+    caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
+        .ifPresentOrElse(
+            reason -> {
+              if (canUpdateNomination(nominationDetailDto) && hasSubmitPermission) {
+                actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
               }
-          );
+              modelAndView.addObject("updateRequestReason", reason);
+            },
+            () -> {
+              if (canRequestNominationUpdate(nominationDetailDto) && hasManageNominationsPermission) {
+                actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+              }
+            }
+        );
 
+    if (CollectionUtils.isNotEmpty(actions)) {
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()
           .sorted(Comparator.comparing(action -> action.getItem().getDisplayOrder()))
           .collect(
@@ -234,7 +250,6 @@ public class NominationCaseProcessingModelAndViewGenerator {
           .collect(StreamUtil.toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue));
 
       modelAndView.addObject("managementActions", groupedNominationManagementActions);
-
     }
   }
 

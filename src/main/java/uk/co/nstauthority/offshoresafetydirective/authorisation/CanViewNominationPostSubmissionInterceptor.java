@@ -126,7 +126,7 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
         .map(Integer::parseInt)
         .toList();
 
-    var portalOrganisationUnitIds = organisationGroupQueryService.getOrganisationGroupsByIds(
+    var portalOrganisationUnitIds = organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
         organisationGroupIdsByTeamScope,
             ORGANISATION_GROUPS_REQUEST_PURPOSE
     ).stream()

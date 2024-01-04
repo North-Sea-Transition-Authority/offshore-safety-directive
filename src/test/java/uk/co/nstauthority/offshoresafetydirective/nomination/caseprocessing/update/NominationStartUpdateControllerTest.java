@@ -37,8 +37,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.Nomi
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @ContextConfiguration(classes = NominationStartUpdateController.class)
 class NominationStartUpdateControllerTest extends AbstractNominationControllerTest {
@@ -47,8 +48,9 @@ class NominationStartUpdateControllerTest extends AbstractNominationControllerTe
 
   private static final ServiceUserDetail NOMINATION_MANAGER_USER = ServiceUserDetailTestUtil.Builder().build();
 
-  private static final TeamMember NOMINATION_MANAGER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
-      .withRole(RegulatorTeamRole.MANAGE_NOMINATION)
+  private static final TeamMember NOMINATION_SUBMITTER_TEAM_MEMBER = TeamMemberTestUtil.Builder()
+      .withTeamType(TeamType.INDUSTRY)
+      .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
       .build();
 
   @MockBean
@@ -79,15 +81,16 @@ class NominationStartUpdateControllerTest extends AbstractNominationControllerTe
         .thenReturn(Optional.of(nominationDetail));
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_MANAGER_USER))
-        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+        .thenReturn(Collections.singletonList(NOMINATION_SUBMITTER_TEAM_MEMBER));
 
     when(caseEventQueryService.hasUpdateRequest(nominationDetail))
         .thenReturn(true);
+
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_MANAGER_USER);
   }
 
   @SecurityTest
   void smokeTestNominationStatuses_onlySubmittedPermitted() {
-
     when(caseEventQueryService.getLatestReasonForUpdate(nominationDetail))
         .thenReturn(Optional.of("reason for update"));
 
@@ -109,14 +112,14 @@ class NominationStartUpdateControllerTest extends AbstractNominationControllerTe
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyManagePermitted() {
-
+  void smokeTestPermissions_onlySubmitPermitted() {
     when(caseEventQueryService.getLatestReasonForUpdate(nominationDetail))
         .thenReturn(Optional.of("reason for update"));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.SUBMIT_NOMINATION))
         .withUser(NOMINATION_MANAGER_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NominationStartUpdateController.class).renderStartUpdate(NOMINATION_ID)),
             status().isOk(),
@@ -267,14 +270,15 @@ class NominationStartUpdateControllerTest extends AbstractNominationControllerTe
   }
 
   @SecurityTest
-  void startUpdateEntryPoint_smokeTestPermissions_onlyManagePermitted() {
+  void startUpdateEntryPoint_smokeTestPermissions_onlySubmitonlPermitted() {
 
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.MANAGE_NOMINATIONS))
+        .withRequiredPermissions(Set.of(RolePermission.SUBMIT_NOMINATION))
         .withUser(NOMINATION_MANAGER_USER)
+        .withTeam(getTeam())
         .withGetEndpoint(
             ReverseRouter.route(on(NominationStartUpdateController.class).startUpdateEntryPoint(NOMINATION_ID)),
             status().is3xxRedirection(),

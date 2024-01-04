@@ -29,7 +29,6 @@ import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
@@ -44,7 +43,10 @@ import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabel;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabelType;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ContextConfiguration(classes = NominationTaskListController.class)
@@ -62,8 +64,6 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
   @MockBean
   private NominationTaskListItem nominationTaskListItem;
 
-  @MockBean
-  private PermissionService permissionService;
 
   @BeforeEach
   void setup() {
@@ -142,8 +142,6 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
 
     setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
 
-    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
-
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
                 .with(user(NOMINATION_CREATOR_USER))
@@ -209,7 +207,14 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
   void getTaskList_assertModelProperties_whenWrongPermission_thenNoAccessToDeleteAttributes() throws Exception {
     givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
-    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(false);
+    var nominationEditorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(nominationEditorTeamMember));
 
     var sectionName = "section name";
     var sectionDisplayOrder = 10;
@@ -240,9 +245,7 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
 
   @Test
   void getTaskList_whenFirstNominationVersion_thenAssertModelProperties() throws Exception {
-
     givenTaskListSectionsExist();
-    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(1)
@@ -262,7 +265,6 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
   @Test
   void getTaskList_whenNotFirstNominationVersion_thenAssertModelProperties() throws Exception {
     givenTaskListSectionsExist();
-    when(permissionService.hasPermission(NOMINATION_CREATOR_USER, RolePermission.CREATE_NOMINATION)).thenReturn(true);
 
     nominationDetail = NominationDetailTestUtil.builder()
         .withVersion(2)

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasUpdateRequest;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.exception.OsdEntityNotFoundException;
@@ -29,7 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/update")
-@HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
+@HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
 @HasUpdateRequest
 public class NominationStartUpdateController {
 

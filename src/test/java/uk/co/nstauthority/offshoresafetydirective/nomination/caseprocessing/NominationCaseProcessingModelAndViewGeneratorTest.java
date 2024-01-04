@@ -160,9 +160,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
-    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
-        .thenReturn(false);
-
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
@@ -263,9 +260,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
-    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
-        .thenReturn(true);
-
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
 
@@ -317,7 +311,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
         .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
         .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
         .hasKeyWithValue("versionOptions", selectionMap)
-        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage");
 
     assertBreadcrumbs(result, nominationDetail);
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
@@ -366,7 +360,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
-    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+    when(permissionService.hasPermission(userDetail, RolePermission.MANAGE_NOMINATIONS))
         .thenReturn(true);
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
@@ -455,6 +449,122 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
   }
 
   @Test
+  void getCaseProcessingModelAndView_whenCanSubmitNomination_andStatusSubmitted_andUpdateRequested() {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
+
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestNominationDetail))
+        .thenReturn(Optional.of(header));
+
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
+        .thenReturn(List.of(caseEventView));
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
+
+    when(permissionService.hasPermissionForNomination(
+        latestNominationDetail,
+        userDetail,
+        Set.of(RolePermission.SUBMIT_NOMINATION)
+    )).thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
+
+    var updateReason = "reason";
+    when(caseEventQueryService.getLatestReasonForUpdate(latestNominationDetail))
+        .thenReturn(Optional.of(updateReason));
+
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
+
+    var qaChecksForm = new NominationQaChecksForm();
+    var decisionForm = new NominationDecisionForm();
+    var withdrawForm = new WithdrawNominationForm();
+    var confirmAppointmentForm = new ConfirmNominationAppointmentForm();
+    var generalCaseNoteForm = new GeneralCaseNoteForm();
+    var pearsPortalReferenceForm = new PearsPortalReferenceForm();
+    var wonsPortalReferenceForm = new WonsPortalReferenceForm();
+    var nominationConsultationResponseForm = new NominationConsultationResponseForm();
+    var nominationRequestUpdateForm = new NominationRequestUpdateForm();
+    var caseProcessingVersionForm = new CaseProcessingVersionForm();
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(qaChecksForm)
+        .withNominationDecisionForm(decisionForm)
+        .withWithdrawNominationForm(withdrawForm)
+        .withConfirmNominationAppointmentForm(confirmAppointmentForm)
+        .withGeneralCaseNoteForm(generalCaseNoteForm)
+        .withPearsPortalReferenceForm(pearsPortalReferenceForm)
+        .withWonsPortalReferenceForm(wonsPortalReferenceForm)
+        .withNominationConsultationResponseForm(nominationConsultationResponseForm)
+        .withNominationRequestUpdateForm(nominationRequestUpdateForm)
+        .withCaseProcessingVersionForm(caseProcessingVersionForm)
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    MapEntryAssert.thenAssertThat(result.getModel())
+        .hasKeyWithValue("headerInformation", header)
+        .hasKeyWithValue("summaryView", nominationSummaryView)
+        .hasKeyWithValue("qaChecksForm", qaChecksForm)
+        .hasKeyWithValue("form", decisionForm)
+        .hasKeyWithValue("withdrawNominationForm", withdrawForm)
+        .hasKeyWithValue("confirmAppointmentForm", confirmAppointmentForm)
+        .hasKeyWithValue("generalCaseNoteForm", generalCaseNoteForm)
+        .hasKeyWithValue("pearsPortalReferenceForm", pearsPortalReferenceForm)
+        .hasKeyWithValue("wonsPortalReferenceForm", wonsPortalReferenceForm)
+        .hasKeyWithValue("caseEvents", List.of(caseEventView))
+        .hasKeyWithValue("activePortalReferencesView", activePortalReferencesView)
+        .hasKeyWithValue("nominationConsultationResponseForm", nominationConsultationResponseForm)
+        .hasKeyWithValue("nominationRequestUpdateForm", nominationRequestUpdateForm)
+        .hasKeyWithValue("nominationVersionForm", caseProcessingVersionForm)
+        .hasKeyWithValue("versionOptions", selectionMap)
+        .hasKeyWithValue("updateRequestReason", updateReason)
+        .hasAssertedAllKeysExcept("breadcrumbsList", "currentPage", "managementActions");
+
+    @SuppressWarnings("unchecked")
+    var managementActions =
+        (Map<CaseProcessingActionGroup, List<CaseProcessingAction>>)
+            result.getModel().get("managementActions");
+
+    var managementActionGroupItemMap = getManagementActionGroupItemMap(managementActions);
+
+    assertThat(managementActionGroupItemMap)
+        .containsExactlyEntriesOf(
+            ImmutableMap.of(CaseProcessingActionGroup.UPDATE_NOMINATION, List.of(CaseProcessingActionItem.UPDATE_NOMINATION))
+        );
+
+    assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
+  @Test
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_andUpdateRequested() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();
     var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
@@ -497,8 +607,14 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
-    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+    when(permissionService.hasPermission(userDetail, RolePermission.MANAGE_NOMINATIONS))
         .thenReturn(true);
+
+    when(permissionService.hasPermissionForNomination(
+        latestNominationDetail,
+        userDetail,
+        Set.of(RolePermission.SUBMIT_NOMINATION)
+    )).thenReturn(false);
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
         .thenReturn(activePortalReferencesView);
@@ -513,8 +629,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var selectionMap = Map.of("1", "selection");
     when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
         .thenReturn(selectionMap);
-
-    when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
     when(userDetailService.getUserDetail()).thenReturn(userDetail);
 
@@ -573,7 +687,6 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(managementActionGroupItemMap)
         .containsExactlyEntriesOf(
             ImmutableMap.of(
-                CaseProcessingActionGroup.UPDATE_NOMINATION, List.of(CaseProcessingActionItem.UPDATE_NOMINATION),
                 CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE),
                 CaseProcessingActionGroup.COMPLETE_QA_CHECKS, List.of(CaseProcessingActionItem.QA_CHECKS),
                 CaseProcessingActionGroup.CONSULTATIONS, List.of(
@@ -635,7 +748,8 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
         .thenReturn(nominationSummaryView);
 
-    when(permissionService.hasPermission(userDetail, Set.of(RolePermission.MANAGE_NOMINATIONS)))
+
+    when(permissionService.hasPermission(userDetail, RolePermission.MANAGE_NOMINATIONS))
         .thenReturn(true);
 
     when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))

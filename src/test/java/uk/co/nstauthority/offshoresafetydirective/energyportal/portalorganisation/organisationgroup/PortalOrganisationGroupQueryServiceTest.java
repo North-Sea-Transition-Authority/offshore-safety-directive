@@ -155,7 +155,7 @@ class PortalOrganisationGroupQueryServiceTest {
         any()
     )).thenReturn(List.of(organisationGroup));
 
-    var resultingOrganisationGroups = portalOrganisationGroupQueryService.getOrganisationGroupsByIds(List.of(groupId), REQUEST_PURPOSE);
+    var resultingOrganisationGroups = portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(List.of(groupId), REQUEST_PURPOSE);
     assertThat(resultingOrganisationGroups).extracting(
             portalOrganisationGroupDto -> Integer.valueOf(portalOrganisationGroupDto.organisationGroupId()),
             PortalOrganisationGroupDto::name
@@ -172,7 +172,7 @@ class PortalOrganisationGroupQueryServiceTest {
         any()
     )).thenReturn(List.of());
 
-    var resultingOrganisationGroups = portalOrganisationGroupQueryService.getOrganisationGroupsByIds(List.of(), REQUEST_PURPOSE);
+    var resultingOrganisationGroups = portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(List.of(), REQUEST_PURPOSE);
     assertThat(resultingOrganisationGroups).isEmpty();
   }
 }

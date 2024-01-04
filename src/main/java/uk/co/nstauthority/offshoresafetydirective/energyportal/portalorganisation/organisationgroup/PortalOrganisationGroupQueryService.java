@@ -99,7 +99,8 @@ public class PortalOrganisationGroupQueryService {
         .orElseGet(Set::of);
   }
 
-  public List<PortalOrganisationGroupDto> getOrganisationGroupsByIds(Collection<Integer> ids, RequestPurpose requestPurpose) {
+  public List<PortalOrganisationGroupDto> getOrganisationGroupsByOrganisationIds(Collection<Integer> ids,
+                                                                                 RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.getAllOrganisationGroupsByIds(
                 ids.stream().toList(),

@@ -67,7 +67,7 @@ public abstract class AbstractNominationControllerTest extends AbstractControlle
 
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
 
-    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
         eq(List.of(Integer.valueOf(TEAM_SCOPE.getPortalId()))), any()))
         .thenReturn(List.of(organisationGroup));
 

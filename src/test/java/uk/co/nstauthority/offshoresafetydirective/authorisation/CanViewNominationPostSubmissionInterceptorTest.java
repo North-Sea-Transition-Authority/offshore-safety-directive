@@ -97,7 +97,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
         .andExpect(status().isOk());
 
     verify(teamScopeService, never()).getTeamScopesFromTeamIds(anyList(), any());
-    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByIds(anyList(), any());
+    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByOrganisationIds(anyList(), any());
     verify(applicantDetailPersistenceService, never()).getApplicantDetail(any());
   }
 
@@ -136,7 +136,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
     when(teamScopeService.getTeamScopesFromTeamIds(List.of(team.toTeamId().uuid()), PortalTeamType.ORGANISATION_GROUP))
         .thenReturn(List.of(teamScope));
 
-    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(eq(List.of(portalId)), any(RequestPurpose.class)))
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(eq(List.of(portalId)), any(RequestPurpose.class)))
         .thenReturn(List.of(organisationGroup));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID, STATUSES_FOR_SUBMISSION_STAGE))
@@ -167,7 +167,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
         .andExpect(status().isForbidden());
 
     verify(teamScopeService, never()).getTeamScopesFromTeamIds(anyList(), any());
-    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByIds(anyList(), any());
+    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByOrganisationIds(anyList(), any());
     verify(applicantDetailPersistenceService, never()).getApplicantDetail(any());
   }
 
@@ -201,7 +201,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
     when(teamScopeService.getTeamScopesFromTeamIds(List.of(team.toTeamId().uuid()), PortalTeamType.ORGANISATION_GROUP))
         .thenReturn(List.of(teamScope));
 
-    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(eq(List.of(portalId)), any(RequestPurpose.class)))
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(eq(List.of(portalId)), any(RequestPurpose.class)))
         .thenReturn(List.of(organisationGroup));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID, STATUSES_FOR_SUBMISSION_STAGE))
@@ -251,7 +251,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
     when(teamScopeService.getTeamScopesFromTeamIds(List.of(team.toTeamId().uuid()), PortalTeamType.ORGANISATION_GROUP))
         .thenReturn(List.of(teamScope));
 
-    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(eq(List.of(portalId)), any(RequestPurpose.class)))
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(eq(List.of(portalId)), any(RequestPurpose.class)))
         .thenReturn(List.of(organisationGroup));
 
     when(nominationDetailService.getLatestNominationDetailWithStatuses(NOMINATION_ID, STATUSES_FOR_SUBMISSION_STAGE))
@@ -287,7 +287,7 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
             .with(user(USER)))
         .andExpect(status().isForbidden());
 
-    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByIds(anyList(), any());
+    verify(portalOrganisationGroupQueryService, never()).getOrganisationGroupsByOrganisationIds(anyList(), any());
     verify(applicantDetailPersistenceService, never()).getApplicantDetail(any());
   }
 

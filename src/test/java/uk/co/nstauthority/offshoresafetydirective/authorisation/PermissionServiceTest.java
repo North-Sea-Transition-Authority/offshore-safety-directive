@@ -1,13 +1,19 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,8 +21,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -31,6 +47,15 @@ class PermissionServiceTest {
 
   @Mock
   private TeamMemberService teamMemberService;
+
+  @Mock
+  private ApplicantDetailPersistenceService applicantDetailPersistenceService;
+
+  @Mock
+  private PortalOrganisationGroupQueryService organisationGroupQueryService;
+
+  @Mock
+  private TeamScopeService teamScopeService;
 
   @InjectMocks
   private PermissionService permissionService;
@@ -165,6 +190,165 @@ class PermissionServiceTest {
     var result = permissionService.getTeamTypePermissionMap(user);
 
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  void hasPermissionForNomination_whenNoApplicantDetail_thenNotFoundException() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.empty());
+
+    var permission = Collections.singleton(RolePermission.CREATE_NOMINATION);
+
+    assertThatThrownBy(() -> permissionService.hasPermissionForNomination(nominationDetail, USER, permission))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("No applicant detail found for nomination detail with id %s".formatted(nominationDetail.getId().toString()));
+  }
+
+  @Test
+  void hasPermissionForNomination_whenNoMatchingPermission_thenFalse() {
+    var portalId = 123;
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(portalId)
+        .build();
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var team = TeamTestUtil.Builder().build();
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamId(team.toTeamId())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(portalId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(applicantDetail.getPortalOrganisationId()),
+        any()
+    )).thenReturn(Set.of(organisationGroupDto));
+
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(team)
+        .build();
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(portalId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of(teamScope));
+
+    var hasPermissionForNomination = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        USER,
+        Collections.singleton(RolePermission.CREATE_NOMINATION));
+
+    assertFalse(hasPermissionForNomination);
+  }
+
+  @Test
+  void hasPermissionForNomination_whenMatchingPermissionForDifferentOrganisationGroup_thenFalse() {
+    var portalId = 123;
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(portalId)
+        .build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var team = TeamTestUtil.Builder().build();
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(new TeamId(UUID.randomUUID()))
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(portalId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(portalId),
+        any()
+    )).thenReturn(Set.of(organisationGroupDto));
+
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(team)
+        .build();
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(portalId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of(teamScope));
+
+    var hasPermissionForNomination = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        USER,
+        Collections.singleton(RolePermission.CREATE_NOMINATION));
+
+    assertFalse(hasPermissionForNomination);
+  }
+
+  @Test
+  void hasPermissionForNomination_whenMatchingPermission_thenTrue() {
+    var portalId = 123;
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(portalId)
+        .build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var team = TeamTestUtil.Builder().build();
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(team.toTeamId())
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var portalOrganisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(portalId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(applicantDetail.getPortalOrganisationId()),
+        any()
+    )).thenReturn(Set.of(portalOrganisationGroupDto));
+
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(team)
+        .build();
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(portalId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of(teamScope));
+
+    var hasPermissionForNomination = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        USER,
+        Collections.singleton(RolePermission.CREATE_NOMINATION));
+
+    assertTrue(hasPermissionForNomination);
   }
 
   enum TestTeamRole implements TeamRole {

@@ -262,7 +262,8 @@ class NominationWorkAreaQueryService {
       rolesByOrganisationGroup.put(organisationGroupId, teamMember.roles());
     });
 
-    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId = organisationGroupQueryService.getOrganisationGroupsByIds(
+    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId =
+        organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
             rolesByOrganisationGroup.keySet().stream().toList(),
             ORGANISATION_GROUP_REQUEST_PURPOSE
         )

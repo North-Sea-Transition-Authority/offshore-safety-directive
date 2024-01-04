@@ -15,22 +15,13 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
-import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
-import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.Team;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScope;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Component
@@ -42,26 +33,17 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptor.class);
 
-  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Get organisations that applicant is a part of");
 
   private final NominationDetailService nominationDetailService;
-  private final PortalOrganisationGroupQueryService organisationGroupQueryService;
-  private final ApplicantDetailPersistenceService applicantDetailPersistenceService;
-  private final TeamMemberService teamMemberService;
-  private final TeamScopeService teamScopeService;
+  private final PermissionService permissionService;
   private final UserDetailService userDetailService;
 
   @Autowired
   NominationInterceptor(NominationDetailService nominationDetailService,
-                        PortalOrganisationGroupQueryService organisationGroupQueryService,
-                        ApplicantDetailPersistenceService applicantDetailPersistenceService,
-                        TeamMemberService teamMemberService,
-                        TeamScopeService teamScopeService, UserDetailService userDetailService) {
+                        PermissionService permissionService,
+                        UserDetailService userDetailService) {
     this.nominationDetailService = nominationDetailService;
-    this.organisationGroupQueryService = organisationGroupQueryService;
-    this.applicantDetailPersistenceService = applicantDetailPersistenceService;
-    this.teamMemberService = teamMemberService;
-    this.teamScopeService = teamScopeService;
+    this.permissionService = permissionService;
     this.userDetailService = userDetailService;
   }
 
@@ -133,46 +115,18 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
   }
 
   private void checkNominationPermission(HasNominationPermission annotation, NominationDetail nominationDetail) {
-    List<RolePermission> allowedPermission = Arrays.asList(annotation.permissions());
+    List<RolePermission> allowedPermissions = Arrays.asList(annotation.permissions());
 
-    var applicantPortalOrganisationId = applicantDetailPersistenceService.getApplicantDetail(nominationDetail)
-        .map(ApplicantDetail::getPortalOrganisationId)
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND,
-            "No applicant detail found for nomination detail with id %s".formatted(nominationDetail.getId().toString())
-        ));
-
-    var organisationGroupsForApplicant = organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
-            applicantPortalOrganisationId,
-            REQUEST_PURPOSE
-        )
-        .stream()
-        .map(PortalOrganisationGroupDto::organisationGroupId)
-        .map(String::valueOf)
-        .toList();
-
-    var userDetail = userDetailService.getUserDetail();
-    var teamsUserIsIn = teamMemberService.getUserAsTeamMembers(userDetail);
-
-    var applicantOrganisationTeamIds = teamScopeService.getTeamScope(
-            organisationGroupsForApplicant,
-            PortalTeamType.ORGANISATION_GROUP
-        )
-        .stream()
-        .map(TeamScope::getTeam)
-        .map(Team::toTeamId)
-        .toList();
-
-    var userHasAllowedPermissionsForApplicantTeam = teamsUserIsIn.stream()
-        .filter(teamMember -> applicantOrganisationTeamIds.contains(teamMember.teamView().teamId()))
-        .flatMap(teamMember -> teamMember.roles().stream())
-        .flatMap(userPermissionsForTeam -> userPermissionsForTeam.getRolePermissions().stream())
-        .anyMatch(allowedPermission::contains);
+    var userHasAllowedPermissionsForApplicantTeam = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        userDetailService.getUserDetail(),
+        allowedPermissions
+    );
 
     if (!userHasAllowedPermissionsForApplicantTeam) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
-          "User does not have required permission {%s} in applicants team".formatted(allowedPermission));
+          "User does not have required permission {%s} in applicants team".formatted(allowedPermissions));
     }
   }
 
