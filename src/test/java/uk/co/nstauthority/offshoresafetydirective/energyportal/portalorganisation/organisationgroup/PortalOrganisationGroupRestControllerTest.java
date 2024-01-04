@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -24,9 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 class PortalOrganisationGroupRestControllerTest extends AbstractControllerTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  @MockBean
-  private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @SecurityTest
   void searchPortalOrganisationGroups_whenNotLoggedIn_thenOk() throws Exception {

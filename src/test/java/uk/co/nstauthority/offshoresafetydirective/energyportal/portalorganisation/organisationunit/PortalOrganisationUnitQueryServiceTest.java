@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -21,7 +20,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 
 class PortalOrganisationUnitQueryServiceTest {
 
@@ -480,42 +478,5 @@ class PortalOrganisationUnitQueryServiceTest {
             expectedNameOrganisation.getOrganisationUnitId(),
             expectedNumberOrganisation.getOrganisationUnitId()
         );
-  }
-
-  @Test
-  void getOrganisationGroupsById_whenMatch_thenPopulatedListReturned() {
-    var groupId = 10;
-    var name = "group name";
-    var organisationGroup = EpaOrganisationGroupTestUtil.builder()
-        .withId(groupId)
-        .withName(name)
-        .build();
-
-    when(organisationApi.getAllOrganisationGroupsByIds(
-        eq(List.of(groupId)),
-        eq(PortalOrganisationUnitQueryService.ORGANISATION_GROUPS_PROJECTION_ROOT),
-        any(),
-        any()
-    )).thenReturn(List.of(organisationGroup));
-
-    var resultingOrganisationGroups = portalOrganisationUnitQueryService.getOrganisationGroupsById(List.of(groupId), REQUEST_PURPOSE);
-    assertThat(resultingOrganisationGroups).extracting(
-            portalOrganisationGroupDto -> Integer.valueOf(portalOrganisationGroupDto.organisationGroupId()),
-            PortalOrganisationGroupDto::name
-        )
-        .containsExactly(tuple(groupId, name));
-  }
-
-  @Test
-  void getOrganisationGroupsById_whenNoMatch_thenEmptyList() {
-    when(organisationApi.getAllOrganisationGroupsByIds(
-        eq(List.of()),
-        eq(PortalOrganisationUnitQueryService.ORGANISATION_GROUPS_PROJECTION_ROOT),
-        any(),
-        any()
-    )).thenReturn(List.of());
-
-    var resultingOrganisationGroups = portalOrganisationUnitQueryService.getOrganisationGroupsById(List.of(), REQUEST_PURPOSE);
-    assertThat(resultingOrganisationGroups).isEmpty();
   }
 }

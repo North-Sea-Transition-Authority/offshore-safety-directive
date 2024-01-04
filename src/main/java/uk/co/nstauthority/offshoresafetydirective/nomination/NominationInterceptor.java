@@ -16,12 +16,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetail;
@@ -45,7 +45,7 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
   private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Get organisations that applicant is a part of");
 
   private final NominationDetailService nominationDetailService;
-  private final PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private final PortalOrganisationGroupQueryService organisationGroupQueryService;
   private final ApplicantDetailPersistenceService applicantDetailPersistenceService;
   private final TeamMemberService teamMemberService;
   private final TeamScopeService teamScopeService;
@@ -53,12 +53,12 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   @Autowired
   NominationInterceptor(NominationDetailService nominationDetailService,
-                        PortalOrganisationUnitQueryService organisationUnitQueryService,
+                        PortalOrganisationGroupQueryService organisationGroupQueryService,
                         ApplicantDetailPersistenceService applicantDetailPersistenceService,
                         TeamMemberService teamMemberService,
                         TeamScopeService teamScopeService, UserDetailService userDetailService) {
     this.nominationDetailService = nominationDetailService;
-    this.organisationUnitQueryService = organisationUnitQueryService;
+    this.organisationGroupQueryService = organisationGroupQueryService;
     this.applicantDetailPersistenceService = applicantDetailPersistenceService;
     this.teamMemberService = teamMemberService;
     this.teamScopeService = teamScopeService;
@@ -142,12 +142,12 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
             "No applicant detail found for nomination detail with id %s".formatted(nominationDetail.getId().toString())
         ));
 
-    var organisationGroupsForApplicant = organisationUnitQueryService.getOrganisationGroupById(
+    var organisationGroupsForApplicant = organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
             applicantPortalOrganisationId,
             REQUEST_PURPOSE
         )
         .stream()
-        .map(OrganisationGroup::getOrganisationGroupId)
+        .map(PortalOrganisationGroupDto::organisationGroupId)
         .map(String::valueOf)
         .toList();
 

@@ -13,10 +13,7 @@ import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupsProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitProjectionRoot;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationUnitsProjectionRoot;
-import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
-import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 
 @Service
 public class PortalOrganisationUnitQueryService {
@@ -28,13 +25,6 @@ public class PortalOrganisationUnitQueryService {
           .registeredNumber()
           .isDuplicate()
           .isActive();
-
-  static final OrganisationUnitProjectionRoot SINGLE_ORGANISATION_LINKED_TO_GROUP_PROJECTION_ROOT =
-      new OrganisationUnitProjectionRoot()
-          .organisationGroups()
-            .organisationGroupId()
-          .root();
-
 
   static final OrganisationUnitsProjectionRoot MULTI_ORGANISATION_PROJECTION_ROOT =
       new OrganisationUnitsProjectionRoot()
@@ -78,32 +68,6 @@ public class PortalOrganisationUnitQueryService {
         .stream()
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .findFirst();
-  }
-
-  public List<OrganisationGroup> getOrganisationGroupById(Integer id, RequestPurpose requestPurpose) {
-    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
-            organisationApi.findOrganisationUnit(
-                id,
-                SINGLE_ORGANISATION_LINKED_TO_GROUP_PROJECTION_ROOT,
-                requestPurpose,
-                logCorrelationId
-            )
-        ).map(OrganisationUnit::getOrganisationGroups)
-        .orElse(List.of());
-  }
-
-  public List<PortalOrganisationGroupDto> getOrganisationGroupsById(Collection<Integer> ids, RequestPurpose requestPurpose) {
-    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
-            organisationApi.getAllOrganisationGroupsByIds(
-                ids.stream().toList(),
-                ORGANISATION_GROUPS_PROJECTION_ROOT,
-                requestPurpose,
-                logCorrelationId
-            )
-        )
-        .stream()
-        .map(PortalOrganisationGroupDto::fromOrganisationGroup)
-        .toList();
   }
 
   public List<PortalOrganisationDto> getOrganisationByIds(Collection<PortalOrganisationUnitId> organisationUnitIds,

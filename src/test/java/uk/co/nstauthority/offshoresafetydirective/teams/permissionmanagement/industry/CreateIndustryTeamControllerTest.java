@@ -27,7 +27,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -48,9 +47,6 @@ class CreateIndustryTeamControllerTest extends AbstractControllerTest {
 
   @MockBean
   private CreateIndustryTeamValidator createIndustryTeamValidator;
-
-  @MockBean
-  private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @SecurityTest
   void renderCreateIndustryTeam_whenNotLoggedIn_thenRedirectionToLogin() throws Exception {

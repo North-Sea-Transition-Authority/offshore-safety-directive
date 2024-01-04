@@ -13,8 +13,8 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -43,7 +43,7 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
   private final TeamMemberService teamMemberService;
   private final UserDetailService userDetailService;
   private final TeamScopeService teamScopeService;
-  private final PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private final PortalOrganisationGroupQueryService organisationGroupQueryService;
   private final NominationDetailService nominationDetailService;
   private final ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
@@ -51,13 +51,13 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
   public CanViewNominationPostSubmissionInterceptor(TeamMemberService teamMemberService,
                                                     UserDetailService userDetailService,
                                                     TeamScopeService teamScopeService,
-                                                    PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                                    PortalOrganisationGroupQueryService organisationGroupQueryService,
                                                     NominationDetailService nominationDetailService,
                                                     ApplicantDetailPersistenceService applicantDetailPersistenceService) {
     this.teamMemberService = teamMemberService;
     this.userDetailService = userDetailService;
     this.teamScopeService = teamScopeService;
-    this.organisationUnitQueryService = organisationUnitQueryService;
+    this.organisationGroupQueryService = organisationGroupQueryService;
     this.nominationDetailService = nominationDetailService;
     this.applicantDetailPersistenceService = applicantDetailPersistenceService;
   }
@@ -126,7 +126,7 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
         .map(Integer::parseInt)
         .toList();
 
-    var portalOrganisationUnitIds = organisationUnitQueryService.getOrganisationGroupsById(
+    var portalOrganisationUnitIds = organisationGroupQueryService.getOrganisationGroupsByIds(
         organisationGroupIdsByTeamScope,
             ORGANISATION_GROUPS_REQUEST_PURPOSE
     ).stream()

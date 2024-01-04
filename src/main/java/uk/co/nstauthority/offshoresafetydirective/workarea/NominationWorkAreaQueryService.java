@@ -35,8 +35,8 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.CaseEvents;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.NominationDetails;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
@@ -68,7 +68,7 @@ class NominationWorkAreaQueryService {
   private final DSLContext context;
   private final UserDetailService userDetailService;
   private final TeamMemberService teamMemberService;
-  private final PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private final PortalOrganisationGroupQueryService organisationGroupQueryService;
   private final TeamScopeService teamScopeService;
   private final MetricsProvider metricsProvider;
 
@@ -76,12 +76,12 @@ class NominationWorkAreaQueryService {
   NominationWorkAreaQueryService(DSLContext context,
                                  UserDetailService userDetailService,
                                  TeamMemberService teamMemberService,
-                                 PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                 PortalOrganisationGroupQueryService organisationGroupQueryService,
                                  TeamScopeService teamScopeService, MetricsProvider metricsProvider) {
     this.context = context;
     this.userDetailService = userDetailService;
     this.teamMemberService = teamMemberService;
-    this.organisationUnitQueryService = organisationUnitQueryService;
+    this.organisationGroupQueryService = organisationGroupQueryService;
     this.teamScopeService = teamScopeService;
     this.metricsProvider = metricsProvider;
   }
@@ -262,7 +262,7 @@ class NominationWorkAreaQueryService {
       rolesByOrganisationGroup.put(organisationGroupId, teamMember.roles());
     });
 
-    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId = organisationUnitQueryService.getOrganisationGroupsById(
+    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId = organisationGroupQueryService.getOrganisationGroupsByIds(
             rolesByOrganisationGroup.keySet().stream().toList(),
             ORGANISATION_GROUP_REQUEST_PURPOSE
         )

@@ -7,9 +7,9 @@ import static org.mockito.Mockito.when;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.EpaOrganisationGroupTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
@@ -32,12 +32,12 @@ public abstract class AbstractNominationControllerTest extends AbstractControlle
 
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
 
-    var organisationGroup = EpaOrganisationGroupTestUtil.builder().build();
+    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder().build();
 
-    when(portalOrganisationUnitQueryService.getOrganisationGroupById(eq(applicantDetail.getPortalOrganisationId()), any()))
-        .thenReturn(List.of(organisationGroup));
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationId(eq(applicantDetail.getPortalOrganisationId()), any()))
+        .thenReturn(Set.of(organisationGroup));
 
-    when(teamScopeService.getTeamScope(List.of(organisationGroup.getOrganisationGroupId().toString()),
+    when(teamScopeService.getTeamScope(List.of(organisationGroup.organisationGroupId()),
         PortalTeamType.ORGANISATION_GROUP))
         .thenReturn(List.of(TEAM_SCOPE));
 
@@ -67,7 +67,7 @@ public abstract class AbstractNominationControllerTest extends AbstractControlle
 
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
 
-    when(portalOrganisationUnitQueryService.getOrganisationGroupsById(
+    when(portalOrganisationGroupQueryService.getOrganisationGroupsByIds(
         eq(List.of(Integer.valueOf(TEAM_SCOPE.getPortalId()))), any()))
         .thenReturn(List.of(organisationGroup));
 

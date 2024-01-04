@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandin
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
@@ -131,6 +132,9 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+
+  @MockBean
+  protected PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @MockBean
   protected TeamScopeService teamScopeService;

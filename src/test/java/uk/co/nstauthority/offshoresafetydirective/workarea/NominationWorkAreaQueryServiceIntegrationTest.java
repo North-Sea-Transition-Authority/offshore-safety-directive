@@ -37,8 +37,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticat
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -86,7 +86,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
   private MetricsProvider metricsProvider;
 
   @MockBean
-  private PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private PortalOrganisationGroupQueryService organisationGroupQueryService;
 
   @Autowired
   TeamScopeService teamScopeService;
@@ -297,7 +297,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnit)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
         List.of(applicantOrgGroupId),
         NominationWorkAreaQueryService.ORGANISATION_GROUP_REQUEST_PURPOSE)
     ).thenReturn(List.of(organisationGroup));
@@ -391,7 +391,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnit)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
         List.of(applicantOrgGroupId),
         NominationWorkAreaQueryService.ORGANISATION_GROUP_REQUEST_PURPOSE)
     ).thenReturn(List.of(organisationGroup));
@@ -559,7 +559,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnit)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
         List.of(applicantOrgGroupId),
         NominationWorkAreaQueryService.ORGANISATION_GROUP_REQUEST_PURPOSE)
     ).thenReturn(List.of(organisationGroup));
@@ -672,7 +672,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnit)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
         List.of(applicantOrgGroupId),
         NominationWorkAreaQueryService.ORGANISATION_GROUP_REQUEST_PURPOSE)
     ).thenReturn(List.of(organisationGroup));
@@ -793,7 +793,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnitForOtherIndustryTeam)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
             argThat(orgGroupIds -> orgGroupIds.containsAll(List.of(applicantOrgGroupId, otherApplicantOrgGroupId))),
             any(RequestPurpose.class)
         ))
@@ -924,7 +924,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnitForOtherIndustryTeam)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(
             argThat(orgGroupIds -> orgGroupIds.containsAll(List.of(applicantOrgGroupId, otherApplicantOrgGroupId))),
             any(RequestPurpose.class)
         ))
@@ -1397,7 +1397,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .withOrganisation(organisationUnit)
         .build();
 
-    when(organisationUnitQueryService.getOrganisationGroupsById(eq(List.of(applicantPortalOrgGroupId)),
+    when(organisationGroupQueryService.getOrganisationGroupsByIds(eq(List.of(applicantPortalOrgGroupId)),
             any(RequestPurpose.class)))
         .thenReturn(List.of(organisationGroup));
 

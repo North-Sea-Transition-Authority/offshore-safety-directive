@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -36,6 +38,8 @@ public class EpaOrganisationUnitTestUtil {
     private LocalDate startDate = LocalDate.now();
 
     private LocalDate endDate = null;
+
+    private List<OrganisationGroup> organisationGroups = new ArrayList<>();
 
     private Boolean isDuplicate = false;
 
@@ -91,6 +95,11 @@ public class EpaOrganisationUnitTestUtil {
       return this;
     }
 
+    public Builder withOrganisationGroup(OrganisationGroup organisationGroup) {
+      this.organisationGroups.add(organisationGroup);
+      return this;
+    }
+
     public Builder isDuplicate(Boolean isDuplicate) {
       this.isDuplicate = isDuplicate;
       return this;
@@ -116,7 +125,7 @@ public class EpaOrganisationUnitTestUtil {
           .endDate(endDate)
           .isDuplicate(isDuplicate)
           .isActive(isActive)
-          .organisationGroups(Collections.emptyList())
+          .organisationGroups(organisationGroups)
           .build();
     }
   }
