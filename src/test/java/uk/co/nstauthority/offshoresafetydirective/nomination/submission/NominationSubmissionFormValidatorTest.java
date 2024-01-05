@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -100,10 +101,12 @@ class NominationSubmissionFormValidatorTest {
             ));
   }
 
-  @Test
-  void validate_confirmationNotSelected_thenVerifyError() {
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "non boolean value")
+  void validate_whenConfirmationValueIsInvalid_thenVerifyError(String value) {
     var form = NominationSubmissionFormTestUtil.builder()
-        .withConfirmedAuthority((String) null)
+        .withConfirmedAuthority(value)
         .build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 

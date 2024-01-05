@@ -23,6 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToAnyFields;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToPearsApplications;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedToWonsApplications;
+import uk.co.nstauthority.offshoresafetydirective.nomination.submission.SubmissionSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.RegisteredCompanyNumber;
@@ -76,6 +77,11 @@ public class NominationSummaryViewTestUtil {
         List.of("Licence 1")
     );
 
+    private SubmissionSummaryView submissionSummaryView = new SubmissionSummaryView(
+        true,
+        "reason for fast track"
+    );
+
     private WellSummaryView wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();
 
     private Builder() {
@@ -106,13 +112,18 @@ public class NominationSummaryViewTestUtil {
       return this;
     }
 
+    void withSubmissionSummaryView(SubmissionSummaryView submissionSummaryView) {
+      this.submissionSummaryView = submissionSummaryView;
+    }
+
     public NominationSummaryView build() {
       return new NominationSummaryView(
           applicantDetailSummaryView,
           nomineeDetailSummaryView,
           relatedInformationSummaryView,
           installationSummaryView,
-          wellSummaryView
+          wellSummaryView,
+          submissionSummaryView
       );
     }
   }

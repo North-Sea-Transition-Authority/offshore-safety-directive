@@ -7,9 +7,11 @@
 <#macro nominationSummary summaryView>
   <@_applicantDetailsSummary.applicantDetailsSummary
     applicantDetailSummaryView=summaryView.applicantDetailSummaryView()
+    submissionSummaryView=summaryView.submissionSummaryView()!
   />
   <@_nomineeDetailsSummary.nomineeDetailsSummary
     nomineeDetailSummaryView=summaryView.nomineeDetailSummaryView()
+    submissionSummaryView=summaryView.submissionSummaryView()!
   />
   <@_relatedInformationSummary.relatedInformationSummary
     relatedInformationSummaryView=summaryView.relatedInformationSummaryView()

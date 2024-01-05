@@ -21,7 +21,7 @@ class ReviewAndSubmitTaskListItem implements NominationTaskListItem {
 
   @Override
   public String getActionUrl(NominationTaskListItemType target) {
-    return ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(target.nominationId()));
+    return ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(target.nominationId(), null));
   }
 
   @Override

@@ -131,7 +131,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(false);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -175,7 +175,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(false);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -217,7 +217,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryView);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -270,7 +270,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryView);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -323,7 +323,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryView);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -372,7 +372,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(true);
 
     var modelAndView = mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -410,7 +410,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryView);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -440,7 +440,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().is3xxRedirection())
@@ -463,7 +463,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isForbidden());
@@ -505,7 +505,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .withTeam(getTeam())
         .withUser(USER)
         .withGetEndpoint(
-            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID))
+            ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null))
         )
         .test();
   }
@@ -552,7 +552,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(List.of(teamMember));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -588,7 +588,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(List.of(teamMember));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -615,7 +615,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryViewWithSubarea);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -640,7 +640,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryViewWithSubarea);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -664,7 +664,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(nominationSummaryViewWithSubarea);
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -698,7 +698,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(Optional.of(reasonForUpdate));
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -722,7 +722,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     )).thenReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -754,7 +754,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(Optional.empty());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -770,7 +770,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().isOk())
@@ -804,7 +804,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     var nominationId = nonDraftNominationDetail.getNomination().getId();
 
     mockMvc.perform(
-            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(user(USER))
         )
         .andExpect(status().is3xxRedirection())
@@ -821,7 +821,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(false);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+            post(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
                 .with(csrf())
                 .with(user(USER))
         )
@@ -844,7 +844,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .andExpect(redirectedUrl(ReverseRouter.route(on(NominationSubmitConfirmationController.class)
             .getSubmissionConfirmationPage(NOMINATION_ID))));
 
-    verify(nominationSubmissionService).submitNomination(nominationDetail);
+    verify(nominationSubmissionService).submitNomination(eq(nominationDetail), any(NominationSubmissionForm.class));
   }
 
   @Test
@@ -870,7 +870,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"));
 
-    verify(nominationSubmissionService, never()).submitNomination(nominationDetail);
+    verify(nominationSubmissionService, never()).submitNomination(any(), any());
   }
 
   @Test
@@ -905,6 +905,6 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         )
         .andExpect(status().is4xxClientError());
 
-    verify(nominationSubmissionService, never()).submitNomination(nominationDetail);
+    verify(nominationSubmissionService, never()).submitNomination(any(), any());
   }
 }

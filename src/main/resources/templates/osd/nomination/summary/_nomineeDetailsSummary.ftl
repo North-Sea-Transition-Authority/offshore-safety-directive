@@ -1,7 +1,7 @@
 <#import "../../../fds/components/summaryList/summaryList.ftl" as fdsSummaryList/>
 <#import '../../files/fileSummary.ftl' as fileSummary>
 
-<#macro nomineeDetailsSummary nomineeDetailSummaryView>
+<#macro nomineeDetailsSummary nomineeDetailSummaryView submissionSummaryView>
   <@fdsSummaryList.summaryListCard
     summaryListId=nomineeDetailSummaryView.summarySectionDetails().summarySectionId().id()
     headingText=nomineeDetailSummaryView.summarySectionDetails().summarySectionName().name()
@@ -21,6 +21,12 @@
       <@fdsSummaryList.summaryListRowNoAction keyText="Planned appointment date">
           ${(nomineeDetailSummaryView.appointmentPlannedStartDate().plannedStartDateString())!""}
       </@fdsSummaryList.summaryListRowNoAction>
+
+      <#if submissionSummaryView?has_content && submissionSummaryView.fastTrackReason()?has_content>
+        <@fdsSummaryList.summaryListRowNoAction keyText="Reason that this submission was planned with less than 3 months">
+            <p class="govuk-body govuk-body__preserve-whitespace">${submissionSummaryView.fastTrackReason()}</p>
+        </@fdsSummaryList.summaryListRowNoAction>
+      </#if>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Accepted all declarations">
           ${((nomineeDetailSummaryView.nomineeDetailConditionsAccepted().accepted())!false)?then("Yes", "")}

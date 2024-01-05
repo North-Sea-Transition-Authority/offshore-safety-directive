@@ -79,7 +79,8 @@ public class NominationSubmissionController {
       NominationStatus.WITHDRAWN
   })
   @HasNominationPermission(permissions = RolePermission.EDIT_NOMINATION)
-  public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId) {
+  public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId,
+                                        @ModelAttribute("form") NominationSubmissionForm form) {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
@@ -93,7 +94,8 @@ public class NominationSubmissionController {
     // wells the service will include on the nomination until after submission.
     finaliseNominatedSubareaWellsService.finaliseNominatedSubareaWells(nominationDetail);
 
-    return getModelAndView(nominationId, nominationDetail, new NominationSubmissionForm());
+    nominationSubmissionService.populateSubmissionForm(form, nominationDetail);
+    return getModelAndView(nominationId, nominationDetail, form);
   }
 
   @PostMapping
@@ -112,7 +114,7 @@ public class NominationSubmissionController {
         return getModelAndView(nominationId, nominationDetail, form);
       }
 
-      nominationSubmissionService.submitNomination(nominationDetail);
+      nominationSubmissionService.submitNomination(nominationDetail, form);
       return ReverseRouter.redirect(
           on(NominationSubmitConfirmationController.class).getSubmissionConfirmationPage(nominationId));
     }

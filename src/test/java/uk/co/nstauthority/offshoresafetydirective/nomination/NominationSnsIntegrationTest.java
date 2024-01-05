@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.epmqmessage.OsdEpmqTopics;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.NominationHasInstallations;
 import uk.co.nstauthority.offshoresafetydirective.nomination.relatedinformation.RelatedInformationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionForm;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSubmissionService;
 import uk.co.nstauthority.offshoresafetydirective.util.TransactionWrapper;
 
@@ -80,7 +81,9 @@ class NominationSnsIntegrationTest {
     when(nominationDetailService.getLatestNominationDetail(new NominationId(nominationDetail)))
         .thenReturn(nominationDetail);
 
-    nominationSubmissionService.submitNomination(nominationDetail);
+    var submissionForm = new NominationSubmissionForm();
+    submissionForm.setConfirmedAuthority(Boolean.TRUE.toString());
+    nominationSubmissionService.submitNomination(nominationDetail, submissionForm);
 
     var nominationsTopicArn = snsService.getOrCreateTopic(OsdEpmqTopics.NOMINATIONS.getName());
 
@@ -147,7 +150,7 @@ class NominationSnsIntegrationTest {
 
     try {
       transactionWrapper.runInNewTransaction(() -> {
-        nominationSubmissionService.submitNomination(nominationDetail);
+        nominationSubmissionService.submitNomination(nominationDetail, new NominationSubmissionForm());
 
         throw new RuntimeException("Test exception");
       });

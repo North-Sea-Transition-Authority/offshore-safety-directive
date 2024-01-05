@@ -38,7 +38,7 @@ class ReviewAndSubmitTaskListItemTest {
   @Test
   void getActionUrl() {
     assertEquals(
-        ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)),
+        ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)),
         reviewAndSubmitTaskListItem.getActionUrl(new NominationTaskListItemType(NOMINATION_DETAIL))
     );
   }
