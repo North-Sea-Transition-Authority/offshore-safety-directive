@@ -281,7 +281,7 @@ class PermissionServiceTest {
         .build();
 
     when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
-        eq(portalId),
+        eq(applicantDetail.getPortalOrganisationId()),
         any()
     )).thenReturn(Set.of(organisationGroupDto));
 
@@ -324,7 +324,7 @@ class PermissionServiceTest {
     when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
 
     var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
-    var portalOrganisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
         .withOrganisationGroupId(portalId)
         .withOrganisation(organisationDto)
         .build();
@@ -332,7 +332,7 @@ class PermissionServiceTest {
     when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
         eq(applicantDetail.getPortalOrganisationId()),
         any()
-    )).thenReturn(Set.of(portalOrganisationGroupDto));
+    )).thenReturn(Set.of(organisationGroupDto));
 
     var teamScope = TeamScopeTestUtil.builder()
         .withTeam(team)
@@ -348,7 +348,169 @@ class PermissionServiceTest {
         USER,
         Collections.singleton(RolePermission.CREATE_NOMINATION));
 
-    assertTrue(hasPermissionForNomination);
+    assertTrue(hasPermissionForNomination);  }
+
+  @Test
+  void getPermissionsForNomination_whenHasNoPermissions_thenEmptyList() {
+    var applicantOrganisationUnitId = 123;
+
+    // GIVEN the user has no permissions in the applicant org group
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(applicantOrganisationUnitId)
+        .build();
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var team = TeamTestUtil.Builder().build();
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamId(team.toTeamId())
+        .build();
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(applicantOrganisationUnitId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(applicantDetail.getPortalOrganisationId()),
+        any()
+    )).thenReturn(Set.of(organisationGroupDto));
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(applicantOrganisationUnitId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of());
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    // WHEN we get the permissions for the nomination
+    var permissionsForNomination = permissionService.getPermissionsForNomination(
+        nominationDetail,
+        USER
+    );
+
+    // THEN no permissions are returned
+    assertThat(permissionsForNomination).isEmpty();
+  }
+
+  @Test
+  void getPermissionsForNomination_whenHasPermissionsForDifferentTeam_thenEmptyList() {
+    var applicantOrganisationUnitId = 123;
+
+    // GIVEN user only has permissions in a different applicant organistion group
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(applicantOrganisationUnitId)
+        .build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var applicantTeam = TeamTestUtil.Builder().build();
+    var otherTeamId = new TeamId(UUID.randomUUID());
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(otherTeamId)
+        .build();
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(applicantOrganisationUnitId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(applicantDetail.getPortalOrganisationId()),
+        any()
+    )).thenReturn(Set.of(organisationGroupDto));
+
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(applicantTeam)
+        .build();
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(applicantOrganisationUnitId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of(teamScope));
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    // WHEN we get the permissions for the nomination
+    var permissionsForNomination = permissionService.getPermissionsForNomination(
+        nominationDetail,
+        USER
+    );
+
+    // THEN no permissions are returned
+    assertThat(permissionsForNomination).isEmpty();
+  }
+
+  @Test
+  void getPermissionsForNomination_whenHasPermissions_thenPopulatedList() {
+    var applicantOrganisationUnitId = 123;
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    var applicantDetail = ApplicantDetailTestUtil.builder()
+        .withPortalOrganisationId(applicantOrganisationUnitId)
+        .build();
+
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.of(applicantDetail));
+
+    var team = TeamTestUtil.Builder().build();
+
+    var teamMemberWithEditPermission = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(team.toTeamId())
+        .build();
+
+    var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var organisationGroupDto = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(applicantOrganisationUnitId)
+        .withOrganisation(organisationDto)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
+        eq(applicantDetail.getPortalOrganisationId()),
+        any()
+    )).thenReturn(Set.of(organisationGroupDto));
+
+    var teamScope = TeamScopeTestUtil.builder()
+        .withTeam(team)
+        .build();
+
+    when(teamScopeService.getTeamScope(
+        List.of(String.valueOf(applicantOrganisationUnitId)),
+        PortalTeamType.ORGANISATION_GROUP)
+    ).thenReturn(List.of(teamScope));
+
+    when(teamMemberService.getUserAsTeamMembers(USER)).thenReturn(List.of(teamMemberWithEditPermission));
+
+    var permissionForNomination = permissionService.getPermissionsForNomination(
+        nominationDetail,
+        USER);
+
+    assertThat(permissionForNomination).containsExactlyInAnyOrder(
+        RolePermission.CREATE_NOMINATION,
+        RolePermission.SUBMIT_NOMINATION,
+        RolePermission.EDIT_NOMINATION,
+        RolePermission.VIEW_NOMINATION
+    );
+  }
+
+  @Test
+  void getPermissionsForNomination_whenNoApplicantDetail_thenNotFoundException() {
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail))
+        .thenReturn(Optional.empty());
+    assertThatThrownBy(() -> permissionService.getPermissionsForNomination(nominationDetail, USER))
+        .isInstanceOf(EntityNotFoundException.class)
+        .hasMessage("No applicant detail found for nomination detail with id %s".formatted(nominationDetail.getId().toString()));
   }
 
   enum TestTeamRole implements TeamRole {

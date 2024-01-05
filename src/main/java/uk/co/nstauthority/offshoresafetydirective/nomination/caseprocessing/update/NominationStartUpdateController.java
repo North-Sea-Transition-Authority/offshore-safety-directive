@@ -51,6 +51,7 @@ public class NominationStartUpdateController {
       statuses = { NominationStatus.DRAFT, NominationStatus.SUBMITTED },
       fetchType = NominationDetailFetchType.LATEST
   )
+  @HasNominationPermission(permissions = {RolePermission.EDIT_NOMINATION, RolePermission.SUBMIT_NOMINATION})
   public ModelAndView startUpdateEntryPoint(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -75,6 +76,7 @@ public class NominationStartUpdateController {
 
   @GetMapping("/start")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
+  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView renderStartUpdate(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -97,6 +99,7 @@ public class NominationStartUpdateController {
 
   @PostMapping("/start")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
+  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView startUpdate(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = getLatestNominationDetail(nominationId);
     nominationUpdateService.createDraftUpdate(nominationDetail);

@@ -7,7 +7,6 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -217,16 +216,21 @@ public class NominationCaseProcessingModelAndViewGenerator {
       }
     }
 
-    var hasSubmitPermission = permissionService.hasPermissionForNomination(
-        nominationDetail,
-        user,
-        Set.of(RolePermission.SUBMIT_NOMINATION)
-    );
+    var permissionsForNomination = permissionService.getPermissionsForNomination(nominationDetail, user);
+
+    var hasCreatePermission = permissionsForNomination.contains(RolePermission.CREATE_NOMINATION);
+
+    var latestNominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+
+    var updateHasStarted = NominationStatus.DRAFT.equals(latestNominationDetail.getStatus())
+        && latestNominationDetail.getVersion() > 1;
+
+    var updateHasStartedAndUserIsEditor = updateHasStarted && permissionsForNomination.contains(RolePermission.EDIT_NOMINATION);
 
     caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
         .ifPresentOrElse(
             reason -> {
-              if (canUpdateNomination(nominationDetailDto) && hasSubmitPermission) {
+              if (canUpdateNomination(nominationDetailDto) && (hasCreatePermission || updateHasStartedAndUserIsEditor)) {
                 actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
               }
               modelAndView.addObject("updateRequestReason", reason);

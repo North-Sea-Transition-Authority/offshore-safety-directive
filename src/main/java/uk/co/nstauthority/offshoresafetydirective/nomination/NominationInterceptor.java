@@ -33,7 +33,6 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptor.class);
 
-
   private final NominationDetailService nominationDetailService;
   private final PermissionService permissionService;
   private final UserDetailService userDetailService;

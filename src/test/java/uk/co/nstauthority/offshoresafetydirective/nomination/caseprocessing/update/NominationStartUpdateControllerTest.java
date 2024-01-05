@@ -270,13 +270,13 @@ class NominationStartUpdateControllerTest extends AbstractNominationControllerTe
   }
 
   @SecurityTest
-  void startUpdateEntryPoint_smokeTestPermissions_onlySubmitonlPermitted() {
+  void startUpdateEntryPoint_smokeTestPermissions_onlySubmitAndEditPermitted() {
 
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Set.of(RolePermission.SUBMIT_NOMINATION))
+        .withRequiredPermissions(Set.of(RolePermission.SUBMIT_NOMINATION, RolePermission.EDIT_NOMINATION))
         .withUser(NOMINATION_MANAGER_USER)
         .withTeam(getTeam())
         .withGetEndpoint(

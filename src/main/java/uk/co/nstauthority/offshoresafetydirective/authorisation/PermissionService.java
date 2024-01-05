@@ -48,7 +48,7 @@ public class PermissionService {
   }
 
   public boolean hasPermission(ServiceUserDetail user, Collection<RolePermission> requiredPermissions) {
-    var teamMembers =  teamMemberService.getUserAsTeamMembers(user);
+    var teamMembers = teamMemberService.getUserAsTeamMembers(user);
 
     if (teamMembers == null) {
       return false;
@@ -103,6 +103,13 @@ public class PermissionService {
   public boolean hasPermissionForNomination(NominationDetail nominationDetail,
                                             ServiceUserDetail userDetail,
                                             Collection<RolePermission> requiredPermissions) {
+    return getPermissionsForNomination(nominationDetail, userDetail)
+        .stream()
+        .anyMatch(requiredPermissions::contains);
+  }
+
+  public Set<RolePermission> getPermissionsForNomination(NominationDetail nominationDetail,
+                                                         ServiceUserDetail userDetail) {
     var applicantPortalOrganisationId = applicantDetailPersistenceService.getApplicantDetail(nominationDetail)
         .map(ApplicantDetail::getPortalOrganisationId)
         .orElseThrow(() -> new EntityNotFoundException(
@@ -132,6 +139,6 @@ public class PermissionService {
         .filter(teamMember -> applicantOrganisationTeamIds.contains(teamMember.teamView().teamId()))
         .flatMap(teamMember -> teamMember.roles().stream())
         .flatMap(userPermissionsForTeam -> userPermissionsForTeam.getRolePermissions().stream())
-        .anyMatch(requiredPermissions::contains);
+        .collect(Collectors.toSet());
   }
 }
