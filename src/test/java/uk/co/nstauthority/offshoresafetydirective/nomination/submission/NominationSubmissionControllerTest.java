@@ -63,6 +63,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.Exc
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryView;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -586,6 +587,39 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
     when(teamMemberService.getUserAsTeamMembers(USER))
         .thenReturn(List.of(teamMember));
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(model().attribute("userCanSubmitNominations", false))
+        .andExpect(model().attribute("organisationUrl",
+            ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection())));
+  }
+
+  @Test
+  void getSubmissionPage_whenUserIsAnEditorForNomination_andSubmitterInOtherTeam_thenUserCannotSubmitNominations() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    var editorInNominationTeam = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(getTeam().toTeamId())
+        .build();
+
+    var submitterInNonNominationTeam = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamType(TeamType.INDUSTRY)
+        .withTeamId(TeamId.valueOf(UUID.randomUUID()))
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(USER))
+        .thenReturn(List.of(editorInNominationTeam, submitterInNonNominationTeam));
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID, null)))

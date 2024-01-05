@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -128,7 +129,11 @@ public class NominationSubmissionController {
     var summaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
     var user = userDetailService.getUserDetail();
-    var userCanSubmitNominations = permissionService.hasPermission(user, RolePermission.CREATE_NOMINATION);
+    var userCanSubmitNominations = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        user,
+        Set.of(RolePermission.CREATE_NOMINATION)
+    );
     var isSubmittable = nominationSubmissionService.canSubmitNomination(nominationDetail);
     var isFastTrackNomination = false;
 
