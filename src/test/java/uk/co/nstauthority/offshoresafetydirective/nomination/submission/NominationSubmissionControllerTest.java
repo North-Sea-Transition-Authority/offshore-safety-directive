@@ -1,6 +1,11 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -14,9 +19,11 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,10 +32,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -36,9 +46,18 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantOrganisationUnitView;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationRelatedToNomination;
+import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationSummaryViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.AppointmentPlannedStartDate;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailSummaryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
@@ -68,6 +87,9 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
   @MockBean
   private FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
 
+  @MockBean
+  private NominationSubmissionFormValidator nominationSubmissionFormValidator;
+
   @BeforeEach
   void setup() {
     nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
@@ -76,6 +98,291 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .build();
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+  }
+
+  @Test
+  void getSubmissionPage_whenSubmittable_andPlannedInThreeMonths_thenAssertModel() throws Exception {
+
+    var draftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    givenUserHasNominationPermission(draftNominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(draftNominationDetail)).thenReturn(true);
+
+    var dateInThreeMonths = LocalDate.now().plusMonths(3);
+    var wellSummaryView = WellSummaryView.builder(null).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder().build();
+    var nomineeDetailSummaryView = NomineeDetailSummaryViewTestUtil.builder()
+        .setAppointmentPlannedStartDate(new AppointmentPlannedStartDate(dateInThreeMonths))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withNomineeDetailSummaryView(nomineeDetailSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    when(nominationSubmissionFormValidator.isNominationWithinFastTrackPeriod(nominationDetail))
+        .thenReturn(false);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    assertThat(model)
+        .containsEntry("isFastTrackNomination", false);
+  }
+
+  @Test
+  void getSubmissionPage_whenSubmittable_andPlannedInMoreThanThreeMonths_thenAssertModel() throws Exception {
+
+    var draftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    givenUserHasNominationPermission(draftNominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(draftNominationDetail)).thenReturn(true);
+
+    var plannedDate = LocalDate.now().plusMonths(4);
+    var wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder().build();
+    var nomineeDetailSummaryView = NomineeDetailSummaryViewTestUtil.builder()
+        .setAppointmentPlannedStartDate(new AppointmentPlannedStartDate(plannedDate))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withNomineeDetailSummaryView(nomineeDetailSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    when(nominationSubmissionFormValidator.isNominationWithinFastTrackPeriod(nominationDetail))
+        .thenReturn(false);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    assertThat(model)
+        .containsEntry("isFastTrackNomination", false);
+  }
+
+  @Test
+  void getSubmissionPage_whenNominationIsForInstallations_assertConfirmationPrompt() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var applicantOrganisationUnitView = ApplicantOrganisationUnitView.from(portalOrganisationDto);
+
+    var applicantSummaryView = new ApplicantDetailSummaryView(
+        applicantOrganisationUnitView,
+        new ApplicantReference("applicant reference"),
+        null
+    );
+
+    var wellSummaryView = WellSummaryView.builder(WellSelectionType.NO_WELLS).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder()
+        .withInstallationRelatedToNomination(new InstallationRelatedToNomination(true, List.of()))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withApplicantDetailSummaryView(applicantSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    var expectedPrompt = "I hereby confirm that %s has the authority for and on behalf of all the relevant licensees" +
+        " to nominate the installation operator for the selected installations";
+
+    assertThat(model)
+        .containsEntry("confirmAuthorityPrompt", expectedPrompt.formatted(applicantOrganisationUnitView.displayName()));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = WellSelectionType.class, names = {"SPECIFIC_WELLS", "LICENCE_BLOCK_SUBAREA"})
+  void getSubmissionPage_whenNominationIsForWells_assertConfirmationPrompt(
+      WellSelectionType wellSelectionType
+  ) throws Exception {
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var applicantOrganisationUnitView = ApplicantOrganisationUnitView.from(portalOrganisationDto);
+
+    var applicantSummaryView = new ApplicantDetailSummaryView(
+        applicantOrganisationUnitView,
+        new ApplicantReference("applicant reference"),
+        null
+    );
+
+    var wellSummaryView = WellSummaryView.builder(wellSelectionType)
+        .withSpecificWellSummaryView(new NominatedWellDetailView())
+        .withExcludedWellSummaryView(new ExcludedWellView())
+        .withSubareaSummary(new NominatedBlockSubareaDetailView())
+        .build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder()
+        .withInstallationRelatedToNomination(new InstallationRelatedToNomination(false, List.of()))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withApplicantDetailSummaryView(applicantSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    var expectedPrompt = "I hereby confirm that %s has the authority for and on behalf of all the relevant " +
+        "licensees to nominate the well operator for the selected wells";
+
+    assertThat(model)
+        .containsEntry("confirmAuthorityPrompt", expectedPrompt.formatted(applicantOrganisationUnitView.displayName()));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = WellSelectionType.class, names = {"SPECIFIC_WELLS", "LICENCE_BLOCK_SUBAREA"})
+  void getSubmissionPage_whenNominationIsForInstallationsAndWells_assertConfirmationPrompt(
+      WellSelectionType wellSelectionType
+  ) throws Exception {
+
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder().build();
+    var applicantOrganisationUnitView = ApplicantOrganisationUnitView.from(portalOrganisationDto);
+
+    var applicantSummaryView = new ApplicantDetailSummaryView(
+        applicantOrganisationUnitView,
+        new ApplicantReference("applicant reference"),
+        null
+    );
+
+    var wellSummaryView = WellSummaryView.builder(wellSelectionType)
+        .withSpecificWellSummaryView(new NominatedWellDetailView())
+        .withExcludedWellSummaryView(new ExcludedWellView())
+        .withSubareaSummary(new NominatedBlockSubareaDetailView())
+        .build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder()
+        .withInstallationRelatedToNomination(new InstallationRelatedToNomination(true, List.of()))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withApplicantDetailSummaryView(applicantSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    var expectedPrompt = "I hereby confirm that %s has the authority for and on behalf of all the relevant " +
+        "licensees to nominate the well and installation operator for the selected wells and installations";
+
+    assertThat(model)
+        .containsEntry("confirmAuthorityPrompt", expectedPrompt.formatted(applicantOrganisationUnitView.displayName()));
+  }
+
+  @Test
+  void getSubmissionPage_whenSubmittable_andPlannedInLessThanThreeMonths_thenAssertModel() throws Exception {
+
+    var draftNominationDetail = new NominationDetailTestUtil.NominationDetailBuilder()
+        .withNominationId(NOMINATION_ID)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    givenUserHasNominationPermission(draftNominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(draftNominationDetail)).thenReturn(true);
+
+    var plannedDate = LocalDate.now()
+        .plusMonths(3)
+        .minusDays(1);
+    var wellSummaryView = WellSummaryView.builder(null).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder().build();
+    var nomineeDetailSummaryView = NomineeDetailSummaryViewTestUtil.builder()
+        .setAppointmentPlannedStartDate(new AppointmentPlannedStartDate(plannedDate))
+        .build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .withNomineeDetailSummaryView(nomineeDetailSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    when(nominationSubmissionFormValidator.isNominationWithinFastTrackPeriod(draftNominationDetail))
+        .thenReturn(true);
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andReturn()
+        .getModelAndView();
+
+    var model = Objects.requireNonNull(modelAndView).getModel();
+
+    assertThat(model)
+        .containsEntry("isFastTrackNomination", true);
   }
 
   @SecurityTest
@@ -89,11 +396,18 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     givenUserHasNominationPermission(draftNominationDetail, USER);
 
     when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(draftNominationDetail);
-
     when(nominationSubmissionService.canSubmitNomination(draftNominationDetail)).thenReturn(true);
-
     when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    var wellSummaryView = WellSummaryView.builder(null).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(draftNominationDetail))
+        .thenReturn(nominationSummaryView);
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
@@ -170,7 +484,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .withUser(USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationSubmissionController.class)
-                .submitNomination(NOMINATION_ID)),
+                .submitNomination(NOMINATION_ID, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -211,7 +525,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .withUser(USER)
         .withPostEndpoint(
             ReverseRouter.route(on(NominationSubmissionController.class)
-                .submitNomination(NOMINATION_ID)),
+                .submitNomination(NOMINATION_ID, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -249,7 +563,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         ))
         .andExpect(model().attribute(
             "actionUrl",
-            ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID))
+            ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID, null, null))
         ))
         .andExpect(model().attribute("isSubmittable", isSubmittable))
         .andExpect(model().attribute("userCanSubmitNominations", true))
@@ -456,8 +770,8 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
     mockMvc.perform(
-        get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
-            .with(user(USER))
+            get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
+                .with(user(USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/submission/submitNomination"));
@@ -487,7 +801,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     when(nominationSummaryService.getNominationSummaryView(nonDraftNominationDetail))
         .thenReturn(NominationSummaryViewTestUtil.builder().build());
 
-    var nominationId =  nonDraftNominationDetail.getNomination().getId();
+    var nominationId = nonDraftNominationDetail.getNomination().getId();
 
     mockMvc.perform(
             get(ReverseRouter.route(on(NominationSubmissionController.class).getSubmissionPage(NOMINATION_ID)))
@@ -522,7 +836,7 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
     when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID)))
+            post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID, null, null)))
                 .with(csrf())
                 .with(user(USER))
         )
@@ -531,5 +845,66 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
             .getSubmissionConfirmationPage(NOMINATION_ID))));
 
     verify(nominationSubmissionService).submitNomination(nominationDetail);
+  }
+
+  @Test
+  void submitNomination_whenFormIsInvalid_verifyNotSaved_andStatusIsOk() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(NominationSummaryViewTestUtil.builder().build());
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("error", "error", "error"));
+      return invocation;
+    }).when(nominationSubmissionFormValidator).validate(any(), any(), eq(nominationDetail));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID, null, null)))
+                .with(csrf())
+                .with(user(USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/submission/submitNomination"));
+
+    verify(nominationSubmissionService, never()).submitNomination(nominationDetail);
+  }
+
+  @Test
+  void submitNomination_whenFormIsInvalid_andNominationDisplayTypeIsUnresolvable_thenVerifyError() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, USER);
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+    when(nominationSubmissionService.canSubmitNomination(nominationDetail)).thenReturn(true);
+
+    var wellSummaryView = WellSummaryView.builder(null).build();
+    var installationSummaryView = InstallationSummaryViewTestUtil.builder()
+        .withInstallationRelatedToNomination(new InstallationRelatedToNomination(false, List.of()))
+        .build();
+
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder()
+        .withWellSummaryView(wellSummaryView)
+        .withInstallationSummaryView(installationSummaryView)
+        .build();
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail))
+        .thenReturn(nominationSummaryView);
+
+    doAnswer(invocation -> {
+      var bindingResult = (BindingResult) invocation.getArgument(1);
+      bindingResult.addError(new FieldError("error", "error", "error"));
+      return invocation;
+    }).when(nominationSubmissionFormValidator).validate(any(), any(), eq(nominationDetail));
+
+    mockMvc.perform(
+            post(ReverseRouter.route(on(NominationSubmissionController.class).submitNomination(NOMINATION_ID, null, null)))
+                .with(csrf())
+                .with(user(USER))
+        )
+        .andExpect(status().is4xxClientError());
+
+    verify(nominationSubmissionService, never()).submitNomination(nominationDetail);
   }
 }

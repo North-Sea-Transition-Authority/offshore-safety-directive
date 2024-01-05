@@ -56,7 +56,7 @@ public class NominationSummaryViewTestUtil {
             new RegisteredCompanyNumber("Registered company number")
         ),
         new NominationReason("Nomination reason"),
-        AppointmentPlannedStartDate.fromDate(LocalDate.now().plusMonths(2)),
+        new AppointmentPlannedStartDate(LocalDate.now().plusMonths(2)),
         new NomineeDetailConditionsAccepted(true),
         new AppendixDocuments(List.of()),
         null

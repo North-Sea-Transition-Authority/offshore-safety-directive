@@ -64,7 +64,7 @@ public class NomineeDetailSummaryService {
               .map(NominationReason::new)
               .orElse(null);
           var proposedDate = Optional.ofNullable(nomineeDetail.getPlannedStartDate())
-              .map(AppointmentPlannedStartDate::fromDate)
+              .map(AppointmentPlannedStartDate::new)
               .orElse(null);
 
           var conditionsAccepted = getConditionsAccepted(nomineeDetail);

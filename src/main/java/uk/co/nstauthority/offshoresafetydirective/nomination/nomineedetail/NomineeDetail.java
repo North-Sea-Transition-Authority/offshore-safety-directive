@@ -17,7 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Entity
 @Table(name = "nominee_details")
 @Audited
-class NomineeDetail {
+public class NomineeDetail {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -92,7 +92,7 @@ class NomineeDetail {
     this.reasonForNomination = reasonForNomination;
   }
 
-  LocalDate getPlannedStartDate() {
+  public LocalDate getPlannedStartDate() {
     return plannedStartDate;
   }
 

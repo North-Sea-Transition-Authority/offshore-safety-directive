@@ -19,7 +19,7 @@
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Planned appointment date">
-          ${(nomineeDetailSummaryView.appointmentPlannedStartDate().plannedStartDate())!""}
+          ${(nomineeDetailSummaryView.appointmentPlannedStartDate().plannedStartDateString())!""}
       </@fdsSummaryList.summaryListRowNoAction>
 
       <@fdsSummaryList.summaryListRowNoAction keyText="Accepted all declarations">

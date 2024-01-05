@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 
 @Service
-class NomineeDetailPersistenceService {
+public class NomineeDetailPersistenceService {
 
   private final NomineeDetailRepository nomineeDetailRepository;
 
@@ -18,7 +18,7 @@ class NomineeDetailPersistenceService {
     this.nomineeDetailRepository = nomineeDetailRepository;
   }
 
-  Optional<NomineeDetail> getNomineeDetail(NominationDetail nominationDetail) {
+  public Optional<NomineeDetail> getNomineeDetail(NominationDetail nominationDetail) {
     return nomineeDetailRepository.findByNominationDetail(nominationDetail);
   }
 

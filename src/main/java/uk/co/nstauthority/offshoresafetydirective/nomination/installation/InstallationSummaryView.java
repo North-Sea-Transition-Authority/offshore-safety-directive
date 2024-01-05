@@ -14,8 +14,8 @@ public record InstallationSummaryView(
     List<String> relatedLicenceReferences
 ) {
 
-  private static final String SUMMARY_ID = "installations-summary";
-  private static final String SUMMARY_NAME = "Installations";
+  static final String SUMMARY_ID = "installations-summary";
+  static final String SUMMARY_NAME = "Installations";
 
   public InstallationSummaryView(InstallationRelatedToNomination installationRelatedToNomination,
                                  InstallationForAllPhases installationForAllPhases,

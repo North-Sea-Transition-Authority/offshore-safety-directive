@@ -131,7 +131,7 @@ class NomineeDetailSummaryServiceTest {
 
     assertThat(result)
         .extracting(NomineeDetailSummaryView::appointmentPlannedStartDate)
-        .extracting(AppointmentPlannedStartDate::plannedStartDate)
+        .extracting(AppointmentPlannedStartDate::plannedStartDateString)
         .isEqualTo("%d %s %d".formatted(
             plannedStartDate.getDayOfMonth(),
             plannedStartDate.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()),

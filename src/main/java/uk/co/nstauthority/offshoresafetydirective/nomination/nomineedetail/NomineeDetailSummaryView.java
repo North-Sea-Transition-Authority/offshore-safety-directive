@@ -15,8 +15,8 @@ public record NomineeDetailSummaryView(
     SummarySectionDetails summarySectionDetails
 ) {
 
-  private static final String SUMMARY_ID = "nominee-details-summary";
-  private static final String SUMMARY_NAME = "Nominee details";
+  static final String SUMMARY_ID = "nominee-details-summary";
+  static final String SUMMARY_NAME = "Nominee details";
 
   public NomineeDetailSummaryView(NominatedOrganisationUnitView applicantOrganisationUnitView,
                                   NominationReason nominationReason,
