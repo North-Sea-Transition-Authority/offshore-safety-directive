@@ -63,6 +63,7 @@ public class NominationCaseProcessingController {
     var modelAndViewDto = CaseProcessingFormDto.builder()
         .withCaseProcessingVersionForm(form)
         .build();
+
     return nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(
         nominationDetail,
         modelAndViewDto

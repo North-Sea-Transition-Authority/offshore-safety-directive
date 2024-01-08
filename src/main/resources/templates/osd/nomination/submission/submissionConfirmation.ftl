@@ -4,6 +4,7 @@
 <#-- @ftlvariable name="workAreaLink" type="String" -->
 <#-- @ftlvariable name="nominationReference" type="String" -->
 <#-- @ftlvariable name="nominationManagementLink" type="String" -->
+<#-- @ftlvariable name="feedbackUrl" type="String" -->
 
 <#assign nominationSubmittedText="Nomination submitted"/>
 
@@ -26,6 +27,13 @@
   </p>
   <p class="govuk-body">
     The licensing authority will contact you if your nomination or supporting information requires any discussion or clarification.
+  </p>
+  <p class="govuk-body">
+    <@fdsAction.link
+      linkClass="govuk-link"
+      linkText="What did you think of this service?"
+      linkUrl=springUrl(feedbackUrl)/>
+    (takes 30 seconds)
   </p>
   <p class="govuk-body">
     <@fdsAction.link linkText="Back to work area" linkUrl=springUrl(workAreaLink)/>

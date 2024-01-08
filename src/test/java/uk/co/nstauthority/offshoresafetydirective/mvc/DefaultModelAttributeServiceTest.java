@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurat
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
+import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -84,8 +85,11 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Feedback",
+                        ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
+                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
@@ -119,6 +123,7 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
+                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
@@ -157,8 +162,11 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Feedback",
+                        ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
+                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
@@ -196,6 +204,7 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
                 ),
+                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );
@@ -232,8 +241,11 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Feedback",
+                        ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
+                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email()
             )
         );

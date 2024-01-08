@@ -19,6 +19,7 @@
   backLinkUrl=springUrl(backLinkUrl)
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
+  phaseBanner=(loggedInUser?has_content)
 >
   <#assign searchFilterContent>
     <@fdsSearch.searchFilterList filterButtonItemText="appointments">

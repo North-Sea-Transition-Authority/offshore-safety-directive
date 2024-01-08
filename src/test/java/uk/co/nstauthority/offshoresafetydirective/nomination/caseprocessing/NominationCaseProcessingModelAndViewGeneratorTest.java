@@ -435,7 +435,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
 
     var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
 
-        MapEntryAssert.thenAssertThat(result.getModel())
+    MapEntryAssert.thenAssertThat(result.getModel())
         .hasKeyWithValue("headerInformation", header)
         .hasKeyWithValue("summaryView", nominationSummaryView)
         .hasKeyWithValue("qaChecksForm", qaChecksForm)

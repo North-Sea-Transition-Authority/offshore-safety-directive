@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
+import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -22,7 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 @Controller
 @RequestMapping("nomination/{nominationId}/submission-confirmation")
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-@HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+@HasPermission(permissions = RolePermission.SUBMIT_NOMINATION)
 public class NominationSubmitConfirmationController {
 
   private final NominationDetailService nominationDetailService;
@@ -42,6 +43,8 @@ public class NominationSubmitConfirmationController {
     return new ModelAndView("osd/nomination/submission/submissionConfirmation")
         .addObject("workAreaLink", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
         .addObject("nominationReference", nomination.getReference())
+        .addObject("feedbackUrl", ReverseRouter.route(on(FeedbackController.class)
+            .getNominationFeedback(new NominationId(nomination.getId()), null)))
         .addObject("nominationManagementLink",
             ReverseRouter.route(on(NominationCaseProcessingController.class)
                 .renderCaseProcessing(new NominationId(nomination.getId()), null)));

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.mvc;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
+import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
@@ -53,20 +55,33 @@ public class DefaultModelAttributeService {
     attributes.put("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties());
     attributes.put("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
     attributes.put("navigationItems", topNavigationService.getTopNavigationItems());
-    attributes.put("footerItems", List.of(
-        new FooterItem(AccessibilityStatementController.PAGE_NAME,
-            ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
-        new FooterItem(ContactInformationController.PAGE_NAME,
-            ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
-    ));
+    attributes.put("footerItems", getFooterItems());
+    attributes.put("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
-
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 
     if (httpServletRequest != null) {
       attributes.put("currentEndPoint", httpServletRequest.getRequestURI());
     }
+  }
+
+  private List<FooterItem> getFooterItems() {
+    var footerItems = new ArrayList<>(
+        List.of(
+            new FooterItem(AccessibilityStatementController.PAGE_NAME,
+                ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+            new FooterItem(ContactInformationController.PAGE_NAME,
+                ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+        ));
+
+    if (getUser().isPresent()) {
+      footerItems.add(
+          new FooterItem(FeedbackController.PAGE_NAME,
+              ReverseRouter.route(on(FeedbackController.class).getFeedback(null))));
+    }
+
+    return footerItems;
   }
 
   private Optional<ServiceUserDetail> getUser() {

@@ -15,6 +15,7 @@
   pageSize=PageSize.TWO_THIRDS_COLUMN
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
+  phaseBanner=(loggedInUser?has_content)
 >
   <ul class="govuk-list">
     <li class="govuk-list__item">

@@ -8,6 +8,7 @@
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
+<#-- @ftlvariable name="feedbackUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="footerItems" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.footer.FooterItem>" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
@@ -16,6 +17,7 @@
 <#assign SERVICE_NAME = serviceBranding.name() />
 <#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
+<#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
 
 <#macro defaultPage
   pageHeading
@@ -112,6 +114,7 @@
     htmlAppTitle=SERVICE_NAME
     pageHeading=pageHeading
     phaseBanner=phaseBanner
+    phaseBannerLink=FEEDBACK_URL
     fullWidthColumn=isFullColumnWidth
     oneHalfColumn=isOneHalfColumnWidth
     oneThirdColumn=isOneThirdColumnWidth

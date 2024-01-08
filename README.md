@@ -104,6 +104,10 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_STATSD_PORT                            | The port that the metrics run on                                                                                            |
 | OSD_METRICS_INSTANCE_TAG                   | The hostname which will be applied to all metrics                                                                           |
 | OSD_METRICS_ENVIRONMENT_NAME               | The app name and environment e.g. osd-prod                                                                                  |
+| OSD_FMS_URL_BASE                           | The URL for the FMS instance on your environment                                                                            |
+| OSD_FMS_SUBMIT_ENDPOINT                    | The FMS endpoint where feedback will be sent. Defaults to /api/v1/save-feedback                                             |
+| OSD_FMS_PRESHARED_KEY                      | This is the api key used when making requests                                                                               |
+| OSD_FMS_CONNECTION_TIMEOUT_SECONDS         | Connection timeout in seconds. Defaults to 20                                                                               |
 
 ### 3. Initialise the Fivium Design System
 

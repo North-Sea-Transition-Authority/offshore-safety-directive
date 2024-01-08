@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSecurityTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
+import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -73,10 +74,10 @@ class NominationSubmitConfirmationControllerTest extends AbstractNominationContr
   }
 
   @SecurityTest
-  void smokeTestPermissions_onlyCreateNominationPermissionAllowed() {
+  void smokeTestPermissions_onlySubmitNominationPermissionAllowed() {
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
-        .withRequiredPermissions(Collections.singleton(RolePermission.CREATE_NOMINATION))
+        .withRequiredPermissions(Collections.singleton(RolePermission.SUBMIT_NOMINATION))
         .withUser(NOMINATION_CREATOR_USER)
         .withGetEndpoint(
             ReverseRouter.route(on(NominationSubmitConfirmationController.class)
@@ -109,6 +110,8 @@ class NominationSubmitConfirmationControllerTest extends AbstractNominationContr
             "workAreaLink",
             ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
         ))
+        .andExpect(model().attribute("feedbackUrl",
+            ReverseRouter.route(on(FeedbackController.class).getNominationFeedback(new NominationId(nomination.getId()), null))))
         .andExpect(model().attribute("nominationReference", "WIO/2022/123"))
         .andExpect(model().attribute("nominationManagementLink",
             ReverseRouter.route(on(NominationCaseProcessingController.class)

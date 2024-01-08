@@ -17,6 +17,7 @@
   backLinkWithBrowserBack=true
   showNavigationItems=(loggedInUser?has_content)
   allowSearchEngineIndexing=false
+  phaseBanner=(loggedInUser?has_content)
 >
     <#if newAppointmentUrl?has_content>
       <@fdsAction.link
