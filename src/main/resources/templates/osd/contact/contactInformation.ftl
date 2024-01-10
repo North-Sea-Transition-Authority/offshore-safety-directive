@@ -9,7 +9,10 @@
   pageHeading=pageName
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkWithBrowserBack=true
-  showNavigationItems=false>
+  showNavigationItems=false
+  phaseBanner=(loggedInUser?has_content)
+>
+
   <div class="govuk-body">
     <div>
       <h2 class="govuk-heading-m">Business support</h2>

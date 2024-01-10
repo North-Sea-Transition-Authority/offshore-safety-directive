@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '3.2.0'
+	id 'org.springframework.boot' version '3.2.1'
 	id 'io.spring.dependency-management' version '1.1.4'
 	id 'java'
 	id "org.sonarqube" version "3.3"
@@ -82,8 +82,8 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalapi:client:v6.3.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
-	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:develop-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
-	implementation 'uk.co.fivium.energyportalmessagequeue:messages:develop-SNAPSHOT' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
+	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v0.2.0' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-437
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:v0.2.0' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.1.0'
 	implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
 

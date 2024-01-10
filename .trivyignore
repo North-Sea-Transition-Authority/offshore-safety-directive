@@ -16,3 +16,9 @@ CVE-2020-8908
 
 # org.springframework.boot:spring-boot-starter-freemarker
 CVE-2023-6378
+
+# org.springframework.boot:spring-boot-starter-test
+# epmqMessagesJarIntegrationTestCompileClasspath
+# epmqMessagesJarIntegrationTestRuntimeClasspath
+# uk.co.fivium.energyportalapi:client:v6.3.0
+CVE-2023-51074
