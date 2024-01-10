@@ -13,7 +13,7 @@
     <#if file.uploadedFileView().fileDescription()?has_content>
       <p
         id="${file.uploadedFileView().fileId()}-description"
-        class="govuk-body govuk-body__preserve-whitespace"
+        class="govuk-body govuk-body__preserve-whitespace govuk-!-margin-bottom-0"
       >
           ${file.uploadedFileView().fileDescription()}
       </p>
