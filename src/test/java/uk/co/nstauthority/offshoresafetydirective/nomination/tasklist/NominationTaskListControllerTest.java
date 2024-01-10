@@ -43,6 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabel;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListLabelType;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionView;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -204,7 +205,7 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
   }
 
   @Test
-  void getTaskList_assertModelProperties_whenWrongPermission_thenNoAccessToDeleteAttributes() throws Exception {
+  void getTaskList_assertModelProperties_whenWrongPermissionForNomination_thenNoAccessToDeleteAttributes() throws Exception {
     givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
 
     var nominationEditorTeamMember = TeamMemberTestUtil.Builder()
@@ -215,6 +216,52 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
 
     when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
         .thenReturn(Collections.singletonList(nominationEditorTeamMember));
+
+    var sectionName = "section name";
+    var sectionDisplayOrder = 10;
+    var sectionWarningText = "section warning text";
+
+    setupMockTaskListSection(sectionName, sectionDisplayOrder, sectionWarningText);
+
+    var nominationTaskListItemType = new NominationTaskListItemType(nominationDetail);
+
+    var expectedTaskListItemView = TaskListTestUtil.getItemViewBuilder(20, "display name", "/action-url")
+        .withTaskListLabels(true)
+        .withNotCompletedLabel(false)
+        .withItemValid(true)
+        .withCustomTaskListLabel(new TaskListLabel("label text", TaskListLabelType.GREY))
+        .build();
+
+    setupMockTaskListItem(expectedTaskListItemView, nominationTaskListItemType);
+
+    mockMvc.perform(
+            get(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(view().name("osd/nomination/tasklist/taskList"))
+        .andExpect(model().attributeDoesNotExist("deleteNominationButtonPrompt"))
+        .andExpect(model().attributeDoesNotExist("deleteNominationUrl"));
+  }
+
+  @Test
+  void getTaskList_assertModelProperties_whenCreatePermissionForDifferentTeam_andEditForNominationTeam_thenNoAccessToDeleteAttributes() throws Exception {
+    givenUserHasNominationPermission(nominationDetail, NOMINATION_CREATOR_USER);
+
+    var nominationSubmitterForOtherTeam = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
+        .withTeamId(new TeamId(UUID.randomUUID()))
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    var nominationEditorTeamMember = TeamMemberTestUtil.Builder()
+        .withRole(IndustryTeamRole.NOMINATION_EDITOR)
+        .withTeamId(getTeam().toTeamId())
+        .withTeamType(TeamType.INDUSTRY)
+        .build();
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(List.of(nominationSubmitterForOtherTeam, nominationEditorTeamMember));
 
     var sectionName = "section name";
     var sectionDisplayOrder = 10;

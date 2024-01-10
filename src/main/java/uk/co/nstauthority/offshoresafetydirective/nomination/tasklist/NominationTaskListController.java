@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.tasklist;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +34,7 @@ public class NominationTaskListController {
   public static final String PAGE_NAME = "Task list";
 
   private final NominationDetailService nominationDetailService;
-
   private final List<NominationTaskListSection> nominationTaskListSections;
-
   private final List<NominationTaskListItem> nominationTaskListItems;
   private final CaseEventQueryService caseEventQueryService;
   private final UserDetailService userDetailService;
@@ -73,7 +72,11 @@ public class NominationTaskListController {
         );
 
     var user = userDetailService.getUserDetail();
-    var canDeleteNomination = permissionService.hasPermission(user, RolePermission.CREATE_NOMINATION);
+    var canDeleteNomination = permissionService.hasPermissionForNomination(
+        nominationDetail,
+        user,
+        Collections.singleton(RolePermission.CREATE_NOMINATION)
+    );
 
     if (canDeleteNomination) {
       modelAndView
