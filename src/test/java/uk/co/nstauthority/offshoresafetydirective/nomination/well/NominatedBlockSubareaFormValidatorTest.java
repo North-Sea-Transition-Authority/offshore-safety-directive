@@ -197,7 +197,7 @@ class NominatedBlockSubareaFormValidatorTest {
   }
 
   @Test
-  void validate_whenNoValidSubareasSelected_thenVerifyError() {
+  void validate_whenSubareasSelectedAreNotOnPortal_thenVerifyError() {
     var subareaIdOnForm = new LicenceBlockSubareaId(UUID.randomUUID().toString());
     var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
         .withSubareas(List.of(subareaIdOnForm.id()))
@@ -215,6 +215,31 @@ class NominatedBlockSubareaFormValidatorTest {
     var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
     assertThat(extractedErrors).containsExactly(
         entry("subareasSelect", Set.of("subareasSelect.notEmpty"))
+    );
+  }
+
+  @Test
+  void validate_whenSubareasSelectedAreNotExtant_thenVerifyError() {
+    var subareaIdOnForm = new LicenceBlockSubareaId(UUID.randomUUID().toString());
+    var form = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .withSubareas(List.of(subareaIdOnForm.id()))
+        .build();
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
+        .isExtant(false)
+        .build();
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(subareaIdOnForm),
+        LICENCE_BLOCK_SUBAREA_REQUEST_PURPOSE
+    ))
+        .thenReturn(List.of(licenceBlockSubareaDto));
+
+    nominatedBlockSubareaFormValidator.validate(form, bindingResult);
+
+    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
+    assertThat(extractedErrors).containsExactly(
+        entry("subareasSelect", Set.of("subareasSelect.invalidSubarea"))
     );
   }
 

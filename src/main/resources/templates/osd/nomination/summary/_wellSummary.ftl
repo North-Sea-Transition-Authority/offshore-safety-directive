@@ -67,7 +67,7 @@
         <ol class="govuk-list">
           <#list subareaWellSummaryView.licenceBlockSubareas as subarea>
             <li class="govuk-list__item govuk-!-margin-top-0">
-              <#if subarea.isOnPortal()>
+              <#if subarea.isExtant()>
                 ${subarea.displayName()}
               <#else>
                   ${subarea.subareaName().value()}

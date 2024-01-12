@@ -13,7 +13,7 @@
     <@fdsSummaryList.summaryList>
       <@fdsSummaryList.summaryListRowNoAction keyText="Licence block subareas">
         <#list nominatedBlockSubareaDetailView.licenceBlockSubareas as subarea>
-          <#if subarea.isOnPortal()>
+          <#if subarea.isExtant()>
             <p class="govuk-!-margin-top-0">${subarea.displayName()}</p>
           <#else>
             <p class="govuk-!-margin-top-0">${subarea.subareaName().value()}</p>

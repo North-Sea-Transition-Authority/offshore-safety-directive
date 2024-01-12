@@ -300,6 +300,72 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
   }
 
   @Test
+  void renderNominatedWellDetail_verifyOrderOfAlreadyAddedWells() throws Exception {
+    var formWithWells = NominatedWellFormTestUtil.builder()
+        .withWell(1)
+        .withWell(2)
+        .withWell(3)
+        .build();
+
+    var wellboreIdsFromForm = formWithWells.getWells()
+        .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
+        .map(WellboreId::new)
+        .toList();
+
+    when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(formWithWells);
+
+    var firstWellOnPortal = WellDtoTestUtil.builder()
+        .withWellboreId(1)
+        .withRegistrationNumber("Wellbore A")
+        .build();
+
+    var wellNotOnPortalId = new WellboreId(2);
+
+    var secondWellOnPortal = WellDtoTestUtil.builder()
+        .withWellboreId(3)
+        .withRegistrationNumber("Wellbore C")
+        .build();
+
+    var secondNominatedWell = NominatedWellTestUtil.builder()
+        .withWellboreId(wellNotOnPortalId.id())
+        .build();
+    when(nominatedWellAccessService.getNominatedWells(nominationDetail))
+        .thenReturn(List.of(secondNominatedWell));
+
+    // controller should return wellbores in the same order as they
+    // are returned from the query service
+    when(wellQueryService.getWellsByIds(wellboreIdsFromForm, NominatedWellDetailController.ALREADY_ADDED_WELLS_PURPOSE))
+        .thenReturn(List.of(firstWellOnPortal, secondWellOnPortal));
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("alreadyAddedWells"))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    @SuppressWarnings("unchecked")
+    var returnedAlreadyAddedWells = (List<WellAddToListView>) modelAndView.getModel().get("alreadyAddedWells");
+
+    assertThat(returnedAlreadyAddedWells)
+        .extracting(
+            WellAddToListView::getId,
+            WellAddToListView::isValid
+        )
+        .containsExactly(
+            Tuple.tuple(String.valueOf(wellNotOnPortalId.id()), false),
+            Tuple.tuple(String.valueOf(firstWellOnPortal.wellboreId().id()), true),
+            Tuple.tuple(String.valueOf(secondWellOnPortal.wellboreId().id()), true)
+        );
+  }
+
+  @Test
   void saveNominatedWellDetail_whenNoValidationErrors_verifyMethodCall() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(new NominatedWellDetailForm(), "form");
 

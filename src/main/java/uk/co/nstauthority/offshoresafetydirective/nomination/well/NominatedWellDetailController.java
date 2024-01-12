@@ -3,9 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,7 +20,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNo
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
@@ -123,27 +121,29 @@ public class NominatedWellDetailController {
         .map(WellboreId::new)
         .toList();
 
-    var savedWellbores = nominatedWellAccessService.getNominatedWells(nominationDetail)
-        .stream()
-        .collect(Collectors.toMap(NominatedWell::getWellId, NominatedWell::getName));
+    var savedWellbores = nominatedWellAccessService.getNominatedWells(nominationDetail);
 
     var wellsOnPortal = wellQueryService.getWellsByIds(wellboreIds, ALREADY_ADDED_WELLS_PURPOSE)
         .stream()
-        .collect(Collectors.toMap(wellDto -> wellDto.wellboreId().id(), WellDto::name));
-
-    return wellboreIds.stream()
-        .filter(wellboreId -> wellsOnPortal.containsKey(wellboreId.id()) || savedWellbores.containsKey(wellboreId.id()))
-        .map(wellboreId -> {
-          var isOnPortal = wellsOnPortal.containsKey(wellboreId.id());
-          var wellName = isOnPortal ? wellsOnPortal.get(wellboreId.id()) : savedWellbores.get(wellboreId.id());
-          return new WellAddToListView(
-              wellboreId.id(),
-              wellName,
-              isOnPortal
-          );
-        })
-        .sorted(Comparator.comparing(WellAddToListView::getName, String::compareToIgnoreCase))
+        .map(wellDto -> new WellAddToListView(
+            wellDto.wellboreId().id(),
+            wellDto.name(),
+            true
+        ))
         .toList();
+
+    var cachedWells = savedWellbores.stream()
+        .filter(nominatedWell -> wellsOnPortal.stream()
+            .noneMatch(view -> nominatedWell.getWellId().equals(view.id()))
+        )
+        .map(nominatedWell -> new WellAddToListView(
+            nominatedWell.getWellId(),
+            nominatedWell.getName(),
+            false
+        ))
+        .toList();
+
+    return Stream.concat(cachedWells.stream(), wellsOnPortal.stream()).toList();
 
   }
 }

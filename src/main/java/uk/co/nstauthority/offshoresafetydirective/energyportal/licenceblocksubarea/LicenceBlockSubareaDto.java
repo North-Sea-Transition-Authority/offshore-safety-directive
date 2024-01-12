@@ -10,20 +10,17 @@ public class LicenceBlockSubareaDto extends SubareaDto {
   private final LicenceBlock licenceBlock;
   private final LicenceDto licenceDto;
   private final boolean isExtant;
-  private final boolean isOnPortal;
 
   public LicenceBlockSubareaDto(LicenceBlockSubareaId subareaId,
                                 SubareaName subareaName,
                                 LicenceBlock licenceBlock,
                                 LicenceDto licenceDto,
-                                boolean isExtant,
-                                boolean isOnPortal) {
+                                boolean isExtant) {
     super(subareaId);
     this.subareaName = subareaName;
     this.licenceBlock = licenceBlock;
     this.licenceDto = licenceDto;
     this.isExtant = isExtant;
-    this.isOnPortal = isOnPortal;
   }
 
   static LicenceBlockSubareaDto fromPortalSubarea(Subarea subarea) {
@@ -40,8 +37,7 @@ public class LicenceBlockSubareaDto extends SubareaDto {
             new LicenceBlock.BlockReference(licenceBlock.getReference())
         ),
         LicenceDto.fromPortalLicence(subarea.getLicence()),
-        subarea.getStatus().equals(SubareaStatus.EXTANT),
-        true
+        subarea.getStatus().equals(SubareaStatus.EXTANT)
     );
   }
 
@@ -51,7 +47,6 @@ public class LicenceBlockSubareaDto extends SubareaDto {
         subareaName,
         null,
         null,
-        false,
         false
     );
   }
@@ -78,10 +73,6 @@ public class LicenceBlockSubareaDto extends SubareaDto {
         licenceBlock.reference().value(),
         subareaName.value()
     );
-  }
-
-  public boolean isOnPortal() {
-    return isOnPortal;
   }
 
   public static LicenceBlockSubareaComparator sort() {

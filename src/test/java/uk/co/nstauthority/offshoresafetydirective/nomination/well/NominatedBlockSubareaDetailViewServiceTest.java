@@ -325,7 +325,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
         .extracting(
             LicenceBlockSubareaDto::subareaId,
             dto -> dto.subareaName().value(),
-            LicenceBlockSubareaDto::isOnPortal
+            LicenceBlockSubareaDto::isExtant
         )
         .containsExactly(
             Tuple.tuple(
@@ -405,7 +405,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
         .extracting(
             LicenceBlockSubareaDto::subareaId,
             dto -> dto.subareaName().value(),
-            LicenceBlockSubareaDto::isOnPortal
+            LicenceBlockSubareaDto::isExtant
         )
         .containsExactly(
             Tuple.tuple(
@@ -548,7 +548,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
         .extracting(
             LicenceBlockSubareaDto::subareaId,
             dto -> dto.subareaName().value(),
-            LicenceBlockSubareaDto::isOnPortal
+            LicenceBlockSubareaDto::isExtant
         )
         .containsExactly(
             Tuple.tuple(

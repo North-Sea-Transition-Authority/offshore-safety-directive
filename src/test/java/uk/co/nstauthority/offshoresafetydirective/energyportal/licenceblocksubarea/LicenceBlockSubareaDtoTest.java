@@ -93,15 +93,13 @@ class LicenceBlockSubareaDtoTest {
             LicenceBlockSubareaDto::subareaName,
             LicenceBlockSubareaDto::licenceBlock,
             LicenceBlockSubareaDto::licence,
-            LicenceBlockSubareaDto::isExtant,
-            LicenceBlockSubareaDto::isOnPortal
+            LicenceBlockSubareaDto::isExtant
         )
         .containsExactly(
             subareaId,
             subareaName,
             null,
             null,
-            false,
             false
         );
   }
