@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQuerySer
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedWellDetailViewServiceTest {
@@ -37,7 +38,7 @@ class NominatedWellDetailViewServiceTest {
   private NominatedWellDetailViewService getNominatedWellDetailView;
 
   @Test
-  void getNominatedWellDetailView_whenEntityExist_assertFields() {
+  void getNominatedWellDetailView_whenEntityExist_andIsOnPortal_assertFields() {
 
     var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
@@ -54,8 +55,12 @@ class NominatedWellDetailViewServiceTest {
         .withWellboreId(2)
         .build();
 
-    var firstNominatedWell = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
-    var secondNominatedWell = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
+    var firstNominatedWell = NominatedWellTestUtil.builder(NOMINATION_DETAIL)
+        .withWellboreId(1)
+        .build();
+    var secondNominatedWell = NominatedWellTestUtil.builder(NOMINATION_DETAIL)
+        .withWellboreId(2)
+        .build();
 
     when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedWellDetail));
@@ -71,6 +76,9 @@ class NominatedWellDetailViewServiceTest {
 
     var nominatedWellDetailView = getNominatedWellDetailView.getNominatedWellDetailView(NOMINATION_DETAIL);
 
+    var firstWellSummaryItemView = WellSummaryItemView.fromWellDto(firstWellDto);
+    var secondWellSummaryItemView = WellSummaryItemView.fromWellDto(secondWellDto);
+
     assertTrue(nominatedWellDetailView.isPresent());
     assertThat(nominatedWellDetailView.get())
         .extracting(
@@ -79,10 +87,72 @@ class NominatedWellDetailViewServiceTest {
             NominatedWellDetailView::getWellPhases
         )
         .containsExactly(
-            List.of(firstWellDto, secondWellDto),
+            List.of(firstWellSummaryItemView, secondWellSummaryItemView),
             nominatedWellDetail.getForAllWellPhases(),
             List.of(WellPhase.EXPLORATION_AND_APPRAISAL, WellPhase.DEVELOPMENT)
         );
+
+    assertThat(List.of(firstWellSummaryItemView, secondWellSummaryItemView))
+        .extracting(WellSummaryItemView::isOnPortal)
+        .containsExactly(true, true);
+  }
+
+  @Test
+  void getNominatedWellDetailView_whenEntityExist_andIsNotOnPortal_assertFields() {
+
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
+        .withNominationDetail(NOMINATION_DETAIL)
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(true)
+        .withDevelopmentPhase(true)
+        .build();
+
+    var wellDto = WellDtoTestUtil.builder()
+        .withWellboreId(1)
+        .build();
+
+    var cachedWellName = "cached name";
+    var nominatedWell = NominatedWellTestUtil.builder(NOMINATION_DETAIL)
+        .withWellboreId(1)
+        .withName(cachedWellName)
+        .build();
+
+    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedWellDetail));
+
+    when(nominatedWellAccessService.getNominatedWells(NOMINATION_DETAIL))
+        .thenReturn(List.of(nominatedWell));
+
+    when(wellQueryService.getWellsByIds(
+        List.of(new WellboreId(nominatedWell.getWellId())),
+        NominatedWellDetailViewService.NOMINATED_WELL_PURPOSE
+    ))
+        .thenReturn(List.of());
+
+    var nominatedWellDetailView = getNominatedWellDetailView.getNominatedWellDetailView(NOMINATION_DETAIL);
+
+    assertTrue(nominatedWellDetailView.isPresent());
+    assertThat(nominatedWellDetailView.get())
+        .extracting(
+            NominatedWellDetailView::getIsNominationForAllWellPhases,
+            NominatedWellDetailView::getWellPhases
+        )
+        .containsExactly(
+            nominatedWellDetail.getForAllWellPhases(),
+            List.of(WellPhase.EXPLORATION_AND_APPRAISAL, WellPhase.DEVELOPMENT)
+        );
+
+    var expectedSummaryView = WellSummaryItemView.notOnPortal(
+        cachedWellName,
+        wellDto.wellboreId()
+    );
+
+    assertThat(nominatedWellDetailView.get().getWells())
+        .first()
+        .usingRecursiveComparison()
+        .isEqualTo(expectedSummaryView);
+
+    assertFalse(expectedSummaryView.isOnPortal());
   }
 
   @Test
@@ -93,4 +163,6 @@ class NominatedWellDetailViewServiceTest {
 
     assertFalse(nominatedWellDetailView.isPresent());
   }
+
+
 }

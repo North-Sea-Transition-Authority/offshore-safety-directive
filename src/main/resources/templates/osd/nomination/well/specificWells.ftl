@@ -27,7 +27,7 @@
       title=""
       itemName="Well"
       noItemText="No wells added"
-      invalidItemText="This well is invalid"
+      invalidItemText="This well no longer exists"
       addToListId="well-table"
       selectorLabelText="Select a well to add to this nomination"
       restUrl=springUrl(wellsRestUrl)

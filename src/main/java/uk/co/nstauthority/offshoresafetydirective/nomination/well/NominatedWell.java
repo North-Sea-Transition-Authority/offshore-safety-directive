@@ -34,9 +34,10 @@ public class NominatedWell {
   protected NominatedWell() {
   }
 
-  NominatedWell(NominationDetail nominationDetail, Integer wellId) {
+  NominatedWell(NominationDetail nominationDetail, Integer wellId, String wellName) {
     this.nominationDetail = nominationDetail;
     this.wellId = wellId;
+    this.name = wellName;
   }
 
   @VisibleForTesting
@@ -68,7 +69,7 @@ public class NominatedWell {
     return name;
   }
 
-  void setName(String name) {
+  public void setName(String name) {
     this.name = name;
   }
 

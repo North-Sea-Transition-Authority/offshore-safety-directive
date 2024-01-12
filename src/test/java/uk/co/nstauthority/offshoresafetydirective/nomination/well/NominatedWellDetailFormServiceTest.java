@@ -50,10 +50,12 @@ class NominatedWellDetailFormServiceTest {
     var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
         .withNominationDetail(NOMINATION_DETAIL)
         .build();
-    var well1 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
-    well1.setWellId(1);
-    var well2 = NominatedWellTestUtil.getNominatedWell(NOMINATION_DETAIL);
-    well2.setWellId(2);
+    var well1 = NominatedWellTestUtil.builder(NOMINATION_DETAIL)
+        .withWellboreId(1)
+        .build();
+    var well2 = NominatedWellTestUtil.builder(NOMINATION_DETAIL)
+        .withWellboreId(2)
+        .build();
     when(nominatedWellDetailAccessService.getNominatedWellDetails(NOMINATION_DETAIL))
         .thenReturn(Optional.of(nominatedWellDetail));
     when(nominatedWellAccessService.getNominatedWells(NOMINATION_DETAIL)).thenReturn(List.of(well1, well2));

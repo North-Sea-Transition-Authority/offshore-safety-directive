@@ -140,9 +140,10 @@ class WellSummaryServiceTest {
         .willReturn(Optional.of(new WellSelectionSetupView(WellSelectionType.SPECIFIC_WELLS)));
 
     var expectedWell = WellDtoTestUtil.builder().build();
+    var expectedWellSummaryView = WellSummaryItemView.fromWellDto(expectedWell);
 
     var specificWellSummaryView = NominatedWellDetailViewTestUtil.builder()
-        .withWellDto(expectedWell)
+        .withWellSummaryItemView(expectedWellSummaryView)
         .withIsNominationForAllWellPhases(false)
         .withWellPhase(WellPhase.EXPLORATION_AND_APPRAISAL)
         .build();
@@ -164,7 +165,7 @@ class WellSummaryServiceTest {
         )
         .containsExactly(
             WellSelectionType.SPECIFIC_WELLS,
-            List.of(expectedWell),
+            List.of(expectedWellSummaryView),
             false,
             List.of(WellPhase.EXPLORATION_AND_APPRAISAL)
         );

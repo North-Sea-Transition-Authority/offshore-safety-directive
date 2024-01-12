@@ -3,7 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -19,10 +21,12 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNo
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.managewells.ManageWellsController;
@@ -42,6 +46,7 @@ public class NominatedWellDetailController {
   private final NominationDetailService nominationDetailService;
   private final WellQueryService wellQueryService;
   private final NominatedWellDetailFormService nominatedWellDetailFormService;
+  private final NominatedWellAccessService nominatedWellAccessService;
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
 
   @Autowired
@@ -49,11 +54,13 @@ public class NominatedWellDetailController {
                                        NominationDetailService nominationDetailService,
                                        WellQueryService wellQueryService,
                                        NominatedWellDetailFormService nominatedWellDetailFormService,
+                                       NominatedWellAccessService nominatedWellAccessService,
                                        AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
     this.nominatedWellDetailPersistenceService = nominatedWellDetailPersistenceService;
     this.nominationDetailService = nominationDetailService;
     this.wellQueryService = wellQueryService;
     this.nominatedWellDetailFormService = nominatedWellDetailFormService;
+    this.nominatedWellAccessService = nominatedWellAccessService;
     this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
   }
 
@@ -83,6 +90,9 @@ public class NominatedWellDetailController {
 
   private ModelAndView getNominatedWellDetailModelAndView(NominatedWellDetailForm form,
                                                           NominationId nominationId) {
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+
     return new ModelAndView("osd/nomination/well/specificWells")
         .addObject("form", form)
         .addObject("backLinkUrl", ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(nominationId)))
@@ -92,7 +102,7 @@ public class NominatedWellDetailController {
             ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null))
         )
         .addObject("wellsRestUrl", getWellsSearchUrl())
-        .addObject("alreadyAddedWells", getWellViews(form))
+        .addObject("alreadyAddedWells", getWellViews(form, nominationDetail))
         .addObject("wellPhases", DisplayableEnumOptionUtil.getDisplayableOptions(WellPhase.class))
         .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }
@@ -101,7 +111,7 @@ public class NominatedWellDetailController {
     return RestApiUtil.route(on(WellRestController.class).searchWells(null));
   }
 
-  private List<WellAddToListView> getWellViews(NominatedWellDetailForm form) {
+  private List<WellAddToListView> getWellViews(NominatedWellDetailForm form, NominationDetail nominationDetail) {
     if (form.getWells() == null || form.getWells().isEmpty()) {
       return Collections.emptyList();
     }
@@ -113,15 +123,27 @@ public class NominatedWellDetailController {
         .map(WellboreId::new)
         .toList();
 
-    return wellQueryService.getWellsByIds(wellboreIds, ALREADY_ADDED_WELLS_PURPOSE)
+    var savedWellbores = nominatedWellAccessService.getNominatedWells(nominationDetail)
         .stream()
-        .map(wellDto ->
-            new WellAddToListView(
-                wellDto.wellboreId().id(),
-                wellDto.name(),
-                true
-            )
-        )
+        .collect(Collectors.toMap(NominatedWell::getWellId, NominatedWell::getName));
+
+    var wellsOnPortal = wellQueryService.getWellsByIds(wellboreIds, ALREADY_ADDED_WELLS_PURPOSE)
+        .stream()
+        .collect(Collectors.toMap(wellDto -> wellDto.wellboreId().id(), WellDto::name));
+
+    return wellboreIds.stream()
+        .filter(wellboreId -> wellsOnPortal.containsKey(wellboreId.id()) || savedWellbores.containsKey(wellboreId.id()))
+        .map(wellboreId -> {
+          var isOnPortal = wellsOnPortal.containsKey(wellboreId.id());
+          var wellName = isOnPortal ? wellsOnPortal.get(wellboreId.id()) : savedWellbores.get(wellboreId.id());
+          return new WellAddToListView(
+              wellboreId.id(),
+              wellName,
+              isOnPortal
+          );
+        })
+        .sorted(Comparator.comparing(WellAddToListView::getName, String::compareToIgnoreCase))
         .toList();
+
   }
 }

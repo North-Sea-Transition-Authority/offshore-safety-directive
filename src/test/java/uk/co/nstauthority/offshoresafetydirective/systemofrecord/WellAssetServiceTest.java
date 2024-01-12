@@ -29,6 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.NominatedSubareaWellAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @ExtendWith(MockitoExtension.class)
 class WellAssetServiceTest {
@@ -78,8 +79,9 @@ class WellAssetServiceTest {
     var existingWellDto = WellDtoTestUtil.builder()
         .withWellboreId(existingWellboreId)
         .build();
+    var summaryView = WellSummaryItemView.fromWellDto(existingWellDto);
     var wellDetailView = NominatedWellDetailViewTestUtil.builder()
-        .withWellDtos(List.of(existingWellDto))
+        .withWellSummaryItemViews(List.of(summaryView))
         .build();
 
     when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
@@ -108,9 +110,10 @@ class WellAssetServiceTest {
     var newWellDto = WellDtoTestUtil.builder()
         .withWellboreId(newWellboreId)
         .build();
+    var summaryView = WellSummaryItemView.fromWellDto(newWellDto);
     var wellDetailView = NominatedWellDetailViewTestUtil.builder()
         .withIsNominationForAllWellPhases(true)
-        .withWellDtos(List.of(newWellDto))
+        .withWellSummaryItemViews(List.of(summaryView))
         .build();
 
     when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
@@ -141,13 +144,14 @@ class WellAssetServiceTest {
     var newWellDto = WellDtoTestUtil.builder()
         .withWellboreId(newWellboreId)
         .build();
+    var summaryView = WellSummaryItemView.fromWellDto(newWellDto);
     var wellDetailView = NominatedWellDetailViewTestUtil.builder()
         .withIsNominationForAllWellPhases(false)
         .withWellPhases(List.of(
             WellPhase.DECOMMISSIONING,
             WellPhase.DEVELOPMENT
         ))
-        .withWellDtos(List.of(newWellDto))
+        .withWellSummaryItemViews(List.of(summaryView))
         .build();
 
     when(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))

@@ -14,6 +14,11 @@
         <tr class="govuk-table__row">
           <td class="govuk-table__cell">
             ${wellbore.name()}
+            <#if !wellbore.isOnPortal()>
+              <div>
+                <strong class="govuk-tag govuk-tag--blue">Does not exist</strong>
+              </div>
+            </#if>
           </td>
           <td class="govuk-table__cell">
             <#if wellbore.mechanicalStatus()?has_content>

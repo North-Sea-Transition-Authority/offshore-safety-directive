@@ -11,8 +11,12 @@ public class NominatedWellTestUtil {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  public static NominatedWell getNominatedWell(NominationDetail nominationDetail) {
-    return new NominatedWell(nominationDetail, 1);
+  public static Builder builder(NominationDetail nominationDetail) {
+    return new Builder()
+        .withId(UUID.randomUUID())
+        .withWellboreId(1)
+        .withNominationDetail(nominationDetail)
+        .withName("name-%s".formatted(UUID.randomUUID()));
   }
 
   public static Builder builder() {
@@ -22,10 +26,9 @@ public class NominatedWellTestUtil {
   public static class Builder {
 
     private UUID id = UUID.randomUUID();
-
     private NominationDetail nominationDetail = NominationDetailTestUtil.builder().build();
-
     private Integer wellboreId = 34;
+    private String name = "name-%s".formatted(UUID.randomUUID());
 
     public Builder withId(UUID id) {
       this.id = id;
@@ -42,10 +45,16 @@ public class NominatedWellTestUtil {
       return this;
     }
 
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public NominatedWell build() {
       var nominatedWell = new NominatedWell(id);
       nominatedWell.setNominationDetail(nominationDetail);
       nominatedWell.setWellId(wellboreId);
+      nominatedWell.setName(name);
       return nominatedWell;
     }
 

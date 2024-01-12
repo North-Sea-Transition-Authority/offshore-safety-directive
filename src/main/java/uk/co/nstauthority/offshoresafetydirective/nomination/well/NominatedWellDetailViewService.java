@@ -1,13 +1,18 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @Service
 public class NominatedWellDetailViewService {
@@ -31,12 +36,28 @@ public class NominatedWellDetailViewService {
     return nominatedWellDetailRepository.findByNominationDetail(nominationDetail)
         .map(entity -> {
 
-          var nominatedWellIds = nominatedWellAccessService.getNominatedWells(nominationDetail)
-              .stream()
+          var nominatedWells = nominatedWellAccessService.getNominatedWells(nominationDetail);
+          var nominatedWellIds = nominatedWells.stream()
               .map(nominatedWell -> new WellboreId(nominatedWell.getWellId()))
+              .distinct()
               .toList();
 
-          var wellDtos = wellQueryService.getWellsByIds(nominatedWellIds, NOMINATED_WELL_PURPOSE);
+          Map<Integer, WellDto> wellboreIdWellDtoMap = wellQueryService.getWellsByIds(nominatedWellIds, NOMINATED_WELL_PURPOSE)
+              .stream()
+              .collect(Collectors.toMap(wellDto -> wellDto.wellboreId().id(), Function.identity()));
+
+          var wellSummaryItemViews = nominatedWells.stream()
+              .map(nominatedWell -> {
+                if (wellboreIdWellDtoMap.containsKey(nominatedWell.getWellId())) {
+                  var wellDto = wellboreIdWellDtoMap.get(nominatedWell.getWellId());
+                  return WellSummaryItemView.fromWellDto(wellDto);
+                }
+                return WellSummaryItemView.notOnPortal(
+                    nominatedWell.getName(),
+                    new WellboreId(nominatedWell.getWellId())
+                );
+              })
+              .toList();
 
           var wellPhases = new ArrayList<WellPhase>();
 
@@ -49,7 +70,7 @@ public class NominatedWellDetailViewService {
           if (entity.getDecommissioningPhase() != null) {
             wellPhases.add(WellPhase.DECOMMISSIONING);
           }
-          return new NominatedWellDetailView(wellDtos, entity.getForAllWellPhases(), wellPhases);
+          return new NominatedWellDetailView(wellSummaryItemViews, entity.getForAllWellPhases(), wellPhases);
         });
   }
 }

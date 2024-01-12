@@ -2,11 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import java.util.Collections;
 import java.util.List;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 public class NominatedWellDetailView {
 
-  private final List<WellDto> wells;
+  private final List<WellSummaryItemView> wells;
   private final Boolean isNominationForAllWellPhases;
   private final List<WellPhase> wellPhases;
 
@@ -14,14 +14,14 @@ public class NominatedWellDetailView {
     this(Collections.emptyList(), null, Collections.emptyList());
   }
 
-  public NominatedWellDetailView(List<WellDto> wells, Boolean isNominationForAllWellPhases,
+  public NominatedWellDetailView(List<WellSummaryItemView> wells, Boolean isNominationForAllWellPhases,
                                  List<WellPhase> wellPhases) {
     this.wells = wells;
     this.isNominationForAllWellPhases = isNominationForAllWellPhases;
     this.wellPhases = wellPhases;
   }
 
-  public List<WellDto> getWells() {
+  public List<WellSummaryItemView> getWells() {
     return wells;
   }
 

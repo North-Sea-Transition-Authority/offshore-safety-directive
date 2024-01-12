@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -68,6 +69,9 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
 
   @MockBean
   private NominatedWellDetailFormService nominatedWellDetailFormService;
+
+  @MockBean
+  private NominatedWellAccessService nominatedWellAccessService;
 
   @BeforeEach
   void setup() {
@@ -139,8 +143,8 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
     when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(form);
 
     var modelAndView = mockMvc.perform(
-        get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
-            .with(user(NOMINATION_CREATOR_USER))
+            get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+                .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().isOk())
         .andExpect(view().name("osd/nomination/well/specificWells"))
@@ -152,7 +156,8 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
         ))
         .andExpect(model().attribute(
             "actionUrl",
-            ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null))
+            ReverseRouter.route(
+                on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null))
         ))
         .andExpect(model().attribute(
             "wellsRestUrl",
@@ -202,10 +207,12 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
 
     var firstWellDto = WellDtoTestUtil.builder()
         .withWellboreId(1)
+        .withRegistrationNumber("Wellbore B")
         .build();
 
     var secondWellDto = WellDtoTestUtil.builder()
         .withWellboreId(2)
+        .withRegistrationNumber("Wellbore A")
         .build();
 
     // controller should return wellbores in the same order as they
@@ -236,20 +243,80 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
   }
 
   @Test
+  void renderNominatedWellDetail_whenSavedWells_andHasWellNoLongerOnPortal_thenVerifyItems() throws Exception {
+
+    var formWithWells = NominatedWellFormTestUtil.builder()
+        .withWell(1)
+        .withWell(2)
+        .build();
+
+    var wellboreIdsFromForm = formWithWells.getWells()
+        .stream()
+        .filter(NumberUtils::isDigits)
+        .map(Integer::parseInt)
+        .map(WellboreId::new)
+        .toList();
+
+    when(nominatedWellDetailFormService.getForm(nominationDetail)).thenReturn(formWithWells);
+
+    var wellDto = WellDtoTestUtil.builder()
+        .withWellboreId(1)
+        .build();
+
+    // controller should return wellbores in the same order as they
+    // are returned from the query service
+    when(wellQueryService.getWellsByIds(wellboreIdsFromForm, NominatedWellDetailController.ALREADY_ADDED_WELLS_PURPOSE))
+        .thenReturn(List.of(wellDto));
+
+    var nominatedWell = NominatedWellTestUtil.builder()
+        .withWellboreId(2)
+        .build();
+    when(nominatedWellAccessService.getNominatedWells(nominationDetail))
+        .thenReturn(List.of(nominatedWell));
+
+    var modelAndView = mockMvc.perform(
+            get(ReverseRouter.route(on(NominatedWellDetailController.class).renderNominatedWellDetail(nominationId)))
+                .with(user(NOMINATION_CREATOR_USER))
+        )
+        .andExpect(status().isOk())
+        .andExpect(model().attributeExists("alreadyAddedWells"))
+        .andReturn()
+        .getModelAndView();
+
+    assertThat(modelAndView).isNotNull();
+
+    @SuppressWarnings("unchecked")
+    var returnedAlreadyAddedWells = (List<WellAddToListView>) modelAndView.getModel().get("alreadyAddedWells");
+
+    assertThat(returnedAlreadyAddedWells)
+        .extracting(
+            WellAddToListView::getId,
+            WellAddToListView::isValid
+        )
+        .containsExactly(
+            Tuple.tuple(String.valueOf(nominatedWell.getWellId()), false),
+            Tuple.tuple(String.valueOf(wellDto.wellboreId().id()), true)
+        );
+  }
+
+  @Test
   void saveNominatedWellDetail_whenNoValidationErrors_verifyMethodCall() throws Exception {
     var bindingResult = new BeanPropertyBindingResult(new NominatedWellDetailForm(), "form");
 
     when(nominatedWellDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
+            post(ReverseRouter.route(
+                on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_CREATOR_USER))
         )
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(nominationId))));
+        .andExpect(
+            redirectedUrl(ReverseRouter.route(on(ManageWellsController.class).getWellManagementPage(nominationId))));
 
-    verify(nominatedWellDetailPersistenceService, times(1)).createOrUpdateNominatedWellDetail(eq(nominationDetail), any());
+    verify(nominatedWellDetailPersistenceService, times(1)).createOrUpdateNominatedWellDetail(eq(nominationDetail),
+        any());
   }
 
   @Test
@@ -260,7 +327,8 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
     when(nominatedWellDetailFormService.validate(any(), any())).thenReturn(bindingResult);
 
     mockMvc.perform(
-            post(ReverseRouter.route(on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
+            post(ReverseRouter.route(
+                on(NominatedWellDetailController.class).saveNominatedWellDetail(nominationId, null, null)))
                 .with(csrf())
                 .with(user(NOMINATION_CREATOR_USER))
         )

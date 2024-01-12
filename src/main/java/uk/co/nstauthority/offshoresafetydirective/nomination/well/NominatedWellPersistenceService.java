@@ -43,7 +43,7 @@ class NominatedWellPersistenceService {
 
     List<NominatedWell> nominatedWells = wellQueryService.getWellsByIds(wellIds, SAVE_WELLS_PURPOSE)
         .stream()
-        .map(wellDto -> new NominatedWell(nominationDetail, wellDto.wellboreId().id()))
+        .map(wellDto -> new NominatedWell(nominationDetail, wellDto.wellboreId().id(), wellDto.name()))
         .toList();
 
     deleteByNominationDetail(nominationDetail);

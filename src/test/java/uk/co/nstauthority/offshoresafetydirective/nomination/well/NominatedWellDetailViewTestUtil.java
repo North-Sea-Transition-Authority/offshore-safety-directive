@@ -2,8 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import java.util.ArrayList;
 import java.util.List;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 public class NominatedWellDetailViewTestUtil {
 
@@ -16,7 +16,7 @@ public class NominatedWellDetailViewTestUtil {
   }
 
   public static class NominatedWellDetailViewBuilder {
-    private List<WellDto> wellDtos = new ArrayList<>();
+    private List<WellSummaryItemView> wellSummaryItemViews = new ArrayList<>();
     private Boolean isNominationForALlWellPhases = false;
     private List<WellPhase> wellPhases = new ArrayList<>();
 
@@ -26,14 +26,14 @@ public class NominatedWellDetailViewTestUtil {
 
     private NominatedWellDetailViewBuilder() {}
 
-    public NominatedWellDetailViewBuilder withWellDtos(List<WellDto> wellDtos) {
-      this.wellDtos = wellDtos;
+    public NominatedWellDetailViewBuilder withWellSummaryItemViews(List<WellSummaryItemView> wellDtos) {
+      this.wellSummaryItemViews = wellDtos;
       this.wellsAdded = true;
       return this;
     }
 
-    public NominatedWellDetailViewBuilder withWellDto(WellDto wellDto) {
-      this.wellDtos.add(wellDto);
+    public NominatedWellDetailViewBuilder withWellSummaryItemView(WellSummaryItemView wellDto) {
+      this.wellSummaryItemViews.add(wellDto);
       this.wellsAdded = true;
       return this;
     }
@@ -58,14 +58,15 @@ public class NominatedWellDetailViewTestUtil {
     public NominatedWellDetailView build() {
 
       if (!wellsAdded) {
-        wellDtos.add(WellDtoTestUtil.builder().build());
+        var wellDto = WellDtoTestUtil.builder().build();
+        wellSummaryItemViews.add(WellSummaryItemView.fromWellDto(wellDto));
       }
 
       if (!wellPhasesAdded) {
         wellPhases.addAll(List.of(WellPhase.DEVELOPMENT, WellPhase.DECOMMISSIONING));
       }
 
-      return new NominatedWellDetailView(wellDtos, isNominationForALlWellPhases, wellPhases);
+      return new NominatedWellDetailView(wellSummaryItemViews, isNominationForALlWellPhases, wellPhases);
     }
   }
 }
