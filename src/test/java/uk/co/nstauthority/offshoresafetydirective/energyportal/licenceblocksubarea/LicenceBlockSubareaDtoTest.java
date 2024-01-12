@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksuba
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 
@@ -79,6 +80,30 @@ class LicenceBlockSubareaDtoTest {
     assertThat(resultingLicenceBlockSubarea)
         .extracting(LicenceBlockSubareaDto::isExtant)
         .isEqualTo(false);
+  }
+
+  @Test
+  void notOnPortal_verifyMapping() {
+    var subareaId = new LicenceBlockSubareaId(UUID.randomUUID().toString());
+    var subareaName = new SubareaName("subarea name");
+    var result = LicenceBlockSubareaDto.notOnPortal(subareaId, subareaName);
+    assertThat(result)
+        .extracting(
+            SubareaDto::subareaId,
+            LicenceBlockSubareaDto::subareaName,
+            LicenceBlockSubareaDto::licenceBlock,
+            LicenceBlockSubareaDto::licence,
+            LicenceBlockSubareaDto::isExtant,
+            LicenceBlockSubareaDto::isOnPortal
+        )
+        .containsExactly(
+            subareaId,
+            subareaName,
+            null,
+            null,
+            false,
+            false
+        );
   }
 
 }

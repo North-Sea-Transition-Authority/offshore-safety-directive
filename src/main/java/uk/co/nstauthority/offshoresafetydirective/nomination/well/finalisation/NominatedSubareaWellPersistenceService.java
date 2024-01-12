@@ -44,7 +44,8 @@ class NominatedSubareaWellPersistenceService {
                                                              NominationDetail nominationDetail) {
     return new NominatedSubareaWell(
         nominationDetail,
-        nominatedSubareaWellDto.wellboreId().id()
+        nominatedSubareaWellDto.wellboreId().id(),
+        nominatedSubareaWellDto.name()
     );
   }
 

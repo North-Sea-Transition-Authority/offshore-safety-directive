@@ -226,7 +226,7 @@ class WellJourneyManagerControllerTest extends AbstractNominationControllerTest 
         .willReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
-        .willReturn(List.of(new NominatedBlockSubareaDto(new LicenceBlockSubareaId("10"))));
+        .willReturn(List.of(new NominatedBlockSubareaDto(new LicenceBlockSubareaId("10"), "subarea name")));
 
     mockMvc.perform(
             get(

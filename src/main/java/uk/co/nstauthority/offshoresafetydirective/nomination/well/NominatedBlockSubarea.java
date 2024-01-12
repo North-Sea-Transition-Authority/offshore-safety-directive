@@ -59,7 +59,7 @@ class NominatedBlockSubarea {
     this.blockSubareaId = blockSubareaId;
   }
 
-  String getName() {
+  public String getName() {
     return name;
   }
 

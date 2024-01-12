@@ -18,4 +18,5 @@ public record LicenceBlockSubareaAddToListView(String id, String name, boolean i
   public boolean isValid() {
     return isValid;
   }
+
 }

@@ -66,7 +66,16 @@
       <#if subareaWellSummaryView.licenceBlockSubareas?has_content>
         <ol class="govuk-list">
           <#list subareaWellSummaryView.licenceBlockSubareas as subarea>
-            <li class="govuk-list__item govuk-!-margin-top-0">${subarea.displayName()}</li>
+            <li class="govuk-list__item govuk-!-margin-top-0">
+              <#if subarea.isOnPortal()>
+                ${subarea.displayName()}
+              <#else>
+                  ${subarea.subareaName().value()}
+                <div>
+                  <strong class="govuk-tag govuk-tag--blue">No longer exists</strong>
+                </div>
+              </#if>
+            </li>
           </#list>
         </ol>
       </#if>

@@ -18,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellAccessService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedSubareaWellsServiceTest {
@@ -39,7 +40,7 @@ class NominatedSubareaWellsServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
         .willReturn(List.of(expectedNominatedSubarea));
@@ -60,17 +61,18 @@ class NominatedSubareaWellsServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
         .willReturn(List.of(expectedNominatedSubarea));
 
     var expectedNominatedWellInSubarea = WellDtoTestUtil.builder().build();
+    var expectedWellSummaryItemView = WellSummaryItemView.fromWellDto(expectedNominatedWellInSubarea);
 
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(
         List.of(expectedNominatedSubarea.subareaId()))
     )
-        .willReturn(List.of(expectedNominatedWellInSubarea));
+        .willReturn(List.of(expectedWellSummaryItemView));
 
     var resultingNominatedSubareaWells =
         nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
@@ -85,7 +87,7 @@ class NominatedSubareaWellsServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
         .willReturn(List.of(expectedNominatedSubarea));
@@ -98,10 +100,13 @@ class NominatedSubareaWellsServiceTest {
         .withWellboreId(10)
         .build();
 
+    var firstWellSummaryItemView = WellSummaryItemView.fromWellDto(firstNominatedWellInSubarea);
+    var secondWellSummaryItemView = WellSummaryItemView.fromWellDto(secondDuplicateNominatedWellInSubarea);
+
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(
         List.of(expectedNominatedSubarea.subareaId()))
     )
-        .willReturn(List.of(firstNominatedWellInSubarea, secondDuplicateNominatedWellInSubarea));
+        .willReturn(List.of(firstWellSummaryItemView, secondWellSummaryItemView));
 
     var resultingNominatedSubareaWells =
         nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail);
@@ -116,7 +121,7 @@ class NominatedSubareaWellsServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
         .willReturn(List.of(expectedNominatedSubarea));
@@ -129,10 +134,13 @@ class NominatedSubareaWellsServiceTest {
         .withWellboreId(20)
         .build();
 
+    var expectedWellSummaryItemView = WellSummaryItemView.fromWellDto(expectedNominatedWellInSubarea);
+    var excludeWellSummaryItemView = WellSummaryItemView.fromWellDto(excludedNominatedWellInSubarea);
+
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(
         List.of(expectedNominatedSubarea.subareaId()))
     )
-        .willReturn(List.of(expectedNominatedWellInSubarea, excludedNominatedWellInSubarea));
+        .willReturn(List.of(expectedWellSummaryItemView, excludeWellSummaryItemView));
 
     given(excludedWellAccessService.getExcludedWellIds(nominationDetail))
         .willReturn(Set.of(excludedNominatedWellInSubarea.wellboreId()));
@@ -150,7 +158,7 @@ class NominatedSubareaWellsServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedNominatedSubarea = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
         .willReturn(List.of(expectedNominatedSubarea));
@@ -159,10 +167,12 @@ class NominatedSubareaWellsServiceTest {
         .withWellboreId(20)
         .build();
 
+    var excludedWellSummaryItemView = WellSummaryItemView.fromWellDto(excludedNominatedWellInSubarea);
+
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(
         List.of(expectedNominatedSubarea.subareaId()))
     )
-        .willReturn(List.of(excludedNominatedWellInSubarea));
+        .willReturn(List.of(excludedWellSummaryItemView));
 
     given(excludedWellAccessService.getExcludedWellIds(nominationDetail))
         .willReturn(Set.of(excludedNominatedWellInSubarea.wellboreId()));

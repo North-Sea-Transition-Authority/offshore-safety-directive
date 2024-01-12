@@ -19,8 +19,10 @@ public class NominatedBlockSubareaAccessService {
   public List<NominatedBlockSubareaDto> getNominatedSubareaDtos(NominationDetail nominationDetail) {
     return findAllByNominationDetail(nominationDetail)
         .stream()
-        .map(nominatedBlockSubarea -> new LicenceBlockSubareaId(nominatedBlockSubarea.getBlockSubareaId()))
-        .map(NominatedBlockSubareaDto::new)
+        .map(nominatedBlockSubarea -> new NominatedBlockSubareaDto(
+            new LicenceBlockSubareaId(nominatedBlockSubarea.getBlockSubareaId()),
+            nominatedBlockSubarea.getName()
+        ))
         .toList();
   }
 

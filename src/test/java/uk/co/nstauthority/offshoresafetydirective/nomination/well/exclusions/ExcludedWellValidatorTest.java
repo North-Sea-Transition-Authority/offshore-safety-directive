@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -154,13 +155,14 @@ class ExcludedWellValidatorTest {
         .withExcludedWells(Collections.emptyList())
         .build();
 
-    var expectedSubarea  = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedSubarea  = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(NOMINATION_DETAIL))
         .willReturn(List.of(expectedSubarea));
 
+    var wellDto = WellDtoTestUtil.builder().build();
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(List.of(expectedSubarea.subareaId())))
-        .willReturn(List.of(WellDtoTestUtil.builder().build()));
+        .willReturn(List.of(WellSummaryItemView.fromWellDto(wellDto)));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -193,13 +195,14 @@ class ExcludedWellValidatorTest {
         .withExcludedWell("wellbore id")
         .build();
 
-    var expectedSubarea  = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"));
+    var expectedSubarea  = new NominatedBlockSubareaDto(new LicenceBlockSubareaId("subarea id"), "subarea name");
 
     given(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(NOMINATION_DETAIL))
         .willReturn(List.of(expectedSubarea));
 
+    var wellDto = WellDtoTestUtil.builder().build();
     given(licenceBlockSubareaWellboreService.getSubareaRelatedWellbores(List.of(expectedSubarea.subareaId())))
-        .willReturn(List.of(WellDtoTestUtil.builder().build()));
+        .willReturn(List.of(WellSummaryItemView.fromWellDto(wellDto)));
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 

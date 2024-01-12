@@ -68,7 +68,7 @@ class NominatedWellDetailFormValidator implements Validator {
           errors.rejectValue(
               "wellsSelect",
               "wellsSelect.notAllSelectable",
-              "You must remove invalid wells"
+              "You can only submit valid wells"
           );
         }
       }

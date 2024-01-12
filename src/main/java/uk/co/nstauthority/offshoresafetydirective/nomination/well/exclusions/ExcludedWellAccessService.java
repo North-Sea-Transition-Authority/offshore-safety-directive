@@ -34,7 +34,7 @@ public class ExcludedWellAccessService {
         .orElse(null);
   }
 
-  List<ExcludedWell> getExcludedWells(NominationDetail nominationDetail) {
+  public List<ExcludedWell> getExcludedWells(NominationDetail nominationDetail) {
     return excludedWellRepository.findByNominationDetail(nominationDetail);
   }
 

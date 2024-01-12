@@ -33,9 +33,10 @@ final class NominatedSubareaWell {
 
   private String name;
 
-  NominatedSubareaWell(NominationDetail nominationDetail, int wellboreId) {
+  NominatedSubareaWell(NominationDetail nominationDetail, int wellboreId, String name) {
     this.nominationDetail = nominationDetail;
     this.wellboreId = wellboreId;
+    this.name = name;
   }
 
   public NominatedSubareaWell() {

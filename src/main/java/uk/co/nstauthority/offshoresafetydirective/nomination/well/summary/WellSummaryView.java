@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.summary;
 
 import java.util.List;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedWellDetailView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
@@ -24,7 +23,7 @@ public class WellSummaryView {
 
   private final ExcludedWellView excludedWellSummaryView;
 
-  private final List<WellDto> subareaWellsIncludedOnNomination;
+  private final List<WellSummaryItemView> subareaWellsIncludedOnNomination;
 
   private final SummarySectionError summarySectionError;
 
@@ -32,7 +31,7 @@ public class WellSummaryView {
                           NominatedWellDetailView specificWellSummaryView,
                           NominatedBlockSubareaDetailView subareaWellSummaryView,
                           ExcludedWellView excludedWellSummaryView,
-                          List<WellDto> subareaWellsIncludedOnNomination,
+                          List<WellSummaryItemView> subareaWellsIncludedOnNomination,
                           SummarySectionError summarySectionError) {
     this.wellSelectionType = wellSelectionType;
     this.specificWellSummaryView = specificWellSummaryView;
@@ -58,7 +57,7 @@ public class WellSummaryView {
     return excludedWellSummaryView;
   }
 
-  public List<WellDto> getSubareaWellsIncludedOnNomination() {
+  public List<WellSummaryItemView> getSubareaWellsIncludedOnNomination() {
     return subareaWellsIncludedOnNomination;
   }
 
@@ -87,7 +86,7 @@ public class WellSummaryView {
 
     private ExcludedWellView excludedWellSummaryView;
 
-    private List<WellDto> subareaWellsIncludedOnNomination;
+    private List<WellSummaryItemView> subareaWellsIncludedOnNomination;
 
     private SummarySectionError summarySectionError;
 
@@ -110,7 +109,7 @@ public class WellSummaryView {
       return this;
     }
 
-    public Builder withSubareaWells(List<WellDto> subareaWellsIncludedOnNomination) {
+    public Builder withSubareaWells(List<WellSummaryItemView> subareaWellsIncludedOnNomination) {
       this.subareaWellsIncludedOnNomination = subareaWellsIncludedOnNomination;
       return this;
     }

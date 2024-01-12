@@ -68,6 +68,9 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
   @MockBean
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
 
+  @MockBean
+  private NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
+
   @BeforeEach
   void setup() {
 
@@ -158,8 +161,12 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
   @Test
   void getLicenceBlockSubareas_whenExistingSubareas_assertModelAndViewProperties() throws Exception {
 
+    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("subarea-id")
+        .build();
+
     var form = NominatedBlockSubareaFormTestUtil.builder()
-        .withSubareas(List.of("subarea-id"))
+        .withSubareas(List.of(expectedSubarea.subareaId().id()))
         .build();
 
     when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(form);
@@ -169,13 +176,18 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .map(LicenceBlockSubareaId::new)
         .toList();
 
-    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
-
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
         subareaIds,
         NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
     ))
         .thenReturn(List.of(expectedSubarea));
+
+    var nominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(expectedSubarea.subareaId())
+        .build();
+
+    when(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
+        .thenReturn(List.of(nominatedBlockSubareaDto));
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
@@ -231,11 +243,6 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
   @Test
   void getLicenceBlockSubareas_whenMultipleSubareaWithSameBlockAndName_thenSortedByLicenceComponents() throws Exception {
 
-    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .build();
-
-    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
-
     var firstSubareaByLicence = LicenceBlockSubareaDtoTestUtil.builder()
         .withLicenceType("A")
         .withLicenceNumber(1)
@@ -260,17 +267,51 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .withSubareaId("fourth")
         .build();
 
+    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .withSubareas(
+            List.of(
+                firstSubareaByLicence.subareaId().id(),
+                thirdSubareaByLicence.subareaId().id(),
+                secondSubareaByLicence.subareaId().id(),
+                fourthSubareaByLicence.subareaId().id()
+            )
+        )
+        .build();
+
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
+
     var unsortedSubareaList = List.of(
-        fourthSubareaByLicence,
         thirdSubareaByLicence,
-        secondSubareaByLicence,
-        firstSubareaByLicence
+        firstSubareaByLicence,
+        fourthSubareaByLicence,
+        secondSubareaByLicence
     );
 
     var subareaIds = formWithSubareas.getSubareas()
             .stream()
             .map(LicenceBlockSubareaId::new)
             .toList();
+
+    var firstNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(firstSubareaByLicence.subareaId())
+        .build();
+    var secondNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(secondSubareaByLicence.subareaId())
+        .build();
+    var thirdNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(thirdSubareaByLicence.subareaId())
+        .build();
+    var fourthNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(fourthSubareaByLicence.subareaId())
+        .build();
+
+    when(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
+        .thenReturn(List.of(
+            firstNominatedBlockSubareaDto,
+            secondNominatedBlockSubareaDto,
+            thirdNominatedBlockSubareaDto,
+            fourthNominatedBlockSubareaDto
+        ));
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
         subareaIds,
@@ -305,12 +346,8 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
   @Test
   void getLicenceBlockSubareas_whenMultipleSubareaWithSameLicenceAndName_thenSortedByBlockComponents() throws Exception {
 
-    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .build();
-
-    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
-
     var firstSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix(null)
@@ -318,6 +355,7 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .build();
 
     var secondSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix("a")
@@ -325,6 +363,7 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .build();
 
     var thirdSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
         .withQuadrantNumber("1")
         .withBlockNumber(1)
         .withBlockSuffix("B")
@@ -332,20 +371,37 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .build();
 
     var fourthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
         .withQuadrantNumber("1")
         .withBlockNumber(2)
         .withSubareaId("fourth")
         .build();
 
     var fifthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
         .withQuadrantNumber("10")
         .withSubareaId("fifth")
         .build();
 
     var sixthSubareaByBlock = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("name")
+        .withBlockReference("block ref")
         .withQuadrantNumber("2")
         .withSubareaId("sixth")
         .build();
+
+    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .withSubareas(List.of(
+            sixthSubareaByBlock.subareaId().id(),
+            firstSubareaByBlock.subareaId().id(),
+            thirdSubareaByBlock.subareaId().id(),
+            secondSubareaByBlock.subareaId().id(),
+            fifthSubareaByBlock.subareaId().id(),
+            fourthSubareaByBlock.subareaId().id()
+        ))
+        .build();
+
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
 
     var unsortedSubareaList = List.of(
         sixthSubareaByBlock,
@@ -366,6 +422,41 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         NominatedBlockSubareaController.ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
     ))
         .thenReturn(unsortedSubareaList);
+
+    var firstNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(firstSubareaByBlock.subareaId())
+        .withName(firstSubareaByBlock.displayName())
+        .build();
+    var secondNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(secondSubareaByBlock.subareaId())
+        .withName(secondSubareaByBlock.displayName())
+        .build();
+    var thirdNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(thirdSubareaByBlock.subareaId())
+        .withName(thirdSubareaByBlock.displayName())
+        .build();
+    var fourthNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(fourthSubareaByBlock.subareaId())
+        .withName(fourthSubareaByBlock.displayName())
+        .build();
+    var fifthNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(fifthSubareaByBlock.subareaId())
+        .withName(fifthSubareaByBlock.displayName())
+        .build();
+    var sixthNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(sixthSubareaByBlock.subareaId())
+        .withName(sixthSubareaByBlock.displayName())
+        .build();
+
+    when(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
+        .thenReturn(List.of(
+            firstNominatedBlockSubareaDto,
+            thirdNominatedBlockSubareaDto,
+            secondNominatedBlockSubareaDto,
+            sixthNominatedBlockSubareaDto,
+            fifthNominatedBlockSubareaDto,
+            fourthNominatedBlockSubareaDto
+        ));
 
     var modelAndView = mockMvc.perform(
             get(ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(NOMINATION_ID)))
@@ -396,22 +487,30 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
   @Test
   void getLicenceBlockSubareas_whenMultipleSubareaWithSameLicenceAndBlock_thenSortedBySubareaName() throws Exception {
 
-    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
-        .build();
-
-    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
-
     var firstSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("1")
         .withSubareaName("a name")
         .build();
 
     var secondSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("2")
         .withSubareaName("B name")
         .build();
 
     var thirdSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId("3")
         .withSubareaName("c name")
         .build();
+
+    var formWithSubareas = new NominatedBlockSubareaFormTestUtil.NominatedBlockSubareaFormBuilder()
+        .withSubareas(List.of(
+            firstSubareaByName.subareaId().id(),
+            thirdSubareaByName.subareaId().id(),
+            secondSubareaByName.subareaId().id()
+        ))
+        .build();
+
+    when(nominatedBlockSubareaFormService.getForm(nominationDetail)).thenReturn(formWithSubareas);
 
     var unsortedSubareaList = List.of(
         thirdSubareaByName,
@@ -423,6 +522,23 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
         .stream()
         .map(LicenceBlockSubareaId::new)
         .toList();
+
+    var firstNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(firstSubareaByName.subareaId())
+        .build();
+    var secondNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(secondSubareaByName.subareaId())
+        .build();
+    var thirdNominatedBlockSubareaDto = NominatedBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(thirdSubareaByName.subareaId())
+        .build();
+
+    when(nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail))
+        .thenReturn(List.of(
+            firstNominatedBlockSubareaDto,
+            thirdNominatedBlockSubareaDto,
+            secondNominatedBlockSubareaDto
+        ));
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
         subareaIds,

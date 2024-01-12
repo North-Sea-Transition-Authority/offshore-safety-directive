@@ -26,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.EpaWellboreT
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @ExtendWith(MockitoExtension.class)
 class LicenceBlockSubareaWellboreServiceTest {
@@ -137,7 +138,7 @@ class LicenceBlockSubareaWellboreServiceTest {
             LicenceBlockSubareaWellboreService.WELLBORES_PURPOSE);
 
     assertThat(resultingWellbores)
-        .extracting(WellDto::wellboreId)
+        .extracting(WellSummaryItemView::wellboreId)
         .containsExactly(new WellboreId(100));
   }
 
@@ -181,7 +182,7 @@ class LicenceBlockSubareaWellboreServiceTest {
     verify(wellQueryServiceSpy).getWellsByIds(List.of(wellDto.wellboreId()), LicenceBlockSubareaWellboreService.WELLBORES_PURPOSE);
 
     assertThat(resultingWellbores)
-        .extracting(WellDto::wellboreId)
+        .extracting(WellSummaryItemView::wellboreId)
         .containsExactly(new WellboreId(100));
   }
 
@@ -258,7 +259,7 @@ class LicenceBlockSubareaWellboreServiceTest {
     verify(wellQueryServiceSpy).getWellsByIds(wellDtoIds, LicenceBlockSubareaWellboreService.WELLBORES_PURPOSE);
 
     assertThat(resultingWells)
-        .extracting(WellDto::name)
+        .extracting(WellSummaryItemView::name)
         .containsExactly(
             firstWellbore.getRegistrationNumber(),
             secondWellbore.getRegistrationNumber(),

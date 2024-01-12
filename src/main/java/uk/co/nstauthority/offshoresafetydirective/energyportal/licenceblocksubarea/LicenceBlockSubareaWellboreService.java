@@ -8,6 +8,7 @@ import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @Service
 public class LicenceBlockSubareaWellboreService {
@@ -28,7 +29,7 @@ public class LicenceBlockSubareaWellboreService {
     this.wellQueryService = wellQueryService;
   }
 
-  public List<WellDto> getSubareaRelatedWellbores(List<LicenceBlockSubareaId> licenceBlockSubareaIds) {
+  public List<WellSummaryItemView> getSubareaRelatedWellbores(List<LicenceBlockSubareaId> licenceBlockSubareaIds) {
 
     if (CollectionUtils.isEmpty(licenceBlockSubareaIds)) {
       return Collections.emptyList();
@@ -43,6 +44,9 @@ public class LicenceBlockSubareaWellboreService {
         .distinct()
         .toList();
 
-    return wellQueryService.getWellsByIds(subareaRelatedWellboreIds, WELLBORES_PURPOSE);
+    return wellQueryService.getWellsByIds(subareaRelatedWellboreIds, WELLBORES_PURPOSE)
+        .stream()
+        .map(WellSummaryItemView::fromWellDto)
+        .toList();
   }
 }

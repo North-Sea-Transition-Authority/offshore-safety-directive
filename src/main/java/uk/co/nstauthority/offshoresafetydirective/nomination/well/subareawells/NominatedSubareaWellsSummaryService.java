@@ -8,6 +8,7 @@ import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @Service
 public class NominatedSubareaWellsSummaryService {
@@ -41,7 +42,10 @@ public class NominatedSubareaWellsSummaryService {
       var wellboresIncludedInNomination = wellQueryService.getWellsByIds(
           wellboreIdsIncludedInNomination,
           NOMINATED_SUBAREA_WELLS_PURPOSE
-      );
+      )
+          .stream()
+          .map(WellSummaryItemView::fromWellDto)
+          .toList();
       return Optional.of(new NominatedSubareaWellsView(wellboresIncludedInNomination));
     }
   }

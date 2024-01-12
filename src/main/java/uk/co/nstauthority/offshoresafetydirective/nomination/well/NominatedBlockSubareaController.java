@@ -4,6 +4,7 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -22,6 +23,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions.ExcludedWellboreController;
@@ -42,6 +44,7 @@ public class NominatedBlockSubareaController {
   private final NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties;
+  private final NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
 
   @Autowired
   public NominatedBlockSubareaController(NominationDetailService nominationDetailService,
@@ -49,32 +52,35 @@ public class NominatedBlockSubareaController {
                                          NominatedBlockSubareaFormService nominatedBlockSubareaFormService,
                                          NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
-                                         AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties) {
+                                         AccidentRegulatorConfigurationProperties accidentRegulatorConfigurationProperties,
+                                         NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService) {
     this.nominationDetailService = nominationDetailService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;
     this.nominatedBlockSubareaFormService = nominatedBlockSubareaFormService;
     this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
     this.accidentRegulatorConfigurationProperties = accidentRegulatorConfigurationProperties;
+    this.nominatedBlockSubareaAccessService = nominatedBlockSubareaAccessService;
   }
 
   @GetMapping
   public ModelAndView getLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-    return getModelAndView(nominationId, nominatedBlockSubareaFormService.getForm(nominationDetail));
+    return getModelAndView(nominationId, nominatedBlockSubareaFormService.getForm(nominationDetail), nominationDetail);
   }
 
   @PostMapping
   public ModelAndView saveLicenceBlockSubareas(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") NominatedBlockSubareaForm form,
                                                BindingResult bindingResult) {
+
+    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     bindingResult = nominatedBlockSubareaFormService.validate(form, bindingResult);
 
     if (bindingResult.hasErrors()) {
-      return getModelAndView(nominationId, form);
+      return getModelAndView(nominationId, form, nominationDetail);
     }
 
-    var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
     nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(nominationDetail, form);
     nominatedBlockSubareaPersistenceService.saveNominatedLicenceBlockSubareas(nominationDetail, form);
     return ReverseRouter.redirect(on(ExcludedWellboreController.class)
@@ -82,16 +88,18 @@ public class NominatedBlockSubareaController {
 
   }
 
-  private ModelAndView getModelAndView(NominationId nominationId, NominatedBlockSubareaForm form) {
+  private ModelAndView getModelAndView(NominationId nominationId, NominatedBlockSubareaForm form,
+                                       NominationDetail nominationDetail) {
     return new ModelAndView("osd/nomination/well/blockSubarea")
         .addObject("form", form)
         .addObject("pageTitle", PAGE_TITLE)
-        .addObject("backLinkUrl", ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(nominationId)))
+        .addObject("backLinkUrl",
+            ReverseRouter.route(on(WellSelectionSetupController.class).getWellSetup(nominationId)))
         .addObject(
             "actionUrl",
             ReverseRouter.route(on(NominatedBlockSubareaController.class).getLicenceBlockSubareas(nominationId))
         )
-        .addObject("alreadyAddedSubareas", getLicenceBlockSubareaViews(form))
+        .addObject("alreadyAddedSubareas", getLicenceBlockSubareaViews(form, nominationDetail))
         .addObject("blockSubareaRestUrl", getLicenceBlockSubareaSearchUrl())
         .addObject("accidentRegulatorBranding", accidentRegulatorConfigurationProperties);
   }
@@ -100,7 +108,8 @@ public class NominatedBlockSubareaController {
     return RestApiUtil.route(on(LicenceBlockSubareaRestController.class).searchSubareas(null));
   }
 
-  private List<LicenceBlockSubareaAddToListView> getLicenceBlockSubareaViews(NominatedBlockSubareaForm form) {
+  private List<LicenceBlockSubareaAddToListView> getLicenceBlockSubareaViews(NominatedBlockSubareaForm form,
+                                                                             NominationDetail nominationDetail) {
     if (form.getSubareas() == null || form.getSubareas().isEmpty()) {
       return Collections.emptyList();
     }
@@ -110,19 +119,30 @@ public class NominatedBlockSubareaController {
         .map(LicenceBlockSubareaId::new)
         .toList();
 
-    return licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+    var subareasOnPortal = licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
             licenceBlockSubareaIds,
             ALREADY_ADDED_LICENCE_BLOCK_SUBAREA_PURPOSE
         )
         .stream()
+        .filter(LicenceBlockSubareaDto::isExtant)
         .sorted(LicenceBlockSubareaDto.sort())
-        .map(blockSubareaDto ->
-            new LicenceBlockSubareaAddToListView(
-                blockSubareaDto.subareaId().id(),
-                blockSubareaDto.displayName(),
-                true
-            )
-        )
+        .map(dto -> new LicenceBlockSubareaAddToListView(
+            dto.subareaId().id(),
+            dto.displayName(),
+            true
+        ))
         .toList();
+
+    var savedSubareas = nominatedBlockSubareaAccessService.getNominatedSubareaDtos(nominationDetail)
+        .stream()
+        .filter(dto -> subareasOnPortal.stream().noneMatch(view -> view.id().equals(dto.subareaId().id())))
+        .map(dto -> new LicenceBlockSubareaAddToListView(
+            dto.subareaId().id(),
+            dto.name(),
+            false
+        ))
+        .toList();
+
+    return Stream.concat(savedSubareas.stream(), subareasOnPortal.stream()).toList();
   }
 }

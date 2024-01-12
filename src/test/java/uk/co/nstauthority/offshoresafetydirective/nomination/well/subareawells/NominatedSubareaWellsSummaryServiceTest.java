@@ -13,11 +13,11 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedSubareaWellsSummaryServiceTest {
@@ -56,7 +56,7 @@ class NominatedSubareaWellsSummaryServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var expectedNominatedSubareaWell = new NominatedSubareaWellDto(new WellboreId(100));
+    var expectedNominatedSubareaWell = new NominatedSubareaWellDto(new WellboreId(100), "subarea name");
 
     given(nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail))
         .willReturn(Set.of(expectedNominatedSubareaWell));
@@ -76,7 +76,7 @@ class NominatedSubareaWellsSummaryServiceTest {
 
     assertThat(resultingNominatedSubareaWellsView).isPresent();
     assertThat(resultingNominatedSubareaWellsView.get().nominatedSubareaWellbores())
-        .extracting(WellDto::wellboreId)
+        .extracting(WellSummaryItemView::wellboreId)
         .containsExactly(expectedNominatedSubareaWell.wellboreId());
   }
 

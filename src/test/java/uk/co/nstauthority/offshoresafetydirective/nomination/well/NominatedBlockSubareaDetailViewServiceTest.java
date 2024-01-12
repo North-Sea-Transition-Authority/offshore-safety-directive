@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,7 +38,7 @@ class NominatedBlockSubareaDetailViewServiceTest {
   private NominatedBlockSubareaDetailViewService nominatedBlockSubareaDetailViewService;
 
   @Test
-  void getNominatedBlockSubareaDetailView_whenEntityExist_assertFields() {
+  void getNominatedBlockSubareaDetailView_whenEntityExists_assertFields() {
 
     var nominatedBlockSubareaDetail = new NominatedBlockSubareaDetailTestUtil.NominatedBlockSubareaDetailBuilder()
         .withForAllWellPhases(false)
@@ -65,7 +66,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
     )
         .thenReturn(List.of(expectedLicenceBlockSubareaDto));
 
-    var nominatedBlockSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+    var nominatedBlockSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
 
     assertTrue(nominatedBlockSubareaDetailView.isPresent());
     assertThat(nominatedBlockSubareaDetailView.get())
@@ -92,7 +94,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
     when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
         .thenReturn(Optional.empty());
 
-    var nominatedBlockSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+    var nominatedBlockSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
 
     assertTrue(nominatedBlockSubareaDetailView.isEmpty());
   }
@@ -161,7 +164,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
                 .build()
         ));
 
-    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
 
     assertThat(resultingSubareaDetailView).isPresent();
     assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
@@ -261,7 +265,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
                 .build()
         ));
 
-    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
 
     assertThat(resultingSubareaDetailView).isPresent();
     assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
@@ -273,6 +278,156 @@ class NominatedBlockSubareaDetailViewServiceTest {
             fourthSubareaByBlock.subareaId(),
             fifthSubareaByBlock.subareaId(),
             sixthSubareaByBlock.subareaId()
+        );
+  }
+
+  @Test
+  void getNominatedBlockSubareaDetailView_whenSubareasAreNotOnPortal_thenAssertPropertiesAndOrder() {
+    var firstSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("a name")
+        .withSubareaId("first")
+        .build();
+
+    var secondSubareaByName = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("b name")
+        .withSubareaId("second")
+        .build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(
+            secondSubareaByName.subareaId(),
+            firstSubareaByName.subareaId()
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    )).thenReturn(List.of());
+
+    var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();
+
+    when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetail));
+
+    when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(List.of(
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(secondSubareaByName.subareaId().id())
+                .withName(secondSubareaByName.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(firstSubareaByName.subareaId().id())
+                .withName(firstSubareaByName.subareaName().value())
+                .build()
+        ));
+
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
+
+    assertThat(resultingSubareaDetailView).isPresent();
+    assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
+        .extracting(
+            LicenceBlockSubareaDto::subareaId,
+            dto -> dto.subareaName().value(),
+            LicenceBlockSubareaDto::isOnPortal
+        )
+        .containsExactly(
+            Tuple.tuple(
+                firstSubareaByName.subareaId(),
+                firstSubareaByName.subareaName().value(),
+                false
+            ),
+            Tuple.tuple(
+                secondSubareaByName.subareaId(),
+                secondSubareaByName.subareaName().value(),
+                false
+            )
+        );
+  }
+
+  @Test
+  void getNominatedBlockSubareaDetailView_verifyOrderOfMixedSourceSubareas() {
+    var firstSubareaByNameNotOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("a name")
+        .withSubareaId("first")
+        .build();
+
+    var secondSubareaByNameNotOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("b name")
+        .withSubareaId("second")
+        .build();
+
+    var firstSubareaByNameOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("a name")
+        .withSubareaId("third")
+        .build();
+
+    var secondSubareaByNameOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("b name")
+        .withSubareaId("fourth")
+        .build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(
+            secondSubareaByNameOnPortal.subareaId(),
+            firstSubareaByNameOnPortal.subareaId(),
+            secondSubareaByNameNotOnPortal.subareaId(),
+            firstSubareaByNameNotOnPortal.subareaId()
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    )).thenReturn(List.of(secondSubareaByNameOnPortal, firstSubareaByNameOnPortal));
+
+    var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();
+
+    when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetail));
+
+    when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(List.of(
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(secondSubareaByNameOnPortal.subareaId().id())
+                .withName(secondSubareaByNameOnPortal.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(firstSubareaByNameOnPortal.subareaId().id())
+                .withName(firstSubareaByNameOnPortal.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(secondSubareaByNameNotOnPortal.subareaId().id())
+                .withName(secondSubareaByNameNotOnPortal.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(firstSubareaByNameNotOnPortal.subareaId().id())
+                .withName(firstSubareaByNameNotOnPortal.subareaName().value())
+                .build()
+        ));
+
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
+
+    assertThat(resultingSubareaDetailView).isPresent();
+    assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
+        .extracting(
+            LicenceBlockSubareaDto::subareaId,
+            dto -> dto.subareaName().value(),
+            LicenceBlockSubareaDto::isOnPortal
+        )
+        .containsExactly(
+            Tuple.tuple(
+                firstSubareaByNameNotOnPortal.subareaId(),
+                firstSubareaByNameNotOnPortal.subareaName().value(),
+                false
+            ),
+            Tuple.tuple(
+                secondSubareaByNameNotOnPortal.subareaId(),
+                secondSubareaByNameNotOnPortal.subareaName().value(),
+                false
+            ),
+            Tuple.tuple(
+                firstSubareaByNameOnPortal.subareaId(),
+                firstSubareaByNameOnPortal.subareaName().value(),
+                true
+            ),
+            Tuple.tuple(
+                secondSubareaByNameOnPortal.subareaId(),
+                secondSubareaByNameOnPortal.subareaName().value(),
+                true
+            )
         );
   }
 
@@ -326,7 +481,8 @@ class NominatedBlockSubareaDetailViewServiceTest {
                 .build()
         ));
 
-    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
 
     assertThat(resultingSubareaDetailView).isPresent();
     assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
@@ -335,6 +491,81 @@ class NominatedBlockSubareaDetailViewServiceTest {
             firstSubareaByName.subareaId(),
             secondSubareaByName.subareaId(),
             thirdSubareaByName.subareaId()
+        );
+  }
+
+  @Test
+  void getNominatedBlockSubareaDetailView_whenSubareasNotOnPortal_verifyOrderedByName_andOrderIsCaseInsensitive() {
+    var firstSubareaByNameNotOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("a name")
+        .withSubareaId("first")
+        .build();
+
+    var secondSubareaByNameNotOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("B name")
+        .withSubareaId("second")
+        .build();
+
+    var thirdSubareaByNameNotOnPortal = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaName("c name")
+        .withSubareaId("third")
+        .build();
+
+    when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
+        List.of(
+            secondSubareaByNameNotOnPortal.subareaId(),
+            thirdSubareaByNameNotOnPortal.subareaId(),
+            firstSubareaByNameNotOnPortal.subareaId()
+        ), NominatedBlockSubareaDetailViewService.NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE
+    )).thenReturn(List.of());
+
+    var nominatedBlockSubareaDetail = NominatedBlockSubareaDetailTestUtil.builder().build();
+
+    when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedBlockSubareaDetail));
+
+    when(nominatedBlockSubareaPersistenceService.findAllByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(List.of(
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(secondSubareaByNameNotOnPortal.subareaId().id())
+                .withName(secondSubareaByNameNotOnPortal.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(thirdSubareaByNameNotOnPortal.subareaId().id())
+                .withName(thirdSubareaByNameNotOnPortal.subareaName().value())
+                .build(),
+            NominatedBlockSubareaTestUtil.builder()
+                .withBlockSubareaId(firstSubareaByNameNotOnPortal.subareaId().id())
+                .withName(firstSubareaByNameNotOnPortal.subareaName().value())
+                .build()
+        ));
+
+    var resultingSubareaDetailView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(
+        NOMINATION_DETAIL);
+
+    assertThat(resultingSubareaDetailView).isPresent();
+    assertThat(resultingSubareaDetailView.get().getLicenceBlockSubareas())
+        .extracting(
+            LicenceBlockSubareaDto::subareaId,
+            dto -> dto.subareaName().value(),
+            LicenceBlockSubareaDto::isOnPortal
+        )
+        .containsExactly(
+            Tuple.tuple(
+                firstSubareaByNameNotOnPortal.subareaId(),
+                firstSubareaByNameNotOnPortal.subareaName().value(),
+                false
+            ),
+            Tuple.tuple(
+                secondSubareaByNameNotOnPortal.subareaId(),
+                secondSubareaByNameNotOnPortal.subareaName().value(),
+                false
+            ),
+            Tuple.tuple(
+                thirdSubareaByNameNotOnPortal.subareaId(),
+                thirdSubareaByNameNotOnPortal.subareaName().value(),
+                false
+            )
         );
   }
 }

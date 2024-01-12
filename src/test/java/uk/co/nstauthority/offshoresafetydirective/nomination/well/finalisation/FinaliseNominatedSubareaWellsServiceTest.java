@@ -117,7 +117,7 @@ class FinaliseNominatedSubareaWellsServiceTest {
     given(wellSelectionSetupAccessService.getWellSelectionType(nominationDetail))
         .willReturn(Optional.of(WellSelectionType.LICENCE_BLOCK_SUBAREA));
 
-    var expectedNominatedSubareaWell = new NominatedSubareaWellDto(new WellboreId(100));
+    var expectedNominatedSubareaWell = new NominatedSubareaWellDto(new WellboreId(100), "subarea name");
 
     given(nominatedSubareaWellsService.determineNominatedSubareaWellbores(nominationDetail))
         .willReturn(Set.of(expectedNominatedSubareaWell));
@@ -133,7 +133,7 @@ class FinaliseNominatedSubareaWellsServiceTest {
         .materialiseNominatedSubareaWells(
             nominationDetail,
             Set.of(
-                new NominatedSubareaWellDto(expectedNominatedSubareaWell.wellboreId())
+                new NominatedSubareaWellDto(expectedNominatedSubareaWell.wellboreId(), "subarea name")
             )
         );
   }

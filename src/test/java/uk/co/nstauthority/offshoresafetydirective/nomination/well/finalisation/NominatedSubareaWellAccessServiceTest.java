@@ -40,8 +40,8 @@ class NominatedSubareaWellAccessServiceTest {
     var wellboreId2 = new WellboreId(20);
 
     var nominatedSubareaWellbores = List.of(
-        new NominatedSubareaWell(NOMINATION_DETAIL, wellboreId1.id()),
-        new NominatedSubareaWell(NOMINATION_DETAIL, wellboreId2.id())
+        new NominatedSubareaWell(NOMINATION_DETAIL, wellboreId1.id(), "subarea name 1"),
+        new NominatedSubareaWell(NOMINATION_DETAIL, wellboreId2.id(), "subarea name 2")
     );
 
     given(nominatedSubareaWellRepository.findByNominationDetail(NOMINATION_DETAIL))

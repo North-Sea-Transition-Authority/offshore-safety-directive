@@ -16,7 +16,7 @@
             ${wellbore.name()}
             <#if !wellbore.isOnPortal()>
               <div>
-                <strong class="govuk-tag govuk-tag--blue">Does not exist</strong>
+                <strong class="govuk-tag govuk-tag--blue">No longer exists</strong>
               </div>
             </#if>
           </td>

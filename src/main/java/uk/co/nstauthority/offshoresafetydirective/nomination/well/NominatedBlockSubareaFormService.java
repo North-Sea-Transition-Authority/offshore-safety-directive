@@ -15,8 +15,8 @@ class NominatedBlockSubareaFormService {
 
   @Autowired
   NominatedBlockSubareaFormService(NominatedBlockSubareaFormValidator nominatedBlockSubareaFormValidator,
-                                          NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
-                                          NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService) {
+                                   NominatedBlockSubareaPersistenceService nominatedBlockSubareaService,
+                                   NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaPersistenceService) {
     this.nominatedBlockSubareaFormValidator = nominatedBlockSubareaFormValidator;
     this.nominatedBlockSubareaPersistenceService = nominatedBlockSubareaService;
     this.nominatedBlockSubareaDetailPersistenceService = nominatedBlockSubareaPersistenceService;

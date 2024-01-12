@@ -5,17 +5,17 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 
-class ExcludedWellTestUtil {
+public class ExcludedWellTestUtil {
 
   private ExcludedWellTestUtil() {
     throw new IllegalUtilClassInstantiationException(this.getClass());
   }
 
-  static Builder builder() {
+  public static Builder builder() {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
 
     private UUID uuid = UUID.randomUUID();
 
@@ -25,22 +25,22 @@ class ExcludedWellTestUtil {
 
     private Builder() {}
 
-    Builder withUuid(UUID uuid) {
+    public Builder withUuid(UUID uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    Builder withNominationDetail(NominationDetail nominationDetail) {
+    public Builder withNominationDetail(NominationDetail nominationDetail) {
       this.nominationDetail = nominationDetail;
       return this;
     }
 
-    Builder withWellboreId(int wellboreId) {
+    public Builder withWellboreId(int wellboreId) {
       this.wellboreId = wellboreId;
       return this;
     }
 
-    ExcludedWell build() {
+    public ExcludedWell build() {
       var excludedWell = new ExcludedWell(uuid);
       excludedWell.setNominationDetail(nominationDetail);
       excludedWell.setWellboreId(wellboreId);

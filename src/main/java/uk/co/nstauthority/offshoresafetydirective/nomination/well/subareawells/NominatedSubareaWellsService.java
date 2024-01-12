@@ -3,12 +3,12 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.subareawells;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
@@ -46,20 +46,29 @@ public class NominatedSubareaWellsService {
     } else {
 
       // add wellbores in nominated subareas
-      var wellboreIdsInNominatedSubareas = licenceBlockSubareaWellboreService
+      var wellboresInNominatedSubareas = licenceBlockSubareaWellboreService
           .getSubareaRelatedWellbores(nominatedSubareaIds)
           .stream()
-          .map(WellDto::wellboreId)
-          .collect(Collectors.toSet());
+          .distinct()
+          .collect(Collectors.toMap(view -> view.wellboreId().id(), Function.identity()));
 
-      Set<WellboreId> wellboreIdsExcludedFromNomination = excludedWellAccessService.getExcludedWellIds(nominationDetail);
+      var wellboreIdsInNominatedSubareas = wellboresInNominatedSubareas.keySet();
+
+      Set<Integer> wellboreIdsExcludedFromNomination = excludedWellAccessService.getExcludedWellIds(nominationDetail)
+          .stream()
+          .map(WellboreId::id)
+          .collect(Collectors.toSet());
 
       // remove any wellbores that have been excluded
       wellboreIdsInNominatedSubareas.removeAll(wellboreIdsExcludedFromNomination);
 
       return wellboreIdsInNominatedSubareas
           .stream()
-          .map(NominatedSubareaWellDto::new)
+          .map(wellboresInNominatedSubareas::get)
+          .map(view -> new NominatedSubareaWellDto(
+              view.wellboreId(),
+              view.name()
+          ))
           .collect(Collectors.toSet());
     }
   }

@@ -21,7 +21,10 @@ public class FinalisedNominatedSubareaWellsAccessService {
   public Set<NominatedSubareaWellDto> getFinalisedNominatedSubareasWells(NominationDetail nominationDetail) {
     return nominatedSubareaWellRepository.findByNominationDetail(nominationDetail)
         .stream()
-        .map(nominatedSubareaWell -> new NominatedSubareaWellDto(new WellboreId(nominatedSubareaWell.getWellboreId())))
+        .map(nominatedSubareaWell -> new NominatedSubareaWellDto(
+            new WellboreId(nominatedSubareaWell.getWellboreId()),
+            nominatedSubareaWell.getName()
+        ))
         .collect(Collectors.toSet());
   }
 

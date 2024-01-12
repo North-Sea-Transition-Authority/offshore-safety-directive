@@ -24,17 +24,17 @@ import org.assertj.core.api.MapAssert;
  *      .hasAssertedAllKeys();
  * </code></pre>
  */
-public class MapEntryAssert {
+public class MapEntryAssert<K, V> {
 
   private final ArrayList<Object> assertedKeys = new ArrayList<>();
-  private final MapAssert<Object, Object> mapAssert;
+  private final MapAssert<K, V> mapAssert;
 
-  public MapEntryAssert(MapAssert<Object, Object> mapAssert) {
+  public MapEntryAssert(MapAssert<K, V> mapAssert) {
     this.mapAssert = mapAssert;
   }
 
-  public static MapEntryAssert thenAssertThat(Map o) {
-    return new MapEntryAssert(new MapAssert<Object, Object>(o));
+  public static <T, U> MapEntryAssert<T, U> thenAssertThat(Map<T, U> o) {
+    return new MapEntryAssert<T, U>(new MapAssert<T, U>(o));
   }
 
   /**
@@ -44,7 +44,7 @@ public class MapEntryAssert {
    * @param value The value of the entry to assert
    * @return self
    */
-  public MapEntryAssert hasKeyWithValue(Object key, Object value) {
+  public MapEntryAssert<K, V> hasKeyWithValue(K key, V value) {
     assertedKeys.add(key);
     mapAssert.containsEntry(key, value);
     return this;
@@ -57,8 +57,9 @@ public class MapEntryAssert {
    * @param keys The keys of the entries that were not asserted
    * @return self
    */
-  public MapEntryAssert hasAssertedAllKeysExcept(Object... keys) {
-    var allKeys = Stream.of(assertedKeys.stream(), Arrays.stream(keys))
+  public MapEntryAssert<K, V> hasAssertedAllKeysExcept(Object... keys) {
+    @SuppressWarnings("unchecked")
+    var allKeys = (K[]) Stream.of(assertedKeys.stream(), Arrays.stream(keys))
         .flatMap(Function.identity())
         .toArray(Object[]::new);
 
@@ -71,7 +72,7 @@ public class MapEntryAssert {
    *
    * @return self
    */
-  public MapEntryAssert hasAssertedAllKeys() {
+  public MapEntryAssert<K, V> hasAssertedAllKeys() {
     return hasAssertedAllKeysExcept();
   }
 }

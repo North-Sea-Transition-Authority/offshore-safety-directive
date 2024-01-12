@@ -18,6 +18,7 @@ class NominatedBlockSubareaTestUtil {
     private UUID id = UUID.randomUUID();
     private NominationDetail nominationDetail = new NominationDetailTestUtil.NominationDetailBuilder().build();
     private String blockSubareaId = "subarea-id";
+    private String name = "name-%s".formatted(UUID.randomUUID());
 
     private NominatedBlockSubareaBuilder() {}
 
@@ -36,10 +37,16 @@ class NominatedBlockSubareaTestUtil {
       return this;
     }
 
+    public NominatedBlockSubareaBuilder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public NominatedBlockSubarea build() {
       var nominatedBlockSubarea = new NominatedBlockSubarea(id);
       nominatedBlockSubarea.setNominationDetail(nominationDetail);
       nominatedBlockSubarea.setBlockSubareaId(blockSubareaId);
+      nominatedBlockSubarea.setName(name);
       return nominatedBlockSubarea;
     }
   }

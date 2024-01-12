@@ -47,7 +47,7 @@ class NominatedSubareaWellPersistenceServiceTest {
 
     var nominationDetail = NominationDetailTestUtil.builder().build();
 
-    var nominatedWellToSave = new NominatedSubareaWellDto(new WellboreId(100));
+    var nominatedWellToSave = new NominatedSubareaWellDto(new WellboreId(100), "subarea name");
 
     nominatedSubareaWellPersistenceService.materialiseNominatedSubareaWells(
         nominationDetail,

@@ -46,6 +46,7 @@ class NominatedBlockSubareaPersistenceService {
           var nominatedBlockSubarea = new NominatedBlockSubarea();
           nominatedBlockSubarea.setNominationDetail(nominationDetail);
           nominatedBlockSubarea.setBlockSubareaId(blockSubareaDto.subareaId().id());
+          nominatedBlockSubarea.setName(blockSubareaDto.displayName());
           return nominatedBlockSubarea;
         })
         .toList();

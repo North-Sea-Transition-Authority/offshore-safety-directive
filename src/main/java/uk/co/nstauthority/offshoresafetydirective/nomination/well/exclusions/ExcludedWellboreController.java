@@ -124,10 +124,8 @@ public class ExcludedWellboreController {
 
   private NominationDetail getNominationDetail(NominationId nominationId) {
     return nominationDetailService.getLatestNominationDetailOptional(nominationId)
-        .orElseThrow(() -> {
-          throw new OsdEntityNotFoundException(String.format(
-              "Cannot find latest NominationDetail with ID: %s", nominationId.id()
-          ));
-        });
+        .orElseThrow(() -> new OsdEntityNotFoundException(String.format(
+            "Cannot find latest NominationDetail with ID: %s", nominationId.id()
+        )));
   }
 }

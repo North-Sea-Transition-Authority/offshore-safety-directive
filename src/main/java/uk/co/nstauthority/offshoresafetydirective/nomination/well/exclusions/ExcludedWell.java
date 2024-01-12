@@ -16,7 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 @Entity
 @Table(name = "excluded_wells")
 @Audited
-class ExcludedWell {
+public class ExcludedWell {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -49,7 +49,7 @@ class ExcludedWell {
     this.nominationDetail = nominationDetail;
   }
 
-  int getWellboreId() {
+  public int getWellboreId() {
     return wellboreId;
   }
 

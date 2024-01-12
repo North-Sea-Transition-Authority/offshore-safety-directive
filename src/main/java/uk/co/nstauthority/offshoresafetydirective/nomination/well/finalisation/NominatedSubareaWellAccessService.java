@@ -31,7 +31,10 @@ public class NominatedSubareaWellAccessService {
 
     var nominatedSubareaWells = nominatedSubareaWellRepository.findByNominationDetail(nominationDetail)
         .stream()
-        .map(nominatedSubareaWell -> new NominatedSubareaWellDto(new WellboreId(nominatedSubareaWell.getWellboreId())))
+        .map(nominatedSubareaWell -> new NominatedSubareaWellDto(
+            new WellboreId(nominatedSubareaWell.getWellboreId()),
+            nominatedSubareaWell.getName()
+        ))
         .toList();
 
     List<WellboreId> nominatedSubareaIds = nominatedSubareaWells

@@ -38,6 +38,8 @@ public class LicenceBlockSubareaDtoTestUtil {
 
     private boolean isExtant = true;
 
+    private boolean isOnPortal = true;
+
     private Builder() {}
 
     public Builder withSubareaId(String subareaId) {
@@ -95,6 +97,11 @@ public class LicenceBlockSubareaDtoTestUtil {
       return this;
     }
 
+    public Builder withIsOnPortal(boolean onPortal) {
+      isOnPortal = onPortal;
+      return this;
+    }
+
     public LicenceBlockSubareaDto build() {
       return new LicenceBlockSubareaDto(
           new LicenceBlockSubareaId(subareaId),
@@ -111,7 +118,8 @@ public class LicenceBlockSubareaDtoTestUtil {
               new LicenceDto.LicenceNumber(licenceNumber),
               new LicenceDto.LicenceReference(licenceReference)
           ),
-          isExtant
+          isExtant,
+          isOnPortal
       );
     }
   }
