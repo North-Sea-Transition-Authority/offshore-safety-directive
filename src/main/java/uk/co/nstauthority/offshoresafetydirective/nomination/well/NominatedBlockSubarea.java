@@ -29,6 +29,8 @@ class NominatedBlockSubarea {
 
   private String blockSubareaId;
 
+  private String name;
+
   protected NominatedBlockSubarea() {
   }
 
@@ -55,5 +57,13 @@ class NominatedBlockSubarea {
 
   void setBlockSubareaId(String blockSubareaId) {
     this.blockSubareaId = blockSubareaId;
+  }
+
+  String getName() {
+    return name;
+  }
+
+  void setName(String name) {
+    this.name = name;
   }
 }

@@ -85,6 +85,7 @@ class NominatedWellDuplicatorTest {
     new PropertyObjectAssert(nominatedWellAssertion)
         .hasFieldOrPropertyWithValue("nominationDetail", targetNominationDetail)
         .hasFieldOrPropertyWithValue("wellId", existingWell.getWellId())
+        .hasFieldOrPropertyWithValue("name", existingWell.getName())
         .hasAssertedAllPropertiesExcept("id");
 
     nominatedWellAssertion

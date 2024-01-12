@@ -29,6 +29,7 @@ public class NominatedWell {
 
   private Integer wellId;
 
+  private String name;
 
   protected NominatedWell() {
   }
@@ -63,12 +64,21 @@ public class NominatedWell {
     this.wellId = wellId;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  void setName(String name) {
+    this.name = name;
+  }
+
   @Override
   public String toString() {
-    return "Well{" +
+    return "NominatedWell{" +
         "id=" + id +
         ", nominationDetail=" + nominationDetail +
         ", wellId=" + wellId +
+        ", name='" + name + '\'' +
         '}';
   }
 }

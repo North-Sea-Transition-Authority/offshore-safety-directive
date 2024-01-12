@@ -79,6 +79,7 @@ class NominatedBlockSubareaDuplicatorTest {
     new PropertyObjectAssert(blockSubareaAssertion)
         .hasFieldOrPropertyWithValue("nominationDetail", targetNominationDetail)
         .hasFieldOrPropertyWithValue("blockSubareaId", existingSubarea.getBlockSubareaId())
+        .hasFieldOrPropertyWithValue("name", existingSubarea.getName())
         .hasAssertedAllPropertiesExcept("id");
 
     blockSubareaAssertion

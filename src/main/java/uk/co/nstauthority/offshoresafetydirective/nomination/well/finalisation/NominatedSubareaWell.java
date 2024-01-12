@@ -31,6 +31,8 @@ final class NominatedSubareaWell {
 
   private int wellboreId;
 
+  private String name;
+
   NominatedSubareaWell(NominationDetail nominationDetail, int wellboreId) {
     this.nominationDetail = nominationDetail;
     this.wellboreId = wellboreId;
@@ -51,12 +53,17 @@ final class NominatedSubareaWell {
     return wellboreId;
   }
 
+  String getName() {
+    return name;
+  }
+
   @Override
   public String toString() {
-    return "NominatedWellbore{" +
+    return "NominatedSubareaWell{" +
         "uuid=" + uuid +
         ", nominationDetail=" + nominationDetail +
         ", wellboreId=" + wellboreId +
+        ", name='" + name + '\'' +
         '}';
   }
 }
