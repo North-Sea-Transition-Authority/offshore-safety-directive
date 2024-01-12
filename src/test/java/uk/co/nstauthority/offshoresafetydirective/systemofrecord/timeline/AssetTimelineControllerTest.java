@@ -22,7 +22,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
@@ -39,9 +38,6 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AssetTimelineService assetTimelineService;
-
-  @MockBean
-  private PortalAssetRetrievalService portalAssetRetrievalService;
 
   @BeforeEach
   void setUp() {

@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandin
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
@@ -43,7 +44,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationIntercept
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
@@ -145,6 +149,15 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
+  @MockBean
+  protected PortalAssetRetrievalService portalAssetRetrievalService;
+
+  @MockBean
+  protected AppointmentCorrectionService appointmentCorrectionService;
+
+  @MockBean
+  protected LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+
   @BeforeEach
   void setupAbstractControllerTest() {
     doCallRealMethod().when(userDetailService).getUserDetail();
@@ -156,6 +169,22 @@ public abstract class AbstractControllerTest {
     @Bean
     public HibernateQueryCounterImpl hibernateQueryInterceptor() {
       return new HibernateQueryCounterImpl();
+    }
+
+    @Bean
+    public AppointmentModelAndViewService appointmentModelAndViewService(PortalAssetRetrievalService portalAssetRetrievalService,
+                                                                          AppointmentCorrectionService appointmentCorrectionService,
+                                                                          NominationDetailService nominationDetailService,
+                                                                          AppointmentAccessService appointmentAccessService,
+                                                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                                                                          PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+      return new AppointmentModelAndViewService(
+          portalAssetRetrievalService,
+          appointmentCorrectionService,
+          nominationDetailService,
+          appointmentAccessService,
+          licenceBlockSubareaQueryService,
+          portalOrganisationUnitQueryService);
     }
   }
 }

@@ -38,7 +38,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -52,6 +51,7 @@ import uk.co.nstauthority.offshoresafetydirective.organisation.unit.Organisation
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
@@ -79,13 +79,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   private PortalAssetNameService portalAssetNameService;
 
   @MockBean
-  private AppointmentCorrectionService appointmentCorrectionService;
-
-  @MockBean
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
-
-  @MockBean
-  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @SecurityTest
   void smokeTestPermissions() {
@@ -321,7 +315,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
         operatorId,
-        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_OPERATOR_NAME_PURPOSE
     ))
         .thenReturn(Optional.empty());
 
@@ -420,7 +414,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
         expectedOrganisationId,
-        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_OPERATOR_NAME_PURPOSE
     ))
         .thenReturn(Optional.of(organisationDto));
 
@@ -507,7 +501,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(portalOrganisationUnitQueryService.getOrganisationById(
         expectedOrganisationId,
-        AppointmentCorrectionController.PRE_SELECTED_OPERATOR_NAME_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_OPERATOR_NAME_PURPOSE
     ))
         .thenReturn(Optional.of(organisationDto));
 
@@ -573,7 +567,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderCorrection_whenOnlineAppointmentType_andNoOnlineReference_thenNoPreselectedNomination() throws Exception {
+  void renderCorrection_whenOnlineAppointmentType_andNoOnlineReference_thenPreselectedNominationIsEmpty() throws Exception {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
@@ -601,11 +595,11 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
         .andExpect(status().isOk())
-        .andExpect(model().attributeDoesNotExist("preselectedNominationReference"));
+        .andExpect(model().attribute("preselectedNominationReference", Map.of()));
   }
 
   @Test
-  void renderCorrection_whenOnlineAppointmentType_andOnlineReferenceIsNotFound_thenNoPreselectedNomination() throws Exception {
+  void renderCorrection_whenOnlineAppointmentType_andOnlineReferenceIsNotFound_thenEmptyPreselectedNomination() throws Exception {
     var appointmentType = AppointmentType.ONLINE_NOMINATION;
     var appointmentId = new AppointmentId(UUID.randomUUID());
 
@@ -641,7 +635,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
         .andExpect(status().isOk())
-        .andExpect(model().attributeDoesNotExist("preselectedNominationReference"));
+        .andExpect(model().attribute("preselectedNominationReference", Map.of()));
   }
 
   @Test
@@ -719,7 +713,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
                 on(AppointmentCorrectionController.class).renderCorrection(appointmentId)))
             .with(user(USER)))
         .andExpect(status().isOk())
-        .andExpect(model().attributeDoesNotExist("preSelectedForwardApprovedAppointment"));
+        .andExpect(model().attribute("preSelectedForwardApprovedAppointment", Map.of()));
   }
 
 
@@ -752,7 +746,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
         new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()),
-        AppointmentCorrectionController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
     ))
         .thenReturn(Optional.empty());
 
@@ -808,7 +802,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
         new LicenceBlockSubareaId(appointment.getAsset().getPortalAssetId()),
-        AppointmentCorrectionController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
     ))
         .thenReturn(Optional.of(subarea));
 

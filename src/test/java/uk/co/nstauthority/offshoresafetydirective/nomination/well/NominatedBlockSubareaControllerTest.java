@@ -37,7 +37,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegula
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaRestController;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.AbstractNominationControllerTest;
@@ -65,9 +64,6 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
 
   @MockBean
   NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
-
-  @MockBean
-  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @MockBean
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;

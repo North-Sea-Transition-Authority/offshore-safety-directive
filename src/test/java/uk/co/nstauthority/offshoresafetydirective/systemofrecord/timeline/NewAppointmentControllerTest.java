@@ -41,7 +41,6 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
@@ -51,6 +50,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
@@ -59,10 +59,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenc
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionFormTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionValidator;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
@@ -81,12 +79,6 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   @MockBean
-  private PortalAssetRetrievalService portalAssetRetrievalService;
-
-  @MockBean
-  private AppointmentCorrectionService appointmentCorrectionService;
-
-  @MockBean
   private AppointmentService appointmentService;
 
   @MockBean
@@ -94,9 +86,6 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
-
-  @MockBean
-  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @BeforeEach
   void setUp() {
@@ -382,7 +371,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             "forwardApprovedAppointmentRestUrl",
             RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         ))
-        .andExpect(model().attributeDoesNotExist("preselectedOperator"));
+        .andExpect(model().attribute("preselectedOperator", Map.of()));
   }
 
   @Test
@@ -413,7 +402,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     var portalOrganisationDto = PortalOrganisationDtoTestUtil.builder()
         .withId(operatorId)
         .build();
-    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, NewAppointmentController.PRE_SELECTED_OPERATOR_NAME_PURPOSE))
+    when(portalOrganisationUnitQueryService.getOrganisationById(operatorId, AppointmentModelAndViewService.PRE_SELECTED_OPERATOR_NAME_PURPOSE))
         .thenReturn(Optional.of(portalOrganisationDto));
 
     mockMvc.perform(post(
@@ -605,7 +594,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
         new LicenceBlockSubareaId(createdByAppointmentAsset.getPortalAssetId()),
-        NewAppointmentController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
     ))
         .thenReturn(Optional.of(subareaDto));
 
@@ -663,7 +652,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
 
     when(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
         new LicenceBlockSubareaId(createdByAsset.getPortalAssetId()),
-        NewAppointmentController.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
+        AppointmentModelAndViewService.PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
     ))
         .thenReturn(Optional.empty());
 

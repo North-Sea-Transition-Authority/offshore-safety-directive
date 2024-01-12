@@ -18,7 +18,6 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -26,7 +25,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionSec
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -48,8 +46,6 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
       .build();
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  @MockBean
-  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @BeforeEach
   void setUp() {

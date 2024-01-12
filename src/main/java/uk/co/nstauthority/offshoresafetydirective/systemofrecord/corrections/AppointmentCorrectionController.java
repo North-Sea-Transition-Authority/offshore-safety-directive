@@ -2,10 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,34 +16,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
-import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
-import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
@@ -58,35 +42,23 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @HasAssetStatus(AssetStatus.EXTANT)
 public class AppointmentCorrectionController {
 
-  static final RequestPurpose PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE =
-      new RequestPurpose("Subarea name for the preselected forward approved appointment display string");
-
-  static final RequestPurpose PRE_SELECTED_OPERATOR_NAME_PURPOSE =
-      new RequestPurpose("Get pre-selected operator name for appointment");
-
   private final AppointmentAccessService appointmentAccessService;
+  private final AppointmentModelAndViewService appointmentModelAndViewService;
   private final PortalAssetNameService portalAssetNameService;
-  private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final AppointmentCorrectionValidator appointmentCorrectionValidator;
-  private final NominationDetailService nominationDetailService;
-  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @Autowired
   public AppointmentCorrectionController(AppointmentAccessService appointmentAccessService,
+                                         AppointmentModelAndViewService appointmentModelAndViewService,
                                          PortalAssetNameService portalAssetNameService,
-                                         PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                          AppointmentCorrectionService appointmentCorrectionService,
-                                         AppointmentCorrectionValidator appointmentCorrectionValidator,
-                                         NominationDetailService nominationDetailService,
-                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+                                         AppointmentCorrectionValidator appointmentCorrectionValidator) {
     this.appointmentAccessService = appointmentAccessService;
+    this.appointmentModelAndViewService = appointmentModelAndViewService;
     this.portalAssetNameService = portalAssetNameService;
-    this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentCorrectionValidator = appointmentCorrectionValidator;
-    this.nominationDetailService = nominationDetailService;
-    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
   }
 
   @GetMapping
@@ -145,121 +117,26 @@ public class AppointmentCorrectionController {
     };
   }
 
-  String getTimelineRoute(AppointmentDto appointmentDto) {
-    return switch (appointmentDto.assetDto().portalAssetType()) {
-      case WELLBORE -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderWellboreTimeline(appointmentDto.assetDto().portalAssetId()));
-      case INSTALLATION -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderInstallationTimeline(appointmentDto.assetDto().portalAssetId()));
-      case SUBAREA -> ReverseRouter.route(on(AssetTimelineController.class)
-          .renderSubareaTimeline(appointmentDto.assetDto().portalAssetId()));
-    };
-  }
-
   private ModelAndView getModelAndView(Appointment appointment,
                                        AppointmentCorrectionForm form) {
 
     var appointmentDto = AppointmentDto.fromAppointment(appointment);
     var assetDto = appointmentDto.assetDto();
-    var assetName = getAssetName(assetDto);
     var correctionHistoryViews = appointmentCorrectionService.getAppointmentCorrectionHistoryViews(appointment);
 
-    var appointmentTypes = AppointmentType.getDisplayableOptions(assetDto.portalAssetType());
-
-    var modelAndView = new ModelAndView("osd/systemofrecord/correction/correctAppointment")
-        .addObject("pageTitle", "Update appointment")
-        .addObject("assetName", assetName.value())
-        .addObject("assetTypeDisplayName", assetDto.portalAssetType().getDisplayName())
-        .addObject("assetTypeSentenceCaseDisplayName", assetDto.portalAssetType().getSentenceCaseDisplayName())
-        .addObject("submitUrl", ReverseRouter.route(on(AppointmentCorrectionController.class)
+    return appointmentModelAndViewService.getAppointmentModelAndView(
+        "Update appointment",
+        assetDto,
+        form,
+        ReverseRouter.route(on(AppointmentCorrectionController.class)
             .submitCorrection(appointmentDto.appointmentId(), null, null, null)))
-        .addObject("portalOrganisationsRestUrl", RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-            .searchAllPortalOrganisations(null, OrganisationFilterType.ALL.name())))
-        .addObject("preselectedOperator", getPreselectedOperator(form))
-        .addObject("phases", appointmentCorrectionService.getSelectablePhaseMap(assetDto.portalAssetType()))
-        .addObject("appointmentTypes", appointmentTypes)
         .addObject("correctionHistoryViews", correctionHistoryViews)
-        .addObject("form", form)
-        .addObject("cancelUrl", getTimelineRoute(appointmentDto))
-        .addObject(
-            "nominationReferenceRestUrl",
-            RestApiUtil.route(on(NominationReferenceRestController.class).searchPostSubmissionNominations(null))
-        )
-        .addObject(
-            "forwardApprovedAppointmentRestUrl",
-            RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
-        )
         .addObject("showCorrectionHistory", true);
-
-    if (AppointmentType.ONLINE_NOMINATION.name().equals(form.getAppointmentType())
-        && form.getOnlineNominationReference() != null) {
-      nominationDetailService.getLatestNominationDetailOptional(
-          new NominationId(UUID.fromString(form.getOnlineNominationReference()))
-      ).ifPresent(nominationDetail -> {
-        var nomination = nominationDetail.getNomination();
-        modelAndView.addObject("preselectedNominationReference", Map.of(
-            nomination.getId(),
-            nomination.getReference()
-        ));
-      });
-    }
-
-    if (AppointmentType.FORWARD_APPROVED.name().equals(form.getAppointmentType())
-        && form.getForwardApprovedAppointmentId() != null) {
-      appointmentAccessService.getAppointment(
-          new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))
-
-      ).ifPresent(preSelectedAppointment -> {
-        var startDate = DateUtil.formatLongDate(preSelectedAppointment.getResponsibleFromDate());
-
-        var subareaName = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-                new LicenceBlockSubareaId(preSelectedAppointment.getAsset().getPortalAssetId()),
-                PRE_SELECTED_FORWARD_APPROVED_APPOINTMENT_PURPOSE
-            ).map(LicenceBlockSubareaDto::displayName)
-            .orElse(assetDto.assetName().value());
-
-        modelAndView.addObject("preSelectedForwardApprovedAppointment", Map.of(
-            preSelectedAppointment.getId(),
-            ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(subareaName, startDate)
-        ));
-      });
-    }
-
-    if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {
-      modelAndView.addObject("phaseSelectionHint", "If decommissioning is required, another phase must be selected.");
-    }
-
-    return modelAndView;
   }
 
   private AssetName getAssetName(AssetDto assetDto) {
     return portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType())
         .orElse(assetDto.assetName());
-  }
-
-  private Map<String, String> getPreselectedOperator(AppointmentCorrectionForm form) {
-    Integer operatorId;
-
-    try {
-      operatorId = Integer.parseInt(form.getAppointedOperatorId());
-    } catch (Exception ignored) {
-      operatorId = null;
-    }
-
-    if (operatorId != null) {
-      var operator = portalOrganisationUnitQueryService.getOrganisationById(
-          operatorId,
-          PRE_SELECTED_OPERATOR_NAME_PURPOSE
-      );
-
-      return operator.stream()
-          .collect(Collectors.toMap(
-              portalOrganisationDto -> Objects.toString(portalOrganisationDto.id(), null),
-              OrganisationUnitDisplayUtil::getOrganisationUnitDisplayName
-          ));
-    }
-
-    return Map.of();
   }
 
   private Appointment getAppointment(AppointmentId appointmentId) {

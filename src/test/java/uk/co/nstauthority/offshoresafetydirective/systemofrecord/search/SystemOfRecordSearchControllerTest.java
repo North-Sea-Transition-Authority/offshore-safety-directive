@@ -41,16 +41,12 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 
 @ContextConfiguration(classes = SystemOfRecordSearchController.class)
 class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
   @MockBean
   private AppointmentSearchService appointmentSearchService;
-
-  @MockBean
-  private PortalAssetRetrievalService portalAssetRetrievalService;
 
   @SecurityTest
   void renderOperatorSearch_verifyUnauthenticatedAccess() throws Exception {

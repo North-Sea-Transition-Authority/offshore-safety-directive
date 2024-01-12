@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -31,9 +30,6 @@ class LicenceBlockSubareaRestControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  @MockBean
-  private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
   @SecurityTest
   void searchSubareas_whenNotLoggedIn_thenIsOK() throws Exception {
