@@ -37,9 +37,9 @@ public class DefaultClientErrorController implements ErrorController {
   @RequestMapping(value = "/error", method = {RequestMethod.GET, RequestMethod.POST})
   public ModelAndView handleError(HttpServletRequest request) {
 
-    var templateName = getHttpStatus(request)
-        .map(this::getTemplateName)
-        .orElse(ErrorTemplate.UNEXPECTED_ERROR.getTemplateName());
+    var status = getHttpStatus(request).orElse(HttpStatus.INTERNAL_SERVER_ERROR);
+
+    var templateName = getTemplateName(status);
 
     var modelAndView = new ModelAndView(templateName);
 
@@ -50,7 +50,7 @@ public class DefaultClientErrorController implements ErrorController {
     var servletException = request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE);
     var throwable = (Throwable) ObjectUtils.defaultIfNull(dispatcherException, servletException);
 
-    errorModelService.addErrorModelProperties(modelAndView, throwable);
+    errorModelService.addErrorModelProperties(modelAndView, throwable, status);
 
     return modelAndView;
   }

@@ -1,10 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc.error;
 
+import java.util.Set;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties;
@@ -27,7 +29,7 @@ class ErrorModelService {
     this.errorConfigurationProperties = errorConfigurationProperties;
   }
 
-  void addErrorModelProperties(ModelAndView modelAndView, Throwable throwable) {
+  void addErrorModelProperties(ModelAndView modelAndView, Throwable throwable, HttpStatus httpStatus) {
 
     modelAndView.addObject("technicalSupport", technicalSupportConfigurationProperties);
     modelAndView.addObject("canShowStackTrace", errorConfigurationProperties.canShowStackTrace());
@@ -36,7 +38,7 @@ class ErrorModelService {
       modelAndView.addObject("stackTrace", ExceptionUtils.getStackTrace(throwable));
     }
 
-    if (throwable != null) {
+    if (throwable != null && isAlertableError(httpStatus)) {
       addErrorReference(modelAndView, throwable);
     }
   }
@@ -49,6 +51,16 @@ class ErrorModelService {
 
   private String generateErrorReference() {
     return RandomStringUtils.random(9, SAFE_CHARACTERS.toUpperCase());
+  }
+
+  private boolean isAlertableError(HttpStatus httpStatus) {
+    var ignorableClientErrors = Set.of(
+        HttpStatus.NOT_FOUND,
+        HttpStatus.METHOD_NOT_ALLOWED,
+        HttpStatus.FORBIDDEN,
+        HttpStatus.UNAUTHORIZED
+    );
+    return ignorableClientErrors.stream().noneMatch(ignorableClientStatus -> ignorableClientStatus.equals(httpStatus));
   }
 
 }

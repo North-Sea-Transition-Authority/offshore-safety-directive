@@ -63,7 +63,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), eq(null));
+        .addErrorModelProperties(any(ModelAndView.class), eq(null), eq(httpStatus));
   }
 
   private static Stream<Arguments> notFoundErrorPageResponseStatuses() {
@@ -91,7 +91,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), eq(null));
+        .addErrorModelProperties(any(ModelAndView.class), eq(null), eq(httpStatus));
   }
 
   private static Stream<Arguments> forbiddenErrorPageResponseStatuses() {
@@ -127,7 +127,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class));
+        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class), eq(httpStatus));
   }
 
   @Test
@@ -147,7 +147,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), eq(null));
+        .addErrorModelProperties(any(ModelAndView.class), eq(null), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 
   @Test
@@ -169,7 +169,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), eq(null));
+        .addErrorModelProperties(any(ModelAndView.class), eq(null), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 
   @Test
@@ -191,7 +191,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), any(IllegalStateException.class));
+        .addErrorModelProperties(any(ModelAndView.class), any(IllegalStateException.class), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 
   @Test
@@ -213,7 +213,7 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class));
+        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 
   @Test
@@ -235,6 +235,6 @@ class DefaultClientErrorControllerTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class));
+        .addErrorModelProperties(any(ModelAndView.class), any(NullPointerException.class), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 }

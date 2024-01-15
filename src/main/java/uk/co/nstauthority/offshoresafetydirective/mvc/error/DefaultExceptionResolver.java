@@ -43,7 +43,7 @@ class DefaultExceptionResolver extends SimpleMappingExceptionResolver {
 
     var modelAndView = super.getModelAndView(viewName, exception);
     defaultModelAttributeService.addDefaultModelAttributes(modelAndView.getModel());
-    errorModelService.addErrorModelProperties(modelAndView, exception);
+    errorModelService.addErrorModelProperties(modelAndView, exception, HttpStatus.INTERNAL_SERVER_ERROR);
 
     return modelAndView;
   }

@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.entry;
 import java.util.Map;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationPropertiesTestUtil;
@@ -35,7 +38,7 @@ class ErrorModelServiceTest {
 
     var modelAndView = new ModelAndView();
 
-    errorModelService.addErrorModelProperties(modelAndView, null);
+    errorModelService.addErrorModelProperties(modelAndView, null, HttpStatus.BAD_REQUEST);
 
     assertThat(modelAndView.getModel())
         .containsExactlyInAnyOrderEntriesOf(
@@ -57,7 +60,7 @@ class ErrorModelServiceTest {
 
     var modelAndView = new ModelAndView();
 
-    errorModelService.addErrorModelProperties(modelAndView, null);
+    errorModelService.addErrorModelProperties(modelAndView, null, HttpStatus.BAD_REQUEST);
 
     assertThat(modelAndView.getModel())
         .containsExactlyInAnyOrderEntriesOf(
@@ -79,7 +82,7 @@ class ErrorModelServiceTest {
 
     var modelAndView = new ModelAndView();
 
-    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException());
+    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException(), HttpStatus.BAD_REQUEST);
 
     assertThat(modelAndView.getModel())
         .contains(
@@ -94,7 +97,7 @@ class ErrorModelServiceTest {
   }
 
   @Test
-  void addErrorModelProperties_whenNonNullThrowableAndCanShowStackTrace_thenVerifyModelProperties() {
+  void addErrorModelProperties_whenNonNullThrowableAndCanShowStackTrace_andAlertableError_thenVerifyModelProperties() {
 
     errorConfigurationProperties = ErrorConfigurationPropertiesTestUtil.builder()
         .canShowStackTrace(true)
@@ -104,7 +107,7 @@ class ErrorModelServiceTest {
 
     var modelAndView = new ModelAndView();
 
-    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException());
+    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException(), HttpStatus.INTERNAL_SERVER_ERROR);
 
     assertThat(modelAndView.getModel())
         .contains(
@@ -127,7 +130,7 @@ class ErrorModelServiceTest {
 
     var modelAndView = new ModelAndView();
 
-    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException());
+    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException(), HttpStatus.INTERNAL_SERVER_ERROR);
 
     var resultingErrorReference = (String) modelAndView.getModel().get("errorReference");
 
@@ -138,4 +141,26 @@ class ErrorModelServiceTest {
         .forEach(character -> assertThat(ErrorModelService.SAFE_CHARACTERS.toCharArray()).contains(character));
   }
 
+  @ParameterizedTest
+  @EnumSource(value = HttpStatus.class, mode = EnumSource.Mode.INCLUDE, names = {"NOT_FOUND", "METHOD_NOT_ALLOWED", "FORBIDDEN", "UNAUTHORIZED"})
+  void addErrorModelProperties_whenIgnorableClientError_thenNoErrorReference(HttpStatus httpStatus) {
+    errorConfigurationProperties = ErrorConfigurationPropertiesTestUtil.builder()
+        .canShowStackTrace(true)
+        .build();
+
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+
+    var modelAndView = new ModelAndView();
+
+    errorModelService.addErrorModelProperties(modelAndView, new NullPointerException(), httpStatus);
+
+    assertThat(modelAndView.getModel())
+        .contains(
+            entry("technicalSupport", technicalSupportConfigurationProperties),
+            entry("canShowStackTrace", true)
+        );
+
+    assertThat(modelAndView.getModel().get("stackTrace")).isNotNull();
+    assertThat(modelAndView.getModel()).doesNotContainKey("errorReference");
+  }
 }

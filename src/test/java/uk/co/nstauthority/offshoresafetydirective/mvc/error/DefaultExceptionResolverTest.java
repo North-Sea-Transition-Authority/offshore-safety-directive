@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.DefaultModelAttributeService;
 
@@ -41,7 +42,7 @@ class DefaultExceptionResolverTest {
 
     then(errorModelService)
         .should(never())
-        .addErrorModelProperties(any(ModelAndView.class), any(Throwable.class));
+        .addErrorModelProperties(any(ModelAndView.class), any(Throwable.class), any());
   }
 
   @Test
@@ -57,6 +58,6 @@ class DefaultExceptionResolverTest {
 
     then(errorModelService)
         .should(onlyOnce())
-        .addErrorModelProperties(any(ModelAndView.class), eq(notClientAbortException));
+        .addErrorModelProperties(any(ModelAndView.class), eq(notClientAbortException), eq(HttpStatus.INTERNAL_SERVER_ERROR));
   }
 }
