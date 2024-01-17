@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOnce;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -793,6 +794,104 @@ class WellSummaryServiceTest {
         .getWellsByIds(
             List.of(expectedWell.wellboreId(), excludedWellDto.wellboreId()),
             WellSummaryService.WELLS_RELATED_TO_NOMINATION_PURPOSE);
+  }
+
+  @Test
+  void getWellSummaryView_whenWellsToExcludeAndWellsInSubarea_andMixedSource_thenVerifyOrder() {
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    // given we have selected licence block subarea as a journey
+    given(wellSelectionSetupViewService.getWellSelectionSetupView(nominationDetail))
+        .willReturn(Optional.of(new WellSelectionSetupView(WellSelectionType.LICENCE_BLOCK_SUBAREA)));
+
+    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder().build();
+
+    var expectedSubareaSummary = new NominatedBlockSubareaDetailView(
+        List.of(expectedSubarea),
+        true,
+        false,
+        List.of(WellPhase.DEVELOPMENT)
+    );
+
+    // and we have saved some subarea data
+    given(nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(nominationDetail))
+        .willReturn(Optional.of(expectedSubareaSummary));
+
+    var expectedSubareaWellOnPortal = new NominatedSubareaWellDto(new WellboreId(100), "portal subarea");
+    var expectedSubareaWellNotOnPortal = new NominatedSubareaWellDto(new WellboreId(101), "removed subarea");
+
+    var expectedWell = WellDtoTestUtil.builder()
+        .withWellboreId(expectedSubareaWellOnPortal.wellboreId().id())
+        .withRegistrationNumber(expectedSubareaWellOnPortal.name())
+        .build();
+
+    // and the subarea selected contains a wellbore
+    var finalisedNominatedSubareaWells = List.of(expectedSubareaWellOnPortal, expectedSubareaWellNotOnPortal);
+    given(finalisedNominatedSubareaWellsAccessService.getFinalisedNominatedSubareasWells(nominationDetail))
+        .willReturn(new LinkedHashSet<>(finalisedNominatedSubareaWells));
+
+    // and we have said Yes to needing to exclude wells
+    given(excludedWellAccessService.hasWellsToExclude(nominationDetail))
+        .willReturn(true);
+
+    var excludedWellOnPortalId = new WellboreId(200);
+    var excludedWellOnPortal = ExcludedWellTestUtil.builder()
+        .withWellboreId(excludedWellOnPortalId.id())
+        .build();
+
+    var excludedWellNotOnPortalId = new WellboreId(201);
+    var excludedWellNotOnPortal = ExcludedWellTestUtil.builder()
+        .withWellboreId(excludedWellNotOnPortalId.id())
+        .build();
+
+    // and we have said Yes to needing to exclude wells
+    given(excludedWellAccessService.getExcludedWells(nominationDetail))
+        .willReturn(List.of(excludedWellOnPortal, excludedWellNotOnPortal));
+
+    var excludedWellDto = WellDtoTestUtil.builder()
+        .withWellboreId(excludedWellOnPortalId.id())
+        .build();
+
+    given(wellQueryService.getWellsByIds(
+        List.of(
+            expectedSubareaWellOnPortal.wellboreId(),
+            expectedSubareaWellNotOnPortal.wellboreId(),
+            excludedWellOnPortalId,
+            excludedWellNotOnPortalId
+        ),
+        WellSummaryService.WELLS_RELATED_TO_NOMINATION_PURPOSE
+    ))
+        .willReturn(List.of(expectedWell, excludedWellDto));
+
+    var resultingWellSummaryView = wellSummaryService.getWellSummaryView(
+        nominationDetail,
+        SummaryValidationBehaviour.VALIDATED
+    );
+
+    // then verify the nominated wells
+    assertThat(resultingWellSummaryView.getSubareaWellsIncludedOnNomination())
+        .extracting(
+            WellSummaryItemView::name,
+            WellSummaryItemView::isOnPortal
+        )
+        .containsExactly(
+            Tuple.tuple(
+                "removed subarea",
+                false
+            ),
+            Tuple.tuple(
+                "portal subarea",
+                true
+            )
+        );
+
+    // then verify the excluded wells
+    assertThat(resultingWellSummaryView.getExcludedWellSummaryView().excludedWells())
+        .containsExactly(
+            new WellboreRegistrationNumber(excludedWellDto.name())
+        );
+
   }
 
   @Test

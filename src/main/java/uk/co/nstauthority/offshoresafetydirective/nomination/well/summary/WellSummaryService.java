@@ -3,12 +3,10 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.summary;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,19 +153,42 @@ public class WellSummaryService {
 
     if (!CollectionUtils.isEmpty(wellboreIdsToFind)) {
       var associatedWellboreIds = Stream.concat(nominatedSubareaWellIds.stream(), excludedWellIds.stream()).toList();
-      var wellbores = wellQueryService.getWellsByIds(
+      var wellsOnPortal = wellQueryService.getWellsByIds(
               associatedWellboreIds,
               WELLS_RELATED_TO_NOMINATION_PURPOSE
-          )
-          .stream()
-          // use a linked hash map so the ordering from the api can be maintained
-          .collect(Collectors.toMap(WellDto::wellboreId, Function.identity(), (x, y) -> x, LinkedHashMap::new));
+          );
 
-      excludedWellRegistrationNumbers = getExcludedWellboreRegistrationNumbers(excludedWellIds, wellbores);
+      List<WellboreId> finalNominatedSubareaWellIds = List.copyOf(nominatedSubareaWellIds);
+      List<WellboreId> finalExcludedWellIds = List.copyOf(excludedWellIds);
+
+      var nominatedWellIdsNotOnPortal = nominatedSubareaWellIds.stream()
+          .filter(wellboreId -> wellsOnPortal.stream().noneMatch(wellDto -> wellDto.wellboreId().equals(wellboreId)))
+          .toList();
+      var nominatedWellsIdsOnPortal = wellsOnPortal.stream()
+          .map(WellDto::wellboreId)
+          .filter(wellboreId -> finalNominatedSubareaWellIds.stream().anyMatch(wellboreId::equals))
+          .toList();
+
+      var excludedWellIdsNotOnPortal = excludedWellIds.stream()
+          .filter(wellboreId -> wellsOnPortal.stream().noneMatch(wellDto -> wellDto.wellboreId().equals(wellboreId)))
+          .toList();
+      var excludedWellsIdsOnPortal = wellsOnPortal.stream()
+          .map(WellDto::wellboreId)
+          .filter(wellboreId -> finalExcludedWellIds.stream().anyMatch(wellboreId::equals))
+          .toList();
+
+      var wellsOnPortalIdAndDtoMap = wellsOnPortal.stream()
+          // use a linked hash map so the ordering from the api can be maintained
+          .collect(StreamUtil.toLinkedHashMap(WellDto::wellboreId, Function.identity()));
+
+      excludedWellRegistrationNumbers = getExcludedWellboreRegistrationNumbers(
+          Stream.concat(excludedWellIdsNotOnPortal.stream(), excludedWellsIdsOnPortal.stream()).toList(),
+          wellsOnPortalIdAndDtoMap
+      );
       wellsIncludedInNomination = getNominatedWellSummaryViews(
-          nominatedSubareaWellIds,
+          Stream.concat(nominatedWellIdsNotOnPortal.stream(), nominatedWellsIdsOnPortal.stream()).toList(),
           nominatedSubareaWellIdAndDtoMap,
-          wellbores
+          wellsOnPortalIdAndDtoMap
       );
     }
 
