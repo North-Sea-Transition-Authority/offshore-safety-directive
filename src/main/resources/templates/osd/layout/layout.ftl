@@ -9,6 +9,7 @@
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="serviceHomeUrl" type="String" -->
 <#-- @ftlvariable name="feedbackUrl" type="String" -->
+<#-- @ftlvariable name="cookiesStatementUrl" type="String" -->
 <#-- @ftlvariable name="singleErrorMessage" type="String" -->
 <#-- @ftlvariable name="footerItems" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.footer.FooterItem>" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
@@ -134,6 +135,7 @@
     noIndex=!allowSearchEngineIndexing
     caption=pageHeadingCaption
     wrapperWidth=isFullPageWidth
+    cookieBannerMacro=_cookieBanner
   >
     <#nested />
   </@fdsDefaultPageTemplate>
@@ -163,6 +165,7 @@
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
     footerContent=footer
+    cookieBannerMacro=_cookieBanner
   >
     <#nested />
   </@fdsLeftSubNavPageTemplate>
@@ -201,4 +204,11 @@
   </#local>
 
   <@fdsNstaFooter.nstaFooter wrapperWidth=isFullPageWidth metaLinks=true footerMetaContent=footerMetaContent/>
+</#macro>
+
+<#macro _cookieBanner>
+  <@fdsCookieBanner.analyticsCookieBanner
+    serviceName=serviceBranding.mnemonic()
+    cookieSettingsUrl=springUrl(cookiesStatementUrl)
+  />
 </#macro>

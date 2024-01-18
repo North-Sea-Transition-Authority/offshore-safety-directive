@@ -17,6 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
+import uk.co.nstauthority.offshoresafetydirective.cookies.CookiesController;
 import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
@@ -58,6 +59,7 @@ public class DefaultModelAttributeService {
     attributes.put("footerItems", getFooterItems());
     attributes.put("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
+    attributes.put("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()));
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 
@@ -72,7 +74,10 @@ public class DefaultModelAttributeService {
             new FooterItem(AccessibilityStatementController.PAGE_NAME,
                 ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
             new FooterItem(ContactInformationController.PAGE_NAME,
-                ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+            new FooterItem(CookiesController.PAGE_NAME,
+                ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
+            )
         ));
 
     if (getUser().isPresent()) {

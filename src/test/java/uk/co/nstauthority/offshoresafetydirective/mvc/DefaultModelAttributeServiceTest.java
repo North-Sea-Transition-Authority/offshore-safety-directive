@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfig
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
+import uk.co.nstauthority.offshoresafetydirective.cookies.CookiesController;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
@@ -86,11 +87,14 @@ class DefaultModelAttributeServiceTest {
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Cookies",
+                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                     new FooterItem("Feedback",
                         ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email()
+                "wonsEmail", wonsContactConfigurationProperties.email(),
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
             )
         );
   }
@@ -121,10 +125,13 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Cookies",
+                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email()
+                "wonsEmail", wonsContactConfigurationProperties.email(),
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
             )
         );
   }
@@ -163,11 +170,14 @@ class DefaultModelAttributeServiceTest {
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Cookies",
+                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                     new FooterItem("Feedback",
                         ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email()
+                "wonsEmail", wonsContactConfigurationProperties.email(),
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
             )
         );
   }
@@ -202,10 +212,13 @@ class DefaultModelAttributeServiceTest {
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage()))
+                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Cookies",
+                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email()
+                "wonsEmail", wonsContactConfigurationProperties.email(),
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
             )
         );
   }
@@ -242,11 +255,14 @@ class DefaultModelAttributeServiceTest {
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+                    new FooterItem("Cookies",
+                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                     new FooterItem("Feedback",
                         ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email()
+                "wonsEmail", wonsContactConfigurationProperties.email(),
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
             )
         );
   }
