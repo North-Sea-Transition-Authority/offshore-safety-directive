@@ -52,7 +52,9 @@ class NominatedBlockSubareaFormValidator {
       } else {
 
         var allSubareasValid = licenceBlockSubareaIds.stream()
-                .allMatch(id -> portalLicenceBlockSubareas.stream().anyMatch(dto -> dto.subareaId().equals(id)));
+            .allMatch(id -> portalLicenceBlockSubareas.stream()
+                .anyMatch(dto -> dto.subareaId().equals(id) && dto.isExtant())
+            );
 
         if (!allSubareasValid) {
           errors.rejectValue(

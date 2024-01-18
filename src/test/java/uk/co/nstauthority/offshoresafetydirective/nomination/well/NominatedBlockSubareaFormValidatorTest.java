@@ -227,6 +227,7 @@ class NominatedBlockSubareaFormValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
+        .withSubareaId(subareaIdOnForm.id())
         .isExtant(false)
         .build();
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(

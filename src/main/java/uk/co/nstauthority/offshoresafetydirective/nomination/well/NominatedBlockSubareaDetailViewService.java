@@ -49,13 +49,17 @@ public class NominatedBlockSubareaDetailViewService {
           var portalLicenceBlockSubareaDtos = licenceBlockSubareaQueryService
               .getLicenceBlockSubareasByIds(licenceBlockSubareaIds, NOMINATED_LICENCE_BLOCK_SUBAREA_PURPOSE)
               .stream()
+              .filter(LicenceBlockSubareaDto::isExtant)
               .collect(Collectors.toMap(dto -> dto.subareaId().id(), Function.identity()));
 
           var nonPortalDtos = licenceBlockSubareas.stream()
-              .filter(subarea -> !portalLicenceBlockSubareaDtos.containsKey(subarea.getBlockSubareaId()))
+              .filter(subarea ->
+                  !portalLicenceBlockSubareaDtos.containsKey(subarea.getBlockSubareaId())
+              )
               .sorted(Comparator.comparing(NominatedBlockSubarea::getName, String::compareToIgnoreCase))
               .map(subarea -> LicenceBlockSubareaDto.notOnPortal(
                   new LicenceBlockSubareaId(subarea.getBlockSubareaId()),
+                  // As the subarea is not on the portal, use the cached name
                   new SubareaName(subarea.getName())
               ))
               .toList();

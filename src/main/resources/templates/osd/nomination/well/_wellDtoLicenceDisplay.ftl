@@ -17,7 +17,7 @@
       <#if originDto?has_content>
         <span>Origin licence: ${originDto.licenceReference().value()}</span>
       <#elseif totalDepthDto?has_content>
-        <span>Total depth licence: originDto.licenceReference().value()</span>
+        <span>Total depth licence: ${totalDepthDto.licenceReference().value()}</span>
       </#if>
     </#if>
 </#macro>
