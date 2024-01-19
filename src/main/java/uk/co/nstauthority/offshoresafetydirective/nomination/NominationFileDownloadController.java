@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Objects;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
@@ -18,7 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @Controller
-@RequestMapping("/nomination/{nominationId}/file")
+@RequestMapping("/nomination/{nominationId}/{version}/file")
 @CanViewNominationPostSubmission
 public class NominationFileDownloadController {
 
@@ -34,6 +35,7 @@ public class NominationFileDownloadController {
   @ResponseBody
   @GetMapping("/download/{fileId}")
   public ResponseEntity<InputStreamResource> download(@PathVariable NominationId nominationId,
+                                                      @PathVariable String version,
                                                       @PathVariable String fileId) {
 
     var fileUuid = StringUtil.toUuid(fileId)
@@ -42,14 +44,26 @@ public class NominationFileDownloadController {
             "Unable to convert file id [%s] to UUID".formatted(fileId)
         ));
 
-    var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
-        nominationId,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ).orElseThrow(() -> new ResponseStatusException(
-        HttpStatus.NOT_FOUND,
-        "Nomination [%s] has no NominationDetail with a post submission status".formatted(
-            nominationId
-        )));
+    if (!NumberUtils.isParsable(version)) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND,
+          "Cannot find version: [%s] for Nomination [%s]".formatted(version, nominationId)
+      );
+    }
+
+    var versionNumber = NumberUtils.toInt(version);
+
+    var nominationDetail = nominationDetailService.getVersionedNominationDetailWithStatuses(
+            nominationId,
+            versionNumber,
+            NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        )
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Nomination [%s] with version [%d] has no NominationDetail with a post submission status".formatted(
+                nominationId,
+                versionNumber
+            )));
 
     return fileService.find(fileUuid)
         .filter(uploadedFile -> canAccessFile(uploadedFile, nominationDetail))

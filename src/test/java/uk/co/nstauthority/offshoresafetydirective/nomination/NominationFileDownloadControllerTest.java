@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +67,13 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         .withDocumentType(FileDocumentType.APPENDIX_C.name())
         .build();
 
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        nominationDetail.getVersion(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
     when(fileService.find(fileUuid))
         .thenReturn(Optional.of(file));
 
@@ -93,7 +103,11 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, fileUuid.toString())),
+                    .download(
+                        NOMINATION_ID,
+                        nominationDetail.getVersion().toString(),
+                        fileUuid.toString()
+                    )),
             status().isOk(),
             status().isForbidden()
         )
@@ -122,6 +136,13 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        nominationDetail.getVersion(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
     doAnswer(invocation -> {
       var streamContent = "abc";
       var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
@@ -140,7 +161,11 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         .withGetEndpoint(
             ReverseRouter.route(
                 on(NominationFileDownloadController.class)
-                    .download(NOMINATION_ID, fileUuid.toString())),
+                    .download(
+                        NOMINATION_ID,
+                        nominationDetail.getVersion().toString(),
+                        fileUuid.toString()
+                    )),
             status().isOk(),
             status().isForbidden()
         )
@@ -177,6 +202,13 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        nominationDetail.getVersion(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
     var streamContent = "abc";
     var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
     var response = ResponseEntity.ok(inputStreamResource);
@@ -185,7 +217,12 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         .thenReturn(response);
 
     var result = mockMvc.perform(get(ReverseRouter.route(
-            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileUuid.toString())))
+            on(NominationFileDownloadController.class)
+                .download(
+                    NOMINATION_ID,
+                    nominationDetail.getVersion().toString(),
+                    fileUuid.toString()
+                )))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isOk())
         .andReturn()
@@ -218,7 +255,109 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         .thenReturn(Optional.of(nominationDetail));
 
     mockMvc.perform(get(ReverseRouter.route(
-            on(NominationFileDownloadController.class).download(NOMINATION_ID, fileId)))
+            on(NominationFileDownloadController.class)
+                .download(
+                    NOMINATION_ID,
+                    nominationDetail.getVersion().toString(),
+                    fileId
+                )))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void download_whenInvalidVersion_verifyNotFound() throws Exception {
+
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.builder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        nominationDetail.getVersion(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.empty());
+
+    var streamContent = "abc";
+    var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
+    var response = ResponseEntity.ok(inputStreamResource);
+
+    when(fileService.download(file))
+        .thenReturn(response);
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(NominationFileDownloadController.class)
+                .download(
+                    NOMINATION_ID,
+                    nominationDetail.getVersion().toString(),
+                    fileUuid.toString()
+                )))
+            .with(user(NOMINATION_CREATOR_USER)))
+        .andExpect(status().isNotFound());
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  @ValueSource(strings = "invalid-number")
+  void download_whenVersionIsInvalidNumber_thenNotFound(String invalidNumber) throws Exception {
+    when(teamMemberService.getUserAsTeamMembers(NOMINATION_CREATOR_USER))
+        .thenReturn(Collections.singletonList(NOMINATION_MANAGER_TEAM_MEMBER));
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var fileUuid = UUID.randomUUID();
+    var file = UploadedFileTestUtil.builder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
+        .build();
+
+    when(fileService.find(fileUuid))
+        .thenReturn(Optional.of(file));
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        NOMINATION_ID,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(
+            on(NominationFileDownloadController.class)
+                .download(
+                    NOMINATION_ID,
+                    invalidNumber,
+                    fileUuid.toString()
+                )))
             .with(user(NOMINATION_CREATOR_USER)))
         .andExpect(status().isNotFound());
   }

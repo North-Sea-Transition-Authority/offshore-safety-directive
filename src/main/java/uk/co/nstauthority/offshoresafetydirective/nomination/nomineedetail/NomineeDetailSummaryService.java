@@ -134,7 +134,8 @@ public class NomineeDetailSummaryService {
           ));
       case SUBMITTED, AWAITING_CONFIRMATION, APPOINTED, WITHDRAWN, OBJECTED -> ReverseRouter.route(
           on(NominationFileDownloadController.class).download(
-              nominationId,
+              nominationDetailDto.nominationId(),
+              nominationDetailDto.version().toString(),
               fileId.toString()
           ));
       case DELETED -> throw new IllegalStateException(

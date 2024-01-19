@@ -157,6 +157,7 @@ class NomineeDetailSummaryServiceTest {
                 firstUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
+                    nominationDetail.getVersion().toString(),
                     firstUploadedFile.getId().toString()
                 ))
             ),
@@ -164,6 +165,7 @@ class NomineeDetailSummaryServiceTest {
                 secondUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
+                    nominationDetail.getVersion().toString(),
                     secondUploadedFile.getId().toString()
                 ))
             ),
@@ -171,6 +173,7 @@ class NomineeDetailSummaryServiceTest {
                 thirdUploadedFileViewByName,
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
+                    nominationDetail.getVersion().toString(),
                     thirdUploadedFile.getId().toString()
                 ))
             )
@@ -302,6 +305,7 @@ class NomineeDetailSummaryServiceTest {
                 UploadedFileView.from(uploadedFile),
                 ReverseRouter.route(on(NominationFileDownloadController.class).download(
                     new NominationId(nominationDetail.getNomination().getId()),
+                    nominationDetail.getVersion().toString(),
                     uploadedFile.getId().toString()
                 ))
             )
