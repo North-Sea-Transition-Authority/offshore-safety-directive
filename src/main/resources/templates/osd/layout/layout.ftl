@@ -21,11 +21,6 @@
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 <#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
 
-<@fdsCookieBanner.analyticsCookieBanner
-  serviceName=serviceBranding.mnemonic()
-  cookieSettingsUrl=springUrl(cookiesStatementUrl)
-/>
-
 <#macro defaultPage
   pageHeading
   htmlTitle=pageHeading
