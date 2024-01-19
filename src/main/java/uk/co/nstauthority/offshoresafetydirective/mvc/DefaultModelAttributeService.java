@@ -16,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
 import uk.co.nstauthority.offshoresafetydirective.cookies.CookiesController;
 import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
@@ -34,15 +35,19 @@ public class DefaultModelAttributeService {
 
   private final TopNavigationService topNavigationService;
 
+  private final AnalyticsProperties analyticsProperties;
+
   @Autowired
   public DefaultModelAttributeService(ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties,
                                       WonsContactConfigurationProperties wonsContactConfigurationProperties,
                                       UserDetailService userDetailService,
-                                      TopNavigationService topNavigationService) {
+                                      TopNavigationService topNavigationService,
+                                      AnalyticsProperties analyticsProperties) {
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
     this.wonsContactConfigurationProperties = wonsContactConfigurationProperties;
     this.userDetailService = userDetailService;
     this.topNavigationService = topNavigationService;
+    this.analyticsProperties = analyticsProperties;
   }
 
   public void addDefaultModelAttributes(Map<String, Object> attributes) {
@@ -60,6 +65,7 @@ public class DefaultModelAttributeService {
     attributes.put("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
     attributes.put("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()));
+    attributes.put("analytics", analyticsProperties);
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 

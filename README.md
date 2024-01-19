@@ -108,6 +108,8 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_FMS_SUBMIT_ENDPOINT                    | The FMS endpoint where feedback will be sent. Defaults to /api/v1/save-feedback                                             |
 | OSD_FMS_PRESHARED_KEY                      | This is the api key used when making requests                                                                               |
 | OSD_FMS_CONNECTION_TIMEOUT_SECONDS         | Connection timeout in seconds. Defaults to 20                                                                               |
+| OSD_ANALYTICS_ENERGY_PORTAL_IDENTIFIER     | The google analytics tag used for all apps                                                                                  |
+| OSD_ANALYTICS_SERVICE_IDENTIFIER           | The service specific google analytics tag                                                                                   |
 
 ### 3. Initialise the Fivium Design System
 

@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamTy
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.WebSecurityConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPortalConfigurationProperties;
@@ -83,7 +84,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
     UpdateRequestInterceptor.class,
     CanViewNominationPostSubmissionInterceptor.class
 })
-@EnableConfigurationProperties(SamlProperties.class)
+@EnableConfigurationProperties(value = {SamlProperties.class, AnalyticsProperties.class})
 public abstract class AbstractControllerTest {
 
   @Autowired

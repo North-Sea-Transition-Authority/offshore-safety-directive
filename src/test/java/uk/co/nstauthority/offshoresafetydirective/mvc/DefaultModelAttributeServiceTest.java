@@ -19,12 +19,15 @@ import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfig
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.WonsContactConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.contact.ContactInformationController;
 import uk.co.nstauthority.offshoresafetydirective.cookies.CookiesController;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.feedback.FeedbackController;
 import uk.co.nstauthority.offshoresafetydirective.footer.FooterItem;
 import uk.co.nstauthority.offshoresafetydirective.topnavigation.TopNavigationService;
+import uk.co.nstauthority.offshoresafetydirective.util.assertion.MapEntryAssert;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 class DefaultModelAttributeServiceTest {
@@ -38,6 +41,8 @@ class DefaultModelAttributeServiceTest {
       WonsContactConfigurationPropertiesTestUtil
           .builder()
           .build();
+
+  private final AnalyticsProperties analyticsProperties = AnalyticsPropertiesTestUtil.builder().build();
 
   private UserDetailService userDetailService;
 
@@ -53,8 +58,8 @@ class DefaultModelAttributeServiceTest {
         serviceBrandingConfigurationProperties,
         wonsContactConfigurationProperties,
         userDetailService,
-        topNavigationService
-    );
+        topNavigationService,
+        analyticsProperties);
   }
 
   @Test
@@ -94,7 +99,8 @@ class DefaultModelAttributeServiceTest {
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
+                "analytics", analyticsProperties
             )
         );
   }
@@ -131,7 +137,8 @@ class DefaultModelAttributeServiceTest {
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
+                "analytics", analyticsProperties
             )
         );
   }
@@ -156,30 +163,26 @@ class DefaultModelAttributeServiceTest {
 
     defaultModelAttributeService.addDefaultModelAttributes(attributes, request);
 
-    assertThat(attributes)
-        .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
-                "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
-                "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "loggedInUser", user,
-                "navigationItems", List.of(topNavigationItem),
-                "currentEndPoint", "/request-uri",
-                "footerItems", List.of(
-                    new FooterItem("Accessibility statement",
-                        ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
-                    new FooterItem("Contact us",
-                        ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
-                    new FooterItem("Cookies",
-                        ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
-                    new FooterItem("Feedback",
-                        ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
-                ),
-                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
-            )
-        );
+    MapEntryAssert.thenAssertThat(attributes)
+        .hasKeyWithValue("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties())
+        .hasKeyWithValue("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties())
+        .hasKeyWithValue("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+        .hasKeyWithValue("loggedInUser", user)
+        .hasKeyWithValue("navigationItems", List.of(topNavigationItem))
+        .hasKeyWithValue("currentEndPoint", "/request-uri")
+        .hasKeyWithValue("footerItems", List.of(
+            new FooterItem("Accessibility statement",
+                ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
+            new FooterItem("Contact us",
+                ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
+            new FooterItem("Cookies",
+                ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
+            new FooterItem("Feedback",
+                ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))))
+        .hasKeyWithValue("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
+        .hasKeyWithValue("wonsEmail", wonsContactConfigurationProperties.email())
+        .hasKeyWithValue("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
+        .hasKeyWithValue("analytics", analyticsProperties);
   }
 
   @Test
@@ -218,7 +221,8 @@ class DefaultModelAttributeServiceTest {
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
+                "analytics", analyticsProperties
             )
         );
   }
@@ -262,7 +266,8 @@ class DefaultModelAttributeServiceTest {
                 ),
                 "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
                 "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())
+                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
+                "analytics", analyticsProperties
             )
         );
   }

@@ -14,11 +14,17 @@
 <#-- @ftlvariable name="footerItems" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.footer.FooterItem>" -->
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner" -->
+<#-- @ftlvariable name="analytics" type="uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties" -->
 
 <#assign SERVICE_NAME = serviceBranding.name() />
 <#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 <#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
+
+<@fdsCookieBanner.analyticsCookieBanner
+  serviceName=serviceBranding.mnemonic()
+  cookieSettingsUrl=springUrl(cookiesStatementUrl)
+/>
 
 <#macro defaultPage
   pageHeading
@@ -110,6 +116,10 @@
     <@_footer isFullPageWidth=isFullPageWidth/>
   </#assign>
 
+  <#assign analyticsScript>
+    <script src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
+  </#assign>
+
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=SERVICE_NAME
@@ -132,11 +142,14 @@
     singleErrorMessage=singleErrorMessage
     headerContent=serviceHeader
     footerContent=footer
+    customScriptContent=analyticsScript
     noIndex=!allowSearchEngineIndexing
     caption=pageHeadingCaption
     wrapperWidth=isFullPageWidth
     cookieBannerMacro=_cookieBanner
   >
+    <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.serviceAnalyticIdentifier() />
+    <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.energyPortalAnalyticIdentifier() />
     <#nested />
   </@fdsDefaultPageTemplate>
 </#macro>
@@ -156,6 +169,10 @@
     <@_footer isFullPageWidth=false/>
   </#assign>
 
+  <#assign analyticsScript>
+    <script src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
+  </#assign>
+
   <@fdsLeftSubNavPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=pageHeading
@@ -165,8 +182,11 @@
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
     footerContent=footer
+    customScriptContent=analyticsScript
     cookieBannerMacro=_cookieBanner
   >
+    <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.serviceAnalyticIdentifier() />
+    <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.energyPortalAnalyticIdentifier() />
     <#nested />
   </@fdsLeftSubNavPageTemplate>
 </#macro>

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
 
 @Component
 class ErrorModelService {
@@ -22,17 +23,22 @@ class ErrorModelService {
 
   private final ErrorConfigurationProperties errorConfigurationProperties;
 
+  private final AnalyticsProperties analyticsProperties;
+
   @Autowired
   ErrorModelService(TechnicalSupportConfigurationProperties technicalSupportConfigurationProperties,
-                    ErrorConfigurationProperties errorConfigurationProperties) {
+                    ErrorConfigurationProperties errorConfigurationProperties,
+                    AnalyticsProperties analyticsProperties) {
     this.technicalSupportConfigurationProperties = technicalSupportConfigurationProperties;
     this.errorConfigurationProperties = errorConfigurationProperties;
+    this.analyticsProperties = analyticsProperties;
   }
 
   void addErrorModelProperties(ModelAndView modelAndView, Throwable throwable, HttpStatus httpStatus) {
 
     modelAndView.addObject("technicalSupport", technicalSupportConfigurationProperties);
     modelAndView.addObject("canShowStackTrace", errorConfigurationProperties.canShowStackTrace());
+    modelAndView.addObject("analytics", analyticsProperties);
 
     if (errorConfigurationProperties.canShowStackTrace() && throwable != null) {
       modelAndView.addObject("stackTrace", ExceptionUtils.getStackTrace(throwable));

@@ -1,6 +1,7 @@
 <#include '../layout/layout.ftl'>
 
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
+<#-- @ftlvariable name="analytics" type="uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties" -->
 
 <@defaultPage htmlTitle=pageName pageHeading=pageName backLinkWithBrowserBack=true>
 
@@ -46,6 +47,19 @@
           </td>
           <td class="govuk-table__cell govuk-!-width-one-half">
             Checks if you’ve visited this service before. This helps us count how many people use the service.
+          </td>
+          <td class="govuk-table__cell">
+            2 years
+          </td>
+        </tr>
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            _ga_${serviceAnalyticIdentifier}
+            <br/>
+            _ga_${energyPortalAnalyticIdentifier}
+          </td>
+          <td class="govuk-table__cell govuk-!-width-one-half">
+            Stores information about how you use this service. This helps us improve the service for other people.
           </td>
           <td class="govuk-table__cell">
             2 years

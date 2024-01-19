@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationPropertiesTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
+import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsPropertiesTestUtil;
 
 class ErrorModelServiceTest {
 
@@ -25,6 +27,7 @@ class ErrorModelServiceTest {
           .builder()
           .build();
 
+  private final AnalyticsProperties analyticsProperties = AnalyticsPropertiesTestUtil.builder().build();
   private ErrorModelService errorModelService;
 
   @Test
@@ -34,7 +37,8 @@ class ErrorModelServiceTest {
         .canShowStackTrace(true)
         .build();
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties,
+        analyticsProperties);
 
     var modelAndView = new ModelAndView();
 
@@ -44,7 +48,8 @@ class ErrorModelServiceTest {
         .containsExactlyInAnyOrderEntriesOf(
             Map.of(
                 "technicalSupport", technicalSupportConfigurationProperties,
-                "canShowStackTrace", true
+                "canShowStackTrace", true,
+                "analytics", analyticsProperties
             )
         );
   }
@@ -56,7 +61,8 @@ class ErrorModelServiceTest {
         .canShowStackTrace(false)
         .build();
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties,
+        analyticsProperties);
 
     var modelAndView = new ModelAndView();
 
@@ -66,7 +72,8 @@ class ErrorModelServiceTest {
         .containsExactlyInAnyOrderEntriesOf(
             Map.of(
                 "technicalSupport", technicalSupportConfigurationProperties,
-                "canShowStackTrace", false
+                "canShowStackTrace", false,
+                "analytics", analyticsProperties
             )
         );
   }
@@ -78,7 +85,8 @@ class ErrorModelServiceTest {
         .canShowStackTrace(false)
         .build();
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties,
+        analyticsProperties);
 
     var modelAndView = new ModelAndView();
 
@@ -87,7 +95,8 @@ class ErrorModelServiceTest {
     assertThat(modelAndView.getModel())
         .contains(
             entry("technicalSupport", technicalSupportConfigurationProperties),
-            entry("canShowStackTrace", false)
+            entry("canShowStackTrace", false),
+            entry("analytics", analyticsProperties)
         );
 
     assertThat(modelAndView.getModel())
@@ -103,7 +112,8 @@ class ErrorModelServiceTest {
         .canShowStackTrace(true)
         .build();
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties,
+        analyticsProperties);
 
     var modelAndView = new ModelAndView();
 
@@ -112,7 +122,8 @@ class ErrorModelServiceTest {
     assertThat(modelAndView.getModel())
         .contains(
             entry("technicalSupport", technicalSupportConfigurationProperties),
-            entry("canShowStackTrace", true)
+            entry("canShowStackTrace", true),
+            entry("analytics", analyticsProperties)
         );
 
     assertThat(modelAndView.getModel())
@@ -126,7 +137,8 @@ class ErrorModelServiceTest {
   @Test
   void addErrorModelProperties_whenThrowable_thenVerifyErrorReferenceFormat() {
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties,
+        analyticsProperties);
 
     var modelAndView = new ModelAndView();
 
@@ -148,7 +160,11 @@ class ErrorModelServiceTest {
         .canShowStackTrace(true)
         .build();
 
-    errorModelService = new ErrorModelService(technicalSupportConfigurationProperties, errorConfigurationProperties);
+    errorModelService = new ErrorModelService(
+        technicalSupportConfigurationProperties,
+        errorConfigurationProperties,
+        analyticsProperties
+    );
 
     var modelAndView = new ModelAndView();
 
