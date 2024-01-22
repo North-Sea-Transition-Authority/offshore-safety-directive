@@ -48,7 +48,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 
 | Environment Variable                   | Description                                                                     |
 |----------------------------------------|---------------------------------------------------------------------------------|
-| OSD_TEST_EMAIL_RECIPIENT               | If email is `test` mode, who to send emails to instead. Value can be a CSV list |
+| OSD_EMAIL_TEST_RECIPIENTS              | If email is `test` mode, who to send emails to instead. Value can be a CSV list |
 
 ### Production profile specific
 
