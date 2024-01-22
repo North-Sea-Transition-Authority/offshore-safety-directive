@@ -18,7 +18,7 @@ services:
         type: bind
 
   s3mock:
-    image: adobe/s3mock:2.1.28
+    image: adobe/s3mock:latest
     ports:
       - "9090:9090"
       - "9191:9191"
@@ -28,7 +28,7 @@ services:
       root: ./s3data
 
   clamav:
-    image: clamav/clamav:0.105
+    image: clamav/clamav:stable
     ports:
       - "3310:3310"
 
