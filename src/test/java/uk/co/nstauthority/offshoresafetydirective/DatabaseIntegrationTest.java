@@ -10,7 +10,7 @@ import uk.co.nstauthority.offshoresafetydirective.configuration.EnergyPortalMess
 
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"database-integration-test", "development"})
+@ActiveProfiles({"development", "database-integration-test"})
 @Import(EnergyPortalMessageQueueTestConfiguration.class)
 @AutoConfigureJooq
 public @interface DatabaseIntegrationTest {

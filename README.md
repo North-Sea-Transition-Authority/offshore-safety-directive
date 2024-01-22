@@ -1,4 +1,4 @@
-# Offshore Safety Directive (OSD)
+# Offshore Safety Directive (OSD) [![Build Status](https://drone-github.fivium.co.uk/api/badges/Fivium/offshore-safety-directive/status.svg?ref=refs/heads/develop)](https://drone-github.fivium.co.uk/Fivium/offshore-safety-directive)
 
 ## Background
 
@@ -15,8 +15,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 - Java 17
 - Node LTS + NPM
 - [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
-  (
-  See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
+  (See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
   for further information about adding your account to the `docker-users` group)
 
 ## Setup
@@ -33,25 +32,25 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 
 ### 2. Add the required profile
 
-### Development
+### Mandatory regardless of profile
+
+| Environment Variable                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| OSD_GOV_NOTIFY_API_KEY                 | The GOV.UK Notify API key - find key for your environment in<br/> the [WIOS project](https://tpm.fivium.co.uk/index.php/prj/view/103). <br/><ul><li>Local dev<ul><li>[to mock sending emails](https://tpm.fivium.co.uk/index.php/pwd/view/2212)</li><li>[to actually send emails](https://tpm.fivium.co.uk/index.php/pwd/view/2124)</li></ul><li>[Dev](https://tpm.fivium.co.uk/index.php/pwd/view/2124)</li><li>[ST](https://tpm.fivium.co.uk/index.php/pwd/view/2125)</li><li>[Pre-prod](https://tpm.fivium.co.uk/index.php/pwd/view/2126)</li></ul> | 
+| OSD_EPMQ_SNS_SQS_AWS_ACCESS_KEY_ID     | AWS access key id for SNS/SQS. Can be optional if run in the `disable-epmq` profile <ul><li>[Local dev](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[Dev](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[ST](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[Pre-prod](https://tpm.fivium.co.uk/index.php/pwd/view/2217)</li><li>[Prod](https://tpm.fivium.co.uk/index.php/pwd/view/2217)</li></ul>                                                                                                                  |
+| OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | AWS secret access key for SNS/SQS. Can be optional if run in the `disable-epmq` profile <ul><li>[Local dev](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[Dev](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[ST](https://tpm.fivium.co.uk/index.php/prj/view/147)</li><li>[Pre-prod](https://tpm.fivium.co.uk/index.php/pwd/view/2217)</li><li>[Prod](https://tpm.fivium.co.uk/index.php/pwd/view/2217)</li></ul>                                                                                                              |
+| OSD_EPMQ_ENVIRONMENT_SUFFIX            | Something unique per environment, e.g. `dev`. For local dev this can be your initials. Can be optional if run in the `disable-epmq` profile                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+### Development profile specific
 
 - In your IntelliJ run configuration for the Spring app, include `development` in your active profiles
 - The following environment variables are required when using this profile:
 
-| Environment Variable                   | Description                                                                                          |
-|----------------------------------------|------------------------------------------------------------------------------------------------------|
-| OSD_EPMQ_SNS_SQS_AWS_ACCESS_KEY_ID     | EPMQ AWS access key id for SNS/SQS                                                                   |
-| OSD_EPMQ_SNS_SQS_AWS_SECRET_ACCESS_KEY | EPMQ AWS secret access key for SNS/SQS                                                               |
-| OSD_EPMQ_ENVIRONMENT_SUFFIX            | EPMQ environment suffix. This should be set to something unique per developer, such as your initials |
-| OSD_TEST_EMAIL_RECIPIENT               | If email is test mode, who to send emails to. Value can be a CSV list                                |
-| OSD_NOTIFY_API_KEY                     | The GOV.UK Notify key [See TPM](https://tpm.fivium.co.uk/index.php/pwd/view/2124)                    |
+| Environment Variable                   | Description                                                                     |
+|----------------------------------------|---------------------------------------------------------------------------------|
+| OSD_TEST_EMAIL_RECIPIENT               | If email is `test` mode, who to send emails to instead. Value can be a CSV list |
 
-- Optionally, the EPMQ integration can be disabled by running with the `disable-epmq` profile. In this case
-  the `OSD_EPMQ_*` environment variables do not need to be set.
-- If you receive a `publishEpmqMessagesIntegrationTestPublicationToSnapshotsRepository` error when hot reloading then
-  run the `publishing > publishEpmqMessagesIntegrationTestPublicationToMavenLocal` gradle task.
-
-### Production
+### Production profile specific
 
 - In your IntelliJ run configuration for the Spring app, include `production` in your active profiles
 - The following environment variables are required when using this profile:
@@ -84,11 +83,8 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_CLAMAV_PORT                            | The port ClamAV is hosted on                                                                                                |
 | OSD_CLAMAV_TIMEOUT                         | ClamAV request timeout                                                                                                      |
 | OSD_SESSION_TIMEOUT                        | The time before a session timeouts. This should be the same as the Energy Portal, e.g 180m. Note, needs the unit afterwards |
-| OSD_EMAIL_MODE                             | Can be test or production. Test mode will redirect all outbound emails to the test recipient(s)                             |
-| OSD_EMAIL_TEST_RECIPIENT                   | If email is test mode, who to send emails to. Value can be a CSV list                                                       |
-| OSD_SNS_SQS_ACCESS_KEY_ID                  | SNS/SQS access key id                                                                                                       |
-| OSD_SNS_SQS_SECRET_ACCESS_KEY              | SNS/SQS secret access key                                                                                                   |
-| OSD_SNS_SQS_ENVIRONMENT_SUFFIX             | SNS/SQS environment suffix. This should be set to the environment name, e.g. st or prod                                     |
+| OSD_NOTIFICATION_MODE                      | Can be `test` or `production`. `test` mode will redirect all outbound emails to the test recipient(s)                       |
+| OSD_EMAIL_TEST_RECIPIENTS                  | If email is test mode, who to send emails to. Value can be a CSV list                                                       |
 | OSD_ACTUATOR_ADMIN_USER_PASSWORD           | Password for the actuator admin user                                                                                        |
 | OSD_CAN_SHOW_STACK_TRACE                   | Boolean flag to control if the stack trace shows up when a 500 response is received (Optional)                              |
 | OSD_DATAWAREHOUSE_USER_PASSWORD            | The database password for the `datawarehouse` database user                                                                 |
@@ -130,7 +126,10 @@ Execute the gradle task `generateJooq`. You will need to re-generate when you ch
 
 Create a run configuration for the Spring app and start the application.
 
-The application will be running on `localhost:8080/wios/<endpoint>` e.g. `localhost:8080/wios//work-area`
+The application will be running on `localhost:8080/wios/<endpoint>` e.g. `localhost:8080/wios/work-area`
+
+If you receive a `publishEpmqMessagesIntegrationTestPublicationToSnapshotsRepository` error when hot reloading then
+run the `publishing > publishEpmqMessagesIntegrationTestPublicationToMavenLocal` gradle task.
 
 ## Development setup
 

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Set;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
@@ -16,7 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.userutil.UserDisplayNameUtil;
 
 public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String title, String firstName,
                              String lastName, String contactEmail, String contactNumber,
-                             Set<TeamRole> teamRoles) {
+                             Set<TeamRole> teamRoles) implements EmailRecipient {
 
   public String getDisplayName() {
     return UserDisplayNameUtil.getUserDisplayName(title, firstName, lastName);
@@ -44,4 +45,8 @@ public record TeamMemberView(WebUserAccountId wuaId, TeamView teamView, String t
     };
   }
 
+  @Override
+  public String getEmailAddress() {
+    return contactEmail;
+  }
 }

@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.notify;
+package uk.co.nstauthority.offshoresafetydirective.email;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

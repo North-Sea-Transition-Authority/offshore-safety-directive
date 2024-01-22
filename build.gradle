@@ -86,6 +86,7 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:v0.2.0' // TODO: Update to release version as part of https://ogajira.atlassian.net/browse/OSDOP-17
 	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.1.0'
 	implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
+	implementation 'uk.co.fivium:spring-boot-starter-digital-notification-library:be-able-to-add-test-recipients-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'
