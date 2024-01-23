@@ -1,30 +1,22 @@
-<#include '../../layout/layout.ftl'>
+<#include '../layout.ftl'>
 <#import '_timelineItem.ftl' as _timelineItem>
 
-<#-- @ftlvariable name="backLinkUrl" type="String" -->
-<#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="assetName" type="String" -->
 <#-- @ftlvariable name="assetTypeDisplayName" type="String" -->
 <#-- @ftlvariable name="timelineItemViews" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineItemView>" -->
 <#-- @ftlvariable name="assetTypeDisplayNameSentenceCase" type="String" -->
 
-<@defaultPage
-  htmlTitle=assetName
-  pageHeading=assetName
-  pageHeadingCaption=assetTypeDisplayName
-  errorItems=[]
+<@systemOfRecordPage
+  pageTitle=assetName
   pageSize=PageSize.FULL_COLUMN
   backLinkWithBrowserBack=true
-  showNavigationItems=(loggedInUser?has_content)
-  allowSearchEngineIndexing=false
-  phaseBanner=(loggedInUser?has_content)
 >
-    <#if newAppointmentUrl?has_content>
-      <@fdsAction.link
-        linkText="Add appointment"
-        linkClass="govuk-button"
-        linkUrl=springUrl(newAppointmentUrl)
-      />
+  <#if newAppointmentUrl?has_content>
+    <@fdsAction.link
+      linkText="Add appointment"
+      linkClass="govuk-button"
+      linkUrl=springUrl(newAppointmentUrl)
+    />
   </#if>
   <#if timelineItemViews?has_content>
     <@fdsTimeline.timeline>
@@ -39,4 +31,4 @@
       No operator history is available for this ${assetTypeDisplayNameSentenceCase}
     </@fdsInsetText.insetText>
   </#if>
-</@defaultPage>
+</@systemOfRecordPage>

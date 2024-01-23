@@ -1,22 +1,11 @@
-<#include '../../layout/layout.ftl'>
+<#include '../layout.ftl'>
 
 <#-- @ftlvariable name="operatorSearchUrl" type="String" -->
 <#-- @ftlvariable name="installationSearchUrl" type="String" -->
 <#-- @ftlvariable name="wellSearchUrl" type="String" -->
 <#-- @ftlvariable name="forwardAreaApprovalSearchUrl" type="String" -->
-<#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 
-<#assign pageTitle = "Well and installation operator appointments" />
-
-<@defaultPage
-  htmlTitle=pageTitle
-  pageHeading=pageTitle
-  errorItems=[]
-  pageSize=PageSize.TWO_THIRDS_COLUMN
-  showNavigationItems=(loggedInUser?has_content)
-  allowSearchEngineIndexing=false
-  phaseBanner=(loggedInUser?has_content)
->
+<@systemOfRecordPage pageTitle="Well and installation operator appointments" pageSize=PageSize.TWO_THIRDS_COLUMN>
   <ul class="govuk-list">
     <li class="govuk-list__item">
       <@_systemOrRecordLandingLink
@@ -61,7 +50,7 @@
       </div>
     </li>
   </ul>
-</@defaultPage>
+</@systemOfRecordPage>
 
 <#macro _systemOrRecordLandingLink linkText, linkUrl, ariaDescribedByHintId>
   <@fdsAction.link
