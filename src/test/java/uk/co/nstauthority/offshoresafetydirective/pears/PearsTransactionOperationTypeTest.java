@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,16 +15,8 @@ class PearsTransactionOperationTypeTest {
     );
   }
 
-  @ParameterizedTest
-  @EnumSource(PearsTransactionOperationType.class)
-  void fromOperationName_verifyCaseInsensitive(PearsTransactionOperationType type) {
-    type.getOperations().forEach(s ->
-        assertThat(PearsTransactionOperationType.fromOperationName(s.toLowerCase())).contains(type)
-    );
-  }
-
   @Test
   void fromOperationName_whenNotValid() {
-    assertThat(PearsTransactionOperationType.fromOperationName("invalid operation type")).isEmpty();
+    assertThat(PearsTransactionOperationType.fromOperationName(null)).isEmpty();
   }
 }

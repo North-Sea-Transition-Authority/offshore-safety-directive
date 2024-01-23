@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsOperationType;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -70,13 +71,12 @@ class PearsSubareaMessageHandlerServiceTest {
   private AssetPhaseRepository assetPhaseRepository;
 
   private Instant now;
-  private Clock clock;
   private PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
 
   @BeforeEach
   void setUp() {
     now = Instant.now();
-    clock = Clock.fixed(now, ZoneId.systemDefault());
+    var clock = Clock.fixed(now, ZoneId.systemDefault());
     var realService = new PearsSubareaMessageHandlerService(
         assetPersistenceService, appointmentAccessService, licenceBlockSubareaQueryService,
         assetAppointmentPhaseAccessService, appointmentRepository, assetPhaseRepository, clock
@@ -103,10 +103,13 @@ class PearsSubareaMessageHandlerServiceTest {
 
   @Test
   void rebuildAppointmentsAndAssets_whenOperationTypeCannotBeMapped_thenError() {
+
+    PearsOperationType unknownOperationType = null;
+
     var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
     var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
     var operation = PearsTransactionOperationTestUtil.builder()
-        .withType("unknown operation type")
+        .withType(unknownOperationType)
         .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
         .build();
 
@@ -506,8 +509,11 @@ class PearsSubareaMessageHandlerServiceTest {
   void endAppointmentsAndAssets_whenOperationTypeCannotBeMapped_thenError() {
     var firstSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
     var secondSubareaChange = PearsTransactionSubareaChangeTestUtil.builder().build();
+
+    PearsOperationType unknownOperationType = null;
+
     var operation = PearsTransactionOperationTestUtil.builder()
-        .withType("unknown operation type")
+        .withType(unknownOperationType)
         .withSubareaChanges(Set.of(firstSubareaChange, secondSubareaChange))
         .build();
 

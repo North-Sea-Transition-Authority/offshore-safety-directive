@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsOperationType;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
@@ -128,6 +129,9 @@ class PearsLicenceServiceTest {
 
   @Test
   void handlePearsTransactionApplied_whenOperationTypeIsUnknown() {
+
+    PearsOperationType unknownOperationType = null;
+
     var oldSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
     var newSubarea = new PearsTransaction.Operation.SubareaChange.Subarea(UUID.randomUUID().toString());
 
@@ -135,7 +139,7 @@ class PearsLicenceServiceTest {
     var operation = new PearsTransaction.Operation(
         UUID.randomUUID().toString(),
         1,
-        "unknown operation type",
+        unknownOperationType,
         Set.of(subareaChange)
     );
     var pearsTransaction = new PearsTransaction(

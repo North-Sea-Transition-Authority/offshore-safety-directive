@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.pears;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import uk.co.fivium.energyportalmessagequeue.message.pears.PearsOperationType;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -20,7 +21,7 @@ public class PearsTransactionOperationTestUtil {
 
     private String id = UUID.randomUUID().toString();
     private Integer executionOrder = new Random().nextInt(Integer.MAX_VALUE);
-    private String type = "SUBAREA_CHANGE";
+    private PearsOperationType type = PearsOperationType.SUBAREA_CHANGE;
     private Set<PearsTransaction.Operation.SubareaChange> subareaChanges = Set.of(
         PearsTransactionSubareaChangeTestUtil.builder().build()
     );
@@ -38,7 +39,7 @@ public class PearsTransactionOperationTestUtil {
       return this;
     }
 
-    Builder withType(String type) {
+    Builder withType(PearsOperationType type) {
       this.type = type;
       return this;
     }
