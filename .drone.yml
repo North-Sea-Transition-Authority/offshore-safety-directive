@@ -96,6 +96,7 @@ steps:
       repo: quay.io/fivium/offshore-safety-directive
       tags:
         - develop
+        - develop-${DRONE_BUILD_NUMBER}
       config:
         from_secret: docker_config
     when:
