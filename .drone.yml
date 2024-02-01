@@ -146,21 +146,6 @@ steps:
       status:
         - success
 
-  - name: deploy-dev-st
-    image: plugins/downstream:linux-amd64
-    settings:
-      server: https://drone.fivium.co.uk
-      token:
-        from_secret: drone_token
-      fork: true
-      repositories:
-        - fiviumuk/fivium-dev-app@master
-    when:
-      branch:
-        - develop
-      status:
-        - success
-
   - name: publish-epmq-messages-jar-snapshot
     image: eclipse-temurin:17-jdk
     environment:
