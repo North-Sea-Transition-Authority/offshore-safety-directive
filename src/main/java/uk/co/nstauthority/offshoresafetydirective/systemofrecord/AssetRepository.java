@@ -12,6 +12,10 @@ public interface AssetRepository extends CrudRepository<Asset, UUID> {
 
   List<Asset> findAllByPortalAssetIdInAndStatusIs(Collection<String> id, AssetStatus assetStatus);
 
+  List<Asset> findAllByPortalAssetIdInAndPortalAssetTypeAndStatusIs(Collection<String> id,
+                                                                    PortalAssetType portalAssetType,
+                                                                    AssetStatus assetStatus);
+
   List<Asset> findByPortalAssetIdInAndPortalAssetTypeAndStatusIs(Collection<String> id,
                                                                  PortalAssetType portalAssetType,
                                                                  AssetStatus assetStatus);

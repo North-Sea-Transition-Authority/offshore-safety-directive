@@ -27,4 +27,7 @@ public interface AppointmentRepository extends CrudRepository<Appointment, UUID>
 
   Optional<Appointment> findByIdAndAppointmentStatus(UUID appointmentId, AppointmentStatus appointmentStatus);
 
+  List<Appointment> findAllByAsset_PortalAssetIdInAndAppointmentStatus(Collection<String> assetIds,
+                                                                       AppointmentStatus appointmentStatus);
+
 }

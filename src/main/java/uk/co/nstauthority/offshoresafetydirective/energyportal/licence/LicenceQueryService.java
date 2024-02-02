@@ -16,7 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalA
 @Service
 public class LicenceQueryService {
 
-  static final LicenceProjectionRoot SINGLE_LICENCE_PROJECTION_ROOT =
+  public static final LicenceProjectionRoot SINGLE_LICENCE_PROJECTION_ROOT =
       new LicenceProjectionRoot()
           .id()
           .licenceType()
@@ -56,6 +56,21 @@ public class LicenceQueryService {
         .findFirst();
   }
 
+  public Optional<LicenceDto> getLicenceById(LicenceId licenceId, RequestPurpose requestPurpose,
+                                             LicenceProjectionRoot projectionRoot) {
+    return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
+            licenceApi.findLicence(
+                licenceId.id(),
+                projectionRoot,
+                requestPurpose,
+                logCorrelationId
+            )
+        )
+        .stream()
+        .map(LicenceDto::fromPortalLicence)
+        .findFirst();
+  }
+
   public List<LicenceDto> getLicencesByIdIn(Collection<Integer> idList, RequestPurpose requestPurpose) {
 
     if (idList == null || idList.isEmpty()) {
@@ -64,26 +79,26 @@ public class LicenceQueryService {
 
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         licenceApi.searchLicencesById(
-            idList.stream().toList(),
-            MULTI_LICENCE_PROJECTION_ROOT,
-            requestPurpose,
-            logCorrelationId
-        )
+                idList.stream().toList(),
+                MULTI_LICENCE_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
             .stream()
             .map(LicenceDto::fromPortalLicence)
             .toList()
-        );
+    );
   }
 
   List<LicenceDto> searchLicences(LicenceSearchFilter licenceSearchFilter, RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
-        licenceApi.searchLicences(
-            licenceSearchFilter,
-            MULTI_LICENCE_PROJECTION_ROOT,
-            requestPurpose,
-            logCorrelationId
+            licenceApi.searchLicences(
+                licenceSearchFilter,
+                MULTI_LICENCE_PROJECTION_ROOT,
+                requestPurpose,
+                logCorrelationId
+            )
         )
-    )
         .stream()
         .map(LicenceDto::fromPortalLicence)
         .sorted(LicenceDto.sort())

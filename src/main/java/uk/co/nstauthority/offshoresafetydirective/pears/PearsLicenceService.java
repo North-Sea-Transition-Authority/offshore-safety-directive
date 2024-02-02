@@ -2,12 +2,14 @@ package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsCorrectionAppliedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransaction;
@@ -15,7 +17,13 @@ import uk.co.fivium.energyportalmessagequeue.message.pears.PearsTransactionAppli
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Asset;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalEventType;
 
 @Service
@@ -30,15 +38,22 @@ class PearsLicenceService {
   private final LicenceQueryService licenceQueryService;
   private final AppointmentService appointmentService;
   private final PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
-
+  private final PearsSubareaEmailService pearsSubareaEmailService;
+  private final AssetAccessService assetAccessService;
+  private final TransactionTemplate transactionTemplate;
 
   @Autowired
   PearsLicenceService(LicenceQueryService licenceQueryService,
                       AppointmentService appointmentService,
-                      PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService) {
+                      PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService,
+                      PearsSubareaEmailService pearsSubareaEmailService, AssetAccessService assetAccessService,
+                      TransactionTemplate transactionTemplate) {
     this.licenceQueryService = licenceQueryService;
     this.appointmentService = appointmentService;
     this.pearsSubareaMessageHandlerService = pearsSubareaMessageHandlerService;
+    this.pearsSubareaEmailService = pearsSubareaEmailService;
+    this.assetAccessService = assetAccessService;
+    this.transactionTemplate = transactionTemplate;
   }
 
   public void handlePearsCorrectionApplied(PearsCorrectionAppliedEpmqMessage message) {
@@ -67,13 +82,31 @@ class PearsLicenceService {
         ));
   }
 
-  @Transactional
   public void handlePearsTransactionApplied(PearsTransactionAppliedEpmqMessage message) {
-    message.getTransaction()
+    var relevantSubareaIds = message.getTransaction()
         .operations()
         .stream()
-        .sorted(Comparator.comparing(PearsTransaction.Operation::executionOrder))
-        .forEachOrdered(this::handlePearsTransactionOperation);
+        .flatMap(operation -> operation.subareas().stream())
+        .map(subareaChange -> subareaChange.originalSubarea().id())
+        .map(PortalAssetId::new)
+        .collect(Collectors.toSet());
+
+    var subareaPortalAssetIdsWithAppointments = appointmentService.getAssetsWithActiveAppointments(
+            relevantSubareaIds,
+            PortalAssetType.SUBAREA
+        )
+        .stream()
+        .filter(assetDto -> AssetStatus.EXTANT.equals(assetDto.status()))
+        .map(dto -> dto.portalAssetId().id())
+        .collect(Collectors.toSet());
+
+    transactionTemplate.executeWithoutResult(transactionStatus ->
+        message.getTransaction()
+            .operations()
+            .stream()
+            .sorted(Comparator.comparing(PearsTransaction.Operation::executionOrder))
+            .forEachOrdered(this::handlePearsTransactionOperation)
+    );
 
     var licenceId = message.getLicenceId();
     if (!NumberUtils.isParsable(licenceId)) {
@@ -95,26 +128,56 @@ class PearsLicenceService {
             message.getTransaction().id(),
             PortalEventType.PEARS_TRANSACTION
         ));
+
+    if (CollectionUtils.isNotEmpty(subareaPortalAssetIdsWithAppointments)) {
+
+      var portalAssetIdsWithAppointments = subareaPortalAssetIdsWithAppointments.stream()
+          .map(PortalAssetId::new)
+          .toList();
+
+      var removedSubareas = assetAccessService.getAssetsByPortalAssetIdsAndStatus(
+          portalAssetIdsWithAppointments,
+          PortalAssetType.SUBAREA,
+          AssetStatus.REMOVED
+      );
+
+      if (CollectionUtils.isNotEmpty(removedSubareas)) {
+        var subareaIds = removedSubareas.stream()
+            .map(Asset::getPortalAssetId)
+            .map(LicenceBlockSubareaId::new)
+            .toList();
+
+        pearsSubareaEmailService.sendForwardAreaApprovalTerminationNotifications(
+            message.getTransaction().id(),
+            licenceId,
+            subareaIds
+        );
+      } else {
+        LOGGER.info("No forward area approvals were ended for PEARS transaction {}", message.getTransaction().id());
+      }
+    }
   }
 
   private void handlePearsTransactionOperation(PearsTransaction.Operation operation) {
     LOGGER.info("Preparing to handle operation with ID [{}]", operation.id());
-    var operationType = PearsTransactionOperationType.fromOperationName(operation.type());
-    if (operationType.isEmpty()) {
-      throw new IllegalStateException(
-          "Operation with ID [%s] has an unresolvable type of [%s]".formatted(
-              operation.id(),
-              operation.type()
-          )
-      );
-    }
+    var operationType = getTransactionOperationType(operation);
 
-    LOGGER.info("Handling operation with ID [{}] using operation type [{}]", operation.id(), operationType.get());
+    LOGGER.info("Handling operation with ID [{}] using operation type [{}]", operation.id(), operationType);
 
-    switch (operationType.get()) {
+    switch (operationType) {
       case COPY_FORWARD -> pearsSubareaMessageHandlerService.rebuildAppointmentsAndAssets(operation);
       case END -> pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation);
     }
+  }
+
+  private PearsTransactionOperationType getTransactionOperationType(PearsTransaction.Operation operation) {
+    return PearsTransactionOperationType.fromOperationName(operation.type())
+        .orElseThrow(() -> new IllegalStateException(
+            "Operation with ID [%s] has an unresolvable type of [%s]".formatted(
+                operation.id(),
+                operation.type()
+            )
+        ));
   }
 
 }

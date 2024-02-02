@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,6 +176,22 @@ public class AppointmentService {
       assets.forEach(asset -> removeAsset(asset, eventId, portalEventType));
       assetRepository.saveAll(assets);
     }
+  }
+
+  public Set<AssetDto> getAssetsWithActiveAppointments(Collection<PortalAssetId> portalAssetIds,
+                                                       PortalAssetType portalAssetType) {
+
+    var assetIds = portalAssetIds.stream()
+        .map(PortalAssetId::id)
+        .toList();
+    return appointmentRepository.findAllByAsset_PortalAssetIdInAndAppointmentStatus(
+            assetIds,
+            AppointmentStatus.EXTANT
+        )
+        .stream()
+        .filter(appointment -> Objects.equals(appointment.getAsset().getPortalAssetType(), portalAssetType))
+        .map(appointment -> AssetDto.fromAsset(appointment.getAsset()))
+        .collect(Collectors.toSet());
   }
 
   private void removeAsset(Asset asset, String eventId, PortalEventType portalEventType) {

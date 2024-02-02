@@ -100,6 +100,11 @@ public class EpaOrganisationUnitTestUtil {
       return this;
     }
 
+    public Builder withOrganisationGroups(List<OrganisationGroup> organisationGroups) {
+      this.organisationGroups = organisationGroups;
+      return this;
+    }
+
     public Builder isDuplicate(Boolean isDuplicate) {
       this.isDuplicate = isDuplicate;
       return this;

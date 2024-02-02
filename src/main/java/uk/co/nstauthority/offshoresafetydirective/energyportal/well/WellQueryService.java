@@ -30,12 +30,14 @@ public class WellQueryService {
           .id()
           .licenceType()
           .licenceNo()
-          .licenceRef().root()
+          .licenceRef()
+          .root()
           .totalDepthLicence()
           .id()
           .licenceType()
           .licenceNo()
-          .licenceRef().root();
+          .licenceRef()
+          .root();
 
   static final WellboresProjectionRoot SEARCH_WELLBORES_PROJECTION_ROOT =
       new WellboresProjectionRoot()

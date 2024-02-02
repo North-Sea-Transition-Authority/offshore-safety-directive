@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 import uk.co.nstauthority.offshoresafetydirective.configuration.EnvironmentConfiguration;
 
 @Component
-class EmailUrlGenerationService {
+public class EmailUrlGenerationService {
 
   private final EnvironmentConfiguration environmentConfiguration;
 
   private final ServletContext servletContext;
 
   @Autowired
-  EmailUrlGenerationService(EnvironmentConfiguration environmentConfiguration,
+  public EmailUrlGenerationService(EnvironmentConfiguration environmentConfiguration,
                                    ServletContext servletContext) {
     this.environmentConfiguration = environmentConfiguration;
     this.servletContext = servletContext;

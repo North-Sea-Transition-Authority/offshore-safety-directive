@@ -1,8 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
 import java.time.LocalDate;
+import java.util.List;
 import uk.co.fivium.energyportalapi.generated.types.Licence;
 import uk.co.fivium.energyportalapi.generated.types.LicenceStatus;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class EpaLicenceTestUtil {
@@ -30,6 +32,8 @@ public class EpaLicenceTestUtil {
     private LocalDate licenceEndDate;
 
     private LicenceStatus licenceStatus = LicenceStatus.EXTANT;
+
+    private List<OrganisationUnit> licensees = List.of();
 
     private Builder() {}
 
@@ -68,6 +72,11 @@ public class EpaLicenceTestUtil {
       return this;
     }
 
+    Builder withLicensees(List<OrganisationUnit> licensees) {
+      this.licensees = licensees;
+      return this;
+    }
+
     public Licence build() {
       return Licence.newBuilder()
           .id(id)
@@ -77,6 +86,7 @@ public class EpaLicenceTestUtil {
           .licenceStartDate(licenceStartDate)
           .licenceEndDate(licenceEndDate)
           .licenceStatus(licenceStatus)
+          .licensees(licensees)
           .build();
     }
 

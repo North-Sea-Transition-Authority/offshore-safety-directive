@@ -359,4 +359,36 @@ class TeamMemberServiceTest {
 
     assertThat(resultingTeams).isEmpty();
   }
+
+  @Test
+  void getTeamMembersOfTeamsWithAnyRoleOf() {
+    var team = TeamTestUtil.Builder()
+        .withTeamType(TeamType.REGULATOR)
+        .build();
+    var role = RegulatorTeamRole.ACCESS_MANAGER;
+
+    var teamMemberRole = TeamMemberRoleTestUtil.Builder()
+        .withRole(role.name())
+        .withTeam(team)
+        .build();
+    when(teamMemberRoleRepository.findAllByTeamInAndRoleIn(
+        List.of(team),
+        List.of(role.name())
+    ))
+        .thenReturn(List.of(teamMemberRole));
+
+    var result = teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(
+        List.of(team),
+        List.of(role.name())
+    );
+
+    assertThat(result)
+        .extracting(
+            teamMember -> teamMember.teamView().teamId(),
+            TeamMember::roles
+        )
+        .containsExactly(
+            Tuple.tuple(team.toTeamId(), Set.of(role))
+        );
+  }
 }

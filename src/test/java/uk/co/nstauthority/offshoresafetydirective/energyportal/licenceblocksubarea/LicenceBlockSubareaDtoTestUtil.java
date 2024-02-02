@@ -1,7 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.EpaOrganisationUnitTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class LicenceBlockSubareaDtoTestUtil {
@@ -37,6 +42,10 @@ public class LicenceBlockSubareaDtoTestUtil {
     private String licenceReference = "licence reference";
 
     private boolean isExtant = true;
+
+    private Set<OrganisationUnit> licensees = new HashSet<>(List.of(
+        EpaOrganisationUnitTestUtil.builder().build()
+    ));
 
     private Builder() {}
 
@@ -95,6 +104,11 @@ public class LicenceBlockSubareaDtoTestUtil {
       return this;
     }
 
+    Builder withLicensees(Set<OrganisationUnit> licensees) {
+      this.licensees = licensees;
+      return this;
+    }
+
     public LicenceBlockSubareaDto build() {
       return new LicenceBlockSubareaDto(
           new LicenceBlockSubareaId(subareaId),
@@ -109,7 +123,8 @@ public class LicenceBlockSubareaDtoTestUtil {
               new LicenceId(licenceId),
               new LicenceDto.LicenceType(licenceType),
               new LicenceDto.LicenceNumber(licenceNumber),
-              new LicenceDto.LicenceReference(licenceReference)
+              new LicenceDto.LicenceReference(licenceReference),
+              licensees
           ),
           isExtant
       );

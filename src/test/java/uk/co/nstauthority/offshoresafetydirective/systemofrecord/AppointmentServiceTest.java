@@ -501,4 +501,30 @@ class AppointmentServiceTest {
     verify(appointmentRepository, never()).saveAll(any());
     verify(assetRepository, never()).saveAll(any());
   }
+
+  @Test
+  void getAssetsWithActiveAppointments() {
+    var assetId = UUID.randomUUID().toString();
+
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(assetId)
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+    when(appointmentRepository.findAllByAsset_PortalAssetIdInAndAppointmentStatus(
+      List.of(assetId),
+      AppointmentStatus.EXTANT
+    ))
+        .thenReturn(List.of(appointment));
+
+    var result = appointmentService.getAssetsWithActiveAppointments(
+        List.of(new PortalAssetId(assetId)),
+        PortalAssetType.SUBAREA
+    );
+
+    assertThat(result)
+        .containsExactly(AssetDto.fromAsset(asset));
+  }
 }

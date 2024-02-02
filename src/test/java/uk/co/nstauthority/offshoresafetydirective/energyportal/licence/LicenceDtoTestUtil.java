@@ -1,5 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licence;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class LicenceDtoTestUtil {
@@ -21,6 +25,9 @@ public class LicenceDtoTestUtil {
     private Integer licenceNumber = 20;
 
     private String licenceReference = "licence reference";
+    private Set<OrganisationUnit> licensees = new HashSet<>(List.of(
+        OrganisationUnit.newBuilder().build()
+    ));
 
     private Builder() {}
 
@@ -44,12 +51,18 @@ public class LicenceDtoTestUtil {
       return this;
     }
 
+    public Builder withLicensees(Set<OrganisationUnit> licensees) {
+      this.licensees = licensees;
+      return this;
+    }
+
     public LicenceDto build() {
       return new LicenceDto(
           new LicenceId(licenceId),
           new LicenceDto.LicenceType(licenceType),
           new LicenceDto.LicenceNumber(licenceNumber),
-          new LicenceDto.LicenceReference(licenceReference)
+          new LicenceDto.LicenceReference(licenceReference),
+          licensees
       );
     }
   }

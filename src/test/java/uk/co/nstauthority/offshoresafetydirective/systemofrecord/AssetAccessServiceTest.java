@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -120,5 +122,28 @@ class AssetAccessServiceTest {
         .thenReturn(Optional.empty());
 
     assertFalse(() -> assetAccessService.isAssetExtant(portalAssetId, portalAssetType));
+  }
+
+  @Test
+  void getAssetsByPortalAssetIdsAndStatus() {
+    var assetId = UUID.randomUUID().toString();
+    var portalAssetType = PortalAssetType.SUBAREA;
+    var assetStatus = AssetStatus.EXTANT;
+
+    var asset = AssetTestUtil.builder().build();
+    when(assetRepository.findAllByPortalAssetIdInAndPortalAssetTypeAndStatusIs(
+        List.of(assetId),
+        portalAssetType,
+        assetStatus
+    ))
+        .thenReturn(List.of(asset));
+
+    var result = assetAccessService.getAssetsByPortalAssetIdsAndStatus(
+        List.of(new PortalAssetId(assetId)),
+        portalAssetType,
+        assetStatus
+    );
+
+    assertThat(result).containsExactly(asset);
   }
 }

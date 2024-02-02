@@ -79,7 +79,7 @@ dependencies {
 	implementation 'io.micrometer:micrometer-registry-statsd'
 
 	// fivium managed dependencies
-	implementation 'uk.co.fivium.energyportalapi:client:v6.3.0'
+	implementation 'uk.co.fivium.energyportalapi:client:v6.4.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:develop-SNAPSHOT'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
 	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v1.0.0'

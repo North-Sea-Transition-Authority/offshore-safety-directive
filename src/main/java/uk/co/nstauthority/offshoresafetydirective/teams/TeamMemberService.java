@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +33,12 @@ public class TeamMemberService {
   public List<TeamMember> getTeamMembersInRoles(Collection<String> roles, TeamType teamType) {
     List<TeamMemberRole> teamMemberRoles = teamMemberRoleRepository.findAllByTeam_TeamTypeAndRoleIn(teamType, roles);
     return convertToTeamMembers(teamMemberRoles);
+  }
+
+  public Set<TeamMember> getTeamMembersOfTeamsWithAnyRoleOf(Collection<Team> teams, Collection<String> roles) {
+    var teamMemberRoles = teamMemberRoleRepository.findAllByTeamInAndRoleIn(teams, roles);
+    List<TeamMember> teamMembers = convertToTeamMembers(teamMemberRoles);
+    return new HashSet<>(teamMembers);
   }
 
   public Optional<TeamMember> getTeamMember(Team team, WebUserAccountId wuaId) {
