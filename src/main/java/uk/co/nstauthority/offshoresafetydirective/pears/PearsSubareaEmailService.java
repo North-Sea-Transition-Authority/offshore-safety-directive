@@ -18,8 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
+import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailUrlGenerationService;
 import uk.co.nstauthority.offshoresafetydirective.email.GovukNotifyTemplate;
@@ -60,6 +62,7 @@ class PearsSubareaEmailService {
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final EnergyPortalUserService energyPortalUserService;
   private final EmailUrlGenerationService emailUrlGenerationService;
+  private final CustomerConfigurationProperties customerConfigurationProperties;
 
   @Autowired
   PearsSubareaEmailService(EmailService emailService,
@@ -67,7 +70,8 @@ class PearsSubareaEmailService {
                            TeamMemberService teamMemberService,
                            LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
                            EnergyPortalUserService energyPortalUserService,
-                           EmailUrlGenerationService emailUrlGenerationService) {
+                           EmailUrlGenerationService emailUrlGenerationService,
+                           CustomerConfigurationProperties customerConfigurationProperties) {
     this.emailService = emailService;
     this.licenceQueryService = licenceQueryService;
     this.teamScopeService = teamScopeService;
@@ -75,6 +79,7 @@ class PearsSubareaEmailService {
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
     this.energyPortalUserService = energyPortalUserService;
     this.emailUrlGenerationService = emailUrlGenerationService;
+    this.customerConfigurationProperties = customerConfigurationProperties;
   }
 
   public void sendForwardAreaApprovalTerminationNotifications(String transactionId,
@@ -146,6 +151,8 @@ class PearsSubareaEmailService {
         .collect(Collectors.toSet());
     var usersToEmail = new HashSet<>(energyPortalUserService.findByWuaIds(targetWuaIds, USER_QUERY_REQUEST_PURPOSE));
 
+    var domainReference = DomainReference.from(transactionId, "PEARS_TRANSACTION");
+
     for (EnergyPortalUserDto user : usersToEmail) {
       var mergedTemplate = template
           .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, user.forename())
@@ -154,9 +161,20 @@ class PearsSubareaEmailService {
       emailService.sendEmail(
           mergedTemplate,
           user::emailAddress,
-          DomainReference.from(transactionId, "PEARS_TRANSACTION")
+          domainReference
       );
     }
+
+    var approvalsEmail = EmailRecipient.directEmailAddress(customerConfigurationProperties.businessEmailAddress());
+    var mergedTemplate = template
+        .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, customerConfigurationProperties.mnemonic())
+        .merge();
+
+    emailService.sendEmail(
+        mergedTemplate,
+        approvalsEmail,
+        domainReference
+    );
   }
 
   Set<String> getOrganisationIdsThatWillNotBeInformed(Collection<String> organisationsIds,
