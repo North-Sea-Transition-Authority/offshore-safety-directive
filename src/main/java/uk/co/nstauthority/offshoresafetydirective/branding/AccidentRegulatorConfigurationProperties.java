@@ -9,5 +9,6 @@ import org.springframework.validation.annotation.Validated;
 public record AccidentRegulatorConfigurationProperties(
     @NotEmpty String name,
     @NotEmpty String mnemonic,
-    @NotEmpty String consultationGuidanceUrl
+    @NotEmpty String consultationGuidanceUrl,
+    @NotEmpty String emailAddress
 ) {}
