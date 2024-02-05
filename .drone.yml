@@ -52,7 +52,7 @@ steps:
         from_secret: docker_config
       DOCKER_CONFIG: /drone/dockerconfig # testcontainers override location for Docker config JSON
     settings:
-      storage_driver: overlay2 --dns=192.168.10.1
+      storage_driver: overlay2 --dns=192.168.10.1 --insecure-registry repo1.dev.fivium.local:5000
       cmd:
         - mkdir $DOCKER_CONFIG
         - echo $DOCKER_CONFIG_JSON > $DOCKER_CONFIG/config.json
