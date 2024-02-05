@@ -21,6 +21,11 @@ public class ApplicantDetailDtoTestUtil {
       return this;
     }
 
+    public Builder withApplicantOrganisationId(Integer applicantOrganisationId) {
+      this.applicantOrganisationId = new ApplicantOrganisationId(applicantOrganisationId);
+      return this;
+    }
+
     public ApplicantDetailDto build() {
       return new ApplicantDetailDto(applicantOrganisationId);
     }
