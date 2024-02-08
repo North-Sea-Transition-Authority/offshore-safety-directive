@@ -95,11 +95,11 @@ class PearsSubareaMessageHandlerService {
           operation.id()
       );
 
-      var appointments = appointmentAccessService.getActiveAppointmentsForAsset(originalSubareaAsset.assetId());
-      appointments.forEach(appointment -> {
-        appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
-        appointmentsToSave.add(appointment);
-      });
+      appointmentAccessService.getCurrentAppointmentForAsset(originalSubareaAsset.assetId())
+          .ifPresent(appointment -> {
+            appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
+            appointmentsToSave.add(appointment);
+          });
     }
 
     appointmentRepository.saveAll(appointmentsToSave);
@@ -157,7 +157,7 @@ class PearsSubareaMessageHandlerService {
     var newSubareaAssets = assetPersistenceService.createAssetsForSubareas(resultingSubareaDtos);
 
     var originalSubareaActiveAppointments =
-        appointmentAccessService.getActiveAppointmentsForAsset(originalSubareaAsset.assetId());
+        appointmentAccessService.getAppointmentsForAsset(originalSubareaAsset.assetId());
 
     Map<AppointmentId, List<AssetPhase>> originalSubareaAppointmentPhases =
         assetAppointmentPhaseAccessService.getPhasesByAppointments(originalSubareaActiveAppointments);

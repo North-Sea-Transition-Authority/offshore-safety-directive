@@ -158,7 +158,7 @@ class AssetTimelineServiceTest {
         .withResponsibleFromDate(LocalDate.of(2023, 8, 18))
         .build();
 
-    given(appointmentAccessService.getActiveAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(firstAppointmentByEventDate, secondAppointmentByEventDate));
 
     given(appointmentTimelineItemService.getTimelineItemViews(List.of(firstAppointmentByEventDate, secondAppointmentByEventDate), assetInSystemOfRecord))
@@ -249,7 +249,7 @@ class AssetTimelineServiceTest {
         .withCreatedDatetime(secondAppointmentInstant)
         .build();
 
-    given(appointmentAccessService.getActiveAppointmentsForAsset(assetInSystemOfRecord.assetId()))
+    given(appointmentAccessService.getAppointmentsForAsset(assetInSystemOfRecord.assetId()))
         .willReturn(List.of(firstAppointmentByCreatedTimestamp, secondAppointmentByCreatedTimestamp));
 
     given(appointmentTimelineItemService.getTimelineItemViews(List.of(firstAppointmentByCreatedTimestamp, secondAppointmentByCreatedTimestamp), assetInSystemOfRecord))

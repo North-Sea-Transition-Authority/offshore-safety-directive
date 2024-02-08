@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -183,7 +184,7 @@ class PearsSubareaMessageHandlerServiceTest {
 
     var firstAppointment = AppointmentTestUtil.builder().build();
     var secondAppointment = AppointmentTestUtil.builder().build();
-    when(appointmentAccessService.getActiveAppointmentsForAsset(persistedAssetDto.assetId()))
+    when(appointmentAccessService.getAppointmentsForAsset(persistedAssetDto.assetId()))
         .thenReturn(List.of(firstAppointment, secondAppointment));
 
     var assetPhase = AssetPhaseTestUtil.builder().build();
@@ -246,7 +247,7 @@ class PearsSubareaMessageHandlerServiceTest {
         .thenReturn(List.of(asset));
 
     var appointment = AppointmentTestUtil.builder().build();
-    when(appointmentAccessService.getActiveAppointmentsForAsset(persistedAssetDto.assetId()))
+    when(appointmentAccessService.getAppointmentsForAsset(persistedAssetDto.assetId()))
         .thenReturn(List.of(appointment));
 
     var assetPhase = AssetPhaseTestUtil.builder().build();
@@ -569,14 +570,16 @@ class PearsSubareaMessageHandlerServiceTest {
     when(assetPersistenceService.getOrCreateAsset(secondSubareaPortalId, PortalAssetType.SUBAREA))
         .thenReturn(secondAssetDto);
 
-    var firstActiveAppointment = spy(AppointmentTestUtil.builder().build());
+    var firstActiveAppointment = spy(AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
+        .build());
     var secondActiveAppointment = spy(AppointmentTestUtil.builder().build());
 
-    when(appointmentAccessService.getActiveAppointmentsForAsset(firstAssetDto.assetId()))
-        .thenReturn(List.of(firstActiveAppointment));
+    when(appointmentAccessService.getCurrentAppointmentForAsset(firstAssetDto.assetId()))
+        .thenReturn(Optional.of(firstActiveAppointment));
 
-    when(appointmentAccessService.getActiveAppointmentsForAsset(secondAssetDto.assetId()))
-        .thenReturn(List.of(secondActiveAppointment));
+    when(appointmentAccessService.getCurrentAppointmentForAsset(secondAssetDto.assetId()))
+        .thenReturn(Optional.of(secondActiveAppointment));
 
     pearsSubareaMessageHandlerService.endAppointmentsAndAssets(operation);
 

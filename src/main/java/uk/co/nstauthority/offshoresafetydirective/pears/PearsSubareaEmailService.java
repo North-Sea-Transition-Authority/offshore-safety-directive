@@ -21,6 +21,7 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailUrlGenerationService;
@@ -144,6 +145,18 @@ class PearsSubareaEmailService {
           organisationIds,
           transactionId
       );
+    } else if (CollectionUtils.isEmpty(orgGroupPortalIds)) {
+      var licenseeIds = Optional.ofNullable(licence.licensees()).orElse(Set.of())
+          .stream()
+          .map(OrganisationUnit::getOrganisationUnitId)
+          .map(Objects::toString)
+          .collect(Collectors.joining(","));
+      LOGGER.info(
+          "No organisation groups were available to inform on transaction [{}] for licensee org units [{}] on licence [{}]",
+          transactionId,
+          licenseeIds,
+          licenceId
+      );
     }
 
     var targetWuaIds = teamMembersToEmail.stream()
@@ -154,14 +167,22 @@ class PearsSubareaEmailService {
     var domainReference = DomainReference.from(transactionId, "PEARS_TRANSACTION");
 
     for (EnergyPortalUserDto user : usersToEmail) {
+
       var mergedTemplate = template
           .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, user.forename())
           .merge();
 
-      emailService.sendEmail(
+      var sentEmail = emailService.sendEmail(
           mergedTemplate,
           user::emailAddress,
           domainReference
+      );
+
+      LOGGER.info(
+          "Sending FAA approval end email to user [{}] for transaction [{}] with email id [{}]",
+          user.webUserAccountId(),
+          transactionId,
+          sentEmail.id()
       );
     }
 
@@ -170,10 +191,17 @@ class PearsSubareaEmailService {
         .withMailMergeField(RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, customerConfigurationProperties.mnemonic())
         .merge();
 
-    emailService.sendEmail(
+    var sentEmail = emailService.sendEmail(
         mergedTemplate,
         approvalsEmail,
         domainReference
+    );
+
+    LOGGER.info(
+        "Sending FAA approval end email to [{}] for transaction [{}] with email id [{}]",
+        customerConfigurationProperties.mnemonic(),
+        transactionId,
+        sentEmail.id()
     );
   }
 

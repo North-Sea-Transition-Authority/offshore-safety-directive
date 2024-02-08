@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,12 +40,23 @@ public class AppointmentAccessService {
     return appointmentRepository.findById(appointmentId.id());
   }
 
-  public Optional<Appointment> getAppointmentByStatus(AppointmentId appointmentId, AppointmentStatus appointmentStatus) {
+  public Optional<Appointment> getAppointmentByStatus(AppointmentId appointmentId,
+                                                      AppointmentStatus appointmentStatus) {
     return appointmentRepository.findByIdAndAppointmentStatus(appointmentId.id(), appointmentStatus);
   }
 
-  public List<Appointment> getActiveAppointmentsForAsset(AssetId assetId) {
+  public List<Appointment> getAppointmentsForAsset(AssetId assetId) {
     return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(assetId.id(), ACTIVE_STATUSES);
+  }
+
+  public Optional<Appointment> getCurrentAppointmentForAsset(AssetId assetId) {
+    return appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+            assetId.id(),
+            EnumSet.of(AppointmentStatus.EXTANT)
+        )
+        .stream()
+        .filter(appointment -> Objects.isNull(appointment.getResponsibleToDate()))
+        .findFirst();
   }
 
   public List<Appointment> getAppointmentsForAssets(

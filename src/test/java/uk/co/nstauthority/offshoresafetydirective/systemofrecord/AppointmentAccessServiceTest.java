@@ -183,7 +183,7 @@ class AppointmentAccessServiceTest {
     ))
         .willReturn(Collections.emptyList());
 
-    var resultingAppointments = appointmentAccessService.getActiveAppointmentsForAsset(assetId);
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
 
     assertThat(resultingAppointments).isEmpty();
   }
@@ -201,7 +201,7 @@ class AppointmentAccessServiceTest {
     ))
         .willReturn(List.of(expectedAppointments));
 
-    var resultingAppointments = appointmentAccessService.getActiveAppointmentsForAsset(assetId);
+    var resultingAppointments = appointmentAccessService.getAppointmentsForAsset(assetId);
 
     assertThat(resultingAppointments)
         .extracting(
@@ -311,6 +311,40 @@ class AppointmentAccessServiceTest {
     var resultingAppointments = appointmentAccessService.getAppointmentByStatus(appointmentId, status);
 
     assertTrue(resultingAppointments.isEmpty());
+  }
+
+  @Test
+  void getCurrentAppointmentForAsset_whenAppointmentIsNotEnded_thenAssertContent() {
+    var assetId = new AssetId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
+        .build();
+
+    when(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        EnumSet.of(AppointmentStatus.EXTANT)
+    ))
+        .thenReturn(List.of(appointment));
+
+    var result = appointmentAccessService.getCurrentAppointmentForAsset(assetId);
+    assertThat(result).contains(appointment);
+  }
+
+  @Test
+  void getCurrentAppointmentForAsset_whenAppointmentIsEnded_thenAssertEmpty() {
+    var assetId = new AssetId(UUID.randomUUID());
+    var appointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(LocalDate.now().minusDays(1))
+        .build();
+
+    when(appointmentRepository.findAllByAsset_idAndAppointmentStatusIn(
+        assetId.id(),
+        EnumSet.of(AppointmentStatus.EXTANT)
+    ))
+        .thenReturn(List.of(appointment));
+
+    var result = appointmentAccessService.getCurrentAppointmentForAsset(assetId);
+    assertThat(result).isEmpty();
   }
 
 }

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.pears;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -26,6 +27,7 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MailMergeField;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.Template;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationPropertiesTestUtil;
@@ -167,6 +169,9 @@ class PearsSubareaEmailServiceTest {
     when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
         .thenReturn(generatedUrl);
 
+    when(emailService.sendEmail(any(), any(), any()))
+        .thenReturn(new EmailNotification(UUID.randomUUID().toString()));
+
     pearsSubareaEmailService.sendForwardAreaApprovalTerminationNotifications(
         TRANSACTION_ID,
         LICENCE_ID.toString(),
@@ -289,6 +294,9 @@ class PearsSubareaEmailServiceTest {
     var generatedUrl = "/";
     when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
         .thenReturn(generatedUrl);
+
+    when(emailService.sendEmail(any(), any(), any()))
+        .thenReturn(new EmailNotification(UUID.randomUUID().toString()));
 
     pearsSubareaEmailService.sendForwardAreaApprovalTerminationNotifications(
         TRANSACTION_ID,

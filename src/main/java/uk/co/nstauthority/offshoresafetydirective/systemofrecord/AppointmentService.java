@@ -190,6 +190,7 @@ public class AppointmentService {
         )
         .stream()
         .filter(appointment -> Objects.equals(appointment.getAsset().getPortalAssetType(), portalAssetType))
+        .filter(appointment -> Objects.isNull(appointment.getResponsibleToDate()))
         .map(appointment -> AssetDto.fromAsset(appointment.getAsset()))
         .collect(Collectors.toSet());
   }

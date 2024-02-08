@@ -503,7 +503,7 @@ class AppointmentServiceTest {
   }
 
   @Test
-  void getAssetsWithActiveAppointments() {
+  void getAssetsWithActiveAppointments_whenHasExtantAppointment_thenHasResult() {
     var assetId = UUID.randomUUID().toString();
 
     var asset = AssetTestUtil.builder()
@@ -512,6 +512,7 @@ class AppointmentServiceTest {
         .build();
     var appointment = AppointmentTestUtil.builder()
         .withAsset(asset)
+        .withResponsibleToDate(null)
         .build();
     when(appointmentRepository.findAllByAsset_PortalAssetIdInAndAppointmentStatus(
       List.of(assetId),
@@ -526,5 +527,31 @@ class AppointmentServiceTest {
 
     assertThat(result)
         .containsExactly(AssetDto.fromAsset(asset));
+  }
+
+  @Test
+  void getAssetsWithActiveAppointments_whenHasExtantAppointment_andIsEnded_thenNoResult() {
+    var assetId = UUID.randomUUID().toString();
+
+    var asset = AssetTestUtil.builder()
+        .withPortalAssetId(assetId)
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .withResponsibleToDate(LocalDate.now())
+        .build();
+    when(appointmentRepository.findAllByAsset_PortalAssetIdInAndAppointmentStatus(
+        List.of(assetId),
+        AppointmentStatus.EXTANT
+    ))
+        .thenReturn(List.of(appointment));
+
+    var result = appointmentService.getAssetsWithActiveAppointments(
+        List.of(new PortalAssetId(assetId)),
+        PortalAssetType.SUBAREA
+    );
+
+    assertThat(result).isEmpty();
   }
 }
