@@ -21,12 +21,14 @@ class FeedbackService {
   private static final Logger LOGGER = LoggerFactory.getLogger(FeedbackService.class);
 
   private final FeedbackClientService feedbackClientService;
+  private final FeedbackEmailService feedbackEmailService;
   private final Clock clock;
 
   @Autowired
-  FeedbackService(FeedbackClientService feedbackClientService,
+  FeedbackService(FeedbackClientService feedbackClientService, FeedbackEmailService feedbackEmailService,
                   Clock clock) {
     this.feedbackClientService = feedbackClientService;
+    this.feedbackEmailService = feedbackEmailService;
     this.clock = clock;
   }
 
@@ -52,7 +54,16 @@ class FeedbackService {
     try {
       feedbackClientService.saveFeedback(feedback);
     } catch (CannotSendFeedbackException e) {
-      LOGGER.warn("Feedback failed to send: {} ", e.getMessage());
+      LOGGER.warn("Feedback failed to send, notifying service desk of feedback: {} ", e.getMessage());
+      try {
+        feedbackEmailService.sendFeedbackFailedToSendEmail(feedback, userDetail);
+      } catch (Exception exception) {
+        LOGGER.error("""
+            Failed to notify service desk of failed request to reach feedback management system.
+            Feedback was %s for user with ID %s. Feedback should be added to the feedback management system manually.
+            """
+            .formatted(feedback.getServiceRating(), userDetail.wuaId()), exception);
+      }
     }
   }
 

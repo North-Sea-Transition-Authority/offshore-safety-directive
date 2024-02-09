@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.feedback;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -48,6 +49,9 @@ class FeedbackServiceTest {
   @Mock
   private FeedbackClientService feedbackClientService;
 
+  @Mock
+  private FeedbackEmailService feedbackEmailService;
+
   @InjectMocks
   private FeedbackService feedbackService;
 
@@ -73,7 +77,7 @@ class FeedbackServiceTest {
   }
 
   @Test
-  void saveFeedback_CannotSendFeedbackException_AssertDoesNotThrow() throws CannotSendFeedbackException {
+  void saveFeedback_CannotSendFeedbackException_thenAssertEmailSent() throws CannotSendFeedbackException {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
     when(feedbackClientService.saveFeedback(any(Feedback.class)))
         .thenThrow(new CannotSendFeedbackException("test exception"));
@@ -81,6 +85,7 @@ class FeedbackServiceTest {
     feedbackService.saveFeedback(form, USER);
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
+    verify(feedbackEmailService).sendFeedbackFailedToSendEmail(feedbackArgumentCaptor.getValue(), USER);
 
     assertThat(feedbackArgumentCaptor.getValue()).extracting(
         Feedback::getSubmitterName,
@@ -162,7 +167,7 @@ class FeedbackServiceTest {
   }
 
   @Test
-  void saveFeedback_WithNominationDetail_CannotSendFeedbackException_AssertDoesNotThrow() throws CannotSendFeedbackException {
+  void saveFeedback_WithNominationDetail_CannotSendFeedbackException_thenAssertEmailSent() throws CannotSendFeedbackException {
     when(clock.instant()).thenReturn(CURRENT_INSTANT);
     when(feedbackClientService.saveFeedback(any(Feedback.class)))
         .thenThrow(new CannotSendFeedbackException("test exception"));
@@ -170,6 +175,7 @@ class FeedbackServiceTest {
     feedbackService.saveFeedback(NOMINATION, form, USER);
 
     verify(feedbackClientService).saveFeedback(feedbackArgumentCaptor.capture());
+    verify(feedbackEmailService).sendFeedbackFailedToSendEmail(feedbackArgumentCaptor.getValue(), USER);
 
     assertThat(feedbackArgumentCaptor.getValue()).extracting(
         Feedback::getSubmitterName,
@@ -190,5 +196,37 @@ class FeedbackServiceTest {
         NOMINATION.getReference(),
         expectedNominationUrl
     );
+  }
+
+  @Test
+  void saveFeedback_whenCannotSendToFeedbackManagerAndExceptionInBackupEmail_thenNoExceptionRethrown() throws CannotSendFeedbackException {
+
+    // GIVEN a failure trying to contact the feedback management system
+    when(feedbackClientService.saveFeedback(any(Feedback.class)))
+        .thenThrow(new CannotSendFeedbackException("exception"));
+
+    // AND we have a failure in the fallback email to the service team
+    doThrow(new NullPointerException("exception"))
+        .when(feedbackEmailService)
+        .sendFeedbackFailedToSendEmail(any(Feedback.class), any(ServiceUserDetail.class));
+
+    // THEN the exception is not thrown back up to the user
+    assertDoesNotThrow(() -> feedbackService.saveFeedback(form, USER));
+  }
+
+  @Test
+  void saveFeedback_nominationVariation_whenCannotSendToFeedbackManagerAndExceptionInBackupEmail_thenNoExceptionRethrown() throws CannotSendFeedbackException {
+
+    // GIVEN a failure trying to contact the feedback management system
+    when(feedbackClientService.saveFeedback(any(Feedback.class)))
+        .thenThrow(new CannotSendFeedbackException("exception"));
+
+    // AND we have a failure in the fallback email to the service team
+    doThrow(new NullPointerException("exception"))
+        .when(feedbackEmailService)
+        .sendFeedbackFailedToSendEmail(any(Feedback.class), any(ServiceUserDetail.class));
+
+    // THEN the exception is not thrown back up to the user
+    assertDoesNotThrow(() -> feedbackService.saveFeedback(NOMINATION, form, USER));
   }
 }

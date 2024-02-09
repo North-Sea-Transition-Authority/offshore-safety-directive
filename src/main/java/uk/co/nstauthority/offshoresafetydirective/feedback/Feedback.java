@@ -3,7 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.feedback;
 import java.time.Instant;
 import uk.co.fivium.feedbackmanagementservice.client.FeedbackManagementServiceFeedback;
 
-public class Feedback implements FeedbackManagementServiceFeedback {
+class Feedback implements FeedbackManagementServiceFeedback {
 
   private String submitterName;
   private String submitterEmail;

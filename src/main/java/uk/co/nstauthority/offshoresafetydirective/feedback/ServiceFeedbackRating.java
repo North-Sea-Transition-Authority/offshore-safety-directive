@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.feedback;
 
 import uk.co.nstauthority.offshoresafetydirective.fds.DisplayableEnumOption;
 
-enum ServiceFeedbackRating implements DisplayableEnumOption {
+public enum ServiceFeedbackRating implements DisplayableEnumOption {
   VERY_SATISFIED(10, "Very satisfied"),
   SATISFIED(20, "Satisfied"),
   NEITHER(30, "Neither satisfied or dissatisfied"),
