@@ -190,8 +190,8 @@ class PearsSubareaEmailServiceTest {
 
     assertThat(domainReferenceCaptor.getAllValues())
         .extracting(
-            DomainReference::getId,
-            DomainReference::getType
+            DomainReference::getDomainId,
+            DomainReference::getDomainType
         )
         .containsExactly(
             Tuple.tuple(

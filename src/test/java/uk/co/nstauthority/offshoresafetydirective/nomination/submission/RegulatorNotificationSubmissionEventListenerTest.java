@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.refEq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -19,6 +19,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -129,16 +130,27 @@ class RegulatorNotificationSubmissionEventListenerTest {
     @Nested
     class WhenNomination {
 
-      @DisplayName("THEN an email is sent to the regulator")
-      @Test
-      void thenEmailSentToRegulator() {
+      private static NominationDetail nominationDetail;
 
-        var nominationDetail = NominationDetailTestUtil.builder()
-            .withNomination(NominationTestUtil.builder().withReference("reference").build())
+      @BeforeEach
+      void setup() {
+
+        var nomination = NominationTestUtil.builder()
+            .withId(NOMINATION_ID.id())
+            .withReference("reference")
+            .build();
+
+        nominationDetail = NominationDetailTestUtil.builder()
+            .withNomination(nomination)
             .build();
 
         given(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
             .willReturn(Optional.of(nominationDetail));
+      }
+
+      @DisplayName("THEN an email is sent to the regulator")
+      @Test
+      void thenEmailSentToRegulator() {
 
         var applicant = PortalOrganisationDtoTestUtil.builder()
             .withId(10)
@@ -178,7 +190,7 @@ class RegulatorNotificationSubmissionEventListenerTest {
             .sendEmail(
                 mergedTemplateArgumentCaptor.capture(),
                 emailRecipientArgumentCaptor.capture(),
-                refEq(EmailService.withNominationDomain(NOMINATION_ID))
+                eq(nominationDetail)
             );
 
         assertThat(emailRecipientArgumentCaptor.getValue().getEmailAddress())

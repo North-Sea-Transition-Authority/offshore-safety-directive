@@ -57,7 +57,9 @@ class ApplicantNotificationEventListener {
 
     LOGGER.info("Handling NominationDecisionDeterminedEvent for applicant with nomination with ID {}", nominationId.id());
 
-    Set<TeamMemberView> applicantTeamMembers = getApplicantTeamMembers(nominationId);
+    var nominationDetail = getNominationDetail(nominationId);
+
+    Set<TeamMemberView> applicantTeamMembers = getApplicantTeamMembers(nominationDetail);
 
     if (CollectionUtils.isNotEmpty(applicantTeamMembers)) {
 
@@ -68,7 +70,7 @@ class ApplicantNotificationEventListener {
           .buildNominationDecisionTemplate(nominationId)
           .withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl));
 
-      emailTeamMembers(nominationId, templateBuilder, applicantTeamMembers);
+      emailTeamMembers(nominationDetail, templateBuilder, applicantTeamMembers);
     } else {
       LOGGER.info(
           "No users in the applicant team when processing NominationDecisionDeterminedEvent for nomination {}",
@@ -77,7 +79,7 @@ class ApplicantNotificationEventListener {
     }
   }
 
-  private void emailTeamMembers(NominationId nominationId,
+  private void emailTeamMembers(NominationDetail nominationDetail,
                                 MergedTemplate.MergedTemplateBuilder templateBuilder,
                                 Set<TeamMemberView> applicantTeamMembers) {
 
@@ -90,21 +92,19 @@ class ApplicantNotificationEventListener {
       EmailNotification sentEmail = emailService.sendEmail(
           template,
           applicant,
-          EmailService.withNominationDomain(nominationId)
+          nominationDetail
       );
 
       LOGGER.info(
-          "Sent nomination decision email with ID {} to applicant user with ID {} for nomination {}",
+          "Sent nomination decision email with ID {} to applicant user with ID {} for nomination detail {}",
           sentEmail.id(),
           applicant.wuaId().id(),
-          nominationId.id()
+          nominationDetail.getId()
       );
     });
   }
 
-  private Set<TeamMemberView> getApplicantTeamMembers(NominationId nominationId) {
-
-    var nominationDetail = getNominationDetail(nominationId);
+  private Set<TeamMemberView> getApplicantTeamMembers(NominationDetail nominationDetail) {
 
     return nominationApplicantTeamService.getApplicantTeamMembersWithAnyRoleOf(
         nominationDetail,

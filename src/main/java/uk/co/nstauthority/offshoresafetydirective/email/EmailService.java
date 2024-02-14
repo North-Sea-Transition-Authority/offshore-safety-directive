@@ -9,7 +9,6 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNoti
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 @Service
 public class EmailService {
@@ -59,10 +58,6 @@ public class EmailService {
         domainReference,
         CorrelationIdUtil.getCorrelationIdFromMdc()
     );
-  }
-
-  public static DomainReference withNominationDomain(NominationId nominationId) {
-    return DomainReference.from(String.valueOf(nominationId.id()), "NOMINATION");
   }
 
   public String withUrl(String url) {

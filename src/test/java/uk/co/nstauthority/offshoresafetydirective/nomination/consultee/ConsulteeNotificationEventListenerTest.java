@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -10,6 +11,7 @@ import static uk.co.nstauthority.offshoresafetydirective.architecture.Transactio
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -29,8 +31,12 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.Template;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
@@ -45,6 +51,13 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.con
 )
 @ExtendWith(MockitoExtension.class)
 class ConsulteeNotificationEventListenerTest {
+  
+  private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
+  
+  private static final NominationDetail NOMINATION_DETAIL = NominationDetailTestUtil
+      .builder()
+      .withNomination(NominationTestUtil.builder().withId(NOMINATION_ID.id()).build())
+      .build();
 
   @Mock
   private EmailService emailService;
@@ -54,6 +67,9 @@ class ConsulteeNotificationEventListenerTest {
 
   @Mock
   private NominationEmailBuilderService nominationEmailBuilderService;
+  
+  @Mock
+  private NominationDetailService nominationDetailService;
 
   @InjectMocks
   private ConsulteeNotificationEventListener consulteeNotificationEventListener;
@@ -79,7 +95,8 @@ class ConsulteeNotificationEventListenerTest {
     @Test
     void whenConsultationCoordinatorsExist() {
 
-      var nominationId = new NominationId(UUID.randomUUID());
+      given(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
+          .willReturn(Optional.of(NOMINATION_DETAIL));
 
       var firstConsultationCoordinator = TeamMemberViewTestUtil.Builder()
           .withContactEmail("first@example.com")
@@ -99,11 +116,11 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      given(nominationEmailBuilderService.buildConsultationRequestedTemplate(NOMINATION_ID))
           .willReturn(template);
 
       given(emailService.withUrl(
-          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))
       ))
           .willReturn("/url");
 
@@ -111,7 +128,7 @@ class ConsulteeNotificationEventListenerTest {
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
 
       consulteeNotificationEventListener
-          .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(nominationId));
+          .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(NOMINATION_ID));
 
       then(emailService)
           .should()
@@ -123,7 +140,7 @@ class ConsulteeNotificationEventListenerTest {
                     .merge()
               ),
               refEq(firstConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
 
       then(emailService)
@@ -136,14 +153,12 @@ class ConsulteeNotificationEventListenerTest {
                       .merge()
               ),
               refEq(secondConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
     }
 
     @Test
     void whenNoConsultationCoordinatorsExist() {
-
-      var nominationId = new NominationId(UUID.randomUUID());
 
       given(teamMemberViewService.getTeamMembersWithRoles(
           Set.of(ConsulteeTeamRole.CONSULTATION_COORDINATOR.name()),
@@ -152,7 +167,7 @@ class ConsulteeNotificationEventListenerTest {
           .willReturn(Collections.emptyList());
 
       consulteeNotificationEventListener
-          .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(nominationId));
+          .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(NOMINATION_ID));
 
       then(nominationEmailBuilderService)
           .shouldHaveNoInteractions();
@@ -183,7 +198,8 @@ class ConsulteeNotificationEventListenerTest {
     @Test
     void whenConsultationCoordinatorsExist() {
 
-      var nominationId = new NominationId(UUID.randomUUID());
+      given(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
+          .willReturn(Optional.of(NOMINATION_DETAIL));
 
       var firstConsultationCoordinator = TeamMemberViewTestUtil.Builder()
           .withContactEmail("first@example.com")
@@ -203,11 +219,11 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      given(nominationEmailBuilderService.buildNominationDecisionTemplate(NOMINATION_ID))
           .willReturn(template);
 
       given(emailService.withUrl(
-          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))
       ))
           .willReturn("/url");
 
@@ -215,7 +231,7 @@ class ConsulteeNotificationEventListenerTest {
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
 
       consulteeNotificationEventListener
-          .notifyConsultationCoordinatorsOfDecision(new NominationDecisionDeterminedEvent(nominationId));
+          .notifyConsultationCoordinatorsOfDecision(new NominationDecisionDeterminedEvent(NOMINATION_ID));
 
       then(emailService)
           .should()
@@ -227,7 +243,7 @@ class ConsulteeNotificationEventListenerTest {
                       .merge()
               ),
               refEq(firstConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
 
       then(emailService)
@@ -240,7 +256,7 @@ class ConsulteeNotificationEventListenerTest {
                       .merge()
               ),
               refEq(secondConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
     }
 
@@ -287,7 +303,8 @@ class ConsulteeNotificationEventListenerTest {
     @Test
     void whenConsultationCoordinatorsExist() {
 
-      var nominationId = new NominationId(UUID.randomUUID());
+      given(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
+          .willReturn(Optional.of(NOMINATION_DETAIL));
 
       var firstConsultationCoordinator = TeamMemberViewTestUtil.Builder()
           .withContactEmail("first@example.com")
@@ -307,11 +324,11 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
+      given(nominationEmailBuilderService.buildAppointmentConfirmedTemplate(NOMINATION_ID))
           .willReturn(template);
 
       given(emailService.withUrl(
-          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))
       ))
           .willReturn("/url");
 
@@ -319,7 +336,7 @@ class ConsulteeNotificationEventListenerTest {
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
 
       consulteeNotificationEventListener
-          .notifyConsultationCoordinatorsOfAppointment(new AppointmentConfirmedEvent(nominationId));
+          .notifyConsultationCoordinatorsOfAppointment(new AppointmentConfirmedEvent(NOMINATION_ID));
 
       then(emailService)
           .should()
@@ -331,7 +348,7 @@ class ConsulteeNotificationEventListenerTest {
                       .merge()
               ),
               refEq(firstConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
 
       then(emailService)
@@ -344,7 +361,7 @@ class ConsulteeNotificationEventListenerTest {
                       .merge()
               ),
               refEq(secondConsultationCoordinator),
-              refEq(EmailService.withNominationDomain(nominationId))
+              eq(NOMINATION_DETAIL)
           );
     }
 

@@ -16,11 +16,12 @@ import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.DomainReference;
 
 @Entity
 @Table(name = "nomination_details")
 @Audited
-public class NominationDetail implements Serializable {
+public class NominationDetail implements Serializable, DomainReference {
 
   @Serial
   private static final long serialVersionUID = 6126656191548621905L;
@@ -108,5 +109,15 @@ public class NominationDetail implements Serializable {
         ", status=" + status +
         ", submittedInstant=" + submittedInstant +
         '}';
+  }
+
+  @Override
+  public String getDomainId() {
+    return String.valueOf(id);
+  }
+
+  @Override
+  public String getDomainType() {
+    return "NOMINATION_DETAIL";
   }
 }

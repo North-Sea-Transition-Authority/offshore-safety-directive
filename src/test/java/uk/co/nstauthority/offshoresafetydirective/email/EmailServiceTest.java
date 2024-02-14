@@ -9,7 +9,6 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
 
 import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,7 +23,6 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailReci
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 
 class EmailServiceTest {
 
@@ -166,18 +164,6 @@ class EmailServiceTest {
             refEq(DomainReference.from("id", "type")),
             eq("log-correlation-id")
         );
-  }
-
-  @Test
-  void withNominationDomain() {
-
-    var nominationId = new NominationId(UUID.randomUUID());
-
-    var resultingDomainReference = EmailService.withNominationDomain(nominationId);
-
-    assertThat(resultingDomainReference)
-        .extracting(DomainReference::getId, DomainReference::getType)
-        .containsExactly(nominationId.id().toString(), "NOMINATION");
   }
 
   @Test

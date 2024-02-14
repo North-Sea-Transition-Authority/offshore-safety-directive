@@ -86,7 +86,7 @@ dependencies {
 	implementation 'uk.co.fivium.energyportalmessagequeue:messages:v1.0.0'
 	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.3.1'
 	implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
-	implementation 'uk.co.fivium:spring-boot-starter-digital-notification-library:be-able-to-add-test-recipients-SNAPSHOT'
+	implementation 'uk.co.fivium:spring-boot-starter-digital-notification-library:rename-domain-reference-properties-SNAPSHOT'
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'

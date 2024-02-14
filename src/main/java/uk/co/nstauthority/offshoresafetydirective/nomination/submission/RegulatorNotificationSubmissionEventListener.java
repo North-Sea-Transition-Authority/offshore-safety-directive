@@ -78,13 +78,13 @@ class RegulatorNotificationSubmissionEventListener {
     var sentEmail = emailService.sendEmail(
         template,
         EmailRecipient.directEmailAddress(customerConfigurationProperties.businessEmailAddress()),
-        EmailService.withNominationDomain(nominationId)
+        nominationDetail
     );
 
     LOGGER.info(
-        "Nomination submission notification {} for nomination {} sent to regulator inbox",
+        "Nomination submission notification {} for nomination detail {} sent to regulator inbox",
         sentEmail.id(),
-        nominationId.id()
+        nominationDetail.getId()
     );
   }
 

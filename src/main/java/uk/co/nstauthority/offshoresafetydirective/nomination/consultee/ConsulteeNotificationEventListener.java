@@ -16,6 +16,8 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
@@ -37,12 +39,16 @@ class ConsulteeNotificationEventListener {
 
   private final NominationEmailBuilderService nominationEmailBuilderService;
 
+  private final NominationDetailService nominationDetailService;
+
   @Autowired
   ConsulteeNotificationEventListener(EmailService emailService, TeamMemberViewService teamMemberViewService,
-                                     NominationEmailBuilderService nominationEmailBuilderService) {
+                                     NominationEmailBuilderService nominationEmailBuilderService,
+                                     NominationDetailService nominationDetailService) {
     this.emailService = emailService;
     this.teamMemberViewService = teamMemberViewService;
     this.nominationEmailBuilderService = nominationEmailBuilderService;
+    this.nominationDetailService = nominationDetailService;
   }
 
   @Async
@@ -57,10 +63,12 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
+      var nominationDetail = getNominationDetail(nominationId);
+
       MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildConsultationRequestedTemplate(nominationId);
 
-      emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
+      emailTeamMembers(nominationDetail, templateBuilder, consultationCoordinators);
     } else {
       LOGGER.info(
           "No users in the consultation coordinator role when processing ConsultationRequestedEvent for nomination %s"
@@ -81,10 +89,12 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
+      var nominationDetail = getNominationDetail(nominationId);
+
       MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildNominationDecisionTemplate(nominationId);
 
-      emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
+      emailTeamMembers(nominationDetail, templateBuilder, consultationCoordinators);
     } else {
       LOGGER.info(
           "No users in the consultation coordinator role when processing NominationDecisionDeterminedEvent for nomination {}",
@@ -105,10 +115,12 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
+      var nominationDetail = getNominationDetail(nominationId);
+
       MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildAppointmentConfirmedTemplate(nominationId);
 
-      emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
+      emailTeamMembers(nominationDetail, templateBuilder, consultationCoordinators);
     } else {
       LOGGER.info(
           "No users in the consultation coordinator role when processing AppointmentConfirmedEvent for nomination {}",
@@ -117,13 +129,13 @@ class ConsulteeNotificationEventListener {
     }
   }
 
-  private void emailTeamMembers(NominationId nominationId,
+  private void emailTeamMembers(NominationDetail nominationDetail,
                                 MergedTemplate.MergedTemplateBuilder mergedTemplateBuilder,
                                 Set<TeamMemberView> teamMembers) {
 
     var nominationSummaryUrl = ReverseRouter
         .route(on(NominationConsulteeViewController.class)
-            .renderNominationView(nominationId));
+            .renderNominationView(new NominationId(nominationDetail.getNomination().getId())));
 
     mergedTemplateBuilder.withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl));
 
@@ -136,14 +148,14 @@ class ConsulteeNotificationEventListener {
       EmailNotification sentEmail = emailService.sendEmail(
           template,
           teamMember,
-          EmailService.withNominationDomain(nominationId)
+          nominationDetail
       );
 
       LOGGER.info(
-          "Sent email with ID {} to user with ID {} for nomination with ID {}",
+          "Sent email with ID {} to user with ID {} for nomination detail with ID {}",
           sentEmail.id(),
           teamMember.wuaId().id(),
-          nominationId.id()
+          nominationDetail.getId()
       );
     });
   }
@@ -153,5 +165,12 @@ class ConsulteeNotificationEventListener {
         Set.of(ConsulteeTeamRole.CONSULTATION_COORDINATOR.name()),
         TeamType.CONSULTEE
     ));
+  }
+
+  private NominationDetail getNominationDetail(NominationId nominationId) {
+    return nominationDetailService.getPostSubmissionNominationDetail(nominationId)
+        .orElseThrow(() -> new IllegalStateException(
+            "Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id())
+        ));
   }
 }

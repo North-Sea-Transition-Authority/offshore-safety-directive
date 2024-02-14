@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -163,7 +164,7 @@ class ApplicantNotificationEventListenerTest {
                         .merge()
                 ),
                 refEq(firstTeamMember),
-                refEq(EmailService.withNominationDomain(NOMINATION_ID))
+                eq(NOMINATION_DETAIL)
             );
 
         then(emailService)
@@ -176,7 +177,7 @@ class ApplicantNotificationEventListenerTest {
                         .merge()
                 ),
                 refEq(firstTeamMember),
-                refEq(EmailService.withNominationDomain(NOMINATION_ID))
+                eq(NOMINATION_DETAIL)
             );
       }
     }
