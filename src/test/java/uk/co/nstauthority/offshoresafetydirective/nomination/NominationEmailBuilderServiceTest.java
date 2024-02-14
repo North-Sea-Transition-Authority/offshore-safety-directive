@@ -3,11 +3,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
@@ -19,18 +16,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MailMergeField;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.Template;
-import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
 import uk.co.nstauthority.offshoresafetydirective.email.GovukNotifyTemplate;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype.NominationTypeService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailDto;
-import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailTestingUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.operatorinvolvement.NominationOperatorService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.operatorinvolvement.NominationOperators;
 
 @ExtendWith(MockitoExtension.class)
 class NominationEmailBuilderServiceTest {
@@ -39,13 +30,7 @@ class NominationEmailBuilderServiceTest {
   private NominationDetailService nominationDetailService;
 
   @Mock
-  private ApplicantDetailAccessService applicantDetailAccessService;
-
-  @Mock
-  private NomineeDetailAccessService nomineeDetailAccessService;
-
-  @Mock
-  private PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private NominationOperatorService nominationOperatorService;
 
   @Mock
   private NominationTypeService nominationTypeService;
@@ -84,44 +69,6 @@ class NominationEmailBuilderServiceTest {
     }
 
     @Test
-    void whenCannotFindApplicant() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-    }
-
-    @Test
-    void whenCannotFindNominee() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(ApplicantDetailDtoTestUtil.builder().build()));
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-
-    }
-
-    @Test
     void whenSuccess_thenVerifyMailMergeFields() {
 
       given(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -130,20 +77,9 @@ class NominationEmailBuilderServiceTest {
       ))
           .willReturn(Optional.of(nominationDetail));
 
-      var applicationDetail = ApplicantDetailDtoTestUtil.builder()
-          .withApplicantOrganisationId(10)
-          .build();
-
       var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
           .withId(10)
           .withName("applicant")
-          .build();
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(applicationDetail));
-
-      var nomineeDetail = NomineeDetailTestingUtil.builder()
-          .withNominatedOrganisationId(20)
           .build();
 
       var nomineeOrganisation = PortalOrganisationDtoTestUtil.builder()
@@ -151,19 +87,8 @@ class NominationEmailBuilderServiceTest {
           .withName("nominee")
           .build();
 
-      var nomineeDetailDto = NomineeDetailDto.fromNomineeDetail(nomineeDetail);
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(nomineeDetailDto));
-
-      given(organisationUnitQueryService.getOrganisationByIds(
-          eq(Set.of(
-              new PortalOrganisationUnitId(nomineeDetailDto.nominatedOrganisationId().id()),
-              new PortalOrganisationUnitId(applicationDetail.applicantOrganisationId().id())
-          )),
-          any(RequestPurpose.class)
-      ))
-          .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
+      given(nominationOperatorService.getNominationOperators(nominationDetail))
+          .willReturn(new NominationOperators(applicantOrganisation, nomineeOrganisation));
 
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
@@ -214,44 +139,6 @@ class NominationEmailBuilderServiceTest {
     }
 
     @Test
-    void whenCannotFindApplicant() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-    }
-
-    @Test
-    void whenCannotFindNominee() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(ApplicantDetailDtoTestUtil.builder().build()));
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-
-    }
-
-    @Test
     void whenSuccess_thenVerifyMailMergeFields() {
 
       given(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -260,20 +147,9 @@ class NominationEmailBuilderServiceTest {
       ))
           .willReturn(Optional.of(nominationDetail));
 
-      var applicationDetail = ApplicantDetailDtoTestUtil.builder()
-          .withApplicantOrganisationId(10)
-          .build();
-
       var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
           .withId(10)
           .withName("applicant")
-          .build();
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(applicationDetail));
-
-      var nomineeDetail = NomineeDetailTestingUtil.builder()
-          .withNominatedOrganisationId(20)
           .build();
 
       var nomineeOrganisation = PortalOrganisationDtoTestUtil.builder()
@@ -281,19 +157,8 @@ class NominationEmailBuilderServiceTest {
           .withName("nominee")
           .build();
 
-      var nomineeDetailDto = NomineeDetailDto.fromNomineeDetail(nomineeDetail);
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(nomineeDetailDto));
-
-      given(organisationUnitQueryService.getOrganisationByIds(
-          eq(Set.of(
-              new PortalOrganisationUnitId(nomineeDetailDto.nominatedOrganisationId().id()),
-              new PortalOrganisationUnitId(applicationDetail.applicantOrganisationId().id())
-          )),
-          any(RequestPurpose.class)
-      ))
-          .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
+      given(nominationOperatorService.getNominationOperators(nominationDetail))
+          .willReturn(new NominationOperators(applicantOrganisation, nomineeOrganisation));
 
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
@@ -344,44 +209,6 @@ class NominationEmailBuilderServiceTest {
     }
 
     @Test
-    void whenCannotFindApplicant() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-    }
-
-    @Test
-    void whenCannotFindNominee() {
-
-      given(nominationDetailService.getLatestNominationDetailWithStatuses(
-          nominationId,
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-      ))
-          .willReturn(Optional.of(nominationDetail));
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(ApplicantDetailDtoTestUtil.builder().build()));
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.empty());
-
-      assertThatThrownBy(() -> nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
-          .isInstanceOf(IllegalStateException.class)
-          .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
-
-    }
-
-    @Test
     void whenSuccess_thenVerifyMailMergeFields() {
 
       given(nominationDetailService.getLatestNominationDetailWithStatuses(
@@ -390,20 +217,9 @@ class NominationEmailBuilderServiceTest {
       ))
           .willReturn(Optional.of(nominationDetail));
 
-      var applicationDetail = ApplicantDetailDtoTestUtil.builder()
-          .withApplicantOrganisationId(10)
-          .build();
-
       var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
           .withId(10)
           .withName("applicant")
-          .build();
-
-      given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(applicationDetail));
-
-      var nomineeDetail = NomineeDetailTestingUtil.builder()
-          .withNominatedOrganisationId(20)
           .build();
 
       var nomineeOrganisation = PortalOrganisationDtoTestUtil.builder()
@@ -411,19 +227,8 @@ class NominationEmailBuilderServiceTest {
           .withName("nominee")
           .build();
 
-      var nomineeDetailDto = NomineeDetailDto.fromNomineeDetail(nomineeDetail);
-
-      given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
-          .willReturn(Optional.of(nomineeDetailDto));
-
-      given(organisationUnitQueryService.getOrganisationByIds(
-          eq(Set.of(
-              new PortalOrganisationUnitId(nomineeDetailDto.nominatedOrganisationId().id()),
-              new PortalOrganisationUnitId(applicationDetail.applicantOrganisationId().id())
-          )),
-          any(RequestPurpose.class)
-      ))
-          .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
+      given(nominationOperatorService.getNominationOperators(nominationDetail))
+          .willReturn(new NominationOperators(applicantOrganisation, nomineeOrganisation));
 
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);

@@ -9,7 +9,7 @@ public class NominationSubmittedEvent extends ApplicationEvent {
   private static final long serialVersionUID = 1694652841778510682L;
   private final NominationId nominationId;
 
-  NominationSubmittedEvent(NominationId nominationId) {
+  public NominationSubmittedEvent(NominationId nominationId) {
     super(nominationId);
     this.nominationId = nominationId;
   }
