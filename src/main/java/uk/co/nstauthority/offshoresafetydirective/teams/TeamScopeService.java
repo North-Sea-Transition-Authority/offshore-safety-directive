@@ -43,7 +43,7 @@ public class TeamScopeService {
     teamScopeRepository.save(teamScope);
   }
 
-  public List<TeamScope> getTeamScope(List<String> portalIds, PortalTeamType portalTeamType) {
+  public List<TeamScope> getTeamScope(Collection<String> portalIds, PortalTeamType portalTeamType) {
     return teamScopeRepository.findAllByPortalIdInAndPortalTeamType(portalIds, portalTeamType);
   }
 }

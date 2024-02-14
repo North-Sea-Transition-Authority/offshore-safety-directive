@@ -4,19 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.assertj.core.groups.Tuple;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
@@ -366,6 +370,217 @@ class TeamMemberViewServiceTest {
         "telephone",
         Set.of(RegulatorTeamRole.ACCESS_MANAGER, RegulatorTeamRole.THIRD_PARTY_ACCESS_MANAGER)
     );
+  }
+
+  @Nested
+  class GetTeamMembersWithRoles {
+
+    @Nested
+    class WhenNoTeamMembers {
+
+      @Test
+      void thenEmptyListReturned() {
+
+        var team = TeamTestUtil.Builder().build();
+
+        given(teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER.name())
+        ))
+            .willReturn(Collections.emptySet());
+
+        var resultingTeamMemberViews = teamMemberViewService
+            .getTeamMembersWithRoles(Set.of(team), Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER));
+
+        assertThat(resultingTeamMemberViews).isEmpty();
+      }
+    }
+
+    @Nested
+    class WhenTeamMembers {
+
+      @Test
+      void thenPopulatedListReturned() {
+
+        var team = TeamTestUtil.Builder().build();
+
+        var teamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(10)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        given(teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER.name())
+        ))
+            .willReturn(Set.of(teamMember));
+
+        var energyPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(teamMember.wuaId())
+            .build();
+
+        given(energyPortalUserService.findByWuaIds(
+            eq(List.of(teamMember.wuaId())),
+            any(RequestPurpose.class)
+        ))
+            .willReturn(List.of(energyPortalTeamMemberUser));
+
+        var resultingTeamMemberViews = teamMemberViewService.getTeamMembersWithRoles(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+        );
+
+        assertThat(resultingTeamMemberViews)
+            .extracting(TeamMemberView::wuaId, TeamMemberView::teamRoles)
+            .containsExactly(
+                tuple(teamMember.wuaId(), Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER))
+            );
+      }
+
+      @Test
+      void thenOrderedByForename() {
+
+        var team = TeamTestUtil.Builder().build();
+
+        var firstTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(10)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var firstPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(firstTeamMember.wuaId())
+            .withForename("a forename")
+            .withSurname("a surname")
+            .build();
+
+        var secondTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(20)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var secondPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(secondTeamMember.wuaId())
+            .withForename("B forename")
+            .withSurname("a surname")
+            .build();
+
+        var thirdTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(30)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var thirdPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(thirdTeamMember.wuaId())
+            .withForename("c forename")
+            .withSurname("a surname")
+            .build();
+
+        given(teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER.name())
+        ))
+            .willReturn(Set.of(firstTeamMember, secondTeamMember, thirdTeamMember));
+
+        given(energyPortalUserService.findByWuaIds(
+            argThat(wuaIds -> wuaIds.containsAll(List.of(
+                firstTeamMember.wuaId(),
+                secondTeamMember.wuaId(),
+                thirdTeamMember.wuaId()
+                ))),
+            any(RequestPurpose.class)
+        ))
+            .willReturn(List.of(
+                secondPortalTeamMemberUser,
+                thirdPortalTeamMemberUser,
+                firstPortalTeamMemberUser
+            ));
+
+        var resultingTeamMemberViews = teamMemberViewService.getTeamMembersWithRoles(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+        );
+
+        assertThat(resultingTeamMemberViews)
+            .extracting(TeamMemberView::wuaId)
+            .containsExactly(
+                firstTeamMember.wuaId(),
+                secondTeamMember.wuaId(),
+                thirdTeamMember.wuaId()
+            );
+      }
+
+      @Test
+      void whenSameForename_thenOrderedBySurname() {
+
+        var team = TeamTestUtil.Builder().build();
+
+        var firstTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(10)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var firstPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(firstTeamMember.wuaId())
+            .withForename("a forename")
+            .withSurname("a surname")
+            .build();
+
+        var secondTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(20)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var secondPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(secondTeamMember.wuaId())
+            .withForename("a forename")
+            .withSurname("B surname")
+            .build();
+
+        var thirdTeamMember = TeamMemberTestUtil.Builder()
+            .withWebUserAccountId(30)
+            .withRole(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+            .build();
+
+        var thirdPortalTeamMemberUser = EnergyPortalUserDtoTestUtil.Builder()
+            .withWebUserAccountId(thirdTeamMember.wuaId())
+            .withForename("a forename")
+            .withSurname("c surname")
+            .build();
+
+        given(teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER.name())
+        ))
+            .willReturn(Set.of(firstTeamMember, secondTeamMember, thirdTeamMember));
+
+        given(energyPortalUserService.findByWuaIds(
+            argThat(wuaIds -> wuaIds.containsAll(List.of(
+                firstTeamMember.wuaId(),
+                secondTeamMember.wuaId(),
+                thirdTeamMember.wuaId()
+            ))),
+            any(RequestPurpose.class)
+        ))
+            .willReturn(List.of(
+                secondPortalTeamMemberUser,
+                thirdPortalTeamMemberUser,
+                firstPortalTeamMemberUser
+            ));
+
+        var resultingTeamMemberViews = teamMemberViewService.getTeamMembersWithRoles(
+            Set.of(team),
+            Set.of(TestTeamRole.FIRST_ROLE_BY_DISPLAY_ORDER)
+        );
+
+        assertThat(resultingTeamMemberViews)
+            .extracting(TeamMemberView::wuaId)
+            .containsExactly(
+                firstTeamMember.wuaId(),
+                secondTeamMember.wuaId(),
+                thirdTeamMember.wuaId()
+            );
+      }
+    }
   }
 
   enum TestTeamRole implements TeamRole {

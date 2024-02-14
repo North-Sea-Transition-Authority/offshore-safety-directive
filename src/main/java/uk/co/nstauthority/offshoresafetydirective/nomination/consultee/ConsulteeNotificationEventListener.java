@@ -75,7 +75,7 @@ class ConsulteeNotificationEventListener {
 
     NominationId nominationId = decisionDeterminedEvent.getNominationId();
 
-    LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
+    LOGGER.info("Handling NominationDecisionDeterminedEvent for consultees nomination with ID {}", nominationId.id());
 
     Set<TeamMemberView> consultationCoordinators = getConsultationCoordinators();
 
@@ -87,8 +87,8 @@ class ConsulteeNotificationEventListener {
       emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
     } else {
       LOGGER.info(
-          "No users in the consultation coordinator role when processing NominationDecisionDeterminedEvent for nomination %s"
-              .formatted(nominationId.id())
+          "No users in the consultation coordinator role when processing NominationDecisionDeterminedEvent for nomination {}",
+          nominationId.id()
       );
     }
   }
@@ -111,8 +111,8 @@ class ConsulteeNotificationEventListener {
       emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
     } else {
       LOGGER.info(
-          "No users in the consultation coordinator role when processing AppointmentConfirmedEvent for nomination %s"
-              .formatted(nominationId.id())
+          "No users in the consultation coordinator role when processing AppointmentConfirmedEvent for nomination {}",
+          nominationId.id()
       );
     }
   }
@@ -139,8 +139,11 @@ class ConsulteeNotificationEventListener {
           EmailService.withNominationDomain(nominationId)
       );
 
-      LOGGER.info("Sent email with ID %s to user with ID %s for nomination with ID %s"
-          .formatted(sentEmail.id(), teamMember.wuaId().id(), nominationId.id())
+      LOGGER.info(
+          "Sent email with ID {} to user with ID {} for nomination with ID {}",
+          sentEmail.id(),
+          teamMember.wuaId().id(),
+          nominationId.id()
       );
     });
   }

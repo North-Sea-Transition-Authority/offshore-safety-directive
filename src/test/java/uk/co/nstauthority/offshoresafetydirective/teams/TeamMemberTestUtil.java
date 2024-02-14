@@ -36,6 +36,11 @@ public class TeamMemberTestUtil {
       return this;
     }
 
+    public TeamMemberBuilder withTeam(Team team) {
+      this.teamId = team.toTeamId();
+      return this;
+    }
+
     public TeamMemberBuilder withTeamType(TeamType teamType) {
       this.teamType = teamType;
       return this;

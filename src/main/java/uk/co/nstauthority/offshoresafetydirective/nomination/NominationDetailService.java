@@ -105,6 +105,13 @@ public class NominationDetailService {
         .toList();
   }
 
+  public Optional<NominationDetail> getPostSubmissionNominationDetail(NominationId nominationId) {
+    return getLatestNominationDetailWithStatuses(
+        nominationId,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    );
+  }
+
   @Transactional
   public void deleteNominationDetail(NominationDetail nominationDetail) {
     if (nominationDetail.getStatus() == NominationStatus.DRAFT) {

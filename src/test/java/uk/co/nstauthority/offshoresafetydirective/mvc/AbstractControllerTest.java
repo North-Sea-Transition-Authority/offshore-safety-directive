@@ -43,6 +43,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInte
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
@@ -92,6 +93,9 @@ public abstract class AbstractControllerTest {
 
   @Autowired
   protected PermissionService permissionService;
+
+  @MockBean
+  protected NominationApplicantTeamService nominationApplicantTeamService;
 
   @MockBean
   protected TeamMemberService teamMemberService;

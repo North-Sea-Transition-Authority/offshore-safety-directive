@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -9,42 +8,27 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
-import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScope;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
 
 @Service
 public class PermissionService {
-
-  private static final RequestPurpose REQUEST_PURPOSE = new RequestPurpose("Get organisations that applicant is a part of");
   private final TeamMemberService teamMemberService;
-  private final ApplicantDetailPersistenceService applicantDetailPersistenceService;
-  private final PortalOrganisationGroupQueryService organisationGroupQueryService;
-  private final TeamScopeService teamScopeService;
+  private final NominationApplicantTeamService nominationApplicantTeamService;
 
   @Autowired
   public PermissionService(TeamMemberService teamMemberService,
-                           ApplicantDetailPersistenceService applicantDetailPersistenceService,
-                           PortalOrganisationGroupQueryService organisationGroupQueryService,
-                           TeamScopeService teamScopeService) {
+                           NominationApplicantTeamService nominationApplicantTeamService) {
     this.teamMemberService = teamMemberService;
-    this.applicantDetailPersistenceService = applicantDetailPersistenceService;
-    this.organisationGroupQueryService = organisationGroupQueryService;
-    this.teamScopeService = teamScopeService;
+    this.nominationApplicantTeamService = nominationApplicantTeamService;
   }
 
   public boolean hasPermission(ServiceUserDetail user, Collection<RolePermission> requiredPermissions) {
@@ -110,33 +94,15 @@ public class PermissionService {
 
   public Set<RolePermission> getPermissionsForNomination(NominationDetail nominationDetail,
                                                          ServiceUserDetail userDetail) {
-    var applicantPortalOrganisationId = applicantDetailPersistenceService.getApplicantDetail(nominationDetail)
-        .map(ApplicantDetail::getPortalOrganisationId)
-        .orElseThrow(() -> new EntityNotFoundException(
-            "No applicant detail found for nomination detail with id %s".formatted(nominationDetail.getId().toString())
-        ));
 
-    var organisationGroupsForApplicant = organisationGroupQueryService.getOrganisationGroupsByOrganisationId(
-            applicantPortalOrganisationId,
-            REQUEST_PURPOSE
-        )
+    Set<TeamId> applicantTeams = nominationApplicantTeamService.getApplicantTeams(nominationDetail)
         .stream()
-        .map(PortalOrganisationGroupDto::organisationGroupId)
-        .map(String::valueOf)
-        .toList();
-
-    var applicantOrganisationTeamIds = teamScopeService.getTeamScope(
-            organisationGroupsForApplicant,
-            PortalTeamType.ORGANISATION_GROUP
-        )
-        .stream()
-        .map(TeamScope::getTeam)
         .map(Team::toTeamId)
-        .toList();
+        .collect(Collectors.toSet());
 
     return teamMemberService.getUserAsTeamMembers(userDetail)
         .stream()
-        .filter(teamMember -> applicantOrganisationTeamIds.contains(teamMember.teamView().teamId()))
+        .filter(teamMember -> applicantTeams.contains(teamMember.teamView().teamId()))
         .flatMap(teamMember -> teamMember.roles().stream())
         .flatMap(userPermissionsForTeam -> userPermissionsForTeam.getRolePermissions().stream())
         .collect(Collectors.toSet());

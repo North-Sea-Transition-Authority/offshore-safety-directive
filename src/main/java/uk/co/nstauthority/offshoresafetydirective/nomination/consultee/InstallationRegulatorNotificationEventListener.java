@@ -52,8 +52,9 @@ class InstallationRegulatorNotificationEventListener {
     EmailNotification sentEmail = emailAccidentRegulator(nominationId, templateBuilder);
 
     LOGGER.info(
-        "Sent consultation requested email with ID %s to accident regulator for nomination %s"
-            .formatted(sentEmail.id(), nominationId.id())
+        "Sent consultation requested email with ID {} to accident regulator for nomination {}",
+        sentEmail.id(),
+        nominationId.id()
     );
   }
 
@@ -63,7 +64,9 @@ class InstallationRegulatorNotificationEventListener {
 
     NominationId nominationId = decisionDeterminedEvent.getNominationId();
 
-    LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
+    LOGGER.info(
+        "Handling NominationDecisionDeterminedEvent for installation regulator for nomination with ID {}", nominationId.id()
+    );
 
     MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
         .buildNominationDecisionTemplate(nominationId);
@@ -71,8 +74,9 @@ class InstallationRegulatorNotificationEventListener {
     EmailNotification sentEmail = emailAccidentRegulator(nominationId, templateBuilder);
 
     LOGGER.info(
-        "Sent nomination decision email with ID %s to accident regulator for nomination %s"
-            .formatted(sentEmail.id(), nominationId.id())
+        "Sent nomination decision email with ID {} to accident regulator for nomination {}",
+        sentEmail.id(),
+        nominationId.id()
     );
   }
 

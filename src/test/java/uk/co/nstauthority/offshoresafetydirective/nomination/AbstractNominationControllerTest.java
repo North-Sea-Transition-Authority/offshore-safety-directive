@@ -18,6 +18,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScope;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
@@ -26,11 +27,15 @@ public abstract class AbstractNominationControllerTest extends AbstractControlle
   private static final TeamScope TEAM_SCOPE = TeamScopeTestUtil.builder().build();
 
   public void givenUserHasNominationPermission(NominationDetail nominationDetail, ServiceUserDetail user) {
+
     var applicantDetail = ApplicantDetailTestUtil.builder()
         .withPortalOrganisationId(1)
         .build();
 
     when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
+
+    when(nominationApplicantTeamService.getApplicantTeams(nominationDetail))
+        .thenReturn(Set.of(TeamTestUtil.Builder().withId(TEAM_SCOPE.getTeam().getUuid()).build()));
 
     var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder().build();
 

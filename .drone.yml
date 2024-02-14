@@ -37,7 +37,7 @@ steps:
       - npx gulp buildAll
 
   - name: build-backend
-    image: quay.io/testcontainers/dind-drone-plugin:1.5.2
+    image: quay.io/testcontainers/dind-drone-plugin
     privileged: true
     # See https://confluence.fivium.co.uk/display/JAVA/Testcontainers
     volumes:

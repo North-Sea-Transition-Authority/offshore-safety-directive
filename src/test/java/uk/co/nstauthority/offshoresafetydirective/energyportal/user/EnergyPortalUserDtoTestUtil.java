@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
+import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
 public class EnergyPortalUserDtoTestUtil {
@@ -27,6 +28,11 @@ public class EnergyPortalUserDtoTestUtil {
 
     public Builder withWebUserAccountId(long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
+      return this;
+    }
+
+    public Builder withWebUserAccountId(WebUserAccountId webUserAccountId) {
+      this.webUserAccountId = webUserAccountId.id();
       return this;
     }
 

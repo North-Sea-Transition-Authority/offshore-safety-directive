@@ -2,15 +2,18 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
@@ -45,6 +48,18 @@ public class TeamMemberViewService {
     return createUserViewsFromTeamMembers(teamMemberRoles);
   }
 
+  public List<TeamMemberView> getTeamMembersWithRoles(Collection<Team> teams, Collection<? extends TeamRole> roles) {
+    Set<Team> teamSet = new HashSet<>(teams);
+
+    Set<String> teamRoleNames = roles
+        .stream()
+        .map(DisplayableEnum::name)
+        .collect(Collectors.toSet());
+
+    var teamMemberRoles = teamMemberService.getTeamMembersOfTeamsWithAnyRoleOf(teamSet, teamRoleNames);
+    return createUserViewsFromTeamMembers(teamMemberRoles);
+  }
+
   private List<TeamMemberView> createUserViewsFromTeamMembers(Collection<TeamMember> teamMembers) {
 
     // extract list of WUA to lookup
@@ -67,7 +82,10 @@ public class TeamMemberViewService {
     return teamMembers
         .stream()
         .map(teamMember -> createTeamMemberView(teamMember, energyPortalUsers))
-        .sorted(Comparator.comparing(TeamMemberView::firstName).thenComparing(TeamMemberView::lastName))
+        .sorted(
+            Comparator.comparing(TeamMemberView::firstName, String::compareToIgnoreCase)
+                .thenComparing(TeamMemberView::lastName, String::compareToIgnoreCase)
+        )
         .toList();
   }
 

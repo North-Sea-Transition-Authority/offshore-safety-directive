@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -508,4 +509,39 @@ class NominationDetailServiceTest {
         .containsExactly(NominationDto.fromNomination(nominationDetailResult.getNomination()));
   }
 
+  @Test
+  void getPostSubmissionNominationDetail_whenResult_thenPopulatedOptionalReturned() {
+
+    NominationId nominationId = new NominationId(NOMINATION.getId());
+
+    given(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        nominationId.id(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .willReturn(Optional.empty());
+
+    Optional<NominationDetail> resultingNominationDetail = nominationDetailService
+        .getPostSubmissionNominationDetail(nominationId);
+
+    assertThat(resultingNominationDetail).isEmpty();
+  }
+
+  @Test
+  void getPostSubmissionNominationDetail_whenNoResult_thenEmptyOptionalReturned() {
+
+    NominationId nominationId = new NominationId(NOMINATION.getId());
+
+    var expectedNominationDetail = NominationDetailTestUtil.builder().build();
+
+    given(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
+        nominationId.id(),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .willReturn(Optional.of(expectedNominationDetail));
+
+    Optional<NominationDetail> resultingNominationDetail = nominationDetailService
+        .getPostSubmissionNominationDetail(nominationId);
+
+    assertThat(resultingNominationDetail).contains(expectedNominationDetail);
+  }
 }

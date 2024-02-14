@@ -16,5 +16,5 @@ interface TeamScopeRepository extends CrudRepository<TeamScope, UUID> {
 
   List<TeamScope> findAllByTeam_UuidInAndPortalTeamType(Collection<UUID> teamIds, PortalTeamType portalTeamType);
 
-  List<TeamScope> findAllByPortalIdInAndPortalTeamType(List<String> portalIds, PortalTeamType portalTeamType);
+  List<TeamScope> findAllByPortalIdInAndPortalTeamType(Collection<String> portalIds, PortalTeamType portalTeamType);
 }

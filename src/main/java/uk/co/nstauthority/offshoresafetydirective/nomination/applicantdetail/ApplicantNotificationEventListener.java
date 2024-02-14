@@ -1,0 +1,132 @@
+package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
+
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.Optional;
+import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
+import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
+import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberView;
+import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
+
+@Component
+class ApplicantNotificationEventListener {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ApplicantNotificationEventListener.class);
+
+  private final EmailService emailService;
+
+  private final NominationEmailBuilderService nominationEmailBuilderService;
+
+  private final NominationApplicantTeamService nominationApplicantTeamService;
+
+  private final NominationDetailService nominationDetailService;
+
+  @Autowired
+  ApplicantNotificationEventListener(EmailService emailService,
+                                     NominationEmailBuilderService nominationEmailBuilderService,
+                                     NominationApplicantTeamService nominationApplicantTeamService,
+                                     NominationDetailService nominationDetailService) {
+    this.emailService = emailService;
+    this.nominationEmailBuilderService = nominationEmailBuilderService;
+    this.nominationApplicantTeamService = nominationApplicantTeamService;
+    this.nominationDetailService = nominationDetailService;
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void notifyApplicantOfDecision(NominationDecisionDeterminedEvent decisionDeterminedEvent) {
+
+    NominationId nominationId = decisionDeterminedEvent.getNominationId();
+
+    LOGGER.info("Handling NominationDecisionDeterminedEvent for applicant with nomination with ID {}", nominationId.id());
+
+    Set<TeamMemberView> applicantTeamMembers = getApplicantTeamMembers(nominationId);
+
+    if (CollectionUtils.isNotEmpty(applicantTeamMembers)) {
+
+      String nominationSummaryUrl = ReverseRouter.route(on(NominationCaseProcessingController.class)
+          .renderCaseProcessing(nominationId, null));
+
+      MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
+          .buildNominationDecisionTemplate(nominationId)
+          .withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl));
+
+      emailTeamMembers(nominationId, templateBuilder, applicantTeamMembers);
+    } else {
+      LOGGER.info(
+          "No users in the applicant team when processing NominationDecisionDeterminedEvent for nomination {}",
+          nominationId.id()
+      );
+    }
+  }
+
+  private void emailTeamMembers(NominationId nominationId,
+                                MergedTemplate.MergedTemplateBuilder templateBuilder,
+                                Set<TeamMemberView> applicantTeamMembers) {
+
+    applicantTeamMembers.forEach(applicant -> {
+
+      MergedTemplate template = templateBuilder
+          .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, applicant.firstName())
+          .merge();
+
+      EmailNotification sentEmail = emailService.sendEmail(
+          template,
+          applicant,
+          EmailService.withNominationDomain(nominationId)
+      );
+
+      LOGGER.info(
+          "Sent nomination decision email with ID {} to applicant user with ID {} for nomination {}",
+          sentEmail.id(),
+          applicant.wuaId().id(),
+          nominationId.id()
+      );
+    });
+  }
+
+  private Set<TeamMemberView> getApplicantTeamMembers(NominationId nominationId) {
+
+    var nominationDetail = getNominationDetail(nominationId);
+
+    return nominationApplicantTeamService.getApplicantTeamMembersWithAnyRoleOf(
+        nominationDetail,
+        Set.of(
+            IndustryTeamRole.NOMINATION_SUBMITTER,
+            IndustryTeamRole.NOMINATION_EDITOR,
+            IndustryTeamRole.NOMINATION_VIEWER
+        )
+    );
+  }
+
+  private NominationDetail getNominationDetail(NominationId nominationId) {
+
+    Optional<NominationDetail> nominationDetail =
+        nominationDetailService.getPostSubmissionNominationDetail(nominationId);
+
+    if (nominationDetail.isEmpty()) {
+      throw new IllegalStateException(
+          "Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id())
+      );
+    }
+
+    return nominationDetail.get();
+  }
+}
