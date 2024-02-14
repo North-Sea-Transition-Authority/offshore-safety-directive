@@ -1,6 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
-
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -18,18 +16,12 @@ import uk.co.nstauthority.offshoresafetydirective.email.GovukNotifyTemplate;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype.NominationTypeService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
 
 @Service
-class ConsulteeEmailBuilderService {
+public class NominationEmailBuilderService {
 
   private final NominationDetailService nominationDetailService;
 
@@ -44,12 +36,12 @@ class ConsulteeEmailBuilderService {
   private final EmailService emailService;
 
   @Autowired
-  ConsulteeEmailBuilderService(NominationDetailService nominationDetailService,
-                               ApplicantDetailAccessService applicantDetailAccessService,
-                               NomineeDetailAccessService nomineeDetailAccessService,
-                               PortalOrganisationUnitQueryService organisationUnitQueryService,
-                               NominationTypeService nominationTypeService,
-                               EmailService emailService) {
+  public NominationEmailBuilderService(NominationDetailService nominationDetailService,
+                                       ApplicantDetailAccessService applicantDetailAccessService,
+                                       NomineeDetailAccessService nomineeDetailAccessService,
+                                       PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                       NominationTypeService nominationTypeService,
+                                       EmailService emailService) {
     this.nominationDetailService = nominationDetailService;
     this.applicantDetailAccessService = applicantDetailAccessService;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
@@ -58,19 +50,19 @@ class ConsulteeEmailBuilderService {
     this.emailService = emailService;
   }
 
-  MergedTemplate.MergedTemplateBuilder buildNominationDecisionTemplate(NominationId nominationId) {
+  public MergedTemplate.MergedTemplateBuilder buildNominationDecisionTemplate(NominationId nominationId) {
     var requestPurpose = new RequestPurpose("Nomination decision consultation coordinator email");
     return emailService.getTemplate(GovukNotifyTemplate.NOMINATION_DECISION_REACHED)
         .withMailMergeFields(getNominationMailMergeFields(nominationId, requestPurpose));
   }
 
-  MergedTemplate.MergedTemplateBuilder buildConsultationRequestedTemplate(NominationId nominationId) {
+  public MergedTemplate.MergedTemplateBuilder buildConsultationRequestedTemplate(NominationId nominationId) {
     var requestPurpose = new RequestPurpose("Consultation requested consultation coordinator email");
     return emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_REQUESTED)
         .withMailMergeFields(getNominationMailMergeFields(nominationId, requestPurpose));
   }
 
-  MergedTemplate.MergedTemplateBuilder buildAppointmentConfirmedTemplate(NominationId nominationId) {
+  public MergedTemplate.MergedTemplateBuilder buildAppointmentConfirmedTemplate(NominationId nominationId) {
     var requestPurpose = new RequestPurpose("Appointment confirmation consultation coordinator email");
     return emailService.getTemplate(GovukNotifyTemplate.APPOINTMENT_CONFIRMED)
         .withMailMergeFields(getNominationMailMergeFields(nominationId, requestPurpose));
@@ -116,11 +108,6 @@ class ConsulteeEmailBuilderService {
     );
     mailMergeFields.add(new MailMergeField("NOMINATION_REFERENCE", nominationDetail.getNomination().getReference()));
 
-    var nominationSummaryUrl = ReverseRouter
-        .route(on(NominationConsulteeViewController.class)
-            .renderNominationView(nominationId));
-
-    mailMergeFields.add(new MailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl)));
     mailMergeFields.add(new MailMergeField("OPERATORSHIP_DISPLAY_TYPE", getNominationOperatorshipText(nominationDetail)));
 
     return mailMergeFields;

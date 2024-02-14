@@ -1,20 +1,17 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.times;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.architecture.TransactionalEventListenerRule.haveTransactionalEventListenerWithPhase;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -22,19 +19,17 @@ import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionPhase;
-import uk.co.fivium.digitalnotificationlibrary.core.notification.MailMergeField;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.Template;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
-import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
@@ -58,13 +53,7 @@ class ConsulteeNotificationEventListenerTest {
   private TeamMemberViewService teamMemberViewService;
 
   @Mock
-  private ConsulteeEmailBuilderService consulteeEmailBuilderService;
-
-  @Captor
-  private ArgumentCaptor<MergedTemplate> mergedTemplateArgumentCaptor;
-
-  @Captor
-  private ArgumentCaptor<EmailRecipient> emailRecipientArgumentCaptor;
+  private NominationEmailBuilderService nominationEmailBuilderService;
 
   @InjectMocks
   private ConsulteeNotificationEventListener consulteeNotificationEventListener;
@@ -110,8 +99,13 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(consulteeEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      given(nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
           .willReturn(template);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+      ))
+          .willReturn("/url");
 
       // to avoid an NPE in the log statement in the code
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
@@ -120,31 +114,29 @@ class ConsulteeNotificationEventListenerTest {
           .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(nominationId));
 
       then(emailService)
-          .should(times(2))
+          .should()
           .sendEmail(
-              mergedTemplateArgumentCaptor.capture(),
-              emailRecipientArgumentCaptor.capture(),
+              refEq(
+                  template
+                    .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, firstConsultationCoordinator.firstName())
+                    .withMailMergeField("NOMINATION_LINK", "/url")
+                    .merge()
+              ),
+              refEq(firstConsultationCoordinator),
               refEq(EmailService.withNominationDomain(nominationId))
           );
 
-      assertThat(emailRecipientArgumentCaptor.getAllValues())
-          .extracting(EmailRecipient::getEmailAddress)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.contactEmail(),
-              secondConsultationCoordinator.contactEmail()
-          );
-
-      var recipientNames = mergedTemplateArgumentCaptor.getAllValues()
-          .stream()
-          .flatMap(mergedTemplate -> mergedTemplate.getMailMergeFields().stream())
-          .filter(mailMergeField -> Objects.equals(mailMergeField.name(), EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME))
-          .map(MailMergeField::value)
-          .collect(Collectors.toSet());
-
-      assertThat(recipientNames)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.firstName(),
-              secondConsultationCoordinator.firstName()
+      then(emailService)
+          .should()
+          .sendEmail(
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, secondConsultationCoordinator.firstName())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(secondConsultationCoordinator),
+              refEq(EmailService.withNominationDomain(nominationId))
           );
     }
 
@@ -162,7 +154,7 @@ class ConsulteeNotificationEventListenerTest {
       consulteeNotificationEventListener
           .notifyConsulteeCoordinatorOfConsultation(new ConsultationRequestedEvent(nominationId));
 
-      then(consulteeEmailBuilderService)
+      then(nominationEmailBuilderService)
           .shouldHaveNoInteractions();
 
       then(emailService)
@@ -211,8 +203,13 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(consulteeEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      given(nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
           .willReturn(template);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+      ))
+          .willReturn("/url");
 
       // to avoid an NPE in the log statement in the code
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
@@ -221,31 +218,29 @@ class ConsulteeNotificationEventListenerTest {
           .notifyConsultationCoordinatorsOfDecision(new NominationDecisionDeterminedEvent(nominationId));
 
       then(emailService)
-          .should(times(2))
+          .should()
           .sendEmail(
-              mergedTemplateArgumentCaptor.capture(),
-              emailRecipientArgumentCaptor.capture(),
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, firstConsultationCoordinator.firstName())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(firstConsultationCoordinator),
               refEq(EmailService.withNominationDomain(nominationId))
           );
 
-      assertThat(emailRecipientArgumentCaptor.getAllValues())
-          .extracting(EmailRecipient::getEmailAddress)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.contactEmail(),
-              secondConsultationCoordinator.contactEmail()
-          );
-
-      var recipientNames = mergedTemplateArgumentCaptor.getAllValues()
-          .stream()
-          .flatMap(mergedTemplate -> mergedTemplate.getMailMergeFields().stream())
-          .filter(mailMergeField -> Objects.equals(mailMergeField.name(), EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME))
-          .map(MailMergeField::value)
-          .collect(Collectors.toSet());
-
-      assertThat(recipientNames)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.firstName(),
-              secondConsultationCoordinator.firstName()
+      then(emailService)
+          .should()
+          .sendEmail(
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, secondConsultationCoordinator.firstName())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(secondConsultationCoordinator),
+              refEq(EmailService.withNominationDomain(nominationId))
           );
     }
 
@@ -263,7 +258,7 @@ class ConsulteeNotificationEventListenerTest {
       consulteeNotificationEventListener
           .notifyConsultationCoordinatorsOfDecision(new NominationDecisionDeterminedEvent(nominationId));
 
-      then(consulteeEmailBuilderService)
+      then(nominationEmailBuilderService)
           .shouldHaveNoInteractions();
 
       then(emailService)
@@ -312,8 +307,13 @@ class ConsulteeNotificationEventListenerTest {
 
       var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
 
-      given(consulteeEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
+      given(nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
           .willReturn(template);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+      ))
+          .willReturn("/url");
 
       // to avoid an NPE in the log statement in the code
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
@@ -322,31 +322,29 @@ class ConsulteeNotificationEventListenerTest {
           .notifyConsultationCoordinatorsOfAppointment(new AppointmentConfirmedEvent(nominationId));
 
       then(emailService)
-          .should(times(2))
+          .should()
           .sendEmail(
-              mergedTemplateArgumentCaptor.capture(),
-              emailRecipientArgumentCaptor.capture(),
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, firstConsultationCoordinator.firstName())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(firstConsultationCoordinator),
               refEq(EmailService.withNominationDomain(nominationId))
           );
 
-      assertThat(emailRecipientArgumentCaptor.getAllValues())
-          .extracting(EmailRecipient::getEmailAddress)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.contactEmail(),
-              secondConsultationCoordinator.contactEmail()
-          );
-
-      var recipientNames = mergedTemplateArgumentCaptor.getAllValues()
-          .stream()
-          .flatMap(mergedTemplate -> mergedTemplate.getMailMergeFields().stream())
-          .filter(mailMergeField -> Objects.equals(mailMergeField.name(), EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME))
-          .map(MailMergeField::value)
-          .collect(Collectors.toSet());
-
-      assertThat(recipientNames)
-          .containsExactlyInAnyOrder(
-              firstConsultationCoordinator.firstName(),
-              secondConsultationCoordinator.firstName()
+      then(emailService)
+          .should()
+          .sendEmail(
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, secondConsultationCoordinator.firstName())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(secondConsultationCoordinator),
+              refEq(EmailService.withNominationDomain(nominationId))
           );
     }
 
@@ -364,7 +362,7 @@ class ConsulteeNotificationEventListenerTest {
       consulteeNotificationEventListener
           .notifyConsultationCoordinatorsOfAppointment(new AppointmentConfirmedEvent(nominationId));
 
-      then(consulteeEmailBuilderService)
+      then(nominationEmailBuilderService)
           .shouldHaveNoInteractions();
 
       then(emailService)

@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
@@ -13,6 +15,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.MergedTemplate;
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNotification;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
@@ -31,14 +35,14 @@ class ConsulteeNotificationEventListener {
 
   private final TeamMemberViewService teamMemberViewService;
 
-  private final ConsulteeEmailBuilderService consulteeEmailBuilderService;
+  private final NominationEmailBuilderService nominationEmailBuilderService;
 
   @Autowired
   ConsulteeNotificationEventListener(EmailService emailService, TeamMemberViewService teamMemberViewService,
-                                     ConsulteeEmailBuilderService consulteeEmailBuilderService) {
+                                     NominationEmailBuilderService nominationEmailBuilderService) {
     this.emailService = emailService;
     this.teamMemberViewService = teamMemberViewService;
-    this.consulteeEmailBuilderService = consulteeEmailBuilderService;
+    this.nominationEmailBuilderService = nominationEmailBuilderService;
   }
 
   @Async
@@ -53,7 +57,7 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
-      MergedTemplate.MergedTemplateBuilder templateBuilder = consulteeEmailBuilderService
+      MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildConsultationRequestedTemplate(nominationId);
 
       emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
@@ -77,7 +81,7 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
-      MergedTemplate.MergedTemplateBuilder templateBuilder = consulteeEmailBuilderService
+      MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildNominationDecisionTemplate(nominationId);
 
       emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
@@ -101,7 +105,7 @@ class ConsulteeNotificationEventListener {
 
     if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
 
-      MergedTemplate.MergedTemplateBuilder templateBuilder = consulteeEmailBuilderService
+      MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
           .buildAppointmentConfirmedTemplate(nominationId);
 
       emailTeamMembers(nominationId, templateBuilder, consultationCoordinators);
@@ -116,6 +120,12 @@ class ConsulteeNotificationEventListener {
   private void emailTeamMembers(NominationId nominationId,
                                 MergedTemplate.MergedTemplateBuilder mergedTemplateBuilder,
                                 Set<TeamMemberView> teamMembers) {
+
+    var nominationSummaryUrl = ReverseRouter
+        .route(on(NominationConsulteeViewController.class)
+            .renderNominationView(nominationId));
+
+    mergedTemplateBuilder.withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl));
 
     teamMembers.forEach(teamMember -> {
 

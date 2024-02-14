@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -11,6 +13,8 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNoti
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
@@ -22,15 +26,15 @@ class InstallationRegulatorNotificationEventListener {
 
   private final EmailService emailService;
 
-  private final ConsulteeEmailBuilderService consulteeEmailBuilderService;
+  private final NominationEmailBuilderService nominationEmailBuilderService;
 
   private final AccidentRegulatorConfigurationProperties accidentRegulatorProperties;
 
   InstallationRegulatorNotificationEventListener(EmailService emailService,
-                                                 ConsulteeEmailBuilderService consulteeEmailBuilderService,
+                                                 NominationEmailBuilderService nominationEmailBuilderService,
                                                  AccidentRegulatorConfigurationProperties accidentRegulatorProperties) {
     this.emailService = emailService;
-    this.consulteeEmailBuilderService = consulteeEmailBuilderService;
+    this.nominationEmailBuilderService = nominationEmailBuilderService;
     this.accidentRegulatorProperties = accidentRegulatorProperties;
   }
 
@@ -42,7 +46,7 @@ class InstallationRegulatorNotificationEventListener {
 
     LOGGER.info("Handling ConsultationRequestedEvent for nomination with ID {}", nominationId.id());
 
-    MergedTemplate.MergedTemplateBuilder templateBuilder = consulteeEmailBuilderService
+    MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
         .buildConsultationRequestedTemplate(nominationId);
 
     EmailNotification sentEmail = emailAccidentRegulator(nominationId, templateBuilder);
@@ -61,7 +65,7 @@ class InstallationRegulatorNotificationEventListener {
 
     LOGGER.info("Handling NominationDecisionDeterminedEvent for nomination with ID {}", nominationId.id());
 
-    MergedTemplate.MergedTemplateBuilder templateBuilder = consulteeEmailBuilderService
+    MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
         .buildNominationDecisionTemplate(nominationId);
 
     EmailNotification sentEmail = emailAccidentRegulator(nominationId, templateBuilder);
@@ -75,8 +79,13 @@ class InstallationRegulatorNotificationEventListener {
   private EmailNotification emailAccidentRegulator(NominationId nominationId,
                                                    MergedTemplate.MergedTemplateBuilder mergedTemplateBuilder) {
 
+    var nominationSummaryUrl = ReverseRouter
+        .route(on(NominationConsulteeViewController.class)
+            .renderNominationView(nominationId));
+
     MergedTemplate template = mergedTemplateBuilder
         .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, accidentRegulatorProperties.name())
+        .withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl))
         .merge();
 
     return emailService.sendEmail(

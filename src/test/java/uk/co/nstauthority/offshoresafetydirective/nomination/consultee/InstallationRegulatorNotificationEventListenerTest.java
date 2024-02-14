@@ -2,15 +2,15 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.architecture.TransactionalEventListenerRule.haveTransactionalEventListenerWithPhase;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -33,6 +33,8 @@ import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailNoti
 import uk.co.fivium.digitalnotificationlibrary.core.notification.email.EmailRecipient;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.email.EmailService;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
@@ -46,7 +48,7 @@ class InstallationRegulatorNotificationEventListenerTest {
 
   private EmailService emailService;
 
-  private ConsulteeEmailBuilderService consulteeEmailBuilderService;
+  private NominationEmailBuilderService nominationEmailBuilderService;
 
   private AccidentRegulatorConfigurationProperties accidentRegulatorProperties;
 
@@ -59,7 +61,7 @@ class InstallationRegulatorNotificationEventListenerTest {
   void setup() {
 
     emailService = mock(EmailService.class);
-    consulteeEmailBuilderService = mock(ConsulteeEmailBuilderService.class);
+    nominationEmailBuilderService = mock(NominationEmailBuilderService.class);
 
     accidentRegulatorProperties = new AccidentRegulatorConfigurationProperties(
         "name",
@@ -70,7 +72,7 @@ class InstallationRegulatorNotificationEventListenerTest {
 
     installationRegulatorNotificationEventListener = new InstallationRegulatorNotificationEventListener(
         emailService,
-        consulteeEmailBuilderService,
+        nominationEmailBuilderService,
         accidentRegulatorProperties
     );
 
@@ -102,8 +104,13 @@ class InstallationRegulatorNotificationEventListenerTest {
       MergedTemplate.MergedTemplateBuilder expectedTemplate = MergedTemplate
           .builder(new Template(null, null, Set.of(), null));
 
-      given(consulteeEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      given(nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
           .willReturn(expectedTemplate);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+      ))
+          .willReturn("/url");
 
       // to avoid an NPE in the log statement in the code
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
@@ -119,13 +126,12 @@ class InstallationRegulatorNotificationEventListenerTest {
               refEq(EmailService.withNominationDomain(nominationId))
           );
 
-      Optional<MailMergeField> recipientName = mergedTemplateArgumentCaptor.getValue().getMailMergeFields()
-          .stream()
-          .filter(mailMergeField -> Objects.equals(mailMergeField.name(), EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME))
-          .findFirst();
-
-      assertThat(recipientName).isPresent();
-      assertThat(recipientName.get().value()).isEqualTo(accidentRegulatorProperties.name());
+      assertThat(mergedTemplateArgumentCaptor.getValue().getMailMergeFields())
+          .extracting(MailMergeField::name, MailMergeField::value)
+          .containsExactlyInAnyOrder(
+              tuple(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, accidentRegulatorProperties.name()),
+              tuple("NOMINATION_LINK", "/url")
+          );
     }
   }
 
@@ -155,8 +161,13 @@ class InstallationRegulatorNotificationEventListenerTest {
       MergedTemplate.MergedTemplateBuilder expectedTemplate = MergedTemplate
           .builder(new Template(null, null, Set.of(), null));
 
-      given(consulteeEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      given(nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
           .willReturn(expectedTemplate);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(nominationId))
+      ))
+          .willReturn("/url");
 
       // to avoid an NPE in the log statement in the code
       given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
@@ -172,13 +183,12 @@ class InstallationRegulatorNotificationEventListenerTest {
               refEq(EmailService.withNominationDomain(nominationId))
           );
 
-      Optional<MailMergeField> recipientName = mergedTemplateArgumentCaptor.getValue().getMailMergeFields()
-          .stream()
-          .filter(mailMergeField -> Objects.equals(mailMergeField.name(), EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME))
-          .findFirst();
-
-      assertThat(recipientName).isPresent();
-      assertThat(recipientName.get().value()).isEqualTo(accidentRegulatorProperties.name());
+      assertThat(mergedTemplateArgumentCaptor.getValue().getMailMergeFields())
+          .extracting(MailMergeField::name, MailMergeField::value)
+          .containsExactlyInAnyOrder(
+              tuple(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, accidentRegulatorProperties.name()),
+              tuple("NOMINATION_LINK", "/url")
+          );
     }
   }
 }

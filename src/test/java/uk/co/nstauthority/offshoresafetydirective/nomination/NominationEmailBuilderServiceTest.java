@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.nomination.consultee;
+package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +25,6 @@ import uk.co.nstauthority.offshoresafetydirective.email.GovukNotifyTemplate;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype.NominationTypeService;
@@ -44,7 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
-class ConsulteeEmailBuilderServiceTest {
+class NominationEmailBuilderServiceTest {
 
   @Mock
   private NominationDetailService nominationDetailService;
@@ -65,7 +54,7 @@ class ConsulteeEmailBuilderServiceTest {
   private EmailService emailService;
 
   @InjectMocks
-  private ConsulteeEmailBuilderService consulteeEmailBuilderService;
+  private NominationEmailBuilderService nominationEmailBuilderService;
 
   @Nested
   class BuildNominationDecisionTemplate {
@@ -89,7 +78,7 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id()));
     }
@@ -106,7 +95,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
     }
@@ -126,7 +115,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildNominationDecisionTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationDecisionTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
 
@@ -176,18 +165,13 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
 
-      given(emailService.withUrl(ReverseRouter.route(on(NominationConsulteeViewController.class)
-              .renderNominationView(nominationId))
-      ))
-          .willReturn("/url");
-
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
 
       given(emailService.getTemplate(GovukNotifyTemplate.NOMINATION_DECISION_REACHED))
           .willReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-      var resultingMergeTemplate = consulteeEmailBuilderService
+      var resultingMergeTemplate = nominationEmailBuilderService
           .buildNominationDecisionTemplate(nominationId)
           .merge();
 
@@ -197,7 +181,6 @@ class ConsulteeEmailBuilderServiceTest {
               tuple("APPLICANT_ORGANISATION", applicantOrganisation.name()),
               tuple("NOMINATED_ORGANISATION", nomineeOrganisation.name()),
               tuple("NOMINATION_REFERENCE", nominationDetail.getNomination().getReference()),
-              tuple("NOMINATION_LINK", "/url"),
               tuple("OPERATORSHIP_DISPLAY_TYPE", "an installation operator")
           );
     }
@@ -225,7 +208,7 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id()));
     }
@@ -242,7 +225,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
     }
@@ -262,7 +245,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildConsultationRequestedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
 
@@ -312,18 +295,13 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
 
-      given(emailService.withUrl(ReverseRouter.route(on(NominationConsulteeViewController.class)
-          .renderNominationView(nominationId))
-      ))
-          .willReturn("/url");
-
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
 
       given(emailService.getTemplate(GovukNotifyTemplate.CONSULTATION_REQUESTED))
           .willReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-      var resultingMergeTemplate = consulteeEmailBuilderService
+      var resultingMergeTemplate = nominationEmailBuilderService
           .buildConsultationRequestedTemplate(nominationId)
           .merge();
 
@@ -333,7 +311,6 @@ class ConsulteeEmailBuilderServiceTest {
               tuple("APPLICANT_ORGANISATION", applicantOrganisation.name()),
               tuple("NOMINATED_ORGANISATION", nomineeOrganisation.name()),
               tuple("NOMINATION_REFERENCE", nominationDetail.getNomination().getReference()),
-              tuple("NOMINATION_LINK", "/url"),
               tuple("OPERATORSHIP_DISPLAY_TYPE", "an installation operator")
           );
     }
@@ -361,7 +338,7 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id()));
     }
@@ -378,7 +355,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve ApplicantDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
     }
@@ -398,7 +375,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(nominationDetail))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(() -> consulteeEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildAppointmentConfirmedTemplate(nominationId))
           .isInstanceOf(IllegalStateException.class)
           .hasMessage("Unable to retrieve NomineeDetail for NominationDetail with ID %s".formatted(nominationDetail.getId()));
 
@@ -448,18 +425,13 @@ class ConsulteeEmailBuilderServiceTest {
       ))
           .willReturn(List.of(applicantOrganisation, nomineeOrganisation));
 
-      given(emailService.withUrl(ReverseRouter.route(on(NominationConsulteeViewController.class)
-          .renderNominationView(nominationId))
-      ))
-          .willReturn("/url");
-
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
 
       given(emailService.getTemplate(GovukNotifyTemplate.APPOINTMENT_CONFIRMED))
           .willReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
 
-      var resultingMergeTemplate = consulteeEmailBuilderService
+      var resultingMergeTemplate = nominationEmailBuilderService
           .buildAppointmentConfirmedTemplate(nominationId)
           .merge();
 
@@ -469,7 +441,6 @@ class ConsulteeEmailBuilderServiceTest {
               tuple("APPLICANT_ORGANISATION", applicantOrganisation.name()),
               tuple("NOMINATED_ORGANISATION", nomineeOrganisation.name()),
               tuple("NOMINATION_REFERENCE", nominationDetail.getNomination().getReference()),
-              tuple("NOMINATION_LINK", "/url"),
               tuple("OPERATORSHIP_DISPLAY_TYPE", "an installation operator")
           );
     }
@@ -486,7 +457,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.WELL_AND_INSTALLATION);
 
-      assertThat(consulteeEmailBuilderService.getNominationOperatorshipText(nominationDetail))
+      assertThat(nominationEmailBuilderService.getNominationOperatorshipText(nominationDetail))
           .isEqualTo("a well and installation operator");
     }
 
@@ -496,7 +467,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.WELL);
 
-      assertThat(consulteeEmailBuilderService.getNominationOperatorshipText(nominationDetail))
+      assertThat(nominationEmailBuilderService.getNominationOperatorshipText(nominationDetail))
           .isEqualTo("a well operator");
     }
 
@@ -506,7 +477,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.INSTALLATION);
 
-      assertThat(consulteeEmailBuilderService.getNominationOperatorshipText(nominationDetail))
+      assertThat(nominationEmailBuilderService.getNominationOperatorshipText(nominationDetail))
           .isEqualTo("an installation operator");
     }
 
@@ -516,7 +487,7 @@ class ConsulteeEmailBuilderServiceTest {
       given(nominationTypeService.getNominationDisplayType(nominationDetail))
           .willReturn(NominationDisplayType.NOT_PROVIDED);
 
-      assertThat(consulteeEmailBuilderService.getNominationOperatorshipText(nominationDetail))
+      assertThat(nominationEmailBuilderService.getNominationOperatorshipText(nominationDetail))
           .isEqualTo("an operator");
     }
 
