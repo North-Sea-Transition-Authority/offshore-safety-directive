@@ -40,16 +40,22 @@
               </#list>
           </ul>
         </td>
-          <#if showActionColumn>
-            <td class="govuk-table__cell">
+        <#if showActionColumn>
+          <td class="govuk-table__cell">
+            <ul class="govuk-list govuk-!-margin-bottom-0">
               <#if canEditUsers>
-                <ul class="govuk-list govuk-!-margin-bottom-0"><@fdsAction.link linkText="Edit" linkUrl=springUrl(member.editUrl()) linkScreenReaderText=member.getDisplayName() /></ul>
+                <li>
+                  <@fdsAction.link linkText="Edit" linkUrl=springUrl(member.editUrl()) linkScreenReaderText=member.getDisplayName() />
+                </li>
               </#if>
               <#if canRemoveUsers>
-                <ul class="govuk-list govuk-!-margin-bottom-0"><@fdsAction.link linkText="Remove" linkUrl=springUrl(member.removeUrl()) linkScreenReaderText=member.getDisplayName() /></ul>
+                <li>
+                  <@fdsAction.link linkText="Remove" linkUrl=springUrl(member.removeUrl()) linkScreenReaderText=member.getDisplayName() />
+                </li>
               </#if>
-            </td>
-          </#if>
+            </ul>
+          </td>
+        </#if>
       </tr>
     </#list>
     </tbody>
