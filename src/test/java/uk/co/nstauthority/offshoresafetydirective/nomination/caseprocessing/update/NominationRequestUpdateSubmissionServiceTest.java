@@ -8,7 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 
 @ExtendWith(MockitoExtension.class)
@@ -16,9 +15,6 @@ class NominationRequestUpdateSubmissionServiceTest {
 
   @Mock
   private CaseEventService caseEventService;
-
-  @Mock
-  private NominationUpdateRequestedEventPublisher nominationUpdateRequestedEventPublisher;
 
   @InjectMocks
   private NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
@@ -34,6 +30,5 @@ class NominationRequestUpdateSubmissionServiceTest {
     nominationRequestUpdateSubmissionService.submit(nominationDetail, form);
 
     verify(caseEventService).createUpdateRequestEvent(nominationDetail, reason);
-    verify(nominationUpdateRequestedEventPublisher).publish(new NominationId(nominationDetail));
   }
 }
