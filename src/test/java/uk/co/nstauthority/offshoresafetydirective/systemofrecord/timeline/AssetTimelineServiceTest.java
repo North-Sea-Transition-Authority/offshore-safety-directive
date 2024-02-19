@@ -51,7 +51,7 @@ class AssetTimelineServiceTest {
     given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -71,7 +71,7 @@ class AssetTimelineServiceTest {
     given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
         .willReturn(Optional.of(new AssetName("from portal")));
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -98,7 +98,7 @@ class AssetTimelineServiceTest {
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -123,7 +123,7 @@ class AssetTimelineServiceTest {
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var resultingAppointmentTimelineHistory = assetTimelineService.getAppointmentHistoryForPortalAsset(
@@ -145,7 +145,7 @@ class AssetTimelineServiceTest {
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     var firstAppointmentByEventDate = AppointmentTestUtil.builder()
@@ -219,7 +219,7 @@ class AssetTimelineServiceTest {
         .withAssetName("from system of record")
         .build();
 
-    given(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.of(assetInSystemOfRecord));
 
     Instant instant = Instant.now();

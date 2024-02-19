@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Asset;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseRepository;
@@ -44,6 +47,7 @@ class PearsSubareaMessageHandlerService {
   private final AppointmentRepository appointmentRepository;
   private final AssetPhaseRepository assetPhaseRepository;
   private final Clock clock;
+  private final AssetAccessService assetAccessService;
 
   @Autowired
   PearsSubareaMessageHandlerService(AssetPersistenceService assetPersistenceService,
@@ -51,7 +55,8 @@ class PearsSubareaMessageHandlerService {
                                     LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
                                     AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                     AppointmentRepository appointmentRepository,
-                                    AssetPhaseRepository assetPhaseRepository, Clock clock) {
+                                    AssetPhaseRepository assetPhaseRepository, Clock clock,
+                                    AssetAccessService assetAccessService) {
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentAccessService = appointmentAccessService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
@@ -59,6 +64,7 @@ class PearsSubareaMessageHandlerService {
     this.appointmentRepository = appointmentRepository;
     this.assetPhaseRepository = assetPhaseRepository;
     this.clock = clock;
+    this.assetAccessService = assetAccessService;
   }
 
   @Transactional
@@ -83,11 +89,22 @@ class PearsSubareaMessageHandlerService {
     var appointmentsToSave = new ArrayList<Appointment>();
 
     for (PearsTransaction.Operation.SubareaChange subareaChange : operation.subareas()) {
+
       var originalSubareaPortalAssetId = new PortalAssetId(subareaChange.originalSubarea().id());
-      var originalSubareaAsset = assetPersistenceService.getOrCreateAsset(
+
+      Optional<AssetDto> originalSubareaAsset =  assetAccessService.getExtantAsset(
           originalSubareaPortalAssetId,
           PortalAssetType.SUBAREA
       );
+
+      if (originalSubareaAsset.isEmpty()) {
+        LOGGER.info(
+            "No extant asset exists for subarea with portal ID {}, no appointments to end for asset on operation {}",
+            originalSubareaPortalAssetId.id(),
+            operation.id()
+        );
+        continue;
+      }
 
       assetPersistenceService.endAssetsWithAssetType(
           List.of(originalSubareaPortalAssetId),
@@ -95,7 +112,7 @@ class PearsSubareaMessageHandlerService {
           operation.id()
       );
 
-      appointmentAccessService.getCurrentAppointmentForAsset(originalSubareaAsset.assetId())
+      appointmentAccessService.getCurrentAppointmentForAsset(originalSubareaAsset.get().assetId())
           .ifPresent(appointment -> {
             appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
             appointmentsToSave.add(appointment);
@@ -130,10 +147,20 @@ class PearsSubareaMessageHandlerService {
   protected void copyForwardAppointmentAndAssets(PearsTransaction.Operation operation,
                                                  PearsTransaction.Operation.SubareaChange subareaChange) {
     var originalSubareaPortalAssetId = new PortalAssetId(subareaChange.originalSubarea().id());
-    var originalSubareaAsset = assetPersistenceService.getOrCreateAsset(
+
+    Optional<AssetDto> originalSubareaAsset = assetAccessService.getExtantAsset(
         originalSubareaPortalAssetId,
         PortalAssetType.SUBAREA
     );
+
+    if (originalSubareaAsset.isEmpty()) {
+      LOGGER.info(
+          "No extant asset exists for subarea with portal ID {}, no appointments to copy forward for operation {}",
+          originalSubareaPortalAssetId.id(),
+          operation.id()
+      );
+      return;
+    }
 
     var resultingSubareaIds = subareaChange.resultingSubareas()
         .stream()
@@ -157,7 +184,7 @@ class PearsSubareaMessageHandlerService {
     var newSubareaAssets = assetPersistenceService.createAssetsForSubareas(resultingSubareaDtos);
 
     var originalSubareaActiveAppointments =
-        appointmentAccessService.getAppointmentsForAsset(originalSubareaAsset.assetId());
+        appointmentAccessService.getAppointmentsForAsset(originalSubareaAsset.get().assetId());
 
     Map<AppointmentId, List<AssetPhase>> originalSubareaAppointmentPhases =
         assetAppointmentPhaseAccessService.getPhasesByAppointments(originalSubareaActiveAppointments);

@@ -16,7 +16,7 @@ public class AssetAccessService {
     this.assetRepository = assetRepository;
   }
 
-  public Optional<AssetDto> getAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+  public Optional<AssetDto> getExtantAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
     return assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
             portalAssetId.id(),
             portalAssetType,

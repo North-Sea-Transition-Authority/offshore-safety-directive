@@ -40,7 +40,7 @@ class AssetTimelineService {
 
     Optional<AssetName> energyPortalAssetName = portalAssetNameService.getAssetName(portalAssetId, portalAssetType);
 
-    Optional<AssetDto> assetOptional = assetAccessService.getAsset(portalAssetId, portalAssetType);
+    Optional<AssetDto> assetOptional = assetAccessService.getExtantAsset(portalAssetId, portalAssetType);
 
     if (assetOptional.isEmpty() && energyPortalAssetName.isEmpty()) {
       return Optional.empty();

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +42,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhase;
@@ -71,6 +74,9 @@ class PearsSubareaMessageHandlerServiceTest {
   @Mock
   private AssetPhaseRepository assetPhaseRepository;
 
+  @Mock
+  private AssetAccessService assetAccessService;
+
   private Instant now;
   private PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
 
@@ -80,7 +86,8 @@ class PearsSubareaMessageHandlerServiceTest {
     var clock = Clock.fixed(now, ZoneId.systemDefault());
     var realService = new PearsSubareaMessageHandlerService(
         assetPersistenceService, appointmentAccessService, licenceBlockSubareaQueryService,
-        assetAppointmentPhaseAccessService, appointmentRepository, assetPhaseRepository, clock
+        assetAppointmentPhaseAccessService, appointmentRepository, assetPhaseRepository, clock,
+        assetAccessService
     );
     pearsSubareaMessageHandlerService = spy(realService);
   }
@@ -161,8 +168,8 @@ class PearsSubareaMessageHandlerServiceTest {
         .build();
 
     var persistedAssetDto = AssetDtoTestUtil.builder().build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, PortalAssetType.SUBAREA))
-        .thenReturn(persistedAssetDto);
+    when(assetAccessService.getExtantAsset(portalAssetId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.of(persistedAssetDto));
 
     var firstLicenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
     var secondLicenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
@@ -228,8 +235,8 @@ class PearsSubareaMessageHandlerServiceTest {
         .build();
 
     var persistedAssetDto = AssetDtoTestUtil.builder().build();
-    when(assetPersistenceService.getOrCreateAsset(portalAssetId, PortalAssetType.SUBAREA))
-        .thenReturn(persistedAssetDto);
+    when(assetAccessService.getExtantAsset(portalAssetId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.of(persistedAssetDto));
 
     var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
     when(licenceBlockSubareaQueryService.getLicenceBlockSubareasByIds(
@@ -564,11 +571,11 @@ class PearsSubareaMessageHandlerServiceTest {
     var firstAssetDto = AssetDtoTestUtil.builder().build();
     var secondAssetDto = AssetDtoTestUtil.builder().build();
 
-    when(assetPersistenceService.getOrCreateAsset(firstSubareaPortalId, PortalAssetType.SUBAREA))
-        .thenReturn(firstAssetDto);
+    when(assetAccessService.getExtantAsset(firstSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.of(firstAssetDto));
 
-    when(assetPersistenceService.getOrCreateAsset(secondSubareaPortalId, PortalAssetType.SUBAREA))
-        .thenReturn(secondAssetDto);
+    when(assetAccessService.getExtantAsset(secondSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.of(secondAssetDto));
 
     var firstActiveAppointment = spy(AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
@@ -604,5 +611,77 @@ class PearsSubareaMessageHandlerServiceTest {
 
     verify(firstActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
     verify(secondActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
+  }
+
+  @Test
+  void endAppointmentsAndAssets_whenOneExtantAssetAndOneNonExtant_thenOnlyExtantAssetEnded() {
+
+    var knownSubareaEndOperation = PearsTransactionSubareaChangeTestUtil.builder()
+        .withResultingSubareas(Set.of())
+        .build();
+
+    var unknownSubareaEndOperation = PearsTransactionSubareaChangeTestUtil.builder()
+        .withResultingSubareas(Set.of())
+        .build();
+
+    // use a linked hash set to preserve order of operations, so we can be sure tha if
+    // the first change is for an unknown asset we still process the second change.
+    Set<PearsTransaction.Operation.SubareaChange> subareaChanges = new LinkedHashSet<>();
+    subareaChanges.add(unknownSubareaEndOperation);
+    subareaChanges.add(knownSubareaEndOperation);
+
+    var endOperation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.END.getOperations().get(0))
+        .withSubareaChanges(subareaChanges)
+        .build();
+
+    var knownSubareaPortalId = new PortalAssetId(knownSubareaEndOperation.originalSubarea().id());
+    var unknownSubareaPortalId = new PortalAssetId(unknownSubareaEndOperation.originalSubarea().id());
+
+    when(assetAccessService.getExtantAsset(unknownSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.empty());
+
+    var knownSubareaAsset = AssetDtoTestUtil.builder().build();
+
+    when(assetAccessService.getExtantAsset(knownSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.of(knownSubareaAsset));
+
+    pearsSubareaMessageHandlerService.endAppointmentsAndAssets(endOperation);
+
+    verify(assetPersistenceService, never()).endAssetsWithAssetType(
+        List.of(unknownSubareaPortalId),
+        PortalAssetType.SUBAREA,
+        endOperation.id()
+    );
+
+    verify(appointmentAccessService).getCurrentAppointmentForAsset(knownSubareaAsset.assetId());
+    verifyNoMoreInteractions(appointmentAccessService);
+  }
+
+  @Test
+  void copyForwardAppointmentAndAssets_whenNonExtantAsset_thenNoCopyForward() {
+
+    var unknownSubareaChangeOperation = PearsTransactionSubareaChangeTestUtil.builder()
+        .withResultingSubareas(Set.of())
+        .build();
+
+    var copyForwardOperation = PearsTransactionOperationTestUtil.builder()
+        .withType(PearsTransactionOperationType.COPY_FORWARD.getOperations().get(0))
+        .withSubareaChanges(Set.of(unknownSubareaChangeOperation))
+        .build();
+
+    var unknownSubareaPortalId = new PortalAssetId(unknownSubareaChangeOperation.originalSubarea().id());
+
+    when(assetAccessService.getExtantAsset(unknownSubareaPortalId, PortalAssetType.SUBAREA))
+        .thenReturn(Optional.empty());
+
+    pearsSubareaMessageHandlerService.copyForwardAppointmentAndAssets(copyForwardOperation, unknownSubareaChangeOperation);
+
+    verifyNoInteractions(appointmentRepository);
+    verifyNoInteractions(assetPersistenceService);
+    verifyNoInteractions(assetAppointmentPhaseAccessService);
+    verifyNoInteractions(appointmentAccessService);
+    verifyNoInteractions(assetPersistenceService);
+    verifyNoInteractions(licenceBlockSubareaQueryService);
   }
 }

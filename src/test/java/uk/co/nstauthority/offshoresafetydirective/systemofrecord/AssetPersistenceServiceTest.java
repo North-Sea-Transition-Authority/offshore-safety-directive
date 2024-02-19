@@ -147,7 +147,7 @@ class AssetPersistenceServiceTest {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.INSTALLATION;
 
-    when(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .thenReturn(Optional.empty());
 
     when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
@@ -167,7 +167,7 @@ class AssetPersistenceServiceTest {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.INSTALLATION;
 
-    when(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .thenReturn(Optional.empty());
 
     var assetName = "asset name";
@@ -223,7 +223,7 @@ class AssetPersistenceServiceTest {
         .withAssetName(assetName)
         .build();
 
-    when(assetAccessService.getAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .thenReturn(Optional.of(assetDto));
 
     var result = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);

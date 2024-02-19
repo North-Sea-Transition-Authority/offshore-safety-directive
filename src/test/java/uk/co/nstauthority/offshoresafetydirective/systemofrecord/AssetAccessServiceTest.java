@@ -27,7 +27,7 @@ class AssetAccessServiceTest {
   private AssetAccessService assetAccessService;
 
   @Test
-  void getAsset_whenFound_thenPopulatedOptional() {
+  void getExtantAsset_whenFound_thenPopulatedOptional() {
 
     var matchedPortalAssetId = new PortalAssetId("portal asset id");
 
@@ -39,7 +39,7 @@ class AssetAccessServiceTest {
     given(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(matchedPortalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .willReturn(Optional.of(expectedAsset));
 
-    var resultingAssetDto = assetAccessService.getAsset(matchedPortalAssetId, portalAssetType);
+    var resultingAssetDto = assetAccessService.getExtantAsset(matchedPortalAssetId, portalAssetType);
 
     assertThat(resultingAssetDto).isPresent();
     assertThat(resultingAssetDto.get())
@@ -58,7 +58,7 @@ class AssetAccessServiceTest {
   }
 
   @Test
-  void getAsset_whenNotFound_thenEmptyOptional() {
+  void getExtantAsset_whenNotFound_thenEmptyOptional() {
 
     var portalAssetType = PortalAssetType.INSTALLATION;
     var unmatchedPortalAssetId = new PortalAssetId("not from portal asset id");
@@ -66,7 +66,7 @@ class AssetAccessServiceTest {
     given(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(unmatchedPortalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
         .willReturn(Optional.empty());
 
-    var resultingAssetDto = assetAccessService.getAsset(unmatchedPortalAssetId, portalAssetType);
+    var resultingAssetDto = assetAccessService.getExtantAsset(unmatchedPortalAssetId, portalAssetType);
 
     assertThat(resultingAssetDto).isEmpty();
   }

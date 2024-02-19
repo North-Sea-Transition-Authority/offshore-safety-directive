@@ -508,7 +508,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(assetAccessService.getAsset(assetDto.assetId()))
         .thenReturn(Optional.of(assetDto));
 
-    when(assetAccessService.getAsset(assetDto.portalAssetId(), portalAssetType))
+    when(assetAccessService.getExtantAsset(assetDto.portalAssetId(), portalAssetType))
         .thenReturn(Optional.empty());
 
     var assetName = "asset name";

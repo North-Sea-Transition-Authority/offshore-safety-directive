@@ -86,7 +86,7 @@ public class AssetPersistenceService {
   @Transactional
   public AssetDto getOrCreateAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
 
-    var existingAsset = assetAccessService.getAsset(portalAssetId, portalAssetType);
+    var existingAsset = assetAccessService.getExtantAsset(portalAssetId, portalAssetType);
 
     var assetName = existingAsset
         .map(AssetDto::assetName)
