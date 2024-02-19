@@ -250,7 +250,7 @@ public class AppointmentCorrectionValidator implements SmartValidator {
           if (optionalWellboreAppointment.isEmpty()) {
             addInvalidParentWellboreAppointmentError(bindingResult);
           } else {
-            var relatedAppointments = appointmentAccessService.getActiveAppointmentsForAsset(hint.assetId());
+            var relatedAppointments = appointmentAccessService.getAppointmentsForAsset(hint.assetId());
             var isRelated = relatedAppointments.stream()
                 .anyMatch(appointment -> appointment.getId().equals(optionalWellboreAppointment.get().getId()));
             if (isRelated) {

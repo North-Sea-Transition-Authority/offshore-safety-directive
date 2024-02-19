@@ -273,7 +273,7 @@ class AppointmentCorrectionValidatorTest {
     var unrelatedAppointment = AppointmentTestUtil.builder()
         .withId(unrelatedAssetId.id())
         .build();
-    when(appointmentAccessService.getActiveAppointmentsForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
         .thenReturn(List.of(unrelatedAppointment));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
@@ -321,7 +321,7 @@ class AppointmentCorrectionValidatorTest {
     when(appointmentAccessService.getAppointment(new AppointmentId(parentWellboreAppointmentId)))
         .thenReturn(Optional.of(appointment));
 
-    when(appointmentAccessService.getActiveAppointmentsForAsset(assetDto.assetId()))
+    when(appointmentAccessService.getAppointmentsForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointment));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
