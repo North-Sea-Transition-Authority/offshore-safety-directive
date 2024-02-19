@@ -69,8 +69,8 @@ public class NominationApplicantTeamService {
         .collect(Collectors.toSet());
   }
 
-  Set<TeamMemberView> getApplicantTeamMembersWithAnyRoleOf(NominationDetail nominationDetail,
-                                                           Collection<IndustryTeamRole> roles) {
+  public Set<TeamMemberView> getApplicantTeamMembersWithAnyRoleOf(NominationDetail nominationDetail,
+                                                                  Collection<IndustryTeamRole> roles) {
 
     Set<Team> applicantTeams = getApplicantTeams(nominationDetail);
 
