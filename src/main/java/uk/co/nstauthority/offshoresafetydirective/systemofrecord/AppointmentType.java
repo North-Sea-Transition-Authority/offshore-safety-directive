@@ -11,8 +11,9 @@ public enum AppointmentType implements DisplayableEnumOption {
 
   DEEMED("Deemed appointment", 10),
   FORWARD_APPROVED("Forward approved appointment", 20, List.of(PortalAssetType.WELLBORE)),
-  OFFLINE_NOMINATION("Offline nomination", 30),
-  ONLINE_NOMINATION("Online nomination", 40);
+  PARENT_WELLBORE("Parent well appointment", 30, List.of(PortalAssetType.WELLBORE)),
+  OFFLINE_NOMINATION("Offline nomination", 40),
+  ONLINE_NOMINATION("Online nomination", 50);
 
   private final String displayName;
   private final int displayOrder;

@@ -35,6 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.IncludeEnergyPort
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
 import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
@@ -163,6 +164,9 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
+  @MockBean
+  protected WellQueryService wellQueryService;
+
   @BeforeEach
   void setupAbstractControllerTest() {
     doCallRealMethod().when(userDetailService).getUserDetail();
@@ -178,18 +182,21 @@ public abstract class AbstractControllerTest {
 
     @Bean
     public AppointmentModelAndViewService appointmentModelAndViewService(PortalAssetRetrievalService portalAssetRetrievalService,
-                                                                          AppointmentCorrectionService appointmentCorrectionService,
-                                                                          NominationDetailService nominationDetailService,
-                                                                          AppointmentAccessService appointmentAccessService,
-                                                                          LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
-                                                                          PortalOrganisationUnitQueryService portalOrganisationUnitQueryService) {
+                                                                         AppointmentCorrectionService appointmentCorrectionService,
+                                                                         NominationDetailService nominationDetailService,
+                                                                         AppointmentAccessService appointmentAccessService,
+                                                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                                                                         PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
+                                                                         WellQueryService wellQueryService) {
       return new AppointmentModelAndViewService(
           portalAssetRetrievalService,
           appointmentCorrectionService,
           nominationDetailService,
           appointmentAccessService,
           licenceBlockSubareaQueryService,
-          portalOrganisationUnitQueryService);
+          portalOrganisationUnitQueryService,
+          wellQueryService
+      );
     }
   }
 }

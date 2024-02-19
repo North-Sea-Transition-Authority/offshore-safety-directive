@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
@@ -33,5 +34,12 @@ public class PortalAssetNameService {
           .getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id()))
           .map(subareaDto -> new AssetName(subareaDto.displayName()));
     };
+  }
+
+  public Optional<AssetName> getAssetName(Appointment appointment) {
+    return getAssetName(
+        new PortalAssetId(appointment.getAsset().getPortalAssetId()),
+        appointment.getAsset().getPortalAssetType()
+    );
   }
 }

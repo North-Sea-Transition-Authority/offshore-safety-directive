@@ -180,6 +180,7 @@ public class AppointmentTerminationService {
           .map(NominationDto::nominationReference)
           .orElse(AppointmentType.ONLINE_NOMINATION.getScreenDisplayText());
       case FORWARD_APPROVED -> AppointmentType.FORWARD_APPROVED.getScreenDisplayText();
+      case PARENT_WELLBORE -> AppointmentType.PARENT_WELLBORE.getScreenDisplayText();
     };
   }
 

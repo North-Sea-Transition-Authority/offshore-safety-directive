@@ -67,6 +67,21 @@
                             formId="forwardApprovedAppointmentStartDate"
                             nestingPath="form.appointmentType"
                         />
+                    <#elseif appointmentTypeName == "PARENT_WELLBORE">
+                        <@fdsSearchSelector.searchSelectorRest
+                            path="form.parentWellboreAppointmentId.inputValue"
+                            restUrl=springUrl(parentWellboreRestUrl)
+                            labelText="What is the parent well appointment?"
+                            preselectedItems=preSelectedParentWellboreAppointment!{}
+                        />
+                        <@fdsDateInput.dateInput
+                            dayPath="form.parentWellAppointmentStartDate.dayInput.inputValue"
+                            monthPath="form.parentWellAppointmentStartDate.monthInput.inputValue"
+                            yearPath="form.parentWellAppointmentStartDate.yearInput.inputValue"
+                            labelText="Start date"
+                            formId="parentWellAppointmentStartDate"
+                            nestingPath="form.appointmentType"
+                        />
                     <#elseif appointmentTypeName == "OFFLINE_NOMINATION">
                         <@fdsTextInput.textInput
                             path="form.offlineNominationReference.inputValue"

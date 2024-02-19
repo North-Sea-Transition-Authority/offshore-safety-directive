@@ -23,6 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
@@ -39,6 +42,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.wellbore.WellboreAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 import uk.co.nstauthority.offshoresafetydirective.util.assertion.MapEntryAssert;
@@ -67,6 +71,9 @@ class AppointmentModelAndViewServiceTest {
 
   @Mock
   private PortalOrganisationUnitQueryService organisationUnitQueryService;
+
+  @Mock
+  private WellQueryService wellQueryService;
 
   @InjectMocks
   private AppointmentModelAndViewService appointmentModelAndViewService;
@@ -108,11 +115,16 @@ class AppointmentModelAndViewServiceTest {
             "forwardApprovedAppointmentRestUrl",
             RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         )
+        .hasKeyWithValue(
+            "parentWellboreRestUrl",
+            RestApiUtil.route(on(WellboreAppointmentRestController.class).searchWellboreAppointments(null))
+        )
         .hasKeyWithValue("submitUrl", SUBMIT_URL)
         .hasAssertedAllKeysExcept(
             "preSelectedForwardApprovedAppointment",
             "preselectedNominationReference",
             "preselectedOperator",
+            "preSelectedParentWellboreAppointment",
             "cancelUrl"
         );
   }
@@ -204,6 +216,23 @@ class AppointmentModelAndViewServiceTest {
   }
 
   @Test
+  void getAppointmentModelAndView_whenNoParentWellboreAppointment_thenPreselectedParentWellboreAppointmentEmpty() {
+    var assetDto = AssetDtoTestUtil.builder().build();
+    var parentWellboreAppointmentId = UUID.randomUUID().toString();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(parentWellboreAppointmentId)
+        .build();
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(UUID.fromString(parentWellboreAppointmentId))))
+        .thenReturn(Optional.empty());
+
+    var resultingModelAndView = appointmentModelAndViewService.getAppointmentModelAndView(PAGE_TITLE, assetDto, form, SUBMIT_URL);
+
+    assertThat(resultingModelAndView.getModel()).containsEntry("preSelectedParentWellboreAppointment", Map.of());
+  }
+
+  @Test
   void getAppointmentModelAndView_whenForwardApprovedAppointment_thenPreselectedForwardApprovedPopulatedWithPortalAssetName() {
     var assetDto = AssetDtoTestUtil.builder().build();
 
@@ -243,6 +272,51 @@ class AppointmentModelAndViewServiceTest {
                     portalSubarea.displayName(),
                     DateUtil.formatLongDate(startDate))
         ));
+  }
+
+  @Test
+  void getAppointmentModelAndView_whenParentWellboreAppointment_thenPreselectedParentWellborePopulatedWithAssetName() {
+    var assetDto = AssetDtoTestUtil.builder().build();
+
+    var parentWellboreAppointmentId = UUID.randomUUID();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(parentWellboreAppointmentId.toString())
+        .build();
+
+    var startDate = LocalDate.now();
+    Integer wellId = 123;
+    var parentWellboreAsset = AssetTestUtil.builder()
+        .withPortalAssetId(wellId.toString())
+        .build();
+
+    var parentWellboreAppointment = AppointmentTestUtil.builder()
+        .withId(parentWellboreAppointmentId)
+        .withAsset(parentWellboreAsset)
+        .withResponsibleFromDate(startDate)
+        .build();
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(parentWellboreAppointmentId)))
+        .thenReturn(Optional.of(parentWellboreAppointment));
+
+    var wellDto = WellDtoTestUtil.builder().build();
+    when(wellQueryService.getWell(
+        new WellboreId(wellId),
+        AppointmentModelAndViewService.PRE_SELECTED_PARENT_WELL_PURPOSE
+    ))
+        .thenReturn(Optional.of(wellDto));
+
+    var resultingModelAndView = appointmentModelAndViewService.getAppointmentModelAndView(PAGE_TITLE, assetDto, form, SUBMIT_URL);
+
+    assertThat(resultingModelAndView.getModel())
+        .containsEntry(
+            "preSelectedParentWellboreAppointment",
+            Map.of(
+                parentWellboreAppointment.getId(),
+                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(
+                    wellDto.name(),
+                    DateUtil.formatLongDate(startDate))
+            ));
   }
 
   @Test

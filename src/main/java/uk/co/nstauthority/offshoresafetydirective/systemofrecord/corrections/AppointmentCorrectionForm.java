@@ -10,16 +10,21 @@ public class AppointmentCorrectionForm {
   private String forAllPhases;
   private Set<String> phases;
   private String appointmentType;
-  private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate", "Start date");
-  private StringInput offlineNominationReference = new StringInput("offlineNominationReference", "nomination reference");
+  private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate",
+      "Start date");
+  private StringInput offlineNominationReference = new StringInput("offlineNominationReference",
+      "nomination reference");
   private ThreeFieldDateInput forwardApprovedAppointmentStartDate =
       new ThreeFieldDateInput("forwardApprovedAppointmentStartDate", "Start date");
   private String forwardApprovedAppointmentId;
-  private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate", "Start date");
+  private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate",
+      "Start date");
   private String onlineNominationReference;
+  private StringInput parentWellboreAppointmentId = new StringInput("parentWellboreAppointmentId", "the parent well appointment");
+  private ThreeFieldDateInput parentWellAppointmentStartDate =
+      new ThreeFieldDateInput("parentWellAppointmentStartDate", "Start date");
   private String hasEndDate;
   private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
-
   private StringInput reason = new StringInput("reason", "a reason for the correction");
 
   public String getAppointedOperatorId() {
@@ -101,6 +106,22 @@ public class AppointmentCorrectionForm {
 
   public void setOnlineNominationReference(String onlineNominationReference) {
     this.onlineNominationReference = onlineNominationReference;
+  }
+
+  public StringInput getParentWellboreAppointmentId() {
+    return parentWellboreAppointmentId;
+  }
+
+  public void setParentWellboreAppointmentId(StringInput parentWellboreId) {
+    this.parentWellboreAppointmentId = parentWellboreId;
+  }
+
+  public ThreeFieldDateInput getParentWellAppointmentStartDate() {
+    return parentWellAppointmentStartDate;
+  }
+
+  public void setParentWellAppointmentStartDate(ThreeFieldDateInput parentWellAppointmentStartDate) {
+    this.parentWellAppointmentStartDate = parentWellAppointmentStartDate;
   }
 
   public String getHasEndDate() {

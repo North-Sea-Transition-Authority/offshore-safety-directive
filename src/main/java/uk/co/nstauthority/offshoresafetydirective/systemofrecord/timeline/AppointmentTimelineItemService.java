@@ -25,7 +25,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
@@ -49,6 +48,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
@@ -59,7 +59,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.Rol
 @Service
 public class AppointmentTimelineItemService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentTimelineItemService.class);
-  private static final String FORWARD_APPROVED_STRING_FORMAT = "%s: %s";
+  static final String CREATED_BY_APPOINTMENT_STRING_FORMAT = "%s: %s";
 
   static final RequestPurpose FORWARD_APPROVED_APPOINTMENT_PURPOSE =
       new RequestPurpose("Subarea name for the forward approved appointment display string");
@@ -84,6 +84,7 @@ public class AppointmentTimelineItemService {
   private final SystemOfRecordConfigurationProperties systemOfRecordConfiguration;
   private final AppointmentAccessService appointmentAccessService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+  private final PortalAssetNameService portalAssetNameService;
 
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
@@ -95,7 +96,8 @@ public class AppointmentTimelineItemService {
                                  AppointmentPhasesService appointmentPhasesService,
                                  SystemOfRecordConfigurationProperties systemOfRecordConfiguration,
                                  AppointmentAccessService appointmentAccessService,
-                                 LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+                                 LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                                 PortalAssetNameService portalAssetNameService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -106,6 +108,7 @@ public class AppointmentTimelineItemService {
     this.systemOfRecordConfiguration = systemOfRecordConfiguration;
     this.appointmentAccessService = appointmentAccessService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
+    this.portalAssetNameService = portalAssetNameService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
@@ -262,7 +265,7 @@ public class AppointmentTimelineItemService {
           appointmentTimelineItemDto.isMemberOfRegulatorTeam()
       );
       case DEEMED -> addDeemedAppointmentModelProperties(modelProperties);
-      case FORWARD_APPROVED -> addForwardApprovedAppointmentModelProperties(
+      case FORWARD_APPROVED, PARENT_WELLBORE -> addCreatedByAppointmentReference(
           modelProperties,
           appointmentDto,
           appointmentTimelineItemDto
@@ -333,7 +336,8 @@ public class AppointmentTimelineItemService {
     modelProperties.addProperty("createdByReference", reference);
 
     if (!AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText().equals(reference) && isMemberOfRegulatorTeam) {
-      modelProperties.addProperty("offlineNominationDocumentUrl", systemOfRecordConfiguration.offlineNominationDocumentUrl());
+      modelProperties.addProperty("offlineNominationDocumentUrl",
+          systemOfRecordConfiguration.offlineNominationDocumentUrl());
     }
   }
 
@@ -352,16 +356,16 @@ public class AppointmentTimelineItemService {
     }
   }
 
-  private void addForwardApprovedAppointmentModelProperties(AssetTimelineModelProperties modelProperties,
-                                                            AppointmentDto appointmentDto,
-                                                            AppointmentTimelineItemDto appointmentTimelineItemDto) {
+  private void addCreatedByAppointmentReference(AssetTimelineModelProperties modelProperties,
+                                                AppointmentDto appointmentDto,
+                                                AppointmentTimelineItemDto appointmentTimelineItemDto) {
 
     modelProperties.addProperty("createdByReference",
         Optional.ofNullable(appointmentDto.createdByAppointmentId())
             .flatMap(appointmentAccessService::getAppointment)
             .map(createdByAppointment -> switch (createdByAppointment.getAppointmentType()) {
-              case DEEMED, FORWARD_APPROVED -> FORWARD_APPROVED_STRING_FORMAT.formatted(
-                  getFormattedAssetName(createdByAppointment),
+              case DEEMED, FORWARD_APPROVED, PARENT_WELLBORE -> CREATED_BY_APPOINTMENT_STRING_FORMAT.formatted(
+                  getAssetName(createdByAppointment),
                   DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()
                   ));
               case OFFLINE_NOMINATION -> getCreatedByReferenceForOfflineAppointmentType(
@@ -375,9 +379,9 @@ public class AppointmentTimelineItemService {
                   modelProperties
               );
             }).orElseGet(() -> {
-              LOGGER.warn("No created by appointment with id [%s]  found for appointment with id [%s]"
+              LOGGER.warn("No created by appointment with id [%s] found for appointment with id [%s]"
                   .formatted(appointmentDto.createdByAppointmentId(), appointmentDto.appointmentId()));
-              return AppointmentType.FORWARD_APPROVED.getScreenDisplayText();
+              return appointmentDto.appointmentType().getScreenDisplayText();
             }));
   }
 
@@ -386,8 +390,8 @@ public class AppointmentTimelineItemService {
                                                                 AssetTimelineModelProperties modelProperties) {
 
     if (StringUtils.isBlank(createdByAppointment.getCreatedByLegacyNominationReference())) {
-      return FORWARD_APPROVED_STRING_FORMAT.formatted(
-          getFormattedAssetName(createdByAppointment),
+      return CREATED_BY_APPOINTMENT_STRING_FORMAT.formatted(
+          getAssetName(createdByAppointment),
           DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()));
     } else {
       if (appointmentTimelineItemDto.isMemberOfRegulatorTeam()) {
@@ -395,8 +399,8 @@ public class AppointmentTimelineItemService {
             systemOfRecordConfiguration.offlineNominationDocumentUrl());
       }
 
-      return FORWARD_APPROVED_STRING_FORMAT.formatted(
-          getFormattedAssetName(createdByAppointment),
+      return CREATED_BY_APPOINTMENT_STRING_FORMAT.formatted(
+          getAssetName(createdByAppointment),
           createdByAppointment.getCreatedByLegacyNominationReference()
       );
     }
@@ -414,20 +418,14 @@ public class AppointmentTimelineItemService {
             getNominationUrl(AppointmentDto.fromAppointment(createdByAppointment), appointmentTimelineItemDto))
         .ifPresent(nominationUrl -> modelProperties.addProperty("nominationUrl", nominationUrl));
 
-    return FORWARD_APPROVED_STRING_FORMAT.formatted(getFormattedAssetName(createdByAppointment), nominationReference);
+    return CREATED_BY_APPOINTMENT_STRING_FORMAT.formatted(getAssetName(createdByAppointment), nominationReference);
 
   }
 
-  private String getFormattedAssetName(Appointment createdByAppointment) {
-    var subareaDtoOptional = licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    );
-
-    if (subareaDtoOptional.isPresent()) {
-      return subareaDtoOptional.get().displayName();
-    }
-    return createdByAppointment.getAsset().getAssetName();
+  private String getAssetName(Appointment createdByAppointment) {
+    return portalAssetNameService.getAssetName(createdByAppointment)
+        .map(AssetName::value)
+        .orElse(createdByAppointment.getAsset().getAssetName());
   }
 
   private String getNominationUrl(AppointmentDto appointmentDto,

@@ -218,6 +218,26 @@ class AppointmentTerminationServiceTest {
   }
 
   @Test
+  void getCreatedByDisplayString_whenForwardApprovedAppointmentType_thenReturnString() {
+    var deemedAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .build();
+    var resultingCreatedBy = appointmentTerminationService.getCreatedByDisplayString(deemedAppointmentDto);
+
+    assertThat(resultingCreatedBy).isEqualTo("Forward approved appointment");
+  }
+
+  @Test
+  void getCreatedByDisplayString_whenParentWellboreAppointmentType_thenReturnString() {
+    var deemedAppointmentDto = AppointmentDtoTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .build();
+    var resultingCreatedBy = appointmentTerminationService.getCreatedByDisplayString(deemedAppointmentDto);
+
+    assertThat(resultingCreatedBy).isEqualTo("Parent well appointment");
+  }
+
+  @Test
   void getCreatedByDisplayString_whenOfflineAppointmentType_andLegacyReferenceIsNotNull_thenReturnString() {
     var offlineAndLegacyAppointmentDto = AppointmentDtoTestUtil.builder()
         .withAppointmentType(AppointmentType.OFFLINE_NOMINATION)

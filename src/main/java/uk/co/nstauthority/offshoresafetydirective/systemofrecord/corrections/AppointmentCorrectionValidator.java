@@ -29,6 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetTypeUtil;
@@ -160,10 +161,12 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
   }
 
-  private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form, PortalAssetType portalAssetType) {
+  private Optional<AppointmentType> getAppointmentType(AppointmentCorrectionForm form,
+                                                       PortalAssetType portalAssetType) {
     if (form.getAppointmentType() == null
         || !EnumUtils.isValidEnum(AppointmentType.class, form.getAppointmentType())
-        || (!AppointmentType.isValidForAssetType(portalAssetType, AppointmentType.valueOf(form.getAppointmentType())))) {
+        || (!AppointmentType.isValidForAssetType(portalAssetType,
+        AppointmentType.valueOf(form.getAppointmentType())))) {
       return Optional.empty();
     }
     var appointmentType = EnumUtils.getEnum(AppointmentType.class, form.getAppointmentType());
@@ -176,43 +179,97 @@ public class AppointmentCorrectionValidator implements SmartValidator {
                                        AppointmentType appointmentType,
                                        Collection<AppointmentDto> appointments) {
 
-    if (appointmentType.equals(AppointmentType.DEEMED)) {
-      var hasExistingDeemedAppointments = appointments.stream()
-          .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentId()))
-          .anyMatch(appointmentDto -> AppointmentType.DEEMED.equals(appointmentDto.appointmentType()));
-
-      if (hasExistingDeemedAppointments) {
-        bindingResult.rejectValue(
-            APPOINTMENT_TYPE_FIELD_NAME,
-            "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
-            "You can only have one deemed appointment"
-        );
-      }
-    } else if (AppointmentType.ONLINE_NOMINATION.equals(appointmentType)) {
-      ValidationUtils.rejectIfEmpty(
-          bindingResult,
-          ONLINE_REFERENCE_FIELD_NAME,
-          FIELD_REQUIRED_ERROR.formatted(ONLINE_REFERENCE_FIELD_NAME),
-          "Enter a %s nomination reference".formatted(
-              serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
-          )
-      );
-      if (!bindingResult.hasFieldErrors(ONLINE_REFERENCE_FIELD_NAME)) {
-        var appointedNominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
-            new NominationId(UUID.fromString(form.getOnlineNominationReference())),
-            EnumSet.of(NominationStatus.APPOINTED)
-        );
-        if (appointedNominationDetail.isEmpty()) {
-          bindingResult.rejectValue(
-              ONLINE_REFERENCE_FIELD_NAME,
-              "%s.invalidNomination".formatted(ONLINE_REFERENCE_FIELD_NAME),
-              "Enter a valid %s nomination reference".formatted(
-                  serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
-              )
-          );
-        }
+    switch (appointmentType) {
+      case DEEMED -> validateDeemedAppointmentType(bindingResult, hint, appointments);
+      case ONLINE_NOMINATION -> validateOnlineNominationAppointmentType(bindingResult, form);
+      case PARENT_WELLBORE -> validatedParentWellboreAppointmentType(bindingResult, form, hint);
+      case OFFLINE_NOMINATION, FORWARD_APPROVED -> {
       }
     }
+  }
+
+  private void validateDeemedAppointmentType(BindingResult bindingResult, AppointmentCorrectionValidationHint hint,
+                                             Collection<AppointmentDto> appointments) {
+    var hasExistingDeemedAppointments = appointments.stream()
+        .filter(appointmentDto -> !appointmentDto.appointmentId().equals(hint.appointmentId()))
+        .anyMatch(appointmentDto -> AppointmentType.DEEMED.equals(appointmentDto.appointmentType()));
+
+    if (hasExistingDeemedAppointments) {
+      bindingResult.rejectValue(
+          APPOINTMENT_TYPE_FIELD_NAME,
+          "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
+          "You can only have one deemed appointment"
+      );
+    }
+  }
+
+  private void validateOnlineNominationAppointmentType(BindingResult bindingResult, AppointmentCorrectionForm form) {
+    ValidationUtils.rejectIfEmpty(
+        bindingResult,
+        ONLINE_REFERENCE_FIELD_NAME,
+        FIELD_REQUIRED_ERROR.formatted(ONLINE_REFERENCE_FIELD_NAME),
+        "Enter a %s nomination reference".formatted(
+            serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
+        )
+    );
+    if (!bindingResult.hasFieldErrors(ONLINE_REFERENCE_FIELD_NAME)) {
+      var appointedNominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
+          new NominationId(UUID.fromString(form.getOnlineNominationReference())),
+          EnumSet.of(NominationStatus.APPOINTED)
+      );
+      if (appointedNominationDetail.isEmpty()) {
+        bindingResult.rejectValue(
+            ONLINE_REFERENCE_FIELD_NAME,
+            "%s.invalidNomination".formatted(ONLINE_REFERENCE_FIELD_NAME),
+            "Enter a valid %s nomination reference".formatted(
+                serviceBrandingConfigurationProperties.getServiceConfigurationProperties().mnemonic()
+            )
+        );
+      }
+    }
+  }
+
+  private void validatedParentWellboreAppointmentType(BindingResult bindingResult, AppointmentCorrectionForm form,
+                                                      AppointmentCorrectionValidationHint hint) {
+    StringInputValidator.builder()
+        .validate(form.getParentWellboreAppointmentId(), bindingResult);
+
+    Optional.ofNullable(form.getParentWellboreAppointmentId().getInputValue())
+        .ifPresent(parentWellboreAppointmentId -> {
+          AppointmentId appointmentId;
+          try {
+            appointmentId = new AppointmentId(UUID.fromString(parentWellboreAppointmentId));
+          } catch (IllegalArgumentException e) {
+            addInvalidParentWellboreAppointmentError(bindingResult);
+            return;
+          }
+          var optionalWellboreAppointment = appointmentAccessService.getAppointment(appointmentId)
+              .filter(appointment ->
+                  PortalAssetType.WELLBORE.equals(appointment.getAsset().getPortalAssetType()));
+
+          if (optionalWellboreAppointment.isEmpty()) {
+            addInvalidParentWellboreAppointmentError(bindingResult);
+          } else {
+            var relatedAppointments = appointmentAccessService.getActiveAppointmentsForAsset(hint.assetId());
+            var isRelated = relatedAppointments.stream()
+                .anyMatch(appointment -> appointment.getId().equals(optionalWellboreAppointment.get().getId()));
+            if (isRelated) {
+              bindingResult.rejectValue(
+                  "parentWellboreAppointmentId.inputValue",
+                  "parentWellboreAppointmentId.inputValue.referencesCurrent",
+                  "The selected appointment cannot be an appointment for this well"
+              );
+            }
+          }
+        });
+  }
+
+  private void addInvalidParentWellboreAppointmentError(BindingResult bindingResult) {
+    bindingResult.rejectValue(
+        "parentWellboreAppointmentId.inputValue",
+        "parentWellboreAppointmentId.inputValue.invalidAppointment",
+        "Select a valid appointment"
+    );
   }
 
   private void validatePhases(AppointmentCorrectionForm form, BindingResult bindingResult,

@@ -38,7 +38,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.installation.Instal
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
@@ -102,7 +106,11 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
+  @EnumSource(
+      value = AppointmentType.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"ONLINE_NOMINATION", "FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
   void validate_whenFullyPopulatedForm_thenNoErrors(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase(InstallationPhase.DEVELOPMENT_CONSTRUCTION.name())
@@ -219,6 +227,253 @@ class AppointmentCorrectionValidatorTest {
     assertThat(errorMessages)
         .containsExactly(
             entry("appointmentType", Set.of("Select the type of appointment")));
+  }
+
+  @Test
+  void validate_whenIsParentWellbore_andIsNotLinkedToAppointmentOnAsset_thenValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var asset = AssetTestUtil.builder().withPortalAssetType(PortalAssetType.WELLBORE).build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var parentWellboreAppointmentId = UUID.randomUUID();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(parentWellboreAppointmentId.toString())
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(parentWellboreAppointmentId)))
+        .thenReturn(Optional.of(appointment));
+
+    var unrelatedAssetId = new AssetId(UUID.randomUUID());
+    var unrelatedAppointment = AppointmentTestUtil.builder()
+        .withId(unrelatedAssetId.id())
+        .build();
+    when(appointmentAccessService.getActiveAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(unrelatedAppointment));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenIsParentWellbore_andIsLinkedToAppointmentOnAsset_thenNotValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var asset = AssetTestUtil.builder().withPortalAssetType(PortalAssetType.WELLBORE).build();
+    var appointment = AppointmentTestUtil.builder()
+        .withAsset(asset)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var parentWellboreAppointmentId = UUID.randomUUID();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(parentWellboreAppointmentId.toString())
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(parentWellboreAppointmentId)))
+        .thenReturn(Optional.of(appointment));
+
+    when(appointmentAccessService.getActiveAppointmentsForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointment));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                "parentWellboreAppointmentId.inputValue",
+                Set.of("The selected appointment cannot be an appointment for this well")
+            )
+        );
+  }
+
+  @Test
+  void validate_whenIsParentWellbore_andAppointmentIdDoesNotExist_thenNotValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var parentWellboreAppointmentId = UUID.randomUUID();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(parentWellboreAppointmentId.toString())
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    when(appointmentAccessService.getAppointment(new AppointmentId(parentWellboreAppointmentId)))
+        .thenReturn(Optional.empty());
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                "parentWellboreAppointmentId.inputValue",
+                Set.of("Select a valid appointment")
+            )
+        );
+  }
+
+  @Test
+  void validate_whenIsParentWellbore_andAppointmentIdIsNotUuid_thenNotValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId("invalid uuid")
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                "parentWellboreAppointmentId.inputValue",
+                Set.of("Select a valid appointment")
+            )
+        );
+  }
+
+  @Test
+  void validate_whenIsParentWellbore_andAppointmentIdIsNull_thenNotValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.PARENT_WELLBORE)
+        .withParentWellboreAppointmentId(null)
+        .withForAllPhases(true)
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+
+    assertThat(errorMessages)
+        .containsExactly(
+            entry(
+                "parentWellboreAppointmentId.inputValue",
+                Set.of("Enter the parent well appointment")
+            )
+        );
   }
 
   @Test
@@ -424,7 +679,8 @@ class AppointmentCorrectionValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.WELLBORE)
-        .build();    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
         .withAssetDto(assetDto)
         .build();
 
@@ -463,7 +719,11 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "FORWARD_APPROVED")
+  @EnumSource(
+      value = AppointmentType.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
   void validate_whenNotForAllPhases_andPhaseIsNotValid_thenError(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhase("NOT_A_VALID_PHASE")
@@ -513,7 +773,11 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
+  @EnumSource(
+      value = AppointmentType.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"ONLINE_NOMINATION", "FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
   void validate_whenNotForAllPhases_andValidPhase_thenNoErrors(AppointmentType appointmentType) {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.INSTALLATION)
@@ -673,7 +937,11 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "FORWARD_APPROVED")
+  @EnumSource(
+      value = AppointmentType.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
   void validate_whenSubareaAsset_andNotForAllPhases_andOnlyDecommissioning(AppointmentType appointmentType) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withPhases(Set.of(WellPhase.DECOMMISSIONING.name()))
@@ -723,7 +991,11 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = {"ONLINE_NOMINATION", "FORWARD_APPROVED"})
+  @EnumSource(
+      value = AppointmentType.class,
+      mode = EnumSource.Mode.EXCLUDE,
+      names = {"ONLINE_NOMINATION", "FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
   void validate_whenSubareaAsset_andNotForAllPhases_andDecommissioningWithOtherPhaseSelected(
       AppointmentType appointmentType
   ) {

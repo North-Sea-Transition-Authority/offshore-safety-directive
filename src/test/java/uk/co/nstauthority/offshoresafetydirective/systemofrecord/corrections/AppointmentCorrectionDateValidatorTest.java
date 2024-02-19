@@ -1179,6 +1179,7 @@ class AppointmentCorrectionDateValidatorTest {
       case OFFLINE_NOMINATION -> appointmentCorrectionForm.getOfflineAppointmentStartDate();
       case ONLINE_NOMINATION -> appointmentCorrectionForm.getOnlineAppointmentStartDate();
       case FORWARD_APPROVED -> appointmentCorrectionForm.getForwardApprovedAppointmentStartDate();
+      case PARENT_WELLBORE -> appointmentCorrectionForm.getParentWellAppointmentStartDate();
     };
   }
 }

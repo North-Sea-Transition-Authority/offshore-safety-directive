@@ -832,9 +832,13 @@ class AppointmentCorrectionServiceTest {
     assertThat(resultingForm)
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate()
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty()
         );
@@ -855,10 +859,14 @@ class AppointmentCorrectionServiceTest {
     assertThat(resultingForm)
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate()
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
             Optional.of(startDate),
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty()
         );
   }
@@ -879,11 +887,13 @@ class AppointmentCorrectionServiceTest {
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
             form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
             Optional.empty(),
             Optional.of(startDate),
+            Optional.empty(),
             Optional.empty()
         );
   }
@@ -904,9 +914,38 @@ class AppointmentCorrectionServiceTest {
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
             form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(startDate),
+            Optional.empty()
+        );
+  }
+
+  @Test
+  void getForm_assertMappings_startDate_whenParentWellboreAppointment() {
+    var appointmentType = AppointmentType.PARENT_WELLBORE;
+    var startDate = LocalDate.now();
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withResponsibleFromDate(startDate)
+        .build();
+
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
+
+    assertThat(resultingForm)
+        .extracting(
+            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
+        )
+        .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(startDate)
@@ -927,10 +966,11 @@ class AppointmentCorrectionServiceTest {
         .extracting(
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
             form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
-
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty()
@@ -992,10 +1032,14 @@ class AppointmentCorrectionServiceTest {
 
     assertThat(resultingForm)
         .extracting(
+            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
             form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getOfflineAppointmentStartDate().getAsLocalDate()
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty()
         );
@@ -1014,11 +1058,39 @@ class AppointmentCorrectionServiceTest {
 
     assertThat(resultingForm)
         .extracting(
-            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
             form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
-            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate()
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
         )
         .containsExactly(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()
+        );
+  }
+
+  @Test
+  void getForm_assertMappings_whenParentWellboreAppointment_andNoAppointmentFromDate() {
+    var appointmentType = AppointmentType.PARENT_WELLBORE;
+
+    var originalAppointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
+        .withResponsibleFromDate(null)
+        .build();
+
+    var resultingForm = appointmentCorrectionService.getForm(originalAppointment);
+
+    assertThat(resultingForm)
+        .extracting(
+            form -> form.getOfflineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getOnlineAppointmentStartDate().getAsLocalDate(),
+            form -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate(),
+            form -> form.getParentWellAppointmentStartDate().getAsLocalDate()
+        )
+        .containsExactly(
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty()

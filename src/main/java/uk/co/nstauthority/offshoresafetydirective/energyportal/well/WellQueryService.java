@@ -55,7 +55,7 @@ public class WellQueryService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  List<WellDto> searchWellsByRegistrationNumber(String wellRegistrationNumber, RequestPurpose requestPurpose) {
+  public List<WellDto> searchWellsByRegistrationNumber(String wellRegistrationNumber, RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         wellboreApi.searchWellboresByRegistrationNumber(
                 wellRegistrationNumber,

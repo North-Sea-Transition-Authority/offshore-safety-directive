@@ -82,6 +82,7 @@ public class AppointmentCorrectionDateValidator {
       case OFFLINE_NOMINATION -> Optional.of(form.getOfflineAppointmentStartDate());
       case ONLINE_NOMINATION -> Optional.of(form.getOnlineAppointmentStartDate());
       case FORWARD_APPROVED -> Optional.of(form.getForwardApprovedAppointmentStartDate());
+      case PARENT_WELLBORE -> Optional.of(form.getParentWellAppointmentStartDate());
     };
   }
 

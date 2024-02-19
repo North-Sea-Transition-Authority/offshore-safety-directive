@@ -13,7 +13,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -31,9 +30,6 @@ class WellRestControllerTest extends AbstractControllerTest {
   private static final ServiceUserDetail SERVICE_USER = ServiceUserDetailTestUtil.Builder().build();
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-  @MockBean
-  private WellQueryService wellQueryService;
 
   @SecurityTest
   void searchWells_whenNoUser_thenOkResponse() throws Exception {

@@ -3,20 +3,25 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,8 +31,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
@@ -52,6 +55,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTest
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
@@ -93,6 +97,9 @@ class AppointmentTimelineItemServiceTest {
 
   @Mock
   private AppointmentAccessService appointmentAccessService;
+
+  @Mock
+  private PortalAssetNameService portalAssetNameService;
 
   @InjectMocks
   private AppointmentTimelineItemService appointmentTimelineItemService;
@@ -1266,19 +1273,23 @@ class AppointmentTimelineItemServiceTest {
         );
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsNull_thenDisplayText() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsNull_thenDisplayText(AppointmentType appointmentType) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(null)
         .build();
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1287,37 +1298,39 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
-        .containsEntry("createdByReference", AppointmentType.FORWARD_APPROVED.getScreenDisplayText());
+        .containsEntry("createdByReference", appointmentType.getScreenDisplayText());
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsDeemed_thenAssetNameAndStartDate() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsDeemed_thenAssetNameAndStartDate(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var createdByAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(AppointmentType.DEEMED)
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1326,15 +1339,21 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
     var startDate = DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate());
 
-    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-        .formatted(subareaDto.displayName(), startDate);
+    var expectedReference = AppointmentTimelineItemService.CREATED_BY_APPOINTMENT_STRING_FORMAT
+        .formatted(assetName, startDate);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference);
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andNoLegacyRef_thenAssetNameAndStartDate() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsOffline_andNoLegacyRef_thenAssetNameAndStartDate(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var createdByAppointment = AppointmentTestUtil.builder()
@@ -1342,20 +1361,16 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByLegacyNominationReference(null)
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1364,7 +1379,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1373,16 +1388,22 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
     var startDate = DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate());
 
-    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-        .formatted(subareaDto.displayName(), startDate);
+    var expectedReference = AppointmentTimelineItemService.CREATED_BY_APPOINTMENT_STRING_FORMAT
+        .formatted(assetName, startDate);
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
         .doesNotContainKey("offlineNominationDocumentUrl");
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andLegacyRef_andIsRegulator_thenIncludeLegacyRefAndLink() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsOffline_andLegacyRef_andIsRegulator_thenIncludeLegacyRefAndLink(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var createdByAppointment = AppointmentTestUtil.builder()
@@ -1390,20 +1411,16 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByLegacyNominationReference("OSDOP-124")
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1412,7 +1429,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Map.of(TeamType.REGULATOR, Set.of(RolePermission.MANAGE_APPOINTMENTS)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1420,7 +1437,8 @@ class AppointmentTimelineItemServiceTest {
 
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
-    var expectedReference = "%s: %s".formatted(subareaDto.displayName(), createdByAppointment.getCreatedByLegacyNominationReference());
+    var expectedReference = AppointmentTimelineItemService.CREATED_BY_APPOINTMENT_STRING_FORMAT
+        .formatted(assetName, createdByAppointment.getCreatedByLegacyNominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
@@ -1428,9 +1446,11 @@ class AppointmentTimelineItemServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = TeamType.class, mode = EnumSource.Mode.EXCLUDE, names = "REGULATOR")
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOffline_andLegacyRef_andIsNotRegulator_thenNoLink(
-      TeamType teamType) {
+  @MethodSource("forwardApprovedAndParentWellboreAppointmentTypesWithNoRegulatorTeamType")
+  void getTimelineItemViews_whenCreatedByAppointmentIsOffline_andLegacyRef_andIsNotRegulator_thenNoLink(
+      AppointmentType appointmentType,
+      TeamType teamType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var createdByAppointment = AppointmentTestUtil.builder()
@@ -1438,20 +1458,16 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByLegacyNominationReference("OSDOP-124")
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1460,7 +1476,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Map.of(teamType, Set.of(RolePermission.GRANT_ROLES)));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1468,15 +1484,22 @@ class AppointmentTimelineItemServiceTest {
 
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
-    var expectedReference = "%s: %s".formatted(subareaDto.displayName(), createdByAppointment.getCreatedByLegacyNominationReference());
+    var expectedReference = AppointmentTimelineItemService.CREATED_BY_APPOINTMENT_STRING_FORMAT
+        .formatted(assetName, createdByAppointment.getCreatedByLegacyNominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
         .doesNotContainKey("offlineNominationDocumentUrl");
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNominationExists_thenIncludeNominationAndLink() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsOnline_andNominationExists_thenIncludeNominationAndLink(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var nomination = NominationDtoTestUtil.builder().build();
@@ -1486,20 +1509,16 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByNominationId(nomination.nominationId().id())
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1511,7 +1530,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Optional.of(nomination));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1520,7 +1539,7 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-        .formatted(subareaDto.displayName(), nomination.nominationReference());
+        .formatted(assetName, nomination.nominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
@@ -1529,8 +1548,14 @@ class AppointmentTimelineItemServiceTest {
                 .renderCaseProcessing(new NominationId(createdByAppointment.getCreatedByNominationId()), null)));
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNominationExists_andCantViewNominations_thenNoLink() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsOnline_andNominationExists_andCantViewNominations_thenNoLink(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var nomination = NominationDtoTestUtil.builder().build();
@@ -1540,20 +1565,16 @@ class AppointmentTimelineItemServiceTest {
         .withCreatedByNominationId(nomination.nominationId().id())
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1565,7 +1586,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Optional.of(nomination));
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1574,35 +1595,37 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-        .formatted(subareaDto.displayName(), nomination.nominationReference());
+        .formatted(assetName, nomination.nominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
         .doesNotContainKey("nominationUrl");
   }
 
-  @Test
-  void getTimelineItemViews_whenForwardApproved_andCreatedByAppointmentIsOnline_andNoNominationExists_thenUnknownNominationReference() {
+  @ParameterizedTest
+  @EnumSource(
+      value = AppointmentType.class,
+      names = {"FORWARD_APPROVED", "PARENT_WELLBORE"}
+  )
+  void getTimelineItemViews_whenCreatedByAppointmentIsOnline_andNoNominationExists_thenUnknownNominationReference(
+      AppointmentType appointmentType
+  ) {
     var assetInSystemOfRecord = AssetDtoTestUtil.builder().build();
 
     var createdByAppointment = AppointmentTestUtil.builder()
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .build();
 
-    var forwardApprovedAppointment = AppointmentTestUtil.builder()
-        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+    var appointment = AppointmentTestUtil.builder()
+        .withAppointmentType(appointmentType)
         .withCreatedByAppointmentId(createdByAppointment.getId())
         .build();
 
-    var subareaDto = LicenceBlockSubareaDtoTestUtil.builder().build();
+    var assetName = "asset name";
+    when(portalAssetNameService.getAssetName(createdByAppointment))
+        .thenReturn(Optional.of(new AssetName(assetName)));
 
-    given(licenceBlockSubareaQueryService.getLicenceBlockSubarea(
-        new LicenceBlockSubareaId(createdByAppointment.getAsset().getPortalAssetId()),
-        AppointmentTimelineItemService.FORWARD_APPROVED_APPOINTMENT_PURPOSE
-    ))
-        .willReturn(Optional.ofNullable(subareaDto));
-
-    given(appointmentAccessService.getAppointment(new AppointmentId(forwardApprovedAppointment.getCreatedByAppointmentId())))
+    given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
 
     given(userDetailService.getUserDetail()).willReturn(loggedInUser);
@@ -1614,7 +1637,7 @@ class AppointmentTimelineItemServiceTest {
         .willReturn(Optional.empty());
 
     var resultingAppointmentTimelineHistoryItems = appointmentTimelineItemService.getTimelineItemViews(
-        List.of(forwardApprovedAppointment),
+        List.of(appointment),
         assetInSystemOfRecord
     );
 
@@ -1623,10 +1646,23 @@ class AppointmentTimelineItemServiceTest {
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
     var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
-        .formatted(subareaDto.displayName(), "Unknown");
+        .formatted(assetName, "Unknown");
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
         .containsEntry("createdByReference", expectedReference)
         .doesNotContainKey("nominationUrl");
+  }
+
+  /**
+   * Use as a method source, binds {AppointmentType, TeamType} parameters to:
+   * AppointmentType: FORWARD_APPROVED, PARENT_WELLBORE
+   * TeamType: All except for REGULATOR
+   * @return Stream of arguments as an argument tuple of {AppointmentType, TeamType}
+   */
+  private static Stream<Arguments> forwardApprovedAndParentWellboreAppointmentTypesWithNoRegulatorTeamType() {
+    var appointmentTypes = EnumSet.of(AppointmentType.FORWARD_APPROVED, AppointmentType.PARENT_WELLBORE);
+    var teamTypes = EnumSet.complementOf(EnumSet.of(TeamType.REGULATOR));
+    return appointmentTypes.stream()
+        .flatMap(appointmentType -> teamTypes.stream().map(teamType -> Arguments.of(appointmentType, teamType)));
   }
 }

@@ -37,7 +37,6 @@ import uk.co.nstauthority.offshoresafetydirective.branding.IncludeAccidentRegula
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellRestController;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -63,9 +62,6 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
 
   @MockBean
   private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
-
-  @MockBean
-  private WellQueryService wellQueryService;
 
   @MockBean
   private NominatedWellDetailFormService nominatedWellDetailFormService;

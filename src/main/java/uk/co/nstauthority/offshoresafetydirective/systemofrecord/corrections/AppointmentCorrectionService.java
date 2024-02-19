@@ -105,6 +105,18 @@ public class AppointmentCorrectionService {
       form.setForwardApprovedAppointmentId(forwardApprovedAppointmentId);
     }
 
+    if (AppointmentType.PARENT_WELLBORE.equals(appointmentDto.appointmentType())) {
+      
+      appointmentFromDate.ifPresent(localDate -> form.getParentWellAppointmentStartDate().setDate(localDate));
+
+      var parentWellboreAppointmentId = Optional.ofNullable(appointmentDto.createdByAppointmentId())
+          .map(AppointmentId::id)
+          .map(String::valueOf)
+          .orElse(null);
+
+      form.getParentWellboreAppointmentId().setInputValue(parentWellboreAppointmentId);
+    }
+
     if (AppointmentType.ONLINE_NOMINATION.equals(appointmentDto.appointmentType()) && appointmentFromDate.isPresent()) {
       form.getOnlineAppointmentStartDate().setDate(appointmentFromDate.get());
 
@@ -157,13 +169,10 @@ public class AppointmentCorrectionService {
   }
 
   @Transactional
-  public Appointment applyCorrectionToAppointment(AppointmentCorrectionForm form, AssetDto assetDto, Appointment appointment) {
+  public Appointment applyCorrectionToAppointment(AppointmentCorrectionForm form, AssetDto assetDto,
+                                                  Appointment appointment) {
 
     var createdByNominationId = Optional.ofNullable(form.getOnlineNominationReference())
-        .map(UUID::fromString)
-        .orElse(null);
-
-    var createdByAppointment = Optional.ofNullable(form.getForwardApprovedAppointmentId())
         .map(UUID::fromString)
         .orElse(null);
 
@@ -201,35 +210,33 @@ public class AppointmentCorrectionService {
     appointment.setResponsibleFromDate(startDate);
     appointment.setResponsibleToDate(endDate);
     appointment.setAppointmentType(appointmentType);
+    appointment.setCreatedDatetime(clock.instant());
+    appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
+    appointment.setCreatedByLegacyNominationReference(null);
+    appointment.setCreatedByNominationId(null);
+    appointment.setCreatedByAppointmentId(null);
 
     switch (appointmentType) {
-      case OFFLINE_NOMINATION -> {
-        appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
-        appointment.setCreatedByNominationId(null);
-        appointment.setCreatedByAppointmentId(null);
-      }
-      case ONLINE_NOMINATION -> {
-        appointment.setCreatedByNominationId(createdByNominationId);
-        appointment.setCreatedByLegacyNominationReference(null);
-        appointment.setCreatedByAppointmentId(null);
-      }
-      case DEEMED -> {
-        appointment.setCreatedByLegacyNominationReference(null);
-        appointment.setCreatedByNominationId(null);
-        appointment.setCreatedByAppointmentId(null);
-      }
+      case OFFLINE_NOMINATION ->
+          appointment.setCreatedByLegacyNominationReference(form.getOfflineNominationReference().getInputValue());
+      case ONLINE_NOMINATION -> appointment.setCreatedByNominationId(createdByNominationId);
       case FORWARD_APPROVED -> {
-        appointment.setCreatedByLegacyNominationReference(null);
-        appointment.setCreatedByNominationId(null);
+        var createdByAppointment = Optional.ofNullable(form.getForwardApprovedAppointmentId())
+            .map(UUID::fromString)
+            .orElse(null);
+
+        appointment.setCreatedByAppointmentId(createdByAppointment);
+      }
+      case PARENT_WELLBORE -> {
+        var createdByAppointment = Optional.ofNullable(form.getParentWellboreAppointmentId().getInputValue())
+            .map(UUID::fromString)
+            .orElse(null);
+
         appointment.setCreatedByAppointmentId(createdByAppointment);
       }
     }
 
-    appointment.setCreatedDatetime(clock.instant());
-    appointment.setAppointmentStatus(AppointmentStatus.EXTANT);
-
     var phases = assetAppointmentPhaseAccessService.getPhasesForAppointmentCorrections(form, appointment);
-
     var savedAppointment = appointmentRepository.save(appointment);
     saveCorrectionReason(appointment, form.getReason().getInputValue());
     assetPhasePersistenceService.updateAssetPhases(AppointmentDto.fromAppointment(appointment), phases);
@@ -255,7 +262,8 @@ public class AppointmentCorrectionService {
         .map(AppointmentId::id)
         .toList();
 
-    List<AppointmentCorrection> corrections = appointmentCorrectionRepository.findAllByAppointment_IdIn(appointmentIdValues);
+    List<AppointmentCorrection> corrections = appointmentCorrectionRepository.findAllByAppointment_IdIn(
+        appointmentIdValues);
 
     return convertToAppointmentCorrectionHistoryViews(corrections);
   }
@@ -269,7 +277,8 @@ public class AppointmentCorrectionService {
         .map(WebUserAccountId::new)
         .collect(Collectors.toSet());
 
-    Map<Long, EnergyPortalUserDto> userIdAndUserMap = energyPortalUserService.findByWuaIds(wuaIds, CORRECTED_BY_USER_PURPOSE)
+    Map<Long, EnergyPortalUserDto> userIdAndUserMap = energyPortalUserService.findByWuaIds(wuaIds,
+            CORRECTED_BY_USER_PURPOSE)
         .stream()
         .collect(Collectors.toMap(EnergyPortalUserDto::webUserAccountId, Function.identity()));
 
@@ -294,6 +303,7 @@ public class AppointmentCorrectionService {
       case OFFLINE_NOMINATION -> form.getOfflineAppointmentStartDate().getAsLocalDate();
       case DEEMED -> Optional.of(AppointmentCorrectionDateValidator.DEEMED_DATE);
       case FORWARD_APPROVED -> form.getForwardApprovedAppointmentStartDate().getAsLocalDate();
+      case PARENT_WELLBORE -> form.getParentWellAppointmentStartDate().getAsLocalDate();
     };
   }
 

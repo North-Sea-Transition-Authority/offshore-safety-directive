@@ -18,6 +18,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.OrganisationFilterType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitRestController;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -27,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.wellbore.WellboreAppointmentRestController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.wellbore.WellboreAppointmentRestService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 
 @Service
@@ -38,12 +42,16 @@ public class AppointmentModelAndViewService {
   public static final RequestPurpose PRE_SELECTED_OPERATOR_NAME_PURPOSE =
       new RequestPurpose("Get pre-selected operator name for appointment");
 
+  public static final RequestPurpose PRE_SELECTED_PARENT_WELL_PURPOSE =
+      new RequestPurpose("Get pre-selected parent wellbore name for appointment");
+
   private final PortalAssetRetrievalService portalAssetRetrievalService;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final NominationDetailService nominationDetailService;
   private final AppointmentAccessService appointmentAccessService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final PortalOrganisationUnitQueryService organisationUnitQueryService;
+  private final WellQueryService wellQueryService;
 
   @Autowired
   public AppointmentModelAndViewService(PortalAssetRetrievalService portalAssetRetrievalService,
@@ -51,13 +59,15 @@ public class AppointmentModelAndViewService {
                                         NominationDetailService nominationDetailService,
                                         AppointmentAccessService appointmentAccessService,
                                         LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
-                                        PortalOrganisationUnitQueryService organisationUnitQueryService) {
+                                        PortalOrganisationUnitQueryService organisationUnitQueryService,
+                                        WellQueryService wellQueryService) {
     this.portalAssetRetrievalService = portalAssetRetrievalService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.nominationDetailService = nominationDetailService;
     this.appointmentAccessService = appointmentAccessService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
     this.organisationUnitQueryService = organisationUnitQueryService;
+    this.wellQueryService = wellQueryService;
   }
 
   public ModelAndView getAppointmentModelAndView(String pageTitle, AssetDto assetDto, AppointmentCorrectionForm form,
@@ -83,11 +93,16 @@ public class AppointmentModelAndViewService {
             "forwardApprovedAppointmentRestUrl",
             RestApiUtil.route(on(ForwardApprovedAppointmentRestController.class).searchSubareaAppointments(null))
         )
+        .addObject(
+            "parentWellboreRestUrl",
+            RestApiUtil.route(on(WellboreAppointmentRestController.class).searchWellboreAppointments(null))
+        )
         .addObject("cancelUrl", getTimelineRoute(assetDto))
         .addObject("submitUrl", submitUrl)
         .addObject("preSelectedForwardApprovedAppointment", getPreselectedForwardApprovedAppointment(form))
         .addObject("preselectedNominationReference", getPreselectedNominationReference(form))
-        .addObject("preselectedOperator", getPreselectedOperator(form));
+        .addObject("preselectedOperator", getPreselectedOperator(form))
+        .addObject("preSelectedParentWellboreAppointment", getPreselectedParentWellboreAppointment(form));
 
     if (PortalAssetType.SUBAREA.equals(assetDto.portalAssetType())) {
       modelAndView.addObject("phaseSelectionHint", "If decommissioning is required, another phase must be selected.");
@@ -137,6 +152,33 @@ public class AppointmentModelAndViewService {
       }
     }
 
+    return Map.of();
+  }
+
+  private Map<UUID, String> getPreselectedParentWellboreAppointment(AppointmentCorrectionForm form) {
+    if (!AppointmentType.PARENT_WELLBORE.name().equals(form.getAppointmentType())) {
+      return Map.of();
+    }
+
+    if (form.getParentWellboreAppointmentId().getInputValue() == null) {
+      return Map.of();
+    }
+
+    var optionalAppointment = appointmentAccessService.getAppointment(
+        new AppointmentId(UUID.fromString(form.getParentWellboreAppointmentId().getInputValue())));
+
+    if (optionalAppointment.isPresent()) {
+      var wellId = Integer.parseInt(optionalAppointment.get().getAsset().getPortalAssetId());
+      var wellboreId = new WellboreId(wellId);
+      var well = wellQueryService.getWell(wellboreId, PRE_SELECTED_PARENT_WELL_PURPOSE);
+      if (well.isPresent()) {
+        var displayName = WellboreAppointmentRestService.formatSearchItemName(
+            well.get().name(),
+            optionalAppointment.get().getResponsibleFromDate()
+        );
+        return Map.of(optionalAppointment.get().getId(), displayName);
+      }
+    }
     return Map.of();
   }
 

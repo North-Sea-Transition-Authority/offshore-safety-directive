@@ -35,6 +35,8 @@ public class AppointmentCorrectionFormTestUtil {
     private String forwardApprovedAppointmentId = null;
     private LocalDate endDate = null;
     private String correctionReason = "reason for correction";
+    private String parentWellboreAppointmentId = UUID.randomUUID().toString();
+    private LocalDate parentWellAppointmentStartDate = LocalDate.now();
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -124,6 +126,7 @@ public class AppointmentCorrectionFormTestUtil {
       this.onlineStartDate = localDate;
       this.offlineStartDate = localDate;
       this.forwardApprovedAppointmentStartDate = localDate;
+      this.parentWellAppointmentStartDate = localDate;
       return this;
     }
 
@@ -134,6 +137,16 @@ public class AppointmentCorrectionFormTestUtil {
 
     public Builder withCorrectionReason(String correctionReason) {
       this.correctionReason = correctionReason;
+      return this;
+    }
+
+    public Builder withParentWellboreAppointmentId(String parentWellboreAppointmentId) {
+      this.parentWellboreAppointmentId = parentWellboreAppointmentId;
+      return this;
+    }
+
+    public Builder withParentWellAppointmentStartDate(LocalDate parentWellAppointmentStartDate) {
+      this.parentWellAppointmentStartDate = parentWellAppointmentStartDate;
       return this;
     }
 
@@ -173,6 +186,15 @@ public class AppointmentCorrectionFormTestUtil {
         form.getForwardApprovedAppointmentStartDate().setDate(forwardApprovedAppointmentStartDate);
       }
 
+      if (parentWellAppointmentStartDate == null) {
+        form.setParentWellAppointmentStartDate(new ThreeFieldDateInput(
+            form.getParentWellAppointmentStartDate().getFieldName(),
+            form.getParentWellAppointmentStartDate().getDisplayName()
+        ));
+      } else {
+        form.getParentWellAppointmentStartDate().setDate(parentWellAppointmentStartDate);
+      }
+
       if (endDate == null) {
         form.setEndDate(new ThreeFieldDateInput(
             form.getEndDate().getFieldName(),
@@ -185,6 +207,7 @@ public class AppointmentCorrectionFormTestUtil {
       form.getOfflineNominationReference().setInputValue(offlineNominationReference);
       form.setOnlineNominationReference(onlineNominationReference);
       form.setForwardApprovedAppointmentId(forwardApprovedAppointmentId);
+      form.getParentWellboreAppointmentId().setInputValue(parentWellboreAppointmentId);
 
       return form;
     }
