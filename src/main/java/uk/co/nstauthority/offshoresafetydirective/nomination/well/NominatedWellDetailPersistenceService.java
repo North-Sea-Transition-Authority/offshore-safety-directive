@@ -43,9 +43,9 @@ class NominatedWellDetailPersistenceService {
     var nominatedWellDetail = new NominatedWellDetail(nominationDetail, Boolean.valueOf(form.getForAllWellPhases()));
     if (BooleanUtils.isFalse(Boolean.valueOf(form.getForAllWellPhases()))) {
       nominatedWellDetail
-          .setExplorationAndAppraisalPhase(Boolean.valueOf(form.getExplorationAndAppraisalPhase()))
-          .setDevelopmentPhase(Boolean.valueOf(form.getDevelopmentPhase()))
-          .setDecommissioningPhase(Boolean.valueOf(form.getDecommissioningPhase()));
+          .setExplorationAndAppraisalPhase(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()))
+          .setDevelopmentPhase(BooleanUtils.toBooleanObject(form.getDevelopmentPhase()))
+          .setDecommissioningPhase(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()));
     }
     return nominatedWellDetail;
   }
@@ -60,9 +60,9 @@ class NominatedWellDetailPersistenceService {
       nominatedWellDetail.setDevelopmentPhase(null);
       nominatedWellDetail.setDecommissioningPhase(null);
     } else {
-      nominatedWellDetail.setExplorationAndAppraisalPhase(Boolean.valueOf(form.getExplorationAndAppraisalPhase()));
-      nominatedWellDetail.setDevelopmentPhase(Boolean.valueOf(form.getDevelopmentPhase()));
-      nominatedWellDetail.setDecommissioningPhase(Boolean.valueOf(form.getDecommissioningPhase()));
+      nominatedWellDetail.setExplorationAndAppraisalPhase(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()));
+      nominatedWellDetail.setDevelopmentPhase(BooleanUtils.toBooleanObject(form.getDevelopmentPhase()));
+      nominatedWellDetail.setDecommissioningPhase(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()));
     }
     return nominatedWellDetail;
   }

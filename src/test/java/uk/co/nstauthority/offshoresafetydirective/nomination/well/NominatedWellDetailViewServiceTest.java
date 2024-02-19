@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -164,5 +167,48 @@ class NominatedWellDetailViewServiceTest {
     assertFalse(nominatedWellDetailView.isPresent());
   }
 
+  @ParameterizedTest(name = "WHEN all phases values are {0}")
+  @ValueSource(booleans = false)
+  @NullSource
+  void getNominatedWellDetailView_whenAllPhasesNotTrue_thenNoPhasesInSummary(Boolean notForPhase) {
 
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(notForPhase)
+        .withDevelopmentPhase(notForPhase)
+        .withDecommissioningPhase(notForPhase)
+        .build();
+
+    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedWellDetail));
+
+    var resultingWellDetailView = getNominatedWellDetailView.getNominatedWellDetailView(NOMINATION_DETAIL);
+
+    assertThat(resultingWellDetailView).isPresent();
+    assertThat(resultingWellDetailView.get().getWellPhases()).isEmpty();
+  }
+
+  @Test
+  void getNominatedWellDetailView_whenAllPhasesTrue_thenPhasesInSummary() {
+
+    var nominatedWellDetail = NominatedWellDetailTestUtil.builder()
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(true)
+        .withDevelopmentPhase(true)
+        .withDecommissioningPhase(true)
+        .build();
+
+    when(nominatedWellDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedWellDetail));
+
+    var resultingWellDetailView = getNominatedWellDetailView.getNominatedWellDetailView(NOMINATION_DETAIL);
+
+    assertThat(resultingWellDetailView).isPresent();
+    assertThat(resultingWellDetailView.get().getWellPhases())
+        .containsExactlyInAnyOrder(
+            WellPhase.EXPLORATION_AND_APPRAISAL,
+            WellPhase.DEVELOPMENT,
+            WellPhase.DECOMMISSIONING
+        );
+  }
 }

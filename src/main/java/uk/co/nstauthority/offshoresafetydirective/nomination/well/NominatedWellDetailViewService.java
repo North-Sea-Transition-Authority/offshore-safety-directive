@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -61,13 +62,13 @@ public class NominatedWellDetailViewService {
 
           var wellPhases = new ArrayList<WellPhase>();
 
-          if (entity.getExplorationAndAppraisalPhase() != null) {
+          if (BooleanUtils.isTrue(entity.getExplorationAndAppraisalPhase())) {
             wellPhases.add(WellPhase.EXPLORATION_AND_APPRAISAL);
           }
-          if (entity.getDevelopmentPhase() != null) {
+          if (BooleanUtils.isTrue(entity.getDevelopmentPhase())) {
             wellPhases.add(WellPhase.DEVELOPMENT);
           }
-          if (entity.getDecommissioningPhase() != null) {
+          if (BooleanUtils.isTrue(entity.getDecommissioningPhase())) {
             wellPhases.add(WellPhase.DECOMMISSIONING);
           }
           return new NominatedWellDetailView(wellSummaryItemViews, entity.getForAllWellPhases(), wellPhases);
