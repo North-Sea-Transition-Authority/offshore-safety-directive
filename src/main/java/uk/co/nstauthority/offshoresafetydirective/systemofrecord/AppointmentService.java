@@ -113,9 +113,9 @@ public class AppointmentService {
       case EXTANT -> {
         List<Appointment> appointmentsToSave = new ArrayList<>();
 
-        var forwardApprovedAppointments = removeLinkBetweenAppointmentAndCreatedByAppointments(appointment);
-        if (!forwardApprovedAppointments.isEmpty()) {
-          appointmentsToSave.addAll(forwardApprovedAppointments);
+        var appointmentsWithRemovedLinks = removeLinkBetweenAppointmentAndCreatedByAppointments(appointment);
+        if (!appointmentsWithRemovedLinks.isEmpty()) {
+          appointmentsToSave.addAll(appointmentsWithRemovedLinks);
         }
 
         appointment.setAppointmentStatus(AppointmentStatus.REMOVED);

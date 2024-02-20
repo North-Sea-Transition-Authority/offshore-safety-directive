@@ -34,7 +34,7 @@
     />
 
     <#assign warningClass>
-      <#if portalAssetType != "SUBAREA">${"govuk-!-margin-bottom-0"}</#if>
+      <#if !["SUBAREA", "WELLBORE"]?seq_contains(portalAssetType)>${"govuk-!-margin-bottom-0"}</#if>
     </#assign>
 
     <@fdsWarning.warning>
@@ -46,6 +46,11 @@
         <p class="govuk-body govuk-!-margin-bottom-0">
           Well appointments created by this forward area approval will remain in place. They will no longer be associated
           with the removed forward area approval.
+        </p>
+      <#elseif portalAssetType == "WELLBORE">
+        <p class="govuk-body govuk-!-margin-bottom-0">
+          Parent well appointments linked to this wellbore will remain in place. They will no longer be associated
+          with the removed appointment.
         </p>
       </#if>
     </@fdsWarning.warning>
