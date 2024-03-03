@@ -8,18 +8,21 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -59,19 +62,22 @@ class NominationWorkAreaItemServiceTest {
     assertThat(result).isEmpty();
   }
 
-  @Test
-  void getWorkAreaItems_whenItemReturned_thenHasCorrectPropertiesSet() {
-    var baseTime = Instant.now();
+  @ParameterizedTest
+  @MethodSource("providePostSubmissionNominationStatuses")
+  void getWorkAreaItems_whenPostSubmissionNomination_thenHasCorrectPropertiesSet(NominationStatus postSubmissionStatus) {
+    var now = Instant.now();
     var pearsReference = "pears/ref/1";
 
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
-        .withNominationStatus(NominationStatus.SUBMITTED)
-        .withCreatedTime(baseTime.minus(Period.ofDays(5)))
-        .withSubmittedTime(baseTime)
+        .withNominationStatus(postSubmissionStatus)
+        .withCreatedTime(now.minus(Period.ofDays(5)))
+        .withSubmittedTime(now)
         .withApplicantOrganisationId(1)
         .withNominatedOrganisationId(2)
         .withPearsReferences(pearsReference)
         .withHasNominationUpdateRequest(false)
+        .withPlannedAppointmentDate(LocalDate.of(2025, 2, 26))
+        .withFirstSubmittedOn(LocalDate.of(2024, 1, 10).atStartOfDay().toInstant(ZoneOffset.UTC))
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
@@ -87,92 +93,119 @@ class NominationWorkAreaItemServiceTest {
         .build();
 
     var ids = Stream.of(applicantOrganisation.id(), nominatedOrganisation.id())
-            .map(PortalOrganisationUnitId::new)
-            .toList();
+        .map(PortalOrganisationUnitId::new)
+        .toList();
 
     when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
         .thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 
-    assertThat(result).hasSize(1);
-
-    assertThat(result.get(0).modelProperties().getProperties().entrySet())
+    assertThat(result)
+        .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
         .containsExactlyInAnyOrder(
-            Map.entry("status",
-                NominationStatus.SUBMITTED.getScreenDisplayText()),
-            Map.entry("nominationType",
-                queryResult.getNominationDisplayType().getDisplayText()),
-            Map.entry("applicantOrganisation",
-                applicantOrganisation.name()),
-            Map.entry("nominationOrganisation",
-                nominatedOrganisation.name()),
-            Map.entry("applicantReference",
-                queryResult.getApplicantReference().reference()),
-            Map.entry("pearsReferences",
-                queryResult.getPearsReferences().references()),
-            Map.entry("hasUpdateRequest", false)
+            Set.of(
+              entry("status", postSubmissionStatus.getScreenDisplayText()),
+              entry("nominationType", queryResult.getNominationDisplayType().getDisplayText()),
+              entry("applicantOrganisation", applicantOrganisation.name()),
+              entry("nominationOrganisation", nominatedOrganisation.name()),
+              entry("applicantReference", queryResult.getApplicantReference().reference()),
+              entry("pearsReferences", queryResult.getPearsReferences().references()),
+              entry("hasUpdateRequest", false),
+              entry("plannedAppointmentDate", "26 February 2025"),
+              entry("nominationFirstSubmittedOn", "10 January 2024")
+            )
         );
   }
 
   @ParameterizedTest
-  @EnumSource(value = NominationStatus.class, mode = EnumSource.Mode.EXCLUDE, names = "DELETED")
-  void getWorkAreaItems_assertPearsReferenceOnlyVisibleForPostSubmission(NominationStatus nominationStatus) {
+  @MethodSource("providePreSubmissionNominationStatuses")
+  void getWorkAreaItems_whenPreSubmissionNomination_thenHasCorrectPropertiesSet(NominationStatus preSubmissionStatus) {
+    var now = Instant.now();
+    var pearsReference = "pears/ref/1";
+
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
-        .withNominationStatus(nominationStatus)
+        .withNominationStatus(preSubmissionStatus)
+        // set the pears references and first submission date to prove they are not set on work area item even if provided
+        .withPearsReferences(pearsReference)
+        .withFirstSubmittedOn(LocalDate.of(2024, 1, 10).atStartOfDay().toInstant(ZoneOffset.UTC))
+        // set other valid fields regardless of status
+        .withCreatedTime(now.minus(Period.ofDays(5)))
+        .withSubmittedTime(null)
+        .withApplicantOrganisationId(1)
+        .withNominatedOrganisationId(2)
+        .withHasNominationUpdateRequest(false)
+        .withPlannedAppointmentDate(LocalDate.of(2025, 2, 26))
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
+    var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(1)
+        .withName("Applicant org")
+        .build();
+
+    var nominatedOrganisation = PortalOrganisationDtoTestUtil.builder()
+        .withId(2)
+        .withName("Nominated org")
+        .build();
+
+    var ids = Stream.of(applicantOrganisation.id(), nominatedOrganisation.id())
+        .map(PortalOrganisationUnitId::new)
+        .toList();
+
+    when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
+        .thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
+
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 
-    var assertion = assertThat(result)
-        .first()
-        .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().keySet().stream().toList())
-        .asList();
-
-    if (nominationStatus.getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION)) {
-      assertion.contains("pearsReferences");
-    } else {
-      assertion.doesNotContain("pearsReferences");
-    }
+    assertThat(result)
+        .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
+        .containsExactlyInAnyOrder(
+            Set.of(
+              entry("status", preSubmissionStatus.getScreenDisplayText()),
+              entry("nominationType", queryResult.getNominationDisplayType().getDisplayText()),
+              entry("applicantOrganisation", applicantOrganisation.name()),
+              entry("nominationOrganisation", nominatedOrganisation.name()),
+              entry("applicantReference", queryResult.getApplicantReference().reference()),
+              entry("hasUpdateRequest", false),
+              entry("plannedAppointmentDate", "26 February 2025")
+            )
+        );
   }
 
   @Test
   void getWorkAreaItems_whenItemReturned_andMissingValues_thenHasDefaultText() {
-    var baseTime = Instant.now();
 
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
         .withNominationStatus(NominationStatus.SUBMITTED)
-        .withCreatedTime(baseTime.minus(Period.ofDays(5)))
-        .withSubmittedTime(baseTime)
-        .withApplicantOrganisationId(1)
-        .withNominatedOrganisationId(2)
+        .withApplicantOrganisationId(null)
+        .withNominatedOrganisationId(null)
         .withApplicantReference(null)
         .withPearsReferences(null)
         .withHasNominationUpdateRequest(false)
+        .withPlannedAppointmentDate(null)
+        .withFirstSubmittedOn(null)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
     var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
 
-    assertThat(result).hasSize(1);
-
-    assertThat(result.get(0).modelProperties().getProperties().entrySet())
+    assertThat(result)
+        .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
         .containsExactlyInAnyOrder(
-            Map.entry("status",
-                NominationStatus.SUBMITTED.getScreenDisplayText()),
-            Map.entry("nominationType",
-                queryResult.getNominationDisplayType().getDisplayText()),
-            Map.entry("applicantOrganisation", "Not provided"),
-            Map.entry("nominationOrganisation", "Not provided"),
-            Map.entry("applicantReference", "Not provided"),
-            Map.entry("pearsReferences", ""),
-            Map.entry("hasUpdateRequest", false)
-        )
-        .map(Map.Entry::getKey)
-        .doesNotContain("pearsReferencesAbbreviated");
+            Set.of(
+              entry("status", NominationStatus.SUBMITTED.getScreenDisplayText()),
+              entry("nominationType", queryResult.getNominationDisplayType().getDisplayText()),
+              entry("applicantOrganisation", "Not provided"),
+              entry("nominationOrganisation", "Not provided"),
+              entry("applicantReference", "Not provided"),
+              entry("pearsReferences", ""),
+              entry("hasUpdateRequest", false),
+              entry("plannedAppointmentDate", "Not provided")
+            )
+        );
   }
 
   @Test
@@ -449,5 +482,18 @@ class NominationWorkAreaItemServiceTest {
     assertThat(result).hasSize(1);
     assertThat(result.get(0).modelProperties().getProperties())
         .containsEntry("hasUpdateRequest", false);
+  }
+
+  private static Stream<Arguments> providePostSubmissionNominationStatuses() {
+    return NominationStatus.getPostSubmissionStatuses()
+        .stream()
+        .map(Arguments::of);
+  }
+
+  private static Stream<Arguments> providePreSubmissionNominationStatuses() {
+    return NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.PRE_SUBMISSION)
+        .stream()
+        .filter(status -> !NominationStatus.DELETED.equals(status))
+        .map(Arguments::of);
   }
 }

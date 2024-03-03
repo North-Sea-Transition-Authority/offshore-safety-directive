@@ -11,9 +11,13 @@ import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +53,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberRoleTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
@@ -1353,6 +1358,176 @@ class NominationWorkAreaQueryServiceIntegrationTest {
     // THEN the item should not have an update request
     assertThat(workAreaItems).hasSize(1);
     assertFalse(workAreaItems.get(0).getNominationHasUpdateRequest().value());
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_whenMoreThatOneVersionSubmitted_thenFirstSubmittedIsFromFirstVersion() {
+
+    // GIVEN a user with access to the work area exist
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has multiple submitted version
+    var nomination = givenNominationExists();
+
+    var yesterday = LocalDate.now().minusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+
+    var firstNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(1)
+        .withSubmittedInstant(yesterday)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(firstNominationDetail);
+
+    var today = Instant.now();
+
+    var secondNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(2)
+        .withStatus(NominationStatus.SUBMITTED)
+        .withSubmittedInstant(today)
+        .build();
+
+    givenNominationDetailExists(secondNominationDetail);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the first submission date is from the first version
+    assertThat(workAreaItems)
+        .extracting(NominationWorkAreaQueryResult::getNominationFirstSubmittedOn)
+        .containsExactly(Optional.of(yesterday));
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_whenNoSubmittedVersion_thenFirstSubmittedIsNotSet() {
+
+    var applicantOrganisationGroupId = 100;
+    var applicantOrganisationUnitId = 200;
+
+    // GIVEN a user with access to the work area exist
+    var nominationSubmitter = givenUserExistsInIndustryTeamWithRolesAndApplicantOrgGroupId(
+        Collections.singleton(IndustryTeamRole.NOMINATION_SUBMITTER),
+        applicantOrganisationGroupId
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(nominationSubmitter)
+        .setSecurityContext();
+
+    // AND their industry organisation group exists on the portal
+    var organisationUnit = PortalOrganisationDtoTestUtil.builder()
+        .withId(applicantOrganisationUnitId)
+        .build();
+
+    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(applicantOrganisationGroupId)
+        .withOrganisation(organisationUnit)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
+        List.of(applicantOrganisationGroupId),
+        NominationWorkAreaQueryService.ORGANISATION_GROUP_REQUEST_PURPOSE)
+    )
+        .thenReturn(List.of(organisationGroup));
+
+    // AND there exists a draft nomination
+    var nomination = givenNominationExists();
+
+    var firstNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(1)
+        .withSubmittedInstant(null)
+        .withStatus(NominationStatus.DRAFT)
+        .build();
+
+    givenNominationDetailExistsWithApplicant(firstNominationDetail, applicantOrganisationUnitId);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the first submission date is an empty optional as the nomination has never been submitted
+    assertThat(workAreaItems)
+        .extracting(NominationWorkAreaQueryResult::getNominationFirstSubmittedOn)
+        .containsExactly(Optional.empty());
+  }
+
+  @Test
+  void getNominationDetailsForWorkArea_whenMoreThatOneVersionSubmitted_thenPlannedAppointmentDateIsFromLatestVersion() {
+
+    // GIVEN a user with access to the work area exist
+    var manageNominationUser = givenUserExistsInTeamWithRoles(
+        TeamType.REGULATOR,
+        Collections.singleton(RegulatorTeamRole.MANAGE_NOMINATION)
+    );
+
+    // AND the user is logged in
+    SamlAuthenticationUtil.Builder()
+        .withUser(manageNominationUser)
+        .setSecurityContext();
+
+    // AND there exist a nomination which has multiple submitted versions
+    var nomination = givenNominationExists();
+
+    var firstNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(1)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(firstNominationDetail);
+
+    var yesterday = LocalDate.now().minusDays(1);
+
+    // AND each version has a different planned start date
+    var firstNominationVersionNomineeDetail = NomineeDetailTestingUtil.builder()
+        .withId(null)
+        .withNominationDetail(firstNominationDetail)
+        .withPlannedStartDate(yesterday)
+        .build();
+
+    persistAndFlush(firstNominationVersionNomineeDetail);
+
+    var secondNominationDetail = NominationDetailTestUtil.builder()
+        .withId(null)
+        .withNomination(nomination)
+        .withVersion(2)
+        .withStatus(NominationStatus.SUBMITTED)
+        .build();
+
+    givenNominationDetailExists(secondNominationDetail);
+
+    var today = LocalDate.now();
+
+    var secondNominationVersionNomineeDetail = NomineeDetailTestingUtil.builder()
+        .withId(null)
+        .withNominationDetail(secondNominationDetail)
+        .withPlannedStartDate(today)
+        .build();
+
+    persistAndFlush(secondNominationVersionNomineeDetail);
+
+    // WHEN we get the work area items for the logged in user
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    // THEN the planned start date is that of the second nomination version
+    assertThat(workAreaItems)
+        .extracting(NominationWorkAreaQueryResult::getPlannedAppointmentDate)
+        .containsExactly(today);
   }
 
   private ServiceUserDetail givenUserExistsInTeamWithRoles(TeamType teamType, Set<TeamRole> teamRoles) {

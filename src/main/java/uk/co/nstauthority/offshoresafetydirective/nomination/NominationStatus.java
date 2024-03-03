@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
@@ -18,8 +17,6 @@ public enum NominationStatus implements DisplayableEnum {
   private final String displayText;
   private final Integer displayOrder;
   private final NominationStatusSubmissionStage submissionStage;
-
-  private static final Set<NominationStatus> CLOSED_STATUSES = EnumSet.of(APPOINTED, WITHDRAWN, DELETED, OBJECTED);
 
   NominationStatus(String displayText, Integer displayOrder,
                    NominationStatusSubmissionStage submissionStage) {
@@ -42,13 +39,13 @@ public enum NominationStatus implements DisplayableEnum {
     return submissionStage;
   }
 
-  public static Set<NominationStatus> getClosedStatuses() {
-    return CLOSED_STATUSES;
-  }
-
   public static Set<NominationStatus> getAllStatusesForSubmissionStage(NominationStatusSubmissionStage stage) {
     return Arrays.stream(values())
         .filter(nominationStatus -> nominationStatus.getSubmissionStage().equals(stage))
         .collect(Collectors.toSet());
+  }
+
+  public static Set<NominationStatus> getPostSubmissionStatuses() {
+    return getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);
   }
 }

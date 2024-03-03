@@ -9,7 +9,7 @@
 <@defaultPage
   htmlTitle=pageTitle
   pageHeading=pageTitle
-  pageSize=PageSize.TWO_THIRDS_COLUMN
+  pageSize=PageSize.FULL_COLUMN
 >
   <#if startNominationUrl?has_content>
     <@fdsAction.link

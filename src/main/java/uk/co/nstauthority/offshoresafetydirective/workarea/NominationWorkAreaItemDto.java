@@ -1,5 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Optional;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
@@ -21,7 +24,8 @@ record NominationWorkAreaItemDto(
     NominationCreatedTime createdTime,
     NominationSubmittedTime submittedTime,
     PearsReferences pearsReferences,
-    NominationHasUpdateRequest nominationHasUpdateRequest
+    NominationHasUpdateRequest nominationHasUpdateRequest,
+    LocalDate plannedAppointmentDate,
+    Optional<Instant> nominationFirstSubmittedOn
 ) {
-
 }

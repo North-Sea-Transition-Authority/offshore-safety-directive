@@ -13,7 +13,6 @@ import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantReference;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PearsReferences;
@@ -78,9 +77,22 @@ class NominationWorkAreaItemService {
                 .map(PortalOrganisationDto::name)
                 .orElse(DEFAULT_TEXT)
         )
-        .addProperty("hasUpdateRequest", dto.nominationHasUpdateRequest().value());
+        .addProperty("hasUpdateRequest", dto.nominationHasUpdateRequest().value())
+        .addProperty(
+            "plannedAppointmentDate",
+            Optional.ofNullable(dto.plannedAppointmentDate())
+                .map(DateUtil::formatLongDate)
+                .orElse(DEFAULT_TEXT)
+        );
 
-    if (canAddPearsReferencesToModelProperties(dto)) {
+    if (isPostSubmission(dto)) {
+      if (dto.nominationFirstSubmittedOn().isPresent()) {
+        modelProperties.addProperty(
+            "nominationFirstSubmittedOn",
+            DateUtil.formatLongDate(dto.nominationFirstSubmittedOn().get())
+        );
+      }
+
       addPearsReferencesToModelProperties(modelProperties, dto);
     }
 
@@ -132,13 +144,6 @@ class NominationWorkAreaItemService {
     };
   }
 
-  private boolean canAddPearsReferencesToModelProperties(NominationWorkAreaItemDto dto) {
-    return switch (dto.nominationStatus()) {
-      case DELETED -> throw getDeletedNominationInWorkAreaException(dto);
-      default -> dto.nominationStatus().getSubmissionStage().equals(NominationStatusSubmissionStage.POST_SUBMISSION);
-    };
-  }
-
   private void addPearsReferencesToModelProperties(WorkAreaItemModelProperties modelProperties,
                                                    NominationWorkAreaItemDto dto) {
 
@@ -160,6 +165,10 @@ class NominationWorkAreaItemService {
             dto.nominationId().id(),
             dto.nominationStatus()
         ));
+  }
+
+  private boolean isPostSubmission(NominationWorkAreaItemDto nominationWorkAreaItem) {
+    return NominationStatus.getPostSubmissionStatuses().contains(nominationWorkAreaItem.nominationStatus());
   }
 
 }

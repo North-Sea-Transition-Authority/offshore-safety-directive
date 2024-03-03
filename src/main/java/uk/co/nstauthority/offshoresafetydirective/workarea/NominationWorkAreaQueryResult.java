@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -31,12 +33,15 @@ class NominationWorkAreaQueryResult {
   private final NominationVersion nominationVersion;
   private final PearsReferences pearsReferences;
   private final NominationHasUpdateRequest nominationHasUpdateRequest;
+  private final LocalDate plannedAppointmentDate;
+  private final Instant nominationFirstSubmittedOn;
 
   NominationWorkAreaQueryResult(UUID nominationId, Integer applicantOrganisationId, String nominationReference,
                                 String applicantReference, Integer nominatedOrganisationId, String wellsSelectionType,
                                 boolean hasInstallations, String nominationStatus, Timestamp createdTime,
                                 Timestamp submittedTime, Integer nominationVersion,
-                                String pearsReferences, boolean nominationHasUpdateRequest) {
+                                String pearsReferences, boolean nominationHasUpdateRequest,
+                                LocalDate plannedAppointmentDate, Timestamp nominationFirstSubmittedOn) {
 
     this.nominationId = getRecordOrNull(nominationId, NominationId::new);
     this.applicantOrganisationId = getRecordOrNull(applicantOrganisationId, ApplicantOrganisationId::new);
@@ -56,6 +61,10 @@ class NominationWorkAreaQueryResult {
         .map(NominationSubmittedTime::new)
         .orElse(null);
     this.nominationVersion = getRecordOrNull(nominationVersion, NominationVersion::new);
+    this.plannedAppointmentDate = plannedAppointmentDate;
+    this.nominationFirstSubmittedOn = Optional.ofNullable(nominationFirstSubmittedOn)
+        .map(Timestamp::toInstant)
+        .orElse(null);
   }
 
   private WellSelectionType getWellSelectionTypeFromString(String wellSelectionTypeText) {
@@ -115,5 +124,13 @@ class NominationWorkAreaQueryResult {
 
   public NominationHasUpdateRequest getNominationHasUpdateRequest() {
     return nominationHasUpdateRequest;
+  }
+
+  LocalDate getPlannedAppointmentDate() {
+    return plannedAppointmentDate;
+  }
+
+  Optional<Instant> getNominationFirstSubmittedOn() {
+    return Optional.ofNullable(nominationFirstSubmittedOn);
   }
 }

@@ -1,13 +1,14 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.stream.Stream;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,19 +31,22 @@ class NominationWorkAreaItemTransformerServiceTest {
   private NominationWorkAreaItemTransformerService nominationWorkAreaItemTransformerService;
 
   @Test
-  void getWorkAreaDtos_whenPortalOrgsFound_thenAllFieldsMapped() {
+  void getWorkAreaDtos() {
 
-    var baseInstant = Instant.now();
+    var now = Instant.now();
 
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
-        .withCreatedTime(baseInstant.minus(Period.ofDays(2)))
-        .withSubmittedTime(baseInstant)
+        .withCreatedTime(now.minus(Period.ofDays(2)))
+        .withSubmittedTime(now)
+        .withPlannedAppointmentDate(LocalDate.now().minusDays(1))
+        .withFirstSubmittedOn(now)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
     var applicantOrganisationId = queryResult.getApplicantOrganisationId().id();
     var nominatedOrganisationId = queryResult.getNominatedOrganisationId().id();
+
     var ids = Stream.of(applicantOrganisationId, nominatedOrganisationId)
         .map(PortalOrganisationUnitId::new)
         .toList();
@@ -71,9 +75,11 @@ class NominationWorkAreaItemTransformerServiceTest {
         NominationWorkAreaItemDto::createdTime,
         NominationWorkAreaItemDto::submittedTime,
         NominationWorkAreaItemDto::nominationVersion,
-        NominationWorkAreaItemDto::nominationHasUpdateRequest
+        NominationWorkAreaItemDto::nominationHasUpdateRequest,
+        NominationWorkAreaItemDto::plannedAppointmentDate,
+        NominationWorkAreaItemDto::nominationFirstSubmittedOn
     ).containsExactly(
-        Tuple.tuple(
+        tuple(
             queryResult.getNominationId(),
             queryResult.getApplicantOrganisationId().id(),
             queryResult.getNominationReference(),
@@ -84,7 +90,9 @@ class NominationWorkAreaItemTransformerServiceTest {
             queryResult.getCreatedTime(),
             queryResult.getSubmittedTime(),
             queryResult.getNominationVersion(),
-            queryResult.getNominationHasUpdateRequest()
+            queryResult.getNominationHasUpdateRequest(),
+            queryResult.getPlannedAppointmentDate(),
+            queryResult.getNominationFirstSubmittedOn()
         )
     );
   }
@@ -92,17 +100,16 @@ class NominationWorkAreaItemTransformerServiceTest {
   @Test
   void getWorkAreaDtos_whenPortalOrgsNotFound_thenNull() {
 
-    var baseInstant = Instant.now();
-
     var queryResult = NominationWorkAreaQueryResultTestUtil.builder()
-        .withCreatedTime(baseInstant.minus(Period.ofDays(2)))
-        .withSubmittedTime(baseInstant)
+        .withApplicantOrganisationId(100)
+        .withNominatedOrganisationId(200)
         .build();
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
     var applicantOrganisationId = queryResult.getApplicantOrganisationId().id();
     var nominatedOrganisationId = queryResult.getNominatedOrganisationId().id();
+
     var ids = Stream.of(applicantOrganisationId, nominatedOrganisationId)
         .map(PortalOrganisationUnitId::new)
         .toList();
@@ -112,30 +119,13 @@ class NominationWorkAreaItemTransformerServiceTest {
 
     var result = nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos();
 
-    assertThat(result).extracting(
-        NominationWorkAreaItemDto::nominationId,
-        NominationWorkAreaItemDto::applicantOrganisationUnitDto,
-        NominationWorkAreaItemDto::nominationReference,
-        NominationWorkAreaItemDto::applicantReference,
-        NominationWorkAreaItemDto::nominatedOrganisationUnitDto,
-        NominationWorkAreaItemDto::nominationDisplay,
-        NominationWorkAreaItemDto::nominationStatus,
-        NominationWorkAreaItemDto::createdTime,
-        NominationWorkAreaItemDto::submittedTime,
-        NominationWorkAreaItemDto::nominationVersion
-    ).containsExactly(
-        Tuple.tuple(
-            queryResult.getNominationId(),
-            null,
-            queryResult.getNominationReference(),
-            queryResult.getApplicantReference(),
-            null,
-            queryResult.getNominationDisplayType(),
-            queryResult.getNominationStatus(),
-            queryResult.getCreatedTime(),
-            queryResult.getSubmittedTime(),
-            queryResult.getNominationVersion()
+    assertThat(result)
+        .extracting(
+            NominationWorkAreaItemDto::applicantOrganisationUnitDto,
+            NominationWorkAreaItemDto::nominatedOrganisationUnitDto
         )
-    );
+        .containsExactly(
+            tuple(null, null)
+        );
   }
 }

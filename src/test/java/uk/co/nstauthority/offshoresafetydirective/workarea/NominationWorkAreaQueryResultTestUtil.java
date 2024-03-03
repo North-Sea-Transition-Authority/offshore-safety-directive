@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -28,6 +29,8 @@ class NominationWorkAreaQueryResultTestUtil {
     private Integer nominationVersion = 1;
     private String pearsReferences = "pears/1";
     private boolean nominationHasUpdateRequest = false;
+    private LocalDate plannedAppointmentDate = LocalDate.now();
+    private Instant nominationFirstSubmittedOn = null;
 
     private Builder() {
 
@@ -98,6 +101,16 @@ class NominationWorkAreaQueryResultTestUtil {
       return this;
     }
 
+    public Builder withPlannedAppointmentDate(LocalDate plannedAppointmentDate) {
+      this.plannedAppointmentDate = plannedAppointmentDate;
+      return this;
+    }
+
+    public Builder withFirstSubmittedOn(Instant firstSubmittedOn) {
+      this.nominationFirstSubmittedOn = firstSubmittedOn;
+      return this;
+    }
+
     public NominationWorkAreaQueryResult build() {
 
       var createdTimestamp = Timestamp.from(createdTime);
@@ -105,11 +118,15 @@ class NominationWorkAreaQueryResultTestUtil {
           .map(Timestamp::from)
           .orElse(null);
 
+      var nominationFirstSubmittedOnTimestamp = Optional.ofNullable(nominationFirstSubmittedOn)
+          .map(Timestamp::from)
+          .orElse(null);
+
       return new NominationWorkAreaQueryResult(nominationId, applicantOrganisationId, nominationReference, applicantReference,
           nominatedOrganisationId,
           Optional.ofNullable(wellSelectionType).map(Enum::name).orElse(null),
           hasInstallations, nominationStatus.name(), createdTimestamp, submittedTimestamp, nominationVersion,
-          pearsReferences, nominationHasUpdateRequest);
+          pearsReferences, nominationHasUpdateRequest, plannedAppointmentDate, nominationFirstSubmittedOnTimestamp);
     }
   }
 

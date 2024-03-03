@@ -62,6 +62,9 @@ class NominationWorkAreaQueryService {
 
   private static final CaseEvents UPDATE_REQUESTS = CASE_EVENTS.as("update_requests");
 
+  private static final NominationDetails FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION =
+      NOMINATION_DETAILS.as("first_submitted_nomination_detail");
+
   static final RequestPurpose ORGANISATION_GROUP_REQUEST_PURPOSE =
       new RequestPurpose("Get organisation groups that are linked to users industry team roles");
 
@@ -104,27 +107,35 @@ class NominationWorkAreaQueryService {
             NOMINATION_DETAILS.SUBMITTED_DATETIME,
             NOMINATION_DETAILS.VERSION,
             NOMINATION_PORTAL_REFERENCES.PORTAL_REFERENCES.as("pears_references"),
-            nvl2(UPDATE_REQUESTS.UUID, val(true), val(false)).as("has_update_request")
+            nvl2(UPDATE_REQUESTS.UUID, val(true), val(false)).as("has_update_request"),
+            NOMINEE_DETAILS.PLANNED_START_DATE.as("planned_appointment_date"),
+            FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION.SUBMITTED_DATETIME.as("first_submitted_on")
         )
         .from(NOMINATIONS)
         .join(NOMINATION_DETAILS)
-        .on(NOMINATION_DETAILS.NOMINATION_ID.eq(NOMINATIONS.ID))
+          .on(NOMINATION_DETAILS.NOMINATION_ID.eq(NOMINATIONS.ID))
         .join(APPLICANT_DETAILS)
-        .on(APPLICANT_DETAILS.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
+          .on(APPLICANT_DETAILS.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
+        .leftJoin(FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION)
+          .on(FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION.NOMINATION_ID.eq(NOMINATIONS.ID))
+          .and(FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION.VERSION.eq(1))
+          .and(FIRST_SUBMITTED_NOMINATION_DETAIL_VERSION.STATUS.in(
+              NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+          ))
         .leftJoin(NOMINEE_DETAILS)
-        .on(NOMINEE_DETAILS.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
+          .on(NOMINEE_DETAILS.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
         .leftJoin(WELL_SELECTION_SETUP)
-        .on(WELL_SELECTION_SETUP.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
+          .on(WELL_SELECTION_SETUP.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
         .leftJoin(INSTALLATION_INCLUSION)
-        .on(INSTALLATION_INCLUSION.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
+          .on(INSTALLATION_INCLUSION.NOMINATION_DETAIL_ID.eq(NOMINATION_DETAILS.ID))
         .leftJoin(NOMINATION_PORTAL_REFERENCES)
-        .on(NOMINATION_PORTAL_REFERENCES.NOMINATION_ID.eq(NOMINATIONS.ID))
-        .and(NOMINATION_PORTAL_REFERENCES.PORTAL_REFERENCE_TYPE.eq(val(PortalReferenceType.PEARS.name())))
+          .on(NOMINATION_PORTAL_REFERENCES.NOMINATION_ID.eq(NOMINATIONS.ID))
+          .and(NOMINATION_PORTAL_REFERENCES.PORTAL_REFERENCE_TYPE.eq(val(PortalReferenceType.PEARS.name())))
         .leftJoin(UPDATE_REQUESTS)
-        .on(UPDATE_REQUESTS.TYPE.eq(val(CaseEventType.UPDATE_REQUESTED.name())))
-        .and(NOMINATION_DETAILS.STATUS.notEqual(CaseEventType.WITHDRAWN.name()))
-        .and(UPDATE_REQUESTS.NOMINATION_ID.eq(NOMINATIONS.ID))
-        .and(UPDATE_REQUESTS.NOMINATION_VERSION.eq(NOMINATION_DETAILS.VERSION))
+          .on(UPDATE_REQUESTS.TYPE.eq(val(CaseEventType.UPDATE_REQUESTED.name())))
+          .and(NOMINATION_DETAILS.STATUS.notEqual(CaseEventType.WITHDRAWN.name()))
+          .and(UPDATE_REQUESTS.NOMINATION_ID.eq(NOMINATIONS.ID))
+          .and(UPDATE_REQUESTS.NOMINATION_VERSION.eq(NOMINATION_DETAILS.VERSION))
         // Connects all conditions in collections with Condition::and calls
         .where(conditions)
         .fetchInto(NominationWorkAreaQueryResult.class);

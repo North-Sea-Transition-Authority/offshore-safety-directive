@@ -51,7 +51,9 @@ class NominationWorkAreaItemTransformerService {
             result.getCreatedTime(),
             result.getSubmittedTime(),
             result.getPearsReferences(),
-            result.getNominationHasUpdateRequest()
+            result.getNominationHasUpdateRequest(),
+            result.getPlannedAppointmentDate(),
+            result.getNominationFirstSubmittedOn()
         ))
         .toList();
   }
