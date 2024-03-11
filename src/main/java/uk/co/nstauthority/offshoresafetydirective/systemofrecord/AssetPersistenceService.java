@@ -24,7 +24,7 @@ public class AssetPersistenceService {
   private final AssetAccessService assetAccessService;
 
   @Autowired
-  AssetPersistenceService(AssetRepository assetRepository, PortalAssetRetrievalService portalAssetRetrievalService,
+  public AssetPersistenceService(AssetRepository assetRepository, PortalAssetRetrievalService portalAssetRetrievalService,
                           AssetAccessService assetAccessService) {
     this.assetRepository = assetRepository;
     this.portalAssetRetrievalService = portalAssetRetrievalService;
@@ -84,13 +84,12 @@ public class AssetPersistenceService {
   }
 
   @Transactional
-  public AssetDto getOrCreateAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
+  public Asset getOrCreateAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
 
-    var existingAsset = assetAccessService.getExtantAsset(portalAssetId, portalAssetType);
+    var existingAsset = assetAccessService.getExtantAsset(portalAssetId.id(), portalAssetType);
 
     var assetName = existingAsset
-        .map(AssetDto::assetName)
-        .map(AssetName::value)
+        .map(Asset::getAssetName)
         .or(() -> portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
         .orElseThrow(() -> new IllegalStateException(
             "No portal asset of type [%s] found with ID [%s]".formatted(
@@ -106,8 +105,7 @@ public class AssetPersistenceService {
           new AssetName(assetName)
       );
 
-      var persistedAsset = persistNominatedAsset(nominatedAssetDto);
-      return AssetDto.fromAsset(persistedAsset);
+      return persistNominatedAsset(nominatedAssetDto);
     });
   }
 

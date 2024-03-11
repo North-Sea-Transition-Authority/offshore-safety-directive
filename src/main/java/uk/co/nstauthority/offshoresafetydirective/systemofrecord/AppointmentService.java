@@ -68,6 +68,22 @@ public class AppointmentService {
   }
 
   @Transactional
+  public Appointment createAppointmentLinkedToOtherAppointment(Appointment linkedAppointment, Asset asset,
+                                                               LocalDate responsibleFromDate,
+                                                               AppointmentType appointmentType, Integer operatorId,
+                                                               AppointmentStatus appointmentStatus) {
+    var appointment = new Appointment();
+    appointment.setAsset(asset);
+    appointment.setResponsibleFromDate(responsibleFromDate);
+    appointment.setCreatedByAppointmentId(linkedAppointment.getId());
+    appointment.setAppointmentType(appointmentType);
+    appointment.setAppointedPortalOperatorId(operatorId);
+    appointment.setCreatedDatetime(clock.instant());
+    appointment.setAppointmentStatus(appointmentStatus);
+    return appointmentRepository.save(appointment);
+  }
+
+  @Transactional
   public List<Appointment> createAppointmentsFromNomination(NominationDetail nominationDetail,
                                                             LocalDate appointmentConfirmationDate,
                                                             Collection<Asset> assets) {

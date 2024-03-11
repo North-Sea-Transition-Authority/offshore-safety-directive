@@ -23,7 +23,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationPhase;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AssetPersistenceServiceTest {
@@ -147,7 +146,7 @@ class AssetPersistenceServiceTest {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.INSTALLATION;
 
-    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getExtantAsset(portalAssetId.id(), portalAssetType))
         .thenReturn(Optional.empty());
 
     when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
@@ -167,7 +166,7 @@ class AssetPersistenceServiceTest {
     var portalAssetId = new PortalAssetId("123");
     var portalAssetType = PortalAssetType.INSTALLATION;
 
-    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
+    when(assetAccessService.getExtantAsset(portalAssetId.id(), portalAssetType))
         .thenReturn(Optional.empty());
 
     var assetName = "asset name";
@@ -182,12 +181,12 @@ class AssetPersistenceServiceTest {
 
     assertThat(result)
         .extracting(
-            AssetDto::portalAssetId,
-            AssetDto::portalAssetType,
-            assetDto -> assetDto.assetName().value()
+            Asset::getPortalAssetId,
+            Asset::getPortalAssetType,
+            Asset::getAssetName
         )
         .containsExactly(
-            portalAssetId,
+            portalAssetId.id(),
             portalAssetType,
             assetName
         );
@@ -217,25 +216,25 @@ class AssetPersistenceServiceTest {
     var portalAssetType = PortalAssetType.INSTALLATION;
     var assetName = "asset name";
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetId(portalAssetId.id())
         .withPortalAssetType(portalAssetType)
         .withAssetName(assetName)
         .build();
 
-    when(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
-        .thenReturn(Optional.of(assetDto));
+    when(assetAccessService.getExtantAsset(portalAssetId.id(), portalAssetType))
+        .thenReturn(Optional.of(asset));
 
     var result = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
 
     assertThat(result)
         .extracting(
-            AssetDto::portalAssetId,
-            AssetDto::portalAssetType,
-            dto -> dto.assetName().value()
+            Asset::getPortalAssetId,
+            Asset::getPortalAssetType,
+            Asset::getAssetName
         )
         .containsExactly(
-            portalAssetId,
+            portalAssetId.id(),
             portalAssetType,
             assetName
         );

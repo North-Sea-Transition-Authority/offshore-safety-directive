@@ -7,17 +7,17 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-class AppointmentRemovedEventPublisher {
+public class AppointmentRemovedEventPublisher {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentRemovedEventPublisher.class);
   private final ApplicationEventPublisher applicationEventPublisher;
 
   @Autowired
-  AppointmentRemovedEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+  public AppointmentRemovedEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
     this.applicationEventPublisher = applicationEventPublisher;
   }
 
-  void publish(AppointmentId appointmentId) {
+  public void publish(AppointmentId appointmentId) {
     applicationEventPublisher.publishEvent(
         new AppointmentRemovedEvent(appointmentId)
     );

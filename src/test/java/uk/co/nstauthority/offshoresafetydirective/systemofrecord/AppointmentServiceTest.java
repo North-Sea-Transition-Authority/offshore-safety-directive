@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -68,11 +69,12 @@ class AppointmentServiceTest {
 
   private AppointmentService appointmentService;
   private AppointmentService appointmentServiceSpy;
+  private Clock clock;
 
   @BeforeEach
   void setup() {
 
-    var clock = Clock.fixed(FIXED_INSTANT, ZoneId.systemDefault());
+    clock = Clock.fixed(FIXED_INSTANT, ZoneId.systemDefault());
 
     appointmentService = new AppointmentService(
         appointmentRepository,
@@ -553,5 +555,50 @@ class AppointmentServiceTest {
     );
 
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  void createAppointmentLinkedToOtherAppointment() {
+
+    doAnswer(invocationOnMock -> invocationOnMock.getArgument(0)).when(appointmentRepository).save(any());
+
+    var linkedAppointment = AppointmentTestUtil.builder().build();
+    var assetLinkedToNewAppointment = AssetTestUtil.builder().build();
+    var confirmationDate = LocalDate.now().minusDays(1);
+    var operatorId = 100;
+    var resultingAppointment = appointmentService.createAppointmentLinkedToOtherAppointment(
+        linkedAppointment,
+        assetLinkedToNewAppointment,
+        confirmationDate,
+        AppointmentType.PARENT_WELLBORE,
+        operatorId,
+        AppointmentStatus.EXTANT
+    );
+
+    assertThat(resultingAppointment)
+        .extracting(
+            Appointment::getAsset,
+            Appointment::getAppointedPortalOperatorId,
+            Appointment::getResponsibleFromDate,
+            Appointment::getResponsibleToDate,
+            Appointment::getAppointmentType,
+            Appointment::getCreatedByNominationId,
+            Appointment::getCreatedByLegacyNominationReference,
+            Appointment::getCreatedByAppointmentId,
+            Appointment::getCreatedDatetime,
+            Appointment::getAppointmentStatus
+        )
+        .containsExactly(
+            assetLinkedToNewAppointment,
+            operatorId,
+            confirmationDate,
+            null,
+            AppointmentType.PARENT_WELLBORE,
+            null,
+            null,
+            linkedAppointment.getId(),
+            clock.instant(),
+            AppointmentStatus.EXTANT
+        );
   }
 }

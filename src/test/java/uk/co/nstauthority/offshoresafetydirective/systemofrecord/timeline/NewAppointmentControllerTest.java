@@ -54,6 +54,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentMode
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
@@ -97,28 +98,28 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   void smokeTestPermissions() {
     var portalAssetId = new PortalAssetId("123");
 
-    var assetDto = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
+        .withId(UUID.randomUUID())
         .withPortalAssetId(portalAssetId.id())
-        .withAssetId(UUID.randomUUID())
         .build();
 
-    when(assetAccessService.getAsset(assetDto.assetId())).thenReturn(Optional.of(assetDto));
+    when(assetAccessService.getAsset(AssetId.fromAsset(asset))).thenReturn(Optional.of(AssetDto.fromAsset(asset)));
 
-    when(portalAssetRetrievalService.getAssetName(eq(assetDto.portalAssetId()), any()))
+    when(portalAssetRetrievalService.getAssetName(eq(new PortalAssetId(asset.getId().toString())), any()))
         .thenReturn(Optional.of("asset name"));
 
     when(portalAssetRetrievalService.isExtantInPortal(eq(portalAssetId), any(PortalAssetType.class)))
         .thenReturn(true);
 
     when(assetPersistenceService.getOrCreateAsset(eq(portalAssetId), any()))
-        .thenReturn(assetDto);
+        .thenReturn(asset);
 
     HasPermissionSecurityTestUtil.smokeTester(mockMvc, teamMemberService)
         .withUser(USER)
         .withRequiredPermissions(Set.of(RolePermission.MANAGE_APPOINTMENTS))
         .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .renderNewAppointment(assetDto.assetId()))
+                .renderNewAppointment(AssetId.fromAsset(asset)))
         )
         .withGetEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
@@ -140,7 +141,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
         )
         .withPostEndpoint(
             ReverseRouter.route(on(NewAppointmentController.class)
-                .createNewAppointment(assetDto.assetId(), null, null, null)),
+                .createNewAppointment(AssetId.fromAsset(asset), null, null, null)),
             status().is3xxRedirection(),
             status().isForbidden()
         )
@@ -239,7 +240,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   void renderAppointment_whenNoAssetNameFound_thenError(PortalAssetType portalAssetType) throws Exception {
     var portalAssetId = new PortalAssetId("123");
 
-    var asset = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .withPortalAssetId(portalAssetId.id())
         .build();
@@ -250,7 +251,8 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
     when(portalAssetRetrievalService.getAssetName(portalAssetId, portalAssetType))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(on(NewAppointmentController.class).renderNewAppointment(asset.assetId())))
+    mockMvc.perform(get(ReverseRouter.route(on(NewAppointmentController.class)
+            .renderNewAppointment(AssetId.fromAsset(asset))))
             .with(user(USER)))
         .andExpect(status().isNotFound());
   }
@@ -264,7 +266,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
   ) throws Exception {
     var portalAssetId = new PortalAssetId("123");
 
-    var asset = AssetDtoTestUtil.builder()
+    var asset = AssetTestUtil.builder()
         .withPortalAssetType(portalAssetType)
         .withPortalAssetId(portalAssetId.id())
         .build();
@@ -287,7 +289,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             .with(user(USER)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(NewAppointmentController.class)
-            .renderNewAppointment(asset.assetId()))));
+            .renderNewAppointment(AssetId.fromAsset(asset)))));
   }
 
   @ParameterizedTest

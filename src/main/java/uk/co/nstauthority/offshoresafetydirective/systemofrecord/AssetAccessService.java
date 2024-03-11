@@ -17,11 +17,15 @@ public class AssetAccessService {
   }
 
   public Optional<AssetDto> getExtantAsset(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
-    return assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
-            portalAssetId.id(),
-            portalAssetType,
-            AssetStatus.EXTANT)
+    return getExtantAsset(portalAssetId.id(), portalAssetType)
         .map(AssetDto::fromAsset);
+  }
+
+  public Optional<Asset> getExtantAsset(String portalAssetId, PortalAssetType portalAssetType) {
+    return assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
+            portalAssetId,
+            portalAssetType,
+            AssetStatus.EXTANT);
   }
 
   public Optional<AssetDto> getAsset(AssetId assetId) {

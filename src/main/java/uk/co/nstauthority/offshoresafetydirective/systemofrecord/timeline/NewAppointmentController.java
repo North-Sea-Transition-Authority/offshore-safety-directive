@@ -110,7 +110,8 @@ public class NewAppointmentController {
     if (portalAssetRetrievalService.isExtantInPortal(portalAssetId, portalAssetType)
         || assetAccessService.isAssetExtant(portalAssetId, portalAssetType)) {
       var asset = assetPersistenceService.getOrCreateAsset(portalAssetId, portalAssetType);
-      return ReverseRouter.redirect(on(NewAppointmentController.class).renderNewAppointment(asset.assetId()));
+      return ReverseRouter.redirect(on(NewAppointmentController.class)
+          .renderNewAppointment(AssetId.fromAsset(asset)));
     }
 
     throw new ResponseStatusException(

@@ -27,8 +27,39 @@ class AssetAccessServiceTest {
   private AssetAccessService assetAccessService;
 
   @Test
-  void getExtantAsset_whenFound_thenPopulatedOptional() {
+  void getExtantAsset_whenFound_andResulTypetIsAsset_verifyResult() {
+    var matchedPortalAssetId = new PortalAssetId("portal asset id");
 
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    var expectedAsset = AssetTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    given(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(matchedPortalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+        .willReturn(Optional.of(expectedAsset));
+
+    var resultingAsset = assetAccessService.getExtantAsset(matchedPortalAssetId.id(), portalAssetType);
+    assertThat(resultingAsset).get().isEqualTo(expectedAsset);
+  }
+
+  @Test
+  void getExtantAsset_whenNotFound_andResultTypeIsAsset_verifyEmpty() {
+    var matchedPortalAssetId = new PortalAssetId("portal asset id");
+
+    var portalAssetType = PortalAssetType.INSTALLATION;
+    var expectedAsset = AssetTestUtil.builder()
+        .withPortalAssetType(portalAssetType)
+        .build();
+
+    given(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(matchedPortalAssetId.id(), portalAssetType, AssetStatus.EXTANT))
+        .willReturn(Optional.empty());
+
+    var resultingAsset = assetAccessService.getExtantAsset(matchedPortalAssetId.id(), portalAssetType);
+    assertThat(resultingAsset).isEmpty();
+  }
+
+  @Test
+  void getExtantAsset_whenFound_andResultTypeIsDto_thenVerifyPopulated() {
     var matchedPortalAssetId = new PortalAssetId("portal asset id");
 
     var portalAssetType = PortalAssetType.INSTALLATION;
@@ -58,7 +89,7 @@ class AssetAccessServiceTest {
   }
 
   @Test
-  void getExtantAsset_whenNotFound_thenEmptyOptional() {
+  void getExtantAsset_whenNotFound_andResultTypeIsDto_thenEmptyOptional() {
 
     var portalAssetType = PortalAssetType.INSTALLATION;
     var unmatchedPortalAssetId = new PortalAssetId("not from portal asset id");

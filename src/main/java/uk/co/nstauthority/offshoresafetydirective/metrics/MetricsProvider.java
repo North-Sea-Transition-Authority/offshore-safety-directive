@@ -13,6 +13,7 @@ public class MetricsProvider {
   private final Counter pearsLicenceMessagesReceivedCounter;
   private final Counter appointmentsPublishedCounter;
   private final Counter nominationsPublishedCounter;
+  private final Counter wonsNotificationMessagesReceivedCounter;
 
   public MetricsProvider(MeterRegistry registry) {
     this.workAreaQueryTimer = registry.timer("%s.workAreaJooqQueryTimer".formatted(METRIC_PREFIX));
@@ -22,6 +23,8 @@ public class MetricsProvider {
         registry.counter("%s.wonsApplicationMessagesReceivedCounter".formatted(METRIC_PREFIX));
     this.pearsLicenceMessagesReceivedCounter =
         registry.counter("%s.pearsLicenceMessagesReceivedCounter".formatted(METRIC_PREFIX));
+    this.wonsNotificationMessagesReceivedCounter =
+        registry.counter("%s.wonsNotificationsReceivedCounter".formatted(METRIC_PREFIX));
     this.appointmentsPublishedCounter = registry.counter("%s.appointmentsPublishedCounter".formatted(METRIC_PREFIX));
     this.nominationsPublishedCounter = registry.counter("%s.nominationsPublishedCounter".formatted(METRIC_PREFIX));
   }
@@ -48,5 +51,9 @@ public class MetricsProvider {
 
   public Counter getNominationsPublishedCounter() {
     return nominationsPublishedCounter;
+  }
+
+  public Counter getWonsNotificationMessagesReceivedCounter() {
+    return wonsNotificationMessagesReceivedCounter;
   }
 }

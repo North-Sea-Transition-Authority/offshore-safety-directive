@@ -18,6 +18,10 @@ public record AssetId(UUID id) {
     }
   }
 
+  public static AssetId fromAsset(Asset asset) {
+    return new AssetId(asset.getId());
+  }
+
   @Override
   public String toString() {
     return id.toString();
