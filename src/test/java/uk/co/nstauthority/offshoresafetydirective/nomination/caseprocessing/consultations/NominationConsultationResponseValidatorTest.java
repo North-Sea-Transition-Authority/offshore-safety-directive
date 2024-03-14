@@ -1,11 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,11 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.fivium.formlibrary.input.StringInput;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationConsultationResponseValidatorTest {
@@ -50,26 +50,33 @@ class NominationConsultationResponseValidatorTest {
   void validate_whenNoFieldsPopulated_thenVerifyHasErrors() {
     var form = new NominationConsultationResponseForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
+
     nominationConsultationResponseValidator.validate(form, bindingResult);
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors)
-        .containsExactlyInAnyOrderEntriesOf(
-            Map.of("response.inputValue", Set.of("Enter response"))
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "response.inputValue",
+                "response.required",
+                "Enter response"
+            )
         );
   }
 
   @Test
   void validate_whenFullyPopulated_thenNoErrors() {
-    var form = new NominationConsultationResponseForm();
-    form.getResponse().setInputValue("text");
+    var form = getValidForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
+
     nominationConsultationResponseValidator.validate(form, bindingResult);
-    assertFalse(bindingResult.hasErrors());
+
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
   void validate_whenFileUploaded_andNoDescription_thenVerifyHasError() {
-    var form = new NominationConsultationResponseForm();
+    var form = getValidForm();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
@@ -85,16 +92,20 @@ class NominationConsultationResponseValidatorTest {
 
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors)
-        .containsEntry(
-            "consultationResponseFiles[0].uploadedFileDescription", Set.of("Enter a description of this file")
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "consultationResponseFiles[0].uploadedFileDescription",
+                "consultationResponseFiles[0].uploadedFileDescription.required",
+                "Enter a description of this file"
+            )
         );
   }
 
   @Test
   void validate_whenFileUploaded_andHasDescription_thenVerifyNoError() {
-    var form = new NominationConsultationResponseForm();
+    var form = getValidForm();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var uploadedFile = UploadedFileTestUtil.builder()
@@ -110,9 +121,7 @@ class NominationConsultationResponseValidatorTest {
 
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors)
-        .doesNotContainKey("consultationResponseFiles[0].uploadedFileDescription");
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -135,19 +144,26 @@ class NominationConsultationResponseValidatorTest {
 
     nominationConsultationResponseValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
         .stream()
         .sorted(String::compareToIgnoreCase)
         .collect(Collectors.joining(", "));
 
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("consultationResponseFiles", Set.of(
+            tuple(
+                "consultationResponseFiles",
+                "consultationResponseFiles.invalidExtension",
                 "The selected files must be a %s".formatted(allowedExtensions)
-            ))
+            )
         );
+  }
+
+  private NominationConsultationResponseForm getValidForm() {
+    var form = new NominationConsultationResponseForm();
+    form.getResponse().setInputValue("text");
+    return form;
   }
 
   private static class UnsupportedClass {

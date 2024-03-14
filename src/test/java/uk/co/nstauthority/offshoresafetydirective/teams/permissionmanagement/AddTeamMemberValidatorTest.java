@@ -1,14 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,9 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AddTeamMemberValidatorTest {
@@ -49,17 +48,15 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME, Set.of(AddTeamMemberValidator.NO_USERNAME_ERROR_CODE))
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME, Set.of(AddTeamMemberValidator.NO_USERNAME_ERROR_MESSAGE))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+                AddTeamMemberValidator.NO_USERNAME_ERROR_CODE,
+                AddTeamMemberValidator.NO_USERNAME_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -79,23 +76,15 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.TOO_MANY_RESULTS_FOUND_ERROR_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.TOO_MANY_RESULTS_FOUND_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+                AddTeamMemberValidator.TOO_MANY_RESULTS_FOUND_ERROR_CODE,
+                AddTeamMemberValidator.TOO_MANY_RESULTS_FOUND_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -110,23 +99,15 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.USERNAME_NOT_FOUND_ERROR_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.USERNAME_NOT_FOUND_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+                AddTeamMemberValidator.USERNAME_NOT_FOUND_ERROR_CODE,
+                AddTeamMemberValidator.USERNAME_NOT_FOUND_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -140,8 +121,7 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
 
@@ -160,24 +140,15 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
-            Set.of(AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE)
-        )
-    );
-
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                AddTeamMemberValidator.USERNAME_FORM_FIELD_NAME,
+                AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_CODE,
+                AddTeamMemberValidator.SHARED_ACCOUNT_NOT_ALLOWED_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -195,8 +166,7 @@ class AddTeamMemberValidatorTest {
 
     var bindingResult = validateAddTeamMemberForm(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   private AddTeamMemberForm constructAddTeamMemberForm(String username) {

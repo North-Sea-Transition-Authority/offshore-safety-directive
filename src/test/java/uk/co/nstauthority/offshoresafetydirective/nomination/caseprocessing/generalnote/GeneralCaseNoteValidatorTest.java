@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.generalnote;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralCaseNoteValidatorTest {
@@ -76,12 +76,11 @@ class GeneralCaseNoteValidatorTest {
 
     generalCaseNoteValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("caseNoteSubject.inputValue", Set.of("Enter a case note subject")),
-            entry("caseNoteText.inputValue", Set.of("Enter case note text"))
+            tuple("caseNoteSubject.inputValue", "caseNoteSubject.required", "Enter a case note subject"),
+            tuple("caseNoteText.inputValue", "caseNoteText.required", "Enter case note text")
         );
   }
 
@@ -106,18 +105,15 @@ class GeneralCaseNoteValidatorTest {
 
     generalCaseNoteValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
         .stream()
         .sorted(String::compareToIgnoreCase)
         .collect(Collectors.joining(", "));
 
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("caseNoteFiles", Set.of(
-                "The selected files must be a %s".formatted(allowedExtensions)
-            ))
+            tuple("caseNoteFiles", "caseNoteFiles.invalidExtension", "The selected files must be a %s".formatted(allowedExtensions))
         );
   }
 

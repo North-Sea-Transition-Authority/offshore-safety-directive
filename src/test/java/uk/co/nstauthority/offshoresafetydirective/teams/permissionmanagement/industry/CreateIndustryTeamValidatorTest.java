@@ -1,24 +1,22 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class CreateIndustryTeamValidatorTest {
@@ -53,10 +51,10 @@ class CreateIndustryTeamValidatorTest {
 
     createIndustryTeamValidator.validate(form, bindingResult);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("orgGroupId", Set.of("Select an organisation"))
+            tuple("orgGroupId", "orgGroupId.required", "Select an organisation")
         );
   }
 
@@ -75,17 +73,16 @@ class CreateIndustryTeamValidatorTest {
 
     createIndustryTeamValidator.validate(form, bindingResult);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("orgGroupId", Set.of("Select an organisation"))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("orgGroupId", "orgGroupId.invalid", "Select an organisation")
         );
   }
 
   @ParameterizedTest
   @NullAndEmptySource
-  @ValueSource(strings = "FISH")
-  void validate_whenOrganisationNotValid_thenError(String invalidValue) {
+  void validate_whenOrganisationNullOrEmpty_thenError(String invalidValue) {
     var form = CreateIndustryTeamFormTestUtil.builder()
         .withOrgGroupId(invalidValue)
         .build();
@@ -94,11 +91,27 @@ class CreateIndustryTeamValidatorTest {
 
     createIndustryTeamValidator.validate(form, bindingResult);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("orgGroupId", "orgGroupId.required", "Select an organisation")
+        );
+  }
 
-    assertThat(errorMessages)
-        .contains(
-            entry("orgGroupId", Set.of("Select an organisation"))
+  @Test
+  void validate_whenOrganisationIdNotANumber_thenError() {
+    var form = CreateIndustryTeamFormTestUtil.builder()
+        .withOrgGroupId("FISH")
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    createIndustryTeamValidator.validate(form, bindingResult);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("orgGroupId", "orgGroupId.invalid", "Select an organisation")
         );
   }
 

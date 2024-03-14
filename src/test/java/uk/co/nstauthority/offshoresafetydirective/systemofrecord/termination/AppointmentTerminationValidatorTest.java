@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,12 +16,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentTerminationValidatorTest {
@@ -34,7 +34,7 @@ class AppointmentTerminationValidatorTest {
   private AppointmentTerminationValidator appointmentTerminationValidator;
   private AppointmentTerminationValidatorHint validatorHint;
 
-  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a support document";
+  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a supporting document";
 
   @BeforeEach
   void setUp() {
@@ -69,15 +69,19 @@ class AppointmentTerminationValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors).containsExactly(
-        entry("reason.inputValue", Set.of("Enter a reason for the termination")),
-        entry("terminationDate.dayInput.inputValue", Set.of("Enter a complete Termination date")),
-        entry("terminationDate.monthInput.inputValue", Set.of("")),
-        entry("terminationDate.yearInput.inputValue", Set.of("")),
-        entry("terminationDocuments", Set.of(TERMINATION_DOCUMENT_ERROR_MESSAGE))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("reason.inputValue", "reason.required", "Enter a reason for the termination"),
+            tuple(
+                "terminationDate.dayInput.inputValue",
+                "terminationDate.dayInput.required",
+                "Enter a complete Termination date"
+            ),
+            tuple("terminationDate.monthInput.inputValue", "terminationDate.monthInput.required", ""),
+            tuple("terminationDate.yearInput.inputValue", "terminationDate.yearInput.required", ""),
+            tuple("terminationDocuments", "terminationDocuments.belowThreshold", TERMINATION_DOCUMENT_ERROR_MESSAGE)
+          );
   }
 
   @Test
@@ -99,50 +103,63 @@ class AppointmentTerminationValidatorTest {
 
   @Test
   void validate_whenTerminationDatePartiallyEntered_thenVerifyError() {
-    var form = new AppointmentTerminationForm();
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var form = AppointmentTerminationFormTestUtil.builder().build();
 
     form.getTerminationDate().setDay(10);
-    appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    form.getTerminationDate().getMonthInput().setInputValue(null);
+    form.getTerminationDate().setYear(LocalDate.now().getYear());
 
-    assertThat(errors).extractingByKeys(
-        "terminationDate.dayInput.inputValue",
-        "terminationDate.monthInput.inputValue",
-        "terminationDate.yearInput.inputValue"
-        ).containsExactly(
-        null,
-        Set.of("Enter a complete Termination date"),
-        Set.of("")
-    );
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+
+    appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "terminationDate.monthInput.inputValue",
+                "terminationDate.monthInput.required",
+                "Enter a complete Termination date"
+            )
+        );
   }
 
   @Test
   void validate_whenTerminationDateInvalidStringEntered_thenVerifyError() {
-    var form = new AppointmentTerminationForm();
-    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var form = AppointmentTerminationFormTestUtil.builder().build();
 
     form.getTerminationDate().getDayInput().setInputValue("non valid day");
     form.getTerminationDate().getMonthInput().setInputValue("non valid month");
     form.getTerminationDate().getYearInput().setInputValue("non valid year");
 
-    appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    assertThat(errors).extractingByKeys(
-        "terminationDate.dayInput.inputValue",
-        "terminationDate.monthInput.inputValue",
-        "terminationDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Termination date must be a real date"),
-        Set.of(""),
-        Set.of("")
-    );
+    appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "terminationDate.dayInput.inputValue",
+                "terminationDate.dayInput.invalid",
+                "Termination date must be a real date"
+            ),
+            tuple(
+                "terminationDate.monthInput.inputValue",
+                "terminationDate.monthInput.invalid",
+                ""
+            ),
+            tuple(
+                "terminationDate.yearInput.inputValue",
+                "terminationDate.yearInput.invalid",
+                ""
+            )
+        );
   }
 
   @Test
   void validate_whenTerminationDateBeforeFromDate_thenVerifyError() {
-    var form = new AppointmentTerminationForm();
+    var form = AppointmentTerminationFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var appointmentFromDate = LocalDate.of(2023, 8, 8);
@@ -158,21 +175,30 @@ class AppointmentTerminationValidatorTest {
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHintWithToDate);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "terminationDate.dayInput.inputValue",
-        "terminationDate.monthInput.inputValue",
-        "terminationDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Termination date must be the same as or after %s".formatted(DateUtil.formatShortDate(appointmentFromDate))),
-        Set.of(""),
-        Set.of("")
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "terminationDate.dayInput.inputValue",
+                "terminationDate.dayInput.minDateNotMet",
+                "Termination date must be the same as or after %s".formatted(DateUtil.formatShortDate(appointmentFromDate))
+            ),
+            tuple(
+                "terminationDate.monthInput.inputValue",
+                "terminationDate.monthInput.minDateNotMet",
+                ""
+            ),
+            tuple(
+                "terminationDate.yearInput.inputValue",
+                "terminationDate.yearInput.minDateNotMet",
+                ""
+            )
+        );
   }
 
   @Test
   void validate_whenTerminationDateAfterCurrentDate_thenVerifyError() {
-    var form = new AppointmentTerminationForm();
+    var form = AppointmentTerminationFormTestUtil.builder().build();
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     var currentDate = LocalDate.now();
@@ -187,16 +213,25 @@ class AppointmentTerminationValidatorTest {
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHintWithToDate);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "terminationDate.dayInput.inputValue",
-        "terminationDate.monthInput.inputValue",
-        "terminationDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Termination date must be the same as or before %s".formatted(DateUtil.formatShortDate(currentDate))),
-        Set.of(""),
-        Set.of("")
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "terminationDate.dayInput.inputValue",
+                "terminationDate.dayInput.maxDateExceeded",
+                "Termination date must be the same as or before %s".formatted(DateUtil.formatShortDate(currentDate))
+            ),
+            tuple(
+                "terminationDate.monthInput.inputValue",
+                "terminationDate.monthInput.maxDateExceeded",
+                ""
+            ),
+            tuple(
+                "terminationDate.yearInput.inputValue",
+                "terminationDate.yearInput.maxDateExceeded",
+                ""
+            )
+        );
   }
 
   @Test
@@ -256,12 +291,15 @@ class AppointmentTerminationValidatorTest {
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "reason.inputValue"
-    ).containsExactly(
-        Set.of("Enter a reason for the termination")
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "reason.inputValue",
+                "reason.required",
+                "Enter a reason for the termination"
+            )
+        );
   }
 
   @Test
@@ -275,11 +313,16 @@ class AppointmentTerminationValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     appointmentTerminationValidator.validate(form, bindingResult, validatorHint);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("terminationDocuments[0].uploadedFileDescription", Set.of("terminationDocuments[0].uploadedFileDescription.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "terminationDocuments[0].uploadedFileDescription",
+                "terminationDocuments[0].uploadedFileDescription.required",
+                "Enter a description of this file"
+            )
+        );
   }
 
   private static class UnsupportedClass {

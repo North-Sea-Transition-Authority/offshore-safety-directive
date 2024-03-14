@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -18,19 +18,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileFormTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
-import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationUtil;
 
 @ExtendWith(SpringExtension.class)
 class NomineeDetailFormValidatorTest {
@@ -82,17 +80,46 @@ class NomineeDetailFormValidatorTest {
   void validate_whenEmptyForm_thenErrors() {
     var invalidForm = new NomineeDetailForm();
     var bindingResult = validateNomineeDetailsForm(invalidForm);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("nominatedOrganisationId", Set.of("nominatedOrganisationId.required")),
-        entry("reasonForNomination", Set.of("reasonForNomination.required")),
-        entry("plannedStartDay", Set.of("plannedStartDay.required")),
-        entry("plannedStartMonth", Set.of("plannedStartMonth.required")),
-        entry("plannedStartYear", Set.of("plannedStartYear.required")),
-        entry("appendixDocuments", Set.of(FileValidationUtil.FILES_EMPTY_ERROR_CODE.formatted("appendixDocuments"))),
-        entry("operatorHasAuthority", Set.of("operatorHasAuthority.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "nominatedOrganisationId",
+                "nominatedOrganisationId.required",
+                "Select the proposed well or installation operator"
+            ),
+            tuple(
+                "reasonForNomination",
+                "reasonForNomination.required",
+                "Enter why you want to appoint this operator"
+            ),
+            tuple(
+                "plannedStartDay",
+                "plannedStartDay.required",
+                "Enter a date the appointment is planned to take effect"
+            ),
+            tuple(
+                "plannedStartMonth",
+                "plannedStartMonth.required",
+                ""
+            ),
+            tuple(
+                "plannedStartYear",
+                "plannedStartYear.required",
+                ""
+            ),
+            tuple(
+                "appendixDocuments",
+                "appendixDocuments.belowThreshold",
+                "Upload the Appendix C and any associated documents"
+            ),
+            tuple(
+                "operatorHasAuthority",
+                "operatorHasAuthority.required",
+                "You must agree to all the licensee declarations"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -112,11 +139,16 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("operatorHasAuthority", Set.of("operatorHasAuthority.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "operatorHasAuthority",
+                "operatorHasAuthority.required",
+                "You must agree to all the licensee declarations"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -135,11 +167,16 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("licenseeAcknowledgeOperatorRequirements", Set.of("licenseeAcknowledgeOperatorRequirements.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "licenseeAcknowledgeOperatorRequirements",
+                "licenseeAcknowledgeOperatorRequirements.required",
+                "You must agree to all the licensee declarations"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -157,11 +194,16 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(invalidForm);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("operatorHasCapacity", Set.of("operatorHasCapacity.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "operatorHasCapacity",
+                "operatorHasCapacity.required",
+                "You must agree to all the licensee declarations"
+            )
+        );
   }
 
   @Test
@@ -179,13 +221,26 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("plannedStartDay", Set.of("plannedStartDay.invalid")),
-        entry("plannedStartMonth", Set.of("plannedStartMonth.invalid")),
-        entry("plannedStartYear", Set.of("plannedStartYear.invalid"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "plannedStartDay",
+                "plannedStartDay.invalid",
+                "Date the appointment is planned to take effect must be a real date"
+            ),
+            tuple(
+                "plannedStartMonth",
+                "plannedStartMonth.invalid",
+                ""
+            ),
+            tuple(
+                "plannedStartYear",
+                "plannedStartYear.invalid",
+                ""
+            )
+        );
   }
 
   @Test
@@ -203,13 +258,26 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("plannedStartDay", Set.of("plannedStartDay.notAfterTargetDate")),
-        entry("plannedStartMonth", Set.of("plannedStartMonth.notAfterTargetDate")),
-        entry("plannedStartYear", Set.of("plannedStartYear.notAfterTargetDate"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "plannedStartDay",
+                "plannedStartDay.notAfterTargetDate",
+                "Date the appointment is planned to take effect must be in the future"
+            ),
+            tuple(
+                "plannedStartMonth",
+                "plannedStartMonth.notAfterTargetDate",
+                ""
+            ),
+            tuple(
+                "plannedStartYear",
+                "plannedStartYear.notAfterTargetDate",
+                ""
+            )
+        );
   }
 
   @Test
@@ -227,13 +295,26 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("plannedStartDay", Set.of("plannedStartDay.notAfterTargetDate")),
-        entry("plannedStartMonth", Set.of("plannedStartMonth.notAfterTargetDate")),
-        entry("plannedStartYear", Set.of("plannedStartYear.notAfterTargetDate"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "plannedStartDay",
+                "plannedStartDay.notAfterTargetDate",
+                "Date the appointment is planned to take effect must be in the future"
+            ),
+            tuple(
+                "plannedStartMonth",
+                "plannedStartMonth.notAfterTargetDate",
+                ""
+            ),
+            tuple(
+                "plannedStartYear",
+                "plannedStartYear.notAfterTargetDate",
+                ""
+            )
+        );
   }
 
   @Test
@@ -251,9 +332,8 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @Test
@@ -270,19 +350,17 @@ class NomineeDetailFormValidatorTest {
 
     var bindingResult = validateNomineeDetailsForm(form);
 
-    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var expectedFrontEndErrorMessage = NomineeDetailFormValidator.NOMINEE_NOT_FOUND_IN_PORTAL_ERROR;
 
-    assertThat(errorCodes).containsExactly(
-        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.code()))
-    );
-
-    assertThat(errorMessages).containsExactly(
-        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                expectedFrontEndErrorMessage.field(),
+                expectedFrontEndErrorMessage.code(),
+                expectedFrontEndErrorMessage.message()
+            )
+        );
   }
 
   @Test
@@ -304,23 +382,21 @@ class NomineeDetailFormValidatorTest {
 
     var bindingResult = validateNomineeDetailsForm(form);
 
-    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var expectedFrontEndErrorMessage = new FrontEndErrorMessage(
         NomineeDetailFormValidator.NOMINEE_FIELD_NAME,
         "%s.notValid".formatted(NomineeDetailFormValidator.NOMINEE_FIELD_NAME),
         "%s is not a valid operator selection".formatted(inactiveOrganisation.name())
     );
 
-    assertThat(errorCodes).containsExactly(
-        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.code()))
-    );
-
-    assertThat(errorMessages).containsExactly(
-        entry(expectedFrontEndErrorMessage.field(), Set.of(expectedFrontEndErrorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                expectedFrontEndErrorMessage.field(),
+                expectedFrontEndErrorMessage.code(),
+                expectedFrontEndErrorMessage.message()
+            )
+        );
   }
 
   @Test
@@ -339,11 +415,16 @@ class NomineeDetailFormValidatorTest {
         .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     var bindingResult = validateNomineeDetailsForm(form);
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
 
-    assertThat(extractedErrors).containsExactly(
-        entry("appendixDocuments[0].uploadedFileDescription", Set.of("appendixDocuments[0].uploadedFileDescription.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "appendixDocuments[0].uploadedFileDescription",
+                "appendixDocuments[0].uploadedFileDescription.required",
+                "Enter a description of this file"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -356,10 +437,15 @@ class NomineeDetailFormValidatorTest {
 
     var bindingResult = validateNomineeDetailsForm(form);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(extractedErrors).containsExactly(
-        entry("nominatedOrganisationId", Set.of("nominatedOrganisationId.required")));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "nominatedOrganisationId",
+                "nominatedOrganisationId.required",
+                "Select the proposed well or installation operator"
+            )
+        );
   }
 
   private BindingResult validateNomineeDetailsForm(NomineeDetailForm form) {

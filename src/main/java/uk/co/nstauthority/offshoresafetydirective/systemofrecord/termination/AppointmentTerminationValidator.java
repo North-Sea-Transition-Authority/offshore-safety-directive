@@ -17,7 +17,7 @@ import uk.co.nstauthority.offshoresafetydirective.validationutil.FileValidationU
 @Service
 class AppointmentTerminationValidator implements SmartValidator {
 
-  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a support document";
+  private static final String TERMINATION_DOCUMENT_ERROR_MESSAGE = "You must upload a supporting document";
 
   private final FileUploadProperties fileUploadProperties;
 
@@ -49,9 +49,6 @@ class AppointmentTerminationValidator implements SmartValidator {
         .mustBeBeforeOrEqualTo(LocalDate.now())
         .mustBeAfterOrEqualTo(hint.appointmentDto().appointmentFromDate().value())
         .validate(form.getTerminationDate(), errors);
-
-    StringInputValidator.builder()
-        .validate(form.getReason(), bindingResult);
 
     var allowedFileExtensions = FileDocumentType.TERMINATION.getAllowedExtensions()
         .orElse(fileUploadProperties.defaultPermittedFileExtensions());

@@ -1,20 +1,19 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class WellSelectionSetupFormValidatorTest {
@@ -55,12 +54,15 @@ class WellSelectionSetupFormValidatorTest {
 
     wellSelectionSetupFormValidator.validate(invalidForm, bindingResult, HINT);
 
-    assertTrue(bindingResult.hasErrors());
-
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellSelectionType", Set.of("wellSelectionType.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellSelectionType",
+                "wellSelectionType.required",
+                "Select if this nomination is in relation to well operatorship"
+            )
+        );
   }
 
   @Test
@@ -71,12 +73,15 @@ class WellSelectionSetupFormValidatorTest {
 
     wellSelectionSetupFormValidator.validate(invalidForm, bindingResult, HINT);
 
-    assertTrue(bindingResult.hasErrors());
-
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellSelectionType", Set.of("wellSelectionType.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellSelectionType",
+                "wellSelectionType.required",
+                "Select if this nomination is in relation to well operatorship"
+            )
+        );
   }
 
   @Test

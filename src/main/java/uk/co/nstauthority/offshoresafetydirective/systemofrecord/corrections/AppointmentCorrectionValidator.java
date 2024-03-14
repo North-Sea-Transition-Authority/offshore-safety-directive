@@ -127,12 +127,6 @@ public class AppointmentCorrectionValidator implements SmartValidator {
   }
 
   private void validateAppointedOperatorId(AppointmentCorrectionForm form, BindingResult bindingResult) {
-    ValidationUtils.rejectIfEmpty(
-        bindingResult,
-        APPOINTED_OPERATOR_FIELD_NAME,
-        FIELD_REQUIRED_ERROR.formatted(APPOINTED_OPERATOR_FIELD_NAME),
-        "Select the appointed operator"
-    );
 
     var operatorId = NumberUtils.isDigits(form.getAppointedOperatorId())
         ? NumberUtils.toInt(form.getAppointedOperatorId())

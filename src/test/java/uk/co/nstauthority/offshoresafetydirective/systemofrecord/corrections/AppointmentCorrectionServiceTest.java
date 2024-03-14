@@ -691,7 +691,11 @@ class AppointmentCorrectionServiceTest {
   @EnumSource(AppointmentType.class)
   void applyCorrectionToAppointment_verifySavedCorrectionReason(AppointmentType appointmentType) {
     var asset = AssetTestUtil.builder().build();
-    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(asset.getPortalAssetId(), asset.getPortalAssetType(), AssetStatus.EXTANT))
+    when(assetRepository.findByPortalAssetIdAndPortalAssetTypeAndStatusIs(
+        asset.getPortalAssetId(),
+        asset.getPortalAssetType(),
+        AssetStatus.EXTANT
+    ))
         .thenReturn(Optional.of(asset));
 
     var appointment = AppointmentTestUtil.builder()
@@ -701,10 +705,12 @@ class AppointmentCorrectionServiceTest {
         .build();
 
     var correctionReason = "correction reason";
+
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(123)
         .withAppointmentType(appointmentType)
         .withCorrectionReason(correctionReason)
+        .withStartDate(LocalDate.now())
         .build();
 
     var wuaId = 1000L;

@@ -8,10 +8,8 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,10 +22,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.EnergyPortalFieldQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.fields.FieldDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class RelatedInformationValidatorTest {
@@ -82,12 +80,15 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(Tuple.tuple(
-            RelatedInformationValidator.RELATED_TO_ANY_FIELDS_FIELD_NAME,
-            Set.of(RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_CODE)
-        ));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RelatedInformationValidator.RELATED_TO_ANY_FIELDS_FIELD_NAME,
+                RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_CODE,
+                "Select Yes if your nomination is related to any fields"
+            )
+        );
   }
 
   @Test
@@ -100,12 +101,15 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(Tuple.tuple(
-            RelatedInformationValidator.FIELDS_FIELD_NAME,
-            Set.of(RelatedInformationValidator.FIELDS_REQUIRED_CODE)
-        ));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RelatedInformationValidator.FIELDS_FIELD_NAME,
+                RelatedInformationValidator.FIELDS_REQUIRED_CODE,
+                "You must add at least one field"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -118,12 +122,15 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(Tuple.tuple(
-            RelatedInformationValidator.FIELDS_FIELD_NAME,
-            Set.of(RelatedInformationValidator.FIELDS_REQUIRED_CODE)
-        ));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RelatedInformationValidator.FIELDS_FIELD_NAME,
+                RelatedInformationValidator.FIELDS_REQUIRED_CODE,
+                "You must add at least one field"
+            )
+        );
   }
 
   static Stream<Arguments> getInvalidArguments() {
@@ -135,37 +142,23 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(new RelatedInformationForm());
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.RELATED_TO_ANY_FIELDS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_CODE)
+                RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE
             ),
             tuple(
                 RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE)
+                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
             ),
             tuple(
                 RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE)
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.RELATED_TO_ANY_FIELDS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_FIELDS_REQUIRED_MESSAGE)
-            ),
-            tuple(
-                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE)
-            ),
-            tuple(
-                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE)
+                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE
             )
         );
   }
@@ -181,21 +174,13 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE)
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE)
+                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_TO_ANY_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
             )
         );
   }
@@ -211,21 +196,13 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_REQUIRED_CODE)
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_REQUIRED_MESSAGE)
+                RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_LICENCE_APPLICATIONS_REQUIRED_MESSAGE
             )
         );
   }
@@ -240,8 +217,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @ParameterizedTest
@@ -255,8 +231,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @ParameterizedTest
@@ -270,21 +245,13 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE)
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE)
+                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_TO_ANY_WELL_APPLICATIONS_REQUIRED_MESSAGE
             )
         );
   }
@@ -300,21 +267,13 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.RELATED_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_WELL_APPLICATIONS_REQUIRED_CODE)
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.RELATED_WELL_APPLICATIONS_FIELD_NAME,
-                Set.of(RelatedInformationValidator.RELATED_WELL_APPLICATIONS_REQUIRED_MESSAGE)
+                RelatedInformationValidator.RELATED_WELL_APPLICATIONS_REQUIRED_CODE,
+                RelatedInformationValidator.RELATED_WELL_APPLICATIONS_REQUIRED_MESSAGE
             )
         );
   }
@@ -329,8 +288,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @ParameterizedTest
@@ -344,8 +302,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @Test
@@ -355,8 +312,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   @Test
@@ -385,21 +341,13 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
             tuple(
                 RelatedInformationValidator.FIELDS_FIELD_NAME,
-                Set.of("invalid")
-            )
-        );
-
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult).entrySet())
-        .extracting(Map.Entry::getKey, Map.Entry::getValue)
-        .containsExactly(
-            tuple(
-                RelatedInformationValidator.FIELDS_FIELD_NAME,
-                Set.of("%s is not a valid field selection".formatted(invalidField.name()))
+                RelatedInformationValidator.FIELDS_FIELD_NAME + ".invalid",
+                "%s is not a valid field selection".formatted(invalidField.name())
             )
         );
   }
@@ -424,8 +372,7 @@ class RelatedInformationValidatorTest {
 
     var bindingResult = validate(form);
 
-    assertThat(ValidatorTestingUtil.extractErrors(bindingResult)).isEmpty();
-    assertThat(ValidatorTestingUtil.extractErrorMessages(bindingResult)).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   private BindingResult validate(RelatedInformationForm form) {

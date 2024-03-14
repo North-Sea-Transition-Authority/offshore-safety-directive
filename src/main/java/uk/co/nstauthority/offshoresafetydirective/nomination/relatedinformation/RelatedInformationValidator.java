@@ -123,7 +123,7 @@ class RelatedInformationValidator implements SmartValidator {
             .forEach(field ->
               errors.rejectValue(
                   FIELDS_FIELD_NAME,
-                  "invalid",
+                  "%s.invalid".formatted(FIELDS_FIELD_NAME),
                   "%s is not a valid field selection".formatted(field.name())
               )
             );

@@ -1,14 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionDateValidator.DEEMED_DATE;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +15,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
@@ -23,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentToDa
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentCorrectionDateValidatorTest {
@@ -61,22 +60,25 @@ class AppointmentCorrectionDateValidatorTest {
         List.of()
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var startDateInput = getAssociatedStartDateInput(form ,appointmentType);
 
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .contains(
-            entry(
+            tuple(
                 "%s.dayInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("Enter a complete Start date")
+                "%s.dayInput.required".formatted(startDateInput.getFieldName()),
+                "Enter a complete Start date"
             ),
-            entry(
+            tuple(
                 "%s.monthInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("")
+                "%s.monthInput.required".formatted(startDateInput.getFieldName()),
+                ""
             ),
-            entry(
+            tuple(
                 "%s.yearInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("")
+                "%s.yearInput.required".formatted(startDateInput.getFieldName()),
+                ""
             )
         );
   }
@@ -142,13 +144,14 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(existingCurrentAppointment)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
                 "%s.dayInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("Another appointment is active during this appointment period"))
+                "%s.dayInput.inputValue.overlapsOtherAppointmentPeriod".formatted(startDateInput.getFieldName()),
+                "Another appointment is active during this appointment period"
+            )
         );
   }
 
@@ -156,14 +159,15 @@ class AppointmentCorrectionDateValidatorTest {
   @EnumSource(value = AppointmentType.class, mode = EnumSource.Mode.EXCLUDE, names = "DEEMED")
   void validate_startDateContainsInvalidCharacters_thenNotValid(AppointmentType appointmentType) {
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
+
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(appointmentType)
-        .withStartDate(LocalDate.now())
         .build();
 
     var startDateInput = getAssociatedStartDateInput(form, appointmentType);
-    startDateInput.setDate(LocalDate.now());
     startDateInput.getDayInput().setInputValue("a");
+    startDateInput.setMonth(10);
+    startDateInput.setYear(2022);
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     var hint = new AppointmentCorrectionValidationHint(
@@ -180,13 +184,13 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
                 "%s.dayInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("Start date must be a real date")
+                "%s.dayInput.invalid".formatted(startDateInput.getFieldName()),
+                "Start date must be a real date"
             )
         );
 
@@ -203,13 +207,13 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
                 "%s.monthInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("Start date must be a real date")
+                "%s.monthInput.invalid".formatted(startDateInput.getFieldName()),
+                "Start date must be a real date"
             )
         );
 
@@ -226,13 +230,13 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry(
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
                 "%s.yearInput.inputValue".formatted(startDateInput.getFieldName()),
-                Set.of("Start date must be a real date")
+                "%s.yearInput.invalid".formatted(startDateInput.getFieldName()),
+                "Start date must be a real date"
             )
         );
   }
@@ -265,22 +269,16 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("End date must be the same as or after %s".formatted(DateUtil.formatShortDate(startDate)))
+            tuple(
+                "endDate.dayInput.inputValue",
+                "endDate.dayInput.minDateNotMet",
+                "End date must be the same as or after %s".formatted(DateUtil.formatShortDate(startDate))
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
-                Set.of("")
-            )
+            tuple("endDate.monthInput.inputValue", "endDate.monthInput.minDateNotMet", ""),
+            tuple("endDate.yearInput.inputValue", "endDate.yearInput.minDateNotMet", "")
         );
   }
 
@@ -310,22 +308,16 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("End date must be the same as or after %s".formatted(DateUtil.formatShortDate(DEEMED_DATE)))
+            tuple(
+                "endDate.dayInput.inputValue",
+                "endDate.dayInput.minDateNotMet",
+                "End date must be the same as or after %s".formatted(DateUtil.formatShortDate(DEEMED_DATE))
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
-                Set.of("")
-            )
+            tuple("endDate.monthInput.inputValue", "endDate.monthInput.minDateNotMet", ""),
+            tuple("endDate.yearInput.inputValue", "endDate.yearInput.minDateNotMet", "")
         );
   }
 
@@ -527,22 +519,25 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(appointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var inputField = getAssociatedStartDateInput(form, appointmentType);
 
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName()),
-                Set.of("Start date must be the same as or after %s".formatted(DateUtil.formatShortDate(DEEMED_DATE)))
+            tuple(
+                "%s.dayInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.dayInput.minDateNotMet".formatted(inputField.getFieldName()),
+                "Start date must be the same as or after %s".formatted(DateUtil.formatShortDate(DEEMED_DATE))
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getMonthInput().getFieldName()),
-                Set.of("")
+            tuple(
+                "%s.monthInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.monthInput.minDateNotMet".formatted(inputField.getFieldName()),
+                ""
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getYearInput().getFieldName()),
-                Set.of("")
+            tuple(
+                "%s.yearInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.yearInput.minDateNotMet".formatted(inputField.getFieldName()),
+                ""
             )
         );
   }
@@ -776,14 +771,15 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(testCaseAppointmentDto, conflictingAppointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var inputField = getAssociatedStartDateInput(form, appointmentType);
 
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName()),
-                Set.of("Another appointment is active during this appointment period")
+            tuple(
+                "%s.dayInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.dayInput.inputValue.overlapsOtherAppointmentPeriod".formatted(inputField.getFieldName()),
+                "Another appointment is active during this appointment period"
             )
         );
   }
@@ -831,14 +827,15 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(testCaseAppointmentDto, conflictingAppointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var inputField = getAssociatedStartDateInput(form, appointmentType);
 
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName()),
-                Set.of("Another appointment is active during this appointment period")
+            tuple(
+                "%s.dayInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.dayInput.inputValue.overlapsOtherAppointmentPeriod".formatted(inputField.getFieldName()),
+                "Another appointment is active during this appointment period"
             )
         );
   }
@@ -886,14 +883,15 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(testCaseAppointmentDto, conflictingAppointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var inputField = getAssociatedStartDateInput(form, appointmentType);
 
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName()),
-                Set.of("Another appointment is active during this appointment period")
+            tuple(
+                "%s.dayInput.inputValue".formatted(inputField.getFieldName()),
+                "%s.dayInput.inputValue.overlapsOtherAppointmentPeriod".formatted(inputField.getFieldName()),
+                "Another appointment is active during this appointment period"
             )
         );
   }
@@ -938,14 +936,17 @@ class AppointmentCorrectionDateValidatorTest {
         List.of(testCaseAppointmentDto, conflictingAppointmentDto)
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
     var inputField = getAssociatedStartDateInput(form, appointmentType);
 
-    assertThat(errorMessages)
+    var dayInputInErrorFieldName = INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName());
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(inputField.getDayInput().getFieldName()),
-                Set.of("Another appointment is active during this appointment period")
+            tuple(
+                dayInputInErrorFieldName,
+                dayInputInErrorFieldName + ".overlapsOtherAppointmentPeriod",
+                "Another appointment is active during this appointment period"
             )
         );
   }
@@ -1041,13 +1042,13 @@ class AppointmentCorrectionDateValidatorTest {
         bindingResult
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("End date must be a real date")
+            tuple(
+                "endDate.dayInput.inputValue",
+                "endDate.dayInput.invalid",
+                "End date must be a real date"
             )
         );
   }
@@ -1066,22 +1067,12 @@ class AppointmentCorrectionDateValidatorTest {
         bindingResult
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("Enter a complete End date")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
-                Set.of("")
-            )
+            tuple("endDate.dayInput.inputValue", "endDate.dayInput.required", "Enter a complete End date"),
+            tuple("endDate.monthInput.inputValue", "endDate.monthInput.required", ""),
+            tuple("endDate.yearInput.inputValue", "endDate.yearInput.required", "")
         );
   }
 
@@ -1111,29 +1102,18 @@ class AppointmentCorrectionDateValidatorTest {
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
-    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(
-        form,
-        bindingResult
-    );
+    appointmentCorrectionDateValidator.validateAppointmentEndDateIsBetweenAcceptableRange(form, bindingResult);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("End date must be the same as or after %s".formatted(
-                    DateUtil.formatShortDate(DEEMED_DATE)
-                ))
+            tuple(
+                "endDate.dayInput.inputValue",
+                "endDate.dayInput.minDateNotMet",
+                "End date must be the same as or after %s".formatted(DateUtil.formatShortDate(DEEMED_DATE))
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
-                Set.of("")
-            )
+            tuple("endDate.monthInput.inputValue", "endDate.monthInput.minDateNotMet", ""),
+            tuple("endDate.yearInput.inputValue", "endDate.yearInput.minDateNotMet", "")
         );
   }
 
@@ -1151,24 +1131,16 @@ class AppointmentCorrectionDateValidatorTest {
         bindingResult
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getDayInput().getFieldName()),
-                Set.of("End date must be the same as or before %s".formatted(
-                    DateUtil.formatShortDate(LocalDate.now())
-                ))
+            tuple(
+                "endDate.dayInput.inputValue",
+                "endDate.dayInput.maxDateExceeded",
+                "End date must be the same as or before %s".formatted(DateUtil.formatShortDate(LocalDate.now()))
             ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getMonthInput().getFieldName()),
-                Set.of("")
-            ),
-            entry(
-                INPUT_VALUE_SUFFIX_FORMAT.formatted(form.getEndDate().getYearInput().getFieldName()),
-                Set.of("")
-            )
+            tuple("endDate.monthInput.inputValue", "endDate.monthInput.maxDateExceeded", ""),
+            tuple("endDate.yearInput.inputValue", "endDate.yearInput.maxDateExceeded", "")
         );
   }
 

@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -10,21 +10,19 @@ import static uk.co.nstauthority.offshoresafetydirective.nomination.well.Nominat
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedWellDetailFormValidatorTest {
@@ -65,8 +63,7 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -77,10 +74,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notEmpty",
+                "You must select at least one well"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -103,10 +105,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("forAllWellPhases", Set.of("forAllWellPhases.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "forAllWellPhases",
+                "forAllWellPhases.required",
+                "Select Yes if this nomination is for all well activity phases"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -132,27 +139,37 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("explorationAndAppraisalPhase", Set.of("explorationAndAppraisalPhase.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "explorationAndAppraisalPhase",
+                "explorationAndAppraisalPhase.required",
+                "Select which well activity phases this nomination is for"
+            )
+        );
   }
 
   @ParameterizedTest
   @NullAndEmptySource
   void validate_whenInvalidWellsSelected_nullAndEmptySource_thenHasError(List<String> invalidValue) {
     var form = NominatedWellFormTestUtil.builder()
-        .withWells(List.of())
+        .withWells(invalidValue)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notEmpty",
+                "You must select at least one well"
+            )
+        );
   }
 
   @Test
@@ -165,10 +182,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notEmpty",
+                "You must select at least one well"
+            )
+        );
   }
 
   @Test
@@ -181,10 +203,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notEmpty",
+                "You must select at least one well"
+            )
+        );
   }
 
   @Test
@@ -197,10 +224,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notAllSelectable"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notAllSelectable",
+                "You can only submit valid wells"
+            )
+        );
   }
 
   @Test
@@ -217,10 +249,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("wellsSelect", Set.of("wellsSelect.notAllSelectable"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "wellsSelect",
+                "wellsSelect.notAllSelectable",
+                "You can only submit valid wells"
+            )
+        );
   }
 
   @Test
@@ -244,14 +281,15 @@ class NominatedWellDetailFormValidatorTest {
 
     nominatedWellDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("forAllWellPhases", Set.of("forAllWellPhases.selectedAll"))
-    );
-  }
-
-  static Stream<Arguments> getInvalidArguments() {
-    return Stream.of(Arguments.of(List.of()), Arguments.of(List.of("FISH")));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "forAllWellPhases",
+                "forAllWellPhases.selectedAll",
+                "Select Yes if all phases are applicable"
+            )
+        );
   }
 
   private static class NonSupportedClass {

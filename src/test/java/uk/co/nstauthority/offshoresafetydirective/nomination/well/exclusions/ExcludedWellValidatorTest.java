@@ -2,12 +2,11 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well.exclusions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaWellboreService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
@@ -25,7 +25,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaAccessService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.summary.WellSummaryItemView;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ExcludedWellValidatorTest {
@@ -76,23 +75,15 @@ class ExcludedWellValidatorTest {
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.field(),
-            Set.of(ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.code())
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.field(),
-            Set.of(ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.message())
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.field(),
+                ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.code(),
+                ExcludedWellValidator.HAS_WELL_TO_EXCLUDE_REQUIRED.message()
+            )
+        );
   }
 
   @Test
@@ -106,12 +97,7 @@ class ExcludedWellValidatorTest {
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorCodes).isEmpty();
-    assertThat(resultingErrorMessages).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -128,23 +114,15 @@ class ExcludedWellValidatorTest {
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.field(),
-            Set.of(ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.code())
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.field(),
-            Set.of(ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.message())
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.field(),
+                ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.code(),
+                ExcludedWellValidator.NO_WELLS_IN_SUBAREAS.message()
+            )
+        );
   }
 
   @Test
@@ -168,23 +146,15 @@ class ExcludedWellValidatorTest {
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.field(),
-            Set.of(ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.code())
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.field(),
-            Set.of(ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.message())
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.field(),
+                ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.code(),
+                ExcludedWellValidator.WELL_TO_EXCLUDE_EMPTY.message()
+            )
+        );
   }
 
   @Test
@@ -208,14 +178,7 @@ class ExcludedWellValidatorTest {
 
     excludedWellValidator.validate(form, bindingResult, new ExcludedWellValidatorHint(NOMINATION_DETAIL));
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).isEmpty();
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).isEmpty();
-
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   static class UnsupportedClass {}

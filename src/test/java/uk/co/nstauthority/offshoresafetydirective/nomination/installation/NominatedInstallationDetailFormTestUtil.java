@@ -28,23 +28,30 @@ public class NominatedInstallationDetailFormTestUtil {
     private Boolean developmentProductionPhase;
     private Boolean decommissioningPhase;
 
+    private boolean licenceValueSet = false;
+    private boolean installationValueSet = false;
+
     public NominatedInstallationDetailFormBuilder withInstallations(List<String> installations) {
       this.installations = installations;
+      this.installationValueSet = true;
       return this;
     }
 
     public NominatedInstallationDetailFormBuilder withInstallation(int installationId) {
       this.installations.add(String.valueOf(installationId));
+      this.installationValueSet = true;
       return this;
     }
 
     public NominatedInstallationDetailFormBuilder withLicences(List<String> licences) {
       this.licences = licences;
+      this.licenceValueSet = true;
       return this;
     }
 
     public NominatedInstallationDetailFormBuilder withLicence(Integer licenceId) {
       this.licences.add(String.valueOf(licenceId));
+      this.licenceValueSet = true;
       return this;
     }
 
@@ -121,8 +128,20 @@ public class NominatedInstallationDetailFormTestUtil {
     public NominatedInstallationDetailForm build() {
 
       var form = new NominatedInstallationDetailForm();
+
+      // need to be valid integers for mocking calls to EPA
+      if (!installationValueSet) {
+        installations.add("100");
+      }
+
       form.setInstallations(installations);
       form.setForAllInstallationPhases(Objects.toString(forAllInstallationPhases, null));
+
+      // need to be valid integers for mocking calls to EPA
+      if (!licenceValueSet) {
+        licences.add("200");
+      }
+
       form.setLicences(licences);
       form.setDevelopmentDesignPhase(Objects.toString(developmentDesignPhase, null));
       form.setDevelopmentConstructionPhase(Objects.toString(developmentConstructionPhase, null));

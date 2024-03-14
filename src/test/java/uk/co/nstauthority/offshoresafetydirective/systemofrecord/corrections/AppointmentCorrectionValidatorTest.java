@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceBrandingConfigurationPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties;
@@ -45,7 +46,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class AppointmentCorrectionValidatorTest {
@@ -222,11 +222,11 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("appointmentType", Set.of("Select the type of appointment")));
+            tuple("appointmentType", "appointmentType.required", "Select the type of appointment")
+        );
   }
 
   @Test
@@ -326,13 +326,13 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "parentWellboreAppointmentId.inputValue",
-                Set.of("The selected appointment cannot be an appointment for this well")
+                "parentWellboreAppointmentId.inputValue.referencesCurrent",
+                "The selected appointment cannot be an appointment for this well"
             )
         );
   }
@@ -375,13 +375,13 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "parentWellboreAppointmentId.inputValue",
-                Set.of("Select a valid appointment")
+                "parentWellboreAppointmentId.inputValue.invalidAppointment",
+                "Select a valid appointment"
             )
         );
   }
@@ -420,13 +420,13 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "parentWellboreAppointmentId.inputValue",
-                Set.of("Select a valid appointment")
+                "parentWellboreAppointmentId.inputValue.invalidAppointment",
+                "Select a valid appointment"
             )
         );
   }
@@ -465,13 +465,13 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "parentWellboreAppointmentId.inputValue",
-                Set.of("Enter the parent well appointment")
+                "parentWellboreAppointmentId.required",
+                "Enter the parent well appointment"
             )
         );
   }
@@ -551,15 +551,14 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("appointedOperatorId", Set.of("Select the appointed operator")),
-            entry("appointmentType", Set.of("Select the type of appointment")),
-            entry("hasEndDate", Set.of("Select Yes if the appointment has an end date")),
-            entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases")),
-            entry("reason.inputValue", Set.of("Enter a reason for the correction"))
+            tuple("appointedOperatorId", "Select the appointed operator"),
+            tuple("appointmentType", "Select the type of appointment"),
+            tuple("hasEndDate", "Select Yes if the appointment has an end date"),
+            tuple("forAllPhases", "Select Yes if this appointment is for all activity phases"),
+            tuple("reason.inputValue", "Enter a reason for the correction")
         );
 
     verify(appointmentCorrectionDateValidator).validateAppointmentEndDateIsBetweenAcceptableRange(
@@ -596,18 +595,16 @@ class AppointmentCorrectionValidatorTest {
         100,
         AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
     ))
-        .thenReturn(Optional.empty());
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
     when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("hasEndDate", Set.of("Select Yes if the appointment has an end date"))
-        );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(tuple("hasEndDate", "hasEndDate.required", "Select Yes if the appointment has an end date"));
 
     verify(appointmentCorrectionDateValidator).validateDates(
         form,
@@ -652,11 +649,12 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("appointedOperatorId", Set.of("Select a valid operator"))
-        );
+    assertThat(bindingResult.getFieldErrors())
+        // as this is a parameterized test and the required inputs change per appointment type,
+        // only assert on fields we care about
+        .filteredOn(fieldError -> fieldError.getField().equals("appointedOperatorId"))
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(tuple("appointedOperatorId", "appointedOperatorId.invalid", "Select a valid operator"));
 
     verify(appointmentCorrectionDateValidator).validateDates(
         form,
@@ -703,11 +701,12 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("phases", Set.of("Select at least one activity phase"))
-        );
+    assertThat(bindingResult.getFieldErrors())
+        // as this is a parameterized test and the required inputs change per appointment type,
+        // only assert on fields we care about
+        .filteredOn(fieldError -> fieldError.getField().equals("phases"))
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(tuple("phases", "phases.required", "Select at least one activity phase"));
 
     verify(appointmentCorrectionDateValidator).validateDates(
         form,
@@ -758,11 +757,12 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("phases", Set.of("Select a valid activity phase"))
-        );
+    assertThat(bindingResult.getFieldErrors())
+        // as this is a parameterized test and the required inputs change per appointment type,
+        // only assert on fields we care about
+        .filteredOn(fieldError -> fieldError.getField().equals("phases"))
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(tuple("phases", "phases.invalid", "Select a valid activity phase"));
 
     verify(appointmentCorrectionDateValidator).validateDates(form,
         bindingResult,
@@ -862,12 +862,18 @@ class AppointmentCorrectionValidatorTest {
     when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(UUID.fromString(form.getOnlineNominationReference())),
+        EnumSet.of(NominationStatus.APPOINTED)
+    ))
+        .thenReturn(Optional.of(NominationDetailTestUtil.builder().build()));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("forAllPhases", Set.of("Select Yes if this appointment is for all activity phases"))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("forAllPhases", "forAllPhases.required", "Select Yes if this appointment is for all activity phases")
         );
 
     verify(appointmentCorrectionDateValidator).validateDates(form,
@@ -976,10 +982,13 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errorMessages)
-        .contains(
-            entry("phases", Set.of("Select another phase in addition to decommissioning"))
+    assertThat(bindingResult.getFieldErrors())
+        // as this is a parameterized test and the required inputs change per appointment type,
+        // only assert on fields we care about
+        .filteredOn(fieldError -> fieldError.getField().equals("phases"))
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("phases", "phases.requiresAdditionalPhase", "Select another phase in addition to decommissioning")
         );
 
     verify(appointmentCorrectionDateValidator).validateDates(form,
@@ -1187,12 +1196,12 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .contains(
-            entry("appointedOperatorId", Set.of("Select a valid operator"))
-        );
+    assertThat(bindingResult.getFieldErrors())
+        // as this is a parameterized test and the required inputs change per appointment type,
+        // only assert on fields we care about
+        .filteredOn(fieldError -> fieldError.getField().equals("appointedOperatorId"))
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(tuple("appointedOperatorId", "appointedOperatorId.invalid", "Select a valid operator"));
 
     verify(appointmentCorrectionDateValidator).validateDates(form,
         bindingResult,
@@ -1234,11 +1243,10 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("appointmentType", Set.of("Select the type of appointment"))
+            tuple("appointmentType", "appointmentType.required", "Select the type of appointment")
         );
 
     verify(appointmentCorrectionDateValidator).validateAppointmentEndDateIsBetweenAcceptableRange(
@@ -1378,11 +1386,10 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("appointmentType", Set.of("You can only have one deemed appointment"))
+            tuple("appointmentType", "appointmentType.tooManyDeemed", "You can only have one deemed appointment")
         );
 
     verify(appointmentCorrectionDateValidator).validateDates(form,
@@ -1408,30 +1415,36 @@ class AppointmentCorrectionValidatorTest {
         appointmentDto.assetDto().portalAssetType()
     );
 
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
+
     appointmentCorrectionValidator.validate(
         form,
         bindingResult,
         hint
     );
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .containsEntry("onlineNominationReference", Set.of(
-            "Enter a %s nomination reference".formatted(
-                SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic()
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "onlineNominationReference",
+                "onlineNominationReference.required",
+                "Enter a %s nomination reference"
+                    .formatted(SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic())
             )
-        ));
+        );
   }
 
   @Test
   void validate_whenOnlineAppointmentType_andNoAppointedNomination_thenHasError() {
 
-    var nominationId = new NominationId(UUID.randomUUID());
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(AppointmentType.ONLINE_NOMINATION)
         .withOnlineNominationReference(null)
-        .withOnlineNominationReference(nominationId.id().toString())
         .build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
@@ -1442,25 +1455,24 @@ class AppointmentCorrectionValidatorTest {
         appointmentDto.assetDto().portalAssetType()
     );
 
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        nominationId,
-        EnumSet.of(NominationStatus.APPOINTED)
-    )).thenReturn(Optional.empty());
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(PortalOrganisationDtoTestUtil.builder().build()));
 
-    appointmentCorrectionValidator.validate(
-        form,
-        bindingResult,
-        hint
-    );
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .containsEntry("onlineNominationReference", Set.of(
-            "Enter a valid %s nomination reference".formatted(
-                SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic()
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "onlineNominationReference",
+                    "onlineNominationReference.required",
+                    "Enter a %s nomination reference"
+                        .formatted(SERVICE_BRANDING_CONFIGURATION_PROPERTIES.getServiceConfigurationProperties().mnemonic())
             )
-        ));
+        );
   }
 
   @Test
@@ -1495,12 +1507,19 @@ class AppointmentCorrectionValidatorTest {
     when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
         .thenReturn(List.of(appointmentDto));
 
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(UUID.fromString(form.getOnlineNominationReference())),
+        EnumSet.of(NominationStatus.APPOINTED)
+    ))
+        .thenReturn(Optional.of(NominationDetailTestUtil.builder().build()));
+
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages)
-        .containsEntry("reason.inputValue", Set.of("Enter a reason for the correction"));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("reason.inputValue", "reason.required", "Enter a reason for the correction")
+        );
   }
 
   @ParameterizedTest
@@ -1509,6 +1528,7 @@ class AppointmentCorrectionValidatorTest {
   void validate_whenAppointedOrganisationNotValid_thenError(String invalidValue) {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointedOperatorId(invalidValue)
+        .withAppointmentType(AppointmentType.DEEMED)
         .build();
 
     var appointmentDto = AppointmentDtoTestUtil.builder().build();
@@ -1521,9 +1541,11 @@ class AppointmentCorrectionValidatorTest {
 
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorMessages).containsEntry("appointedOperatorId", Set.of("Select the appointed operator"));
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("appointedOperatorId", "appointedOperatorId.required", "Select the appointed operator")
+        );
   }
 
   private static class UnsupportedClass {

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.re
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,8 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamMemberRolesForm;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 class RegulatorTeamMemberRolesValidatorTest {
 
@@ -40,23 +41,15 @@ class RegulatorTeamMemberRolesValidatorTest {
 
     var bindingResult = validateTeamMemberRolesForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
+                RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_CODE,
+                RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -67,23 +60,15 @@ class RegulatorTeamMemberRolesValidatorTest {
 
     var bindingResult = validateTeamMemberRolesForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
+                RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_CODE,
+                RegulatorTeamMemberRolesValidator.ROLES_REQUIRED_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -94,23 +79,15 @@ class RegulatorTeamMemberRolesValidatorTest {
 
     var bindingResult = validateTeamMemberRolesForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLE_INVALID_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_INVALID_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
+                RegulatorTeamMemberRolesValidator.ROLE_INVALID_CODE,
+                RegulatorTeamMemberRolesValidator.ROLES_INVALID_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -121,23 +98,15 @@ class RegulatorTeamMemberRolesValidatorTest {
 
     var bindingResult = validateTeamMemberRolesForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLE_INVALID_CODE)
-        )
-    );
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(
-            RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
-            Set.of(RegulatorTeamMemberRolesValidator.ROLES_INVALID_ERROR_MESSAGE)
-        )
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                RegulatorTeamMemberRolesValidator.ROLES_FIELD_NAME,
+                RegulatorTeamMemberRolesValidator.ROLE_INVALID_CODE,
+                RegulatorTeamMemberRolesValidator.ROLES_INVALID_ERROR_MESSAGE
+            )
+        );
   }
 
   @Test
@@ -148,13 +117,7 @@ class RegulatorTeamMemberRolesValidatorTest {
 
     var bindingResult = validateTeamMemberRolesForm(form);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    assertThat(resultingErrorCodes).isEmpty();
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(resultingErrorMessages).isEmpty();
+    assertThat(bindingResult.hasFieldErrors()).isFalse();
   }
 
   private BindingResult validateTeamMemberRolesForm(TeamMemberRolesForm teamMemberRolesForm) {

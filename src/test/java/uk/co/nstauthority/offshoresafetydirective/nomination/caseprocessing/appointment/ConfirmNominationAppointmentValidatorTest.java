@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.app
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
@@ -27,7 +28,6 @@ import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestU
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class ConfirmNominationAppointmentValidatorTest {
@@ -68,14 +68,24 @@ class ConfirmNominationAppointmentValidatorTest {
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
-        .contains(
-            entry("appointmentDate.dayInput.inputValue",
-                Set.of("Enter a complete Appointment date")),
-            entry("appointmentDate.monthInput.inputValue", Set.of("")),
-            entry("appointmentDate.yearInput.inputValue", Set.of(""))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "appointmentDate.dayInput.inputValue",
+                "appointmentDate.dayInput.required",
+                "Enter a complete Appointment date"
+            ),
+            tuple(
+                "appointmentDate.monthInput.inputValue",
+                "appointmentDate.monthInput.required",
+                ""
+            ),
+            tuple(
+                "appointmentDate.yearInput.inputValue",
+                "appointmentDate.yearInput.required",
+                ""
+            )
         );
   }
 
@@ -142,14 +152,7 @@ class ConfirmNominationAppointmentValidatorTest {
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
-        .doesNotContainKeys(
-            "appointmentDate.dayInput.inputValue",
-            "appointmentDate.monthInput.inputValue",
-            "appointmentDate.yearInput.inputValue"
-        );
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -169,14 +172,24 @@ class ConfirmNominationAppointmentValidatorTest {
 
     var formattedDate = DateUtil.formatShortDate(LOCAL_DATE_NOW);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
-        .contains(
-            entry("appointmentDate.dayInput.inputValue",
-                Set.of("Appointment date must be the same as or before %s".formatted(formattedDate))),
-            entry("appointmentDate.monthInput.inputValue", Set.of("")),
-            entry("appointmentDate.yearInput.inputValue", Set.of(""))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "appointmentDate.dayInput.inputValue",
+                "appointmentDate.dayInput.maxDateExceeded",
+                "Appointment date must be the same as or before %s".formatted(formattedDate)
+            ),
+            tuple(
+                "appointmentDate.monthInput.inputValue",
+                "appointmentDate.monthInput.maxDateExceeded",
+                ""
+            ),
+            tuple(
+                "appointmentDate.yearInput.inputValue",
+                "appointmentDate.yearInput.maxDateExceeded",
+                ""
+            )
         );
   }
 
@@ -198,14 +211,24 @@ class ConfirmNominationAppointmentValidatorTest {
 
     var formattedDate = DateUtil.formatShortDate(decisionDate);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
-        .contains(
-            entry("appointmentDate.dayInput.inputValue",
-                Set.of("Appointment date must be the same as or after %s".formatted(formattedDate))),
-            entry("appointmentDate.monthInput.inputValue", Set.of("")),
-            entry("appointmentDate.yearInput.inputValue", Set.of(""))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "appointmentDate.dayInput.inputValue",
+                "appointmentDate.dayInput.minDateNotMet",
+                "Appointment date must be the same as or after %s".formatted(formattedDate)
+            ),
+            tuple(
+                "appointmentDate.monthInput.inputValue",
+                "appointmentDate.monthInput.minDateNotMet",
+                ""
+            ),
+            tuple(
+                "appointmentDate.yearInput.inputValue",
+                "appointmentDate.yearInput.minDateNotMet",
+                ""
+            )
         );
   }
 
@@ -226,14 +249,24 @@ class ConfirmNominationAppointmentValidatorTest {
     var validatorHint = new ConfirmNominationAppointmentValidatorHint(nominationDetail);
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
-        .contains(
-            entry("appointmentDate.dayInput.inputValue",
-                Set.of("Appointment date must be a real date")),
-            entry("appointmentDate.monthInput.inputValue", Set.of("")),
-            entry("appointmentDate.yearInput.inputValue", Set.of(""))
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "appointmentDate.dayInput.inputValue",
+                "appointmentDate.dayInput.invalid",
+                "Appointment date must be a real date"
+            ),
+            tuple(
+                "appointmentDate.monthInput.inputValue",
+                "appointmentDate.monthInput.invalid",
+                ""
+            ),
+            tuple(
+                "appointmentDate.yearInput.inputValue",
+                "appointmentDate.yearInput.invalid",
+                ""
+            )
         );
   }
 
@@ -264,18 +297,19 @@ class ConfirmNominationAppointmentValidatorTest {
 
     confirmNominationAppointmentValidator.validate(form, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var allowedExtensions = FILE_UPLOAD_PROPERTIES.defaultPermittedFileExtensions()
         .stream()
         .sorted(String::compareToIgnoreCase)
         .collect(Collectors.joining(", "));
 
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("files", Set.of(
+            tuple(
+                "files",
+                "files.invalidExtension",
                 "The selected files must be a %s".formatted(allowedExtensions)
-            ))
+            )
         );
   }
 

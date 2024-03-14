@@ -2,7 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.submission;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -12,7 +12,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,11 +21,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailTestingUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationSubmissionFormValidatorTest {
@@ -70,17 +69,18 @@ class NominationSubmissionFormValidatorTest {
 
     nominationSubmissionFormValidator.validate(form, bindingResult, nominationDetail);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "confirmedAuthority",
-                Set.of("You must confirm that you have authority to submit the nomination")
+                "confirmedAuthority.required",
+                "You must confirm that you have authority to submit the nomination"
             ),
-            entry(
+            tuple(
                 "reasonForFastTrack.inputValue",
-                Set.of("Enter the reason that this nomination is required within 3 months")
+                "reasonForFastTrack.required",
+                "Enter the reason that this nomination is required within 3 months"
             )
         );
   }
@@ -116,14 +116,15 @@ class NominationSubmissionFormValidatorTest {
 
     nominationSubmissionFormValidator.validate(form, bindingResult, nominationDetail);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "confirmedAuthority",
-                Set.of("You must confirm that you have authority to submit the nomination")
-            ));
+                "confirmedAuthority.required",
+                "You must confirm that you have authority to submit the nomination"
+            )
+        );
   }
 
   @Test
@@ -145,14 +146,15 @@ class NominationSubmissionFormValidatorTest {
 
     nominationSubmissionFormValidator.validate(form, bindingResult, nominationDetail);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry(
+            tuple(
                 "reasonForFastTrack.inputValue",
-                Set.of("Enter the reason that this nomination is required within 3 months")
-            ));
+                "reasonForFastTrack.required",
+                "Enter the reason that this nomination is required within 3 months"
+            )
+        );
   }
 
   @ParameterizedTest

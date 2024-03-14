@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.validationutil;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.Instant;
@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 class FileValidationUtilTest {
 
@@ -48,9 +48,11 @@ class FileValidationUtilTest {
         .withMaximumNumberOfFiles(1, null)
         .validate(errors, form.getFiles(), "files", Set.of(VALID_EXTENSION));
 
-    var errorValues = ValidatorTestingUtil.extractErrorMessages(errors);
-    assertThat(errorValues)
-        .containsExactly(entry("files", Set.of(minErrorMessage)));
+    assertThat(errors.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("files", "files.belowThreshold", minErrorMessage)
+        );
   }
 
   @Test
@@ -70,9 +72,11 @@ class FileValidationUtilTest {
         .withMaximumNumberOfFiles(1, maxErrorMessage)
         .validate(errors, form.getFiles(), "files", Set.of(VALID_EXTENSION));
 
-    var errorValues = ValidatorTestingUtil.extractErrorMessages(errors);
-    assertThat(errorValues)
-        .containsExactly(entry("files", Set.of(maxErrorMessage)));
+    assertThat(errors.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("files", "files.limitExceeded", maxErrorMessage)
+        );
   }
 
   @Test
@@ -93,11 +97,11 @@ class FileValidationUtilTest {
         .withMaximumNumberOfFiles(1, null)
         .validate(errors, form.getFiles(), "files", Set.of(VALID_EXTENSION, otherValidExtension));
 
-    var errorValues = ValidatorTestingUtil.extractErrorMessages(errors);
-    assertThat(errorValues)
-        .containsExactly(entry("files", Set.of(
-            "The selected files must be a %s, %s".formatted(otherValidExtension, VALID_EXTENSION)
-        )));
+    assertThat(errors.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("files", "files.invalidExtension", "The selected files must be a %s, %s".formatted(otherValidExtension, VALID_EXTENSION))
+        );
   }
 
   public static class FileForm {

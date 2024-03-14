@@ -29,14 +29,14 @@ public class AppointmentCorrectionFormTestUtil {
     private String hasEndDate = "false";
     private String offlineNominationReference = null;
     private String onlineNominationReference = UUID.randomUUID().toString();
-    private LocalDate offlineStartDate = LocalDate.now();
+    private LocalDate offlineStartDate = null;
     private LocalDate onlineStartDate = LocalDate.now();
-    private LocalDate forwardApprovedAppointmentStartDate = LocalDate.now();
+    private LocalDate forwardApprovedAppointmentStartDate = null;
     private String forwardApprovedAppointmentId = null;
     private LocalDate endDate = null;
     private String correctionReason = "reason for correction";
-    private String parentWellboreAppointmentId = UUID.randomUUID().toString();
-    private LocalDate parentWellAppointmentStartDate = LocalDate.now();
+    private String parentWellboreAppointmentId = null;
+    private LocalDate parentWellAppointmentStartDate = null;
 
     private Builder() {
       this.phases.add(InstallationPhase.DEVELOPMENT_DESIGN.name());
@@ -102,31 +102,23 @@ public class AppointmentCorrectionFormTestUtil {
       return this;
     }
 
-    public Builder withOfflineStartDate(LocalDate offlineStartDate) {
-      this.offlineStartDate = offlineStartDate;
-      return this;
-    }
-
-    public Builder withOnlineStartDate(LocalDate onlineStartDate) {
-      this.onlineStartDate = onlineStartDate;
-      return this;
-    }
-
-    public Builder withForwardApprovedStartDate(LocalDate forwardApprovedAppointmentStartDate) {
-      this.forwardApprovedAppointmentStartDate = forwardApprovedAppointmentStartDate;
-      return this;
-    }
-
     public Builder withForwardApprovedAppointmentId(String forwardApprovedAppointmentId) {
       this.forwardApprovedAppointmentId = forwardApprovedAppointmentId;
       return this;
     }
 
     public Builder withStartDate(LocalDate localDate) {
-      this.onlineStartDate = localDate;
-      this.offlineStartDate = localDate;
-      this.forwardApprovedAppointmentStartDate = localDate;
-      this.parentWellAppointmentStartDate = localDate;
+
+      if (AppointmentType.ONLINE_NOMINATION.name().equals(appointmentType)) {
+        this.onlineStartDate = localDate;
+      } else if (AppointmentType.OFFLINE_NOMINATION.name().equals(appointmentType)) {
+        this.offlineStartDate = localDate;
+      } else if (AppointmentType.FORWARD_APPROVED.name().equals(appointmentType)) {
+        this.forwardApprovedAppointmentStartDate = localDate;
+      } else if (AppointmentType.PARENT_WELLBORE.name().equals(appointmentType)) {
+        this.parentWellAppointmentStartDate = localDate;
+      }
+
       return this;
     }
 
@@ -142,11 +134,6 @@ public class AppointmentCorrectionFormTestUtil {
 
     public Builder withParentWellboreAppointmentId(String parentWellboreAppointmentId) {
       this.parentWellboreAppointmentId = parentWellboreAppointmentId;
-      return this;
-    }
-
-    public Builder withParentWellAppointmentStartDate(LocalDate parentWellAppointmentStartDate) {
-      this.parentWellAppointmentStartDate = parentWellAppointmentStartDate;
       return this;
     }
 
@@ -178,7 +165,7 @@ public class AppointmentCorrectionFormTestUtil {
       }
 
       if (forwardApprovedAppointmentStartDate == null) {
-        form.setOnlineAppointmentStartDate(new ThreeFieldDateInput(
+        form.setForwardApprovedAppointmentStartDate(new ThreeFieldDateInput(
             form.getForwardApprovedAppointmentStartDate().getFieldName(),
             form.getForwardApprovedAppointmentStartDate().getDisplayName()
         ));

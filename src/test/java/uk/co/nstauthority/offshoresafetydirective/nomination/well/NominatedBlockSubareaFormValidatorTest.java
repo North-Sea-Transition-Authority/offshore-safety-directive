@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 import static uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaFormValidator.LICENCE_BLOCK_SUBAREA_REQUEST_PURPOSE;
 
@@ -19,10 +20,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedBlockSubareaFormValidatorTest {
@@ -58,8 +59,7 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -71,10 +71,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("subareasSelect", Set.of("subareasSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "subareasSelect",
+                "subareasSelect.notEmpty",
+                "You must select at least one licence block subarea"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -100,10 +105,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("validForFutureWellsInSubarea", Set.of("validForFutureWellsInSubarea.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "validForFutureWellsInSubarea",
+                "validForFutureWellsInSubarea.required",
+                "Select Yes if this nomination should cover future wells that may be drilled in the selected subareas"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -128,10 +138,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("forAllWellPhases", Set.of("forAllWellPhases.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "forAllWellPhases",
+                "forAllWellPhases.required",
+                "Select Yes if this nomination is for all well activity phases"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -159,10 +174,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("explorationAndAppraisalPhase", Set.of("explorationAndAppraisalPhase.required"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "explorationAndAppraisalPhase",
+                "explorationAndAppraisalPhase.required",
+                "Select which well activity phases this nomination is for"
+            )
+        );
   }
 
   @ParameterizedTest
@@ -190,10 +210,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("validForFutureWellsInSubarea", Set.of("validForFutureWellsInSubarea.invalid"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "validForFutureWellsInSubarea",
+                "validForFutureWellsInSubarea.invalid",
+                "Cannot set this nomination for all future wells when the only selected well phase is decommissioning"
+            )
+        );
   }
 
   @Test
@@ -212,10 +237,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("subareasSelect", Set.of("subareasSelect.notEmpty"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "subareasSelect",
+                "subareasSelect.notEmpty",
+                "You must select at least one licence block subarea"
+            )
+        );
   }
 
   @Test
@@ -238,10 +268,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("subareasSelect", Set.of("subareasSelect.invalidSubarea"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "subareasSelect",
+                "subareasSelect.invalidSubarea",
+                "You can only submit valid licence block subareas"
+            )
+        );
   }
 
   @Test
@@ -264,10 +299,15 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("subareasSelect", Set.of("subareasSelect.invalidSubarea"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "subareasSelect",
+                "subareasSelect.invalidSubarea",
+                "You can only submit valid licence block subareas"
+            )
+        );
   }
 
   @Test
@@ -293,9 +333,14 @@ class NominatedBlockSubareaFormValidatorTest {
 
     nominatedBlockSubareaFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsExactly(
-        entry("forAllWellPhases", Set.of("forAllWellPhases.selectedAll"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "forAllWellPhases",
+                "forAllWellPhases.selectedAll",
+                "Select Yes if all phases are applicable"
+            )
+        );
   }
 }

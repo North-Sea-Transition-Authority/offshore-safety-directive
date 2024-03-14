@@ -168,7 +168,7 @@ public class AppointmentCorrectionDateValidator {
     if (hasOverlap || multipleActiveAppointmentsExist) {
       bindingResult.rejectValue(
           startDateInputValueFieldName,
-          "%s.overlapsOtherAppointmentPeriod",
+          "%s.overlapsOtherAppointmentPeriod".formatted(startDateInputValueFieldName),
           "Another appointment is active during this appointment period"
       );
     }

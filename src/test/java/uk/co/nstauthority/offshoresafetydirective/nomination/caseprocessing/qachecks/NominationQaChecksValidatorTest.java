@@ -1,16 +1,15 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.qachecks;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
+import org.springframework.validation.FieldError;
 
 @ExtendWith(MockitoExtension.class)
 class NominationQaChecksValidatorTest {
@@ -44,11 +43,10 @@ class NominationQaChecksValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     nominationQaChecksValidator.validate(form, bindingResult);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("comment.inputValue", Set.of("Enter QA comments"))
+            tuple("comment.inputValue", "comment.required", "Enter QA comments")
         );
   }
 

@@ -1,13 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,9 +17,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.validation.FrontEndErrorMessage;
 
 @ExtendWith(MockitoExtension.class)
@@ -131,17 +130,15 @@ class ApplicantDetailFormValidatorTest {
 
   private void assertErrorCodesAndMessages(BindingResult bindingResult, FrontEndErrorMessage frontEndErrorMessage) {
 
-    var errorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var errorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errorCodes).containsExactly(
-        entry(frontEndErrorMessage.field(), Set.of(frontEndErrorMessage.code()))
-    );
-
-    assertThat(errorMessages).containsExactly(
-        entry(frontEndErrorMessage.field(), Set.of(frontEndErrorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                frontEndErrorMessage.field(),
+                frontEndErrorMessage.code(),
+                frontEndErrorMessage.message()
+            )
+        );
   }
 
   private BindingResult validateApplicantDetailsForm(ApplicantDetailForm form) {

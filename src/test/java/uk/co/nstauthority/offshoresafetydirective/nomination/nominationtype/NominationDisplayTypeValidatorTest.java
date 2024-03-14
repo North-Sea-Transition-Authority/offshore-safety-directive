@@ -1,10 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.nominationtype;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,11 +11,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationInclusionFormService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionSetupFormService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationDisplayTypeValidatorTest {
@@ -48,8 +47,7 @@ class NominationDisplayTypeValidatorTest {
         FIELD_NAME
     );
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(errors);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(errors.hasErrors()).isFalse();
   }
 
   @Test
@@ -65,10 +63,15 @@ class NominationDisplayTypeValidatorTest {
         FIELD_NAME
     );
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(errors);
-    assertThat(extractedErrors).containsExactly(
-        entry(FIELD_NAME, Set.of("%s.invalid".formatted(FIELD_NAME)))
-    );
+    assertThat(errors.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                FIELD_NAME,
+                FIELD_NAME + ".invalid",
+                "You must add at least one well or installation to your nomination"
+            )
+        );
   }
 
   @Test
@@ -84,8 +87,7 @@ class NominationDisplayTypeValidatorTest {
         FIELD_NAME
     );
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(errors);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(errors.hasErrors()).isFalse();
   }
 
   @Test
@@ -101,10 +103,15 @@ class NominationDisplayTypeValidatorTest {
         FIELD_NAME
     );
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(errors);
-    assertThat(extractedErrors).containsExactly(
-        entry(FIELD_NAME, Set.of("%s.invalid".formatted(FIELD_NAME)))
-    );
+    assertThat(errors.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                FIELD_NAME,
+                FIELD_NAME + ".invalid",
+                "You must add at least one well or installation to your nomination"
+            )
+        );
   }
 
   private static class TestForm {

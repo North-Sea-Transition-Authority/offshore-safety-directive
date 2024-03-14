@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,12 +22,12 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
+import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominationDecisionValidatorTest {
@@ -61,41 +61,26 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors).containsExactly(
-        entry(
-            NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME,
-            Set.of(NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE)
-        ),
-        entry("decisionDate.dayInput.inputValue", Set.of("Enter a complete Decision date")),
-        entry("decisionDate.monthInput.inputValue", Set.of("")),
-        entry("decisionDate.yearInput.inputValue", Set.of("")),
-        entry("comments.inputValue", Set.of("Enter Decision comments")),
-        entry("decisionFiles", Set.of("Upload a decision document"))
-    );
-
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME,
+                NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME + ".empty",
+                NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE
+            ),
+            tuple("decisionDate.dayInput.inputValue", "decisionDate.dayInput.required", "Enter a complete Decision date"),
+            tuple("decisionDate.monthInput.inputValue", "decisionDate.monthInput.required", ""),
+            tuple("decisionDate.yearInput.inputValue", "decisionDate.yearInput.required", ""),
+            tuple("comments.inputValue", "comments.required", "Enter Decision comments"),
+            tuple("decisionFiles", "decisionFiles.belowThreshold", "Upload a decision document")
+        );
   }
 
   @Test
   void validate_whenFullyPopulated_thenNoErrors() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
-
-    nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
-    nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
-    nominationDecisionForm.getComments().setInputValue("comment text");
-
-    var uploadedFile = UploadedFileTestUtil.builder()
-        .withName("document.%s".formatted(VALID_EXTENSION))
-        .build();
-
-    var uploadedFileForm = new UploadedFileForm();
-    uploadedFileForm.setFileId(uploadedFile.getId());
-    uploadedFileForm.setFileName(uploadedFile.getName());
-    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
-
-    nominationDecisionForm.getDecisionFiles().add(uploadedFileForm);
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
     assertFalse(bindingResult.hasErrors());
@@ -103,7 +88,7 @@ class NominationDecisionValidatorTest {
 
   @Test
   void validate_whenNominationDecisionNotNullButInvalidString_thenVerifyError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     nominationDecisionForm.setNominationDecision("TEST_VALUE");
@@ -124,7 +109,7 @@ class NominationDecisionValidatorTest {
 
   @Test
   void validate_whenDecisionDateIsToday_thenVerifyNoError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var validDecisionDate = LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault());
@@ -136,7 +121,7 @@ class NominationDecisionValidatorTest {
 
   @Test
   void validate_whenDecisionDateIsSubmissionDate_thenVerifyNoError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var submittedDate = LocalDate.ofInstant(nominationDetail.getSubmittedInstant(), ZoneId.systemDefault());
@@ -149,30 +134,31 @@ class NominationDecisionValidatorTest {
 
   @Test
   void validate_whenDecisionDatePartiallyEntered_thenVerifyError() {
-    var nominationDecisionForm = new NominationDecisionForm();
-    var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
+    var nominationDecisionForm = getValidNominationDecisionForm();
 
     var validDecisionDate = LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault());
     nominationDecisionForm.getDecisionDate().getDayInput().setInteger(validDecisionDate.getDayOfMonth());
+    nominationDecisionForm.getDecisionDate().getMonthInput().setInputValue(null);
+    nominationDecisionForm.getDecisionDate().getYearInput().setInteger(validDecisionDate.getYear());
+
+    var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "decisionDate.dayInput.inputValue",
-        "decisionDate.monthInput.inputValue",
-        "decisionDate.yearInput.inputValue"
-    ).containsExactly(
-        null,
-        Set.of("Enter a complete Decision date"),
-        Set.of("")
-    );
-
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionDate.monthInput.inputValue",
+                "decisionDate.monthInput.required",
+                "Enter a complete Decision date"
+            )
+        );
   }
 
   @Test
   void validate_whenDecisionDateInvalidStringEntered_thenVerifyError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     nominationDecisionForm.getDecisionDate().getDayInput().setInputValue("non valid day");
@@ -181,22 +167,24 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "decisionDate.dayInput.inputValue",
-        "decisionDate.monthInput.inputValue",
-        "decisionDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Decision date must be a real date"),
-        Set.of(""),
-        Set.of("")
-    );
-
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionDate.dayInput.inputValue",
+                "decisionDate.dayInput.invalid",
+                "Decision date must be a real date"
+            ),
+            tuple("decisionDate.monthInput.inputValue", "decisionDate.monthInput.invalid", ""),
+            tuple("decisionDate.yearInput.inputValue", "decisionDate.yearInput.invalid", "")
+        );
   }
 
   @Test
   void validate_whenDecisionDateBeforeSubmittedDate_thenVerifyError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
+    nominationDecisionForm.getComments().setInputValue("comment input");
+
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var submittedDate = LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault())
@@ -208,22 +196,22 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "decisionDate.dayInput.inputValue",
-        "decisionDate.monthInput.inputValue",
-        "decisionDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Decision date must be the same as or after %s".formatted(
-            DateUtil.formatShortDate(submittedDate))),
-        Set.of(""),
-        Set.of("")
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionDate.dayInput.inputValue",
+                "decisionDate.dayInput.minDateNotMet",
+                "Decision date must be the same as or after %s".formatted(DateUtil.formatShortDate(submittedDate))
+            ),
+            tuple("decisionDate.monthInput.inputValue", "decisionDate.monthInput.minDateNotMet", ""),
+            tuple("decisionDate.yearInput.inputValue", "decisionDate.yearInput.minDateNotMet", "")
+        );
   }
 
   @Test
   void validate_whenDecisionDateAfterValidDate_thenVerifyError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var maxDecisionDate = LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault());
@@ -234,22 +222,22 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-    assertThat(errors).extractingByKeys(
-        "decisionDate.dayInput.inputValue",
-        "decisionDate.monthInput.inputValue",
-        "decisionDate.yearInput.inputValue"
-    ).containsExactly(
-        Set.of("Decision date must be the same as or before %s".formatted(
-            DateUtil.formatShortDate(maxDecisionDate))),
-        Set.of(""),
-        Set.of("")
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionDate.dayInput.inputValue",
+                "decisionDate.dayInput.maxDateExceeded",
+                "Decision date must be the same as or before %s".formatted(DateUtil.formatShortDate(maxDecisionDate))
+            ),
+            tuple("decisionDate.monthInput.inputValue", "decisionDate.monthInput.maxDateExceeded", ""),
+            tuple("decisionDate.yearInput.inputValue", "decisionDate.yearInput.maxDateExceeded", "")
+        );
   }
 
   @Test
   void validate_whenCommentsNotNull_thenVerifyNoError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     nominationDecisionForm.getComments().setInputValue("comment text");
@@ -260,7 +248,8 @@ class NominationDecisionValidatorTest {
 
   @Test
   void validate_whenFileHasNoDescription_thenVerifyHasError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
+
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var uploadedFileForm = new UploadedFileForm();
@@ -272,16 +261,20 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors).contains(
-        entry("decisionFiles[0].uploadedFileDescription", Set.of("Enter a description of this file"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionFiles[0].uploadedFileDescription",
+                "decisionFiles[0].uploadedFileDescription.required",
+                "Enter a description of this file"
+            )
+        );
   }
 
   @Test
   void validate_whenMoreThanOneFile_thenVerifyHasError() {
-    var nominationDecisionForm = new NominationDecisionForm();
+    var nominationDecisionForm = getValidNominationDecisionForm();
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     var firstUploadedFileForm = new UploadedFileForm();
@@ -296,19 +289,20 @@ class NominationDecisionValidatorTest {
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(errors).contains(
-        entry("decisionFiles", Set.of("Only one decision document can be uploaded"))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                "decisionFiles",
+                "decisionFiles.limitExceeded",
+                "Only one decision document can be uploaded"
+            )
+        );
   }
 
   @Test
   void validate_whenFileExtensionIsUnsupported_thenVerifyErrors() {
-    var nominationDecisionForm = new NominationDecisionForm();
-    nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
-    nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
-    nominationDecisionForm.getComments().setInputValue("comment text");
+    var nominationDecisionForm = getValidNominationDecisionForm();
 
     var uploadedFile = UploadedFileTestUtil.builder()
         .withName("document.invalid-extension")
@@ -319,21 +313,22 @@ class NominationDecisionValidatorTest {
     uploadedFileForm.setFileName(uploadedFile.getName());
     uploadedFileForm.setFileDescription(uploadedFile.getDescription());
 
-    nominationDecisionForm.getDecisionFiles().add(uploadedFileForm);
+    nominationDecisionForm.setDecisionFiles(List.of(uploadedFileForm));
 
     var bindingResult = new BeanPropertyBindingResult(nominationDecisionForm, "form");
 
     nominationDecisionValidator.validate(nominationDecisionForm, bindingResult, validatorHint);
 
-    var errors = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
     var allowedExtensions = "pdf";
 
-    assertThat(errors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("decisionFiles", Set.of(
+            tuple(
+                "decisionFiles",
+                "decisionFiles.invalidExtension",
                 "The selected files must be a %s".formatted(allowedExtensions)
-            ))
+            )
         );
   }
 
@@ -345,6 +340,28 @@ class NominationDecisionValidatorTest {
   @Test
   void supports_whenIncorrectClass_thenDoesNotSupport() {
     assertFalse(nominationDecisionValidator.supports(UnsupportedClass.class));
+  }
+
+  private NominationDecisionForm getValidNominationDecisionForm() {
+
+    var nominationDecisionForm = new NominationDecisionForm();
+
+    nominationDecisionForm.setNominationDecision(NominationDecision.NO_OBJECTION);
+    nominationDecisionForm.getDecisionDate().setDate(LocalDate.ofInstant(clockNow.instant(), ZoneId.systemDefault()));
+    nominationDecisionForm.getComments().setInputValue("comment text");
+
+    var uploadedFile = UploadedFileTestUtil.builder()
+        .withName("document.%s".formatted(VALID_EXTENSION))
+        .build();
+
+    var uploadedFileForm = new UploadedFileForm();
+    uploadedFileForm.setFileId(uploadedFile.getId());
+    uploadedFileForm.setFileName(uploadedFile.getName());
+    uploadedFileForm.setFileDescription(uploadedFile.getDescription());
+
+    nominationDecisionForm.getDecisionFiles().add(uploadedFileForm);
+
+    return nominationDecisionForm;
   }
 
   private static class UnsupportedClass {

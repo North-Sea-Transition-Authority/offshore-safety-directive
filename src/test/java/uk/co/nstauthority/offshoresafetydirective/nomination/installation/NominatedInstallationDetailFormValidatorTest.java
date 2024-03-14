@@ -1,7 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.installation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,13 +20,13 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceQueryService;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
 
 @ExtendWith(MockitoExtension.class)
 class NominatedInstallationDetailFormValidatorTest {
@@ -63,17 +62,29 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-
     var installationsRequiredErrorMessage = NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR;
     var licencesRequiredErrorMessage = NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR;
     var forAllInstallationPhasesErrorMessage = NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR;
 
-    assertThat(resultingErrors).containsExactly(
-        entry(installationsRequiredErrorMessage.field(), Set.of(installationsRequiredErrorMessage.code())),
-        entry(licencesRequiredErrorMessage.field(), Set.of(licencesRequiredErrorMessage.code())),
-        entry(forAllInstallationPhasesErrorMessage.field(), Set.of(forAllInstallationPhasesErrorMessage.code()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactlyInAnyOrder(
+            tuple(
+                installationsRequiredErrorMessage.field(),
+                installationsRequiredErrorMessage.code(),
+                installationsRequiredErrorMessage.message()
+            ),
+            tuple(
+                licencesRequiredErrorMessage.field(),
+                licencesRequiredErrorMessage.code(),
+                licencesRequiredErrorMessage.message()
+            ),
+            tuple(
+                forAllInstallationPhasesErrorMessage.field(),
+                forAllInstallationPhasesErrorMessage.code(),
+                forAllInstallationPhasesErrorMessage.message()
+            )
+        );
   }
 
   @Test
@@ -102,8 +113,7 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -135,8 +145,7 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @ParameterizedTest
@@ -169,19 +178,15 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR.field(),
+                NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR.code(),
+                NominatedInstallationDetailFormValidator.ALL_PHASES_REQUIRED_ERROR.message()
+            )
+        );
   }
 
   @ParameterizedTest
@@ -220,19 +225,15 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.SPECIFIC_PHASES_REQUIRED_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.SPECIFIC_PHASES_REQUIRED_ERROR.field(),
+                NominatedInstallationDetailFormValidator.SPECIFIC_PHASES_REQUIRED_ERROR.code(),
+                NominatedInstallationDetailFormValidator.SPECIFIC_PHASES_REQUIRED_ERROR.message()
+            )
+        );
   }
 
   @Test
@@ -265,19 +266,15 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR.field(),
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR.code(),
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_FOUND_IN_PORTAL_ERROR.message()
+            )
+        );
   }
 
   @Test
@@ -313,8 +310,7 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(formWithDuplicates, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -350,8 +346,7 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(formWithDuplicates, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -383,19 +378,15 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.LICENCE_NOT_FOUND_IN_PORTAL_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.LICENCE_NOT_FOUND_IN_PORTAL_ERROR.field(),
+                NominatedInstallationDetailFormValidator.LICENCE_NOT_FOUND_IN_PORTAL_ERROR.code(),
+                NominatedInstallationDetailFormValidator.LICENCE_NOT_FOUND_IN_PORTAL_ERROR.message()
+            )
+        );
   }
 
   @ParameterizedTest
@@ -429,55 +420,81 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.INSTALLATION_NOT_VALID_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_VALID_ERROR.field(),
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_VALID_ERROR.code(),
+                NominatedInstallationDetailFormValidator.INSTALLATION_NOT_VALID_ERROR.message()
+            )
+        );
   }
 
   @ParameterizedTest
   @MethodSource("getInvalidArguments")
-  void validate_whenInvaliInstallationsSelected_thenHasError(List<String> invalidValue) {
+  void validate_whenInvalidInstallationsSelected_thenHasError(List<String> invalidValue) {
     var form = NominatedInstallationDetailFormTestUtil.builder()
         .withInstallations(invalidValue)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
+    List<Integer> licences = form.getLicences()
+        .stream()
+        .map(Integer::parseInt)
+        .toList();
+
+    when(licenceQueryService.getLicencesByIdIn(
+        licences,
+        NominatedInstallationDetailFormValidator.LICENCES_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(LicenceDtoTestUtil.builder().build()));
+
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsEntry(
-        NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.field(),
-            Set.of(NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.code())
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.field(),
+                NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.code(),
+                NominatedInstallationDetailFormValidator.INSTALLATIONS_REQUIRED_ERROR.message()
+            )
+        );
   }
 
   @ParameterizedTest
   @MethodSource("getInvalidArguments")
   void validate_whenInvalidLicencesSelected_thenHasError(List<String> invalidValue) {
     var form = NominatedInstallationDetailFormTestUtil.builder()
-        .withInstallations(invalidValue)
+        .withLicences(invalidValue)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
 
+    List<Integer> installations = form.getInstallations()
+        .stream()
+        .map(Integer::parseInt)
+        .toList();
+
+    when(installationQueryService.getInstallationsByIdIn(
+        installations,
+        NominatedInstallationDetailFormValidator.INSTALLATIONS_SELECTED_VALIDATION_PURPOSE
+    ))
+        .thenReturn(List.of(InstallationDtoTestUtil.builder().build()));
+
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).containsEntry(
-        NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.field(),
-        Set.of(NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.code())
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.field(),
+                NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.code(),
+                NominatedInstallationDetailFormValidator.LICENCE_REQUIRED_ERROR.message()
+            )
+        );
   }
 
   @Test
@@ -509,8 +526,7 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    assertThat(extractedErrors).isEmpty();
+    assertThat(bindingResult.hasErrors()).isFalse();
   }
 
   @Test
@@ -547,19 +563,15 @@ class NominatedInstallationDetailFormValidatorTest {
 
     nominatedInstallationDetailFormValidator.validate(form, bindingResult);
 
-    var resultingErrorCodes = ValidatorTestingUtil.extractErrors(bindingResult);
-
-    var resultingErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    var errorMessage = NominatedInstallationDetailFormValidator.FOR_ALL_PHASES_ERROR;
-
-    assertThat(resultingErrorCodes).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.code()))
-    );
-
-    assertThat(resultingErrorMessages).containsExactly(
-        entry(errorMessage.field(), Set.of(errorMessage.message()))
-    );
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple(
+                NominatedInstallationDetailFormValidator.FOR_ALL_PHASES_ERROR.field(),
+                NominatedInstallationDetailFormValidator.FOR_ALL_PHASES_ERROR.code(),
+                NominatedInstallationDetailFormValidator.FOR_ALL_PHASES_ERROR.message()
+            )
+        );
   }
 
 

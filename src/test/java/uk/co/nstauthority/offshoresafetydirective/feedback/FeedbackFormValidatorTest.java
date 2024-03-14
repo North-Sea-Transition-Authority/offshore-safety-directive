@@ -1,11 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.feedback;
 
-import static java.util.Map.entry;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.validation.BeanPropertyBindingResult;
-import uk.co.nstauthority.offshoresafetydirective.util.ValidatorTestingUtil;
+import org.springframework.validation.FieldError;
 
 @ExtendWith(MockitoExtension.class)
 class FeedbackFormValidatorTest {
@@ -58,17 +57,10 @@ class FeedbackFormValidatorTest {
 
     feedbackFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    var extractedErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(extractedErrors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("serviceRating", Set.of("serviceRating.required"))
-        );
-
-    assertThat(extractedErrorMessages)
-        .containsExactly(
-            entry("serviceRating", Set.of("Select how you felt about this service"))
+            tuple("serviceRating", "serviceRating.required", "Select how you felt about this service")
         );
   }
 
@@ -83,17 +75,10 @@ class FeedbackFormValidatorTest {
 
     feedbackFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    var extractedErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(extractedErrors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("serviceRating", Set.of("serviceRating.required"))
-        );
-
-    assertThat(extractedErrorMessages)
-        .containsExactly(
-            entry("serviceRating", Set.of("Select how you felt about this service"))
+            tuple("serviceRating", "serviceRating.required", "Select how you felt about this service")
         );
   }
 
@@ -109,19 +94,13 @@ class FeedbackFormValidatorTest {
     var bindingResult = new BeanPropertyBindingResult(form, "form");
     feedbackFormValidator.validate(form, bindingResult);
 
-    var extractedErrors = ValidatorTestingUtil.extractErrors(bindingResult);
-    var extractedErrorMessages = ValidatorTestingUtil.extractErrorMessages(bindingResult);
-
-    assertThat(extractedErrors)
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            entry("feedback.inputValue", Set.of("feedback.invalid"))
-        );
-
-    assertThat(extractedErrorMessages)
-        .containsExactly(
-            entry(
+            tuple(
                 "feedback.inputValue",
-                Set.of("Feedback must contain %s characters or fewer".formatted(FeedbackController.MAX_FEEDBACK_CHARACTER_LENGTH))
+                "feedback.invalid",
+                "Feedback must contain %s characters or fewer".formatted(FeedbackController.MAX_FEEDBACK_CHARACTER_LENGTH)
             )
         );
   }
