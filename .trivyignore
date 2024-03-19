@@ -23,13 +23,21 @@ CVE-2023-6378
 # uk.co.fivium.energyportalapi:client:v6.3.0
 CVE-2023-51074
 
-### To update as part of OSDOP-779
 ## org.postgresql:postgresql
 CVE-2024-1597
+
 ## org.springframework.security:spring-security-core
 CVE-2024-22234
+
 ## org.springframework:spring-web
 CVE-2024-22243
+CVE-2024-22259
 
 # uk.co.fivium:spring-boot-starter-digital-notification-library
 CVE-2023-51775
+
+# org.springframework.boot:spring-boot-starter-web
+CVE-2024-24549
+
+# org.springframework.security:spring-security-core
+CVE-2024-22257

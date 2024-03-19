@@ -120,7 +120,7 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 ### 5. Generate Jooq classes
 
 Execute the gradle task `generateJooq`. You will need to re-generate when you change the database.
-(This requires docker to be running on your machine)
+(This requires docker to be running on your machine. Make sure you stop any other containers that are running on port 5432 as generateJooq needs to use it.)
 
 ### 6. Run the app
 
