@@ -41,3 +41,6 @@ CVE-2024-24549
 
 # org.springframework.security:spring-security-core
 CVE-2024-22257
+
+# uk.co.fivium.energy-portal-message-queue
+CVE-2024-29025
