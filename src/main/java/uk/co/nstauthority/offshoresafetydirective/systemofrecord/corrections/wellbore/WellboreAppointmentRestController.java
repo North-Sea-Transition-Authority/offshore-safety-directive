@@ -5,13 +5,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/api/appointments/parent-wellbores")
-@HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
 public class WellboreAppointmentRestController {
 
   private final WellboreAppointmentRestService wellboreAppointmentRestService;

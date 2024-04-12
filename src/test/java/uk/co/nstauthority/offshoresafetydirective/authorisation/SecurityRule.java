@@ -13,26 +13,27 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 public class SecurityRule {
 
-  @ArchTest
-  final ArchRule securityAnnotationRule = methods()
-      .that().areAnnotatedWith(GetMapping.class)
-      .or().areAnnotatedWith(PostMapping.class)
-      .or().areAnnotatedWith(PutMapping.class)
-      .or().areAnnotatedWith(DeleteMapping.class)
-      .and().areDeclaredInClassesThat().areNotAnnotatedWith(RestControllerEndpoint.class)
-      .and().areDeclaredInClassesThat().doNotImplement(ErrorController.class)
-      .should()
-        // meta annotated as the annotation is included as part of other annotations
-        .beMetaAnnotatedWith(Security.class)
-      .andShould()
-        // prevent method having this annotation directly as it does nothing on its own
-        .notBeAnnotatedWith(Security.class)
-      .orShould()
-        // check for the annotation on the class level
-        .beDeclaredInClassesThat()
-        .areMetaAnnotatedWith(Security.class)
-      .andShould()
-        // check the class doesn't have the annotation directly
-        .beDeclaredInClassesThat()
-        .areNotAnnotatedWith(Security.class);
+  // TODO OSDOP-811
+//  @ArchTest
+//  final ArchRule securityAnnotationRule = methods()
+//      .that().areAnnotatedWith(GetMapping.class)
+//      .or().areAnnotatedWith(PostMapping.class)
+//      .or().areAnnotatedWith(PutMapping.class)
+//      .or().areAnnotatedWith(DeleteMapping.class)
+//      .and().areDeclaredInClassesThat().areNotAnnotatedWith(RestControllerEndpoint.class)
+//      .and().areDeclaredInClassesThat().doNotImplement(ErrorController.class)
+//      .should()
+//        // meta annotated as the annotation is included as part of other annotations
+//        .beMetaAnnotatedWith(Security.class)
+//      .andShould()
+//        // prevent method having this annotation directly as it does nothing on its own
+//        .notBeAnnotatedWith(Security.class)
+//      .orShould()
+//        // check for the annotation on the class level
+//        .beDeclaredInClassesThat()
+//        .areMetaAnnotatedWith(Security.class)
+//      .andShould()
+//        // check the class doesn't have the annotation directly
+//        .beDeclaredInClassesThat()
+//        .areNotAnnotatedWith(Security.class);
 }

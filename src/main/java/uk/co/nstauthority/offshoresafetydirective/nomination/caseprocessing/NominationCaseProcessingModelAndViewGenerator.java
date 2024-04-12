@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
@@ -43,14 +42,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.with
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Component
 public class NominationCaseProcessingModelAndViewGenerator {
 
   private final NominationCaseProcessingService nominationCaseProcessingService;
   private final NominationSummaryService nominationSummaryService;
-  private final PermissionService permissionService;
   private final UserDetailService userDetailService;
   private final CaseEventQueryService caseEventQueryService;
   private final NominationPortalReferenceAccessService nominationPortalReferenceAccessService;
@@ -62,7 +59,6 @@ public class NominationCaseProcessingModelAndViewGenerator {
   public NominationCaseProcessingModelAndViewGenerator(
       NominationCaseProcessingService nominationCaseProcessingService,
       NominationSummaryService nominationSummaryService,
-      PermissionService permissionService,
       UserDetailService userDetailService,
       CaseEventQueryService caseEventQueryService,
       NominationPortalReferenceAccessService referenceAccessService,
@@ -71,7 +67,6 @@ public class NominationCaseProcessingModelAndViewGenerator {
       NominationCaseProcessingSelectionService nominationCaseProcessingSelectionService) {
     this.nominationCaseProcessingService = nominationCaseProcessingService;
     this.nominationSummaryService = nominationSummaryService;
-    this.permissionService = permissionService;
     this.userDetailService = userDetailService;
     this.caseEventQueryService = caseEventQueryService;
     this.nominationPortalReferenceAccessService = referenceAccessService;
@@ -172,75 +167,76 @@ public class NominationCaseProcessingModelAndViewGenerator {
 
     var user = userDetailService.getUserDetail();
 
-    var hasManageNominationsPermission = permissionService.hasPermission(
-        user,
-        RolePermission.MANAGE_NOMINATIONS
-    );
-
-    if (hasManageNominationsPermission) {
-      if (canSubmitQaChecks(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createQaChecksAction(nominationId));
-      }
-
-      if (canWithdrawnNomination(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createWithdrawAction(nominationId));
-      }
-
-      if (canSubmitDecision(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createNominationDecisionAction(nominationId));
-      }
-
-      if (canConfirmAppointments(nominationDetailDto)) {
-        actions.add(
-            caseProcessingActionService.createConfirmNominationAppointmentAction(nominationId));
-      }
-
-      if (canAddGeneralCaseNote(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createGeneralCaseNoteAction(nominationId));
-      }
-
-      if (canUpdatePearsReferences(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createPearsReferencesAction(nominationId));
-      }
-
-      if (canUpdateWonsReferences(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createWonsReferencesAction(nominationId));
-      }
-
-      if (canSendNominationForConsultation(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createSendForConsultationAction(nominationId));
-      }
-
-      if (canAddConsultationResponse(nominationDetailDto)) {
-        actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
-      }
-    }
-
-    var permissionsForNomination = permissionService.getPermissionsForNomination(nominationDetail, user);
-
-    var hasCreatePermission = permissionsForNomination.contains(RolePermission.CREATE_NOMINATION);
-
-    var latestNominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
-
-    var updateHasStarted = NominationStatus.DRAFT.equals(latestNominationDetail.getStatus())
-        && latestNominationDetail.getVersion() > 1;
-
-    var updateHasStartedAndUserIsEditor = updateHasStarted && permissionsForNomination.contains(RolePermission.EDIT_NOMINATION);
-
-    caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
-        .ifPresentOrElse(
-            reason -> {
-              if (canUpdateNomination(nominationDetailDto) && (hasCreatePermission || updateHasStartedAndUserIsEditor)) {
-                actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
-              }
-              modelAndView.addObject("updateRequestReason", reason);
-            },
-            () -> {
-              if (canRequestNominationUpdate(nominationDetailDto) && hasManageNominationsPermission) {
-                actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
-              }
-            }
-        );
+    // TODO OSDOP-811
+//    var hasManageNominationsPermission = permissionService.hasPermission(
+//        user,
+//        RolePermission.MANAGE_NOMINATIONS
+//    );
+//
+//    if (hasManageNominationsPermission) {
+//      if (canSubmitQaChecks(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createQaChecksAction(nominationId));
+//      }
+//
+//      if (canWithdrawnNomination(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createWithdrawAction(nominationId));
+//      }
+//
+//      if (canSubmitDecision(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createNominationDecisionAction(nominationId));
+//      }
+//
+//      if (canConfirmAppointments(nominationDetailDto)) {
+//        actions.add(
+//            caseProcessingActionService.createConfirmNominationAppointmentAction(nominationId));
+//      }
+//
+//      if (canAddGeneralCaseNote(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createGeneralCaseNoteAction(nominationId));
+//      }
+//
+//      if (canUpdatePearsReferences(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createPearsReferencesAction(nominationId));
+//      }
+//
+//      if (canUpdateWonsReferences(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createWonsReferencesAction(nominationId));
+//      }
+//
+//      if (canSendNominationForConsultation(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createSendForConsultationAction(nominationId));
+//      }
+//
+//      if (canAddConsultationResponse(nominationDetailDto)) {
+//        actions.add(caseProcessingActionService.createConsultationResponseAction(nominationId));
+//      }
+//    }
+//
+//    var permissionsForNomination = permissionService.getPermissionsForNomination(nominationDetail, user);
+//
+//    var hasCreatePermission = permissionsForNomination.contains(RolePermission.CREATE_NOMINATION);
+//
+//    var latestNominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
+//
+//    var updateHasStarted = NominationStatus.DRAFT.equals(latestNominationDetail.getStatus())
+//        && latestNominationDetail.getVersion() > 1;
+//
+//    var updateHasStartedAndUserIsEditor = updateHasStarted && permissionsForNomination.contains(RolePermission.EDIT_NOMINATION);
+//
+//    caseEventQueryService.getLatestReasonForUpdate(nominationDetail)
+//        .ifPresentOrElse(
+//            reason -> {
+//              if (canUpdateNomination(nominationDetailDto) && (hasCreatePermission || updateHasStartedAndUserIsEditor)) {
+//                actions.add(caseProcessingActionService.createUpdateNominationAction(nominationId));
+//              }
+//              modelAndView.addObject("updateRequestReason", reason);
+//            },
+//            () -> {
+//              if (canRequestNominationUpdate(nominationDetailDto) && hasManageNominationsPermission) {
+//                actions.add(caseProcessingActionService.createRequestNominationUpdateAction(nominationId));
+//              }
+//            }
+//        );
 
     if (CollectionUtils.isNotEmpty(actions)) {
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()

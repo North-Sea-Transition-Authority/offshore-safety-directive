@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasUpdateRequest;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
@@ -25,11 +24,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/update")
-@HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+// TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
 @HasUpdateRequest
 public class NominationStartUpdateController {
 
@@ -51,7 +49,7 @@ public class NominationStartUpdateController {
       statuses = { NominationStatus.DRAFT, NominationStatus.SUBMITTED },
       fetchType = NominationDetailFetchType.LATEST
   )
-  @HasNominationPermission(permissions = {RolePermission.EDIT_NOMINATION, RolePermission.SUBMIT_NOMINATION})
+  // TODO OSDOP-811 @HasNominationPermission(permissions = {RolePermission.EDIT_NOMINATION, RolePermission.SUBMIT_NOMINATION})
   public ModelAndView startUpdateEntryPoint(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -76,7 +74,7 @@ public class NominationStartUpdateController {
 
   @GetMapping("/start")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
-  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView renderStartUpdate(@PathVariable("nominationId") NominationId nominationId) {
 
     var nominationDetail = getLatestNominationDetail(nominationId);
@@ -99,7 +97,7 @@ public class NominationStartUpdateController {
 
   @PostMapping("/start")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED, fetchType = NominationDetailFetchType.LATEST)
-  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView startUpdate(@PathVariable("nominationId") NominationId nominationId) {
     var nominationDetail = getLatestNominationDetail(nominationId);
     nominationUpdateService.createDraftUpdate(nominationDetail);

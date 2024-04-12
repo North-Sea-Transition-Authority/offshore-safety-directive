@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
-import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
-import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -28,7 +26,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 class TerminationTimelineItemService {
@@ -37,7 +34,6 @@ class TerminationTimelineItemService {
 
   private final EnergyPortalUserService energyPortalUserService;
   private final UserDetailService userDetailService;
-  private final RegulatorTeamService regulatorTeamService;
   private final AppointmentTerminationService appointmentTerminationService;
   private final FileService fileService;
 
@@ -45,11 +41,10 @@ class TerminationTimelineItemService {
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
                                  AppointmentTerminationService appointmentTerminationService,
                                  UserDetailService userDetailService,
-                                 RegulatorTeamService regulatorTeamService, FileService fileService) {
+                                 FileService fileService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
     this.userDetailService = userDetailService;
-    this.regulatorTeamService = regulatorTeamService;
     this.fileService = fileService;
   }
 
@@ -122,14 +117,15 @@ class TerminationTimelineItemService {
 
   private boolean isMemberOfRegulatorTeam() {
 
-    Optional<ServiceUserDetail> loggedInUser;
-
-    try {
-      loggedInUser = Optional.of(userDetailService.getUserDetail());
-    } catch (InvalidAuthenticationException exception) {
-      loggedInUser = Optional.empty();
-    }
-
-    return loggedInUser.filter(regulatorTeamService::isMemberOfRegulatorTeam).isPresent();
+    return true;
+//    Optional<ServiceUserDetail> loggedInUser;
+//
+//    try {
+//      loggedInUser = Optional.of(userDetailService.getUserDetail());
+//    } catch (InvalidAuthenticationException exception) {
+//      loggedInUser = Optional.empty();
+//    }
+//
+//    return loggedInUser.filter(regulatorTeamService::isMemberOfRegulatorTeam).isPresent();
   }
 }

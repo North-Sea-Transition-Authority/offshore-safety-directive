@@ -2,7 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.upd
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
-import java.util.EnumSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
 
 @Service
 class NominationRequestUpdateSubmissionService {
@@ -72,26 +70,27 @@ class NominationRequestUpdateSubmissionService {
             ))
         ));
 
-    nominationApplicantTeamService.getApplicantTeamMembersWithAnyRoleOf(
-            nominationDetail,
-            EnumSet.of(IndustryTeamRole.NOMINATION_SUBMITTER)
-        )
-        .forEach(teamMemberView -> {
-          var mergedTemplate = templateBuiler
-              .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, teamMemberView.firstName())
-              .merge();
-          try {
-            emailService.sendEmail(mergedTemplate, teamMemberView, nominationDetail);
-          } catch (Exception e) {
-            LOGGER.error("""
-                    Failed to send update request email to user {} for NominationDetail {}.
-                    The submission has not been blocked.
-                    """,
-                teamMemberView.wuaId(),
-                nominationDetail.getId(),
-                e
-            );
-          }
-        });
+    // TODO OSDOP-811
+//    nominationApplicantTeamService.getApplicantTeamMembersWithAnyRoleOf(
+//            nominationDetail,
+//            EnumSet.of(IndustryTeamRole.NOMINATION_SUBMITTER)
+//        )
+//        .forEach(teamMemberView -> {
+//          var mergedTemplate = templateBuiler
+//              .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, teamMemberView.firstName())
+//              .merge();
+//          try {
+//            emailService.sendEmail(mergedTemplate, teamMemberView, nominationDetail);
+//          } catch (Exception e) {
+//            LOGGER.error("""
+//                    Failed to send update request email to user {} for NominationDetail {}.
+//                    The submission has not been blocked.
+//                    """,
+//                teamMemberView.wuaId(),
+//                nominationDetail.getId(),
+//                e
+//            );
+//          }
+//        });
   }
 }

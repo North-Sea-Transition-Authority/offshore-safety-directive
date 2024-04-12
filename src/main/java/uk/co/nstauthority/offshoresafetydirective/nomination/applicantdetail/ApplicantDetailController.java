@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.NominationBreadcrumbUtil;
@@ -31,7 +30,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationCont
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination")
@@ -63,13 +61,13 @@ public class ApplicantDetailController {
   }
 
   @GetMapping("/applicant-details")
-  @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+  // TODO OSDOP-811 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
   public ModelAndView getNewApplicantDetails() {
     return getCreateApplicantDetailModelAndView(new ApplicantDetailForm());
   }
 
   @PostMapping("/applicant-details")
-  @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+  // TODO OSDOP-811 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
   public ModelAndView createApplicantDetails(@ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
     bindingResult = applicantDetailFormService.validate(form, bindingResult);

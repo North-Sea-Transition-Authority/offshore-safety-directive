@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
 import static org.jooq.impl.DSL.coalesce;
-import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.max;
 import static org.jooq.impl.DSL.nvl2;
 import static org.jooq.impl.DSL.or;
@@ -17,26 +16,15 @@ import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.N
 import static uk.co.nstauthority.offshoresafetydirective.generated.jooq.Tables.WELL_SELECTION_SETUP;
 
 import com.google.common.base.Stopwatch;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.CaseEvents;
 import uk.co.nstauthority.offshoresafetydirective.generated.jooq.tables.NominationDetails;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
@@ -44,15 +32,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.portalreferences.PortalReferenceType;
-import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamId;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamRole;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamRole;
 
 @Service
 class NominationWorkAreaQueryService {
@@ -70,22 +49,17 @@ class NominationWorkAreaQueryService {
 
   private final DSLContext context;
   private final UserDetailService userDetailService;
-  private final TeamMemberService teamMemberService;
   private final PortalOrganisationGroupQueryService organisationGroupQueryService;
-  private final TeamScopeService teamScopeService;
   private final MetricsProvider metricsProvider;
 
   @Autowired
   NominationWorkAreaQueryService(DSLContext context,
                                  UserDetailService userDetailService,
-                                 TeamMemberService teamMemberService,
                                  PortalOrganisationGroupQueryService organisationGroupQueryService,
-                                 TeamScopeService teamScopeService, MetricsProvider metricsProvider) {
+                                 MetricsProvider metricsProvider) {
     this.context = context;
     this.userDetailService = userDetailService;
-    this.teamMemberService = teamMemberService;
     this.organisationGroupQueryService = organisationGroupQueryService;
-    this.teamScopeService = teamScopeService;
     this.metricsProvider = metricsProvider;
   }
 
@@ -145,35 +119,37 @@ class NominationWorkAreaQueryService {
   }
 
   private List<Condition> getConditions() {
-    var user = userDetailService.getUserDetail();
-    var teamMembers = teamMemberService.getUserAsTeamMembers(user);
 
-    var isMemberOfRegulatorTeam = isMemberOfTeam(TeamType.REGULATOR, teamMembers);
-    var isMemberOfIndustryTeam = isMemberOfTeam(TeamType.INDUSTRY, teamMembers);
+    // TODO OSDOP-811
+//    var user = userDetailService.getUserDetail();
+//    var teamMembers = teamMemberService.getUserAsTeamMembers(user);
+//
+//    var isMemberOfRegulatorTeam = isMemberOfTeam(TeamType.REGULATOR, teamMembers);
+//    var isMemberOfIndustryTeam = isMemberOfTeam(TeamType.INDUSTRY, teamMembers);
+//
+//    Condition conditionBasedOnUserRole = falseCondition();
+//
+//    if (isMemberOfIndustryTeam && isMemberOfRegulatorTeam) {
+//      var regulatorRoles = getRegulatorRolesForTeamMembers(teamMembers);
+//      var industryTeamMembers = teamMembers.stream()
+//          .filter(teamMember -> TeamType.INDUSTRY.equals(teamMember.teamView().teamType()))
+//          .toList();
+//      conditionBasedOnUserRole = getConditionsForRegulatorRole(regulatorRoles)
+//          .or(getConditionsForIndustryRole(getIndustryRoleToOrganisationUnitsIdMap(industryTeamMembers)));
+//
+//    } else if (isMemberOfIndustryTeam) {
+//      var industryTeamMembers = teamMembers.stream()
+//          .filter(teamMember -> TeamType.INDUSTRY.equals(teamMember.teamView().teamType()))
+//          .toList();
+//      conditionBasedOnUserRole = getConditionsForIndustryRole(getIndustryRoleToOrganisationUnitsIdMap(industryTeamMembers));
+//
+//    } else if (isMemberOfRegulatorTeam) {
+//      var regulatorRoles = getRegulatorRolesForTeamMembers(teamMembers);
+//      conditionBasedOnUserRole = getConditionsForRegulatorRole(regulatorRoles);
+//
+//    }
 
-    Condition conditionBasedOnUserRole = falseCondition();
-
-    if (isMemberOfIndustryTeam && isMemberOfRegulatorTeam) {
-      var regulatorRoles = getRegulatorRolesForTeamMembers(teamMembers);
-      var industryTeamMembers = teamMembers.stream()
-          .filter(teamMember -> TeamType.INDUSTRY.equals(teamMember.teamView().teamType()))
-          .toList();
-      conditionBasedOnUserRole = getConditionsForRegulatorRole(regulatorRoles)
-          .or(getConditionsForIndustryRole(getIndustryRoleToOrganisationUnitsIdMap(industryTeamMembers)));
-
-    } else if (isMemberOfIndustryTeam) {
-      var industryTeamMembers = teamMembers.stream()
-          .filter(teamMember -> TeamType.INDUSTRY.equals(teamMember.teamView().teamType()))
-          .toList();
-      conditionBasedOnUserRole = getConditionsForIndustryRole(getIndustryRoleToOrganisationUnitsIdMap(industryTeamMembers));
-
-    } else if (isMemberOfRegulatorTeam) {
-      var regulatorRoles = getRegulatorRolesForTeamMembers(teamMembers);
-      conditionBasedOnUserRole = getConditionsForRegulatorRole(regulatorRoles);
-
-    }
-
-    return List.of(conditionBasedOnUserRole, excludeDeletedNominations(), excludeDraftUpdates());
+    return List.of(excludeDeletedNominations(), excludeDraftUpdates());
   }
 
   private Condition excludeDraftUpdates() {
@@ -197,122 +173,122 @@ class NominationWorkAreaQueryService {
     return NOMINATION_DETAILS.VERSION.eq(versionFilter);
   }
 
-  private Condition getConditionsForRegulatorRole(Set<TeamRole> roles) {
-
-    if (roles.contains(RegulatorTeamRole.MANAGE_NOMINATION) || roles.contains(RegulatorTeamRole.VIEW_NOMINATION)) {
-      List<String> postSubmissionStatusNames =
-          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-              .stream()
-              .map(Enum::name)
-              .toList();
-      return NOMINATION_DETAILS.STATUS.in(postSubmissionStatusNames);
-    }
-
-    return falseCondition();
-  }
-
-  private Condition getConditionsForIndustryRole(Map<TeamRole, List<Integer>> roleToOrganisationUnitsIdMap) {
-    Condition condition = null;
-
-    var roles = roleToOrganisationUnitsIdMap.keySet();
-
-    if (!roles.contains(IndustryTeamRole.NOMINATION_EDITOR)
-        && !roles.contains(IndustryTeamRole.NOMINATION_SUBMITTER)
-        && !roles.contains(IndustryTeamRole.NOMINATION_VIEWER)) {
-      return falseCondition();
-    }
-
-    if (roles.contains(IndustryTeamRole.NOMINATION_SUBMITTER) || roles.contains(IndustryTeamRole.NOMINATION_EDITOR)) {
-      var statusesIncludingDraft = Arrays.stream(NominationStatus.values())
-          .filter(nominationStatus -> !nominationStatus.equals(NominationStatus.DELETED))
-          .map(Enum::name)
-          .toList();
-
-      var organisationsForSubmitter = Optional.ofNullable(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_SUBMITTER))
-          .orElse(List.of());
-      var organisationsForEditor = Optional.ofNullable(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_EDITOR))
-          .orElse(List.of());
-
-      var organisations = Stream.concat(organisationsForSubmitter.stream(), organisationsForEditor.stream())
-          .collect(Collectors.toSet());
-
-      condition = APPLICANT_DETAILS.PORTAL_ORGANISATION_ID.in(organisations)
-          .and(NOMINATION_DETAILS.STATUS.in(statusesIncludingDraft));
-    }
-
-    if (roles.contains(IndustryTeamRole.NOMINATION_VIEWER)) {
-      var nominationViewerCondition =
-          APPLICANT_DETAILS.PORTAL_ORGANISATION_ID.in(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_VIEWER))
-              .and(includePostSubmissionNominations());
-
-      condition = condition == null ? nominationViewerCondition : condition.or(nominationViewerCondition);
-    }
-
-    return condition;
-  }
-
-  private Map<TeamRole, List<Integer>> getIndustryRoleToOrganisationUnitsIdMap(List<TeamMember> teamMembers) {
-    var teamIds = teamMembers.stream()
-        .map(TeamMember::teamView)
-        .map(team -> team.teamId().uuid())
-        .toList();
-
-    Map<TeamId, Integer> organisationGroupsByTeamScope = teamScopeService
-        .getTeamScopesFromTeamIds(teamIds, PortalTeamType.ORGANISATION_GROUP)
-        .stream()
-        .collect(Collectors.toMap(
-            teamScope -> teamScope.getTeam().toTeamId(),
-            teamScope -> Integer.parseInt(teamScope.getPortalId())
-        ));
-
-    Map<Integer, Set<TeamRole>> rolesByOrganisationGroup = new HashMap<>();
-
-    // The organisation group id linked to the team roles that the user has for that group.
-    teamMembers.forEach(teamMember -> {
-      var organisationGroupId = organisationGroupsByTeamScope.get(teamMember.teamView().teamId());
-      rolesByOrganisationGroup.put(organisationGroupId, teamMember.roles());
-    });
-
-    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId =
-        organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
-            rolesByOrganisationGroup.keySet().stream().toList(),
-            ORGANISATION_GROUP_REQUEST_PURPOSE
-        )
-        .stream()
-        .filter(organisationGroup -> NumberUtils.isDigits(organisationGroup.organisationGroupId()))
-        .collect(Collectors.toMap(
-            group -> Integer.parseInt(group.organisationGroupId()),
-            PortalOrganisationGroupDto::organisations
-          ));
-
-    Map<TeamRole, List<Integer>> organisationUnitsByRole = new HashMap<>();
-
-    // The team role and the organisation unit ids that the user can access.
-    rolesByOrganisationGroup.forEach((organisationGroupId, roles) -> {
-
-      var organisationUnitIdsForGroup = organisationsByGroupId.get(organisationGroupId)
-          .stream()
-          .map(PortalOrganisationDto::id)
-          .toList();
-
-      roles.forEach(role -> {
-        // Add the organisation units for this group to the list of organisation units (if any)
-        // which are associated to this role.
-
-        List<Integer> organisationUnits = new ArrayList<>();
-
-        if (organisationUnitsByRole.containsKey(role)) {
-          organisationUnits.addAll(organisationUnitsByRole.get(role));
-        }
-
-        organisationUnits.addAll(organisationUnitIdsForGroup);
-
-        organisationUnitsByRole.put(role, organisationUnits);
-      });
-    });
-
-    return organisationUnitsByRole;
-  }
+//  private Condition getConditionsForRegulatorRole(Set<TeamRole> roles) {
+//
+//    if (roles.contains(RegulatorTeamRole.MANAGE_NOMINATION) || roles.contains(RegulatorTeamRole.VIEW_NOMINATION)) {
+//      List<String> postSubmissionStatusNames =
+//          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+//              .stream()
+//              .map(Enum::name)
+//              .toList();
+//      return NOMINATION_DETAILS.STATUS.in(postSubmissionStatusNames);
+//    }
+//
+//    return falseCondition();
+//  }
+//
+//  private Condition getConditionsForIndustryRole(Map<TeamRole, List<Integer>> roleToOrganisationUnitsIdMap) {
+//    Condition condition = null;
+//
+//    var roles = roleToOrganisationUnitsIdMap.keySet();
+//
+//    if (!roles.contains(IndustryTeamRole.NOMINATION_EDITOR)
+//        && !roles.contains(IndustryTeamRole.NOMINATION_SUBMITTER)
+//        && !roles.contains(IndustryTeamRole.NOMINATION_VIEWER)) {
+//      return falseCondition();
+//    }
+//
+//    if (roles.contains(IndustryTeamRole.NOMINATION_SUBMITTER) || roles.contains(IndustryTeamRole.NOMINATION_EDITOR)) {
+//      var statusesIncludingDraft = Arrays.stream(NominationStatus.values())
+//          .filter(nominationStatus -> !nominationStatus.equals(NominationStatus.DELETED))
+//          .map(Enum::name)
+//          .toList();
+//
+//      var organisationsForSubmitter = Optional.ofNullable(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_SUBMITTER))
+//          .orElse(List.of());
+//      var organisationsForEditor = Optional.ofNullable(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_EDITOR))
+//          .orElse(List.of());
+//
+//      var organisations = Stream.concat(organisationsForSubmitter.stream(), organisationsForEditor.stream())
+//          .collect(Collectors.toSet());
+//
+//      condition = APPLICANT_DETAILS.PORTAL_ORGANISATION_ID.in(organisations)
+//          .and(NOMINATION_DETAILS.STATUS.in(statusesIncludingDraft));
+//    }
+//
+//    if (roles.contains(IndustryTeamRole.NOMINATION_VIEWER)) {
+//      var nominationViewerCondition =
+//          APPLICANT_DETAILS.PORTAL_ORGANISATION_ID.in(roleToOrganisationUnitsIdMap.get(IndustryTeamRole.NOMINATION_VIEWER))
+//              .and(includePostSubmissionNominations());
+//
+//      condition = condition == null ? nominationViewerCondition : condition.or(nominationViewerCondition);
+//    }
+//
+//    return condition;
+//  }
+//
+//  private Map<TeamRole, List<Integer>> getIndustryRoleToOrganisationUnitsIdMap(List<TeamMember> teamMembers) {
+//    var teamIds = teamMembers.stream()
+//        .map(TeamMember::teamView)
+//        .map(team -> team.teamId().uuid())
+//        .toList();
+//
+//    Map<TeamId, Integer> organisationGroupsByTeamScope = teamScopeService
+//        .getTeamScopesFromTeamIds(teamIds, PortalTeamType.ORGANISATION_GROUP)
+//        .stream()
+//        .collect(Collectors.toMap(
+//            teamScope -> teamScope.getTeam().toTeamId(),
+//            teamScope -> Integer.parseInt(teamScope.getPortalId())
+//        ));
+//
+//    Map<Integer, Set<TeamRole>> rolesByOrganisationGroup = new HashMap<>();
+//
+//    // The organisation group id linked to the team roles that the user has for that group.
+//    teamMembers.forEach(teamMember -> {
+//      var organisationGroupId = organisationGroupsByTeamScope.get(teamMember.teamView().teamId());
+//      rolesByOrganisationGroup.put(organisationGroupId, teamMember.roles());
+//    });
+//
+//    Map<Integer, Set<PortalOrganisationDto>> organisationsByGroupId =
+//        organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
+//            rolesByOrganisationGroup.keySet().stream().toList(),
+//            ORGANISATION_GROUP_REQUEST_PURPOSE
+//        )
+//        .stream()
+//        .filter(organisationGroup -> NumberUtils.isDigits(organisationGroup.organisationGroupId()))
+//        .collect(Collectors.toMap(
+//            group -> Integer.parseInt(group.organisationGroupId()),
+//            PortalOrganisationGroupDto::organisations
+//          ));
+//
+//    Map<TeamRole, List<Integer>> organisationUnitsByRole = new HashMap<>();
+//
+//    // The team role and the organisation unit ids that the user can access.
+//    rolesByOrganisationGroup.forEach((organisationGroupId, roles) -> {
+//
+//      var organisationUnitIdsForGroup = organisationsByGroupId.get(organisationGroupId)
+//          .stream()
+//          .map(PortalOrganisationDto::id)
+//          .toList();
+//
+//      roles.forEach(role -> {
+//        // Add the organisation units for this group to the list of organisation units (if any)
+//        // which are associated to this role.
+//
+//        List<Integer> organisationUnits = new ArrayList<>();
+//
+//        if (organisationUnitsByRole.containsKey(role)) {
+//          organisationUnits.addAll(organisationUnitsByRole.get(role));
+//        }
+//
+//        organisationUnits.addAll(organisationUnitIdsForGroup);
+//
+//        organisationUnitsByRole.put(role, organisationUnits);
+//      });
+//    });
+//
+//    return organisationUnitsByRole;
+//  }
 
   private Condition includePostSubmissionNominations() {
     List<String> postSubmissionStatusNames =
@@ -327,18 +303,18 @@ class NominationWorkAreaQueryService {
     return NOMINATION_DETAILS.STATUS.notEqual(NominationStatus.DELETED.name());
   }
 
-  private boolean isMemberOfTeam(TeamType teamType, List<TeamMember> teamMembers) {
-    return teamMembers
-        .stream()
-        .anyMatch(teamMember -> teamMember.teamView().teamType().equals(teamType));
-  }
-
-  private Set<TeamRole> getRegulatorRolesForTeamMembers(List<TeamMember> teamMembers) {
-    return teamMembers
-        .stream()
-        .filter(teamMember -> teamMember.teamView().teamType().equals(TeamType.REGULATOR))
-        .flatMap(teamMember -> teamMember.roles().stream())
-        .collect(Collectors.toSet());
-  }
+//  private boolean isMemberOfTeam(TeamType teamType, List<TeamMember> teamMembers) {
+//    return teamMembers
+//        .stream()
+//        .anyMatch(teamMember -> teamMember.teamView().teamType().equals(teamType));
+//  }
+//
+//  private Set<TeamRole> getRegulatorRolesForTeamMembers(List<TeamMember> teamMembers) {
+//    return teamMembers
+//        .stream()
+//        .filter(teamMember -> teamMember.teamView().teamType().equals(TeamType.REGULATOR))
+//        .flatMap(teamMember -> teamMember.roles().stream())
+//        .collect(Collectors.toSet());
+//  }
 }
 

@@ -16,9 +16,6 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
 
 @RestController
 @RequestMapping
@@ -26,8 +23,6 @@ public class PortalOrganisationUnitRestController {
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final UserDetailService userDetailService;
-  private final TeamMemberService teamMemberService;
-  private final TeamScopeService teamScopeService;
 
   static final RequestPurpose OPERATOR_SEARCH_PURPOSE =
       new RequestPurpose("Operator search selector (search operator)");
@@ -36,12 +31,9 @@ public class PortalOrganisationUnitRestController {
 
   @Autowired
   public PortalOrganisationUnitRestController(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                              UserDetailService userDetailService, TeamMemberService teamMemberService,
-                                              TeamScopeService teamScopeService) {
+                                              UserDetailService userDetailService) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.userDetailService = userDetailService;
-    this.teamMemberService = teamMemberService;
-    this.teamScopeService = teamScopeService;
   }
 
   @GetMapping("/api/public/organisations/units")
@@ -80,12 +72,13 @@ public class PortalOrganisationUnitRestController {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User must be logged in to access rest endpoint.");
     }
 
-    var authenticatedUser = user.get();
-    var teamIds = teamMemberService.getTeamsFromWuaId(authenticatedUser);
-    var portalOrganisationGroupIds = teamScopeService.getPortalIds(teamIds, PortalTeamType.ORGANISATION_GROUP);
+    // TODO OSDOP-811
+//    var authenticatedUser = user.get();
+//    var teamIds = teamMemberService.getTeamsFromWuaId(authenticatedUser);
+//    var portalOrganisationGroupIds = teamScopeService.getPortalIds(teamIds, PortalTeamType.ORGANISATION_GROUP);
 
     var organisationsRelatedToUser = portalOrganisationUnitQueryService.searchOrganisationsByGroups(
-        portalOrganisationGroupIds,
+        List.of(),
         ORGANISATION_GROUPS_FOR_USER_PURPOSE
     );
 

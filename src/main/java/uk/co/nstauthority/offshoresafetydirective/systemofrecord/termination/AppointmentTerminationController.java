@@ -20,7 +20,6 @@ import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointment;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -34,11 +33,10 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/appointment/{appointmentId}/termination")
-@HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
 @IsCurrentAppointment
 @HasNotBeenTerminated
 @HasAssetStatus(AssetStatus.EXTANT)

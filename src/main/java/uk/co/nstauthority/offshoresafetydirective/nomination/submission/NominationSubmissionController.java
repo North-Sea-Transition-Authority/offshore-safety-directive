@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -35,8 +33,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamTypeSelectionController;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/submit")
@@ -48,7 +44,6 @@ public class NominationSubmissionController {
   private final FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
   private final CaseEventQueryService caseEventQueryService;
   private final UserDetailService userDetailService;
-  private final PermissionService permissionService;
   private final NominationSubmissionFormValidator nominationSubmissionFormValidator;
 
   @Autowired
@@ -58,7 +53,6 @@ public class NominationSubmissionController {
                                         FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService,
                                         CaseEventQueryService caseEventQueryService,
                                         UserDetailService userDetailService,
-                                        PermissionService permissionService,
                                         NominationSubmissionFormValidator nominationSubmissionFormValidator) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
@@ -66,7 +60,6 @@ public class NominationSubmissionController {
     this.finaliseNominatedSubareaWellsService = finaliseNominatedSubareaWellsService;
     this.caseEventQueryService = caseEventQueryService;
     this.userDetailService = userDetailService;
-    this.permissionService = permissionService;
     this.nominationSubmissionFormValidator = nominationSubmissionFormValidator;
   }
 
@@ -79,7 +72,6 @@ public class NominationSubmissionController {
       NominationStatus.OBJECTED,
       NominationStatus.WITHDRAWN
   })
-  @HasNominationPermission(permissions = RolePermission.EDIT_NOMINATION)
   public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId,
                                         @ModelAttribute("form") NominationSubmissionForm form) {
 
@@ -101,7 +93,6 @@ public class NominationSubmissionController {
 
   @PostMapping
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
-  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView submitNomination(@PathVariable("nominationId") NominationId nominationId,
                                        @ModelAttribute("form") NominationSubmissionForm form,
                                        BindingResult bindingResult) {
@@ -129,11 +120,13 @@ public class NominationSubmissionController {
     var summaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
     var user = userDetailService.getUserDetail();
-    var userCanSubmitNominations = permissionService.hasPermissionForNomination(
-        nominationDetail,
-        user,
-        Set.of(RolePermission.CREATE_NOMINATION)
-    );
+    // TODO OSDOP-811
+    var userCanSubmitNominations = false;
+//    = permissionService.hasPermissionForNomination(
+//        nominationDetail,
+//        user,
+//        Set.of(RolePermission.CREATE_NOMINATION)
+//    );
     var isSubmittable = nominationSubmissionService.canSubmitNomination(nominationDetail);
     var isFastTrackNomination = false;
 
@@ -147,11 +140,11 @@ public class NominationSubmissionController {
         .addObject("hasLicenceBlockSubareas",
             WellSelectionType.LICENCE_BLOCK_SUBAREA.equals(summaryView.wellSummaryView().getWellSelectionType()));
 
-    if (isSubmittable && !userCanSubmitNominations) {
-      modelAndView
-          .addObject("organisationUrl",
-              ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()));
-    }
+//    if (isSubmittable && !userCanSubmitNominations) {
+//      modelAndView
+//          .addObject("organisationUrl",
+//              ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()));
+//    }
 
     if (isSubmittable && userCanSubmitNominations) {
 

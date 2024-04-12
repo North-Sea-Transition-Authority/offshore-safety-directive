@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
@@ -24,11 +23,10 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @RestController
 @RequestMapping("/api/appointments/forward-approvals")
-@HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
 public class ForwardApprovedAppointmentRestController {
 
   public static final String SEARCH_DISPLAY_STRING = "%s: %s";

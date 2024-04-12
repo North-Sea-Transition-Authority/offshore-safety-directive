@@ -3,7 +3,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +22,6 @@ import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
@@ -53,8 +51,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Service
 public class AppointmentTimelineItemService {
@@ -75,8 +71,6 @@ public class AppointmentTimelineItemService {
 
   private final UserDetailService userDetailService;
 
-  private final PermissionService permissionService;
-
   private final AppointmentCorrectionService appointmentCorrectionService;
 
   private final AppointmentPhasesService appointmentPhasesService;
@@ -91,7 +85,6 @@ public class AppointmentTimelineItemService {
                                  AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                  NominationAccessService nominationAccessService,
                                  UserDetailService userDetailService,
-                                 PermissionService permissionService,
                                  AppointmentCorrectionService appointmentCorrectionService,
                                  AppointmentPhasesService appointmentPhasesService,
                                  SystemOfRecordConfigurationProperties systemOfRecordConfiguration,
@@ -102,7 +95,6 @@ public class AppointmentTimelineItemService {
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
     this.userDetailService = userDetailService;
-    this.permissionService = permissionService;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.appointmentPhasesService = appointmentPhasesService;
     this.systemOfRecordConfiguration = systemOfRecordConfiguration;
@@ -152,33 +144,34 @@ public class AppointmentTimelineItemService {
 
     Map<AppointmentId, List<AppointmentCorrectionHistoryView>> appointmentCorrectionMap = new HashMap<>();
 
-    if (loggedInUser.isPresent()) {
-
-      Map<TeamType, Collection<RolePermission>> teamTypePermissionMap =
-          permissionService.getTeamTypePermissionMap(loggedInUser.get());
-
-      var regulatorRolePermissions = teamTypePermissionMap.getOrDefault(TeamType.REGULATOR, Set.of());
-
-      canManageAppointments = regulatorRolePermissions.contains(RolePermission.MANAGE_APPOINTMENTS);
-      isMemberOfRegulatorTeam = teamTypePermissionMap.containsKey(TeamType.REGULATOR);
-
-      canViewNominations = Set.of(RolePermission.VIEW_ALL_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
-          .stream()
-          .anyMatch(regulatorRolePermissions::contains);
-
-      canViewConsultations = teamTypePermissionMap.getOrDefault(TeamType.CONSULTEE, Set.of())
-          .contains(RolePermission.VIEW_ALL_NOMINATIONS);
-
-      if (isMemberOfRegulatorTeam) {
-
-        var appointmentIds = appointmentDtos.stream().map(AppointmentDto::appointmentId).toList();
-
-        appointmentCorrectionMap = appointmentCorrectionService
-            .getAppointmentCorrectionHistoryViews(appointmentIds)
-            .stream()
-            .collect(Collectors.groupingBy(AppointmentCorrectionHistoryView::appointmentId, Collectors.toList()));
-      }
-    }
+    // TODO OSDOP-811
+//    if (loggedInUser.isPresent()) {
+//
+//      Map<TeamType, Collection<RolePermission>> teamTypePermissionMap =
+//          permissionService.getTeamTypePermissionMap(loggedInUser.get());
+//
+//      var regulatorRolePermissions = teamTypePermissionMap.getOrDefault(TeamType.REGULATOR, Set.of());
+//
+//      canManageAppointments = regulatorRolePermissions.contains(RolePermission.MANAGE_APPOINTMENTS);
+//      isMemberOfRegulatorTeam = teamTypePermissionMap.containsKey(TeamType.REGULATOR);
+//
+//      canViewNominations = Set.of(RolePermission.VIEW_ALL_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
+//          .stream()
+//          .anyMatch(regulatorRolePermissions::contains);
+//
+//      canViewConsultations = teamTypePermissionMap.getOrDefault(TeamType.CONSULTEE, Set.of())
+//          .contains(RolePermission.VIEW_ALL_NOMINATIONS);
+//
+//      if (isMemberOfRegulatorTeam) {
+//
+//        var appointmentIds = appointmentDtos.stream().map(AppointmentDto::appointmentId).toList();
+//
+//        appointmentCorrectionMap = appointmentCorrectionService
+//            .getAppointmentCorrectionHistoryViews(appointmentIds)
+//            .stream()
+//            .collect(Collectors.groupingBy(AppointmentCorrectionHistoryView::appointmentId, Collectors.toList()));
+//      }
+//    }
 
     var appointmentTimelineItemDtoBuilder = AppointmentTimelineItemDto.builder()
         .withCanManageAppointments(canManageAppointments)

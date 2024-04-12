@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordLandingPageController;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.TeamTypeSelectionController;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,8 +36,7 @@ class TopNavigationServiceTest {
             ),
             tuple(
                 TopNavigationService.TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-                StringUtils.stripEnd(
-                    ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()), "/")
+                "/stub"
             ),
             tuple(
                 TopNavigationService.SEARCH_SYSTEM_OF_RECORD_NAVIGATION_ITEM_TITLE,

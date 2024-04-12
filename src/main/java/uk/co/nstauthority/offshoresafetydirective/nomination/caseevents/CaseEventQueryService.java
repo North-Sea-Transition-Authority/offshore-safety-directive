@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -22,11 +21,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMember;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamView;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @Service
 public class CaseEventQueryService {
@@ -37,25 +31,16 @@ public class CaseEventQueryService {
   private final CaseEventFileService caseEventFileService;
   private final EnergyPortalUserService energyPortalUserService;
   private final UserDetailService userDetailService;
-  private final PermissionService permissionService;
-  private final RegulatorTeamService regulatorTeamService;
-  private final TeamMemberService teamMemberService;
 
   @Autowired
   CaseEventQueryService(CaseEventRepository caseEventRepository,
                         CaseEventFileService caseEventFileService,
                         EnergyPortalUserService energyPortalUserService,
-                        UserDetailService userDetailService,
-                        PermissionService permissionService,
-                        RegulatorTeamService regulatorTeamService,
-                        TeamMemberService teamMemberService) {
+                        UserDetailService userDetailService) {
     this.caseEventRepository = caseEventRepository;
     this.caseEventFileService = caseEventFileService;
     this.energyPortalUserService = energyPortalUserService;
     this.userDetailService = userDetailService;
-    this.permissionService = permissionService;
-    this.regulatorTeamService = regulatorTeamService;
-    this.teamMemberService = teamMemberService;
   }
 
   public Optional<LocalDate> getDecisionDateForNominationDetail(NominationDetail nominationDetail) {
@@ -121,25 +106,32 @@ public class CaseEventQueryService {
 
     var files = caseEventFileService.getFileViewMapFromCaseEvents(events);
 
-    var user = userDetailService.getUserDetail();
-    var canViewAllCaseEvents = permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)
-        && regulatorTeamService.isMemberOfRegulatorTeam(user);
+    // TODO OSDOP-811
+//    var user = userDetailService.getUserDetail();
+//    var canViewAllCaseEvents = permissionService.hasPermission(user, RolePermission.VIEW_ALL_NOMINATIONS)
+//        && regulatorTeamService.isMemberOfRegulatorTeam(user);
+//
+//    if (canViewAllCaseEvents) {
+//      return events.stream()
+//          .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
+//          .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
+//          .toList();
+//    }
+//
+//    var teamTypesForUser = teamMemberService.getUserAsTeamMembers(user)
+//        .stream()
+//        .map(TeamMember::teamView)
+//        .map(TeamView::teamType)
+//        .collect(Collectors.toSet());
+//
+//    return events.stream()
+//        .filter(caseEvent -> CaseEventType.isValidForTeamType(teamTypesForUser, caseEvent.getCaseEventType()))
+//        .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
+//        .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
+//        .toList();
 
-    if (canViewAllCaseEvents) {
-      return events.stream()
-          .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
-          .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
-          .toList();
-    }
-
-    var teamTypesForUser = teamMemberService.getUserAsTeamMembers(user)
+    return events
         .stream()
-        .map(TeamMember::teamView)
-        .map(TeamView::teamType)
-        .collect(Collectors.toSet());
-
-    return events.stream()
-        .filter(caseEvent -> CaseEventType.isValidForTeamType(teamTypesForUser, caseEvent.getCaseEventType()))
         .map(caseEvent -> buildCaseEventView(caseEvent, userIdAndDtoMap, files.get(caseEvent)))
         .sorted(Comparator.comparing(CaseEventView::getCreatedInstant, Comparator.reverseOrder()))
         .toList();

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.CreateIndustryTeamFormTestUtil;
 
 class FormErrorSummaryServiceTest {
 
@@ -22,12 +21,16 @@ class FormErrorSummaryServiceTest {
 
   @Test
   void getErrorItems_withBindingResults() {
-    var bindingResult = new BeanPropertyBindingResult(CreateIndustryTeamFormTestUtil.builder().build(), "form");
+    var bindingResult = new BeanPropertyBindingResult(new DummyForm(), "form");
     bindingResult.addError(new FieldError("Error", "ErrorField", "Error message"));
 
     List<ErrorItem> errorItemList = formErrorSummaryService.getErrorItems(bindingResult);
     assertThat(errorItemList)
         .extracting(ErrorItem::getFieldName, ErrorItem::getErrorMessage)
         .containsExactly(tuple("ErrorField", "Error message"));
+  }
+
+  static class DummyForm {
+
   }
 }

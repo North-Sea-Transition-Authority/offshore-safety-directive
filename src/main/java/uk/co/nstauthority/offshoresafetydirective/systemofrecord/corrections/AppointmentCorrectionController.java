@@ -18,7 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerUtil;
@@ -33,11 +32,10 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.PortalAssetNameService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/appointment/{appointmentId}/correct")
-@HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
 @HasNotBeenTerminated
 @HasAssetStatus(AssetStatus.EXTANT)
 public class AppointmentCorrectionController {

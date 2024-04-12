@@ -18,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
@@ -33,11 +32,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.Case
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action.CaseProcessingActionIdentifier;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/review")
-@HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
+// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
 @HasNominationStatus(
     statuses = NominationStatus.AWAITING_CONFIRMATION,
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION

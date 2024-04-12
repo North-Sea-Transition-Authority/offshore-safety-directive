@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
@@ -22,11 +21,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/case-event/{caseEventId}")
-@HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS})
+// TODO OSDOP-811 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS})
 @HasNominationStatus(
     statuses = {
         NominationStatus.SUBMITTED,

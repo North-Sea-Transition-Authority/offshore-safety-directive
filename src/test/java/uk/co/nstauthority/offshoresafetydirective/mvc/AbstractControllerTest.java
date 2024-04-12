@@ -21,11 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominatio
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasPermissionInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasTeamPermissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.IsMemberOfTeamTypeInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
@@ -52,12 +48,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessServ
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberService;
-import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.PermissionManagementHandlerInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.consultee.ConsulteeTeamService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamService;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.regulator.RegulatorTeamService;
 
 @ActiveProfiles({"test", "development"})
 @AutoConfigureMockMvc
@@ -68,16 +58,11 @@ import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.reg
 @Import({
     AbstractControllerTest.TestConfig.class,
     WebMvcConfiguration.class,
-    PermissionManagementHandlerInterceptor.class,
-    HasTeamPermissionInterceptor.class,
     NominationInterceptor.class,
-    HasPermissionInterceptor.class,
     IsCurrentAppointmentInterceptor.class,
     HasNotBeenTerminatedInterceptor.class,
     HasAppointmentStatusInterceptor.class,
-    PermissionService.class,
     WebSecurityConfiguration.class,
-    IsMemberOfTeamTypeInterceptor.class,
     HasAssetStatusInterceptor.class,
     RequestLogFilter.class,
     PostAuthenticationRequestMdcFilter.class,
@@ -92,14 +77,8 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected MockMvc mockMvc;
 
-  @Autowired
-  protected PermissionService permissionService;
-
   @MockBean
   protected NominationApplicantTeamService nominationApplicantTeamService;
-
-  @MockBean
-  protected TeamMemberService teamMemberService;
 
   @MockBean
   protected UserDetailService userDetailService;
@@ -123,15 +102,6 @@ public abstract class AbstractControllerTest {
   protected AppointmentTerminationService appointmentTerminationService;
 
   @MockBean
-  protected RegulatorTeamService regulatorTeamService;
-
-  @MockBean
-  protected ConsulteeTeamService consulteeTeamService;
-
-  @MockBean
-  protected IndustryTeamService industryTeamService;
-
-  @MockBean
   protected JooqStatisticsListener jooqStatisticsListener;
 
   @MockBean
@@ -145,9 +115,6 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
-
-  @MockBean
-  protected TeamScopeService teamScopeService;
 
   @MockBean
   protected NominationDetailService nominationDetailService;

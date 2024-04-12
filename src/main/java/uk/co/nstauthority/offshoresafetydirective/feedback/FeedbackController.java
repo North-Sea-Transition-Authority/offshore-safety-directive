@@ -14,7 +14,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -25,7 +24,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Controller
@@ -74,7 +72,7 @@ public class FeedbackController {
 
   @GetMapping("/nomination/{nominationId}/feedback")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView getNominationFeedback(@PathVariable("nominationId") NominationId nominationId,
                                             @ModelAttribute("form") FeedbackForm form) {
     var nomination = nominationService.getNominationByIdOrError(nominationId);
@@ -83,7 +81,7 @@ public class FeedbackController {
 
   @PostMapping("/nomination/{nominationId}/feedback")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-  @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
   public ModelAndView submitNominationFeedback(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") FeedbackForm form,
                                                BindingResult bindingResult,

@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,33 +15,27 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationPermission;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Component
 public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(
-      HasNominationStatus.class, HasNominationPermission.class
+      HasNominationStatus.class
   );
 
   private static final Logger LOGGER = LoggerFactory.getLogger(NominationInterceptor.class);
 
   private final NominationDetailService nominationDetailService;
-  private final PermissionService permissionService;
   private final UserDetailService userDetailService;
 
   @Autowired
   NominationInterceptor(NominationDetailService nominationDetailService,
-                        PermissionService permissionService,
                         UserDetailService userDetailService) {
     this.nominationDetailService = nominationDetailService;
-    this.permissionService = permissionService;
     this.userDetailService = userDetailService;
   }
 
@@ -58,19 +51,19 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
       NominationDetail nominationDetail = null;
       HasNominationStatus hasNominationStatusAnnotation = getNominationStatusAnnotation(handlerMethod);
-      HasNominationPermission hasNominationPermissionAnnotation = getNominationPermissionAnnotation(handlerMethod);
 
       if (hasNominationStatusAnnotation != null) {
         nominationDetail = getNominationDetail(hasNominationStatusAnnotation.fetchType(), nominationId);
         checkNominationStatus(hasNominationStatusAnnotation, nominationDetail);
       }
 
-      if (hasNominationPermissionAnnotation != null) {
-        nominationDetail = nominationDetail != null
-            ? nominationDetail
-            : getNominationDetail(NominationDetailFetchType.LATEST, nominationId);
-        checkNominationPermission(hasNominationPermissionAnnotation, nominationDetail);
-      }
+      // TODO OSDOP-811
+//      if (hasNominationPermissionAnnotation != null) {
+//        nominationDetail = nominationDetail != null
+//            ? nominationDetail
+//            : getNominationDetail(NominationDetailFetchType.LATEST, nominationId);
+//        checkNominationPermission(hasNominationPermissionAnnotation, nominationDetail);
+//      }
     }
 
     return true;
@@ -85,14 +78,15 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
     return hasNominationStatusAnnotation;
   }
 
-  private HasNominationPermission getNominationPermissionAnnotation(HandlerMethod handlerMethod) {
-    HasNominationPermission hasNominationPermissionAnnotation = null;
-
-    if (hasAnnotation(handlerMethod, HasNominationPermission.class)) {
-      hasNominationPermissionAnnotation = (HasNominationPermission) getAnnotation(handlerMethod, HasNominationPermission.class);
-    }
-    return hasNominationPermissionAnnotation;
-  }
+  // TODO OSDOP-81
+//  private HasNominationPermission getNominationPermissionAnnotation(HandlerMethod handlerMethod) {
+//    HasNominationPermission hasNominationPermissionAnnotation = null;
+//
+//    if (hasAnnotation(handlerMethod, HasNominationPermission.class)) {
+//      hasNominationPermissionAnnotation = (HasNominationPermission) getAnnotation(handlerMethod, HasNominationPermission.class);
+//    }
+//    return hasNominationPermissionAnnotation;
+//  }
 
   private NominationDetail getNominationDetail(NominationDetailFetchType fetchType, NominationId nominationId) {
     var nominationDetail = switch (fetchType) {
@@ -113,21 +107,22 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
     return nominationDetail;
   }
 
-  private void checkNominationPermission(HasNominationPermission annotation, NominationDetail nominationDetail) {
-    List<RolePermission> allowedPermissions = Arrays.asList(annotation.permissions());
-
-    var userHasAllowedPermissionsForApplicantTeam = permissionService.hasPermissionForNomination(
-        nominationDetail,
-        userDetailService.getUserDetail(),
-        allowedPermissions
-    );
-
-    if (!userHasAllowedPermissionsForApplicantTeam) {
-      throw new ResponseStatusException(
-          HttpStatus.FORBIDDEN,
-          "User does not have required permission {%s} in applicants team".formatted(allowedPermissions));
-    }
-  }
+  // TODO OSDOP-811
+//  private void checkNominationPermission(HasNominationPermission annotation, NominationDetail nominationDetail) {
+//    List<RolePermission> allowedPermissions = Arrays.asList(annotation.permissions());
+//
+//    var userHasAllowedPermissionsForApplicantTeam = permissionService.hasPermissionForNomination(
+//        nominationDetail,
+//        userDetailService.getUserDetail(),
+//        allowedPermissions
+//    );
+//
+//    if (!userHasAllowedPermissionsForApplicantTeam) {
+//      throw new ResponseStatusException(
+//          HttpStatus.FORBIDDEN,
+//          "User does not have required permission {%s} in applicants team".formatted(allowedPermissions));
+//    }
+//  }
 
   private void checkNominationStatus(HasNominationStatus annotation, NominationDetail nominationDetail) {
 

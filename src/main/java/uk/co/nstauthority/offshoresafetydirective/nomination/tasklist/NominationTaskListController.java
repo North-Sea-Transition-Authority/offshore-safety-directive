@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.PermissionService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -24,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.deletion.DeleteNominationController;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionUtil;
-import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.RolePermission;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/task-list")
@@ -38,21 +36,18 @@ public class NominationTaskListController {
   private final List<NominationTaskListItem> nominationTaskListItems;
   private final CaseEventQueryService caseEventQueryService;
   private final UserDetailService userDetailService;
-  private final PermissionService permissionService;
 
   @Autowired
   public NominationTaskListController(NominationDetailService nominationDetailService,
                                       List<NominationTaskListSection> nominationTaskListSections,
                                       List<NominationTaskListItem> nominationTaskListItems,
                                       CaseEventQueryService caseEventQueryService,
-                                      UserDetailService userDetailService,
-                                      PermissionService permissionService) {
+                                      UserDetailService userDetailService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationTaskListSections = nominationTaskListSections;
     this.nominationTaskListItems = nominationTaskListItems;
     this.caseEventQueryService = caseEventQueryService;
     this.userDetailService = userDetailService;
-    this.permissionService = permissionService;
   }
 
   @GetMapping
@@ -72,11 +67,14 @@ public class NominationTaskListController {
         );
 
     var user = userDetailService.getUserDetail();
-    var canDeleteNomination = permissionService.hasPermissionForNomination(
-        nominationDetail,
-        user,
-        Collections.singleton(RolePermission.CREATE_NOMINATION)
-    );
+
+    var canDeleteNomination = true;
+    // TODO OSDOP-811
+//    var canDeleteNomination = permissionService.hasPermissionForNomination(
+//        nominationDetail,
+//        user,
+//        Collections.singleton(RolePermission.CREATE_NOMINATION)
+//    );
 
     if (canDeleteNomination) {
       modelAndView
