@@ -15,10 +15,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 
 @Component
 public class NominationInterceptor extends AbstractHandlerInterceptor {

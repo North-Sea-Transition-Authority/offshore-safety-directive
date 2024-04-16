@@ -20,9 +20,9 @@
 //import org.springframework.web.servlet.ModelAndView;
 //import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 //import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
-//import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNominationStatus;
-//import uk.co.nstauthority.offshoresafetydirective.authorisation.NominationDetailFetchType;
+//import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanAccessDraftNomination;
+//import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+//import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 //import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 //import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
 //import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;

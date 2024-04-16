@@ -18,12 +18,10 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponsePar
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
@@ -42,6 +40,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanViewNominationPostSubmissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;

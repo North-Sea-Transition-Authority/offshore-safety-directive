@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.branding.AccidentRegulatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnumOptionUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
@@ -27,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceRe
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.licences.LicenceAddToListView;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.manageinstallations.ManageInstallationsController;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;

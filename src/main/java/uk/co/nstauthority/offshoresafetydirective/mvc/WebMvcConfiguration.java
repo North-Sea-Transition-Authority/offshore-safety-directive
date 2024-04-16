@@ -13,14 +13,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanViewNominationPostSubmissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamManagementHandlerInterceptor;
 
 @Configuration

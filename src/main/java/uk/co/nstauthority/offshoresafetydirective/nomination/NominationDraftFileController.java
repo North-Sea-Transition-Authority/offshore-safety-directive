@@ -17,9 +17,9 @@ import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
 import uk.co.fivium.fileuploadlibrary.fds.FileDeleteResponse;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanAccessDraftNomination;
 import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @RestController

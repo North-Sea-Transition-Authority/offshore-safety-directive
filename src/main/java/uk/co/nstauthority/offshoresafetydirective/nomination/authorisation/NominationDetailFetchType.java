@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.authorisation;
+package uk.co.nstauthority.offshoresafetydirective.nomination.authorisation;
 
 public enum NominationDetailFetchType {
 
