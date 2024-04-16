@@ -16,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
@@ -48,6 +49,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessServ
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
+import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagementService;
+import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamManagementHandlerInterceptor;
 
 @ActiveProfiles({"test", "development"})
 @AutoConfigureMockMvc
@@ -69,7 +73,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.App
     MetricsProvider.class,
     ErrorListHandlerInterceptor.class,
     UpdateRequestInterceptor.class,
-    CanViewNominationPostSubmissionInterceptor.class
+    CanViewNominationPostSubmissionInterceptor.class,
+    TeamManagementHandlerInterceptor.class,
+    ServiceUserDetailArgumentResolver.class
 })
 @EnableConfigurationProperties(value = {SamlProperties.class, AnalyticsProperties.class})
 public abstract class AbstractControllerTest {
@@ -133,6 +139,15 @@ public abstract class AbstractControllerTest {
 
   @MockBean
   protected WellQueryService wellQueryService;
+
+  @MockBean
+  protected TeamManagementService teamManagementService;
+
+  @MockBean
+  protected TeamQueryService teamQueryService;
+
+  @Autowired
+  protected TeamManagementHandlerInterceptor teamManagementHandlerInterceptor;
 
   @BeforeEach
   void setupAbstractControllerTest() {

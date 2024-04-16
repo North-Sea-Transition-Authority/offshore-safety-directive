@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.ResourceUrlEncodingFilter;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.CanViewNominationPostSubmissionInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
@@ -19,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppoint
 import uk.co.nstauthority.offshoresafetydirective.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamManagementHandlerInterceptor;
 
 @Configuration
 class WebMvcConfiguration implements WebMvcConfigurer {
@@ -39,6 +42,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final HasAssetStatusInterceptor hasAssetStatusInterceptor;
   private final ErrorListHandlerInterceptor errorListHandlerInterceptor;
   private final CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor;
+  private final TeamManagementHandlerInterceptor teamManagementHandlerInterceptor;
+  private final ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver;
 
   @Autowired
   WebMvcConfiguration(NominationInterceptor nominationInterceptor,
@@ -48,7 +53,9 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       HasAppointmentStatusInterceptor hasAppointmentStatusInterceptor,
                       HasAssetStatusInterceptor hasAssetStatusInterceptor,
                       ErrorListHandlerInterceptor errorListHandlerInterceptor,
-                      CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor) {
+                      CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor,
+                      TeamManagementHandlerInterceptor teamManagementHandlerInterceptor,
+                      ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver) {
     this.nominationInterceptor = nominationInterceptor;
     this.updateRequestInterceptor = updateRequestInterceptor;
     this.isCurrentAppointmentInterceptor = isCurrentAppointmentInterceptor;
@@ -57,6 +64,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.hasAssetStatusInterceptor = hasAssetStatusInterceptor;
     this.errorListHandlerInterceptor = errorListHandlerInterceptor;
     this.canViewNominationPostSubmissionInterceptor = canViewNominationPostSubmissionInterceptor;
+    this.teamManagementHandlerInterceptor = teamManagementHandlerInterceptor;
+    this.serviceUserDetailArgumentResolver = serviceUserDetailArgumentResolver;
   }
 
   @Override
@@ -97,10 +106,17 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addPathPatterns("/asset/**", "/appointment/**");
     registry.addInterceptor(errorListHandlerInterceptor)
         .excludePathPatterns(ASSETS_PATH, "/api/**");
+    registry.addInterceptor(teamManagementHandlerInterceptor)
+        .addPathPatterns("/team-management/**");
   }
 
   @Bean
   public ResourceUrlEncodingFilter resourceUrlEncodingFilter() {
     return new ResourceUrlEncodingFilter();
+  }
+
+  @Override
+  public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+    resolvers.add(serviceUserDetailArgumentResolver);
   }
 }

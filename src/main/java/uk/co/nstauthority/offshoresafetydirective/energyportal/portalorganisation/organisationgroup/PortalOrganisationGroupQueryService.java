@@ -66,7 +66,7 @@ public class PortalOrganisationGroupQueryService {
         .map(PortalOrganisationGroupDto::fromOrganisationGroup);
   }
 
-  List<PortalOrganisationGroupDto> queryOrganisationByName(String organisationName, RequestPurpose requestPurpose) {
+  public List<PortalOrganisationGroupDto> queryOrganisationByName(String organisationName, RequestPurpose requestPurpose) {
 
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
             organisationApi.searchOrganisationGroups(

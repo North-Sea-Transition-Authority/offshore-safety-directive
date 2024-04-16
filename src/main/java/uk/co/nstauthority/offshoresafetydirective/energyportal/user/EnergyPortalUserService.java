@@ -46,13 +46,13 @@ public class EnergyPortalUserService {
     this.energyPortalApiWrapper = energyPortalApiWrapper;
   }
 
-  public List<EnergyPortalUserDto> findUserByUsername(String username, RequestPurpose requestPurpose) {
+  public List<EnergyPortalUserDto> findUserByEmail(String username, RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> 
         userApi.searchUsersByEmail(
             username,
             USERS_PROJECT_ROOT,
-            requestPurpose.purpose(),
-            logCorrelationId.id()
+            requestPurpose,
+            logCorrelationId
         )
         .stream()
         .filter(User::getCanLogin)
@@ -72,8 +72,8 @@ public class EnergyPortalUserService {
       return userApi.searchUsersByIds(
               webUserAccountIdApiInputs,
               USERS_PROJECT_ROOT,
-              requestPurpose.purpose(),
-              logCorrelationId.id()
+              requestPurpose,
+              logCorrelationId
           )
           .stream()
           .map(this::convertToEnergyPortalUser)
@@ -86,8 +86,8 @@ public class EnergyPortalUserService {
         userApi.findUserById(
             webUserAccountId.toInt(),
             USER_PROJECT_ROOT,
-            requestPurpose.purpose(),
-            logCorrelationId.id()
+            requestPurpose,
+            logCorrelationId
         )
         .stream()
         .map(this::convertToEnergyPortalUser)

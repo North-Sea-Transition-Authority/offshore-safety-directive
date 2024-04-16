@@ -45,3 +45,6 @@ CVE-2024-22257
 
 # uk.co.fivium.energy-portal-message-queue
 CVE-2024-29025
+
+# file-upload-spring-boot-starter
+CVE-2024-21634

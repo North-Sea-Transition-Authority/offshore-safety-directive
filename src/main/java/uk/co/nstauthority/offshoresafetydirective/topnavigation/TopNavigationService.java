@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import uk.co.nstauthority.offshoresafetydirective.fds.navigation.TopNavigationItem;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.search.SystemOfRecordLandingPageController;
+import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagementController;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Service
@@ -27,7 +28,7 @@ public class TopNavigationService {
     navigationItems.add(
         new TopNavigationItem(
             TEAM_MANAGEMENT_NAVIGATION_ITEM_TITLE,
-            "/stub"
+            ReverseRouter.route(on(TeamManagementController.class).renderTeamTypeList(null))
         )
     );
 
