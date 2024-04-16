@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.authorisation;
+package uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

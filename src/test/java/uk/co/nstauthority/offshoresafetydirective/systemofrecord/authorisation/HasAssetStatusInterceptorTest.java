@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.authorisation;
+package uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;

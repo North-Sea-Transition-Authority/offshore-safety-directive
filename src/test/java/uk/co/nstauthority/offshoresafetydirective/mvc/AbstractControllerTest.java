@@ -18,10 +18,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponsePar
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAppointmentStatusInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatusInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminatedInterceptor;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointmentInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.branding.IncludeServiceBrandingConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties;
 import uk.co.nstauthority.offshoresafetydirective.configuration.SamlProperties;
@@ -47,6 +43,10 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAcce
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentModelAndViewService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAppointmentStatusInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAssetStatusInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasNotBeenTerminatedInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.IsCurrentAppointmentInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;

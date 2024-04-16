@@ -18,9 +18,6 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasAssetStatus;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.HasNotBeenTerminated;
-import uk.co.nstauthority.offshoresafetydirective.authorisation.IsCurrentAppointment;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -32,6 +29,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAssetStatus;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasNotBeenTerminated;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.IsCurrentAppointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
 
 @Controller
