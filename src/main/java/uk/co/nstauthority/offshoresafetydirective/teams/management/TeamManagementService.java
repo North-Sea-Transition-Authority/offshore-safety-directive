@@ -83,17 +83,42 @@ public class TeamManagementService {
     if (teamType.isScoped()) {
       throw new TeamManagementException("TeamType %s is scoped, expected static".formatted(teamType));
     }
-    return getTeamsOfTypeUserCanManage(teamType, wuaId).stream()
+
+    Optional<Team> team = getTeamsOfTypeUserCanManage(teamType, wuaId)
+        .stream()
         .findFirst();
+
+    if (team.isEmpty() && TeamType.CONSULTEE.equals(teamType) && userCanManageAnyConsulteeTeam(wuaId)) {
+      team = getStaticTeamOfType(teamType);
+    }
+
+    return team;
   }
 
-  Optional<Team> getStaticTeamOfTypeUserIsMemberOf(TeamType teamType, Long wuaId) {
+  Optional<Team> getStaticTeamOfType(TeamType teamType) {
+
     if (teamType.isScoped()) {
       throw new TeamManagementException("TeamType %s is scoped, expected static".formatted(teamType));
     }
-    return getTeamsOfTypeUserIsMemberOf(teamType, wuaId)
+
+    return teamRepository.findByTeamType(teamType).stream().findFirst();
+  }
+
+  Optional<Team> getStaticTeamOfTypeUserIsMemberOf(TeamType teamType, Long wuaId) {
+
+    if (teamType.isScoped()) {
+      throw new TeamManagementException("TeamType %s is scoped, expected static".formatted(teamType));
+    }
+
+    Optional<Team> team = getTeamsOfTypeUserIsMemberOf(teamType, wuaId)
         .stream()
         .findFirst();
+
+    if (team.isEmpty() && TeamType.CONSULTEE.equals(teamType) && userCanManageAnyConsulteeTeam(wuaId)) {
+      team = getStaticTeamOfType(teamType);
+    }
+
+    return team;
   }
 
   public List<Team> getScopedTeamsOfTypeUserCanManage(TeamType teamType, Long wuaId) {
@@ -284,6 +309,10 @@ public class TeamManagementService {
 
   public boolean userCanManageAnyOrganisationTeam(long wuaId) {
     return teamQueryService.userHasStaticRole(wuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER);
+  }
+
+  public boolean userCanManageAnyConsulteeTeam(long wuaId) {
+    return userCanManageAnyOrganisationTeam(wuaId);
   }
 
   private List<Team> getAllScopedTeamsOfType(TeamType teamType) {

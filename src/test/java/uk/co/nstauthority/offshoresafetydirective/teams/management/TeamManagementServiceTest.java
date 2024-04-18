@@ -210,6 +210,43 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void getStaticTeamOfTypeUserCanManage_whenConsulteeTeamType_andThirdPartyAccessManagerRole_thenTeamReturned() {
+
+    var consulteeTeamType = TeamType.CONSULTEE;
+
+    when(teamRoleRepository.findByWuaIdAndRole(user1WuaId, Role.TEAM_MANAGER))
+        .thenReturn(List.of());
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(true);
+
+    var expectedTeam = new Team();
+
+    when(teamRepository.findByTeamType(consulteeTeamType))
+        .thenReturn(List.of(expectedTeam));
+
+    var resultingTeam = teamManagementService.getStaticTeamOfTypeUserCanManage(consulteeTeamType, user1WuaId);
+
+    assertThat(resultingTeam).contains(expectedTeam);
+  }
+
+  @Test
+  void getStaticTeamOfTypeUserCanManage_whenConsulteeTeamType_andNotThirdPartyAccessManagerRole_thenNoTeamReturned() {
+
+    var consulteeTeamType = TeamType.CONSULTEE;
+
+    when(teamRoleRepository.findByWuaIdAndRole(user1WuaId, Role.TEAM_MANAGER))
+        .thenReturn(List.of());
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(false);
+
+    var resultingTeam = teamManagementService.getStaticTeamOfTypeUserCanManage(consulteeTeamType, user1WuaId);
+
+    assertThat(resultingTeam).isEmpty();
+  }
+
+  @Test
   void getScopedTeamOfTypeUserCanManage() {
     when(teamRoleRepository.findByWuaIdAndRole(user1WuaId, Role.TEAM_MANAGER))
         .thenReturn(List.of(regTeamUser1RoleManage, orgTeam1User1RoleManage));
@@ -642,6 +679,24 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void userCanManageAnyConsulteeTeam_whenHasRole_thenTrue() {
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(true);
+
+    assertThat(teamManagementService.userCanManageAnyConsulteeTeam(user1WuaId)).isTrue();
+  }
+
+  @Test
+  void userCanManageAnyConsulteeTeam_whenNoRole_thenFalse() {
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(false);
+
+    assertThat(teamManagementService.userCanManageAnyConsulteeTeam(user1WuaId)).isFalse();
+  }
+
+  @Test
   void isMemberOfTeam_whenMemberOfTeam_thenTrue() {
 
     when(teamRoleRepository.existsByTeamAndWuaId(regTeam, user1WuaId))
@@ -779,6 +834,46 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void getStaticTeamOfTypeUserIsMemberOf_whenConsulteeTeamType_andNotMemberOfTeam_andCanManageAnyConsulteeTeam_thenTeamReturned() {
+
+    var staticTeamType = TeamType.CONSULTEE;
+
+    var expectedTeam = new Team(UUID.randomUUID());
+    expectedTeam.setTeamType(staticTeamType);
+
+    // user is not in any team of this type
+    when(teamRoleRepository.findAllByWuaId(user1WuaId))
+        .thenReturn(List.of());
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(true);
+
+    when(teamRepository.findByTeamType(staticTeamType))
+        .thenReturn(List.of(expectedTeam));
+
+    var resultingTeam = teamManagementService.getStaticTeamOfTypeUserIsMemberOf(staticTeamType, user1WuaId);
+
+    assertThat(resultingTeam).contains(expectedTeam);
+  }
+
+  @Test
+  void getStaticTeamOfTypeUserIsMemberOf_whenConsulteeTeamType_andNotMemberOfTeam_andCannotManageAnyConsulteeTeam_thenNoTeamReturned() {
+
+    var staticTeamType = TeamType.CONSULTEE;
+
+    // user is not in any team of this type
+    when(teamRoleRepository.findAllByWuaId(user1WuaId))
+        .thenReturn(List.of());
+
+    when(teamQueryService.userHasStaticRole(user1WuaId, TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
+        .thenReturn(false);
+
+    var resultingTeam = teamManagementService.getStaticTeamOfTypeUserIsMemberOf(staticTeamType, user1WuaId);
+
+    assertThat(resultingTeam).isEmpty();
+  }
+
+  @Test
   void getScopedTeamsOfTypeUserIsMemberOf_whenStaticTeamType_thenException() {
 
     var staticTeamType = TeamType.REGULATOR;
@@ -860,5 +955,42 @@ class TeamManagementServiceTest {
 
     assertThat(resultingScopedTeams)
         .containsExactlyInAnyOrder(teamUserIsNotMemberOf, teamUserIsMemberOf);
+  }
+
+  @Test
+  void getStaticTeamOfType_whenScopedType_thenException() {
+
+    var scopedTeamType = TeamType.ORGANISATION_GROUP;
+
+    assertThatThrownBy(() -> teamManagementService.getStaticTeamOfType(scopedTeamType))
+        .isInstanceOf(TeamManagementException.class);
+  }
+
+  @Test
+  void getStaticTeamOfType_whenTeamExists() {
+
+    var staticTeamType = TeamType.REGULATOR;
+
+    var expectedTeam = new Team();
+
+    when(teamRepository.findByTeamType(staticTeamType))
+        .thenReturn(List.of(expectedTeam));
+
+    var resultingTeam = teamManagementService.getStaticTeamOfType(staticTeamType);
+
+    assertThat(resultingTeam).contains(expectedTeam);
+  }
+
+  @Test
+  void getStaticTeamOfType_whenNoTeamExists_thenEmptyOptionalReturned() {
+
+    var staticTeamType = TeamType.REGULATOR;
+
+    when(teamRepository.findByTeamType(staticTeamType))
+        .thenReturn(List.of());
+
+    var resultingTeam = teamManagementService.getStaticTeamOfType(staticTeamType);
+
+    assertThat(resultingTeam).isEmpty();
   }
 }

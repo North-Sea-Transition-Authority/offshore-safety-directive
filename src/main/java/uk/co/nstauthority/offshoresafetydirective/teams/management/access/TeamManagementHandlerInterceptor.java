@@ -98,8 +98,8 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
   }
 
   private boolean hasAnnotation(HandlerMethod handlerMethod, Class<? extends Annotation> annotation) {
-    return AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation) != null ||
-        AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation) != null;
+    return AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation) != null
+        || AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation) != null;
   }
 
   private  <T extends Annotation> T getAnnotation(HandlerMethod handlerMethod, Class<T> annotation) {
@@ -113,8 +113,9 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
 
     var team = getTeamFromRequest(request);
 
-    if (teamManagementService.isMemberOfTeam(team, wuaId) || (TeamType.ORGANISATION_GROUP.equals(team.getTeamType())
-        && teamManagementService.userCanManageAnyOrganisationTeam(wuaId))) {
+    if (teamManagementService.isMemberOfTeam(team, wuaId)
+        || (TeamType.ORGANISATION_GROUP.equals(team.getTeamType()) && userCanManageAnyOrganisationTeam(wuaId))
+        || (TeamType.CONSULTEE.equals(team.getTeamType()) && userCanManageAnyConsulteeTeam(wuaId))) {
       return true;
     } else {
       throw new ResponseStatusException(
@@ -145,5 +146,13 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
 
     return teamManagementService.getTeam(teamId)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "teamId %s not found".formatted(teamId)));
+  }
+
+  private boolean userCanManageAnyOrganisationTeam(long wuaId) {
+    return teamManagementService.userCanManageAnyOrganisationTeam(wuaId);
+  }
+
+  private boolean userCanManageAnyConsulteeTeam(long wuaId) {
+    return teamManagementService.userCanManageAnyConsulteeTeam(wuaId);
   }
 }

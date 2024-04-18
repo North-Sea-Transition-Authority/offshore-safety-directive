@@ -4,12 +4,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -332,6 +332,57 @@ class TeamManagementHandlerInterceptorTest {
         .thenReturn(false);
 
     when(teamManagementService.userCanManageAnyOrganisationTeam(invokingUser.wuaId()))
+        .thenReturn(true);
+
+    assertThat(teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod)).isTrue();
+  }
+
+  @Test
+  void preHandle_invokingUserCanViewTeam_whenConsulteeTeam_andNotMemberOfTeam_andNotManageAnyConsulteeTeamRole_thenForbidden() throws Exception {
+
+    var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    var consulteeTeam = new Team(UUID.randomUUID());
+    consulteeTeam.setTeamType(TeamType.CONSULTEE);
+
+    when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE))
+        .thenReturn(Map.of("teamId", consulteeTeam.getId().toString()));
+
+    when(teamManagementService.getTeam(consulteeTeam.getId()))
+        .thenReturn(Optional.of(consulteeTeam));
+
+    when(teamManagementService.isMemberOfTeam(consulteeTeam, invokingUser.wuaId()))
+        .thenReturn(false);
+
+    when(teamManagementService.userCanManageAnyConsulteeTeam(invokingUser.wuaId()))
+        .thenReturn(false);
+
+    assertThatExceptionOfType(ResponseStatusException.class)
+        .isThrownBy(() -> teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod))
+        .extracting(ResponseStatusException::getStatusCode)
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  void preHandle_invokingUserCanViewTeam_whenConsulteeTeam_andNotMemberOfTeam_andHasManageAnyConsulteeTeamRole_thenOk() throws Exception {
+
+    var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    var consulteeTeam = new Team(UUID.randomUUID());
+    consulteeTeam.setTeamType(TeamType.CONSULTEE);
+
+    when(request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE))
+        .thenReturn(Map.of("teamId", consulteeTeam.getId().toString()));
+
+    when(teamManagementService.getTeam(consulteeTeam.getId()))
+        .thenReturn(Optional.of(consulteeTeam));
+
+    when(teamManagementService.isMemberOfTeam(consulteeTeam, invokingUser.wuaId()))
+        .thenReturn(false);
+
+    when(teamManagementService.userCanManageAnyConsulteeTeam(invokingUser.wuaId()))
         .thenReturn(true);
 
     assertThat(teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod)).isTrue();

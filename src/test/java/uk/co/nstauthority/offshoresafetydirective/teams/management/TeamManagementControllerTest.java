@@ -116,7 +116,7 @@ class TeamManagementControllerTest extends AbstractControllerTest {
   }
 
   @SecurityTest
-  void renderTeamTypeList_regWithOrgManageCanSeeOrgTeams() throws Exception {
+  void renderTeamTypeList_whenRegulatorTeamThirdPartyAccessManager() throws Exception {
     when(teamManagementService.getTeamTypesUserIsMemberOf(invokingUser.wuaId()))
         .thenReturn(Set.of(TeamType.REGULATOR));
 
@@ -132,7 +132,11 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
     assertThat(teamTypeViews)
         .extracting(TeamTypeView::teamTypeName)
-        .containsExactly(TeamType.REGULATOR.getDisplayName(), TeamType.ORGANISATION_GROUP.getDisplayName());
+        .containsExactly(
+            TeamType.CONSULTEE.getDisplayName(),
+            TeamType.REGULATOR.getDisplayName(),
+            TeamType.ORGANISATION_GROUP.getDisplayName()
+        );
   }
 
   @SecurityTest

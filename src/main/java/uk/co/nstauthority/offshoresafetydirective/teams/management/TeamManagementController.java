@@ -62,8 +62,8 @@ public class TeamManagementController {
     var teamTypes = new HashSet<>(teamManagementService.getTeamTypesUserIsMemberOf(user.wuaId()));
 
     if (teamQueryService.userHasStaticRole(user.wuaId(), TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER)) {
-      // regulator with priv can manage org teams
       teamTypes.add(TeamType.ORGANISATION_GROUP);
+      teamTypes.add(TeamType.CONSULTEE);
     }
 
     if (teamTypes.isEmpty()) {
