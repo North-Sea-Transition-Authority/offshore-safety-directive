@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
@@ -29,10 +30,12 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmen
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAssetStatus;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
 @RequestMapping("/appointment/{appointmentId}/remove")
-// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+@InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.APPOINTMENT_MANAGER)
 @HasAppointmentStatus(AppointmentStatus.EXTANT)
 @HasAssetStatus(AssetStatus.EXTANT)
 class RemoveAppointmentController {

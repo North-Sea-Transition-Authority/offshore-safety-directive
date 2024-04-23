@@ -25,6 +25,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanPerformRegulatorNominationAction;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
@@ -34,7 +35,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/review")
-// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_NOMINATIONS)
+@CanPerformRegulatorNominationAction
 @HasNominationStatus(
     statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION},
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION

@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
+import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
@@ -26,6 +29,8 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Service
 class TerminationTimelineItemService {
@@ -36,16 +41,18 @@ class TerminationTimelineItemService {
   private final UserDetailService userDetailService;
   private final AppointmentTerminationService appointmentTerminationService;
   private final FileService fileService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   TerminationTimelineItemService(EnergyPortalUserService energyPortalUserService,
                                  AppointmentTerminationService appointmentTerminationService,
                                  UserDetailService userDetailService,
-                                 FileService fileService) {
+                                 FileService fileService, TeamQueryService teamQueryService) {
     this.energyPortalUserService = energyPortalUserService;
     this.appointmentTerminationService = appointmentTerminationService;
     this.userDetailService = userDetailService;
     this.fileService = fileService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments) {
@@ -117,15 +124,18 @@ class TerminationTimelineItemService {
 
   private boolean isMemberOfRegulatorTeam() {
 
-    return true;
-//    Optional<ServiceUserDetail> loggedInUser;
-//
-//    try {
-//      loggedInUser = Optional.of(userDetailService.getUserDetail());
-//    } catch (InvalidAuthenticationException exception) {
-//      loggedInUser = Optional.empty();
-//    }
-//
-//    return loggedInUser.filter(regulatorTeamService::isMemberOfRegulatorTeam).isPresent();
+    Optional<ServiceUserDetail> loggedInUser;
+
+    try {
+      loggedInUser = Optional.of(userDetailService.getUserDetail());
+    } catch (InvalidAuthenticationException exception) {
+      return false;
+    }
+
+    return teamQueryService.userHasAtLeastOneStaticRole(
+        loggedInUser.get().wuaId(),
+        TeamType.REGULATOR,
+        new LinkedHashSet<>(TeamType.REGULATOR.getAllowedRoles())
+    );
   }
 }

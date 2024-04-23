@@ -19,9 +19,11 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanAccessDraftNomination;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.deletion.DeleteNominationController;
 import uk.co.nstauthority.offshoresafetydirective.tasklist.TaskListSectionUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/task-list")
@@ -35,18 +37,21 @@ public class NominationTaskListController {
   private final List<NominationTaskListItem> nominationTaskListItems;
   private final CaseEventQueryService caseEventQueryService;
   private final UserDetailService userDetailService;
+  private final NominationRoleService nominationRoleService;
 
   @Autowired
   public NominationTaskListController(NominationDetailService nominationDetailService,
                                       List<NominationTaskListSection> nominationTaskListSections,
                                       List<NominationTaskListItem> nominationTaskListItems,
                                       CaseEventQueryService caseEventQueryService,
-                                      UserDetailService userDetailService) {
+                                      UserDetailService userDetailService,
+                                      NominationRoleService nominationRoleService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationTaskListSections = nominationTaskListSections;
     this.nominationTaskListItems = nominationTaskListItems;
     this.caseEventQueryService = caseEventQueryService;
     this.userDetailService = userDetailService;
+    this.nominationRoleService = nominationRoleService;
   }
 
   @GetMapping
@@ -67,13 +72,11 @@ public class NominationTaskListController {
 
     var user = userDetailService.getUserDetail();
 
-    var canDeleteNomination = true;
-    // TODO OSDOP-811
-//    var canDeleteNomination = permissionService.hasPermissionForNomination(
-//        nominationDetail,
-//        user,
-//        Collections.singleton(RolePermission.CREATE_NOMINATION)
-//    );
+    var canDeleteNomination = nominationRoleService.userHasRoleInApplicantOrganisationGroupTeam(
+        user.wuaId(),
+        nominationDetail,
+        Role.NOMINATION_SUBMITTER
+    );
 
     if (canDeleteNomination) {
       modelAndView
@@ -88,7 +91,7 @@ public class NominationTaskListController {
 
     // The first version of the nomination would not have been submitted at this point
     // so no need to check if an update request has been made.
-    if (nominationDetailDto.version() != null && nominationDetailDto.version().intValue() > 1) {
+    if (nominationDetailDto.version() != null && nominationDetailDto.version() > 1) {
       var submittedDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
           nominationId,
           EnumSet.of(NominationStatus.SUBMITTED)

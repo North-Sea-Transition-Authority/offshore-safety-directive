@@ -57,9 +57,7 @@ steps:
         - mkdir $DOCKER_CONFIG
         - echo $DOCKER_CONFIG_JSON > $DOCKER_CONFIG/config.json
         - chmod +x gradlew
-#        TODO OSDOP-811
-#        - ./gradlew generateJooq checkstyleMain test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar
-        - ./gradlew generateJooq test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar
+        - ./gradlew generateJooq checkstyleMain test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar
       build_image: repo1.dev.fivium.local:5000/docker-compose-java17
 
   - name: sync-reports
@@ -302,9 +300,7 @@ steps:
         - mkdir /drone/dockerconfig
         - echo $DOCKER_CONFIG_JSON > /drone/dockerconfig/config.json
         - chmod +x gradlew
-#        TODO OSDOP-811
-#        - ./gradlew generateJooq checkstyleMain test bootJar --continue --parallel --max-workers=3
-        - ./gradlew generateJooq test bootJar --continue --parallel --max-workers=3
+        - ./gradlew generateJooq checkstyleMain test bootJar --continue --parallel --max-workers=3
       build_image: repo1.dev.fivium.local:5000/docker-compose-java17
 
   # This is in the PR pipeline as only PR events get the necessary information for proper github integration

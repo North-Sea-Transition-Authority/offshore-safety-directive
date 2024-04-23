@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.fds.FileUploadComponentAttributes;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner;
 import uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBannerType;
@@ -33,10 +34,12 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.H
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasNotBeenTerminated;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.IsCurrentAppointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetTimelineController;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
 @RequestMapping("/appointment/{appointmentId}/termination")
-// TODO OSDOP-811 @HasPermission(permissions = RolePermission.MANAGE_APPOINTMENTS)
+@InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.APPOINTMENT_MANAGER)
 @IsCurrentAppointment
 @HasNotBeenTerminated
 @HasAssetStatus(AssetStatus.EXTANT)

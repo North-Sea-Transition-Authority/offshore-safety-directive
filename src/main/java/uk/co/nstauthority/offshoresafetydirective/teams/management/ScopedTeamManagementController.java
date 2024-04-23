@@ -2,9 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.teams.management;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import jakarta.validation.Valid;
 import java.util.Comparator;
 import java.util.Optional;
-import jakarta.validation.Valid;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
@@ -28,11 +29,11 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeReference;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-import uk.co.nstauthority.offshoresafetydirective.teams.management.access.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.teams.management.form.NewOrganisationGroupTeamForm;
 
 @Controller
 @RequestMapping("/team-management")
+@InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.THIRD_PARTY_TEAM_MANAGER)
 public class ScopedTeamManagementController {
 
   private final TeamManagementService teamManagementService;
@@ -48,13 +49,11 @@ public class ScopedTeamManagementController {
   }
 
   @GetMapping("/organisation/new")
-  @InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.THIRD_PARTY_TEAM_MANAGER)
   public ModelAndView renderCreateNewOrganisationGroupTeam(@ModelAttribute("form") NewOrganisationGroupTeamForm form) {
     return getModelAndView();
   }
 
   @PostMapping("/organisation/new")
-  @InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.THIRD_PARTY_TEAM_MANAGER)
   public ModelAndView handleCreateNewOrganisationGroupTeam(@Valid @ModelAttribute("form") NewOrganisationGroupTeamForm form,
                                                            BindingResult bindingResult) {
 

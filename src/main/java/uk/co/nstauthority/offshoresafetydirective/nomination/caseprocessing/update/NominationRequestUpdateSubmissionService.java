@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.upd
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,10 @@ import uk.co.nstauthority.offshoresafetydirective.email.GovukNotifyTemplate;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 
 @Service
 class NominationRequestUpdateSubmissionService {
@@ -27,18 +29,18 @@ class NominationRequestUpdateSubmissionService {
   private final TransactionTemplate transactionTemplate;
   private final EmailService emailService;
   private final EmailUrlGenerationService emailUrlGenerationService;
-  private final NominationApplicantTeamService nominationApplicantTeamService;
+  private final NominationRoleService nominationRoleService;
 
   @Autowired
   NominationRequestUpdateSubmissionService(CaseEventService caseEventService, TransactionTemplate transactionTemplate,
                                            EmailService emailService,
                                            EmailUrlGenerationService emailUrlGenerationService,
-                                           NominationApplicantTeamService nominationApplicantTeamService) {
+                                           NominationRoleService nominationRoleService) {
     this.caseEventService = caseEventService;
     this.transactionTemplate = transactionTemplate;
     this.emailService = emailService;
     this.emailUrlGenerationService = emailUrlGenerationService;
-    this.nominationApplicantTeamService = nominationApplicantTeamService;
+    this.nominationRoleService = nominationRoleService;
   }
 
   public void submit(NominationDetail nominationDetail, NominationRequestUpdateForm form) {
@@ -70,27 +72,26 @@ class NominationRequestUpdateSubmissionService {
             ))
         ));
 
-    // TODO OSDOP-811
-//    nominationApplicantTeamService.getApplicantTeamMembersWithAnyRoleOf(
-//            nominationDetail,
-//            EnumSet.of(IndustryTeamRole.NOMINATION_SUBMITTER)
-//        )
-//        .forEach(teamMemberView -> {
-//          var mergedTemplate = templateBuiler
-//              .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, teamMemberView.firstName())
-//              .merge();
-//          try {
-//            emailService.sendEmail(mergedTemplate, teamMemberView, nominationDetail);
-//          } catch (Exception e) {
-//            LOGGER.error("""
-//                    Failed to send update request email to user {} for NominationDetail {}.
-//                    The submission has not been blocked.
-//                    """,
-//                teamMemberView.wuaId(),
-//                nominationDetail.getId(),
-//                e
-//            );
-//          }
-//        });
+    nominationRoleService.getUsersInApplicantOrganisationTeamWithAnyRoleOf(
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER)
+    )
+        .forEach(user -> {
+          var mergedTemplate = templateBuiler
+              .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, user.forename())
+              .merge();
+          try {
+            emailService.sendEmail(mergedTemplate, user, nominationDetail);
+          } catch (Exception e) {
+            LOGGER.error("""
+                    Failed to send update request email to user {} for NominationDetail {}.
+                    The submission has not been blocked.
+                    """,
+                user.webUserAccountId(),
+                nominationDetail.getId(),
+                e
+            );
+          }
+        });
   }
 }

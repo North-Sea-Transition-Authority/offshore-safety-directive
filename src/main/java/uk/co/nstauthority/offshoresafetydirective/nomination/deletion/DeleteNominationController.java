@@ -21,15 +21,17 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
 import uk.co.nstauthority.offshoresafetydirective.nomination.submission.NominationSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.summary.SummaryValidationBehaviour;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/delete")
 @HasNominationStatus(statuses = NominationStatus.DRAFT)
-// TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.CREATE_NOMINATION)
+@HasRoleInApplicantOrganisationGroupTeam(roles = Role.NOMINATION_SUBMITTER)
 public class DeleteNominationController {
 
   private final NominationDetailService nominationDetailService;

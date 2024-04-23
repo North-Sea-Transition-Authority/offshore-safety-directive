@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasAtLeastOneStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
@@ -13,12 +14,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNo
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/consultation")
-// TODO OSDOP-811
-//@HasPermission(permissions = {RolePermission.VIEW_ALL_NOMINATIONS})
-//@IsMemberOfTeamType(TeamType.CONSULTEE)
+@InvokingUserHasAtLeastOneStaticRole(
+    teamType = TeamType.CONSULTEE,
+    roles = { Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT }
+)
 @HasNominationStatus(
     statuses = {
         NominationStatus.SUBMITTED,

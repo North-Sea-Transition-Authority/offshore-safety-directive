@@ -11,6 +11,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailServi
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
 
 @Controller
 @RequestMapping("/work-area")
@@ -23,11 +24,14 @@ public class WorkAreaController {
 
   private final UserDetailService userDetailService;
 
+  private final NominationRoleService nominationRoleService;
+
   @Autowired
   public WorkAreaController(WorkAreaItemService workAreaItemService,
-                            UserDetailService userDetailService) {
+                            UserDetailService userDetailService, NominationRoleService nominationRoleService) {
     this.workAreaItemService = workAreaItemService;
     this.userDetailService = userDetailService;
+    this.nominationRoleService = nominationRoleService;
   }
 
   @GetMapping
@@ -36,15 +40,14 @@ public class WorkAreaController {
     var modelAndView = new ModelAndView("osd/workarea/workArea")
         .addObject("workAreaItems", workAreaItemService.getWorkAreaItems());
 
-    // TODO OSDOP-811
-    var user = userDetailService.getUserDetail();
+    var canUserStartNomination = nominationRoleService.userCanStartNomination(userDetailService.getUserDetail().wuaId());
 
-//    if (permissionService.hasPermission(user, Set.of(RolePermission.CREATE_NOMINATION))) {
+    if (canUserStartNomination) {
       modelAndView.addObject(
           "startNominationUrl",
           ReverseRouter.route(on(StartNominationController.class).startNomination())
       );
-//    }
+    }
 
     return modelAndView;
   }

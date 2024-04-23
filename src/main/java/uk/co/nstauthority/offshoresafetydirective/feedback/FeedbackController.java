@@ -24,11 +24,12 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping
-@AccessibleByServiceUsers
 public class FeedbackController {
 
   public static final String PAGE_NAME = "Feedback";
@@ -49,11 +50,13 @@ public class FeedbackController {
   }
 
   @GetMapping("/feedback")
+  @AccessibleByServiceUsers
   public ModelAndView getFeedback(@ModelAttribute("form") FeedbackForm form) {
     return getFeedbackModelAndView(form);
   }
 
   @PostMapping("/feedback")
+  @AccessibleByServiceUsers
   public ModelAndView submitFeedback(@ModelAttribute("form") FeedbackForm form,
                                      BindingResult bindingResult,
                                      RedirectAttributes redirectAttributes) {
@@ -72,7 +75,7 @@ public class FeedbackController {
 
   @GetMapping("/nomination/{nominationId}/feedback")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  @HasRoleInApplicantOrganisationGroupTeam(roles = Role.NOMINATION_SUBMITTER)
   public ModelAndView getNominationFeedback(@PathVariable("nominationId") NominationId nominationId,
                                             @ModelAttribute("form") FeedbackForm form) {
     var nomination = nominationService.getNominationByIdOrError(nominationId);
@@ -81,7 +84,7 @@ public class FeedbackController {
 
   @PostMapping("/nomination/{nominationId}/feedback")
   @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-  // TODO OSDOP-811 @HasNominationPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+  @HasRoleInApplicantOrganisationGroupTeam(roles = Role.NOMINATION_SUBMITTER)
   public ModelAndView submitNominationFeedback(@PathVariable("nominationId") NominationId nominationId,
                                                @ModelAttribute("form") FeedbackForm form,
                                                BindingResult bindingResult,

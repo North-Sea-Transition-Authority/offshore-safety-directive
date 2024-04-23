@@ -27,6 +27,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.StartNominationController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanAccessDraftNomination;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanStartNomination;
 import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
 import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
@@ -61,13 +62,13 @@ public class ApplicantDetailController {
   }
 
   @GetMapping("/applicant-details")
-  // TODO OSDOP-811 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+  @CanStartNomination
   public ModelAndView getNewApplicantDetails() {
     return getCreateApplicantDetailModelAndView(new ApplicantDetailForm());
   }
 
   @PostMapping("/applicant-details")
-  // TODO OSDOP-811 @HasPermission(permissions = RolePermission.CREATE_NOMINATION)
+  @CanStartNomination
   public ModelAndView createApplicantDetails(@ModelAttribute("form") ApplicantDetailForm form,
                                              BindingResult bindingResult) {
     bindingResult = applicantDetailFormService.validate(form, bindingResult);
@@ -141,7 +142,7 @@ public class ApplicantDetailController {
 
   private String getPortalOrganisationSearchUrl() {
     return RestApiUtil.route(on(PortalOrganisationUnitRestController.class)
-        .searchOrganisationsRelatedToUser(null, OrganisationFilterType.ACTIVE.name()));
+        .searchOrganisationsRelatedToUser(null, OrganisationFilterType.ACTIVE.name(), null));
   }
 
   private Map<String, String> getPreselectedPortalOrganisation(ApplicantDetailForm form) {

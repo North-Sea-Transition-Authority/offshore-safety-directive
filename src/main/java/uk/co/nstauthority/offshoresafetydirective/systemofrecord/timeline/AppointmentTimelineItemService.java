@@ -23,7 +23,6 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenti
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationUnitQueryService;
@@ -51,14 +50,15 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.App
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamRole;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Service
 public class AppointmentTimelineItemService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentTimelineItemService.class);
   static final String CREATED_BY_APPOINTMENT_STRING_FORMAT = "%s: %s";
-
-  static final RequestPurpose FORWARD_APPROVED_APPOINTMENT_PURPOSE =
-      new RequestPurpose("Subarea name for the forward approved appointment display string");
 
   static final RequestPurpose APPOINTED_OPERATORS_PURPOSE =
       new RequestPurpose("Appointed operators for each appointment on the asset timeline");
@@ -77,8 +77,8 @@ public class AppointmentTimelineItemService {
 
   private final SystemOfRecordConfigurationProperties systemOfRecordConfiguration;
   private final AppointmentAccessService appointmentAccessService;
-  private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
   private final PortalAssetNameService portalAssetNameService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   AppointmentTimelineItemService(PortalOrganisationUnitQueryService organisationUnitQueryService,
@@ -89,8 +89,7 @@ public class AppointmentTimelineItemService {
                                  AppointmentPhasesService appointmentPhasesService,
                                  SystemOfRecordConfigurationProperties systemOfRecordConfiguration,
                                  AppointmentAccessService appointmentAccessService,
-                                 LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
-                                 PortalAssetNameService portalAssetNameService) {
+                                 PortalAssetNameService portalAssetNameService, TeamQueryService teamQueryService) {
     this.organisationUnitQueryService = organisationUnitQueryService;
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.nominationAccessService = nominationAccessService;
@@ -99,8 +98,8 @@ public class AppointmentTimelineItemService {
     this.appointmentPhasesService = appointmentPhasesService;
     this.systemOfRecordConfiguration = systemOfRecordConfiguration;
     this.appointmentAccessService = appointmentAccessService;
-    this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
     this.portalAssetNameService = portalAssetNameService;
+    this.teamQueryService = teamQueryService;
   }
 
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments, AssetDto assetDto) {
@@ -144,34 +143,39 @@ public class AppointmentTimelineItemService {
 
     Map<AppointmentId, List<AppointmentCorrectionHistoryView>> appointmentCorrectionMap = new HashMap<>();
 
-    // TODO OSDOP-811
-//    if (loggedInUser.isPresent()) {
-//
-//      Map<TeamType, Collection<RolePermission>> teamTypePermissionMap =
-//          permissionService.getTeamTypePermissionMap(loggedInUser.get());
-//
-//      var regulatorRolePermissions = teamTypePermissionMap.getOrDefault(TeamType.REGULATOR, Set.of());
-//
-//      canManageAppointments = regulatorRolePermissions.contains(RolePermission.MANAGE_APPOINTMENTS);
-//      isMemberOfRegulatorTeam = teamTypePermissionMap.containsKey(TeamType.REGULATOR);
-//
-//      canViewNominations = Set.of(RolePermission.VIEW_ALL_NOMINATIONS, RolePermission.MANAGE_NOMINATIONS)
-//          .stream()
-//          .anyMatch(regulatorRolePermissions::contains);
-//
-//      canViewConsultations = teamTypePermissionMap.getOrDefault(TeamType.CONSULTEE, Set.of())
-//          .contains(RolePermission.VIEW_ALL_NOMINATIONS);
-//
-//      if (isMemberOfRegulatorTeam) {
-//
-//        var appointmentIds = appointmentDtos.stream().map(AppointmentDto::appointmentId).toList();
-//
-//        appointmentCorrectionMap = appointmentCorrectionService
-//            .getAppointmentCorrectionHistoryViews(appointmentIds)
-//            .stream()
-//            .collect(Collectors.groupingBy(AppointmentCorrectionHistoryView::appointmentId, Collectors.toList()));
-//      }
-//    }
+    if (loggedInUser.isPresent()) {
+
+      Set<TeamRole> teamRolesForUser = teamQueryService.getTeamRolesForUser(loggedInUser.get().wuaId());
+
+      canManageAppointments = teamRolesForUser
+          .stream()
+          .filter(teamRole -> TeamType.REGULATOR.equals(teamRole.getTeam().getTeamType()))
+          .anyMatch(teamRole -> Role.APPOINTMENT_MANAGER.equals(teamRole.getRole()));
+
+      isMemberOfRegulatorTeam = teamRolesForUser
+          .stream()
+          .anyMatch(teamRole -> TeamType.REGULATOR.equals(teamRole.getTeam().getTeamType()));
+
+      canViewNominations = teamRolesForUser
+          .stream()
+          .filter(teamRole -> TeamType.REGULATOR.equals(teamRole.getTeam().getTeamType()))
+          .anyMatch(teamRole -> Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION).contains(teamRole.getRole()));
+
+      canViewConsultations = teamRolesForUser
+          .stream()
+          .filter(teamRole -> TeamType.CONSULTEE.equals(teamRole.getTeam().getTeamType()))
+          .anyMatch(teamRole -> Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT).contains(teamRole.getRole()));
+
+      if (isMemberOfRegulatorTeam) {
+
+        var appointmentIds = appointmentDtos.stream().map(AppointmentDto::appointmentId).toList();
+
+        appointmentCorrectionMap = appointmentCorrectionService
+            .getAppointmentCorrectionHistoryViews(appointmentIds)
+            .stream()
+            .collect(Collectors.groupingBy(AppointmentCorrectionHistoryView::appointmentId, Collectors.toList()));
+      }
+    }
 
     var appointmentTimelineItemDtoBuilder = AppointmentTimelineItemDto.builder()
         .withCanManageAppointments(canManageAppointments)

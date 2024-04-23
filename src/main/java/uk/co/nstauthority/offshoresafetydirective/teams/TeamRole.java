@@ -33,7 +33,7 @@ public class TeamRole {
   public TeamRole() {
   }
 
-  TeamRole(UUID id) {
+  public TeamRole(UUID id) {
     this.id = id;
   }
 

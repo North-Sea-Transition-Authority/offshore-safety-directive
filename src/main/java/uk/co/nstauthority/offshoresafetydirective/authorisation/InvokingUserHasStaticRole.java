@@ -1,4 +1,4 @@
-package uk.co.nstauthority.offshoresafetydirective.teams.management.access;
+package uk.co.nstauthority.offshoresafetydirective.authorisation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,7 +8,8 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
+@Security
 public @interface InvokingUserHasStaticRole {
   TeamType teamType();
   Role role();

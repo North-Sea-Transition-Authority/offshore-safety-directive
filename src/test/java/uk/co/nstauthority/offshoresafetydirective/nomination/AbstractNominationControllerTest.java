@@ -1,103 +1,122 @@
-// TODO OSDOP-811
-//package uk.co.nstauthority.offshoresafetydirective.nomination;
-//
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.ArgumentMatchers.eq;
-//import static org.mockito.Mockito.when;
-//
-//import java.util.Collections;
-//import java.util.List;
-//import java.util.Optional;
-//import java.util.Set;
-//import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
-//import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDtoTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.PortalOrganisationDtoTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
-//import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.teams.PortalTeamType;
-//import uk.co.nstauthority.offshoresafetydirective.teams.Team;
-//import uk.co.nstauthority.offshoresafetydirective.teams.TeamMemberTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.teams.TeamScope;
-//import uk.co.nstauthority.offshoresafetydirective.teams.TeamScopeTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.teams.TeamTestUtil;
-//import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
-//import uk.co.nstauthority.offshoresafetydirective.teams.permissionmanagement.industry.IndustryTeamRole;
-//
-//public abstract class AbstractNominationControllerTest extends AbstractControllerTest {
-//
-//  private static final TeamScope TEAM_SCOPE = TeamScopeTestUtil.builder().build();
-//
-//  public void givenUserHasNominationPermission(NominationDetail nominationDetail, ServiceUserDetail user) {
-//
-//    var applicantDetail = ApplicantDetailTestUtil.builder()
-//        .withPortalOrganisationId(1)
-//        .build();
-//
-//    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
-//
-//    when(nominationApplicantTeamService.getApplicantTeams(nominationDetail))
-//        .thenReturn(Set.of(TeamTestUtil.Builder().withId(TEAM_SCOPE.getTeam().getUuid()).build()));
-//
-//    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder().build();
-//
-//    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationId(eq(applicantDetail.getPortalOrganisationId()), any()))
-//        .thenReturn(Set.of(organisationGroup));
-//
-//    when(teamScopeService.getTeamScope(List.of(organisationGroup.organisationGroupId()),
-//        PortalTeamType.ORGANISATION_GROUP))
-//        .thenReturn(List.of(TEAM_SCOPE));
-//
-//    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
-//        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-//        .withTeamId(TEAM_SCOPE.getTeam().toTeamId())
-//        .withTeamType(TeamType.INDUSTRY)
-//        .build();
-//
-//    when(teamMemberService.getUserAsTeamMembers(user))
-//        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
-//  }
-//
-//  public void givenUserHasViewPermissionForPostSubmissionNominations(NominationDetail nominationDetail, ServiceUserDetail user) {
-//    var portalOrgId = 1;
-//    var organisation = PortalOrganisationDtoTestUtil.builder()
-//        .withId(portalOrgId)
-//        .build();
-//
-//    var organisationGroup = PortalOrganisationGroupDtoTestUtil.builder()
-//        .withOrganisation(organisation)
-//        .build();
-//
-//    var applicantDetail = ApplicantDetailTestUtil.builder()
-//        .withPortalOrganisationId(portalOrgId)
-//        .build();
-//
-//    when(applicantDetailPersistenceService.getApplicantDetail(nominationDetail)).thenReturn(Optional.ofNullable(applicantDetail));
-//
-//    when(portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
-//        eq(List.of(Integer.valueOf(TEAM_SCOPE.getPortalId()))), any()))
-//        .thenReturn(List.of(organisationGroup));
-//
-//    when(teamScopeService.getTeamScopesFromTeamIds(List.of(TEAM_SCOPE.getTeam().getUuid()),
-//        PortalTeamType.ORGANISATION_GROUP))
-//        .thenReturn(List.of(TEAM_SCOPE));
-//
-//    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-//        new NominationId(nominationDetail.getNomination().getId()),
-//        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-//    ))
-//        .thenReturn(Optional.of(nominationDetail));
-//
-//    var nominationCreatorTeamMember = TeamMemberTestUtil.Builder()
-//        .withRole(IndustryTeamRole.NOMINATION_SUBMITTER)
-//        .withTeamId(TEAM_SCOPE.getTeam().toTeamId())
-//        .withTeamType(TeamType.INDUSTRY)
-//        .build();
-//
-//    when(teamMemberService.getUserAsTeamMembers(user))
-//        .thenReturn(Collections.singletonList(nominationCreatorTeamMember));
-//  }
-//
-//  public Team getTeam() {
-//    return TEAM_SCOPE.getTeam();
-//  }
-//}
+package uk.co.nstauthority.offshoresafetydirective.nomination;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+
+import java.util.Set;
+import org.springframework.test.web.servlet.ResultMatcher;
+import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
+import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
+import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.NominationTaskListController;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+
+public abstract class AbstractNominationControllerTest extends AbstractControllerTest {
+
+  protected void givenUserCanStartNomination(long wuaId) {
+    when(nominationRoleService.userCanStartNomination(wuaId))
+        .thenReturn(true);
+  }
+
+  protected void givenUserCannotStartNomination(long wuaId) {
+    when(nominationRoleService.userCanStartNomination(wuaId))
+        .thenReturn(false);
+  }
+
+  protected void givenLatestNominationDetail(NominationDetail nominationDetail) {
+    when(nominationDetailService.getLatestNominationDetail(
+        new NominationId(nominationDetail.getNomination().getId())
+    ))
+        .thenReturn(nominationDetail);
+  }
+
+  protected void givenUserHasRoleInApplicantTeamForDraftNominationAccess(long wuaId, NominationDetail nominationDetail) {
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR),
+        TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        wuaId,
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR)
+    ))
+        .thenReturn(true);
+  }
+
+  protected void givenUserHasRoleInApplicantTeam(long wuaId, NominationDetail nominationDetail, Role role) {
+
+    when(teamQueryService.areRolesValidForTeamType(Set.of(role), TeamType.ORGANISATION_GROUP))
+        .thenReturn(true);
+
+    when(nominationRoleService.userHasRoleInApplicantOrganisationGroupTeam(wuaId, nominationDetail, role))
+        .thenReturn(true);
+
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(wuaId, nominationDetail, Set.of(role)))
+        .thenReturn(true);
+  }
+
+  protected void givenUserDoesNotHaveRoleInApplicantTeam(long wuaId, NominationDetail nominationDetail, Role role) {
+
+    when(teamQueryService.areRolesValidForTeamType(Set.of(role), TeamType.ORGANISATION_GROUP))
+        .thenReturn(true);
+
+    when(nominationRoleService.userHasRoleInApplicantOrganisationGroupTeam(wuaId, nominationDetail, role))
+        .thenReturn(false);
+
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(wuaId, nominationDetail, Set.of(role)))
+        .thenReturn(false);
+  }
+
+  protected void givenUserHasNoRoleInApplicantTeamForDraftNominationAccess(long wuaId, NominationDetail nominationDetail) {
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR),
+        TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        wuaId,
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR)
+    ))
+        .thenReturn(false);
+  }
+
+  protected static ResultMatcher redirectionToTaskList(NominationId nominationId) {
+    return result -> assertThat(result.getResponse().getRedirectedUrl())
+        .isEqualTo(ReverseRouter.route(on(NominationTaskListController.class).getTaskList(nominationId)));
+  }
+
+  protected void givenUserIsNominationManager(long wuaId) {
+    when(teamQueryService.userHasStaticRole(wuaId, TeamType.REGULATOR, Role.NOMINATION_MANAGER))
+        .thenReturn(true);
+  }
+
+  protected void givenUserIsNotNominationManager(long wuaId) {
+    when(teamQueryService.userHasStaticRole(wuaId, TeamType.REGULATOR, Role.NOMINATION_MANAGER))
+        .thenReturn(false);
+  }
+
+  protected void givenUserHasAtLeastOneRoleInStaticTeam(long wuaId, TeamType teamType, Set<Role> roles) {
+
+    if (teamType.isScoped()) {
+      throw new IllegalArgumentException("Team type is scoped, expected static");
+    }
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(wuaId, teamType, roles))
+        .thenReturn(true);
+  }
+
+  protected void givenUserDoesNotHaveAtLeastOneRoleInStaticTeam(long wuaId, TeamType teamType, Set<Role> roles) {
+
+    if (teamType.isScoped()) {
+      throw new IllegalArgumentException("Team type is scoped, expected static");
+    }
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(wuaId, teamType, roles))
+        .thenReturn(false);
+  }
+}

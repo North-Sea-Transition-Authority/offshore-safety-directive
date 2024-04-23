@@ -15,13 +15,15 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.workarea.WorkAreaController;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/submission-confirmation")
 @HasNominationStatus(statuses = NominationStatus.SUBMITTED)
-// TODO OSDOP-811 @HasPermission(permissions = RolePermission.SUBMIT_NOMINATION)
+@HasRoleInApplicantOrganisationGroupTeam(roles = Role.NOMINATION_SUBMITTER)
 public class NominationSubmitConfirmationController {
 
   private final NominationDetailService nominationDetailService;

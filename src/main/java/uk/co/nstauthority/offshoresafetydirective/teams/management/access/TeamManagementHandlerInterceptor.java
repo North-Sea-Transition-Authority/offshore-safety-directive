@@ -3,19 +3,24 @@ package uk.co.nstauthority.offshoresafetydirective.teams.management.access;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import org.springframework.core.annotation.AnnotationUtils;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasAtLeastOneStaticRole;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserIsMemberOfStaticTeam;
+import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
@@ -23,7 +28,15 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagementService;
 
 @Component
-public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
+public class TeamManagementHandlerInterceptor extends AbstractHandlerInterceptor {
+
+  private static final Set<Class<? extends Annotation>> SUPPORTED_SECURITY_ANNOTATIONS = Set.of(
+      InvokingUserCanManageTeam.class,
+      InvokingUserHasStaticRole.class,
+      InvokingUserHasAtLeastOneStaticRole.class,
+      InvokingUserCanViewTeam.class,
+      InvokingUserIsMemberOfStaticTeam.class
+  );
 
   private final TeamManagementService teamManagementService;
   private final UserDetailService userDetailService;
@@ -44,7 +57,9 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
       return true;
     }
 
-    if (handler instanceof HandlerMethod handlerMethod) {
+    if (handler instanceof HandlerMethod handlerMethod
+        && hasAnnotations(handlerMethod, SUPPORTED_SECURITY_ANNOTATIONS
+    )) {
       var wuaId = userDetailService.getUserDetail().wuaId();
 
       if (hasAnnotation(handlerMethod, InvokingUserCanManageTeam.class)) {
@@ -52,17 +67,35 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
       }
 
       if (hasAnnotation(handlerMethod, InvokingUserHasStaticRole.class)) {
-        var annotation = getAnnotation(handlerMethod, InvokingUserHasStaticRole.class);
+        var annotation = (InvokingUserHasStaticRole) getAnnotation(handlerMethod, InvokingUserHasStaticRole.class);
         return handleInvokingUserHasRoleCheck(wuaId, annotation.teamType(), annotation.role());
+      }
+
+      if (hasAnnotation(handlerMethod, InvokingUserHasAtLeastOneStaticRole.class)) {
+        var annotation = (InvokingUserHasAtLeastOneStaticRole) getAnnotation(
+            handlerMethod,
+            InvokingUserHasAtLeastOneStaticRole.class
+        );
+        return handleInvokingUserHasAtLeastOneStaticRoleCheck(
+            wuaId,
+            annotation.teamType(),
+            Arrays.stream(annotation.roles()).collect(Collectors.toSet())
+        );
       }
 
       if (hasAnnotation(handlerMethod, InvokingUserCanViewTeam.class)) {
         return handleInvokingUserCanViewTeam(request, wuaId);
       }
 
-      return true;
+      if (hasAnnotation(handlerMethod, InvokingUserIsMemberOfStaticTeam.class)) {
+        var annotation = (InvokingUserIsMemberOfStaticTeam) getAnnotation(
+            handlerMethod,
+            InvokingUserIsMemberOfStaticTeam.class
+        );
+        return handleInvokingUserIsMemberOfStaticTeam(wuaId, annotation);
+      }
     }
-    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unexpected handler class %s".formatted(handler.getClass()));
+    return true;
   }
 
   private boolean handleInvokingUserCanManageTeamCheck(HttpServletRequest request, Long wuaId) {
@@ -97,16 +130,32 @@ public class TeamManagementHandlerInterceptor implements HandlerInterceptor {
     }
   }
 
-  private boolean hasAnnotation(HandlerMethod handlerMethod, Class<? extends Annotation> annotation) {
-    return AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation) != null
-        || AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation) != null;
+  private boolean handleInvokingUserHasAtLeastOneStaticRoleCheck(Long wuaId, TeamType teamType, Set<Role> roles) {
+    if (teamQueryService.userHasAtLeastOneStaticRole(wuaId, teamType, roles)) {
+      return true;
+    } else {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "wuaId %s does not have at least one static role of %s for teamType %s".formatted(wuaId, roles, teamType)
+      );
+    }
   }
 
-  private  <T extends Annotation> T getAnnotation(HandlerMethod handlerMethod, Class<T> annotation) {
-    return Objects.requireNonNullElse(
-        AnnotationUtils.findAnnotation(handlerMethod.getMethod(), annotation),
-        AnnotationUtils.findAnnotation(handlerMethod.getMethod().getDeclaringClass(), annotation)
+  private boolean handleInvokingUserIsMemberOfStaticTeam(long wuaId, InvokingUserIsMemberOfStaticTeam annotation) {
+    var isMemberOfStaticTeam = teamQueryService.userHasAtLeastOneStaticRole(
+        wuaId,
+        annotation.teamType(),
+        new LinkedHashSet<>(annotation.teamType().getAllowedRoles())
     );
+
+    if (isMemberOfStaticTeam) {
+      return true;
+    } else {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "wuaId %s is not part of static team of type %s".formatted(wuaId, annotation.teamType())
+      );
+    }
   }
 
   private boolean handleInvokingUserCanViewTeam(HttpServletRequest request, Long wuaId) {

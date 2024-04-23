@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -57,6 +58,7 @@ public class TeamManagementController {
   }
 
   @GetMapping
+  @AccessibleByServiceUsers
   public ModelAndView renderTeamTypeList(ServiceUserDetail user) {
 
     var teamTypes = new HashSet<>(teamManagementService.getTeamTypesUserIsMemberOf(user.wuaId()));
@@ -89,6 +91,7 @@ public class TeamManagementController {
   }
 
   @GetMapping("/{teamTypeSlug}")
+  @AccessibleByServiceUsers
   public ModelAndView renderTeamsOfType(@PathVariable String teamTypeSlug, ServiceUserDetail user) {
     var teamType = TeamType.fromUrlSlug(teamTypeSlug)
         .orElseThrow(() -> new ResponseStatusException(

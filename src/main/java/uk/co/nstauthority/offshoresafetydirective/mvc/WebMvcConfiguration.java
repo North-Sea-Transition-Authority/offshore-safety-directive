@@ -16,6 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanViewNominationPostSubmissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.StartNominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAppointmentStatusInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.authorisation.HasAssetStatusInterceptor;
@@ -33,7 +34,6 @@ class WebMvcConfiguration implements WebMvcConfigurer {
       ASSETS_PATH, SYSTEM_OF_RECORD_PATH
   );
 
-
   private final NominationInterceptor nominationInterceptor;
   private final UpdateRequestInterceptor updateRequestInterceptor;
   private final IsCurrentAppointmentInterceptor isCurrentAppointmentInterceptor;
@@ -44,6 +44,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
   private final CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor;
   private final TeamManagementHandlerInterceptor teamManagementHandlerInterceptor;
   private final ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver;
+  private final StartNominationInterceptor startNominationInterceptor;
 
   @Autowired
   WebMvcConfiguration(NominationInterceptor nominationInterceptor,
@@ -55,7 +56,8 @@ class WebMvcConfiguration implements WebMvcConfigurer {
                       ErrorListHandlerInterceptor errorListHandlerInterceptor,
                       CanViewNominationPostSubmissionInterceptor canViewNominationPostSubmissionInterceptor,
                       TeamManagementHandlerInterceptor teamManagementHandlerInterceptor,
-                      ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver) {
+                      ServiceUserDetailArgumentResolver serviceUserDetailArgumentResolver,
+                      StartNominationInterceptor startNominationInterceptor) {
     this.nominationInterceptor = nominationInterceptor;
     this.updateRequestInterceptor = updateRequestInterceptor;
     this.isCurrentAppointmentInterceptor = isCurrentAppointmentInterceptor;
@@ -66,6 +68,7 @@ class WebMvcConfiguration implements WebMvcConfigurer {
     this.canViewNominationPostSubmissionInterceptor = canViewNominationPostSubmissionInterceptor;
     this.teamManagementHandlerInterceptor = teamManagementHandlerInterceptor;
     this.serviceUserDetailArgumentResolver = serviceUserDetailArgumentResolver;
+    this.startNominationInterceptor = startNominationInterceptor;
   }
 
   @Override
@@ -77,37 +80,30 @@ class WebMvcConfiguration implements WebMvcConfigurer {
         .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
   }
 
-  // TODO OSDOP-811
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(new ResponseBufferSizeHandlerInterceptor())
         .excludePathPatterns(ASSETS_PATH);
-//    registry.addInterceptor(permissionManagementHandlerInterceptor)
-//        .addPathPatterns("/permission-management/**");
-//    registry.addInterceptor(hasTeamPermissionInterceptor)
-//        .addPathPatterns("/permission-management/**");
     registry.addInterceptor(nominationInterceptor)
         .addPathPatterns("/nomination/**", "/draft-nomination/**");
     registry.addInterceptor(updateRequestInterceptor)
         .addPathPatterns("/nomination/**");
     registry.addInterceptor(canViewNominationPostSubmissionInterceptor)
         .addPathPatterns("/nomination/**");
-//    registry.addInterceptor(hasPermissionInterceptor)
-//        .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);
     registry.addInterceptor(isCurrentAppointmentInterceptor)
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(hasNotBeenTerminatedInterceptor)
         .addPathPatterns("/appointment/**");
     registry.addInterceptor(hasAppointmentStatusInterceptor)
         .addPathPatterns("/appointment/**");
-//    registry.addInterceptor(isMemberOfTeamTypeInterceptor)
-//        .addPathPatterns("/appointment/**", "/nomination/**", "/termination/**");
     registry.addInterceptor(hasAssetStatusInterceptor)
         .addPathPatterns("/asset/**", "/appointment/**");
     registry.addInterceptor(errorListHandlerInterceptor)
         .excludePathPatterns(ASSETS_PATH, "/api/**");
     registry.addInterceptor(teamManagementHandlerInterceptor)
-        .addPathPatterns("/team-management/**");
+        .excludePathPatterns(UNAUTHENTICATED_URL_PATHS);
+    registry.addInterceptor(startNominationInterceptor)
+        .addPathPatterns("/nomination/**", "/start-nomination");
   }
 
   @Bean

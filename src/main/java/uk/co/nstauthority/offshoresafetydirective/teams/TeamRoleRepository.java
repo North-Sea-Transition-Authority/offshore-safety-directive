@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -18,4 +19,6 @@ public interface TeamRoleRepository extends CrudRepository<TeamRole, UUID> {
   boolean existsByTeamAndWuaId(Team team, Long wuaId);
 
   List<TeamRole> findAllByWuaId(long wuaId);
+
+  Set<TeamRole> findAllByTeamAndRole(Team team, Role role);
 }

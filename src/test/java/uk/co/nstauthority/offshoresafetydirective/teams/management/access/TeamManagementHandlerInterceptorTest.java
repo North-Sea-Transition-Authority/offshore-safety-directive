@@ -6,11 +6,12 @@ import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasAtLeastOneStaticRole;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserIsMemberOfStaticTeam;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
@@ -65,14 +69,13 @@ class TeamManagementHandlerInterceptorTest {
       null
   );
 
-  @BeforeEach
-  void setUp() {
-    when(userDetailService.getUserDetail())
-        .thenReturn(invokingUser);
-  }
 
   @Test
   void preHandle_invokingUserHasStaticRole() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserHasStaticRole", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -85,6 +88,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserHasStaticRole_noAccess() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserHasStaticRole", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -98,7 +105,88 @@ class TeamManagementHandlerInterceptorTest {
   }
 
   @Test
+  void preHandle_invokingUserIsMemberOfStaticTeam() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
+    var method = TestController.class.getDeclaredMethod("invokingUserIsMemberOfStaticTeam", UUID.class);
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        invokingUser.wuaId(),
+        TeamType.REGULATOR,
+        new LinkedHashSet<>(TeamType.REGULATOR.getAllowedRoles())
+    ))
+        .thenReturn(true);
+
+    assertThat(teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod))
+        .isTrue();
+  }
+
+  @Test
+  void preHandle_invokingUserIsMemberOfStaticTeam_noAccess() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
+    var method = TestController.class.getDeclaredMethod("invokingUserIsMemberOfStaticTeam", UUID.class);
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        invokingUser.wuaId(),
+        TeamType.REGULATOR,
+        new LinkedHashSet<>(TeamType.REGULATOR.getAllowedRoles())
+    ))
+        .thenReturn(false);
+
+    assertThatExceptionOfType(ResponseStatusException.class)
+        .isThrownBy(() -> teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod))
+        .extracting(ResponseStatusException::getStatusCode)
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
+  void preHandle_invokingUserHasAtLeastOneStaticRole() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
+    var method = TestController.class.getDeclaredMethod("invokingUserHasAtLeastOneStaticRole", UUID.class);
+
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(invokingUser.wuaId(), TeamType.REGULATOR, Set.of(Role.TEAM_MANAGER, Role.NOMINATION_MANAGER)))
+        .thenReturn(true);
+
+    assertThat(teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod))
+        .isTrue();
+  }
+
+  @Test
+  void preHandle_invokingUserHasAtLeastOneStaticRole_noAccess() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
+    var method = TestController.class.getDeclaredMethod("invokingUserHasAtLeastOneStaticRole", UUID.class);
+    when(handlerMethod.getMethod()).thenReturn(method);
+
+    when(teamQueryService.userHasAtLeastOneStaticRole(invokingUser.wuaId(), TeamType.REGULATOR, Set.of(Role.TEAM_MANAGER, Role.NOMINATION_MANAGER)))
+        .thenReturn(false);
+
+    assertThatExceptionOfType(ResponseStatusException.class)
+        .isThrownBy(() -> teamManagementHandlerInterceptor.preHandle(request, response, handlerMethod))
+        .extracting(ResponseStatusException::getStatusCode)
+        .isEqualTo(HttpStatus.FORBIDDEN);
+  }
+
+  @Test
   void preHandle_InvokingUserCanManageTeam_staticTeam() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -120,6 +208,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_InvokingUserCanManageTeam_staticTeam_noAccess() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -143,6 +235,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_InvokingUserCanManageTeam_scopedTeam() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -164,6 +260,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_InvokingUserCanManageTeam_scopedTeam_noAccess() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -187,6 +287,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_InvokingUserCanManageTeam_noTeamIdInPath() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -201,6 +305,10 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_InvokingUserCanManageTeam_malformedTeamIdUuid() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanManageTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -215,6 +323,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenNoTeamIdInPath_thenBadRequest() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -231,6 +342,9 @@ class TeamManagementHandlerInterceptorTest {
   @Test
   void preHandle_invokingUserCanViewTeam_whenMalformedTeamIdUuid_thenBadRequest() throws Exception {
 
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -245,6 +359,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenIsMemberOfTeam_thenOk() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -265,6 +382,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenNotMemberOfTeam_thenForbidden() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -288,6 +408,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenOrganisationTeam_andNotMemberOfTeam_andNotManageAnyOrganisationTeamRole_thenForbidden() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -316,6 +439,9 @@ class TeamManagementHandlerInterceptorTest {
   @Test
   void preHandle_invokingUserCanViewTeam_whenOrganisationTeam_andNotMemberOfTeam_andHasManageAnyOrganisationTeamRole_thenOk() throws Exception {
 
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
+
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
 
@@ -339,6 +465,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenConsulteeTeam_andNotMemberOfTeam_andNotManageAnyConsulteeTeamRole_thenForbidden() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -366,6 +495,9 @@ class TeamManagementHandlerInterceptorTest {
 
   @Test
   void preHandle_invokingUserCanViewTeam_whenConsulteeTeam_andNotMemberOfTeam_andHasManageAnyConsulteeTeamRole_thenOk() throws Exception {
+
+    when(userDetailService.getUserDetail())
+        .thenReturn(invokingUser);
 
     var method = TestController.class.getDeclaredMethod("invokingUserCanViewTeam", UUID.class);
     when(handlerMethod.getMethod()).thenReturn(method);
@@ -406,6 +538,12 @@ class TeamManagementHandlerInterceptorTest {
       return "ok";
     }
 
+    @GetMapping("/{teamId}/foo")
+    @InvokingUserHasAtLeastOneStaticRole(teamType = TeamType.REGULATOR, roles = { Role.TEAM_MANAGER, Role.NOMINATION_MANAGER})
+    String invokingUserHasAtLeastOneStaticRole(@PathVariable UUID teamId) {
+      return "ok";
+    }
+
     @GetMapping("/{teamId}/bar")
     @InvokingUserCanManageTeam
     String invokingUserCanManageTeam(@PathVariable UUID teamId) {
@@ -415,6 +553,12 @@ class TeamManagementHandlerInterceptorTest {
     @GetMapping("/{teamId}/can-view-team")
     @InvokingUserCanViewTeam
     String invokingUserCanViewTeam(@PathVariable UUID teamId) {
+      return "ok";
+    }
+
+    @GetMapping("/{teamId}/can-view-team")
+    @InvokingUserIsMemberOfStaticTeam(teamType = TeamType.REGULATOR)
+    String invokingUserIsMemberOfStaticTeam(@PathVariable UUID teamId) {
       return "ok";
     }
 

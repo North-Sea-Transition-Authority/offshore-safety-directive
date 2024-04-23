@@ -23,6 +23,8 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDisplayTy
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.installation.InstallationRelatedToNomination;
@@ -32,6 +34,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.tasklist.Nomination
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellSelectionType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.finalisation.FinaliseNominatedSubareaWellsService;
 import uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
+import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagementController;
 
 @Controller
 @RequestMapping("nomination/{nominationId}/submit")
@@ -44,6 +49,7 @@ public class NominationSubmissionController {
   private final CaseEventQueryService caseEventQueryService;
   private final UserDetailService userDetailService;
   private final NominationSubmissionFormValidator nominationSubmissionFormValidator;
+  private final NominationRoleService nominationRoleService;
 
   @Autowired
   public NominationSubmissionController(NominationSubmissionService nominationSubmissionService,
@@ -52,7 +58,8 @@ public class NominationSubmissionController {
                                         FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService,
                                         CaseEventQueryService caseEventQueryService,
                                         UserDetailService userDetailService,
-                                        NominationSubmissionFormValidator nominationSubmissionFormValidator) {
+                                        NominationSubmissionFormValidator nominationSubmissionFormValidator,
+                                        NominationRoleService nominationRoleService) {
     this.nominationSubmissionService = nominationSubmissionService;
     this.nominationDetailService = nominationDetailService;
     this.nominationSummaryService = nominationSummaryService;
@@ -60,6 +67,7 @@ public class NominationSubmissionController {
     this.caseEventQueryService = caseEventQueryService;
     this.userDetailService = userDetailService;
     this.nominationSubmissionFormValidator = nominationSubmissionFormValidator;
+    this.nominationRoleService = nominationRoleService;
   }
 
   @GetMapping
@@ -71,6 +79,7 @@ public class NominationSubmissionController {
       NominationStatus.OBJECTED,
       NominationStatus.WITHDRAWN
   })
+  @HasRoleInApplicantOrganisationGroupTeam(roles = {Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR})
   public ModelAndView getSubmissionPage(@PathVariable("nominationId") NominationId nominationId,
                                         @ModelAttribute("form") NominationSubmissionForm form) {
 
@@ -92,9 +101,11 @@ public class NominationSubmissionController {
 
   @PostMapping
   @HasNominationStatus(statuses = NominationStatus.DRAFT)
+  @HasRoleInApplicantOrganisationGroupTeam(roles = Role.NOMINATION_SUBMITTER)
   public ModelAndView submitNomination(@PathVariable("nominationId") NominationId nominationId,
                                        @ModelAttribute("form") NominationSubmissionForm form,
                                        BindingResult bindingResult) {
+
     var nominationDetail = nominationDetailService.getLatestNominationDetail(nominationId);
 
     if (nominationSubmissionService.canSubmitNomination(nominationDetail)) {
@@ -119,13 +130,13 @@ public class NominationSubmissionController {
     var summaryView = nominationSummaryService.getNominationSummaryView(nominationDetail);
 
     var user = userDetailService.getUserDetail();
-    // TODO OSDOP-811
-    var userCanSubmitNominations = false;
-//    = permissionService.hasPermissionForNomination(
-//        nominationDetail,
-//        user,
-//        Set.of(RolePermission.CREATE_NOMINATION)
-//    );
+
+    var userCanSubmitNominations = nominationRoleService.userHasRoleInApplicantOrganisationGroupTeam(
+        user.wuaId(),
+        nominationDetail,
+        Role.NOMINATION_SUBMITTER
+    );
+
     var isSubmittable = nominationSubmissionService.canSubmitNomination(nominationDetail);
     var isFastTrackNomination = false;
 
@@ -139,11 +150,13 @@ public class NominationSubmissionController {
         .addObject("hasLicenceBlockSubareas",
             WellSelectionType.LICENCE_BLOCK_SUBAREA.equals(summaryView.wellSummaryView().getWellSelectionType()));
 
-//    if (isSubmittable && !userCanSubmitNominations) {
-//      modelAndView
-//          .addObject("organisationUrl",
-//              ReverseRouter.route(on(TeamTypeSelectionController.class).renderTeamTypeSelection()));
-//    }
+    if (isSubmittable && !userCanSubmitNominations) {
+      modelAndView.addObject(
+          "organisationUrl",
+          ReverseRouter.route(on(TeamManagementController.class)
+              .renderTeamsOfType(TeamType.ORGANISATION_GROUP.getUrlSlug(), null))
+      );
+    }
 
     if (isSubmittable && userCanSubmitNominations) {
 

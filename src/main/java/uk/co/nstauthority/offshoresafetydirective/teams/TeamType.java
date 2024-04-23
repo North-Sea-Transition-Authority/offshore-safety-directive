@@ -36,7 +36,8 @@ public enum TeamType {
       "organisation",
       true,
       List.of(Role.TEAM_MANAGER, Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER),
-      () -> ReverseRouter.route(on(ScopedTeamManagementController.class).renderCreateNewOrganisationGroupTeam(null))
+          () -> ReverseRouter.route(on(ScopedTeamManagementController.class)
+              .renderCreateNewOrganisationGroupTeam(null))
   );
 
   private final String displayName;

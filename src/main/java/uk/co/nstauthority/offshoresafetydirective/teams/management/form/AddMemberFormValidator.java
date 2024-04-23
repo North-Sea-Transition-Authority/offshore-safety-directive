@@ -30,7 +30,11 @@ public class AddMemberFormValidator {
     }
 
     if (users.size() > 1) {
-      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".tooMany", "More than one Energy Portal user exists with this email address. Enter the username of the user instead.");
+      errors.rejectValue(
+          FIELD_NAME,
+          FIELD_NAME + ".tooMany",
+          "More than one Energy Portal user exists with this email address. Enter the username of the user instead."
+      );
     }
 
     if (users.get(0).isSharedAccount()) {
@@ -38,7 +42,11 @@ public class AddMemberFormValidator {
     }
 
     if (!users.get(0).canLogin()) {
-      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".inactiveAccount", "This user does not have login access to the Energy Portal and can't be added to this service");
+      errors.rejectValue(
+          FIELD_NAME,
+          FIELD_NAME + ".inactiveAccount",
+          "This user does not have login access to the Energy Portal and can't be added to this service"
+      );
     }
 
     return !errors.hasErrors();

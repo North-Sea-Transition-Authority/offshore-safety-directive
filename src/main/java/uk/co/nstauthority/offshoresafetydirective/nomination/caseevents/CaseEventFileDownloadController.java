@@ -18,13 +18,14 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanDownloadCaseEventFiles;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 
 @Controller
 @RequestMapping("/nomination/{nominationId}/case-event/{caseEventId}")
-// TODO OSDOP-811 @HasPermission(permissions = {RolePermission.MANAGE_NOMINATIONS, RolePermission.VIEW_ALL_NOMINATIONS})
+@CanDownloadCaseEventFiles
 @HasNominationStatus(
     statuses = {
         NominationStatus.SUBMITTED,

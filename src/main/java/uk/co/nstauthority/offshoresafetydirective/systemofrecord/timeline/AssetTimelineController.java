@@ -17,6 +17,9 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessServ
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.teams.Role;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
 @RequestMapping("/system-of-record")
@@ -27,16 +30,19 @@ public class AssetTimelineController {
   private final UserDetailService userDetailService;
   private final AssetAccessService assetAccessService;
   private final PortalAssetRetrievalService portalAssetRetrievalService;
+  private final TeamQueryService teamQueryService;
 
   @Autowired
   public AssetTimelineController(AssetTimelineService assetTimelineService,
                                  UserDetailService userDetailService,
                                  AssetAccessService assetAccessService,
-                                 PortalAssetRetrievalService portalAssetRetrievalService) {
+                                 PortalAssetRetrievalService portalAssetRetrievalService,
+                                 TeamQueryService teamQueryService) {
     this.assetTimelineService = assetTimelineService;
     this.userDetailService = userDetailService;
     this.assetAccessService = assetAccessService;
     this.portalAssetRetrievalService = portalAssetRetrievalService;
+    this.teamQueryService = teamQueryService;
   }
 
   public static String determineRouteByPortalAssetType(PortalAssetId portalAssetId, PortalAssetType portalAssetType) {
@@ -99,14 +105,9 @@ public class AssetTimelineController {
         .addObject("assetTypeDisplayNameSentenceCase", portalAssetType.getSentenceCaseDisplayName())
         .addObject("timelineItemViews", assetAppointmentHistory.timelineItemViews());
 
-    // TODO OSDOP-811
-//    if (userDetailService.isUserLoggedIn()
-//        && permissionService.hasPermission(
-//        userDetailService.getUserDetail(),
-//        Set.of(RolePermission.MANAGE_APPOINTMENTS)
-//    )) {
-//      modelAndView.addObject("newAppointmentUrl", getNewAppointmentUrl(portalAssetId, portalAssetType));
-//    }
+    if (userDetailService.isUserLoggedIn() && userIsAppointmentManager()) {
+      modelAndView.addObject("newAppointmentUrl", getNewAppointmentUrl(portalAssetId, portalAssetType));
+    }
 
     return modelAndView;
   }
@@ -120,5 +121,13 @@ public class AssetTimelineController {
       case SUBAREA -> ReverseRouter.route(on(NewAppointmentController.class)
           .renderNewSubareaAppointment(portalAssetId));
     };
+  }
+
+  private boolean userIsAppointmentManager() {
+    return teamQueryService.userHasStaticRole(
+        userDetailService.getUserDetail().wuaId(),
+        TeamType.REGULATOR,
+        Role.APPOINTMENT_MANAGER
+    );
   }
 }

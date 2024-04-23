@@ -2,6 +2,9 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisati
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,30 +13,32 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
+import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.Unauthenticated;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchItem;
 import uk.co.nstauthority.offshoresafetydirective.fds.RestSearchResult;
 import uk.co.nstauthority.offshoresafetydirective.organisation.unit.OrganisationUnitDisplayUtil;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @RestController
 @RequestMapping
 public class PortalOrganisationUnitRestController {
-
-  private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
-  private final UserDetailService userDetailService;
 
   static final RequestPurpose OPERATOR_SEARCH_PURPOSE =
       new RequestPurpose("Operator search selector (search operator)");
   static final RequestPurpose ORGANISATION_GROUPS_FOR_USER_PURPOSE =
       new RequestPurpose("Operator search selector on nominations. (search user related operator for a nomination)");
 
+  private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
+  private final TeamQueryService teamQueryService;
+
   @Autowired
   public PortalOrganisationUnitRestController(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
-                                              UserDetailService userDetailService) {
+                                              TeamQueryService teamQueryService) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
-    this.userDetailService = userDetailService;
+    this.teamQueryService = teamQueryService;
   }
 
   @GetMapping("/api/public/organisations/units")
@@ -41,16 +46,16 @@ public class PortalOrganisationUnitRestController {
   public RestSearchResult searchAllPortalOrganisations(@RequestParam("term") String searchTerm,
                                                        @RequestParam("type") String filterType) {
 
-    var matchingFilterType = OrganisationFilterType.getValue(filterType);
-
-    if (matchingFilterType.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "boom");
-    }
+    var matchingFilterType = OrganisationFilterType.getValue(filterType)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Provided filter type %s is not valid filter type"
+        ));
 
     List<PortalOrganisationDto> matchedOrganisationUnits =
         getOrganisationMatchingSearchTerm(searchTerm, OPERATOR_SEARCH_PURPOSE);
 
-    if (OrganisationFilterType.ACTIVE.equals(matchingFilterType.get())) {
+    if (OrganisationFilterType.ACTIVE.equals(matchingFilterType)) {
       matchedOrganisationUnits = filterActiveOrganisations(matchedOrganisationUnits);
     }
 
@@ -60,25 +65,29 @@ public class PortalOrganisationUnitRestController {
   @GetMapping("/api/organisation/units")
   @AccessibleByServiceUsers
   public RestSearchResult searchOrganisationsRelatedToUser(@RequestParam("term") String searchTerm,
-                                                           @RequestParam("type") String filterType) {
-    var user = userDetailService.getOptionalUserDetail();
-    var matchingFilterType = OrganisationFilterType.getValue(filterType);
+                                                           @RequestParam("type") String filterType,
+                                                           ServiceUserDetail user) {
 
-    if (matchingFilterType.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "boom");
+    var matchingFilterType = OrganisationFilterType.getValue(filterType)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Provided filter type %s is not valid filter type"
+        ));
+
+    Set<Integer> organisationGroupIds = teamQueryService.getTeamsOfTypeUserIsMemberOf(
+        user.wuaId(),
+        TeamType.ORGANISATION_GROUP
+    )
+        .stream()
+        .map(team -> Integer.valueOf(team.getScopeId()))
+        .collect(Collectors.toSet());
+
+    if (CollectionUtils.isEmpty(organisationGroupIds)) {
+      return new RestSearchResult(List.of());
     }
-
-    if (user.isEmpty()) {
-      throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User must be logged in to access rest endpoint.");
-    }
-
-    // TODO OSDOP-811
-//    var authenticatedUser = user.get();
-//    var teamIds = teamMemberService.getTeamsFromWuaId(authenticatedUser);
-//    var portalOrganisationGroupIds = teamScopeService.getPortalIds(teamIds, PortalTeamType.ORGANISATION_GROUP);
 
     var organisationsRelatedToUser = portalOrganisationUnitQueryService.searchOrganisationsByGroups(
-        List.of(),
+        organisationGroupIds,
         ORGANISATION_GROUPS_FOR_USER_PURPOSE
     );
 
@@ -87,7 +96,7 @@ public class PortalOrganisationUnitRestController {
         .filter(organisationsRelatedToUser::contains)
         .toList();
 
-    if (OrganisationFilterType.ACTIVE.equals(matchingFilterType.get())) {
+    if (OrganisationFilterType.ACTIVE.equals(matchingFilterType)) {
       matchedOrganisations = filterActiveOrganisations(matchedOrganisations);
     }
 
@@ -114,7 +123,7 @@ public class PortalOrganisationUnitRestController {
   private RestSearchResult convertOrgUnitsToSearchResult(List<PortalOrganisationDto> matchedOrganisationUnits) {
     List<RestSearchItem> resultingSearchItems = matchedOrganisationUnits
         .stream()
-        .sorted(Comparator.comparing(portalOrganisationDto -> portalOrganisationDto.name().toLowerCase()))
+        .sorted(Comparator.comparing(PortalOrganisationDto::name, String::compareToIgnoreCase))
         .map(this::convertToRestSearchItem)
         .toList();
 

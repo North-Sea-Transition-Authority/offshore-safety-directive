@@ -25,7 +25,11 @@ public class MemberRolesFormValidator {
         .toList();
 
     if (!teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(team, wuaId, roles)) {
-      errors.rejectValue("roles", "roles.noTeamManager", "There must always be at least one user who can add, remove and update members of this team.");
+      errors.rejectValue(
+          "roles",
+          "roles.noTeamManager",
+          "There must always be at least one user who can add, remove and update members of this team."
+      );
     }
     return !errors.hasErrors();
   }

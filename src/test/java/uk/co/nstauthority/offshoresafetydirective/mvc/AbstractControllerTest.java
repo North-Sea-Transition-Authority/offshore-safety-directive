@@ -35,8 +35,9 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInte
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.ApplicantDetailPersistenceService;
-import uk.co.nstauthority.offshoresafetydirective.nomination.applicantdetail.NominationApplicantTeamService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanViewNominationPostSubmissionInterceptor;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.StartNominationInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.UpdateRequestInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
@@ -75,16 +76,14 @@ import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamMa
     UpdateRequestInterceptor.class,
     CanViewNominationPostSubmissionInterceptor.class,
     TeamManagementHandlerInterceptor.class,
-    ServiceUserDetailArgumentResolver.class
+    ServiceUserDetailArgumentResolver.class,
+    StartNominationInterceptor.class
 })
 @EnableConfigurationProperties(value = {SamlProperties.class, AnalyticsProperties.class})
 public abstract class AbstractControllerTest {
 
   @Autowired
   protected MockMvc mockMvc;
-
-  @MockBean
-  protected NominationApplicantTeamService nominationApplicantTeamService;
 
   @MockBean
   protected UserDetailService userDetailService;
@@ -146,8 +145,8 @@ public abstract class AbstractControllerTest {
   @MockBean
   protected TeamQueryService teamQueryService;
 
-  @Autowired
-  protected TeamManagementHandlerInterceptor teamManagementHandlerInterceptor;
+  @MockBean
+  protected NominationRoleService nominationRoleService;
 
   @BeforeEach
   void setupAbstractControllerTest() {

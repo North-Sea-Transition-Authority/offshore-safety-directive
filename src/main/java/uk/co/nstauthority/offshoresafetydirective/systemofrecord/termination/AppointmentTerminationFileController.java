@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.fivium.fileuploadlibrary.core.UploadedFile;
+import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserIsMemberOfStaticTeam;
 import uk.co.nstauthority.offshoresafetydirective.file.FileDocumentType;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUsageType;
+import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @Controller
 @RequestMapping("/termination/{terminationId}")
-// TODO OSDOP-811 @IsMemberOfTeamType(TeamType.REGULATOR)
+@InvokingUserIsMemberOfStaticTeam(teamType = TeamType.REGULATOR)
 public class AppointmentTerminationFileController {
 
   private final AppointmentTerminationService appointmentTerminationService;
