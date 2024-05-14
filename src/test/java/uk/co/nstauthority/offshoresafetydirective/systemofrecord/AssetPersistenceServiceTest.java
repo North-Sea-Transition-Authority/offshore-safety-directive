@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
@@ -332,6 +333,87 @@ class AssetPersistenceServiceTest {
                 licenceBlockSubareaDto.displayName(),
                 AssetStatus.EXTANT
             )
+        );
+  }
+
+  @Test
+  void persistNominatedAsset_whenWellAssetNameNull() {
+    var assetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withPortalAssetId(new PortalAssetId("123"))
+        .build();
+
+    when(assetRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var savedAsset = assetPersistenceService.persistNominatedAsset(assetWithoutName);
+
+    assertThat(savedAsset.getAssetName()).isEqualTo("Unknown wellbore");
+  }
+
+  @Test
+  void persistNominatedAsset_whenInstallationAssetNameNull() {
+    var assetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withPortalAssetId(new PortalAssetId("123"))
+        .build();
+
+    when(assetRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var savedAsset = assetPersistenceService.persistNominatedAsset(assetWithoutName);
+
+    assertThat(savedAsset.getAssetName()).isEqualTo("Unknown installation");
+  }
+
+  @Test
+  void persistNominatedAsset_whenSubareaAssetNameNull() {
+    var assetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withPortalAssetId(new PortalAssetId("123"))
+        .build();
+
+    when(assetRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var savedAsset = assetPersistenceService.persistNominatedAsset(assetWithoutName);
+
+    assertThat(savedAsset.getAssetName()).isEqualTo("Unknown subarea");
+  }
+
+  @Test
+  void persistNominatedAssets_whenAssetNameNull() {
+
+    var subareaAssetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.SUBAREA)
+        .withPortalAssetId(new PortalAssetId("123"))
+        .build();
+
+    var installationAssetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.INSTALLATION)
+        .withPortalAssetId(new PortalAssetId("456"))
+        .build();
+
+    var wellboreAssetWithoutName = NominatedAssetDtoTestUtil.builder()
+        .withPortalAssetName(new AssetName(null))
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .withPortalAssetId(new PortalAssetId("789"))
+        .build();
+
+    when(assetRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    var savedAssets = assetPersistenceService.persistNominatedAssets(
+        Set.of(subareaAssetWithoutName, installationAssetWithoutName, wellboreAssetWithoutName)
+    );
+
+    assertThat(savedAssets)
+        .extracting(Asset::getAssetName)
+        .containsExactlyInAnyOrder(
+            "Unknown wellbore",
+            "Unknown installation",
+            "Unknown subarea"
         );
   }
 

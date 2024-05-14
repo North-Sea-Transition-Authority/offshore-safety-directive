@@ -3,7 +3,7 @@
 <#import '../well/_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 <#import '../well/_listWellbores.ftl' as _listWellbores>
 <#import '../../../fds/components/details/details.ftl' as fdsDetails>
-<#import '../well/managewells/_wonsContactGuidance.ftl' as _wonsContactGuidance>
+<#import '../well/_wonsContactGuidance.ftl' as _wonsContactGuidance>
 
 <#macro wellSummary wellSummaryView>
   <#if wellSummaryView.wellSelectionType?has_content>

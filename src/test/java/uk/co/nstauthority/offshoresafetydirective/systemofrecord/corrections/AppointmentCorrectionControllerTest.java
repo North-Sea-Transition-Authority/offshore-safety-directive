@@ -54,7 +54,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentMode
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -238,7 +237,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var assetName = "asset name";
 
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
         .thenReturn(true);
@@ -282,7 +281,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
     var assetName = "asset name";
 
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
         .thenReturn(true);
@@ -317,7 +316,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
         .thenReturn(true);
@@ -351,7 +350,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
@@ -434,7 +433,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     var expectedOrganisationId = Integer.valueOf(appointmentDto.appointedOperatorId().id());
     var organisationDto = PortalOrganisationDtoTestUtil.builder().build();
@@ -938,7 +937,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     when(appointmentTerminationService.hasNotBeenTerminated(appointmentId))
         .thenReturn(true);

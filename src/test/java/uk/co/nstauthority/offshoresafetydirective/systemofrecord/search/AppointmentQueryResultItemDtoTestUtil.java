@@ -3,6 +3,9 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.UUID;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
@@ -30,11 +33,11 @@ class AppointmentQueryResultItemDtoTestUtil {
 
     private AppointmentType appointmentType = AppointmentType.DEEMED;
 
-    private Date appointmentDate = Date.valueOf(LocalDate.now());
+    private final Date appointmentDate = Date.valueOf(LocalDate.now());
 
     private String assetName = "asset name";
 
-    private AppointmentId appointmentId = new AppointmentId(UUID.randomUUID());
+    private final AppointmentId appointmentId = new AppointmentId(UUID.randomUUID());
 
     Builder withPortalAssetId(String portalAssetId) {
       this.portalAssetId = new PortalAssetId(portalAssetId);
@@ -56,18 +59,29 @@ class AppointmentQueryResultItemDtoTestUtil {
       return this;
     }
 
-    Builder withAppointmentDate(LocalDate appointmentDate) {
-      this.appointmentDate = Date.valueOf(appointmentDate);
-      return this;
-    }
-
     Builder withAssetName(String assetName) {
       this.assetName = assetName;
       return this;
     }
 
-    Builder withAppointmentId(UUID uuid) {
-      this.appointmentId = new AppointmentId(uuid);
+    Builder withWellbore(WellDto wellbore) {
+      this.portalAssetId = new PortalAssetId(String.valueOf(wellbore.wellboreId().id()));
+      this.portalAssetType = PortalAssetType.WELLBORE;
+      this.assetName = wellbore.name();
+      return this;
+    }
+
+    Builder withInstallation(InstallationDto installation) {
+      this.portalAssetId = new PortalAssetId(String.valueOf(installation.id()));
+      this.portalAssetType = PortalAssetType.INSTALLATION;
+      this.assetName = installation.name();
+      return this;
+    }
+
+    Builder withSubarea(LicenceBlockSubareaDto subarea) {
+      this.portalAssetId = new PortalAssetId(subarea.subareaId().id());
+      this.portalAssetType = PortalAssetType.SUBAREA;
+      this.assetName = subarea.displayName();
       return this;
     }
 

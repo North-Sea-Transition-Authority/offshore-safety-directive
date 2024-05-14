@@ -1,9 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.operatorinvolvement;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -51,8 +51,10 @@ public class NominationOperatorService {
             .formatted(nominationDetail.getId()))
         );
 
+    var organisationIds = Stream.of(nomineeOrganisationId, applicantOrganisationId).collect(Collectors.toSet());
+
     Map<Integer, PortalOrganisationDto> organisations = organisationUnitQueryService
-        .getOrganisationByIds(Set.of(nomineeOrganisationId, applicantOrganisationId), requestPurpose)
+        .getOrganisationByIds(organisationIds, requestPurpose)
         .stream()
         .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
 

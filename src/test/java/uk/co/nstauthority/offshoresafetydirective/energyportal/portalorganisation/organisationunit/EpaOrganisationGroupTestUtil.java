@@ -64,7 +64,7 @@ public class EpaOrganisationGroupTestUtil {
     }
 
     public Builder withOrganisationUnits(List<OrganisationUnit> organisationUnits) {
-      this.organisationUnits.addAll(organisationUnits);
+      this.organisationUnits = organisationUnits;
       return this;
     }
 

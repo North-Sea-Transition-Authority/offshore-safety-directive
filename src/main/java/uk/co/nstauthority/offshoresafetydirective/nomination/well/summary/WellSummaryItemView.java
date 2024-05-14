@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.well.summary;
 
+import java.util.Optional;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
@@ -16,7 +17,7 @@ public record WellSummaryItemView(
 
   public static WellSummaryItemView fromWellDto(WellDto wellDto) {
     return new WellSummaryItemView(
-        wellDto.name(),
+        Optional.ofNullable(wellDto.name()).orElse("Unknown wellbore"),
         wellDto.wellboreId(),
         wellDto.mechanicalStatus(),
         wellDto.originLicenceDto(),

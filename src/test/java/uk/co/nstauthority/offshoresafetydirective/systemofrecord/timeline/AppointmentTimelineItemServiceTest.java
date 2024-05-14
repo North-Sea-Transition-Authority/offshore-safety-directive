@@ -53,7 +53,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTest
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
@@ -1400,7 +1399,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1446,7 +1445,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1503,7 +1502,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1557,7 +1556,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1615,7 +1614,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1682,7 +1681,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));
@@ -1740,7 +1739,7 @@ class AppointmentTimelineItemServiceTest {
 
     var assetName = "asset name";
     when(portalAssetNameService.getAssetName(createdByAppointment))
-        .thenReturn(Optional.of(new AssetName(assetName)));
+        .thenReturn(Optional.of(assetName));
 
     given(appointmentAccessService.getAppointment(new AppointmentId(appointment.getCreatedByAppointmentId())))
         .willReturn(Optional.of(createdByAppointment));

@@ -280,7 +280,7 @@ class NominationWorkAreaQueryService {
       condition = condition == null ? nominationViewerCondition : condition.or(nominationViewerCondition);
     }
 
-    return condition;
+    return condition != null ? condition : falseCondition();
   }
 
   private Condition getConditionsForIndustryAndRegulatorRole(Map<TeamType, Set<TeamRole>> userTeamTypeRoles) {

@@ -1,6 +1,7 @@
 <#include '../../../layout/layout.ftl'>
 <#import '_wellExclusionList.ftl' as exclusions>
 <#import '../_listWellbores.ftl' as _listWellbores>
+<#import '../_wonsContactGuidance.ftl' as wonsContactGuidance>
 
 <#-- @ftlvariable name="actionUrl" type="String" -->
 <#-- @ftlvariable name="backLinkUrl" type="String" -->
@@ -55,6 +56,7 @@
         with Abandoned Phase 3 mechanical status or those drilled under a previous licence according to WONS.
       </p>
       <@_listWellbores.listWellbores wellbores/>
+      <@wonsContactGuidance.wonsContactGuidance/>
     </@fdsDetails.summaryDetails>
 
     <@fdsAction.button buttonText="Save and continue"/>

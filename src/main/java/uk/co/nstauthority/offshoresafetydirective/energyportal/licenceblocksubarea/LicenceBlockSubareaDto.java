@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea;
 
+import org.apache.commons.lang3.ObjectUtils;
 import uk.co.fivium.energyportalapi.generated.types.Subarea;
 import uk.co.fivium.energyportalapi.generated.types.SubareaStatus;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
@@ -68,6 +69,17 @@ public class LicenceBlockSubareaDto extends SubareaDto {
   }
 
   public String displayName() {
+
+    var areAllPropertiesNull = ObjectUtils.allNull(
+        licenceDto.licenceReference().value(),
+        licenceBlock.reference().value(),
+        subareaName.value()
+    );
+
+    if (areAllPropertiesNull) {
+      return null;
+    }
+
     return "%s %s %s".formatted(
         licenceDto.licenceReference().value(),
         licenceBlock.reference().value(),

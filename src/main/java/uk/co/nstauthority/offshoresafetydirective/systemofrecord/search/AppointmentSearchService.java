@@ -2,21 +2,20 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import com.google.common.base.Stopwatch;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationQueryService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceId;
@@ -240,31 +239,24 @@ class AppointmentSearchService {
     List<AppointmentQueryResultItemDto> resultingAppointments =
         appointmentQueryService.search(assetTypeRestrictions, searchFilter);
 
-    // convert resulting appointments to a map for ease of lookup
-    Map<PortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems =
-        Optional.ofNullable(resultingAppointments)
-            .orElse(Collections.emptyList())
-            .stream()
-            .collect(Collectors.toMap(AppointmentQueryResultItemDto::getPortalAssetId, Function.identity()));
+    if (CollectionUtils.isNotEmpty(resultingAppointments)) {
 
-    if (!CollectionUtils.isEmpty(appointmentQueryResultItems)) {
+      resultingAppointments.forEach(appointment -> {
 
-      appointmentQueryResultItems.forEach((appointedPortalAssetId, appointmentQueryResultItemDto) -> {
-
-        var portalAssetId = appointedPortalAssetId.id();
+        var portalAssetId = appointment.getPortalAssetId().id();
 
         // populate the IDs that we need to get from EPA
-        switch (appointmentQueryResultItemDto.getPortalAssetType()) {
+        switch (appointment.getPortalAssetType()) {
           case INSTALLATION -> installationIds.add(new InstallationId(Integer.parseInt(portalAssetId)));
           case WELLBORE -> wellboreIds.add(new WellboreId(Integer.parseInt(portalAssetId)));
           case SUBAREA -> subareaIds.add(new LicenceBlockSubareaId(portalAssetId));
           default -> throw new IllegalStateException(
-              "Unsupported asset type: %s".formatted(appointmentQueryResultItemDto.getPortalAssetType())
+              "Unsupported asset type: %s".formatted(appointment.getPortalAssetType())
           );
         }
 
         operatorIds.add(new PortalOrganisationUnitId(
-            Integer.parseInt(appointmentQueryResultItemDto.getAppointedOperatorId().id())
+            Integer.parseInt(appointment.getAppointedOperatorId().id())
         ));
 
       });
@@ -274,55 +266,64 @@ class AppointmentSearchService {
           .stream()
           .collect(Collectors.toMap(PortalOrganisationDto::id, Function.identity()));
 
+      Map<PortalAssetType, Set<AppointmentQueryResultItemDto>> appointmentsByAssetType = resultingAppointments
+          .stream()
+          .collect(Collectors.groupingBy(
+              AppointmentQueryResultItemDto::getPortalAssetType,
+              Collectors.mapping(Function.identity(), Collectors.toSet())
+          ));
+
       // if we have installation ids then call the installation api and create
       // the resulting appointments from those installations
       if (!CollectionUtils.isEmpty(installationIds)) {
 
-        var installationAppointments = installationQueryService
+        installationQueryService
             .getInstallationsByIds(installationIds, APPOINTMENT_SEARCH_INSTALLATIONS_PURPOSE)
             .stream()
             .sorted(Comparator.comparing(installation -> installation.name().toLowerCase()))
-            .map(installation -> createInstallationAppointmentSearchItem(
-                installation,
-                appointmentQueryResultItems,
-                organisationUnits
-            ))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .toList();
-
-        appointments.addAll(installationAppointments);
+            .forEach(installation ->
+                getAppointmentQueryResultForAsset(
+                    appointmentsByAssetType.get(PortalAssetType.INSTALLATION),
+                    String.valueOf(installation.id())
+                )
+                    .ifPresent(appointment -> appointments.add(
+                        createAppointmentItem(installation.name(), appointment, organisationUnits)
+                    ))
+            );
       }
 
       // if we have wellbore ids then call the wellbore api and create
       // the resulting appointments from those wellbores
-      if (!CollectionUtils.isEmpty(wellboreIds)) {
+      if (CollectionUtils.isNotEmpty(wellboreIds)) {
 
-        var wellboreAppointments = wellQueryService
-            .getWellsByIds(wellboreIds, APPOINTMENT_SEARCH_WELLBORE_PURPOSE)
-            .stream()
-            .map(wellbore -> createWellboreAppointmentSearchItem(wellbore, appointmentQueryResultItems, organisationUnits))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .toList();
-
-        appointments.addAll(wellboreAppointments);
+        wellQueryService.getWellsByIds(wellboreIds, APPOINTMENT_SEARCH_WELLBORE_PURPOSE).forEach(wellbore ->
+            getAppointmentQueryResultForAsset(
+                appointmentsByAssetType.get(PortalAssetType.WELLBORE),
+                String.valueOf(wellbore.wellboreId().id())
+            )
+                .ifPresent(appointment -> appointments.add(
+                    createAppointmentItem(wellbore.name(), appointment, organisationUnits)
+                ))
+        );
       }
 
       // if we have subarea ids then call the subarea api and create
       // the resulting appointments from those subareas
-      if (!CollectionUtils.isEmpty(subareaIds)) {
+      if (CollectionUtils.isNotEmpty(subareaIds)) {
 
-        var subareaAppointments = licenceBlockSubareaQueryService
+        licenceBlockSubareaQueryService
             .getLicenceBlockSubareasByIds(subareaIds, APPOINTMENT_SEARCH_SUBAREA_PURPOSE)
             .stream()
             .sorted(LicenceBlockSubareaDto.sort())
-            .map(subarea -> createSubareaAppointmentSearchItem(subarea, appointmentQueryResultItems, organisationUnits))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .toList();
-
-        appointments.addAll(subareaAppointments);
+            .forEach(subarea ->
+                getAppointmentQueryResultForAsset(
+                    appointmentsByAssetType.get(PortalAssetType.SUBAREA),
+                    subarea.subareaId().id()
+                )
+                    .ifPresent(appointment -> appointments.add(
+                        createAppointmentItem(subarea.displayName(), appointment, organisationUnits))
+                    )
+            );
       }
     }
 
@@ -332,93 +333,37 @@ class AppointmentSearchService {
     return appointments;
   }
 
-  private Optional<AppointmentSearchItemDto> createInstallationAppointmentSearchItem(
-      InstallationDto installation,
-      Map<PortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems,
-      Map<Integer, PortalOrganisationDto> organisations
+  private Optional<AppointmentQueryResultItemDto> getAppointmentQueryResultForAsset(
+      Set<AppointmentQueryResultItemDto> appointments,
+      String portalAssetId
   ) {
-    return createAppointmentSearchItem(
-        new PortalAssetId(String.valueOf(installation.id())),
-        new AssetName(installation.name()),
-        PortalAssetType.INSTALLATION,
-        appointmentQueryResultItems,
-        organisations
-    );
+    return appointments
+        .stream()
+        .filter(appointment -> Objects.equals(appointment.getPortalAssetId().id(), portalAssetId))
+        .findFirst();
   }
 
-  private Optional<AppointmentSearchItemDto> createWellboreAppointmentSearchItem(
-      WellDto wellbore,
-      Map<PortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems,
-      Map<Integer, PortalOrganisationDto> organisations
-  ) {
-    return createAppointmentSearchItem(
-        new PortalAssetId(String.valueOf(wellbore.wellboreId().id())),
-        new AssetName(wellbore.name()),
-        PortalAssetType.WELLBORE,
-        appointmentQueryResultItems,
-        organisations
-    );
-  }
-
-  private Optional<AppointmentSearchItemDto> createSubareaAppointmentSearchItem(
-      LicenceBlockSubareaDto subarea,
-      Map<PortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems,
-      Map<Integer, PortalOrganisationDto> organisations
-  ) {
-    return createAppointmentSearchItem(
-        new PortalAssetId(String.valueOf(subarea.subareaId().id())),
-        new AssetName(subarea.displayName()),
-        PortalAssetType.SUBAREA,
-        appointmentQueryResultItems,
-        organisations
-    );
-  }
-
-  private Optional<AppointmentSearchItemDto> createAppointmentSearchItem(
-      PortalAssetId assetId,
-      AssetName assetName,
-      PortalAssetType portalAssetType,
-      Map<PortalAssetId, AppointmentQueryResultItemDto> appointmentQueryResultItems,
-      Map<Integer, PortalOrganisationDto> organisations
-  ) {
-
-    Optional<AppointmentQueryResultItemDto> appointmentOptional =
-        Optional.ofNullable(appointmentQueryResultItems.get(assetId));
-
-    if (appointmentOptional.isPresent()) {
-
-      var appointment = appointmentOptional.get();
-
-      var appointmentSearchItem = createAppointmentSearchItem(
-          assetId,
-          assetName,
-          portalAssetType,
-          appointment,
-          organisations
-      );
-
-      return Optional.of(appointmentSearchItem);
-    }
-
-    return Optional.empty();
-  }
-
-  private AppointmentSearchItemDto createAppointmentSearchItem(
-      PortalAssetId portalAssetId,
-      AssetName assetName,
-      PortalAssetType portalAssetType,
+  private AppointmentSearchItemDto createAppointmentItem(
+      String assetNameFromPortal,
       AppointmentQueryResultItemDto appointmentQueryResultItem,
       Map<Integer, PortalOrganisationDto> organisations
   ) {
 
-    var operatorName = Optional.ofNullable(
-            organisations.get(Integer.parseInt(appointmentQueryResultItem.getAppointedOperatorId().id())).name()
-        )
-        .orElse("");
+    var operatorId = Integer.parseInt(appointmentQueryResultItem.getAppointedOperatorId().id());
+
+    var operatorName = Optional.ofNullable(organisations.get(operatorId))
+        .map(PortalOrganisationDto::name)
+        .orElse("Unknown operator");
+
+    var portalAssetId = appointmentQueryResultItem.getPortalAssetId();
+    var portalAssetType = appointmentQueryResultItem.getPortalAssetType();
+
+    var assetName = Optional.ofNullable(assetNameFromPortal)
+        .orElse(appointmentQueryResultItem.getAssetName());
 
     return new AppointmentSearchItemDto(
         portalAssetId,
-        assetName,
+        new AssetName(assetName),
         new AppointedOperatorName(operatorName),
         appointmentQueryResultItem.getAppointmentDate().toLocalDate(),
         appointmentQueryResultItem.getAppointmentType(),

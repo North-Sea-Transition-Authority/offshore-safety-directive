@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationTestUtil;
@@ -69,7 +68,7 @@ class AssetTimelineServiceTest {
     var portalAssetType = PortalAssetType.INSTALLATION;
 
     given(portalAssetNameService.getAssetName(portalAssetId, portalAssetType))
-        .willReturn(Optional.of(new AssetName("from portal")));
+        .willReturn(Optional.of("from portal"));
 
     given(assetAccessService.getExtantAsset(portalAssetId, portalAssetType))
         .willReturn(Optional.empty());

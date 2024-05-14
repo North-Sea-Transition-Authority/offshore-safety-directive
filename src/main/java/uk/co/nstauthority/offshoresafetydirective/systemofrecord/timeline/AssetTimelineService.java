@@ -38,7 +38,7 @@ class AssetTimelineService {
   Optional<AssetAppointmentHistory> getAppointmentHistoryForPortalAsset(PortalAssetId portalAssetId,
                                                                         PortalAssetType portalAssetType) {
 
-    Optional<AssetName> energyPortalAssetName = portalAssetNameService.getAssetName(portalAssetId, portalAssetType);
+    Optional<String> energyPortalAssetName = portalAssetNameService.getAssetName(portalAssetId, portalAssetType);
 
     Optional<AssetDto> assetOptional = assetAccessService.getExtantAsset(portalAssetId, portalAssetType);
 
@@ -47,7 +47,7 @@ class AssetTimelineService {
     }
 
     List<AssetTimelineItemView> timelineItemViews = new ArrayList<>();
-    AssetName cachedAssetName = null;
+    String cachedAssetName = null;
 
     if (assetOptional.isPresent()) {
 
@@ -60,7 +60,7 @@ class AssetTimelineService {
         timelineItemViews.addAll(terminationTimelineItemService.getTimelineItemViews(appointments));
       }
 
-      cachedAssetName = assetDto.assetName();
+      cachedAssetName = assetDto.assetName().value();
     }
 
     timelineItemViews = timelineItemViews.stream()
@@ -71,7 +71,7 @@ class AssetTimelineService {
         )
         .toList();
 
-    AssetName assetName = energyPortalAssetName.orElse(cachedAssetName);
+    AssetName assetName = new AssetName(energyPortalAssetName.orElse(cachedAssetName));
 
     return Optional.of(new AssetAppointmentHistory(assetName, timelineItemViews));
   }

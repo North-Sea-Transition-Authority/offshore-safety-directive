@@ -34,4 +34,17 @@ class WellSummaryItemViewTest {
         .hasFieldOrPropertyWithValue("isOnPortal", false)
         .hasAssertedAllProperties();
   }
+
+  @Test
+  void fromWellDto_whenNullRegistrationName() {
+
+    var wellDto = WellDtoTestUtil.builder()
+        .withRegistrationNumber(null)
+        .build();
+
+    var summaryView = WellSummaryItemView.fromWellDto(wellDto);
+
+    PropertyObjectAssert.thenAssertThat(summaryView)
+        .hasFieldOrPropertyWithValue("name", "Unknown wellbore");
+  }
 }

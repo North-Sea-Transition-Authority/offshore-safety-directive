@@ -2,7 +2,7 @@
 <#import '../../../../fds/components/insetText/insetText.ftl' as fdsInsetText>
 <#import '../_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 <#import '../_listWellbores.ftl' as _listWellbores>
-<#import '_wonsContactGuidance.ftl' as _wonsContactGuidance>
+<#import '../_wonsContactGuidance.ftl' as _wonsContactGuidance>
 
 <#-- @ftlvariable name="nominatedWellsView" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto>" -->
 
@@ -26,6 +26,9 @@
       <p class="govuk-body">
         The well origin and total depth location is recorded in WONS. If wells are missing, or included when they
         should not be, then check the information in WONS is correct.
+      </p>
+      <p class="govuk-body">
+        <@_wonsContactGuidance.wonsLicenceQueryContactText/>
       </p>
     </@fdsDetails.summaryDetails>
   </#if>

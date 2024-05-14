@@ -3,6 +3,7 @@
 <#-- @ftlvariable name="businessSupport" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
 <#-- @ftlvariable name="technicalSupport" type="uk.co.nstauthority.offshoresafetydirective.branding.TechnicalSupportConfigurationProperties" -->
 <#-- @ftlvariable name="pageName" type="java.lang.String" -->
+<#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 
 <@defaultPage
   htmlTitle=pageName
@@ -16,7 +17,7 @@
   <div class="govuk-body">
     <div>
       <h2 class="govuk-heading-m">Business support</h2>
-      <p>For example, to report a issue with well or installation operators, or questions about filling in your nomination.</p>
+      <p>For example, to report an issue with well or installation operators, or questions about filling in your nomination.</p>
       <ul class="govuk-list">
         <li>${businessSupport.mnemonic()}</li>
         <li>Email:  <@mailTo.mailToLink

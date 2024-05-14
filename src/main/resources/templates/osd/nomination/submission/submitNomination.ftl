@@ -8,6 +8,7 @@
 <#-- @ftlvariable name="userCanSubmitNominations" type="Boolean" -->
 <#-- @ftlvariable name="summaryView" type="uk.co.nstauthority.offshoresafetydirective.summary.NominationSummaryView" -->
 <#-- @ftlvariable name="errorList" type="java.util.List<uk.co.nstauthority.offshoresafetydirective.fds.ErrorItem>" -->
+<#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 
 <#assign pageHeading = "Check your answers before submitting your nomination" />
 
@@ -15,7 +16,7 @@
   <#if organisationUrl??>
     <@fdsNotificationBanner.notificationBannerInfo bannerTitleText="Information">
       <@fdsNotificationBanner.notificationBannerContent>
-        You must ask a nomination submitter within your <@fdsNotificationBanner.notificationBannerLink bannerLinkUrl="${springUrl(organisationUrl)}" bannerLinkText="organisation"/>
+        You must ask a nomination submitter within your <a class="govuk-notification-banner__link" href="${springUrl(organisationUrl)}">organisation</a>
         to submit the nomination on your behalf
       </@fdsNotificationBanner.notificationBannerContent>
     </@fdsNotificationBanner.notificationBannerInfo>
@@ -70,7 +71,11 @@
             </div>
 
             <#if isSubmittable && isFastTrackNomination>
-                <@fdsTextarea.textarea path="form.reasonForFastTrack.inputValue" labelText="Provide a reason why this nomination is required within 3 months"/>
+                <@fdsTextarea.textarea
+                  path="form.reasonForFastTrack.inputValue"
+                  labelText="Provide a robust justification for why the appointment needs to take effect within 3 months of the nomination"
+                  hintText="Your justification should explain the exceptional circumstances as to why this is needed. The ${serviceBranding.regulationNameLong()} allow the Licensing Authority 3 months for a decision to be made."
+                />
             </#if>
 
             <@fdsAction.submitButtons

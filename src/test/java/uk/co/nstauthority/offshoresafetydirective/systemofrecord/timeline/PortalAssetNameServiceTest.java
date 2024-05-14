@@ -15,7 +15,6 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
@@ -56,7 +55,24 @@ class PortalAssetNameServiceTest {
 
     var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.INSTALLATION);
 
-    assertThat(resultingAssetName).contains(new AssetName("installation name"));
+    assertThat(resultingAssetName).contains("installation name");
+  }
+
+  @Test
+  void getAssetName_whenInstallationTypeAndFoundInPortalButNoName_thenEmptyOptional() {
+
+    var portalAssetId = new PortalAssetId("123");
+
+    var expectedInstallation = InstallationDtoTestUtil.builder()
+        .withName(null)
+        .build();
+
+    given(portalAssetRetrievalService.getInstallation(new InstallationId(Integer.parseInt(portalAssetId.id()))))
+        .willReturn(Optional.of(expectedInstallation));
+
+    var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.INSTALLATION);
+
+    assertThat(resultingAssetName).isEmpty();
   }
 
   @Test
@@ -86,7 +102,24 @@ class PortalAssetNameServiceTest {
 
     var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.WELLBORE);
 
-    assertThat(resultingAssetName).contains(new AssetName("well registration number"));
+    assertThat(resultingAssetName).contains("well registration number");
+  }
+
+  @Test
+  void getAssetName_whenWellboreTypeAndFoundInPortalButNoName_thenEmptyOptional() {
+
+    var portalAssetId = new PortalAssetId("123");
+
+    var expectedWellbore = WellDtoTestUtil.builder()
+        .withRegistrationNumber(null)
+        .build();
+
+    given(portalAssetRetrievalService.getWellbore(new WellboreId(Integer.parseInt(portalAssetId.id()))))
+        .willReturn(Optional.of(expectedWellbore));
+
+    var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.WELLBORE);
+
+    assertThat(resultingAssetName).isEmpty();
   }
 
   @Test
@@ -118,7 +151,26 @@ class PortalAssetNameServiceTest {
 
     var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.SUBAREA);
 
-    assertThat(resultingAssetName).contains(new AssetName("licence reference block reference subarea name"));
+    assertThat(resultingAssetName).contains("licence reference block reference subarea name");
+  }
+
+  @Test
+  void getAssetName_whenSubareaTypeAndFoundInPortalButNoName_thenEmptyOptional() {
+
+    var portalAssetId = new PortalAssetId("123");
+
+    var expectedSubarea = LicenceBlockSubareaDtoTestUtil.builder()
+        .withLicenceReference(null)
+        .withBlockReference(null)
+        .withSubareaName(null)
+        .build();
+
+    given(portalAssetRetrievalService.getLicenceBlockSubarea(new LicenceBlockSubareaId(portalAssetId.id())))
+        .willReturn(Optional.of(expectedSubarea));
+
+    var resultingAssetName = portalAssetNameService.getAssetName(portalAssetId, PortalAssetType.SUBAREA);
+
+    assertThat(resultingAssetName).isEmpty();
   }
 
 }

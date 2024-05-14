@@ -39,7 +39,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationAccessSer
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointedOperatorId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentPhasesService;
@@ -168,7 +167,7 @@ class AppointmentTerminationServiceTest {
     var portalAssetName = "name from portal";
 
     when(portalAssetNameService.getAssetName(providedAssetDto.portalAssetId(), providedAssetDto.portalAssetType()))
-        .thenReturn(Optional.of(new AssetName(portalAssetName)));
+        .thenReturn(Optional.of(portalAssetName));
 
     var resultingAssetName = appointmentTerminationService.getAssetName(providedAssetDto);
 
@@ -461,8 +460,6 @@ class AppointmentTerminationServiceTest {
 
     var appointmentTerminationArgumentCaptor = ArgumentCaptor.forClass(AppointmentTermination.class);
     verify(appointmentTerminationRepository).save(appointmentTerminationArgumentCaptor.capture());
-
-    var appointmentDtoArgumentCaptor = ArgumentCaptor.forClass(AppointmentDto.class);
 
     verify(appointmentService).setAppointmentStatus(appointment, AppointmentStatus.TERMINATED);
     verify(appointmentService).endAppointment(appointment, terminationDate);

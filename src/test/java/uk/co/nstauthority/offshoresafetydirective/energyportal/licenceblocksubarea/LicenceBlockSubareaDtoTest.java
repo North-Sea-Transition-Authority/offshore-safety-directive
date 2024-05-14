@@ -23,6 +23,18 @@ class LicenceBlockSubareaDtoTest {
   }
 
   @Test
+  void displayName_whenAllPropertiesNull() {
+
+    var licenceBlockSubareaDto = LicenceBlockSubareaDtoTestUtil.builder()
+        .withLicenceReference(null)
+        .withBlockReference(null)
+        .withSubareaName(null)
+        .build();
+
+    assertThat(licenceBlockSubareaDto.displayName()).isNull();
+  }
+
+  @Test
   void fromPortalSubarea_verifyMappings() {
 
     var portalSubarea = EpaSubareaTestUtil.builder().build();

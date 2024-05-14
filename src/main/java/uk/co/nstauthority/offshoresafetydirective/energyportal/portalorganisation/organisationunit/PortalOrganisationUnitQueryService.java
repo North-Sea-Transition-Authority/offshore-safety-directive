@@ -143,7 +143,7 @@ public class PortalOrganisationUnitQueryService {
             )
         )
         .stream()
-        .flatMap(organisationGroup -> organisationGroup.getOrganisationUnits().stream())
+        .flatMap(organisationGroup -> Optional.ofNullable(organisationGroup.getOrganisationUnits()).orElse(List.of()).stream())
         .map(PortalOrganisationDto::fromOrganisationUnit)
         .toList();
   }

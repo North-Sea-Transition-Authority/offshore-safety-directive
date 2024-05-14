@@ -19,6 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationUnit;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 
 class PortalOrganisationUnitQueryServiceTest {
@@ -331,6 +332,29 @@ class PortalOrganisationUnitQueryServiceTest {
     assertThat(resultingOrganisationDto)
         .extracting(PortalOrganisationDto::id)
         .containsExactly(matchedOrganisationGroupId.id());
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void searchOrganisationsByGroups_whenGroupHasNoUnits(List<OrganisationUnit> nullOrEmptyOrganisationUnitList) {
+
+    var organisationGroupWithNullUnits = EpaOrganisationGroupTestUtil.builder()
+        .withId(100)
+        .withOrganisationUnits(nullOrEmptyOrganisationUnitList)
+        .build();
+
+    when(organisationApi.getAllOrganisationGroupsByIds(
+        eq(List.of(organisationGroupWithNullUnits.getOrganisationGroupId())),
+        eq(PortalOrganisationUnitQueryService.ORGANISATION_GROUPS_PROJECTION_ROOT),
+        any(),
+        any()
+    ))
+        .thenReturn(List.of(organisationGroupWithNullUnits));
+
+    var resultingOrganisations = portalOrganisationUnitQueryService
+        .searchOrganisationsByGroups(List.of(100), REQUEST_PURPOSE);
+
+    assertThat(resultingOrganisations).isEmpty();
   }
 
   @Test

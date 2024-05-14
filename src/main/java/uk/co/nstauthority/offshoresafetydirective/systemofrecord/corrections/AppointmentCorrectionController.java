@@ -137,6 +137,7 @@ public class AppointmentCorrectionController {
 
   private AssetName getAssetName(AssetDto assetDto) {
     return portalAssetNameService.getAssetName(assetDto.portalAssetId(), assetDto.portalAssetType())
+        .map(AssetName::new)
         .orElse(assetDto.assetName());
   }
 

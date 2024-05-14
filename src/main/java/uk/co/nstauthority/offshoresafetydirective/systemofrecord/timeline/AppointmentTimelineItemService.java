@@ -45,7 +45,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetAppointmentPhaseAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetDto;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetName;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryView;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
@@ -421,7 +420,6 @@ public class AppointmentTimelineItemService {
 
   private String getAssetName(Appointment createdByAppointment) {
     return portalAssetNameService.getAssetName(createdByAppointment)
-        .map(AssetName::value)
         .orElse(createdByAppointment.getAsset().getAssetName());
   }
 

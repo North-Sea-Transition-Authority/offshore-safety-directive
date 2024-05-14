@@ -2,8 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.operatorinvolvemen
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.refEq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -129,13 +127,13 @@ class NominationOperatorServiceTest {
             .willReturn(Optional.of(nomineeDto));
 
         given(organisationUnitQueryService.getOrganisationByIds(
-            refEq(
-                Set.of(
-                  new PortalOrganisationUnitId(nomineeDto.nominatedOrganisationId().id()),
-                  new PortalOrganisationUnitId(applicantDto.applicantOrganisationId().id())
-                )
+            Set.of(
+              new PortalOrganisationUnitId(nomineeDto.nominatedOrganisationId().id()),
+              new PortalOrganisationUnitId(applicantDto.applicantOrganisationId().id())
             ),
-            any(RequestPurpose.class)
+            new RequestPurpose(
+                "Determine nomination operators for nomination detail with ID %s".formatted(NOMINATION_DETAIL.getId())
+            )
         ))
             .willReturn(List.of(applicantPortalOrganisation, nomineePortalOrganisation));
 
@@ -144,6 +142,55 @@ class NominationOperatorServiceTest {
         assertThat(resultingNominationOperators)
             .extracting(NominationOperators::applicant, NominationOperators::nominee)
             .containsExactly(applicantPortalOrganisation, nomineePortalOrganisation);
+      }
+    }
+
+    @DisplayName("WHEN the applicant and nominee are the same")
+    @Nested
+    class WhenNomineeSameAsApplicant {
+
+      @DisplayName("THEN same company is returned for both roles")
+      @Test
+      void thenSameCompanyInBothRoles() {
+
+        var organisationId = 100;
+
+        var applicantDetail = ApplicantDetailTestUtil.builder()
+            .withPortalOrganisationId(organisationId)
+            .build();
+
+        var applicantDto = ApplicantDetailDto.fromApplicantDetail(applicantDetail);
+
+        given(applicantDetailAccessService.getApplicantDetailDtoByNominationDetail(NOMINATION_DETAIL))
+            .willReturn(Optional.of(applicantDto));
+
+        var nomineeDetail = NomineeDetailTestingUtil.builder()
+            .withNominatedOrganisationId(organisationId)
+            .build();
+
+        var nomineeDto = NomineeDetailDto.fromNomineeDetail(nomineeDetail);
+
+        given(nomineeDetailAccessService.getNomineeDetailDtoByNominationDetail(NOMINATION_DETAIL))
+            .willReturn(Optional.of(nomineeDto));
+
+        var nomineeAndApplicantPortalOrganisation = PortalOrganisationDtoTestUtil.builder()
+            .withId(organisationId)
+            .build();
+
+        // only one ID should be provided instead of two
+        given(organisationUnitQueryService.getOrganisationByIds(
+            Set.of(new PortalOrganisationUnitId(organisationId)),
+            new RequestPurpose(
+                "Determine nomination operators for nomination detail with ID %s".formatted(NOMINATION_DETAIL.getId())
+            )
+        ))
+            .willReturn(List.of(nomineeAndApplicantPortalOrganisation));
+
+        var resultingNominationOperators = nominationOperatorService.getNominationOperators(NOMINATION_DETAIL);
+
+        assertThat(resultingNominationOperators)
+            .extracting(NominationOperators::applicant, NominationOperators::nominee)
+            .containsExactly(nomineeAndApplicantPortalOrganisation, nomineeAndApplicantPortalOrganisation);
       }
     }
   }

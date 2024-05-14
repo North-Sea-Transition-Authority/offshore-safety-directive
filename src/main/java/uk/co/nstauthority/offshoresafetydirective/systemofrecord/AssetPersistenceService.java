@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Streams;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -169,8 +170,12 @@ public class AssetPersistenceService {
   }
 
   private Asset createAssetEntity(NominatedAssetDto nominatedAssetDto) {
+
+    var assetName = Optional.ofNullable(nominatedAssetDto.portalAssetName().value())
+        .orElse("Unknown %s".formatted(nominatedAssetDto.portalAssetType().getSentenceCaseDisplayName()));
+
     var asset = new Asset();
-    asset.setAssetName(nominatedAssetDto.portalAssetName().value());
+    asset.setAssetName(assetName);
     asset.setPortalAssetId(nominatedAssetDto.portalAssetId().id());
     asset.setPortalAssetType(nominatedAssetDto.portalAssetType());
     asset.setStatus(AssetStatus.EXTANT);

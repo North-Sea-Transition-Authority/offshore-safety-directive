@@ -1523,6 +1523,41 @@ class NominationWorkAreaQueryServiceIntegrationTest {
         .containsExactly(today);
   }
 
+  @Test
+  void getWorkAreaItems_whenOrganisationGroupScopeTeamHasNoOrganisations() {
+
+    var organisationGroupIdWithNoUnits = 100;
+
+    // GIVEN an organisation group with no units
+    var organisationGroupWithoutUnits = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(organisationGroupIdWithNoUnits)
+        .withOrganisations(null)
+        .build();
+
+    when(organisationGroupQueryService.getOrganisationGroupsByOrganisationIds(
+        eq(Set.of(organisationGroupIdWithNoUnits)),
+        any(RequestPurpose.class)
+    ))
+        .thenReturn(List.of(organisationGroupWithoutUnits));
+
+    var user = ServiceUserDetailTestUtil.Builder().build();
+
+    // AND team exists for the organisation with a user who can see nominations
+    givenUserExistsInIndustryTeamWithRolesAndApplicantOrgGroupId(
+        user,
+        Set.of(Role.NOMINATION_SUBMITTER),
+        organisationGroupIdWithNoUnits
+    );
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(user)
+        .setSecurityContext();
+
+    var workAreaItems = nominationWorkAreaQueryService.getWorkAreaItems();
+
+    assertThat(workAreaItems).isEmpty();
+  }
+
   private ServiceUserDetail givenUserExistsInStaticTeamWithRoles(TeamType teamType, Set<Role> roles) {
 
     if (teamType.isScoped()) {
