@@ -1,10 +1,16 @@
 plugins {
-	id 'org.springframework.boot' version '2.7.0'
-	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'org.springframework.boot' version '3.2.2'
+	id 'io.spring.dependency-management' version '1.1.4'
 	id 'java'
 	id "org.sonarqube" version "3.3"
 	id 'checkstyle'
 	id 'jacoco'
+	id 'maven-publish'
+	id 'nu.studer.jooq' version '8.1'
+	// docker-compose needed to startup a postgres container for Jooq codegen
+	id 'com.avast.gradle.docker-compose' version "0.16.11"
+	// Flyway added manually here, as it's used for the Jooq codegen
+	id "org.flywaydb.flyway" version "9.16.0"
 }
 
 group = 'uk.co.nstauthority'
@@ -12,24 +18,173 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
 repositories {
+	mavenLocal()
 	mavenCentral()
+	maven {
+		// Required for opensaml deps
+		url "https://build.shibboleth.net/nexus/content/repositories/releases/"
+	}
+	maven {
+		url "https://nexus.fivium.co.uk/repository/maven-releases/"
+	}
+	maven {
+		url "https://nexus.fivium.co.uk/repository/maven-snapshots/"
+	}
+}
+
+sourceSets {
+	epmqMessagesJarIntegrationTest {}
 }
 
 dependencies {
+
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+	// OpenSAML 4.1+ is required for most SAML functionality
+	// See the Spring samples e.g. https://github.com/spring-projects/spring-security-samples/blob/main/servlet/spring-boot/java/saml2/login/build.gradle
+	constraints {
+		implementation "org.opensaml:opensaml-core:4.2.0"
+		implementation "org.opensaml:opensaml-saml-api:4.2.0"
+		implementation "org.opensaml:opensaml-saml-impl:4.2.0"
+	}
+
+	// spring starters
 	implementation 'org.springframework.boot:spring-boot-starter-freemarker'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-configuration-processor'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.security:spring-security-saml2-service-provider'
+	implementation 'org.springframework.session:spring-session-core'
+	implementation 'org.springframework.session:spring-session-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-jooq'
+	implementation 'org.springframework.data:spring-data-envers'
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// spring managed
+	implementation 'org.jooq:jooq-codegen'
+	implementation 'org.jooq:jooq-meta'
+	implementation 'org.flywaydb:flyway-core'
+
+	// external dependencies
+	implementation 'com.google.guava:guava:32.1.3-jre'
+	implementation 'org.apache.commons:commons-lang3:3.13.0'
+	implementation 'fi.solita.clamav:clamav-client:1.0.1'
+	implementation 'commons-validator:commons-validator:1.7'
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.6.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.6.0'
+	implementation 'io.micrometer:micrometer-registry-statsd'
+	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.705'
+
+	// fivium managed dependencies
+	implementation 'uk.co.fivium.energyportalapi:client:v6.4.0'
+	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:v1.0.0'
+	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v2.1.1'
+	implementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v1.1.0'
+	implementation 'uk.co.fivium.energyportalmessagequeue:messages:v1.1.0'
+	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.5.0'
+	implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
+	implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.0'
+
+	runtimeOnly 'org.postgresql:postgresql'
+	jooqGenerator 'org.postgresql:postgresql'
+
+	// for test which require a database but not requiring a full postgres database
+	testImplementation 'com.h2database:h2:2.2.220'
+
+	// for test requiring an actual postgres database be used and the flyway migrations run
+	testImplementation "org.testcontainers:postgresql:1.18.3"
+
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.1.0'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	// external test dependencies
+	testImplementation 'org.awaitility:awaitility:4.2.0'
+
+	epmqMessagesJarIntegrationTestImplementation 'org.springframework.boot:spring-boot-starter-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.offshoresafetydirective:epmq-messages:integration-test'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:spring-boot-starter:v1.1.0'
+	epmqMessagesJarIntegrationTestImplementation 'uk.co.fivium.energyportalmessagequeue:messages:v1.1.0'
 }
 
 tasks {
 	test {
 		useJUnitPlatform()
 		finalizedBy jacocoTestReport
+		systemProperty 'spring.profiles.active', 'test'
 	}
 	bootJar {
 		archiveFileName.set("${rootProject.name}.jar")
 	}
+}
+
+dockerCompose {
+  useComposeFiles = ['local-dev-compose.yml']
+  startedServices = ['database']
+}
+
+flyway {
+  user = 'osd_app'
+  password = 'dev'
+  schemas = ['osd']
+  placeholders = [
+  	'datawarehouse-user-password' : 'dev',
+  	'application-schema' : 'osd'
+  ]
+}
+
+//Set the url before the build to dynamically set the port
+//This must be done here, not above, as the serviceInfos object won't exist at configuration time
+flywayMigrate.doFirst {
+  url = 'jdbc:postgresql://' + dockerCompose.servicesInfos['database'].host + ':' + dockerCompose.servicesInfos['database'].ports[5432] + '/osd'
+  System.setProperty('DB_URL', url)
+}
+
+jooq {
+  version = dependencyManagement.importedProperties['jooq.version']
+  configurations {
+    main {
+      generateSchemaSourceOnCompilation = false
+      generationTool {
+        jdbc {
+          driver = 'org.postgresql.Driver'
+          user = 'osd_app'
+          password = 'dev'
+        }
+        generator {
+          database {
+            name = 'org.jooq.meta.postgres.PostgresDatabase'
+            inputSchema = 'osd'
+          }
+          target {
+            packageName = 'uk.co.nstauthority.offshoresafetydirective.generated.jooq'
+          }
+        }
+      }
+    }
+  }
+}
+
+flywayMigrate.dependsOn(composeUp)
+
+generateJooq.dependsOn(flywayMigrate)
+
+generateJooq.finalizedBy(composeDown)
+
+generateJooq.doFirst {
+  //Jooq doesn't allow you to specify the config at runtime
+  //This will make the field modifiable so we can change the url
+  def clazz = generateJooq.class.superclass
+  def field = clazz.getDeclaredField("jooqConfiguration")
+
+  field.accessible = true
+
+  def jooqConfiguration = (org.jooq.meta.jaxb.Configuration) field.get(generateJooq)
+  jooqConfiguration.jdbc.url = System.getProperty('DB_URL')
 }
 
 sonarqube {
@@ -37,29 +192,104 @@ sonarqube {
 		property "sonar.projectKey", "Fivium_${rootProject.name}"
 		property "sonar.organization", "fivium-gh"
 		property "sonar.host.url", "https://sonarcloud.io"
-		if (System.getenv("DRONE_PULL_REQUEST") != null) {
-			property("sonar.pullrequest.key", System.getenv("DRONE_PULL_REQUEST"))
+		property 'sonar.login', System.getenv('SONARCLOUD_TOKEN')
 
-			if (System.getenv("DRONE_SOURCE_BRANCH") != null) {
-				property("sonar.pullrequest.branch", System.getenv("DRONE_SOURCE_BRANCH"))
+		if (System.getenv("DRONE_PULL_REQUEST") != null) {
+			property 'sonar.pullrequest.key', System.getenv('DRONE_PULL_REQUEST')
+			property 'sonar.pullrequest.base', System.getenv('DRONE_TARGET_BRANCH')
+			property 'sonar.pullrequest.branch', System.getenv('DRONE_SOURCE_BRANCH')
+			property 'sonar.pullrequest.provider', 'github'
+			property 'sonar.pullrequest.github.repository', 'offshore-safety-directive'
+			property 'sonar.pullrequest.github.endpoint', 'https://api.github.com/'
+		} else {
+			property 'sonar.branch.name', System.getenv('DRONE_BRANCH')
+			if (System.getenv('DRONE_BRANCH') != 'develop') {
+				property 'sonar.branch.target', 'develop'
 			}
-			if (System.getenv("DRONE_TARGET_BRANCH") != null) {
-				property("sonar.pullrequest.base", System.getenv("DRONE_TARGET_BRANCH"))
-			}
+			property 'sonar.coverage.jacoco.xmlReportPaths', "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
 		}
-		property 'sonar.coverage.jacoco.xmlReportPaths', "$buildDir/reports/jacoco/test/jacocoTestReport.xml"
 	}
 }
 
 checkstyle {
 	config = rootProject.resources.text.fromFile('devtools/checkstyle.xml')
-	toolVersion '9.3'
+	toolVersion '10.12.4'
 	ignoreFailures = false
 	maxWarnings = 0
+	configProperties = [ "suppressionFile" : project(':').file('devtools/checkstyle-suppression.xml')]
 }
+
+checkstyleMain.exclude 'uk/co/nstauthority/offshoresafetydirective/generated/**'
 
 jacocoTestReport {
 	reports {
 		xml.required = true
 	}
+}
+
+tasks.register('epmqMessagesJar', Jar) {
+	from sourceSets.main.output
+	include 'uk/co/nstauthority/offshoresafetydirective/epmqmessage/**'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/NominationDisplayType.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/well/WellSelectionType.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/well/DisplayableEnumOption.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/nomination/installation/NominationHasInstallations.class'
+	include 'uk/co/nstauthority/offshoresafetydirective/fds/DisplayableEnumOption.class'
+	archiveBaseName = 'offshore-safety-directive-epmq-messages'
+}
+
+publishing {
+	publications {
+		epmqMessages(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = System.getenv("EPMQ_MESSAGES_JAR_VERSION") ?: version
+
+			artifact(epmqMessagesJar)
+		}
+		epmqMessagesIntegrationTest(MavenPublication) {
+			groupId = 'uk.co.fivium.offshoresafetydirective'
+			artifactId = 'epmq-messages'
+			version = 'integration-test'
+
+			artifact(epmqMessagesJar)
+		}
+	}
+	repositories {
+		maven {
+			name = 'snapshots'
+			url = 'https://nexus.fivium.co.uk/repository/maven-snapshots'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+
+		maven {
+			name = 'releases'
+			url = 'https://nexus.fivium.co.uk/repository/maven-releases'
+			credentials {
+				username = System.getenv("NEXUS_USERNAME")
+				password = System.getenv("NEXUS_PASSWORD")
+			}
+		}
+	}
+}
+
+tasks.register('epmqMessagesJarIntegrationTest', Test) {
+	useJUnitPlatform()
+	group 'verification'
+	//Need to explicitly override the default classesDirs and classpath for a test task
+	testClassesDirs = sourceSets.epmqMessagesJarIntegrationTest.output.classesDirs
+	classpath = sourceSets.epmqMessagesJarIntegrationTest.runtimeClasspath
+
+	mustRunAfter(publishEpmqMessagesIntegrationTestPublicationToMavenLocal)
+}
+
+tasks.register('epmqMessagesJarIntegrationTestReport', TestReport) {
+	destinationDir = file("$buildDir/reports/epmqMessagesJarIntegrationTests")
+	//Specify test result directory rather than task names so this task runs even if the tests fail
+	testResultDirs = [epmqMessagesJarIntegrationTest.binResultsDir]
+
+	mustRunAfter(epmqMessagesJarIntegrationTest)
 }

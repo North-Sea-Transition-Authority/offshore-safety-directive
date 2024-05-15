@@ -1,0 +1,2 @@
+ALTER TABLE appointment_terminations
+RENAME COLUMN corrected_by_wua_id TO terminated_by_wua_id;

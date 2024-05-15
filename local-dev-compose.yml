@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+
+  database:
+    image: postgres:14.3-alpine
+    ports:
+      - target: 5432
+        published: 5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: osd
+    volumes:
+      - osd-database-volume:/var/lib/postgresql/data
+      - source: ./devtools/create_db_user.sh
+        target: /docker-entrypoint-initdb.d/create_db_user.sh
+        type: bind
+
+  s3mock:
+    image: adobe/s3mock:latest
+    ports:
+      - "9090:9090"
+      - "9191:9191"
+    environment:
+      initialBuckets: wios-dev
+      retainFilesOnExit: "true"
+      root: ./s3data
+
+  clamav:
+    image: clamav/clamav:stable
+    ports:
+      - "3310:3310"
+
+volumes:
+  osd-database-volume:
