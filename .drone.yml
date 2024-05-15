@@ -162,6 +162,7 @@ steps:
         - feature/**
       event:
         - push
+        - tag
 
   - name: publish-epmq-messages-jar-release
     image: eclipse-temurin:17-jdk
