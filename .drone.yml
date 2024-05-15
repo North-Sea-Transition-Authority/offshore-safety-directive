@@ -170,7 +170,8 @@ steps:
       NEXUS_PASSWORD:
         from_secret: nexus_password
     commands:
-      - export EPMQ_MESSAGES_JAR_VERSION=${DRONE_BRANCH/\//-}-${DRONE_BUILD_NUMBER}
+      - export EPMQ_MESSAGES_JAR_VERSION=${DRONE_TAG}
+      - echo EPMQ_MESSAGES_JAR_VERSION
       - ./gradlew :publishEpmqMessagesPublicationToReleasesRepository
     when:
       event:
