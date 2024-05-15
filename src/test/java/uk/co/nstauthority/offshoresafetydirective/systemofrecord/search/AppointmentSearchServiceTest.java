@@ -2,8 +2,6 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -19,7 +17,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.Timer;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,12 +71,6 @@ class AppointmentSearchServiceTest {
   @InjectMocks
   private AppointmentSearchService appointmentSearchService;
 
-  @BeforeEach
-  void setUp() {
-    Timer timer = mock(Timer.class);
-    given(metricsProvider.getSystemOfRecordSearchTimer()).willReturn(timer);
-  }
-
   @ParameterizedTest
   @NullAndEmptySource
   void searchAppointments_whenNoAppointmentsFound_thenEmptyListReturned(
@@ -94,6 +85,8 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(assetTypeRestrictions, searchFilter))
         .willReturn(resultItemDtos);
+
+    givenTimerExists();
 
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
@@ -146,6 +139,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -228,6 +223,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
@@ -286,6 +283,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -367,6 +366,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
@@ -425,6 +426,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -505,6 +508,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -609,6 +614,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedInstallationOperator, appointedWellboreOperator, appointedSubareaOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -782,6 +789,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     // when we search appointments
     var resultingAppointments = appointmentSearchService.searchAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
@@ -813,6 +822,8 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(resultItemDtos);
+
+    givenTimerExists();
 
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -864,6 +875,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments =
@@ -945,6 +958,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     // when we search appointments
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -1018,6 +1033,8 @@ class AppointmentSearchServiceTest {
             appointmentForSecondInstallation
         ));
 
+    givenTimerExists();
+
     var resultingAppointmentSearchItems =
         appointmentSearchService.searchInstallationAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
 
@@ -1042,6 +1059,8 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
         .willReturn(resultItemDtos);
+
+    givenTimerExists();
 
     var resultingAppointments =
         appointmentSearchService.searchForwardApprovalAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -1096,6 +1115,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTMENT_SEARCH_SUBAREA_PURPOSE
     ))
         .willReturn(List.of(appointedSubarea));
+
+    givenTimerExists();
 
     // when we search appointments
     var resultingAppointments =
@@ -1175,6 +1196,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     // when we search appointments
     var resultingAppointments =
         appointmentSearchService.searchForwardApprovalAppointments(EMPTY_SYSTEM_OF_RECORD_SEARCH_FORM);
@@ -1216,6 +1239,8 @@ class AppointmentSearchServiceTest {
             new LicenceBlockSubareaId(searchFormWithSubareaId.getSubareaId()),
             AppointmentSearchService.NO_SUBAREA_APPOINTMENT_PURPOSE))
         .willReturn(Optional.of(expectedSubarea));
+
+    givenTimerExists();
 
     var resultingAppointments =
         appointmentSearchService.searchForwardApprovalAppointments(searchFormWithSubareaId);
@@ -1267,6 +1292,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.of(expectedInstallation));
 
+    givenTimerExists();
+
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationId);
 
@@ -1305,6 +1332,8 @@ class AppointmentSearchServiceTest {
     given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
         .willReturn(Collections.emptyList());
 
+    givenTimerExists();
+
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(emptySearchForm);
 
@@ -1337,6 +1366,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.NO_INSTALLATION_APPOINTMENT_PURPOSE))
         .willReturn(Optional.empty());
 
+    givenTimerExists();
+
     var resultingAppointments =
         appointmentSearchService.searchInstallationAppointments(searchFormWithInstallationId);
 
@@ -1347,6 +1378,7 @@ class AppointmentSearchServiceTest {
         .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
+  // TODO OSD-843: Is this test bringing any value or documenting a requirement?
   @Test
   void searchWellboreAppointments_whenNoSearchParams_thenVerifyInteractions() {
 
@@ -1361,35 +1393,6 @@ class AppointmentSearchServiceTest {
             null,
             Collections.emptyList(),
             AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE);
-
-    then(metricsProvider.getSystemOfRecordSearchTimer())
-        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
-  }
-
-  @Test
-  void searchWellboreAppointments_whenSearchParams_thenVerifyInteractions() {
-
-    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
-        .withWellboreId(123)
-        .withLicenceId(456)
-        .build();
-
-    appointmentSearchService.searchWellboreAppointments(searchForm);
-
-    then(wellQueryService)
-        .should(onlyOnce())
-        .searchWellbores(
-            List.of(new WellboreId(123)),
-            null,
-            List.of(new LicenceId(456)),
-            AppointmentSearchService.SEARCH_WELLBORE_APPOINTMENTS_PURPOSE);
-
-    then(appointmentQueryService)
-        .should(onlyOnce())
-        .search(anyCollection(), any());
-
-    then(metricsProvider.getSystemOfRecordSearchTimer())
-        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
   }
 
   @Test
@@ -1412,8 +1415,11 @@ class AppointmentSearchServiceTest {
 
     assertThat(resultingWellboreAppointments).isEmpty();
 
-    then(metricsProvider.getSystemOfRecordSearchTimer())
-        .should().record(anyLong(), eq(TimeUnit.MILLISECONDS));
+    then(appointmentQueryService)
+        .shouldHaveNoInteractions();
+
+    then(metricsProvider)
+        .shouldHaveNoInteractions();
   }
 
   @Test
@@ -1440,6 +1446,8 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
         .willReturn(Collections.emptyList());
+
+    givenTimerExists();
 
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
@@ -1513,6 +1521,8 @@ class AppointmentSearchServiceTest {
     when(wellQueryService.getWellsByIds(Set.of(appointedWellbore.wellboreId()),
         AppointmentSearchService.APPOINTMENT_SEARCH_WELLBORE_PURPOSE))
         .thenReturn(List.of(appointedWellbore));
+
+    givenTimerExists();
 
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
@@ -1600,6 +1610,8 @@ class AppointmentSearchServiceTest {
 
     given(appointmentQueryService.search(Set.of(PortalAssetType.WELLBORE), searchFilter))
         .willReturn(List.of(wellboreAppointment));
+
+    givenTimerExists();
 
     var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
@@ -1698,6 +1710,8 @@ class AppointmentSearchServiceTest {
           .withWellboreId(wellboreId)
           .build();
 
+      givenTimerExists();
+
       var resultingWellboreAppointments = appointmentSearchService.searchWellboreAppointments(searchForm);
 
       // THEN the default operator name will be returned
@@ -1740,6 +1754,8 @@ class AppointmentSearchServiceTest {
       var searchFilter = SystemOfRecordSearchFilter.builder()
           .withInstallationId(String.valueOf(installationId))
           .build();
+
+      givenTimerExists();
 
       // AND an installation appointment exits
       given(appointmentQueryService.search(Set.of(PortalAssetType.INSTALLATION), searchFilter))
@@ -1795,6 +1811,8 @@ class AppointmentSearchServiceTest {
       // AND a subarea appointment exits
       given(appointmentQueryService.search(Set.of(PortalAssetType.SUBAREA), searchFilter))
           .willReturn(List.of(subareaAppointment));
+
+      givenTimerExists();
 
       var searchForm = SystemOfRecordSearchFormTestUtil.builder()
           .withSubareaId(subareaId)
@@ -1874,6 +1892,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     var searchForm = SystemOfRecordSearchForm.builder()
         .withAppointedOperatorId(String.valueOf(appointedOperatorId.id()))
         .build();
@@ -1933,6 +1953,8 @@ class AppointmentSearchServiceTest {
         AppointmentSearchService.APPOINTED_OPERATORS_PURPOSE
     ))
         .willReturn(List.of(appointedOperator));
+
+    givenTimerExists();
 
     var searchForm = SystemOfRecordSearchForm.builder()
         .withInstallation(String.valueOf(installationId))
@@ -1998,6 +2020,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     var searchForm = SystemOfRecordSearchForm.builder()
         .withWellbore(String.valueOf(wellboreId))
         .build();
@@ -2056,6 +2080,8 @@ class AppointmentSearchServiceTest {
     ))
         .willReturn(List.of(appointedOperator));
 
+    givenTimerExists();
+
     var searchForm = SystemOfRecordSearchForm.builder()
         .withSubarea(subareaId)
         .build();
@@ -2068,4 +2094,8 @@ class AppointmentSearchServiceTest {
         .containsExactly("cached asset name");
   }
 
+  private void givenTimerExists() {
+    Timer timer = mock(Timer.class);
+    given(metricsProvider.getSystemOfRecordSearchTimer()).willReturn(timer);
+  }
 }

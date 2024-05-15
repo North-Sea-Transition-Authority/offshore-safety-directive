@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.search;
 
 import com.google.common.base.Stopwatch;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -146,6 +147,10 @@ class AppointmentSearchService {
         licenceIds,
         SEARCH_WELLBORE_APPOINTMENTS_PURPOSE
     );
+
+    if (CollectionUtils.isEmpty(resultingWellbores)) {
+      return Collections.emptyList();
+    }
 
     Set<Integer> wellboreIdsToFilter = resultingWellbores
         .stream()
