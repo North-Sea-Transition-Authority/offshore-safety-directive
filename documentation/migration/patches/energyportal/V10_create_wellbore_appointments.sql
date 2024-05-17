@@ -16,8 +16,8 @@ BEGIN
     , mwa.wellbore_registration_number
     , mwa.appointed_operator_id
     , mwa.appointed_operator_name
-    , mwa.responsible_from_date
-    , mwa.responsible_to_date
+    , mwa.responsible_from_date::date
+    , mwa.responsible_to_date::date
     , mwa.is_exploration_phase::bool
     , mwa.is_development_phase::bool
     , mwa.is_decommissioning_phase::bool
@@ -45,12 +45,14 @@ BEGIN
       , portal_asset_id
       , portal_asset_type
       , asset_name
+      , status
       )
       VALUES (
         l_asset_id
       , wellbore_appointment.wellbore_id
       , 'WELLBORE'
       , wellbore_appointment.wellbore_registration_number
+      , 'EXTANT'
       );
 
     END IF;
@@ -67,6 +69,7 @@ BEGIN
     , type
     , created_by_legacy_nomination_reference
     , created_datetime
+    , status
     )
     VALUES(
       l_appointment_id
@@ -77,6 +80,7 @@ BEGIN
     , wellbore_appointment.appointment_source
     , wellbore_appointment.legacy_nomination_reference
     , wellbore_appointment.responsible_from_date::timestamp
+    , 'EXTANT'
     );
 
     -- create phase records

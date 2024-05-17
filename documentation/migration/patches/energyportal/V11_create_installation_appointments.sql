@@ -16,8 +16,8 @@ BEGIN
     , mia.installation_name
     , mia.appointed_operator_id
     , mia.appointed_operator_name
-    , mia.responsible_from_date
-    , mia.responsible_to_date
+    , mia.responsible_from_date::date
+    , mia.responsible_to_date::date
     , mia.is_development_phase::bool
     , mia.is_decommissioning_phase::bool
     , mia.appointment_source
@@ -44,12 +44,14 @@ BEGIN
       , portal_asset_id
       , portal_asset_type
       , asset_name
+      , status
       )
       VALUES (
         l_asset_id
       , installation_appointment.installation_id
       , 'INSTALLATION'
       , installation_appointment.installation_name
+      , 'EXTANT'
       );
 
     END IF;
@@ -66,6 +68,7 @@ BEGIN
     , type
     , created_by_legacy_nomination_reference
     , created_datetime
+    , status
     )
     VALUES(
       l_appointment_id
@@ -76,6 +79,7 @@ BEGIN
     , installation_appointment.appointment_source
     , installation_appointment.legacy_nomination_reference
     , installation_appointment.responsible_from_date::timestamp
+    , 'EXTANT'
     );
 
     -- create phase records
