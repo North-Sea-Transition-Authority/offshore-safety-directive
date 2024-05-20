@@ -9,7 +9,7 @@
 <#-- @ftlvariable name="filteredInstallation" type="java.util.Map<String, String>" -->
 
 <@systemOfRecordPage
-  pageTitle="View appointments for forward area approvals"
+  pageTitle="View appointments for installations"
   pageSize=PageSize.FULL_PAGE
   backLinkUrl=springUrl(backLinkUrl)
 >
