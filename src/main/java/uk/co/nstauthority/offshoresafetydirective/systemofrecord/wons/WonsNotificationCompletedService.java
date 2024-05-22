@@ -13,7 +13,6 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRemovedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentType;
@@ -27,6 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseDto;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhasePersistenceService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 
 @Service
 class WonsNotificationCompletedService {
@@ -40,7 +40,7 @@ class WonsNotificationCompletedService {
   private final AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
   private final Clock clock;
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
-  private final AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
+  private final AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
   WonsNotificationCompletedService(AssetAccessService assetAccessService,
                                    AssetPersistenceService assetPersistenceService,
@@ -49,7 +49,7 @@ class WonsNotificationCompletedService {
                                    AssetPhasePersistenceService assetPhasePersistenceService,
                                    AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                    Clock clock, AppointmentAddedEventPublisher appointmentAddedEventPublisher,
-                                   AppointmentRemovedEventPublisher appointmentRemovedEventPublisher) {
+                                   AppointmentEndedEventPublisher appointmentEndedEventPublisher) {
     this.assetAccessService = assetAccessService;
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentService = appointmentService;
@@ -58,7 +58,7 @@ class WonsNotificationCompletedService {
     this.assetAppointmentPhaseAccessService = assetAppointmentPhaseAccessService;
     this.clock = clock;
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
-    this.appointmentRemovedEventPublisher = appointmentRemovedEventPublisher;
+    this.appointmentEndedEventPublisher = appointmentEndedEventPublisher;
   }
 
   @Transactional
@@ -152,7 +152,7 @@ class WonsNotificationCompletedService {
           appointment,
           LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault())
       );
-      appointmentRemovedEventPublisher.publish(new AppointmentId(appointment.getId()));
+      appointmentEndedEventPublisher.publish(appointment.getId());
     });
 
     return childAppointment;

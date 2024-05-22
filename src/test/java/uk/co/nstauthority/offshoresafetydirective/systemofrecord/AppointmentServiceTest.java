@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -36,6 +37,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.Nomin
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailTestingUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,6 +69,9 @@ class AppointmentServiceTest {
   @Mock
   private LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
+  @Mock
+  private AppointmentEndedEventPublisher appointmentEndedEventPublisher;
+
   private AppointmentService appointmentService;
   private AppointmentService appointmentServiceSpy;
   private Clock clock;
@@ -84,7 +89,8 @@ class AppointmentServiceTest {
         appointmentRemovedEventPublisher,
         appointmentAddedEventPublisher,
         appointmentCorrectionService,
-        licenceBlockSubareaQueryService
+        licenceBlockSubareaQueryService,
+        appointmentEndedEventPublisher
     );
 
     appointmentServiceSpy = spy(appointmentService);
@@ -118,6 +124,8 @@ class AppointmentServiceTest {
         newAppointmentConfirmationDate,
         List.of(asset)
     );
+
+    verify(appointmentEndedEventPublisher).publish(existingAppointment.getId());
 
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Appointment>> appointmentsPersisted = ArgumentCaptor.forClass(List.class);
@@ -192,6 +200,8 @@ class AppointmentServiceTest {
     @SuppressWarnings("unchecked")
     ArgumentCaptor<List<Appointment>> appointmentsPersisted = ArgumentCaptor.forClass(List.class);
     verify(appointmentRepository, times(1)).saveAll(appointmentsPersisted.capture());
+
+    verifyNoInteractions(appointmentEndedEventPublisher);
 
     var savedNewAppointments = appointmentsPersisted.getAllValues().get(0);
 

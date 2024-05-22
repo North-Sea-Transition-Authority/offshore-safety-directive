@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto
 import uk.co.nstauthority.offshoresafetydirective.nomination.nomineedetail.NomineeDetailAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionForm;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 
 @Service
 public class AppointmentService {
@@ -40,6 +41,7 @@ public class AppointmentService {
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
   private final AppointmentCorrectionService appointmentCorrectionService;
   private final LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
+  private final AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
   @Autowired
   AppointmentService(AppointmentRepository appointmentRepository,
@@ -49,7 +51,8 @@ public class AppointmentService {
                      AppointmentRemovedEventPublisher appointmentRemovedEventPublisher,
                      AppointmentAddedEventPublisher appointmentAddedEventPublisher,
                      AppointmentCorrectionService appointmentCorrectionService,
-                     LicenceBlockSubareaQueryService licenceBlockSubareaQueryService) {
+                     LicenceBlockSubareaQueryService licenceBlockSubareaQueryService,
+                     AppointmentEndedEventPublisher appointmentEndedEventPublisher) {
     this.appointmentRepository = appointmentRepository;
     this.nomineeDetailAccessService = nomineeDetailAccessService;
     this.assetRepository = assetRepository;
@@ -58,6 +61,7 @@ public class AppointmentService {
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
     this.appointmentCorrectionService = appointmentCorrectionService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
+    this.appointmentEndedEventPublisher = appointmentEndedEventPublisher;
   }
 
   @Transactional
@@ -231,7 +235,10 @@ public class AppointmentService {
             EnumSet.of(AppointmentStatus.EXTANT)
         );
     if (!existingAppointments.isEmpty()) {
-      existingAppointments.forEach(appointment -> appointment.setResponsibleToDate(endDate));
+      existingAppointments.forEach(appointment -> {
+        appointment.setResponsibleToDate(endDate);
+        appointmentEndedEventPublisher.publish(appointment.getId());
+      });
     }
     return existingAppointments;
   }

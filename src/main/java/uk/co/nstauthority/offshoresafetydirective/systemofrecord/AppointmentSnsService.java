@@ -24,6 +24,7 @@ import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationEvent;
 
 @Service
@@ -116,6 +117,28 @@ class AppointmentSnsService {
     } else {
       publishAppointmentDeletedSnsMessage(appointment.getId(), correlationId);
     }
+    metricsProvider.getAppointmentsPublishedCounter().increment();
+  }
+
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void handleAppointmentEnded(AppointmentEndedEvent event) {
+
+    var appointment = getAppointment(event.getAppointmentId());
+
+    LOGGER.info("Received AppointmentEndedEvent for appointment with ID {}", event.getAppointmentId());
+
+    if (appointment.getResponsibleToDate() == null) {
+      throw new IllegalStateException("""
+          Received AppointmentEndedEvent for appointment with ID %s but appointment is active. An incorrect event
+          has been emitted. No message has been sent to the portal message queue."""
+          .formatted(event.getAppointmentId()));
+    }
+
+    var correlationId = CorrelationIdUtil.getCorrelationIdFromMdc();
+
+    publishAppointmentDeletedSnsMessage(appointment.getId(), correlationId);
+
     metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 

@@ -21,6 +21,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.nomination.duplication.DuplicationUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Asset;
@@ -32,6 +33,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 
 @Service
 class PearsSubareaMessageHandlerService {
@@ -48,6 +50,8 @@ class PearsSubareaMessageHandlerService {
   private final AssetPhaseRepository assetPhaseRepository;
   private final Clock clock;
   private final AssetAccessService assetAccessService;
+  private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+  private final AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
   @Autowired
   PearsSubareaMessageHandlerService(AssetPersistenceService assetPersistenceService,
@@ -56,7 +60,9 @@ class PearsSubareaMessageHandlerService {
                                     AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                     AppointmentRepository appointmentRepository,
                                     AssetPhaseRepository assetPhaseRepository, Clock clock,
-                                    AssetAccessService assetAccessService) {
+                                    AssetAccessService assetAccessService,
+                                    AppointmentAddedEventPublisher appointmentAddedEventPublisher,
+                                    AppointmentEndedEventPublisher appointmentEndedEventPublisher) {
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentAccessService = appointmentAccessService;
     this.licenceBlockSubareaQueryService = licenceBlockSubareaQueryService;
@@ -65,6 +71,8 @@ class PearsSubareaMessageHandlerService {
     this.assetPhaseRepository = assetPhaseRepository;
     this.clock = clock;
     this.assetAccessService = assetAccessService;
+    this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
+    this.appointmentEndedEventPublisher = appointmentEndedEventPublisher;
   }
 
   @Transactional
@@ -116,6 +124,7 @@ class PearsSubareaMessageHandlerService {
           .ifPresent(appointment -> {
             appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
             appointmentsToSave.add(appointment);
+            appointmentEndedEventPublisher.publish(appointment.getId());
           });
     }
 
@@ -205,8 +214,10 @@ class PearsSubareaMessageHandlerService {
       originalSubareaActiveAppointments
           .stream()
           .filter(appointment -> appointment.getResponsibleToDate() == null)
-          .forEach(appointment ->
-              appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault())));
+          .forEach(appointment -> {
+            appointment.setResponsibleToDate(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
+            appointmentEndedEventPublisher.publish(appointment.getId());
+          });
     }
 
     if (!resultingSubareasIncludesOriginalSubarea || subareaChange.resultingSubareas().size() > 1) {
@@ -232,6 +243,10 @@ class PearsSubareaMessageHandlerService {
 
     appointmentRepository.saveAll(newAppointments);
     assetPhaseRepository.saveAll(newAssetPhases);
+
+    newAppointments.forEach(appointment ->
+        appointmentAddedEventPublisher.publish(new AppointmentId(appointment.getId()))
+    );
   }
 
   protected void duplicateAppointment(Appointment appointment,
