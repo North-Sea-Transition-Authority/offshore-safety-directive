@@ -39,6 +39,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubar
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licenceblocksubarea.LicenceBlockSubareaQueryService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
@@ -51,6 +52,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseTestU
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline.AssetDtoTestUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,6 +79,12 @@ class PearsSubareaMessageHandlerServiceTest {
   @Mock
   private AssetAccessService assetAccessService;
 
+  @Mock
+  private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
+
+  @Mock
+  private AppointmentEndedEventPublisher appointmentEndedEventPublisher;
+
   private Instant now;
   private PearsSubareaMessageHandlerService pearsSubareaMessageHandlerService;
 
@@ -87,7 +95,7 @@ class PearsSubareaMessageHandlerServiceTest {
     var realService = new PearsSubareaMessageHandlerService(
         assetPersistenceService, appointmentAccessService, licenceBlockSubareaQueryService,
         assetAppointmentPhaseAccessService, appointmentRepository, assetPhaseRepository, clock,
-        assetAccessService
+        assetAccessService, appointmentAddedEventPublisher, appointmentEndedEventPublisher
     );
     pearsSubareaMessageHandlerService = spy(realService);
   }
@@ -189,8 +197,14 @@ class PearsSubareaMessageHandlerServiceTest {
     )
         .thenReturn(List.of(firstAsset, secondAsset));
 
-    var firstAppointment = AppointmentTestUtil.builder().build();
-    var secondAppointment = AppointmentTestUtil.builder().build();
+    var firstAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+
+    var secondAppointment = AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build();
+
     when(appointmentAccessService.getAppointmentsForAsset(persistedAssetDto.assetId()))
         .thenReturn(List.of(firstAppointment, secondAppointment));
 
@@ -215,6 +229,9 @@ class PearsSubareaMessageHandlerServiceTest {
         PortalAssetType.SUBAREA,
         operation.id()
     );
+
+    verify(appointmentEndedEventPublisher).publish(firstAppointment.getId());
+    verify(appointmentEndedEventPublisher).publish(secondAppointment.getId());
 
     verify(appointmentRepository).saveAll(List.of(firstAppointment, secondAppointment));
   }
@@ -421,6 +438,11 @@ class PearsSubareaMessageHandlerServiceTest {
             fourthAddedAssetPhase
         );
 
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(firstAddedAppointment.getId()));
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(secondAddedAppointment.getId()));
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(thirdAddedAppointment.getId()));
+    verify(appointmentAddedEventPublisher).publish(new AppointmentId(fourthAddedAppointment.getId()));
+
   }
 
   @Test
@@ -579,8 +601,12 @@ class PearsSubareaMessageHandlerServiceTest {
 
     var firstActiveAppointment = spy(AppointmentTestUtil.builder()
         .withResponsibleToDate(null)
+        .withId(UUID.randomUUID())
         .build());
-    var secondActiveAppointment = spy(AppointmentTestUtil.builder().build());
+
+    var secondActiveAppointment = spy(AppointmentTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .build());
 
     when(appointmentAccessService.getCurrentAppointmentForAsset(firstAssetDto.assetId()))
         .thenReturn(Optional.of(firstActiveAppointment));
@@ -611,6 +637,9 @@ class PearsSubareaMessageHandlerServiceTest {
 
     verify(firstActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
     verify(secondActiveAppointment).setResponsibleToDate(LocalDate.ofInstant(now, ZoneId.systemDefault()));
+
+    verify(appointmentEndedEventPublisher).publish(firstActiveAppointment.getId());
+    verify(appointmentEndedEventPublisher).publish(secondActiveAppointment.getId());
   }
 
   @Test

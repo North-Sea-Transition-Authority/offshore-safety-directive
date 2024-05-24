@@ -36,7 +36,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentId;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRemovedEventPublisher;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentRepository;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentStatus;
@@ -49,6 +48,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AssetPhaseRepos
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetId;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetRetrievalService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEventPublisher;
 
 @DatabaseIntegrationTest
 @Nested
@@ -77,7 +77,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
   private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
   @MockBean
-  private AppointmentRemovedEventPublisher appointmentRemovedEventPublisher;
+  private AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
   @SpyBean
   private Clock clock;
@@ -156,7 +156,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
           );
 
       verify(appointmentAddedEventPublisher).publish(new AppointmentId(result.get(0).getId()));
-      verify(appointmentRemovedEventPublisher, never()).publish(any());
+      verify(appointmentEndedEventPublisher, never()).publish(any());
     }
 
     @Nested
@@ -203,7 +203,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
             .isEqualTo(LocalDate.ofInstant(clock.instant(), ZoneId.systemDefault()));
 
         verify(appointmentAddedEventPublisher).publish(new AppointmentId(newAppointment.get(0).getId()));
-        verify(appointmentRemovedEventPublisher).publish(new AppointmentId(childOriginalAppointment.getId()));
+        verify(appointmentEndedEventPublisher).publish(childOriginalAppointment.getId());
       }
 
     }
@@ -237,7 +237,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
       assertThat(result).isEmpty();
 
       verify(appointmentAddedEventPublisher, never()).publish(any());
-      verify(appointmentRemovedEventPublisher, never()).publish(any());
+      verify(appointmentEndedEventPublisher, never()).publish(any());
     }
 
   }
@@ -272,7 +272,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
       assertThat(result).isEmpty();
 
       verify(appointmentAddedEventPublisher, never()).publish(any());
-      verify(appointmentRemovedEventPublisher, never()).publish(any());
+      verify(appointmentEndedEventPublisher, never()).publish(any());
     }
 
   }
@@ -304,7 +304,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
       assertThat(result).isEmpty();
 
       verify(appointmentAddedEventPublisher, never()).publish(any());
-      verify(appointmentRemovedEventPublisher, never()).publish(any());
+      verify(appointmentEndedEventPublisher, never()).publish(any());
     }
 
   }

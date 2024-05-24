@@ -17,19 +17,19 @@ BEGIN
     , msa.subarea_reference
     , msa.appointed_operator_id
     , msa.appointed_operator_name
-    , msa.responsible_from_date
-    , msa.responsible_to_date
+    , msa.responsible_from_date::date
+    , msa.responsible_to_date::date
     , msa.is_exploration_phase::bool
     , msa.is_development_phase::bool
     , msa.is_decommissioning_phase::bool
     , msa.appointment_source
     , msa.legacy_nomination_reference
     , msa.created_by_migratable_appointment_id
-    , msa.asset_status
+    , COALESCE(msa.asset_status, 'EXTANT') asset_status
     FROM osd_migration.migratable_subarea_appointments msa
     -- created_by_migratable_appointment_id nulls first so we make any appointments that
     -- will be referenced by other appointments first so we know they exist when we lookup
-    ORDER BY msa.migratable_appointment_id, msa.created_by_migratable_appointment_id NULLS FIRST
+    ORDER BY msa.migratable_appointment_id::int, msa.created_by_migratable_appointment_id::int NULLS FIRST
   )
   LOOP
 
@@ -65,6 +65,7 @@ BEGIN
 
     -- create an appointment record
     l_appointment_id := gen_random_uuid();
+    l_created_by_appointment_id := NULL;
 
     IF subarea_appointment.created_by_migratable_appointment_id IS NOT NULL THEN
 

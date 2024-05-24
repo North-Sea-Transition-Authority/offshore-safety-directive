@@ -46,6 +46,7 @@ import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionEvent;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.message.ended.AppointmentEndedEvent;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationEvent;
 
 @AnalyzeClasses(
@@ -551,5 +552,86 @@ class AppointmentSnsServiceTest {
     assertThat(epmqMessage.getAppointmentId()).isEqualTo(appointmentId);
     assertThat(epmqMessage.getCorrelationId()).isEqualTo(CORRELATION_ID);
     assertThat(epmqMessage.getCreatedInstant()).isEqualTo(FIXED_INSTANT);
+  }
+
+  @ArchTest
+  final ArchRule handleAppointmentEnded_isAsync = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentEnded")
+      .should()
+      .beAnnotatedWith(Async.class);
+
+  @ArchTest
+  final ArchRule handleAppointmentEnded_isTransactionalAfterCommit = methods()
+      .that()
+      .areDeclaredIn(AppointmentSnsService.class)
+      .and().haveName("handleAppointmentEnded")
+      .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+  @Test
+  void handleAppointmentEnded_whenNoAppointmentFound() {
+
+    var appointmentId = UUID.randomUUID();
+
+    when(appointmentRepository.findById(appointmentId))
+        .thenReturn(Optional.empty());
+
+    var appointmentEndedEvent = new AppointmentEndedEvent(appointmentId);
+
+    assertThatThrownBy(() -> appointmentSnsService.handleAppointmentEnded(appointmentEndedEvent))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void handleAppointmentEnded_whenAppointmentIsActive() {
+
+    var appointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(null)
+        .build();
+
+    when(appointmentRepository.findById(appointment.getId()))
+        .thenReturn(Optional.of(appointment));
+
+    var appointmentEndedEvent = new AppointmentEndedEvent(appointment.getId());
+
+    assertThatThrownBy(() -> appointmentSnsService.handleAppointmentEnded(appointmentEndedEvent))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void handleAppointmentEnded_whenAppointmentIsEnded() {
+
+    var appointment = AppointmentTestUtil.builder()
+        .withResponsibleToDate(LocalDate.now())
+        .build();
+
+    when(appointmentRepository.findById(appointment.getId()))
+        .thenReturn(Optional.of(appointment));
+
+    when(metricsProvider.getAppointmentsPublishedCounter())
+        .thenReturn(counter);
+
+    var appointmentEndedEvent = new AppointmentEndedEvent(appointment.getId());
+
+    appointmentSnsService.handleAppointmentEnded(appointmentEndedEvent);
+
+    var argumentCaptor = ArgumentCaptor.forClass(AppointmentDeletedOsdEpmqMessage.class);
+
+    verify(snsService).publishMessage(eq(appointmentsTopicArn), argumentCaptor.capture());
+    verify(metricsProvider).getAppointmentsPublishedCounter();
+    verify(counter).increment();
+
+    assertThat(argumentCaptor.getValue())
+        .extracting(
+            AppointmentDeletedOsdEpmqMessage::getAppointmentId,
+            EpmqMessage::getCreatedInstant,
+            EpmqMessage::getCorrelationId
+        )
+        .containsExactly(
+            appointment.getId(),
+            FIXED_INSTANT,
+            CORRELATION_ID
+        );
   }
 }
