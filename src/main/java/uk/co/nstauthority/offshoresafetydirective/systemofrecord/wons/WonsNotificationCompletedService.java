@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,25 +76,25 @@ class WonsNotificationCompletedService {
   public void processParentWellboreNotification(String notificationId, Integer targetWellboreId,
                                                 Integer parentWellboreId, boolean usingParentWellboreAppointment) {
     if (!usingParentWellboreAppointment) {
-      LOGGER.info("""
-              Wellbore {} resulting from geological sidetrack notification {} is not using the parent wellbore appointment.
-              No appointment will be created.
-              """,
+      LOGGER.info(
+          "Wellbore {} resulting from notification {} is not using the parent wellbore appointment. " +
+              "No appointment will be created.",
           targetWellboreId,
           notificationId
       );
       return;
     }
-    var optionalAppointment = assetAccessService.getExtantAsset(
+
+    Optional<Appointment> parentAppointmentOptional = assetAccessService.getExtantAsset(
             new PortalAssetId(parentWellboreId.toString()),
             PortalAssetType.WELLBORE
         )
         .flatMap(assetDto -> appointmentAccessService.getCurrentAppointmentForAsset(assetDto.assetId()));
 
-    if (optionalAppointment.isEmpty()) {
+    if (parentAppointmentOptional.isEmpty()) {
       LOGGER.info(
-          "The parent wellbore {} of wellbore {} resulting from geological sidetrack notification {} " +
-              "does not have an active appointment.\n" + "No appointment for wellbore {} will be created.",
+          "The parent wellbore {} of wellbore {} resulting from notification {} " +
+              "does not have an active appointment. No appointment for wellbore {} will be created.",
           parentWellboreId,
           targetWellboreId,
           notificationId,
@@ -101,7 +102,8 @@ class WonsNotificationCompletedService {
       );
       return;
     }
-    var parentAppointment = optionalAppointment.get();
+
+    Appointment parentAppointment = parentAppointmentOptional.get();
 
     Asset childAsset;
     try {
@@ -114,26 +116,24 @@ class WonsNotificationCompletedService {
       return;
     }
 
-    var childWellAppointment = createAppointmentFromParentWellAppointment(
+    var childAppointment = createAppointmentFromParentWellAppointment(
         childAsset,
         parentAppointment
     );
 
-    linkAssetPhases(parentAppointment, childWellAppointment);
+    linkAssetPhases(parentAppointment, childAppointment);
 
-    appointmentAddedEventPublisher.publish(new AppointmentId(childWellAppointment.getId()));
+    appointmentAddedEventPublisher.publish(new AppointmentId(childAppointment.getId()));
 
-    LOGGER.info("""
-            Created appointment for wellbore {} with parent wellbore {} resulting from geological sidetrack notification {}
-            """,
+    LOGGER.info(
+        "Created appointment for wellbore {} from parent wellbore {} resulting from notification {}",
         targetWellboreId,
         parentWellboreId,
         notificationId
     );
   }
 
-  private Appointment createAppointmentFromParentWellAppointment(Asset childAsset,
-                                                                 Appointment parentAppointment) {
+  private Appointment createAppointmentFromParentWellAppointment(Asset childAsset, Appointment parentAppointment) {
 
     var currentAppointmentForAsset =
         appointmentAccessService.getCurrentAppointmentForAsset(new AssetId(childAsset.getId()));
