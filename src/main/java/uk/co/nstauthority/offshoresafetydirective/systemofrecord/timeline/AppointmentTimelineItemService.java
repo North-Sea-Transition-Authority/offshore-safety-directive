@@ -57,7 +57,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 @Service
 public class AppointmentTimelineItemService {
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentTimelineItemService.class);
-  static final String CREATED_BY_APPOINTMENT_STRING_FORMAT = "%s: %s";
+  static final String CREATED_BY_APPOINTMENT_STRING_FORMAT = "%s on %s";
 
   static final RequestPurpose APPOINTED_OPERATORS_PURPOSE =
       new RequestPurpose("Appointed operators for each appointment on the asset timeline");

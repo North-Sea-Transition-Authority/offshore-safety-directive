@@ -78,18 +78,18 @@ class EpaUserTestUtil {
     }
 
     User build() {
-      return new User(
-          webUserAccountId,
-          personId,
-          title,
-          forename,
-          surname,
-          middleInitials,
-          primaryEmailAddress,
-          telephoneNumber,
-          canLogin,
-          isAccountShared
-      );
+      return User.newBuilder()
+          .webUserAccountId(webUserAccountId)
+          .personId(personId)
+          .title(title)
+          .forename(forename)
+          .surname(surname)
+          .middleInitials(middleInitials)
+          .primaryEmailAddress(primaryEmailAddress)
+          .telephoneNumber(telephoneNumber)
+          .canLogin(canLogin)
+          .isAccountShared(isAccountShared)
+          .build();
     }
 
   }

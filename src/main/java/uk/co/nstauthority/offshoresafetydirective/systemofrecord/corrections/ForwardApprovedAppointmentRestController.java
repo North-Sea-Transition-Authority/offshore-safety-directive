@@ -32,7 +32,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 @InvokingUserHasStaticRole(teamType = TeamType.REGULATOR, role = Role.APPOINTMENT_MANAGER)
 public class ForwardApprovedAppointmentRestController {
 
-  public static final String SEARCH_DISPLAY_STRING = "%s: %s";
+  public static final String SEARCH_DISPLAY_STRING = "%s on %s";
   static final RequestPurpose FORWARD_APPROVED_SEARCH_PURPOSE =
       new RequestPurpose("Forward approved appointments search selector (search forward approved appointments)");
   static final EnumSet<AppointmentStatus> STATUSES = EnumSet.of(AppointmentStatus.EXTANT, AppointmentStatus.TERMINATED);

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import uk.co.fivium.energyportalapi.generated.types.MechanicalStatus;
+import uk.co.fivium.energyportalapi.generated.types.WellboreIntent;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.EpaLicenceTestUtil;
 
 class WellDtoTest {
@@ -25,6 +26,7 @@ class WellDtoTest {
                 .withLicenceReference("total depth licence")
                 .build()
         )
+        .withIntent(WellboreIntent.APPRAISAL)
         .build();
 
     var resultingWellboreDto = WellDto.fromPortalWellbore(portalWellbore);
@@ -33,22 +35,18 @@ class WellDtoTest {
         .extracting(
             WellDto::wellboreId,
             WellDto::name,
-            wellDto -> wellDto.mechanicalStatus().getPortalMechanicalStatus()
-        )
-        .containsExactly(
-            new WellboreId(portalWellbore.getId()),
-            portalWellbore.getRegistrationNumber(),
-            portalWellbore.getMechanicalStatus()
-        );
-
-    assertThat(resultingWellboreDto)
-        .extracting(
+            WellDto::mechanicalStatus,
             wellDto -> wellDto.originLicenceDto().licenceReference().value(),
-            wellDto -> wellDto.totalDepthLicenceDto().licenceReference().value()
+            wellDto -> wellDto.totalDepthLicenceDto().licenceReference().value(),
+            WellDto::intent
         )
         .containsExactly(
-            portalWellbore.getOriginLicence().getLicenceRef(),
-            portalWellbore.getTotalDepthLicence().getLicenceRef()
+            new WellboreId(10),
+            "registration number",
+            WellboreMechanicalStatus.PLANNED,
+            "origin licence",
+            "total depth licence",
+            WonsWellboreIntent.APPRAISAL
         );
   }
 
@@ -71,6 +69,20 @@ class WellDtoTest {
             null,
             null
         );
+  }
+
+  @Test
+  void fromPortalWellbore_whenNoIntent() {
+
+    var portalWellbore = EpaWellboreTestUtil.builder()
+        .withIntent(null)
+        .build();
+
+    var resultingWellboreDto = WellDto.fromPortalWellbore(portalWellbore);
+
+    assertThat(resultingWellboreDto)
+        .extracting(WellDto::intent)
+        .isNull();
   }
 
 }

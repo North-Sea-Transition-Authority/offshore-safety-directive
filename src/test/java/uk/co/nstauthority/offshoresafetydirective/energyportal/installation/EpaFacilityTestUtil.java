@@ -57,13 +57,13 @@ class EpaFacilityTestUtil {
     }
 
     Facility build() {
-      return new Facility(
-          id,
-          name,
-          type,
-          status,
-          isInUkcs
-      );
+      return Facility.newBuilder()
+          .id(id)
+          .name(name)
+          .type(type)
+          .status(status)
+          .isInUkcs(isInUkcs)
+          .build();
     }
 
   }

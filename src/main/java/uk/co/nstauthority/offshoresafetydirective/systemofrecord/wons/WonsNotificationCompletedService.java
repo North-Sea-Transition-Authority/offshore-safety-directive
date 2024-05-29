@@ -3,13 +3,22 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.geological.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.mechanical.WonsMechicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.respud.WonsRespudNotificationCompletedEpmqMessage;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAccessService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
@@ -42,6 +51,7 @@ class WonsNotificationCompletedService {
   private final Clock clock;
   private final AppointmentAddedEventPublisher appointmentAddedEventPublisher;
   private final AppointmentEndedEventPublisher appointmentEndedEventPublisher;
+  private final WellQueryService wellQueryService;
 
   WonsNotificationCompletedService(AssetAccessService assetAccessService,
                                    AssetPersistenceService assetPersistenceService,
@@ -50,7 +60,8 @@ class WonsNotificationCompletedService {
                                    AssetPhasePersistenceService assetPhasePersistenceService,
                                    AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService,
                                    Clock clock, AppointmentAddedEventPublisher appointmentAddedEventPublisher,
-                                   AppointmentEndedEventPublisher appointmentEndedEventPublisher) {
+                                   AppointmentEndedEventPublisher appointmentEndedEventPublisher,
+                                   WellQueryService wellQueryService) {
     this.assetAccessService = assetAccessService;
     this.assetPersistenceService = assetPersistenceService;
     this.appointmentService = appointmentService;
@@ -60,6 +71,7 @@ class WonsNotificationCompletedService {
     this.clock = clock;
     this.appointmentAddedEventPublisher = appointmentAddedEventPublisher;
     this.appointmentEndedEventPublisher = appointmentEndedEventPublisher;
+    this.wellQueryService = wellQueryService;
   }
 
   @Transactional
@@ -73,8 +85,27 @@ class WonsNotificationCompletedService {
   }
 
   @Transactional
-  public void processParentWellboreNotification(String notificationId, Integer targetWellboreId,
-                                                Integer parentWellboreId, boolean usingParentWellboreAppointment) {
+  public void processParentWellboreNotification(WonsMechicalSidetrackNotificationCompletedEpmqMessage message) {
+    processParentWellboreNotification(
+        message.getNotificationId(),
+        message.getCreatedWellboreId(),
+        message.getSubmittedOnWellboreId(),
+        message.isUsingParentWellboreAppointment()
+    );
+  }
+
+  @Transactional
+  public void processParentWellboreNotification(WonsRespudNotificationCompletedEpmqMessage message) {
+    processParentWellboreNotification(
+        message.getNotificationId(),
+        message.getCreatedWellboreId(),
+        message.getSubmittedOnWellboreId(),
+        message.isUsingParentWellboreAppointment()
+    );
+  }
+
+  private void processParentWellboreNotification(String notificationId, Integer targetWellboreId,
+                                                 Integer parentWellboreId, boolean usingParentWellboreAppointment) {
     if (!usingParentWellboreAppointment) {
       LOGGER.info(
           "Wellbore {} resulting from notification {} is not using the parent wellbore appointment. " +
@@ -104,6 +135,20 @@ class WonsNotificationCompletedService {
     }
 
     Appointment parentAppointment = parentAppointmentOptional.get();
+
+    // need to check the intent of the child well from EPA and see parent appointment covers those phases
+    WellDto childWellbore = wellQueryService
+        .getWell(new WellboreId(targetWellboreId), new RequestPurpose("Get target well from notification event"))
+        .orElseThrow(() -> new IllegalStateException(
+            "Unable to find target wellbore from WONS with ID %d".formatted(targetWellboreId)
+        ));
+
+    if (!doesAppointmentCoverWellboreIntent(childWellbore, parentAppointment)) {
+      LOGGER.info("The parent wellbore appointment with ID {} does not cover the intent of the child wellbore with ID {}. " +
+          "No appointment will be created for the child wellbore", parentAppointment.getId(), childWellbore.wellboreId().id());
+
+      return;
+    }
 
     Asset childAsset;
     try {
@@ -170,6 +215,23 @@ class WonsNotificationCompletedService {
         phaseNames
     );
     assetPhasePersistenceService.createAssetPhases(Set.of(assetPhase));
+  }
+
+  private boolean doesAppointmentCoverWellboreIntent(WellDto childWellbore, Appointment parentAppointment) {
+
+    Set<WellPhase> appointmentPhases = assetAppointmentPhaseAccessService.getPhasesByAppointment(parentAppointment)
+        .stream()
+        .map(phase -> WellPhase.valueOfOrNull(phase.value()))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toSet());
+
+    return switch (childWellbore.intent()) {
+      case EXPLORATION, APPRAISAL -> appointmentPhases.contains(WellPhase.EXPLORATION_AND_APPRAISAL);
+      case DEVELOPMENT -> appointmentPhases.contains(WellPhase.DEVELOPMENT);
+      // This is a historical intent in WONS which doesn't map to an appointment phase in this service.
+      // If a wellbore has this intent the appointment can never cover the wellbore intent so just return false
+      case CARBON_CAPTURE_AND_STORAGE -> false;
+    };
   }
 
 }

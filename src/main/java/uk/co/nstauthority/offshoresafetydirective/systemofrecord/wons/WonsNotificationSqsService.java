@@ -11,7 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.geological.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.mechanical.WonsMechicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.respud.WonsRespudNotificationCompletedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -48,29 +50,27 @@ class WonsNotificationSqsService {
   }
 
   @Scheduled(fixedDelayString = "${epmq.message-poll-interval-seconds}", timeUnit = TimeUnit.SECONDS)
-  @SchedulerLock(name = "WonsNotificationSqsService")
+  @SchedulerLock(name = "WonsNotificationSqsService_receiveMessages")
   void receiveMessages() {
     LOGGER.debug("Process received WONS notification messages");
     sqsService.receiveQueueMessages(
         notificationsOsdQueueUrl,
         EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_NOTIFICATIONS),
         epmqMessage -> {
+
+          LOGGER.info("Started processing epmq message with correlation id {}", epmqMessage.getCorrelationId());
+
           metricsProvider.getWonsNotificationMessagesReceivedCounter().increment();
+
           if (epmqMessage instanceof WonsGeologicalSidetrackNotificationCompletedEpmqMessage message) {
-            LOGGER.info(
-                "Started processing WonsGeologicalSidetrackNotificationCompletedEpmqMessage with notification id {} " +
-                    "and correlation id {}",
-                message.getNotificationId(),
-                message.getCorrelationId()
-            );
             wonsNotificationCompletedService.processParentWellboreNotification(message);
-            LOGGER.info(
-                "Finished processing WonsGeologicalSidetrackNotificationCompletedEpmqMessage with notification id {}" +
-                    "and correlation id {}",
-                message.getNotificationId(),
-                message.getCorrelationId()
-            );
+          } else if (epmqMessage instanceof WonsMechicalSidetrackNotificationCompletedEpmqMessage message) {
+            wonsNotificationCompletedService.processParentWellboreNotification(message);
+          } else if (epmqMessage instanceof WonsRespudNotificationCompletedEpmqMessage message) {
+            wonsNotificationCompletedService.processParentWellboreNotification(message);
           }
+
+          LOGGER.info("Finished processing epmq message with correlation id {}", epmqMessage.getCorrelationId());
         });
   }
 

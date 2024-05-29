@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,6 +12,7 @@ import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -22,8 +24,13 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.geological.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WonsWellboreIntent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.WellPhase;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.Appointment;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentAddedEventPublisher;
@@ -68,11 +75,14 @@ class WonsNotificationCompletedServiceIntegrationTest {
   @Autowired
   private AssetPhaseRepository assetPhaseRepository;
 
-  @Nested
-  @DisplayName("WHEN the notification is a geological sidetrack")
-  class WhenGeologicalSidetrackNotification {
+  @MockBean
+  private WellQueryService wellQueryService;
 
-    private static WonsGeologicalSidetrackNotificationCompletedEpmqMessage geologicalSidetrackNotificationMessage;
+  @Nested
+  @DisplayName("WHEN the notification is a type that produces a child wellbore")
+  class WhenChildProducingNotification {
+
+    private static WonsGeologicalSidetrackNotificationCompletedEpmqMessage childProducingNotificationMessage;
 
     @Nested
     @DisplayName("AND the parent wellbore has an active appointment")
@@ -85,35 +95,67 @@ class WonsNotificationCompletedServiceIntegrationTest {
       @BeforeEach
       void beforeEachSetup() {
 
-        parentWellboreAsset = givenWellboreAssetExists(geologicalSidetrackNotificationMessage.getSubmittedOnWellboreId());
+        parentWellboreAsset = givenWellboreAssetExists(childProducingNotificationMessage.getSubmittedOnWellboreId());
 
-        geologicalSidetrackNotificationMessage = GeologicalSidetrackMessageBuilder.builder()
+        childProducingNotificationMessage = ChildProducingNotificationMessageBuilder.builder()
             .withSubmittedOnWellboreId(Integer.valueOf(parentWellboreAsset.getPortalAssetId()))
             .build();
 
         when(portalAssetRetrievalService.getAssetName(
-            new PortalAssetId(String.valueOf(geologicalSidetrackNotificationMessage.getCreatedWellboreId())),
+            new PortalAssetId(String.valueOf(childProducingNotificationMessage.getCreatedWellboreId())),
             PortalAssetType.WELLBORE
         ))
             .thenReturn(Optional.of("asset-name"));
       }
 
       @Nested
-      @DisplayName("AND the sidetrack will be using the parent wellbore appointment")
-      class AndChildUsingParentWellboreAppointment {
+      @DisplayName("AND the child wellbore will be using the parent wellbore appointment")
+      class AndChildUsingParentAppointment {
 
         @BeforeAll
         static void beforeAllSetup() {
-          geologicalSidetrackNotificationMessage = GeologicalSidetrackMessageBuilder.builder()
+          childProducingNotificationMessage = ChildProducingNotificationMessageBuilder.builder()
               .usingParentWellboreAppointment(true)
               .build();
+        }
+
+        @Nested
+        @DisplayName("AND the parent appointment's phases do not cover the intent of the child wellbore")
+        class AndAppointmentDoesNotCoverIntent {
+
+          @DisplayName("THEN an appointment for the child wellbore will not be created")
+          @Test
+          void thenNoAppointmentCreated() {
+
+            var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
+
+            parentAppointment = AppointmentTestUtil.builder()
+                .withId(null)
+                .withAsset(parentWellboreAsset)
+                .withAppointmentType(AppointmentType.DEEMED)
+                .withResponsibleToDate(null)
+                .withAppointmentStatus(AppointmentStatus.EXTANT)
+                .build();
+
+            // GIVEN a E&A appointment for this parent wellbore
+            givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
+
+            // AND the child wellbore is DEVELOPMENT intent
+            givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.DEVELOPMENT);
+
+            wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
+
+            var resultingChildAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
+
+            thenNoAppointmentsAreCreated(resultingChildAppointment);
+          }
         }
 
         @DisplayName("THEN an appointment is made for the child wellbore from the parents deemed appointment")
         @Test
         void thenAnAppointmentForChildWellboreIsCreatedFromDeemedParentAppointment() {
 
-          var childWellboreId = geologicalSidetrackNotificationMessage.getCreatedWellboreId();
+          var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
 
           parentAppointment = AppointmentTestUtil.builder()
               .withId(null)
@@ -123,9 +165,13 @@ class WonsNotificationCompletedServiceIntegrationTest {
               .withAppointmentStatus(AppointmentStatus.EXTANT)
               .build();
 
+          // GIVEN a E&A appointment for this parent wellbore
           givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-          wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+          // AND the child wellbore is EXPLORATION intent
+          givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.EXPLORATION);
+
+          wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
           var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
 
@@ -177,7 +223,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
         @Test
         void thenAnAppointmentForChildWellboreIsCreatedFromOfflineParentAppointment() {
 
-          var childWellboreId = geologicalSidetrackNotificationMessage.getCreatedWellboreId();
+          var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
 
           parentAppointment = AppointmentTestUtil.builder()
               .withId(null)
@@ -190,7 +236,9 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
           givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-          wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+          givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.EXPLORATION);
+
+          wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
           var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
 
@@ -242,7 +290,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
         @Test
         void thenAnAppointmentForChildWellboreIsCreatedFromOnlineParentAppointment() {
 
-          var childWellboreId = geologicalSidetrackNotificationMessage.getCreatedWellboreId();
+          var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
 
           parentAppointment = AppointmentTestUtil.builder()
               .withId(null)
@@ -255,7 +303,9 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
           givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-          wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+          givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.EXPLORATION);
+
+          wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
           var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
 
@@ -307,7 +357,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
         @Test
         void thenAnAppointmentForChildWellboreIsCreatedFromForwardApprovedParentAppointment() {
 
-          var childWellboreId = geologicalSidetrackNotificationMessage.getCreatedWellboreId();
+          var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
 
           parentAppointment = AppointmentTestUtil.builder()
               .withId(null)
@@ -320,7 +370,9 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
           givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-          wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+          givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.EXPLORATION);
+
+          wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
           var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
 
@@ -374,10 +426,12 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
           @DisplayName("THEN existing appointment for child wellbore is ended and a new one created from the parent")
           @Test
-          void thenExistingAppointmentIsEndedAndNewAppointmentCreated() {
+          void thenOldAppointmentEndedAndNewAppointmentCreated() {
+
+            var childWellboreId = childProducingNotificationMessage.getCreatedWellboreId();
 
             // GIVEN the child wellbore already has an active appointment
-            var childWellboreAsset = givenWellboreAssetExists(geologicalSidetrackNotificationMessage.getCreatedWellboreId());
+            var childWellboreAsset = givenWellboreAssetExists(childWellboreId);
 
             var existingChildAppointment = AppointmentTestUtil.builder()
                 .withId(null)
@@ -401,8 +455,10 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
             givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-            // WHEN we process the geological sidetrack notification
-            wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+            givenWellboreExistsWithIntent(childWellboreId, WonsWellboreIntent.EXPLORATION);
+
+            // WHEN we process the notification
+            wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
             // THEN the child wellbore will have an appointment created from the parent wellbore
             var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
@@ -462,14 +518,14 @@ class WonsNotificationCompletedServiceIntegrationTest {
       }
 
       @Nested
-      @DisplayName("AND the sidetrack will not using the parent wellbore appointment")
+      @DisplayName("AND the child wellbore will not using the parent wellbore appointment")
       class AndChildNotUsingParentWellboreAppointment {
 
         @DisplayName("THEN no appointment for the child wellbore is created")
         @Test
         void thenNoChildWellboreAppointmentIsCreated() {
 
-          var geologicalSidetrackNotificationMessage = GeologicalSidetrackMessageBuilder.builder()
+          var geologicalSidetrackNotificationMessage = ChildProducingNotificationMessageBuilder.builder()
               .usingParentWellboreAppointment(false)
               .build();
 
@@ -485,7 +541,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
           givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-          // WHEN we process the geological sidetrack notification not using parent appointment
+          // WHEN we process the notification not using parent appointment
           wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
 
           // THEN no parent appointment will be made for the child wellbore
@@ -509,7 +565,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
         // GIVEN a parent appointment exists which is ended
 
-        var parentWellboreAsset = givenWellboreAssetExists(geologicalSidetrackNotificationMessage.getSubmittedOnWellboreId());
+        var parentWellboreAsset = givenWellboreAssetExists(childProducingNotificationMessage.getSubmittedOnWellboreId());
 
         var parentAppointment = AppointmentTestUtil.builder()
             .withId(null)
@@ -522,8 +578,8 @@ class WonsNotificationCompletedServiceIntegrationTest {
 
         givenWellboreAppointmentExists(parentAppointment, Set.of(WellPhase.EXPLORATION_AND_APPRAISAL));
 
-        // WHEN we process the geological sidetrack notification not using parent appointment
-        wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+        // WHEN we process the notification not using parent appointment
+        wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
         // THEN no parent appointment will be made for the child wellbore
         var resultingAppointment = appointmentRepository.findAllByCreatedByAppointmentId(parentAppointment.getId());
@@ -543,14 +599,14 @@ class WonsNotificationCompletedServiceIntegrationTest {
       @Test
       void thenNoChildWellboreAppointmentIsCreated() {
 
-        geologicalSidetrackNotificationMessage = GeologicalSidetrackMessageBuilder.builder()
+        childProducingNotificationMessage = ChildProducingNotificationMessageBuilder.builder()
             // and ID not known to the system of record
             .withSubmittedOnWellboreId(-100)
             .withCreatedWellboreId(200)
             .build();
 
-        // WHEN we process the geological sidetrack notification when we have no parent appointments
-        wonsNotificationCompletedService.processParentWellboreNotification(geologicalSidetrackNotificationMessage);
+        // WHEN we process the notification when we have no parent appointments
+        wonsNotificationCompletedService.processParentWellboreNotification(childProducingNotificationMessage);
 
         // THEN no parent appointment will be made for the child wellbore
         var resultingAppointment = appointmentRepository
@@ -594,7 +650,21 @@ class WonsNotificationCompletedServiceIntegrationTest {
     entityManager.flush();
   }
 
-  static class GeologicalSidetrackMessageBuilder {
+  private void givenWellboreExistsWithIntent(int wellboreId, WonsWellboreIntent intent) {
+
+    var wellbore = WellDtoTestUtil.builder()
+        .withIntent(intent)
+        .build();
+
+    when(wellQueryService.getWell(eq(new WellboreId(wellboreId)), any(RequestPurpose.class)))
+        .thenReturn(Optional.of(wellbore));
+  }
+
+  private void thenNoAppointmentsAreCreated(List<Appointment> appointments) {
+    assertThat(appointments).isEmpty();
+  }
+
+  static class ChildProducingNotificationMessageBuilder {
 
     static Builder builder() {
       return new Builder();

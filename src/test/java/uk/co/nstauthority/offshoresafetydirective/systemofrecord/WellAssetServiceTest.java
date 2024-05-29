@@ -19,6 +19,7 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellboreMechanicalStatus;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WonsWellboreIntent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.nomination.well.NominatedBlockSubareaDetailViewService;
@@ -194,14 +195,16 @@ class WellAssetServiceTest {
                   "first asset name",
                   WellboreMechanicalStatus.DRILLING,
                   LicenceDto.fromPortalLicence(licence),
-                  LicenceDto.fromPortalLicence(licence)
+                  LicenceDto.fromPortalLicence(licence),
+                  WonsWellboreIntent.EXPLORATION
                 ),
                 new WellDto(
                     secondWellboreId,
                     "second asset name",
                     WellboreMechanicalStatus.DRILLING,
                     LicenceDto.fromPortalLicence(licence),
-                    LicenceDto.fromPortalLicence(licence)
+                    LicenceDto.fromPortalLicence(licence),
+                    WonsWellboreIntent.EXPLORATION
                 )
         ));
 
@@ -247,14 +250,16 @@ class WellAssetServiceTest {
                     "first asset name",
                     WellboreMechanicalStatus.DRILLING,
                     LicenceDto.fromPortalLicence(licence),
-                    LicenceDto.fromPortalLicence(licence)
+                    LicenceDto.fromPortalLicence(licence),
+                    WonsWellboreIntent.EXPLORATION
                 ),
                 new WellDto(
                     secondWellboreId,
                     "second asset name",
                     WellboreMechanicalStatus.DRILLING,
                     LicenceDto.fromPortalLicence(licence),
-                    LicenceDto.fromPortalLicence(licence)
+                    LicenceDto.fromPortalLicence(licence),
+                    WonsWellboreIntent.EXPLORATION
                 )
         ));
 
@@ -299,14 +304,16 @@ class WellAssetServiceTest {
                     "first asset name",
                     WellboreMechanicalStatus.DRILLING,
                     LicenceDto.fromPortalLicence(licence),
-                    LicenceDto.fromPortalLicence(licence)
+                    LicenceDto.fromPortalLicence(licence),
+                    WonsWellboreIntent.EXPLORATION
                 ),
                 new WellDto(
                     secondWellboreId,
                     "second asset name",
                     WellboreMechanicalStatus.DRILLING,
                     LicenceDto.fromPortalLicence(licence),
-                    LicenceDto.fromPortalLicence(licence)
+                    LicenceDto.fromPortalLicence(licence),
+                    WonsWellboreIntent.EXPLORATION
                 )
         ));
 

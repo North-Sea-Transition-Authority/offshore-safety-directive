@@ -137,7 +137,7 @@ class WellboreAppointmentRestServiceTest {
     var responsibleDate = LocalDate.of(2024, 1, 1);
 
     assertThat(WellboreAppointmentRestService.formatSearchItemName(wellName, responsibleDate))
-        .isEqualTo("%s: %s".formatted(
+        .isEqualTo("%s on %s".formatted(
             wellName,
             "1 January 2024"
         ));

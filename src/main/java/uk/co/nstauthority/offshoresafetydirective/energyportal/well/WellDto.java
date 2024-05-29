@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
+import java.util.Optional;
 import uk.co.fivium.energyportalapi.generated.types.Wellbore;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 
@@ -8,31 +9,31 @@ public record WellDto(
     String name,
     WellboreMechanicalStatus mechanicalStatus,
     LicenceDto originLicenceDto,
-    LicenceDto totalDepthLicenceDto
+    LicenceDto totalDepthLicenceDto,
+    WonsWellboreIntent intent
 ) {
 
   public static WellDto fromPortalWellbore(Wellbore wellbore) {
 
-    var originLicence = wellbore.getOriginLicence();
-    LicenceDto originLicenceDto = null;
+    LicenceDto originLicence = Optional.ofNullable(wellbore.getOriginLicence())
+        .map(LicenceDto::fromPortalLicence)
+        .orElse(null);
 
-    var totalDepthLicence = wellbore.getTotalDepthLicence();
-    LicenceDto totalDepthLicenceDto = null;
+    LicenceDto totalDepthLicence = Optional.ofNullable(wellbore.getTotalDepthLicence())
+        .map(LicenceDto::fromPortalLicence)
+        .orElse(null);
 
-    if (originLicence != null) {
-      originLicenceDto = LicenceDto.fromPortalLicence(originLicence);
-    }
-
-    if (totalDepthLicence != null) {
-      totalDepthLicenceDto = LicenceDto.fromPortalLicence(wellbore.getTotalDepthLicence());
-    }
+    WonsWellboreIntent intent = Optional.ofNullable(wellbore.getIntent())
+        .map(WonsWellboreIntent::fromPortalIntent)
+        .orElse(null);
 
     return new WellDto(
         new WellboreId(wellbore.getId()),
         wellbore.getRegistrationNumber(),
         WellboreMechanicalStatus.fromPortalMechanicalStatus(wellbore.getMechanicalStatus()),
-        originLicenceDto,
-        totalDepthLicenceDto
+        originLicence,
+        totalDepthLicence,
+        intent
     );
   }
 }

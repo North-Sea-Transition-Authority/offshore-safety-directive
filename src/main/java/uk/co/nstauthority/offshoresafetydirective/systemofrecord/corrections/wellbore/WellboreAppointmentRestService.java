@@ -74,7 +74,7 @@ public class WellboreAppointmentRestService {
   }
 
   public static String formatSearchItemName(String wellName, LocalDate fromDate) {
-    return "%s: %s".formatted(
+    return "%s on %s".formatted(
         wellName,
         DateUtil.formatLongDate(fromDate)
     );

@@ -1,6 +1,5 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.well;
 
-import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.LicenceDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -22,15 +21,7 @@ public class WellDtoTestUtil {
 
     private String registrationNumber = "registration number";
 
-    private WellboreMechanicalStatus mechanicalStatus;
-
-    private LicenceDto originLicenceDto = LicenceDtoTestUtil.builder()
-        .withLicenceReference("P101")
-        .build();
-
-    private LicenceDto totalDepthLicenceDto = LicenceDtoTestUtil.builder()
-        .withLicenceReference("P123")
-        .build();
+    private WonsWellboreIntent intent = WonsWellboreIntent.EXPLORATION;
 
     public Builder withWellboreId(Integer wellboreId) {
       this.wellboreId = new WellboreId(wellboreId);
@@ -42,30 +33,30 @@ public class WellDtoTestUtil {
       return this;
     }
 
-    public Builder withMechanicalStatus(WellboreMechanicalStatus wellboreMechanicalStatus) {
-      this.mechanicalStatus = wellboreMechanicalStatus;
-      return this;
-    }
-
-    public Builder withOriginLicenceDto(
-        LicenceDto originLicenceDto) {
-      this.originLicenceDto = originLicenceDto;
-      return this;
-    }
-
-    public Builder withTotalDepthLicenceDto(LicenceDto totalDepthLicenceDto) {
-      this.totalDepthLicenceDto = totalDepthLicenceDto;
+    public Builder withIntent(WonsWellboreIntent intent) {
+      this.intent = intent;
       return this;
     }
 
     public WellDto build() {
+
+      var mechanicalStatus = WellboreMechanicalStatus.PLANNED;
+
+      var originLicenceDto = LicenceDtoTestUtil.builder()
+          .withLicenceReference("P101")
+          .build();
+
+      var totalDepthLicenceDto = LicenceDtoTestUtil.builder()
+          .withLicenceReference("P123")
+          .build();
 
       return new WellDto(
           wellboreId,
           registrationNumber,
           mechanicalStatus,
           originLicenceDto,
-          totalDepthLicenceDto
+          totalDepthLicenceDto,
+          intent
       );
     }
   }

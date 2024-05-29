@@ -5,6 +5,7 @@ import uk.co.fivium.energyportalapi.generated.types.MechanicalStatus;
 import uk.co.fivium.energyportalapi.generated.types.OperationalStatus;
 import uk.co.fivium.energyportalapi.generated.types.RegulatoryJurisdiction;
 import uk.co.fivium.energyportalapi.generated.types.Wellbore;
+import uk.co.fivium.energyportalapi.generated.types.WellboreIntent;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.licence.EpaLicenceTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInstantiationException;
 
@@ -33,6 +34,8 @@ public class EpaWellboreTestUtil {
     private Licence totalDepthLicence = EpaLicenceTestUtil.builder().build();
 
     private RegulatoryJurisdiction regulatoryJurisdiction = RegulatoryJurisdiction.SEAWARD;
+
+    private WellboreIntent intent = WellboreIntent.EXPLORATION;
 
     private Builder() {}
 
@@ -75,6 +78,11 @@ public class EpaWellboreTestUtil {
       return this;
     }
 
+    public Builder withIntent(WellboreIntent intent) {
+      this.intent = intent;
+      return this;
+    }
+
     public Wellbore build() {
       return Wellbore.newBuilder()
           .id(wellboreId)
@@ -84,6 +92,7 @@ public class EpaWellboreTestUtil {
           .originLicence(originLicence)
           .totalDepthLicence(totalDepthLicence)
           .regulatoryJurisdiction(regulatoryJurisdiction)
+          .intent(intent)
           .build();
     }
 

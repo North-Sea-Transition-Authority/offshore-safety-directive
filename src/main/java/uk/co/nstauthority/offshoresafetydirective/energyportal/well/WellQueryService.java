@@ -27,17 +27,18 @@ public class WellQueryService {
           .mechanicalStatus().root()
           .regulatoryJurisdiction().root()
           .originLicence()
-          .id()
-          .licenceType()
-          .licenceNo()
-          .licenceRef()
-          .root()
+            .id()
+            .licenceType()
+            .licenceNo()
+            .licenceRef()
+            .root()
           .totalDepthLicence()
-          .id()
-          .licenceType()
-          .licenceNo()
-          .licenceRef()
-          .root();
+            .id()
+            .licenceType()
+            .licenceNo()
+            .licenceRef()
+            .root()
+          .intent().root();
 
   static final WellboresProjectionRoot SEARCH_WELLBORES_PROJECTION_ROOT =
       new WellboresProjectionRoot()

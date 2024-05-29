@@ -1,16 +1,16 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.Counter;
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,9 +20,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.WonsNotificationType;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.geological.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.mechanical.WonsMechicalSidetrackNotificationCompletedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.notification.respud.WonsRespudNotificationCompletedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -48,7 +53,7 @@ class WonsNotificationSqsServiceTest {
   private WonsNotificationCompletedService wonsNotificationCompletedService;
 
   @Captor
-  private ArgumentCaptor<Consumer<WonsGeologicalSidetrackNotificationCompletedEpmqMessage>> completedMessageCaptor;
+  private ArgumentCaptor<Consumer<EpmqMessage>> completedMessageCaptor;
 
   private WonsNotificationSqsService wonsNotificationSqsService;
   private Counter counter;
@@ -77,46 +82,81 @@ class WonsNotificationSqsServiceTest {
   }
 
   @Test
-  void receiveMessages() {
+  void receiveMessages_whenGeologicalSidetrackNotificationMessage() {
+
+    givenMessageReceivedCounterExists();
+
+    var message1 = givenGeologicalSidetrackNotificationMessage();
+    var message2 = givenGeologicalSidetrackNotificationMessage();
+
+    givenMessagesExistOnTopic(Set.of(message1, message2));
+
     wonsNotificationSqsService.receiveMessages();
 
-    verify(sqsService).receiveQueueMessages(
-        eq(QUEUE_URL),
-        eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_NOTIFICATIONS)),
-        any()
-    );
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message1);
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message2);
+
+    thenWeIncrementMessageReceivedCounterBy(2);
   }
 
   @Test
-  void receiveMessages_whenNotificationCompletedMessage_verifyCalls() {
+  void receiveMessages_whenMechanicalSidetrackNotificationMessage() {
 
-    when(metricsProvider.getWonsNotificationMessagesReceivedCounter())
-        .thenReturn(counter);
+    givenMessageReceivedCounterExists();
 
-    var createdInstantOfMessage1 = Instant.now();
-    var createdInstantOfMessage2 = Instant.now().plusSeconds(10);
+    var message1 = givenMechanicalSidetrackNotificationMessage();
+    var message2 = givenMechanicalSidetrackNotificationMessage();
 
-    var message1 = new WonsGeologicalSidetrackNotificationCompletedEpmqMessage(
-        "correlation-%s".formatted(UUID.randomUUID()),
-        createdInstantOfMessage1,
-        "notification-%s".formatted(UUID.randomUUID()),
-        100,
-        200,
-        true
-    );
-    var message2 = new WonsGeologicalSidetrackNotificationCompletedEpmqMessage(
-        "correlation-%s".formatted(UUID.randomUUID()),
-        createdInstantOfMessage2,
-        "notification-%s".formatted(UUID.randomUUID()),
-        300,
-        400,
-        false
-    );
+    givenMessagesExistOnTopic(Set.of(message1, message2));
 
+    wonsNotificationSqsService.receiveMessages();
+
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message1);
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message2);
+
+    thenWeIncrementMessageReceivedCounterBy(2);
+  }
+
+  @Test
+  void receiveMessages_whenRespudNotificationMessage() {
+
+    givenMessageReceivedCounterExists();
+
+    var message1 = givenRespudNotificationMessage();
+    var message2 = givenRespudNotificationMessage();
+    var message3 = givenRespudNotificationMessage();
+
+    givenMessagesExistOnTopic(Set.of(message1, message2, message3));
+
+    wonsNotificationSqsService.receiveMessages();
+
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message1);
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message2);
+    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message3);
+
+    thenWeIncrementMessageReceivedCounterBy(3);
+  }
+
+  @Test
+  void receiveMessages_whenNonChildProducingNotificationMessage() {
+
+    givenMessageReceivedCounterExists();
+
+    var message = givenNonChildProducingNotificationMessage();
+
+    givenMessagesExistOnTopic(Set.of(message));
+
+    wonsNotificationSqsService.receiveMessages();
+
+    verifyNoInteractions(wonsNotificationCompletedService);
+
+    thenWeIncrementMessageReceivedCounterBy(1);
+  }
+
+  private void givenMessagesExistOnTopic(Set<EpmqMessage> epmqMessages) {
     doAnswer(invocation -> {
       var onMessage = completedMessageCaptor.getValue();
-      onMessage.accept(message1);
-      onMessage.accept(message2);
+      epmqMessages.forEach(onMessage);
       return null;
     })
         .when(sqsService)
@@ -125,17 +165,59 @@ class WonsNotificationSqsServiceTest {
             eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_NOTIFICATIONS)),
             completedMessageCaptor.capture()
         );
+  }
 
-    when(metricsProvider.getWonsNotificationMessagesReceivedCounter()).thenReturn(counter);
+  private void givenMessageReceivedCounterExists() {
+    when(metricsProvider.getWonsNotificationMessagesReceivedCounter())
+        .thenReturn(counter);
+  }
 
-    wonsNotificationSqsService.receiveMessages();
+  private void thenWeIncrementMessageReceivedCounterBy(int counterIncrement) {
+    verify(metricsProvider, times(counterIncrement)).getWonsNotificationMessagesReceivedCounter();
+    verify(counter, times(counterIncrement)).increment();
+  }
 
-    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message1);
-    verify(wonsNotificationCompletedService, times(1)).processParentWellboreNotification(message2);
+  private WonsGeologicalSidetrackNotificationCompletedEpmqMessage givenGeologicalSidetrackNotificationMessage() {
+    return new WonsGeologicalSidetrackNotificationCompletedEpmqMessage(
+        "correlation-%s".formatted(UUID.randomUUID()),
+        Instant.now(),
+        "notification-%s".formatted(UUID.randomUUID()),
+        100, // submitted on wellbore ID
+        200, // ID of wellbore created by notification
+        true // using parent wellbore appointment
+    );
+  }
 
-    verify(metricsProvider, times(2)).getWonsNotificationMessagesReceivedCounter();
-    verify(counter, times(2)).increment();
+  private WonsMechicalSidetrackNotificationCompletedEpmqMessage givenMechanicalSidetrackNotificationMessage() {
+    return new WonsMechicalSidetrackNotificationCompletedEpmqMessage(
+        "correlation-%s".formatted(UUID.randomUUID()),
+        Instant.now(),
+        "notification-%s".formatted(UUID.randomUUID()),
+        100, // submitted on wellbore ID
+        200, // ID of wellbore created by notification
+        true // using parent wellbore appointment
+    );
+  }
 
-    verifyNoMoreInteractions(wonsNotificationCompletedService, metricsProvider);
+  private WonsRespudNotificationCompletedEpmqMessage givenRespudNotificationMessage() {
+    return new WonsRespudNotificationCompletedEpmqMessage(
+        "correlation-%s".formatted(UUID.randomUUID()),
+        Instant.now(),
+        "notification-%s".formatted(UUID.randomUUID()),
+        100, // submitted on wellbore ID
+        200, // ID of wellbore created by notification
+        true // using parent wellbore appointment
+    );
+  }
+
+  private WonsNotificationCompletedEpmqMessage givenNonChildProducingNotificationMessage() {
+    return new WonsNotificationCompletedEpmqMessage(
+        WonsNotificationCompletedEpmqMessage.TYPE,
+        "correlation-%s".formatted(UUID.randomUUID()),
+        Instant.now(),
+        "notification-%s".formatted(UUID.randomUUID()),
+        WonsNotificationType.WELL_TEST,
+        200
+    );
   }
 }
