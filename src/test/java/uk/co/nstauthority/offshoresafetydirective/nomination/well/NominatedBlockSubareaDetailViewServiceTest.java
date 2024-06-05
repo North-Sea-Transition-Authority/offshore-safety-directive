@@ -10,6 +10,9 @@ import java.util.UUID;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -634,5 +637,57 @@ class NominatedBlockSubareaDetailViewServiceTest {
                 true
             )
         );
+  }
+
+  @ParameterizedTest(name = "WHEN phase is {0}")
+  @ValueSource(booleans = false)
+  @NullSource
+  void getNominatedBlockSubareaDetailView_whenPhaseNotSelected(Boolean notForPhase) {
+
+    var nominatedSubarea = NominatedBlockSubareaDetailTestUtil.builder()
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(notForPhase)
+        .withDevelopmentPhase(notForPhase)
+        .withDecommissioningPhase(notForPhase)
+        .build();
+
+    when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedSubarea));
+
+    var resultingSubareaView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+
+    theSubareaViewShouldExist(resultingSubareaView);
+    thereAreNoPhasesIncluded(resultingSubareaView.get());
+  }
+
+  @Test
+  void getNominatedBlockSubareaDetailView_whenPhasesSelected() {
+
+    var nominatedSubarea = NominatedBlockSubareaDetailTestUtil.builder()
+        .withForAllWellPhases(false)
+        .withExplorationAndAppraisalPhase(true)
+        .withDevelopmentPhase(true)
+        .withDecommissioningPhase(false)
+        .build();
+
+    when(nominatedBlockSubareaDetailPersistenceService.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(nominatedSubarea));
+
+    var resultingSubareaView = nominatedBlockSubareaDetailViewService.getNominatedBlockSubareaDetailView(NOMINATION_DETAIL);
+
+    theSubareaViewShouldExist(resultingSubareaView);
+    thePhasesIncludedAre(List.of(WellPhase.EXPLORATION_AND_APPRAISAL, WellPhase.DEVELOPMENT), resultingSubareaView.get());
+  }
+
+  private void theSubareaViewShouldExist(Optional<NominatedBlockSubareaDetailView> nominatedBlockSubareaDetailView) {
+    assertThat(nominatedBlockSubareaDetailView).isPresent();
+  }
+
+  private void thereAreNoPhasesIncluded(NominatedBlockSubareaDetailView nominatedBlockSubareaDetailView) {
+    assertThat(nominatedBlockSubareaDetailView.getWellPhases()).isEmpty();
+  }
+
+  private void thePhasesIncludedAre(List<WellPhase> wellPhases, NominatedBlockSubareaDetailView subareaView) {
+    assertThat(subareaView.getWellPhases()).isEqualTo(wellPhases);
   }
 }

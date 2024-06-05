@@ -51,9 +51,9 @@ class NominatedBlockSubareaDetailPersistenceService {
       blockSubareaDetail.setDevelopmentPhase(null);
       blockSubareaDetail.setDecommissioningPhase(null);
     } else {
-      blockSubareaDetail.setExplorationAndAppraisalPhase(Boolean.valueOf(form.getExplorationAndAppraisalPhase()));
-      blockSubareaDetail.setDevelopmentPhase(Boolean.valueOf(form.getDevelopmentPhase()));
-      blockSubareaDetail.setDecommissioningPhase(Boolean.valueOf(form.getDecommissioningPhase()));
+      blockSubareaDetail.setExplorationAndAppraisalPhase(BooleanUtils.toBooleanObject(form.getExplorationAndAppraisalPhase()));
+      blockSubareaDetail.setDevelopmentPhase(BooleanUtils.toBooleanObject(form.getDevelopmentPhase()));
+      blockSubareaDetail.setDecommissioningPhase(BooleanUtils.toBooleanObject(form.getDecommissioningPhase()));
     }
     return blockSubareaDetail;
   }

@@ -5,10 +5,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,6 +25,9 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
 
   @Mock
   private NominatedBlockSubareaDetailRepository nominatedBlockSubareaDetailRepository;
+
+  @Captor
+  private ArgumentCaptor<NominatedBlockSubareaDetail> nominatedBlockSubareaDetailArgumentCaptor;
 
   @InjectMocks
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
@@ -129,5 +134,62 @@ class NominatedBlockSubareaDetailPersistenceServiceTest {
   void deleteByNominationDetail_verifyRepositoryInteraction() {
     nominatedBlockSubareaDetailPersistenceService.deleteByNominationDetail(NOMINATION_DETAIL);
     verify(nominatedBlockSubareaDetailRepository, times(1)).deleteAllByNominationDetail(NOMINATION_DETAIL);
+  }
+
+  @Test
+  void createOrUpdateNominatedBlockSubareaDetail_whenCreate_andFormContainsOnOff() {
+    var form = new NominatedBlockSubareaForm();
+    form.setForAllWellPhases("false");
+    form.setExplorationAndAppraisalPhase("on");
+    form.setDevelopmentPhase("off");
+    form.setDecommissioningPhase("on");
+
+    when(nominatedBlockSubareaDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.empty());
+
+    nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(NOMINATION_DETAIL, form);
+
+    thenWeSaveTheEntity();
+    thenTheEntityIncludesPhases(WellPhase.EXPLORATION_AND_APPRAISAL, WellPhase.DECOMMISSIONING);
+    thenTheEntityDoesNotIncludePhase(WellPhase.DEVELOPMENT);
+  }
+
+  @Test
+  void createOrUpdateNominatedBlockSubareaDetail_whenUpdate_andFormContainsOnOff() {
+
+    var form = new NominatedBlockSubareaForm();
+    form.setForAllWellPhases("false");
+    form.setExplorationAndAppraisalPhase("off");
+    form.setDevelopmentPhase("on");
+    form.setDecommissioningPhase("on");
+
+    when(nominatedBlockSubareaDetailRepository.findByNominationDetail(NOMINATION_DETAIL))
+        .thenReturn(Optional.of(new NominatedBlockSubareaDetail()));
+
+    nominatedBlockSubareaDetailPersistenceService.createOrUpdateNominatedBlockSubareaDetail(NOMINATION_DETAIL, form);
+
+    thenWeSaveTheEntity();
+    thenTheEntityIncludesPhases(WellPhase.DEVELOPMENT, WellPhase.DECOMMISSIONING);
+    thenTheEntityDoesNotIncludePhase(WellPhase.EXPLORATION_AND_APPRAISAL);
+  }
+
+  private void thenWeSaveTheEntity() {
+    verify(nominatedBlockSubareaDetailRepository).save(nominatedBlockSubareaDetailArgumentCaptor.capture());
+  }
+
+  private void thenTheEntityIncludesPhases(WellPhase... wellPhases) {
+    Arrays.asList(wellPhases).forEach(wellPhase -> assertThat(includesWellPhase(wellPhase)).isTrue());
+  }
+
+  private void thenTheEntityDoesNotIncludePhase(WellPhase wellPhase) {
+    assertThat(includesWellPhase(wellPhase)).isFalse();
+  }
+
+  private boolean includesWellPhase(WellPhase wellPhase) {
+    return switch (wellPhase) {
+      case EXPLORATION_AND_APPRAISAL -> nominatedBlockSubareaDetailArgumentCaptor.getValue().getExplorationAndAppraisalPhase();
+      case DEVELOPMENT -> nominatedBlockSubareaDetailArgumentCaptor.getValue().getDevelopmentPhase();
+      case DECOMMISSIONING -> nominatedBlockSubareaDetailArgumentCaptor.getValue().getDecommissioningPhase();
+    };
   }
 }
