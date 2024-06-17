@@ -148,6 +148,38 @@ class CanViewNominationPostSubmissionInterceptorTest extends AbstractNominationC
     then(nominationRoleService).shouldHaveNoInteractions();
   }
 
+  @Test
+  void whenUserInConsulteeTeamWithCorrectRole() throws Exception {
+
+    var nominationId = new NominationId(UUID.randomUUID());
+
+    // GIVEN user is not in the regulator team
+    given(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.REGULATOR,
+        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .willReturn(false);
+
+    // AND they are in the consultee team
+    given(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+    ))
+        .willReturn(true);
+
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    given(nominationDetailService.getPostSubmissionNominationDetail(nominationId))
+        .willReturn(Optional.of(nominationDetail));
+
+    mockMvc.perform(get(ReverseRouter.route(on(TestController.class)
+        .withCanViewNominationPostSubmission(nominationId)))
+        .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
   @Controller
   @RequestMapping("/nomination")
   static class TestController {
