@@ -50,12 +50,20 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
   }
 
   @SecurityTest
-  void download_whenIncorrectRoleInApplicantOrganisationAndRegulatorTeam() throws Exception {
+  void download_whenNoRoleInAnyTeam() throws Exception {
 
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.REGULATOR,
         Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    // AND they do not have the required consultee roles
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
     ))
         .thenReturn(false);
 
@@ -88,6 +96,14 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
         USER.wuaId(),
         TeamType.REGULATOR,
         Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    // AND they do not have the required consultee roles
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
     ))
         .thenReturn(false);
 
@@ -135,6 +151,64 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
     mockMvc.perform(get(ReverseRouter.route(on(NominationFileDownloadController.class)
         .download(NOMINATION_ID, "1", fileId.toString())))
         .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @SecurityTest
+  void download_whenCorrectRoleInConsulteeTeam() throws Exception {
+
+    // GIVEN the user does not have the required regulator roles
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.REGULATOR,
+        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    // AND they have the required consultee roles
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+    ))
+        .thenReturn(true);
+
+    var nominationDetail = NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    when(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
+        .thenReturn(Optional.of(nominationDetail));
+
+    when(nominationDetailService.getVersionedNominationDetailWithStatuses(
+        NOMINATION_ID,
+        1,
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    ))
+        .thenReturn(Optional.of(nominationDetail));
+
+    var fileId = UUID.randomUUID();
+
+    // WHEN the user tries to download the file scoped to a nomination they can access
+    var file = UploadedFileTestUtil.builder()
+        .withUsageId(nominationDetail.getId().toString())
+        .withUsageType(FileUsageType.NOMINATION_DETAIL.getUsageType())
+        .withDocumentType(FileDocumentType.APPENDIX_C.name())
+        .build();
+
+    when(fileService.find(fileId))
+        .thenReturn(Optional.of(file));
+
+    when(fileService.download(file))
+        .thenReturn(
+            ResponseEntity.ok(new InputStreamResource(new StringInputStream("streamContent"), "stream description"))
+        );
+
+    // THEN the download will be successful
+    mockMvc.perform(get(ReverseRouter.route(on(NominationFileDownloadController.class)
+            .download(NOMINATION_ID, "1", fileId.toString())))
+            .with(user(USER)))
         .andExpect(status().isOk());
   }
 

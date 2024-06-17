@@ -63,28 +63,28 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
 
       var user = userDetailService.getUserDetail();
 
-      var requiredRegulatorRoles = Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION);
-
-      var canViewNominationAsRegulator = teamQueryService.userHasAtLeastOneStaticRole(
+      var canViewNominationAsLicensingAuthority = teamQueryService.userHasAtLeastOneStaticRole(
           user.wuaId(),
           TeamType.REGULATOR,
-          requiredRegulatorRoles
+          Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
       );
+
+      var canViewNominationAsConsultee = teamQueryService.userHasAtLeastOneStaticRole(
+          user.wuaId(),
+          TeamType.CONSULTEE,
+          Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+      );
+
+      var canViewNominationAsRegulator = canViewNominationAsLicensingAuthority || canViewNominationAsConsultee;
 
       if (canViewNominationAsRegulator) {
         return true;
       } else {
 
-        var requiredApplicantTeamRoles = Set.of(
-            Role.NOMINATION_SUBMITTER,
-            Role.NOMINATION_EDITOR,
-            Role.NOMINATION_VIEWER
-        );
-
         var canViewNominationAsApplicant = nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
             user.wuaId(),
             nominationDetail,
-            requiredApplicantTeamRoles
+            Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER)
         );
 
         if (canViewNominationAsApplicant) {
@@ -93,10 +93,10 @@ public class CanViewNominationPostSubmissionInterceptor extends AbstractHandlerI
           throw new ResponseStatusException(
               HttpStatus.FORBIDDEN,
               """
-                  User with ID %s is either not a member of the regulator team with at least one of %s roles or
-                  part of the applicant group team for nomination with ID %s with at least one of %s roles
+                  User with ID %s does not have the required role in the licensing authority or consultee team or is
+                  not part of the applicant group team for nomination with ID %s
               """
-                  .formatted(user.wuaId(), requiredRegulatorRoles, nominationId.id(), requiredApplicantTeamRoles)
+                  .formatted(user.wuaId(), nominationId.id())
           );
         }
       }
