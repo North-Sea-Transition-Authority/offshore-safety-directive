@@ -12,8 +12,8 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 
 ## Pre-requisites
 
-- Java 17
-- Node LTS + NPM
+- Java 21
+- At least node 18+
 - [Docker for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
   (See [Docker setup](https://confluence.fivium.co.uk/display/JAVA/Java+development+environment+setup#Javadevelopmentenvironmentsetup-Docker)
   for further information about adding your account to the `docker-users` group)
