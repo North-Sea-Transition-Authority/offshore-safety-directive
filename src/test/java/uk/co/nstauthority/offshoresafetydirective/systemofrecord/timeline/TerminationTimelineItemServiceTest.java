@@ -3,7 +3,11 @@ package uk.co.nstauthority.offshoresafetydirective.systemofrecord.timeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.AssertionsForClassTypes.entry;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import java.time.Instant;
@@ -16,9 +20,12 @@ import java.util.Set;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.InvalidAuthenticationException;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -34,6 +41,7 @@ import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileView;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.AppointmentTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTermination;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationFileController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationTestUtil;
@@ -369,5 +377,23 @@ class TerminationTimelineItemServiceTest {
 
         )
         .containsExactly("Unknown");
+  }
+
+  @ParameterizedTest
+  @NullAndEmptySource
+  void getTimelineItemViews_whenNoTerminations(List<AppointmentTermination> nullOrEmptyTerminations) {
+
+    var appointments = List.of(AppointmentTestUtil.builder().build());
+
+    given(appointmentTerminationService.getTerminations(appointments))
+        .willReturn(nullOrEmptyTerminations);
+
+    var resultingTerminationViewList = terminationTimelineItemService.getTimelineItemViews(appointments);
+
+    assertThat(resultingTerminationViewList).isEmpty();
+
+    then(energyPortalUserService)
+        .should(never())
+        .findByWuaIds(anyCollection(), any(RequestPurpose.class));
   }
 }

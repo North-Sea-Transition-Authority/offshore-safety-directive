@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
@@ -58,6 +59,11 @@ class TerminationTimelineItemService {
   public List<AssetTimelineItemView> getTimelineItemViews(List<Appointment> appointments) {
 
     var terminations = appointmentTerminationService.getTerminations(appointments);
+
+    if (CollectionUtils.isEmpty(terminations)) {
+      return List.of();
+    }
+
     var users = getUsers(terminations);
 
     return terminations.stream()
