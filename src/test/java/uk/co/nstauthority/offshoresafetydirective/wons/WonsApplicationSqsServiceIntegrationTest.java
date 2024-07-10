@@ -10,7 +10,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
@@ -33,7 +34,7 @@ class WonsApplicationSqsServiceIntegrationTest {
         .untilAsserted(() ->
             verify(sqsService, atLeast(2)).receiveQueueMessages(
                 any(),
-                eq(WonsApplicationSubmittedEpmqMessage.class),
+                eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
                 any()
             )
         );

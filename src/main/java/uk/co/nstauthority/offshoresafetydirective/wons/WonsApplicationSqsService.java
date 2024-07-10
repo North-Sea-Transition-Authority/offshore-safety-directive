@@ -10,13 +10,16 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.provisionaldrilling.WonsProvisionalDrillingApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons.application.WonsApplicationSubmittedService;
 
 @Service
 @Profile("!disable-epmq")
@@ -30,15 +33,18 @@ class WonsApplicationSqsService {
   private final SnsTopicArn applicationsSnsTopicArn;
   private final SqsQueueUrl applicationsOsdQueueUrl;
   private final MetricsProvider metricsProvider;
+  private final WonsApplicationSubmittedService wonsApplicationSubmittedService;
 
   @Autowired
-  WonsApplicationSqsService(SqsService sqsService, SnsService snsService, MetricsProvider metricsProvider) {
+  WonsApplicationSqsService(SqsService sqsService, SnsService snsService, MetricsProvider metricsProvider,
+                            WonsApplicationSubmittedService wonsApplicationSubmittedService) {
     this.sqsService = sqsService;
     this.snsService = snsService;
 
     applicationsSnsTopicArn = snsService.getOrCreateTopic(EpmqTopics.WONS_APPLICATIONS.getName());
     applicationsOsdQueueUrl = sqsService.getOrCreateQueue(APPLICATIONS_OSD_QUEUE_NAME);
     this.metricsProvider = metricsProvider;
+    this.wonsApplicationSubmittedService = wonsApplicationSubmittedService;
   }
 
   @EventListener(classes = ApplicationReadyEvent.class)
@@ -52,10 +58,31 @@ class WonsApplicationSqsService {
     LOGGER.debug("Process received WONS application messages");
     sqsService.receiveQueueMessages(
         applicationsOsdQueueUrl,
-        WonsApplicationSubmittedEpmqMessage.class,
-        message ->
-          // TODO: Handle messages as part of https://ogajira.atlassian.net/browse/OSDOP-17
-          metricsProvider.getWonsApplicationMessagesReceivedCounter().increment()
+        EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_APPLICATIONS),
+        message -> {
+          LOGGER.info(
+              "Received wons application topic message with correlation ID {}",
+              message.getCorrelationId()
+          );
+
+          metricsProvider.getWonsApplicationMessagesReceivedCounter().increment();
+          handleMessage(message);
+
+          LOGGER.info(
+              "Finished handling wons application topic message with correlation ID {}",
+              message.getCorrelationId()
+          );
+        }
     );
+  }
+
+  private void handleMessage(EpmqMessage message) {
+    if (message instanceof WonsProvisionalDrillingApplicationSubmittedEpmqMessage provisionalDrillingMessage) {
+      wonsApplicationSubmittedService.processApplicationSubmittedEvent(
+          provisionalDrillingMessage.getApplicationId(),
+          provisionalDrillingMessage.getSubmittedOnWellboreId(),
+          provisionalDrillingMessage.getForwardAreaApprovalAppointmentId()
+      );
+    }
   }
 }

@@ -1,11 +1,13 @@
 package uk.co.nstauthority.offshoresafetydirective.wons;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.micrometer.core.instrument.Counter;
@@ -19,13 +21,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.wons.WonsApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsApplicationType;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.provisionaldrilling.WonsProvisionalDrillingApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.wons.application.WonsApplicationSubmittedService;
 
 @ExtendWith(MockitoExtension.class)
 class WonsApplicationSqsServiceTest {
@@ -39,6 +45,9 @@ class WonsApplicationSqsServiceTest {
   @Mock
   private MetricsProvider metricsProvider;
 
+  @Mock
+  private WonsApplicationSubmittedService wonsApplicationSubmittedService;
+
   @Captor
   private ArgumentCaptor<Consumer<WonsApplicationSubmittedEpmqMessage>> wonsApplicationEpmqMessageConsumerCaptor;
 
@@ -50,59 +59,109 @@ class WonsApplicationSqsServiceTest {
 
   @BeforeEach
   void setUp() {
+
     when(snsService.getOrCreateTopic(EpmqTopics.WONS_APPLICATIONS.getName()))
         .thenReturn(applicationsSnsTopicArn);
+
     when(sqsService.getOrCreateQueue(WonsApplicationSqsService.APPLICATIONS_OSD_QUEUE_NAME))
         .thenReturn(applicationsOsdQueueUrl);
 
-    counter = mock(Counter.class);
-    wonsApplicationSqsService = new WonsApplicationSqsService(sqsService, snsService, metricsProvider);
+    wonsApplicationSqsService = new WonsApplicationSqsService(
+        sqsService, snsService, metricsProvider,
+        wonsApplicationSubmittedService
+    );
   }
 
   @Test
   void subscribeSnsTopicToOsdQueue() {
     wonsApplicationSqsService.subscribeSnsTopicToOsdQueue();
-
     verify(snsService).subscribeTopicToSqsQueue(applicationsSnsTopicArn, applicationsOsdQueueUrl);
   }
 
   @Test
-  void receiveMessages() {
+  void receiveMessages_whenProvisionalDrillingApplication() {
+
+    var createdInstantOfMessage = Instant.now();
+    var applicationId = 123;
+    var wellboreId = 456;
+    var appointmentId = "appointment-id";
+
+    var message = new WonsProvisionalDrillingApplicationSubmittedEpmqMessage(
+        UUID.randomUUID().toString(),
+        createdInstantOfMessage,
+        applicationId,
+        WonsApplicationType.PROVISIONAL_DRILLING_APPLICATION,
+        wellboreId,
+        appointmentId
+    );
+
+    givenMessageReceivedCounter();
+
+    whenMessageIsReceived(message);
+
     wonsApplicationSqsService.receiveMessages();
 
-    verify(sqsService)
-        .receiveQueueMessages(eq(applicationsOsdQueueUrl), eq(WonsApplicationSubmittedEpmqMessage.class), any());
+    thenMessageReceivedCounterIsIncrementedBy(1);
+
+    verify(wonsApplicationSubmittedService).processApplicationSubmittedEvent(
+        applicationId,
+        wellboreId,
+        appointmentId
+    );
   }
 
   @Test
-  void receiveMessages_verifyCalls() {
+  void receiveMessages_whenNotProvisionalDrillingApplication() {
 
-    var createdInstantOfMessage1 = Instant.now();
+    var createdInstantOfMessage = Instant.now();
+    var applicationId = 123;
+    var wellboreId = 456;
 
-    var message1 = new WonsApplicationSubmittedEpmqMessage(
-        1,
+    var message = new WonsApplicationSubmittedEpmqMessage(
+        WonsApplicationSubmittedEpmqMessage.TYPE,
         UUID.randomUUID().toString(),
-        UUID.randomUUID().toString(),
-        createdInstantOfMessage1
+        createdInstantOfMessage,
+        applicationId,
+        WonsApplicationType.SUSPENSION_APPLICATION,
+        wellboreId
     );
+
+    givenMessageReceivedCounter();
+
+    whenMessageIsReceived(message);
+
+    wonsApplicationSqsService.receiveMessages();
+
+    thenMessageReceivedCounterIsIncrementedBy(1);
+
+    verify(wonsApplicationSubmittedService, never()).processApplicationSubmittedEvent(
+        anyInt(),
+        anyInt(),
+        anyString()
+    );
+  }
+
+  private void whenMessageIsReceived(WonsApplicationSubmittedEpmqMessage message) {
 
     doAnswer(invocation -> {
       var onMessage = wonsApplicationEpmqMessageConsumerCaptor.getValue();
-      onMessage.accept(message1);
+      onMessage.accept(message);
       return null;
     })
         .when(sqsService)
         .receiveQueueMessages(
             eq(applicationsOsdQueueUrl),
-            eq(WonsApplicationSubmittedEpmqMessage.class),
+            eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_APPLICATIONS)),
             wonsApplicationEpmqMessageConsumerCaptor.capture()
         );
+  }
+
+  private void thenMessageReceivedCounterIsIncrementedBy(int expectedIncrement) {
+    verify(counter, times(expectedIncrement)).increment();
+  }
+
+  private void givenMessageReceivedCounter() {
+    counter = mock(Counter.class);
     when(metricsProvider.getWonsApplicationMessagesReceivedCounter()).thenReturn(counter);
-
-    wonsApplicationSqsService.receiveMessages();
-
-    verify(metricsProvider).getWonsApplicationMessagesReceivedCounter();
-    verify(counter).increment();
-    verifyNoMoreInteractions(metricsProvider);
   }
 }

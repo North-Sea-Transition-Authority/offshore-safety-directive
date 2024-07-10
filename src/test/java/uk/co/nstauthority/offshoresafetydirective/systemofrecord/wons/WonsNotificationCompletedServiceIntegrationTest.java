@@ -653,6 +653,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
   private void givenWellboreExistsWithIntent(int wellboreId, WonsWellboreIntent intent) {
 
     var wellbore = WellDtoTestUtil.builder()
+        .withWellboreId(wellboreId)
         .withIntent(intent)
         .build();
 
