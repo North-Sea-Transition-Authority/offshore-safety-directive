@@ -16,7 +16,7 @@ import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractActuatorController
 class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
 
   private static final String PUBLISH_NOMINATION_SUBMITTED_MESSAGE_URL_FORMAT =
-      "/actuator/nominations/publish-epmq-message/nomination/%s";
+      "/actuator/nomination-submitted-message/%s";
 
   @MockBean
   private NominationSnsService nominationSnsService;
@@ -45,7 +45,7 @@ class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
     mockMvc
         .perform(
             post(PUBLISH_NOMINATION_SUBMITTED_MESSAGE_URL_FORMAT.formatted(nominationId.id()))
-                .with(httpBasic("admin", "invalidpassword"))
+                .with(httpBasic("admin", "invalid-password"))
         )
         .andExpect(status().isUnauthorized());
   }

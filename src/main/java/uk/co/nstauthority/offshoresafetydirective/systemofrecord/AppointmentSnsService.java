@@ -29,7 +29,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.App
 
 @Service
 @Profile("!disable-epmq")
-class AppointmentSnsService {
+public class AppointmentSnsService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentSnsService.class);
   private final SnsService snsService;
@@ -40,7 +40,7 @@ class AppointmentSnsService {
   private final MetricsProvider metricsProvider;
 
   @Autowired
-  AppointmentSnsService(
+  public AppointmentSnsService(
       SnsService snsService,
       AppointmentRepository appointmentRepository,
       AssetPhaseRepository assetPhaseRepository,
@@ -142,14 +142,14 @@ class AppointmentSnsService {
     metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
-  void publishAppointmentDeletedSnsMessage(UUID appointmentId, String correlationId) {
+  public void publishAppointmentDeletedSnsMessage(UUID appointmentId, String correlationId) {
     snsService.publishMessage(
         appointmentsTopicArn,
         new AppointmentDeletedOsdEpmqMessage(appointmentId, correlationId, clock.instant())
     );
   }
 
-  void publishAppointmentUpdatedSnsMessage(Appointment appointment, String correlationId) {
+  public void publishAppointmentUpdatedSnsMessage(Appointment appointment, String correlationId) {
     var assetPhasesByAssetId =
         assetPhaseRepository.findByAppointment(appointment)
             .stream()
@@ -212,7 +212,7 @@ class AppointmentSnsService {
     metricsProvider.getAppointmentsPublishedCounter().increment();
   }
 
-  void publishAppointmentCreatedSnsMessage(Appointment appointment) {
+  public void publishAppointmentCreatedSnsMessage(Appointment appointment) {
     var assetPhasesByAssetAndAppointment =
         assetPhaseRepository.findByAppointment(appointment)
             .stream()

@@ -4,7 +4,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
-import org.springframework.boot.actuate.endpoint.web.annotation.RestControllerEndpoint;
+import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpoint;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +19,7 @@ public class SecurityRule {
       .or().areAnnotatedWith(PostMapping.class)
       .or().areAnnotatedWith(PutMapping.class)
       .or().areAnnotatedWith(DeleteMapping.class)
-      .and().areDeclaredInClassesThat().areNotAnnotatedWith(RestControllerEndpoint.class)
+      .and().areDeclaredInClassesThat().areNotAnnotatedWith(WebEndpoint.class)
       .and().areDeclaredInClassesThat().doNotImplement(ErrorController.class)
       .should()
         // meta annotated as the annotation is included as part of other annotations
