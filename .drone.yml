@@ -136,7 +136,7 @@ steps:
       registry: quay.io
       repo: quay.io/fivium/offshore-safety-directive
       tags:
-        - ${DRONE_BRANCH/\//-}-${DRONE_BUILD_NUMBER}
+        - ${DRONE_BRANCH//\//-}-${DRONE_BUILD_NUMBER}
       config:
         from_secret: docker_config
     when:
