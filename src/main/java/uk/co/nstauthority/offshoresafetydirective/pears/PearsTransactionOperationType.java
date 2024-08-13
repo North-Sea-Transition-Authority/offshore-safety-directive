@@ -7,7 +7,9 @@ import uk.co.fivium.energyportalmessagequeue.message.pears.PearsOperationType;
 
 enum PearsTransactionOperationType {
 
-  END(PearsOperationType.SUBAREA_MERGE, PearsOperationType.BLOCK_END, PearsOperationType.LICENCE_END),
+  END(PearsOperationType.SUBAREA_MERGE, PearsOperationType.BLOCK_END,
+      PearsOperationType.LICENCE_END, PearsOperationType.SUBAREA_END
+  ),
   COPY_FORWARD(PearsOperationType.SUBAREA_CHANGE, PearsOperationType.BLOCK_CHANGE),
   ;
 
