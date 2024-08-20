@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
-import uk.co.fivium.energyportalmessagequeue.message.wons.application.provisionaldrilling.WonsProvisionalDrillingApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsOsdOperatorApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -66,6 +66,7 @@ class WonsApplicationSqsService {
           );
 
           metricsProvider.getWonsApplicationMessagesReceivedCounter().increment();
+
           handleMessage(message);
 
           LOGGER.info(
@@ -77,11 +78,11 @@ class WonsApplicationSqsService {
   }
 
   private void handleMessage(EpmqMessage message) {
-    if (message instanceof WonsProvisionalDrillingApplicationSubmittedEpmqMessage provisionalDrillingMessage) {
+    if (message instanceof WonsOsdOperatorApplicationSubmittedEpmqMessage osdMessage) {
       wonsApplicationSubmittedService.processApplicationSubmittedEvent(
-          provisionalDrillingMessage.getApplicationId(),
-          provisionalDrillingMessage.getSubmittedOnWellboreId(),
-          provisionalDrillingMessage.getForwardAreaApprovalAppointmentId()
+          osdMessage.getApplicationId(),
+          osdMessage.getSubmittedOnWellboreId(),
+          osdMessage.getForwardAreaApprovalAppointmentId()
       );
     }
   }

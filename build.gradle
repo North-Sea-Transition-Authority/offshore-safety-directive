@@ -37,7 +37,7 @@ repositories {
 	}
 }
 
-def epmqVersion= 'v4.0.0'
+def epmqVersion= 'OSDOP-794-add-ida-message-SNAPSHOT'
 
 sourceSets {
 	epmqMessagesJarIntegrationTest {}

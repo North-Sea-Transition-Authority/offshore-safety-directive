@@ -25,7 +25,7 @@ import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsApplicationType;
-import uk.co.fivium.energyportalmessagequeue.message.wons.application.provisionaldrilling.WonsProvisionalDrillingApplicationSubmittedEpmqMessage;
+import uk.co.fivium.energyportalmessagequeue.message.wons.application.WonsOsdOperatorApplicationSubmittedEpmqMessage;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsTopicArn;
 import uk.co.fivium.energyportalmessagequeue.sqs.SqsQueueUrl;
@@ -79,39 +79,35 @@ class WonsApplicationSqsServiceTest {
   }
 
   @Test
-  void receiveMessages_whenProvisionalDrillingApplication() {
-
-    var createdInstantOfMessage = Instant.now();
-    var applicationId = 123;
-    var wellboreId = 456;
-    var appointmentId = "appointment-id";
-
-    var message = new WonsProvisionalDrillingApplicationSubmittedEpmqMessage(
-        UUID.randomUUID().toString(),
-        createdInstantOfMessage,
-        applicationId,
-        WonsApplicationType.PROVISIONAL_DRILLING_APPLICATION,
-        wellboreId,
-        appointmentId
-    );
+  void receiveMessages_whenOsdOperatorRelatedApplication() {
 
     givenMessageReceivedCounter();
 
-    whenMessageIsReceived(message);
+    var wonsOsdRelatedApplicationSubmittedMessage = new WonsOsdOperatorApplicationSubmittedEpmqMessage(
+        WonsOsdOperatorApplicationSubmittedEpmqMessage.TYPE,
+        "correlation-id",
+        Instant.now(),
+        100, // wons application id
+        WonsApplicationType.PROVISIONAL_DRILLING_APPLICATION,
+        200, // submitted on wellbore id
+        "osd-appointment-id"
+    );
+
+    whenMessageIsReceived(wonsOsdRelatedApplicationSubmittedMessage);
 
     wonsApplicationSqsService.receiveMessages();
 
     thenMessageReceivedCounterIsIncrementedBy(1);
 
     verify(wonsApplicationSubmittedService).processApplicationSubmittedEvent(
-        applicationId,
-        wellboreId,
-        appointmentId
+        wonsOsdRelatedApplicationSubmittedMessage.getApplicationId(),
+        wonsOsdRelatedApplicationSubmittedMessage.getSubmittedOnWellboreId(),
+        wonsOsdRelatedApplicationSubmittedMessage.getForwardAreaApprovalAppointmentId()
     );
   }
 
   @Test
-  void receiveMessages_whenNotProvisionalDrillingApplication() {
+  void receiveMessages_whenNotOsdOperatorRelated() {
 
     var createdInstantOfMessage = Instant.now();
     var applicationId = 123;

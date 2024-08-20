@@ -34,7 +34,7 @@ class WonsApplicationSqsServiceIntegrationTest {
         .untilAsserted(() ->
             verify(sqsService, atLeast(2)).receiveQueueMessages(
                 any(),
-                eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.PEARS_LICENCES)),
+                eq(EpmqMessageTypeMapping.getTypeToClassMapByTopic(EpmqTopics.WONS_APPLICATIONS)),
                 any()
             )
         );
