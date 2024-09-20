@@ -79,7 +79,7 @@ dependencies {
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.763'
 
 	// fivium managed dependencies
-	implementation 'uk.co.fivium.energyportalapi:client:v12.1.1'
+	implementation 'uk.co.fivium.energyportalapi:client:v12.4.0'
 	implementation 'uk.co.fivium.digital.energyportalteamaccesslibrary:energy-portal-team-access-libray:v1.0.0'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 	implementation "uk.co.fivium.energyportalmessagequeue:spring-boot-starter:${epmqVersion}"
