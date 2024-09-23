@@ -15,7 +15,7 @@
 >
   <#assign searchFilterContent>
     <@fdsSearch.searchFilterList filterButtonItemText="appointments">
-      <@fdsSearch.searchFilterItem itemName="Appointed operator" expanded=searchForm.appointedOperatorId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Appointed operator" expanded=true>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.appointedOperatorId"
           restUrl=springUrl(appointedOperatorRestUrl)

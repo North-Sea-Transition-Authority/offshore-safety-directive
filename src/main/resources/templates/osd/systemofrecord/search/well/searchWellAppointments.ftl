@@ -17,7 +17,7 @@
 >
   <#assign searchFilterContent>
     <@fdsSearch.searchFilterList filterButtonItemText="appointments">
-      <@fdsSearch.searchFilterItem itemName="Well registration number" expanded=searchForm.wellboreId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Well registration number" expanded=true>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.wellboreId"
           restUrl=springUrl(wellboreRestUrl)
@@ -28,7 +28,7 @@
           preselectedItems=filteredWellbore
         />
       </@fdsSearch.searchFilterItem>
-      <@fdsSearch.searchFilterItem itemName="Licence well pursuant to" expanded=searchForm.licenceId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Licence well pursuant to" expanded=true>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.licenceId"
           restUrl=springUrl(licenceRestUrl)

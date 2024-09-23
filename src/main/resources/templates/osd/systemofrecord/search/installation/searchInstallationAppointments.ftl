@@ -15,7 +15,7 @@
 >
   <#assign searchFilterContent>
     <@fdsSearch.searchFilterList filterButtonItemText="appointments">
-      <@fdsSearch.searchFilterItem itemName="Installation" expanded=searchForm.installationId?has_content>
+      <@fdsSearch.searchFilterItem itemName="Installation" expanded=true>
         <@fdsSearchSelector.searchSelectorRest
           path="searchForm.installationId"
           restUrl=springUrl(installationRestUrl)
