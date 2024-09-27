@@ -34,6 +34,11 @@ public class PostAuthenticationRequestMdcFilter extends OncePerRequestFilter {
       if (userDetailService.isUserLoggedIn()) {
         var authenticatedUser = userDetailService.getUserDetail();
         MDC.put(RequestLogFilter.MDC_WUA_ID, authenticatedUser.wuaId().toString());
+
+        if (authenticatedUser.proxyWuaId() != null) {
+          MDC.put(RequestLogFilter.MDC_PROXY_WUA_ID, authenticatedUser.proxyWuaId().toString());
+        }
+
         MDC.put(RequestLogFilter.MDC_REQUEST_TYPE, "authenticated");
       } else {
         MDC.put(RequestLogFilter.MDC_REQUEST_TYPE, "guest");

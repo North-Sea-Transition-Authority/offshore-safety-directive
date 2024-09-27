@@ -76,6 +76,8 @@ public class RequestLogFilter extends OncePerRequestFilter {
       var jooqQueryCount = jooqStatisticsListener.getCount();
       jooqStatisticsListener.clear();
       CorrelationIdUtil.clearCorrelationIdOnMdc();
+      MDC.remove(RequestLogFilter.MDC_WUA_ID);
+      MDC.remove(RequestLogFilter.MDC_PROXY_WUA_ID);
 
       LOGGER.info(
           "{} request: {} {}{} ({}), correlation id: {}, time: {}, status: {}, user id: {}, proxy user id: {}, " +
