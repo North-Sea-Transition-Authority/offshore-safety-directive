@@ -73,13 +73,16 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
   }
 
   @Test
-  void renderOperatorSearch_whenFormProvided_verifyModelProperties() throws Exception {
+  void renderOperatorSearch_whenFormProvidedAndOperatorHasRegisteredNumber_verifyModelProperties() throws Exception {
 
     var searchForm = SystemOfRecordSearchFormTestUtil.builder()
         .withAppointedOperatorId(100)
         .build();
 
-    var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder().build();
+    var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withName("operator name")
+        .withRegisteredNumber("registered number")
+        .build();
 
     given(portalOrganisationUnitQueryService.getOrganisationById(
         Integer.valueOf(searchForm.getAppointedOperatorId()),
@@ -110,7 +113,52 @@ class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
         )
         .andExpect(model().attribute(
             "filteredAppointedOperator",
-            Map.of(String.valueOf(expectedAppointedOperator.id()), expectedAppointedOperator.name())
+            Map.of(String.valueOf(expectedAppointedOperator.id()), "operator name (registered number)")
+        ));
+  }
+
+  @Test
+  void renderOperatorSearch_whenFormProvidedAndOperatorHasNoRegisteredNumber_verifyModelProperties() throws Exception {
+
+    var searchForm = SystemOfRecordSearchFormTestUtil.builder()
+        .withAppointedOperatorId(100)
+        .build();
+
+    var expectedAppointedOperator = PortalOrganisationDtoTestUtil.builder()
+        .withName("operator name")
+        .withRegisteredNumber("")
+        .build();
+
+    given(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(searchForm.getAppointedOperatorId()),
+        SystemOfRecordSearchController.OPERATOR_SEARCH_FILTER_PURPOSE
+    ))
+        .willReturn(Optional.of(expectedAppointedOperator));
+
+    var expectedAppointment = AppointmentSearchItemDtoTestUtil.builder().build();
+
+    given(appointmentSearchService.searchAppointments(any(SystemOfRecordSearchForm.class)))
+        .willReturn(List.of(expectedAppointment));
+
+    mockMvc.perform(
+        get(ReverseRouter.route(on(SystemOfRecordSearchController.class).renderOperatorSearch(null)))
+            .param("appointedOperator", String.valueOf(searchForm.getAppointedOperatorId()))
+        )
+        .andExpect(view().name("osd/systemofrecord/search/operator/searchAppointmentsByOperator"))
+        .andExpect(model().attribute(
+            "backLinkUrl",
+            ReverseRouter.route(on(SystemOfRecordLandingPageController.class).renderLandingPage()))
+        )
+        .andExpect(model().attribute("appointments", List.of(expectedAppointment)))
+        .andExpect(model().attributeExists("searchForm"))
+        .andExpect(model().attribute("hasAddedFilter", true))
+        .andExpect(model().attribute(
+            "appointedOperatorRestUrl",
+            RestApiUtil.route(on(PortalOrganisationUnitRestController.class).searchAllPortalOrganisations(null, OrganisationFilterType.ACTIVE.name())))
+        )
+        .andExpect(model().attribute(
+            "filteredAppointedOperator",
+            Map.of(String.valueOf(expectedAppointedOperator.id()), "operator name")
         ));
   }
 
