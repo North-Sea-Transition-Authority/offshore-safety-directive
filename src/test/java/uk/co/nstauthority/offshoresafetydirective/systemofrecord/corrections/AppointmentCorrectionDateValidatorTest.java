@@ -68,7 +68,7 @@ class AppointmentCorrectionDateValidatorTest {
             tuple(
                 "%s.dayInput.inputValue".formatted(startDateInput.getFieldName()),
                 "%s.dayInput.required".formatted(startDateInput.getFieldName()),
-                "Enter a complete Start date"
+                "Enter a complete start date"
             ),
             tuple(
                 "%s.monthInput.inputValue".formatted(startDateInput.getFieldName()),
@@ -1070,7 +1070,7 @@ class AppointmentCorrectionDateValidatorTest {
     assertThat(bindingResult.getFieldErrors())
         .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
         .containsExactly(
-            tuple("endDate.dayInput.inputValue", "endDate.dayInput.required", "Enter a complete End date"),
+            tuple("endDate.dayInput.inputValue", "endDate.dayInput.required", "Enter a complete end date"),
             tuple("endDate.monthInput.inputValue", "endDate.monthInput.required", ""),
             tuple("endDate.yearInput.inputValue", "endDate.yearInput.required", "")
         );

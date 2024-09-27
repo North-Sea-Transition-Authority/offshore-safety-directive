@@ -10,7 +10,7 @@ class AppointmentTerminationForm {
 
   private StringInput reason = new StringInput("reason", "a reason for the termination");
   private ThreeFieldDateInput terminationDate =
-      new ThreeFieldDateInput("terminationDate", "Termination date");
+      new ThreeFieldDateInput("terminationDate", "termination date");
 
   private List<UploadedFileForm> terminationDocuments = new ArrayList<>();
 

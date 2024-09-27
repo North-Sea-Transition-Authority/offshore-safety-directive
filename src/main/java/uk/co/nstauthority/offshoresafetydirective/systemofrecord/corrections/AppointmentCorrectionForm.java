@@ -11,20 +11,20 @@ public class AppointmentCorrectionForm {
   private Set<String> phases;
   private String appointmentType;
   private ThreeFieldDateInput offlineAppointmentStartDate = new ThreeFieldDateInput("offlineAppointmentStartDate",
-      "Start date");
+      "start date");
   private StringInput offlineNominationReference = new StringInput("offlineNominationReference",
       "nomination reference");
   private ThreeFieldDateInput forwardApprovedAppointmentStartDate =
-      new ThreeFieldDateInput("forwardApprovedAppointmentStartDate", "Start date");
+      new ThreeFieldDateInput("forwardApprovedAppointmentStartDate", "start date");
   private String forwardApprovedAppointmentId;
   private ThreeFieldDateInput onlineAppointmentStartDate = new ThreeFieldDateInput("onlineAppointmentStartDate",
-      "Start date");
+      "start date");
   private String onlineNominationReference;
   private StringInput parentWellboreAppointmentId = new StringInput("parentWellboreAppointmentId", "the parent well appointment");
   private ThreeFieldDateInput parentWellAppointmentStartDate =
-      new ThreeFieldDateInput("parentWellAppointmentStartDate", "Start date");
+      new ThreeFieldDateInput("parentWellAppointmentStartDate", "start date");
   private String hasEndDate;
-  private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "End date");
+  private ThreeFieldDateInput endDate = new ThreeFieldDateInput("endDate", "end date");
   private StringInput reason = new StringInput("reason", "a reason for the correction");
 
   public String getAppointedOperatorId() {

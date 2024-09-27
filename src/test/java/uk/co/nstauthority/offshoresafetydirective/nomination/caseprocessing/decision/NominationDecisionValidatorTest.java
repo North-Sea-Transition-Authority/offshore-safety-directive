@@ -22,7 +22,6 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.configuration.FileUploadProperties;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
-import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 import uk.co.nstauthority.offshoresafetydirective.date.DateUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.FileUploadPropertiesTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.file.UploadedFileTestUtil;
@@ -69,10 +68,10 @@ class NominationDecisionValidatorTest {
                 NominationDecisionValidator.NOMINATION_DECISION_FIELD_NAME + ".empty",
                 NominationDecisionValidator.NOMINATION_DECISION_BLANK_ERROR_MESSAGE
             ),
-            tuple("decisionDate.dayInput.inputValue", "decisionDate.dayInput.required", "Enter a complete Decision date"),
+            tuple("decisionDate.dayInput.inputValue", "decisionDate.dayInput.required", "Enter a complete decision date"),
             tuple("decisionDate.monthInput.inputValue", "decisionDate.monthInput.required", ""),
             tuple("decisionDate.yearInput.inputValue", "decisionDate.yearInput.required", ""),
-            tuple("comments.inputValue", "comments.required", "Enter Decision comments"),
+            tuple("comments.inputValue", "comments.required", "Enter decision comments"),
             tuple("decisionFiles", "decisionFiles.belowThreshold", "Upload a decision document")
         );
   }
@@ -151,7 +150,7 @@ class NominationDecisionValidatorTest {
             tuple(
                 "decisionDate.monthInput.inputValue",
                 "decisionDate.monthInput.required",
-                "Enter a complete Decision date"
+                "Enter a complete decision date"
             )
         );
   }

@@ -74,7 +74,7 @@ class ConfirmNominationAppointmentValidatorTest {
             tuple(
                 "appointmentDate.dayInput.inputValue",
                 "appointmentDate.dayInput.required",
-                "Enter a complete Appointment date"
+                "Enter a complete appointment date"
             ),
             tuple(
                 "appointmentDate.monthInput.inputValue",

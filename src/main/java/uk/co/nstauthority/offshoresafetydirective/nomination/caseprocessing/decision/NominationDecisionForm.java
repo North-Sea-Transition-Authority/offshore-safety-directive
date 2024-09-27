@@ -10,9 +10,9 @@ public class NominationDecisionForm {
 
   private String nominationDecision;
 
-  private ThreeFieldDateInput decisionDate = new ThreeFieldDateInput("decisionDate", "Decision date");
+  private ThreeFieldDateInput decisionDate = new ThreeFieldDateInput("decisionDate", "decision date");
 
-  private StringInput comments = new StringInput("comments", "Decision comments");
+  private StringInput comments = new StringInput("comments", "decision comments");
 
   private List<UploadedFileForm> decisionFiles = new ArrayList<>();
 

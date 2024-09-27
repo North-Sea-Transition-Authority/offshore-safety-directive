@@ -76,7 +76,7 @@ class AppointmentTerminationValidatorTest {
             tuple(
                 "terminationDate.dayInput.inputValue",
                 "terminationDate.dayInput.required",
-                "Enter a complete Termination date"
+                "Enter a complete termination date"
             ),
             tuple("terminationDate.monthInput.inputValue", "terminationDate.monthInput.required", ""),
             tuple("terminationDate.yearInput.inputValue", "terminationDate.yearInput.required", ""),
@@ -119,7 +119,7 @@ class AppointmentTerminationValidatorTest {
             tuple(
                 "terminationDate.monthInput.inputValue",
                 "terminationDate.monthInput.required",
-                "Enter a complete Termination date"
+                "Enter a complete termination date"
             )
         );
   }

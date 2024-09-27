@@ -8,7 +8,7 @@ import uk.co.fivium.formlibrary.input.ThreeFieldDateInput;
 
 public class ConfirmNominationAppointmentForm {
 
-  private ThreeFieldDateInput appointmentDate = new ThreeFieldDateInput("appointmentDate", "Appointment date");
+  private ThreeFieldDateInput appointmentDate = new ThreeFieldDateInput("appointmentDate", "appointment date");
 
   private StringInput comments = new StringInput("comments", "comments");
 
