@@ -7,3 +7,6 @@ CVE-2024-38809
 
 # com.netflix.graphql.dgs:graphql-dgs
 CVE-2024-7254
+
+# uk.co.fivium:digital-notification-library-spring-boot-starter
+CVE-2024-47554
