@@ -9,9 +9,9 @@ import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 
 public enum AppointmentType implements DisplayableEnumOption {
 
-  DEEMED("Deemed appointment", 10),
-  FORWARD_APPROVED("Forward approved appointment", 20, List.of(PortalAssetType.WELLBORE)),
-  PARENT_WELLBORE("Parent well appointment", 30, List.of(PortalAssetType.WELLBORE)),
+  DEEMED("Deemed appointment", 20),
+  FORWARD_APPROVED("Forward approved appointment", 30, List.of(PortalAssetType.WELLBORE)),
+  PARENT_WELLBORE("Based on parent wellbore appointment", 10, List.of(PortalAssetType.WELLBORE)),
   OFFLINE_NOMINATION("Offline nomination", 40),
   ONLINE_NOMINATION("Online nomination", 50);
 

@@ -233,7 +233,7 @@ class AppointmentTerminationServiceTest {
         .build();
     var resultingCreatedBy = appointmentTerminationService.getCreatedByDisplayString(deemedAppointmentDto);
 
-    assertThat(resultingCreatedBy).isEqualTo("Parent well appointment");
+    assertThat(resultingCreatedBy).isEqualTo("Based on parent wellbore appointment");
   }
 
   @Test

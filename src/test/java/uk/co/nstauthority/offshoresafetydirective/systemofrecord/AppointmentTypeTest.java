@@ -29,9 +29,9 @@ class AppointmentTypeTest {
     Map<String, String> displayableOptions = AppointmentType.getDisplayableOptions(PortalAssetType.WELLBORE);
     assertThat(displayableOptions)
         .containsExactly(
+            entry(AppointmentType.PARENT_WELLBORE.name(), AppointmentType.PARENT_WELLBORE.getScreenDisplayText()),
             entry(AppointmentType.DEEMED.name(), AppointmentType.DEEMED.getScreenDisplayText()),
             entry(AppointmentType.FORWARD_APPROVED.name(), AppointmentType.FORWARD_APPROVED.getScreenDisplayText()),
-            entry(AppointmentType.PARENT_WELLBORE.name(), AppointmentType.PARENT_WELLBORE.getScreenDisplayText()),
             entry(AppointmentType.OFFLINE_NOMINATION.name(), AppointmentType.OFFLINE_NOMINATION.getScreenDisplayText()),
             entry(AppointmentType.ONLINE_NOMINATION.name(), AppointmentType.ONLINE_NOMINATION.getScreenDisplayText())
         );

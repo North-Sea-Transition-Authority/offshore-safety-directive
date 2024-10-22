@@ -78,7 +78,9 @@
                             dayPath="form.parentWellAppointmentStartDate.dayInput.inputValue"
                             monthPath="form.parentWellAppointmentStartDate.monthInput.inputValue"
                             yearPath="form.parentWellAppointmentStartDate.yearInput.inputValue"
-                            labelText="Start date"
+                            labelText="Start date of resulting wellbore"
+                            hintText="This should be the date that is relevant to the WONS sidetrack or respud that created this wellbore"
+                            defaultHint=false
                             formId="parentWellAppointmentStartDate"
                             nestingPath="form.appointmentType"
                         />
