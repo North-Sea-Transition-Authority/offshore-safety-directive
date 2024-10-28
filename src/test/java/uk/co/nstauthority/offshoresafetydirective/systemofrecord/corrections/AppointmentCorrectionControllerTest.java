@@ -683,7 +683,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 appointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
                     .formatted(appointment.getAsset().getAssetName(),
                         DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
             )));
@@ -735,7 +735,7 @@ class AppointmentCorrectionControllerTest extends AbstractControllerTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 appointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
                     .formatted(subarea.displayName(), DateUtil.formatLongDate(appointment.getResponsibleFromDate()))
             )));
   }

@@ -43,11 +43,13 @@ public class AppointmentCorrectionValidator implements SmartValidator {
   private static final String APPOINTED_OPERATOR_FIELD_NAME = "appointedOperatorId";
   private static final String FOR_ALL_PHASES_FIELD_NAME = "forAllPhases";
   private static final String APPOINTMENT_TYPE_FIELD_NAME = "appointmentType";
+  private static final String FORWARD_APPROVED_APPOINTMENT_ID_FIELD_NAME = "forwardApprovedAppointmentId";
   private static final String ONLINE_REFERENCE_FIELD_NAME = "onlineNominationReference";
   private static final String FIELD_REQUIRED_ERROR = "%s.required";
 
   private final PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
   private final AppointmentAccessService appointmentAccessService;
+  private final ForwardApprovedAppointmentRestService forwardApprovedAppointmentRestService;
   private final AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
   private final NominationDetailService nominationDetailService;
   private final ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties;
@@ -55,11 +57,13 @@ public class AppointmentCorrectionValidator implements SmartValidator {
   @Autowired
   AppointmentCorrectionValidator(PortalOrganisationUnitQueryService portalOrganisationUnitQueryService,
                                  AppointmentAccessService appointmentAccessService,
+                                 ForwardApprovedAppointmentRestService forwardApprovedAppointmentRestService,
                                  AppointmentCorrectionDateValidator appointmentCorrectionDateValidator,
                                  NominationDetailService nominationDetailService,
                                  ServiceBrandingConfigurationProperties serviceBrandingConfigurationProperties) {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
     this.appointmentAccessService = appointmentAccessService;
+    this.forwardApprovedAppointmentRestService = forwardApprovedAppointmentRestService;
     this.appointmentCorrectionDateValidator = appointmentCorrectionDateValidator;
     this.nominationDetailService = nominationDetailService;
     this.serviceBrandingConfigurationProperties = serviceBrandingConfigurationProperties;
@@ -175,9 +179,10 @@ public class AppointmentCorrectionValidator implements SmartValidator {
 
     switch (appointmentType) {
       case DEEMED -> validateDeemedAppointmentType(bindingResult, hint, appointments);
+      case FORWARD_APPROVED -> validateForwardApprovedAppointmentType(bindingResult, form);
       case ONLINE_NOMINATION -> validateOnlineNominationAppointmentType(bindingResult, form);
       case PARENT_WELLBORE -> validatedParentWellboreAppointmentType(bindingResult, form, hint);
-      case OFFLINE_NOMINATION, FORWARD_APPROVED -> {
+      case OFFLINE_NOMINATION -> {
       }
     }
   }
@@ -194,6 +199,21 @@ public class AppointmentCorrectionValidator implements SmartValidator {
           "%s.tooManyDeemed".formatted(APPOINTMENT_TYPE_FIELD_NAME),
           "You can only have one deemed appointment"
       );
+    }
+  }
+
+  private void validateForwardApprovedAppointmentType(BindingResult bindingResult, AppointmentCorrectionForm form) {
+    var forwardApprovedAppointmentId = form.getForwardApprovedAppointmentId();
+    if (forwardApprovedAppointmentId != null) {
+      var appointmentId = new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()));
+
+      if (!forwardApprovedAppointmentRestService.isValidSubareaAppointmentId(appointmentId)) {
+        bindingResult.rejectValue(
+            FORWARD_APPROVED_APPOINTMENT_ID_FIELD_NAME,
+            "%s.invalid".formatted(FORWARD_APPROVED_APPOINTMENT_ID_FIELD_NAME),
+            "Select a valid forward approval subarea"
+        );
+      }
     }
   }
 

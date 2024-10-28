@@ -28,6 +28,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionForm;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.wellbore.WellboreAppointmentRestController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.wellbore.WellboreAppointmentRestService;
@@ -147,7 +148,7 @@ public class AppointmentModelAndViewService {
 
         return Map.of(
             preSelectedAppointment.getId(),
-            ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(subareaName, startDate)
+            ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING.formatted(subareaName, startDate)
         );
       }
     }

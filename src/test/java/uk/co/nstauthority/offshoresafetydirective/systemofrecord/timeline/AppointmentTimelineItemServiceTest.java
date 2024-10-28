@@ -57,7 +57,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionController;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionHistoryViewTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionService;
-import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.termination.AppointmentTerminationController;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
@@ -1647,7 +1647,7 @@ class AppointmentTimelineItemServiceTest {
 
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
-    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+    var expectedReference = ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
         .formatted(assetName, nomination.nominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
@@ -1710,7 +1710,7 @@ class AppointmentTimelineItemServiceTest {
 
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
-    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+    var expectedReference = ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
         .formatted(assetName, nomination.nominationReference());
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())
@@ -1768,7 +1768,7 @@ class AppointmentTimelineItemServiceTest {
 
     AssetTimelineItemView timelineItemView = resultingAppointmentTimelineHistoryItems.get(0);
 
-    var expectedReference = ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+    var expectedReference = ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
         .formatted(assetName, "Unknown");
 
     assertThat(timelineItemView.assetTimelineModelProperties().getModelProperties())

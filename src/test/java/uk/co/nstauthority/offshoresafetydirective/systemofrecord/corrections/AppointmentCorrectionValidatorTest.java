@@ -67,6 +67,9 @@ class AppointmentCorrectionValidatorTest {
   private AppointmentAccessService appointmentAccessService;
 
   @Mock
+  private ForwardApprovedAppointmentRestService forwardApprovedAppointmentRestService;
+
+  @Mock
   private AppointmentCorrectionDateValidator appointmentCorrectionDateValidator;
 
   @Mock
@@ -79,6 +82,7 @@ class AppointmentCorrectionValidatorTest {
     appointmentCorrectionValidator = new AppointmentCorrectionValidator(
         portalOrganisationUnitQueryService,
         appointmentAccessService,
+        forwardApprovedAppointmentRestService,
         appointmentCorrectionDateValidator,
         nominationDetailService,
         SERVICE_BRANDING_CONFIGURATION_PROPERTIES
@@ -156,7 +160,7 @@ class AppointmentCorrectionValidatorTest {
   }
 
   @Test
-  void validate_whenIsForwardApproved_andWellbore_thenValid() {
+  void validate_whenIsForwardApproved_andWellbore_andForwardApprovedAppointmentIdIsNull_thenValid() {
     var assetDto = AssetDtoTestUtil.builder()
         .withPortalAssetType(PortalAssetType.WELLBORE)
         .build();
@@ -166,6 +170,7 @@ class AppointmentCorrectionValidatorTest {
     var form = AppointmentCorrectionFormTestUtil.builder()
         .withAppointmentType(AppointmentType.FORWARD_APPROVED)
         .withForAllPhases(true)
+        .withForwardApprovedAppointmentId(null)
         .build();
 
     var bindingResult = new BeanPropertyBindingResult(form, "form");
@@ -189,6 +194,94 @@ class AppointmentCorrectionValidatorTest {
     appointmentCorrectionValidator.validate(form, bindingResult, hint);
 
     assertFalse(bindingResult.hasErrors());
+  }
+
+  @Test
+  void validate_whenIsForwardApproved_andWellbore_andForwardApprovedAppointmentIdIsNotValidSubareaAppointmentId_thenInvalid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForAllPhases(true)
+        .withForwardApprovedAppointmentId(UUID.randomUUID().toString())
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    when(forwardApprovedAppointmentRestService.isValidSubareaAppointmentId(
+        new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))
+    ))
+        .thenReturn(false);
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertThat(bindingResult.getFieldErrors())
+        .extracting(FieldError::getField, FieldError::getCode, FieldError::getDefaultMessage)
+        .containsExactly(
+            tuple("forwardApprovedAppointmentId", "forwardApprovedAppointmentId.invalid", "Select a valid forward approval subarea")
+        );
+  }
+
+  @Test
+  void validate_whenIsForwardApproved_andWellbore_andForwardApprovedAppointmentIdIsValidSubareaAppointmentId_thenValid() {
+    var assetDto = AssetDtoTestUtil.builder()
+        .withPortalAssetType(PortalAssetType.WELLBORE)
+        .build();
+    var appointmentDto = AppointmentDtoTestUtil.builder()
+        .withAssetDto(assetDto)
+        .build();
+    var form = AppointmentCorrectionFormTestUtil.builder()
+        .withAppointmentType(AppointmentType.FORWARD_APPROVED)
+        .withForAllPhases(true)
+        .withForwardApprovedAppointmentId(UUID.randomUUID().toString())
+        .build();
+
+    var bindingResult = new BeanPropertyBindingResult(form, "form");
+    var hint = new AppointmentCorrectionValidationHint(
+        appointmentDto.appointmentId(),
+        appointmentDto.assetDto().assetId(),
+        appointmentDto.assetDto().portalAssetType()
+    );
+
+    var portalOrgDto = PortalOrganisationDtoTestUtil.builder().build();
+
+    when(portalOrganisationUnitQueryService.getOrganisationById(
+        Integer.valueOf(form.getAppointedOperatorId()),
+        AppointmentCorrectionValidator.APPOINTED_OPERATOR_VALIDATION_PURPOSE
+    ))
+        .thenReturn(Optional.of(portalOrgDto));
+
+    when(appointmentAccessService.getActiveAppointmentDtosForAsset(assetDto.assetId()))
+        .thenReturn(List.of(appointmentDto));
+
+    when(forwardApprovedAppointmentRestService.isValidSubareaAppointmentId(
+        new AppointmentId(UUID.fromString(form.getForwardApprovedAppointmentId()))
+    ))
+        .thenReturn(true);
+
+    appointmentCorrectionValidator.validate(form, bindingResult, hint);
+
+    assertThat(bindingResult.getFieldErrors()).isEmpty();
   }
 
   @ParameterizedTest

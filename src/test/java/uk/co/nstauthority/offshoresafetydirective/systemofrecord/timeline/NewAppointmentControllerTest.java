@@ -62,6 +62,7 @@ import uk.co.nstauthority.offshoresafetydirective.systemofrecord.PortalAssetType
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionFormTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.AppointmentCorrectionValidator;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestController;
+import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.ForwardApprovedAppointmentRestService;
 import uk.co.nstauthority.offshoresafetydirective.systemofrecord.corrections.NominationReferenceRestController;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -656,7 +657,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 createdByAppointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
                     .formatted(subareaDto.displayName(), DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()))
             )));
   }
@@ -713,7 +714,7 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 createdByAppointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING
                     .formatted(createdByAsset.getAssetName(), DateUtil.formatLongDate(createdByAppointment.getResponsibleFromDate()))
             )));
   }

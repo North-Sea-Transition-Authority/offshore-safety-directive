@@ -268,7 +268,7 @@ class AppointmentModelAndViewServiceTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 forwardApprovedAppointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING.formatted(
                     portalSubarea.displayName(),
                     DateUtil.formatLongDate(startDate))
         ));
@@ -313,7 +313,7 @@ class AppointmentModelAndViewServiceTest {
             "preSelectedParentWellboreAppointment",
             Map.of(
                 parentWellboreAppointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING.formatted(
                     wellDto.name(),
                     DateUtil.formatLongDate(startDate))
             ));
@@ -366,7 +366,7 @@ class AppointmentModelAndViewServiceTest {
             "preSelectedForwardApprovedAppointment",
             Map.of(
                 forwardApprovedAppointment.getId(),
-                ForwardApprovedAppointmentRestController.SEARCH_DISPLAY_STRING.formatted(
+                ForwardApprovedAppointmentRestService.SEARCH_DISPLAY_STRING.formatted(
                     forwardApprovedAsset.getAssetName(),
                     DateUtil.formatLongDate(startDate))
         ));
