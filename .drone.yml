@@ -70,20 +70,19 @@ steps:
     commands:
       - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
 
-# Commenting out due to hitting TOO_MANY_REQUESTS global timeout and hotfix needs to go out
-#  - name: trivy-scan
-#    image: aquasec/trivy:0.47.0
-#    volumes:
-#      - name: docker-sock
-#        path: /var/run/docker.sock
-#      - name: webfiles
-#        path: /var/webfiles
-#    commands:
-#      # timeout set as initial cache population can seemingly take a while sometimes
-#      - trivy --cache-dir /drone/src/trivy_cache image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
-#    when:
-#      status:
-#        - success
+  - name: trivy-scan
+    image: aquasec/trivy:0.47.0
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+      - name: webfiles
+        path: /var/webfiles
+    commands:
+      # timeout set as initial cache population can seemingly take a while sometimes
+      - trivy --cache-dir /drone/src/trivy_cache image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
+    when:
+      status:
+        - success
 
   - name: sync-reports
     image: alpine:3.16.0
