@@ -4,6 +4,7 @@ CVE-2024-38810
 # org.springframework.boot:spring-boot-starter-web
 CVE-2024-38816
 CVE-2024-38809
+CVE-2024-38821
 
 # com.netflix.graphql.dgs:graphql-dgs
 CVE-2024-7254

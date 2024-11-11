@@ -71,12 +71,15 @@ steps:
       - docker build -t quay.io/fivium/offshore-safety-directive:trivy-scan-target .
 
   - name: trivy-scan
-    image: aquasec/trivy:0.47.0
+    image: aquasec/trivy:0.57.0
     volumes:
       - name: docker-sock
         path: /var/run/docker.sock
       - name: webfiles
         path: /var/webfiles
+    environment:
+      TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db,aquasec/trivy-db,ghcr.io/aquasecurity/trivy-db
+      TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db,aquasec/trivy-java-db,ghcr.io/aquasecurity/trivy-java-db
     commands:
       # timeout set as initial cache population can seemingly take a while sometimes
       - trivy --cache-dir /drone/src/trivy_cache image --timeout 30m --exit-code 1 quay.io/fivium/offshore-safety-directive:trivy-scan-target
