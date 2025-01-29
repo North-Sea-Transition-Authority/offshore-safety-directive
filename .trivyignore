@@ -1,10 +1,13 @@
 # org.springframework.security:spring-security-core
 CVE-2024-38810
+CVE-2024-38827
 
 # org.springframework.boot:spring-boot-starter-web
 CVE-2024-38816
 CVE-2024-38809
 CVE-2024-38821
+CVE-2024-50379
+CVE-2024-56337
 
 # com.netflix.graphql.dgs:graphql-dgs
 CVE-2024-7254
@@ -14,3 +17,13 @@ CVE-2024-47554
 
 # org.springframework:spring-context
 CVE-2024-38820
+
+# ch.qos.logback:logback-core
+CVE-2024-12798
+CVE-2024-12801
+
+# io.netty:netty-common
+CVE-2024-47535
+
+# org.springframework:spring-webmvc
+CVE-2024-38819

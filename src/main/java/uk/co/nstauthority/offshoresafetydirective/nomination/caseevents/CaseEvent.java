@@ -20,7 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 @Entity
 @Table(name = "case_events")
 @Audited
-class CaseEvent {
+public class CaseEvent {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -58,7 +58,7 @@ class CaseEvent {
     this.uuid = uuid;
   }
 
-  CaseEventType getCaseEventType() {
+  public CaseEventType getCaseEventType() {
     return caseEventType;
   }
 

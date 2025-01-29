@@ -8,10 +8,10 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import com.amazonaws.util.StringInputStream;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import com.amazonaws.util.StringInputStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
@@ -55,102 +55,6 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
   }
 
   @SecurityTest
-  void download_whenUserDoesNotHaveRequiredRoles() throws Exception {
-
-    givenUserDoesNotHaveAtLeastOneRoleInStaticTeam(
-        USER.wuaId(),
-        TeamType.REGULATOR,
-        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
-    );
-
-    givenUserDoesNotHaveAtLeastOneRoleInStaticTeam(
-        USER.wuaId(),
-        TeamType.CONSULTEE,
-        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
-    );
-
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withNominationId(NOMINATION_ID)
-        .build();
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
-
-    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
-        .thenReturn(Optional.of(nominationDetail));
-
-    var fileId = UUID.randomUUID();
-    var caseEventId = new CaseEventId(UUID.randomUUID());
-
-    mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
-        .download(NOMINATION_ID, caseEventId, fileId.toString())))
-        .with(user(USER)))
-        .andExpect(status().isForbidden());
-  }
-
-  @SecurityTest
-  void download_whenNoRegulatorRole_butConsulteeRole() throws Exception {
-
-    givenUserDoesNotHaveAtLeastOneRoleInStaticTeam(
-        USER.wuaId(),
-        TeamType.REGULATOR,
-        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
-    );
-
-    givenUserHasAtLeastOneRoleInStaticTeam(
-        USER.wuaId(),
-        TeamType.CONSULTEE,
-        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
-    );
-
-    var nominationDetail = NominationDetailTestUtil.builder()
-        .withNominationId(NOMINATION_ID)
-        .withStatus(NominationStatus.SUBMITTED)
-        .build();
-
-    var fileUuid = UUID.randomUUID();
-    var caseEventUuid = UUID.randomUUID();
-    var caseEventId = new CaseEventId(caseEventUuid);
-    var caseEvent = CaseEventTestUtil.builder()
-        .withUuid(caseEventUuid)
-        .build();
-
-    when(nominationDetailService.getLatestNominationDetailWithStatuses(
-        NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
-    ))
-        .thenReturn(Optional.of(nominationDetail));
-
-    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
-        .thenReturn(Optional.of(nominationDetail));
-
-    var file = UploadedFileTestUtil.builder()
-        .withUsageId(caseEventUuid.toString())
-        .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
-        .build();
-    when(fileService.find(fileUuid))
-        .thenReturn(Optional.of(file));
-
-    when(fileService.download(file))
-        .thenAnswer(invocation -> {
-          var streamContent = "abc";
-          var inputStreamResource = new InputStreamResource(new StringInputStream(streamContent), "stream description");
-          return ResponseEntity.ok(inputStreamResource);
-        });
-
-    when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
-        .thenReturn(Optional.of(caseEvent));
-
-    mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
-        .download(NOMINATION_ID, caseEventId, fileUuid.toString())))
-        .with(user(USER)))
-        .andExpect(status().isOk());
-  }
-
-  @SecurityTest
   void download_assertStatusesPermitted() {
 
     givenUserHasAtLeastOneRoleInStaticTeam(
@@ -179,6 +83,9 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
     var file = UploadedFileTestUtil.builder()
         .withUsageId(caseEventUuid.toString())
         .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
@@ -202,10 +109,8 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
         )
         .withNominationDetail(nominationDetail)
         .withUser(USER)
-        .withGetEndpoint(
-            ReverseRouter.route(
-                on(CaseEventFileDownloadController.class)
-                    .download(NOMINATION_ID, caseEventId, fileUuid.toString())),
+        .withGetEndpoint(ReverseRouter.route(on(CaseEventFileDownloadController.class)
+            .download(NOMINATION_ID, caseEventId, fileUuid.toString())),
             status().isOk(),
             status().isForbidden()
         )
@@ -242,6 +147,9 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
     var file = UploadedFileTestUtil.builder()
         .withUsageId(caseEventUuid.toString())
         .withUsageType(FileUsageType.CASE_EVENT.getUsageType())
@@ -259,9 +167,9 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
         .thenReturn(Optional.of(caseEvent));
 
-    var result = mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
-            .with(user(USER)))
+    var result = mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
+        .download(NOMINATION_ID, caseEventId, fileUuid.toString())))
+        .with(user(USER)))
         .andExpect(status().isOk())
         .andReturn()
         .getResponse()
@@ -298,14 +206,22 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
-    mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileId)))
-            .with(user(USER)))
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
+    mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
+        .download(NOMINATION_ID, caseEventId, fileId)))
+        .with(user(USER)))
         .andExpect(status().isNotFound());
   }
 
   @Test
   void download_whenNoNominationDetailFound_thenNotFound() throws Exception {
+
+    // mock that is important for the test to check that the controller handles a nomination not being found
+    // if the @HasNominationStatus is ever removed
+    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
+        .thenReturn(Optional.empty());
 
     givenUserHasAtLeastOneRoleInStaticTeam(
         USER.wuaId(),
@@ -317,26 +233,25 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     var caseEventUuid = UUID.randomUUID();
     var caseEventId = new CaseEventId(caseEventUuid);
 
+    var nominationDetail =  NominationDetailTestUtil.builder()
+        .withStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
     // return a valid nomination detail in order to pass the @HasNominationStatus check
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
         NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
     ))
-        .thenReturn(Optional.of(
-            NominationDetailTestUtil.builder()
-                .withStatus(NominationStatus.AWAITING_CONFIRMATION)
-                .withNominationId(NOMINATION_ID)
-                .build()
-        ));
+        .thenReturn(Optional.of(nominationDetail));
 
-    // mock that is important for the test to check that the controller handles a nomination not being found
-    // if the @HasNominationStatus is ever removed
-    when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
-        .thenReturn(Optional.empty());
+    // return a valid nomination detail in order to pass the @CanDownloadCaseEventFiles check
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
 
-    mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
-            .with(user(USER)))
+    mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
+        .download(NOMINATION_ID, caseEventId, fileUuid.toString())))
+        .with(user(USER)))
         .andExpect(status().isNotFound());
   }
 
@@ -364,15 +279,18 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
     ))
         .thenReturn(Optional.of(nominationDetail));
 
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID))
+        .thenReturn(nominationDetail);
+
     when(nominationDetailService.getLatestNominationDetailOptional(NOMINATION_ID))
         .thenReturn(Optional.of(nominationDetail));
 
     when(caseEventQueryService.getCaseEventForNomination(caseEventId, nominationDetail.getNomination()))
         .thenReturn(Optional.empty());
 
-    mockMvc.perform(get(ReverseRouter.route(
-            on(CaseEventFileDownloadController.class).download(NOMINATION_ID, caseEventId, fileUuid.toString())))
-            .with(user(USER)))
+    mockMvc.perform(get(ReverseRouter.route(on(CaseEventFileDownloadController.class)
+        .download(NOMINATION_ID, caseEventId, fileUuid.toString())))
+        .with(user(USER)))
         .andExpect(status().isNotFound());
   }
 

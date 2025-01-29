@@ -23,6 +23,9 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.CanDo
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
@@ -31,6 +34,7 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
+  private static final CaseEventId CASE_EVENT_ID = new CaseEventId(UUID.randomUUID());
 
   @Test
   void preHandle_whenMethodHasNoSupportedAnnotations_thenOkResponse() throws Exception {
@@ -229,6 +233,20 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
   @Test
   void preHandle_withCanDownloadCaseEventFiles_whenIsMemberOfRegulatorTeamWithCorrectRole() throws Exception {
 
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the regulator can see
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.NO_OBJECTION_DECISION)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    // and the user has the correct roles in the regulator team
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.REGULATOR,
@@ -236,15 +254,30 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
     ))
         .thenReturn(true);
 
+    // then the user is able to download the case event
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-        .withCanDownloadCaseEventFiles(NOMINATION_ID)))
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
         .with(user(USER)))
         .andExpect(status().isOk());
   }
 
   @Test
-  void preHandle_withCanDownloadCaseEventFiles_whenIncorrectPermissions() throws Exception {
+  void preHandle_withCanDownloadCaseEventFiles_whenIncorrectPermissionsInAnyTeam() throws Exception {
 
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the user can see if they had the correct role
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.NO_OBJECTION_DECISION)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    // when the user has no required role in regulator team
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.REGULATOR,
@@ -252,6 +285,7 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
     ))
         .thenReturn(false);
 
+    // and the user has no required role in consultee team
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.CONSULTEE,
@@ -259,8 +293,22 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
     ))
         .thenReturn(false);
 
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER), TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    // and the user has no required role in applicant team
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        USER.wuaId(),
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER)
+    ))
+        .thenReturn(false);
+
+    // then they will be forbidden from downloading the case event file
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-        .withCanDownloadCaseEventFiles(NOMINATION_ID)))
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
         .with(user(USER)))
         .andExpect(status().isForbidden());
   }
@@ -268,6 +316,20 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
   @Test
   void preHandle_withCanDownloadCaseEventFiles_whenIsMemberOfConsulteeTeamWithCorrectRole() throws Exception {
 
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the consultee can see
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.NO_OBJECTION_DECISION)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    // and the user does not have the required role in the regulator team
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.REGULATOR,
@@ -275,6 +337,7 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
     ))
         .thenReturn(false);
 
+    // and then user does have the required roles in the consultee team
     when(teamQueryService.userHasAtLeastOneStaticRole(
         USER.wuaId(),
         TeamType.CONSULTEE,
@@ -282,10 +345,186 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
     ))
         .thenReturn(true);
 
+    // then they will be able to download the file
     mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
-        .withCanDownloadCaseEventFiles(NOMINATION_ID)))
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
         .with(user(USER)))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_withCanDownloadCaseEventFiles_whenIsMemberOfConsulteeTeamWithCorrectRole_andCaseEventNotShownToConsultees() throws Exception {
+
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the consultees cannot see
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.QA_CHECKS)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    // and then user does have the required roles in the consultee team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+    ))
+        .thenReturn(true);
+
+    // and the user does not have the required role in the regulator team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.REGULATOR,
+        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER), TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    // and the user does not have the required role in the applicant team
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        USER.wuaId(),
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER)
+    ))
+        .thenReturn(false);
+
+    // then they will not be able to download the file
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
+        .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_withCanDownloadCaseEventFiles_whenIsMemberOfApplicantTeamWithCorrectRole() throws Exception {
+
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the applicant can see
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.NO_OBJECTION_DECISION)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER), TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    // and the user does have the required role in the applicant team
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        USER.wuaId(),
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER)
+    ))
+        .thenReturn(true);
+
+    // and the user does not have the required role in the regulator team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.REGULATOR,
+        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    // and the user does not have the required role in the consultee team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+    ))
+        .thenReturn(false);
+
+    // then they will not be able to download the file
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
+        .with(user(USER)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void preHandle_withCanDownloadCaseEventFiles_whenIsMemberOfApplicantTeamWithCorrectRole_andCaseEventNotShownToApplicants() throws Exception {
+
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event exists with a type the applicant cannot see
+    var caseEvent = CaseEventTestUtil.builder()
+        .withCaseEventType(CaseEventType.QA_CHECKS)
+        .build();
+
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.of(caseEvent));
+
+    when(teamQueryService.areRolesValidForTeamType(
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER), TeamType.ORGANISATION_GROUP
+    ))
+        .thenReturn(true);
+
+    // and the user does have the required role in the applicant team
+    when(nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        USER.wuaId(),
+        nominationDetail,
+        Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER)
+    ))
+        .thenReturn(true);
+
+    // and the user does not have the required role in the regulator team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.REGULATOR,
+        Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+    ))
+        .thenReturn(false);
+
+    // and the user does not have the required role in the consultee team
+    when(teamQueryService.userHasAtLeastOneStaticRole(
+        USER.wuaId(),
+        TeamType.CONSULTEE,
+        Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+    ))
+        .thenReturn(false);
+
+    // then they will not be able to download the file
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
+        .with(user(USER)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void preHandle_withCanDownloadCaseEventFiles_whenCaseEventNotFound() throws Exception {
+
+    // given the nomination exists
+    var nominationDetail = NominationDetailTestUtil.builder().build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(nominationDetail);
+
+    // and the case event does not exist
+    when(caseEventQueryService.getCaseEventForNomination(CASE_EVENT_ID, nominationDetail.getNomination()))
+        .thenReturn(Optional.empty());
+
+    // then they will not be able to download the file
+    mockMvc.perform(get(ReverseRouter.route(on(NominationInterceptorTest.TestController.class)
+        .withCanDownloadCaseEventFiles(NOMINATION_ID, CASE_EVENT_ID)))
+        .with(user(USER)))
+        .andExpect(status().isNotFound());
   }
 
   @Controller
@@ -345,11 +584,13 @@ class NominationInterceptorTest extends AbstractNominationControllerTest {
           .addObject("nominationId", nominationId);
     }
 
-    @GetMapping("/download-case-event-files/{nominationId}")
+    @GetMapping("/download-case-event-files/{nominationId}/case-event/{caseEventId}")
     @CanDownloadCaseEventFiles
-    ModelAndView withCanDownloadCaseEventFiles(@PathVariable("nominationId") NominationId nominationId) {
+    ModelAndView withCanDownloadCaseEventFiles(@PathVariable("nominationId") NominationId nominationId,
+                                               @PathVariable CaseEventId caseEventId) {
       return new ModelAndView(VIEW_NAME)
-          .addObject("nominationId", nominationId);
+          .addObject("nominationId", nominationId)
+          .addObject("caseEventId", caseEventId);
     }
   }
 }

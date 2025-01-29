@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.interceptorutil.NominationInterceptorUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractHandlerInterceptor;
@@ -24,6 +26,10 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasNo
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.HasRoleInApplicantOrganisationGroupTeam;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationDetailFetchType;
 import uk.co.nstauthority.offshoresafetydirective.nomination.authorisation.NominationRoleService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEvent;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
+import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventType;
 import uk.co.nstauthority.offshoresafetydirective.teams.Role;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamQueryService;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -47,15 +53,19 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
 
   private final TeamQueryService teamQueryService;
 
+  private final CaseEventQueryService caseEventQueryService;
+
   @Autowired
   NominationInterceptor(NominationDetailService nominationDetailService,
                         NominationRoleService nominationRoleService,
                         UserDetailService userDetailService,
-                        TeamQueryService teamQueryService) {
+                        TeamQueryService teamQueryService,
+                        CaseEventQueryService caseEventQueryService) {
     this.nominationDetailService = nominationDetailService;
     this.nominationRoleService = nominationRoleService;
     this.userDetailService = userDetailService;
     this.teamQueryService = teamQueryService;
+    this.caseEventQueryService = caseEventQueryService;
   }
 
   @Override
@@ -92,7 +102,22 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
           getCanDownloadCaseEventFilesAnnotation(handlerMethod);
 
       if (hasCanDownloadCaseEventFilesAnnotation.isPresent()) {
-        checkUserCanDownloadCaseEventFiles();
+
+        var caseEventId = extractCaseEventIdFromRequest(request, handlerMethod);
+
+        var nominationDetail = getNominationDetail(NominationDetailFetchType.LATEST, nominationId);
+
+        var caseEvent = caseEventQueryService.getCaseEventForNomination(
+            extractCaseEventIdFromRequest(request, handlerMethod),
+            nominationDetail.getNomination()
+        )
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Could not find case event with id %s on nomination %s"
+                    .formatted(caseEventId, nominationDetail.getNomination().getId())
+            ));
+
+        checkUserCanDownloadCaseEventFiles(caseEvent, nominationDetail);
       }
     }
 
@@ -183,23 +208,10 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
       HasRoleInApplicantOrganisationGroupTeam annotation,
       NominationDetail nominationDetail
   ) {
-
-    Set<Role> requiredRoles = Arrays.stream(annotation.roles()).collect(Collectors.toSet());
-
+    var requiredRoles = Arrays.stream(annotation.roles()).collect(Collectors.toSet());
     var user = userDetailService.getUserDetail();
 
-    if (!teamQueryService.areRolesValidForTeamType(requiredRoles, TeamType.ORGANISATION_GROUP)) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Not all roles %s are valid for team type %s".formatted(requiredRoles, TeamType.ORGANISATION_GROUP)
-      );
-    }
-
-    var userHasRoleInApplicantTeam = nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
-        user.wuaId(),
-        nominationDetail,
-        Arrays.stream(annotation.roles()).collect(Collectors.toSet())
-    );
+    var userHasRoleInApplicantTeam = hasRoleInApplicationOrganisationGroupTeam(requiredRoles, nominationDetail);
 
     if (!userHasRoleInApplicantTeam) {
       throw new ResponseStatusException(
@@ -210,35 +222,78 @@ public class NominationInterceptor extends AbstractHandlerInterceptor {
     }
   }
 
-  private void checkUserCanDownloadCaseEventFiles() {
+  private boolean hasRoleInApplicationOrganisationGroupTeam(Set<Role> requiredRoles, NominationDetail nominationDetail) {
 
     var user = userDetailService.getUserDetail();
 
-    var requiredRegulatorRoles = Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION);
-
-    var hasRoleInRegulatorTeam = teamQueryService.userHasAtLeastOneStaticRole(
-        user.wuaId(),
-        TeamType.REGULATOR,
-        requiredRegulatorRoles
-    );
-
-    if (!hasRoleInRegulatorTeam) {
-
-      var requiredConsulteeRoles = Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT);
-
-      var hasRoleInConsulteeTeam = teamQueryService.userHasAtLeastOneStaticRole(
-          user.wuaId(),
-          TeamType.CONSULTEE,
-          requiredConsulteeRoles
+    if (!teamQueryService.areRolesValidForTeamType(requiredRoles, TeamType.ORGANISATION_GROUP)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Not all roles %s are valid for team type %s".formatted(requiredRoles, TeamType.ORGANISATION_GROUP)
       );
-
-      if (!hasRoleInConsulteeTeam) {
-        throw new ResponseStatusException(
-            HttpStatus.FORBIDDEN,
-            "User with ID %s does not have any of roles %s in regulator team or any of roles %s in the consultee team"
-                .formatted(user.wuaId(), requiredRegulatorRoles, requiredConsulteeRoles)
-        );
-      }
     }
+
+    return nominationRoleService.userHasAtLeastOneRoleInApplicantOrganisationGroupTeam(
+        user.wuaId(),
+        nominationDetail,
+        requiredRoles
+    );
+  }
+
+  private void checkUserCanDownloadCaseEventFiles(CaseEvent caseEvent, NominationDetail nominationDetail) {
+
+    var caseEventType = caseEvent.getCaseEventType();
+
+    var user = userDetailService.getUserDetail();
+
+    if (CaseEventType.isValidForTeamType(Set.of(TeamType.REGULATOR), caseEventType)
+        && teamQueryService.userHasAtLeastOneStaticRole(
+            user.wuaId(),
+            TeamType.REGULATOR,
+            Set.of(Role.NOMINATION_MANAGER, Role.VIEW_ANY_NOMINATION)
+        )
+    ) {
+      return;
+    }
+
+    if (CaseEventType.isValidForTeamType(Set.of(TeamType.CONSULTEE), caseEventType)
+        && teamQueryService.userHasAtLeastOneStaticRole(
+            user.wuaId(),
+            TeamType.CONSULTEE,
+            Set.of(Role.CONSULTATION_MANAGER, Role.CONSULTATION_PARTICIPANT)
+        )
+    ) {
+      return;
+    }
+
+    if (CaseEventType.isValidForTeamType(Set.of(TeamType.ORGANISATION_GROUP), caseEventType)
+        && hasRoleInApplicationOrganisationGroupTeam(
+            Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR, Role.NOMINATION_VIEWER),
+            nominationDetail
+        )
+    ) {
+      return;
+    }
+
+    throw new ResponseStatusException(
+        HttpStatus.FORBIDDEN,
+        "User with ID %s does not have any of roles to access case event files for nomination".formatted(user.wuaId())
+    );
+  }
+
+  private CaseEventId extractCaseEventIdFromRequest(HttpServletRequest httpServletRequest, HandlerMethod handlerMethod) {
+
+    var caseEventIdParameter = getPathVariableByClass(handlerMethod, CaseEventId.class);
+
+    if (caseEventIdParameter.isEmpty()) {
+      var errorMessage = "No path variable of type CaseEventId found in request";
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, errorMessage);
+    }
+
+    @SuppressWarnings("unchecked")
+    var pathVariables = (Map<String, String>) httpServletRequest
+        .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+
+    return CaseEventId.valueOf(pathVariables.get(caseEventIdParameter.get().getName()));
   }
 }
