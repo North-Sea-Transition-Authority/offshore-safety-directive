@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '3.3.1'
+	id 'org.springframework.boot' version '3.3.10'
 	id 'io.spring.dependency-management' version '1.1.5'
 	id 'java'
 	id "org.sonarqube" version "5.1.0.4882"
@@ -37,7 +37,7 @@ repositories {
 	}
 }
 
-def epmqVersion= 'v4.2.3'
+def epmqVersion= 'v4.3.0'
 
 sourceSets {
 	epmqMessagesJarIntegrationTest {}
