@@ -37,7 +37,7 @@ repositories {
 	}
 }
 
-def epmqVersion= 'v4.3.0'
+def epmqVersion= 'v4.2.3'
 
 sourceSets {
 	epmqMessagesJarIntegrationTest {}
