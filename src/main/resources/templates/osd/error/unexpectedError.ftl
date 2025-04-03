@@ -13,7 +13,9 @@
   </p>
   <p class="govuk-body">
     If you continue to experience this problem, contact the ${technicalSupport.name()} using the
-    details below.
+    details below. Be sure to include the error reference below in any correspondence,
+    along with a description of what you were trying to do and, if relevant, the
+    reference number for the activity or information you were working on.
   </p>
   <#if errorReference?has_content>
     <p class="govuk-body">

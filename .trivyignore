@@ -24,6 +24,19 @@ CVE-2024-12801
 
 # io.netty:netty-common
 CVE-2024-47535
+CVE-2025-25193
+
+# io.netty:netty-handler
+CVE-2025-24970
+
+# net.minidev:json-smart
+CVE-2024-57699
 
 # org.springframework:spring-webmvc
 CVE-2024-38819
+
+# org.apache.tomcat.embed:tomcat-embed-core
+CVE-2025-24813
+
+# org.springframework.security:spring-security-crypto
+CVE-2025-22228
