@@ -11,8 +11,8 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -25,7 +25,7 @@ class WorkAreaControllerTest extends AbstractControllerTest {
 
   private static final ServiceUserDetail WORK_AREA_USER = ServiceUserDetailTestUtil.Builder().build();
 
-  @MockBean
+  @MockitoBean
   private WorkAreaItemService workAreaItemService;
 
   @SecurityTest

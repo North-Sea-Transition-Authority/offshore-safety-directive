@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqMessageTypeMapping;
 import uk.co.fivium.energyportalmessagequeue.message.EpmqTopics;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
@@ -20,10 +20,10 @@ import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 @SpringBootTest(properties = { "epmq.message-poll-interval-seconds = 1" })
 class WonsApplicationSqsServiceIntegrationTest {
 
-  @MockBean
+  @MockitoBean
   private SqsService sqsService;
 
-  @MockBean
+  @MockitoBean
   protected SnsService snsService;
 
   @Test

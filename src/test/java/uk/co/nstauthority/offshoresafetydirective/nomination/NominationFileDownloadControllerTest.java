@@ -9,18 +9,18 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import com.amazonaws.util.StringInputStream;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import com.amazonaws.util.StringInputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -38,7 +38,7 @@ class NominationFileDownloadControllerTest extends AbstractNominationControllerT
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private FileService fileService;
 
   @SecurityTest

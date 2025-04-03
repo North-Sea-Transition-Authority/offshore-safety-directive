@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlAuthenticationUtil;
@@ -77,7 +77,7 @@ class NominationWorkAreaQueryServiceIntegrationTest {
   @Autowired
   private MetricsProvider metricsProvider;
 
-  @MockBean
+  @MockitoBean
   private PortalOrganisationGroupQueryService organisationGroupQueryService;
 
   @Test

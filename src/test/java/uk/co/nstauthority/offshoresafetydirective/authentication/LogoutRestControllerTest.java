@@ -8,8 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
@@ -25,7 +25,7 @@ class LogoutRestControllerTest extends AbstractControllerTest {
   @Autowired
   private EnergyPortalConfiguration energyPortalConfiguration;
 
-  @MockBean
+  @MockitoBean
   private LogoutService logoutService;
 
   @SecurityTest

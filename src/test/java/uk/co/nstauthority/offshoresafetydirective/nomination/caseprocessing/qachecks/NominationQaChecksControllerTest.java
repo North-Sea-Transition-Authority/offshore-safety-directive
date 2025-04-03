@@ -23,8 +23,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -59,13 +59,13 @@ class NominationQaChecksControllerTest extends AbstractNominationControllerTest 
       .withBannerType(NotificationBannerType.SUCCESS)
       .build();
 
-  @MockBean
+  @MockitoBean
   private CaseEventService caseEventService;
 
-  @MockBean
+  @MockitoBean
   private NominationQaChecksValidator nominationQaChecksValidator;
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   private NominationDetail nominationDetail;

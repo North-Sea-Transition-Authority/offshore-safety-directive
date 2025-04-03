@@ -13,9 +13,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.testcontainers.shaded.org.awaitility.Awaitility;
 import uk.co.fivium.energyportalmessagequeue.sns.SnsService;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
@@ -46,10 +46,10 @@ class NominationSnsIntegrationTest {
   @Autowired
   private SnsService snsService;
 
-  @MockBean
+  @MockitoBean
   private NominationSnsQueryService nominationSnsQueryService;
 
-  @SpyBean
+  @MockitoSpyBean
   private NominationDetailService nominationDetailService;
 
   @Test

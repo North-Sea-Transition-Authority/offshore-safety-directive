@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -16,14 +17,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalmessagequeue.message.wons.notification.geological.WonsGeologicalSidetrackNotificationCompletedEpmqMessage;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
@@ -60,13 +60,13 @@ class WonsNotificationCompletedServiceIntegrationTest {
   @Autowired
   private WonsNotificationCompletedService wonsNotificationCompletedService;
 
-  @MockBean
+  @MockitoBean
   private PortalAssetRetrievalService portalAssetRetrievalService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
-  @MockBean
+  @MockitoBean
   private AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
   @Autowired
@@ -75,7 +75,7 @@ class WonsNotificationCompletedServiceIntegrationTest {
   @Autowired
   private AssetPhaseRepository assetPhaseRepository;
 
-  @MockBean
+  @MockitoBean
   private WellQueryService wellQueryService;
 
   @Nested

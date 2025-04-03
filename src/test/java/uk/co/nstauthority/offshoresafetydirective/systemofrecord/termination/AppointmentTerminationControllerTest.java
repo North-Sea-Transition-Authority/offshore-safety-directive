@@ -28,8 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.unit.DataSize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -81,10 +81,10 @@ class AppointmentTerminationControllerTest extends AbstractControllerTest {
       .withDefaultPermittedFileExtensions(Set.of(VALID_EXTENSION))
       .build();
 
-  @MockBean
+  @MockitoBean
   private AppointmentTerminationValidator appointmentTerminationValidator;
 
-  @MockBean
+  @MockitoBean
   private FileService fileService;
 
   @BeforeEach

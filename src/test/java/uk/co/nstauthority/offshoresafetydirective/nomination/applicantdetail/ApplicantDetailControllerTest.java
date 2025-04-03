@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -59,10 +59,10 @@ class ApplicantDetailControllerTest extends AbstractNominationControllerTest {
   private static final String POST_CREATE_APPLICANT_DETAILS_ROUTE =  ReverseRouter.route(
       on(ApplicantDetailController.class).createApplicantDetails(null, null));
 
-  @MockBean
+  @MockitoBean
   private ApplicantDetailFormService applicantDetailFormService;
 
-  @MockBean
+  @MockitoBean
   private NominationService nominationService;
 
   @SecurityTest

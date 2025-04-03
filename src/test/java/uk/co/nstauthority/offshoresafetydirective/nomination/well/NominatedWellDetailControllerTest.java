@@ -1,4 +1,4 @@
- package uk.co.nstauthority.offshoresafetydirective.nomination.well;
+package uk.co.nstauthority.offshoresafetydirective.nomination.well;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,8 +25,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -59,13 +59,13 @@ class NominatedWellDetailControllerTest extends AbstractNominationControllerTest
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private NominatedWellDetailPersistenceService nominatedWellDetailPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private NominatedWellDetailFormService nominatedWellDetailFormService;
 
-  @MockBean
+  @MockitoBean
   private NominatedWellAccessService nominatedWellAccessService;
 
   @BeforeEach

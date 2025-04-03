@@ -28,8 +28,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.fivium.fileuploadlibrary.FileUploadLibraryUtils;
@@ -73,13 +73,13 @@ class NomineeDetailControllerTest extends AbstractNominationControllerTest {
   private NominationDetail nominationDetail;
   private NomineeDetailForm form;
 
-  @MockBean
+  @MockitoBean
   private NomineeDetailFormService nomineeDetailFormService;
 
-  @MockBean
+  @MockitoBean
   private NomineeDetailSubmissionService nomineeDetailSubmissionService;
 
-  @MockBean
+  @MockitoBean
   private FileService fileService;
 
   @Autowired

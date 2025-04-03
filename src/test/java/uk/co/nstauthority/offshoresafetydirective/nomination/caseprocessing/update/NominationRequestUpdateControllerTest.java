@@ -24,8 +24,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -54,13 +54,13 @@ class NominationRequestUpdateControllerTest extends AbstractNominationController
 
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
-  @MockBean
+  @MockitoBean
   private NominationRequestUpdateValidator nominationRequestUpdateValidator;
 
-  @MockBean
+  @MockitoBean
   private NominationRequestUpdateSubmissionService nominationRequestUpdateSubmissionService;
 
   private NominationDetail nominationDetail;

@@ -7,7 +7,7 @@ import uk.co.nstauthority.offshoresafetydirective.exception.IllegalUtilClassInst
 
 public class RedirectedToLoginUrlMatcher {
 
-  private static final String SAML_LOGIN_REDIRECT_URL = "http://localhost/saml2/authenticate/saml";
+  private static final String SAML_LOGIN_REDIRECT_URL = "http://localhost/saml2/authenticate?registrationId=saml";
 
   private RedirectedToLoginUrlMatcher() {
     throw new IllegalUtilClassInstantiationException(this.getClass());

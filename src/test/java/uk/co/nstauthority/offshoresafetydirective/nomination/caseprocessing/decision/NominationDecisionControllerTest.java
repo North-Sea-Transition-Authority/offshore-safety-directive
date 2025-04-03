@@ -27,8 +27,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.fileuploadlibrary.fds.UploadedFileForm;
@@ -59,13 +59,13 @@ class NominationDecisionControllerTest extends AbstractNominationControllerTest 
 
   private static final String VIEW_NAME = "test-view-name";
 
-  @MockBean
+  @MockitoBean
   private NominationDecisionValidator nominationDecisionValidator;
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
-  @MockBean
+  @MockitoBean
   private NominationDecisionSubmissionService nominationDecisionSubmissionService;
 
   private NominationDetail nominationDetail;

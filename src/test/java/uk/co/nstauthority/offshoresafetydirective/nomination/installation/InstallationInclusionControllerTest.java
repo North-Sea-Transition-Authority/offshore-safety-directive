@@ -20,8 +20,8 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -45,13 +45,13 @@ class InstallationInclusionControllerTest extends AbstractNominationControllerTe
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private InstallationInclusionPersistenceService installationInclusionPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private InstallationInclusionFormService installationInclusionFormService;
 
-  @MockBean
+  @MockitoBean
   private InstallationInclusionValidationService installationInclusionValidationService;
 
   @BeforeEach

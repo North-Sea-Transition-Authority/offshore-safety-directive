@@ -25,8 +25,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import uk.co.fivium.energyportalapi.generated.types.FieldStatus;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -56,16 +56,16 @@ class RelatedInformationControllerTest extends AbstractNominationControllerTest 
 
   private ServiceUserDetail user;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalFieldQueryService fieldQueryService;
 
-  @MockBean
+  @MockitoBean
   private RelatedInformationPersistenceService relatedInformationPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private RelatedInformationFormService relatedInformationFormService;
 
-  @MockBean
+  @MockitoBean
   private RelatedInformationValidator relatedInformationValidator;
 
   @Autowired

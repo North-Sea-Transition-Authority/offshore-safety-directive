@@ -13,8 +13,8 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -31,7 +31,7 @@ class AssetTimelineControllerTest extends AbstractControllerTest {
   private static final PortalAssetId PORTAL_ASSET_ID = new PortalAssetId("portal-asset-id");
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
 
-  @MockBean
+  @MockitoBean
   private AssetTimelineService assetTimelineService;
 
   @SecurityTest

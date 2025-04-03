@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -58,16 +58,16 @@ class NominatedBlockSubareaControllerTest extends AbstractNominationControllerTe
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private NominatedBlockSubareaDetailPersistenceService nominatedBlockSubareaDetailPersistenceService;
 
-  @MockBean
+  @MockitoBean
   NominatedBlockSubareaPersistenceService nominatedBlockSubareaPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private NominatedBlockSubareaFormService nominatedBlockSubareaFormService;
 
-  @MockBean
+  @MockitoBean
   private NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
 
   @BeforeEach

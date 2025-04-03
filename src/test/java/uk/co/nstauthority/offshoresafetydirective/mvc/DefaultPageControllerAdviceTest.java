@@ -11,9 +11,9 @@ import static uk.co.nstauthority.offshoresafetydirective.util.MockitoUtil.onlyOn
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -24,8 +24,8 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
     DefaultPageControllerAdvice.class
 })
 class DefaultPageControllerAdviceTest extends AbstractControllerTest {
-
-  @MockBean
+  
+  @MockitoBean
   private DefaultModelAttributeService defaultModelAttributeService;
 
   @Test

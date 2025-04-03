@@ -9,10 +9,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
@@ -86,67 +86,67 @@ public abstract class AbstractControllerTest {
   @Autowired
   protected MockMvc mockMvc;
 
-  @MockBean
+  @MockitoBean
   protected UserDetailService userDetailService;
 
-  @MockBean
+  @MockitoBean
   protected SamlResponseParser samlResponseParser;
 
-  @MockBean
+  @MockitoBean
   protected ServiceLogoutSuccessHandler serviceLogoutSuccessHandler;
 
-  @MockBean
+  @MockitoBean
   protected CaseEventQueryService caseEventQueryService;
 
-  @MockBean
+  @MockitoBean
   protected AppointmentAccessService appointmentAccessService;
 
-  @MockBean
+  @MockitoBean
   protected AssetAccessService assetAccessService;
 
-  @MockBean
+  @MockitoBean
   protected AppointmentTerminationService appointmentTerminationService;
 
-  @MockBean
+  @MockitoBean
   protected JooqStatisticsListener jooqStatisticsListener;
 
-  @MockBean
+  @MockitoBean
   protected MeterRegistry registry;
 
-  @MockBean
+  @MockitoBean
   protected FormErrorSummaryService formErrorSummaryService;
 
-  @MockBean
+  @MockitoBean
   protected PortalOrganisationUnitQueryService portalOrganisationUnitQueryService;
 
-  @MockBean
+  @MockitoBean
   protected PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
-  @MockBean
+  @MockitoBean
   protected NominationDetailService nominationDetailService;
 
-  @MockBean
+  @MockitoBean
   protected ApplicantDetailPersistenceService applicantDetailPersistenceService;
 
-  @MockBean
+  @MockitoBean
   protected PortalAssetRetrievalService portalAssetRetrievalService;
 
-  @MockBean
+  @MockitoBean
   protected AppointmentCorrectionService appointmentCorrectionService;
 
-  @MockBean
+  @MockitoBean
   protected LicenceBlockSubareaQueryService licenceBlockSubareaQueryService;
 
-  @MockBean
+  @MockitoBean
   protected WellQueryService wellQueryService;
 
-  @MockBean
+  @MockitoBean
   protected TeamManagementService teamManagementService;
 
-  @MockBean
+  @MockitoBean
   protected TeamQueryService teamQueryService;
 
-  @MockBean
+  @MockitoBean
   protected NominationRoleService nominationRoleService;
 
   @BeforeEach

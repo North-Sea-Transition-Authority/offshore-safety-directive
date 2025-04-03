@@ -25,8 +25,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -47,13 +47,13 @@ import uk.co.nstauthority.offshoresafetydirective.teams.management.view.TeamView
 @ContextConfiguration(classes = TeamManagementController.class)
 class TeamManagementControllerTest extends AbstractControllerTest {
 
-  @MockBean
+  @MockitoBean
   private MemberRolesFormValidator memberRolesFormValidator;
 
-  @MockBean
+  @MockitoBean
   private AddMemberFormValidator addMemberFormValidator;
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalConfiguration energyPortalConfiguration;
 
   private static Team regTeam;

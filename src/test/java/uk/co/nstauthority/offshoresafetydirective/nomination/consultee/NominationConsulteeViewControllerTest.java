@@ -15,8 +15,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -45,10 +45,10 @@ class NominationConsulteeViewControllerTest extends AbstractNominationController
       .withWuaId(200L)
       .build();
 
-  @MockBean
+  @MockitoBean
   private NominationSummaryService nominationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
   private NominationDetail nominationDetail;

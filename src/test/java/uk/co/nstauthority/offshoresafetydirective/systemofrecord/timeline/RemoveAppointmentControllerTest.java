@@ -22,8 +22,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -54,16 +54,16 @@ class RemoveAppointmentControllerTest extends AbstractControllerTest {
   private static final PortalAssetId PORTAL_ASSET_ID = new PortalAssetId("123");
   private static final AppointmentId APPOINTMENT_ID = new AppointmentId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private AssetAppointmentPhaseAccessService assetAppointmentPhaseAccessService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentPhasesService appointmentPhasesService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentTimelineItemService appointmentTimelineItemService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentService appointmentService;
 
   @BeforeEach

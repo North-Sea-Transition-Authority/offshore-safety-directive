@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -31,7 +31,7 @@ class ForwardApprovedAppointmentRestControllerTest extends AbstractControllerTes
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  @MockBean
+  @MockitoBean
   private ForwardApprovedAppointmentRestService forwardApprovedAppointmentRestService;
 
   @BeforeEach

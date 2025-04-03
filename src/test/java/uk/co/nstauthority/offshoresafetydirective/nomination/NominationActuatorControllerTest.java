@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.actuator.ActuatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractActuatorControllerTest;
@@ -18,7 +18,7 @@ class NominationActuatorControllerTest extends AbstractActuatorControllerTest {
   private static final String PUBLISH_NOMINATION_SUBMITTED_MESSAGE_URL_FORMAT =
       "/actuator/nomination-submitted-message/%s";
 
-  @MockBean
+  @MockitoBean
   private NominationSnsService nominationSnsService;
 
   @Autowired

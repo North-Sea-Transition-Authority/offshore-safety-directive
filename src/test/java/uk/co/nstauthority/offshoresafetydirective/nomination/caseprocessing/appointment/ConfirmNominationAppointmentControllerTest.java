@@ -28,8 +28,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -62,13 +62,13 @@ class ConfirmNominationAppointmentControllerTest extends AbstractNominationContr
 
   private static final String VIEW_NAME = "test-view-name";
 
-  @MockBean
+  @MockitoBean
   private ConfirmNominationAppointmentValidator confirmNominationAppointmentValidator;
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
-  @MockBean
+  @MockitoBean
   private ConfirmNominationAppointmentSubmissionService confirmNominationAppointmentSubmissionService;
 
   private NominationDetail nominationDetail;

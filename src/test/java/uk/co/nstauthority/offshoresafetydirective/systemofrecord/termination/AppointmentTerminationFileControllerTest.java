@@ -9,15 +9,15 @@ import static org.springframework.web.servlet.mvc.method.annotation.MvcUriCompon
 import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUserProvider.user;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
+import com.amazonaws.util.StringInputStream;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.UUID;
-import com.amazonaws.util.StringInputStream;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -37,7 +37,7 @@ class AppointmentTerminationFileControllerTest extends AbstractControllerTest {
   private static final UUID APPOINTMENT_ID = UUID.randomUUID();
   private static final UUID TERMINATION_ID = UUID.randomUUID();
 
-  @MockBean
+  @MockitoBean
   private FileService fileService;
 
   @SecurityTest

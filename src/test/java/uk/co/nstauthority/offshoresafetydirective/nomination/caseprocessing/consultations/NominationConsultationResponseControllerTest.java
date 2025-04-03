@@ -22,8 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.servlet.ModelAndView;
@@ -54,13 +54,13 @@ class NominationConsultationResponseControllerTest extends AbstractNominationCon
 
   private static final String VIEW_NAME = "test-view-name";
 
-  @MockBean
+  @MockitoBean
   private NominationCaseProcessingModelAndViewGenerator nominationCaseProcessingModelAndViewGenerator;
 
-  @MockBean
+  @MockitoBean
   private NominationConsultationResponseValidator nominationConsultationResponseValidator;
 
-  @MockBean
+  @MockitoBean
   NominationConsultationResponseSubmissionService nominationConsultationResponseSubmissionService;
 
   private NominationDetail nominationDetail;

@@ -25,8 +25,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -62,16 +62,16 @@ class NominatedInstallationControllerTest extends AbstractNominationControllerTe
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private NominatedInstallationDetailPersistenceService nominatedInstallationDetailPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private NominatedInstallationDetailFormService nominatedInstallationDetailFormService;
 
-  @MockBean
+  @MockitoBean
   private InstallationQueryService installationQueryService;
 
-  @MockBean
+  @MockitoBean
   private LicenceQueryService licenceQueryService;
 
   @BeforeEach

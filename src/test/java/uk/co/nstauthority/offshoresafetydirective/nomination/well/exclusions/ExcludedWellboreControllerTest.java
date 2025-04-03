@@ -26,8 +26,8 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -53,19 +53,19 @@ class ExcludedWellboreControllerTest extends AbstractNominationControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private LicenceBlockSubareaWellboreService subareaWellboreService;
 
-  @MockBean
+  @MockitoBean
   NominatedBlockSubareaAccessService nominatedBlockSubareaAccessService;
 
-  @MockBean
+  @MockitoBean
   private ExcludedWellValidator excludedWellValidator;
 
-  @MockBean
+  @MockitoBean
   private ExcludedWellPersistenceService excludedWellPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private ExcludedWellFormService excludedWellFormService;
 
   @BeforeEach

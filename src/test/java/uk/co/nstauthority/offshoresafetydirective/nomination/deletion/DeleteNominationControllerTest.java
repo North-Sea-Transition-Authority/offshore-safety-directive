@@ -15,8 +15,8 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -42,7 +42,7 @@ class DeleteNominationControllerTest extends AbstractNominationControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private NominationSummaryService nominationSummaryService;
 
   @SecurityTest

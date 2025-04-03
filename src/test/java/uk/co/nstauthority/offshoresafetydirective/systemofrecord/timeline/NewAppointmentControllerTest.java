@@ -29,8 +29,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -74,13 +74,13 @@ class NewAppointmentControllerTest extends AbstractControllerTest {
 
   private static final AssetId ASSET_ID = new AssetId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private AppointmentService appointmentService;
 
-  @MockBean
+  @MockitoBean
   private AssetPersistenceService assetPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentCorrectionValidator appointmentCorrectionValidator;
 
   @BeforeEach

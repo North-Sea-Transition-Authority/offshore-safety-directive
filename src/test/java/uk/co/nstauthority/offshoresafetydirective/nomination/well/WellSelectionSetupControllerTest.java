@@ -22,8 +22,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -48,13 +48,13 @@ class WellSelectionSetupControllerTest extends AbstractNominationControllerTest 
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private WellSelectionSetupPersistenceService wellSelectionSetupPersistenceService;
 
-  @MockBean
+  @MockitoBean
   private WellSelectionSetupFormService wellSelectionSetupFormService;
 
-  @MockBean
+  @MockitoBean
   private WellSelectionSetupValidationService wellSelectionSetupValidationService;
 
   @BeforeEach

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.DatabaseIntegrationTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellDto;
@@ -62,13 +62,13 @@ class WonsApplicationSubmittedServiceIntegrationTest {
   @Autowired
   private AppointmentRepository appointmentRepository;
 
-  @MockBean
+  @MockitoBean
   private AppointmentAddedEventPublisher appointmentAddedEventPublisher;
 
-  @MockBean
+  @MockitoBean
   private AppointmentEndedEventPublisher appointmentEndedEventPublisher;
 
-  @MockBean
+  @MockitoBean
   private WellQueryService wellQueryService;
 
   @Autowired

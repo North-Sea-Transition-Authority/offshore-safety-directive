@@ -13,10 +13,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.fileuploadlibrary.core.FileService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -39,7 +39,7 @@ class CaseEventFileDownloadControllerTest extends AbstractNominationControllerTe
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private FileService fileService;
 
   @SecurityTest

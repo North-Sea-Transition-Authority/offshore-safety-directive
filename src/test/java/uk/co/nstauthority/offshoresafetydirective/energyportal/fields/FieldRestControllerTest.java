@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -30,7 +30,7 @@ class FieldRestControllerTest extends AbstractControllerTest {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  @MockBean
+  @MockitoBean
   private EnergyPortalFieldQueryService fieldQueryService;
 
   @SecurityTest

@@ -59,7 +59,9 @@ steps:
         - echo $DOCKER_CONFIG_JSON > $DOCKER_CONFIG/config.json
         - chmod +x gradlew
         - ./gradlew generateJooq
-        - ./gradlew checkstyleMain test publishEpmqMessagesIntegrationTestPublicationToMavenLocal epmqMessagesJarIntegrationTest bootJar
+        - ./gradlew publishEpmqMessagesIntegrationTestPublicationToMavenLocal
+        - ./gradlew epmqMessagesJarIntegrationTest
+        - ./gradlew checkstyleMain test bootJar
       build_image: repo1.dev.fivium.local:5000/docker-compose-java21
 
   - name: trivy-build-image

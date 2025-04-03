@@ -15,8 +15,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceSearchFilter;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
@@ -33,7 +33,7 @@ class LicenceRestControllerTest extends AbstractControllerTest {
   @Captor
   private ArgumentCaptor<LicenceSearchFilter> licenceSearchFilterArgumentCaptor;
 
-  @MockBean
+  @MockitoBean
   private LicenceQueryService licenceQueryService;
 
   @SecurityTest

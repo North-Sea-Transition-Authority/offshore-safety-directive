@@ -30,8 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -75,16 +75,16 @@ class NominationSubmissionControllerTest extends AbstractNominationControllerTes
 
   private NominationDetail nominationDetail;
 
-  @MockBean
+  @MockitoBean
   private NominationSubmissionService nominationSubmissionService;
 
-  @MockBean
+  @MockitoBean
   private NominationSummaryService nominationSummaryService;
 
-  @MockBean
+  @MockitoBean
   private FinaliseNominatedSubareaWellsService finaliseNominatedSubareaWellsService;
 
-  @MockBean
+  @MockitoBean
   private NominationSubmissionFormValidator nominationSubmissionFormValidator;
 
   @BeforeEach

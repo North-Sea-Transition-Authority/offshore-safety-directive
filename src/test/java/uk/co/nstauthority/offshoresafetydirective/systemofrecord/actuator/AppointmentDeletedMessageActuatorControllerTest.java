@@ -19,7 +19,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.actuator.ActuatorConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
@@ -36,10 +36,10 @@ class AppointmentDeletedMessageActuatorControllerTest extends AbstractActuatorCo
   private static final String PUBLISH_APPOINTMENT_DELETED_MESSAGE_URL_FORMAT =
       "/actuator/appointment-deleted-message/%s";
 
-  @MockBean
+  @MockitoBean
   private AppointmentAccessService appointmentAccessService;
 
-  @MockBean
+  @MockitoBean
   private AppointmentSnsService appointmentSnsService;
 
   @Autowired

@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.fivium.energyportalapi.generated.types.FacilityType;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.installation.InstallationDtoTestUtil;
@@ -45,7 +45,7 @@ import uk.co.nstauthority.offshoresafetydirective.restapi.RestApiUtil;
 @ContextConfiguration(classes = SystemOfRecordSearchController.class)
 class SystemOfRecordSearchControllerTest extends AbstractControllerTest {
 
-  @MockBean
+  @MockitoBean
   private AppointmentSearchService appointmentSearchService;
 
   @SecurityTest

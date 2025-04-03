@@ -20,8 +20,8 @@ import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginU
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
@@ -45,13 +45,13 @@ class FeedbackControllerTest extends AbstractNominationControllerTest {
   private static final ServiceUserDetail USER = ServiceUserDetailTestUtil.Builder().build();
   private static final NominationId NOMINATION_ID = new NominationId(UUID.randomUUID());
 
-  @MockBean
+  @MockitoBean
   private FeedbackService feedbackService;
 
-  @MockBean
+  @MockitoBean
   private FeedbackFormValidator feedbackFormValidator;
 
-  @MockBean
+  @MockitoBean
   private NominationService nominationService;
 
   private NominationDetail nominationDetail;
