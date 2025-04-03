@@ -1,6 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.jpa;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 public class HibernateConfig {
 
   @Bean
-  public HibernatePropertiesCustomizer configureStatementInspector(HibernateQueryCounterImpl hibernateQueryCounter) {
-    return properties -> properties.put(AvailableSettings.STATEMENT_INSPECTOR, hibernateQueryCounter);
+  public HibernatePropertiesCustomizer configureStatementInspector(HibernateQueryCounter hibernateQueryCounter) {
+    return properties -> properties.put(JdbcSettings.STATEMENT_INSPECTOR, hibernateQueryCounter);
   }
 }

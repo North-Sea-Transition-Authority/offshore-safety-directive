@@ -6,20 +6,18 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerMapping;
 import uk.co.nstauthority.offshoresafetydirective.authentication.EnergyPortalSamlAttribute;
 import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
-import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
-import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
+import uk.co.nstauthority.offshoresafetydirective.metrics.QueryCounter;
 
 @Component
 public class RequestLogFilter extends OncePerRequestFilter {
@@ -31,60 +29,58 @@ public class RequestLogFilter extends OncePerRequestFilter {
       EnergyPortalSamlAttribute.PROXY_USER_WUA_ID.getAttributeName()
   );
   static final String MDC_REQUEST_TYPE = RequestLogFilter.class.getName() + ".REQUEST_TYPE";
-  private static final Logger LOGGER = LoggerFactory.getLogger(RequestLogFilter.class);
   private static final String UNKNOWN = "unknown";
 
-  private final HibernateQueryCounterImpl hibernateQueryCounter;
-  private final JooqStatisticsListener jooqStatisticsListener;
+  private static final Logger LOGGER = LoggerFactory.getLogger(RequestLogFilter.class);
 
-  @Autowired
-  public RequestLogFilter(HibernateQueryCounterImpl hibernateQueryCounter,
-                          JooqStatisticsListener jooqStatisticsListener) {
-    this.hibernateQueryCounter = hibernateQueryCounter;
-    this.jooqStatisticsListener = jooqStatisticsListener;
+  private final QueryCounter queryCounter;
+
+  RequestLogFilter(QueryCounter queryCounter) {
+    this.queryCounter = queryCounter;
   }
 
   @Override
-  protected void doFilterInternal(@NotNull HttpServletRequest request,
-                                  @NotNull HttpServletResponse response,
-                                  FilterChain filterChain) throws ServletException, IOException {
-
+  protected void doFilterInternal(
+      @NonNull HttpServletRequest request,
+      @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain
+  ) throws ServletException, IOException {
+    CorrelationIdUtil.setCorrelationIdOnMdcFromRequest(request);
     var stopwatch = Stopwatch.createStarted();
-    hibernateQueryCounter.clearQueryCount();
-    String correlationId = "";
 
     try {
-      correlationId = CorrelationIdUtil.getOrCreateCorrelationId(request);
-      CorrelationIdUtil.setCorrelationIdOnMdc(correlationId);
       filterChain.doFilter(request, response);
     } finally {
-      String queryString = StringUtils.defaultString(request.getQueryString());
-      if (queryString.length() > 0) {
-        queryString = "?" + queryString;
-      }
-
-      Long hibernateQueryCount = hibernateQueryCounter.getQueryCount();
-
-      Object patternAttribute = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-      String mvcPattern = StringUtils.firstNonBlank(patternAttribute != null ? patternAttribute.toString() : "",
-          UNKNOWN);
-
-      String requestType = StringUtils.firstNonBlank(MDC.get(MDC_REQUEST_TYPE), UNKNOWN);
-      String userId = StringUtils.firstNonBlank(MDC.get(MDC_WUA_ID), UNKNOWN);
-      String proxyUserId = StringUtils.firstNonBlank(MDC.get(MDC_PROXY_WUA_ID), UNKNOWN);
-
-      var jooqQueryCount = jooqStatisticsListener.getCount();
-      jooqStatisticsListener.clear();
-      CorrelationIdUtil.clearCorrelationIdOnMdc();
-      MDC.remove(RequestLogFilter.MDC_WUA_ID);
-      MDC.remove(RequestLogFilter.MDC_PROXY_WUA_ID);
+      var elapsedMs = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+      var queryString = Optional.ofNullable(request.getQueryString()).map("?"::concat).orElse("");
+      var pattern = Optional.ofNullable(request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE)).orElse(UNKNOWN);
+      var wuaId = MDC.get(MDC_WUA_ID);
+      var proxyWuaId = MDC.get(MDC_PROXY_WUA_ID);
 
       LOGGER.info(
-          "{} request: {} {}{} ({}), correlation id: {}, time: {}, status: {}, user id: {}, proxy user id: {}, " +
-              "hibernate query count: {}, jooq query count: {}",
-          requestType, request.getMethod(), request.getRequestURI(), queryString,
-          mvcPattern, correlationId, stopwatch.elapsed(TimeUnit.MILLISECONDS),
-          response.getStatus(), userId, proxyUserId, hibernateQueryCount, jooqQueryCount);
+          "[{}] {}ms {} {}{} ({}) wuaId:{} proxyWuaId:{} {}",
+          response.getStatus(),
+          elapsedMs,
+          request.getMethod(),
+          request.getRequestURI(),
+          queryString,
+          pattern,
+          wuaId,
+          proxyWuaId,
+          getQueryCounts()
+      );
+
+      // remove MDC items set for use by the RequestLogFilter
+      CorrelationIdUtil.removeCorrelationIdFromMdc();
+      MDC.remove(RequestLogFilter.MDC_WUA_ID);
+      MDC.remove(RequestLogFilter.MDC_PROXY_WUA_ID);
     }
+  }
+
+  private String getQueryCounts() {
+    return "queryCounts[hibernate:%s epa:%s]".formatted(
+        queryCounter.getAndResetHibernate(),
+        queryCounter.getAndResetEpa()
+    );
   }
 }

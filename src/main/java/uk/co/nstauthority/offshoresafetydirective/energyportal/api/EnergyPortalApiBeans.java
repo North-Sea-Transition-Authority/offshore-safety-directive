@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.energyportal.api;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import uk.co.fivium.energyportalapi.client.EnergyPortal;
+import uk.co.fivium.energyportalapi.client.LogCorrelationId;
 import uk.co.fivium.energyportalapi.client.facility.FacilityApi;
 import uk.co.fivium.energyportalapi.client.field.FieldApi;
 import uk.co.fivium.energyportalapi.client.licence.licence.LicenceApi;
@@ -10,15 +11,23 @@ import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.client.subarea.SubareaApi;
 import uk.co.fivium.energyportalapi.client.user.UserApi;
 import uk.co.fivium.energyportalapi.client.wellbore.WellboreApi;
+import uk.co.nstauthority.offshoresafetydirective.correlationid.CorrelationIdUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalQueryCounter;
 
 @Configuration
 class EnergyPortalApiBeans {
 
   @Bean
-  EnergyPortal energyPortal(EnergyPortalApiConfiguration energyPortalApiConfiguration) {
-    return EnergyPortal.defaultConfiguration(
-        energyPortalApiConfiguration.url(),
-        energyPortalApiConfiguration.token()
+  EnergyPortal energyPortal(
+      EnergyPortalApiConfiguration energyPortalApiConfig,
+      EnergyPortalQueryCounter energyPortalQueryCounter
+  ) {
+    return EnergyPortal.customConfiguration(
+        energyPortalApiConfig.url(),
+        energyPortalApiConfig.token(),
+        EnergyPortal.DEFAULT_REQUEST_TIMEOUT_SECONDS,
+        () -> new LogCorrelationId(CorrelationIdUtil.getCorrelationIdFromMdc()),
+        energyPortalQueryCounter
     );
   }
 

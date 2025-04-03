@@ -9,6 +9,9 @@ CVE-2024-38821
 CVE-2024-50379
 CVE-2024-56337
 
+# org.springframework:spring-webmvc
+CVE-2024-38819
+
 # com.netflix.graphql.dgs:graphql-dgs
 CVE-2024-7254
 

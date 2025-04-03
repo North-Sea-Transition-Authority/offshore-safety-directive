@@ -29,8 +29,9 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisatio
 import uk.co.nstauthority.offshoresafetydirective.energyportal.well.WellQueryService;
 import uk.co.nstauthority.offshoresafetydirective.fds.FormErrorSummaryService;
 import uk.co.nstauthority.offshoresafetydirective.jooq.JooqStatisticsListener;
-import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounterImpl;
+import uk.co.nstauthority.offshoresafetydirective.jpa.HibernateQueryCounter;
 import uk.co.nstauthority.offshoresafetydirective.metrics.MetricsProvider;
+import uk.co.nstauthority.offshoresafetydirective.metrics.QueryCounter;
 import uk.co.nstauthority.offshoresafetydirective.mvc.error.ErrorListHandlerInterceptor;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationInterceptor;
@@ -157,8 +158,13 @@ public abstract class AbstractControllerTest {
   public static class TestConfig {
 
     @Bean
-    public HibernateQueryCounterImpl hibernateQueryInterceptor() {
-      return new HibernateQueryCounterImpl();
+    public QueryCounter queryCounter() {
+      return new QueryCounter();
+    }
+
+    @Bean
+    public HibernateQueryCounter hibernateQueryInterceptor(QueryCounter queryCounter) {
+      return new HibernateQueryCounter(queryCounter);
     }
 
     @Bean
