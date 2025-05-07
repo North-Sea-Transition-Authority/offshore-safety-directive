@@ -198,7 +198,8 @@ steps:
   - name: slack
     image: plugins/slack
     settings:
-      webhook: https://hooks.slack.com/services/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
+      webhook:
+        from_secret: slack_webhook
       channel: offshore-safety-directive-builds
       template: "*{{build.status}}* <{{build.link}}|Commit {{truncate build.commit 7}} on {{build.branch}} by ${DRONE_COMMIT_AUTHOR_NAME}>\nReports published to: http://drone-assets.fivium.local:9090/offshore-safety-directive/{{build.number}}/"
     when:
@@ -379,3 +380,9 @@ data: WDOPuypCNVJ4qwu0gkfO7+8XspeSrhxqebUILxvkQsdhQBoVu090+Iggcv0XvC2xdqUyRSMp2H
 kind: secret
 name: nexus_password
 data: tUqqxLEq9I73Ld0q5X0YUVjWbW/32/zxVUAHbnkrTaJy01yfog==
+
+---
+
+kind: secret
+name: slack_webhook
+data: 3NSpxgXzmYISOZZ/A/NkrKvfZFnFCPeA3zcuDrVmy4BDYfbqB1uDc3T+np1Z5ihkdr2PtjhDvmz8U/P47B8/Wl8chYPA6kh6qT6gcWQyAg2HBztx44Aw67WCHWJEyPIV/oWkOjDtgGmmun8=
