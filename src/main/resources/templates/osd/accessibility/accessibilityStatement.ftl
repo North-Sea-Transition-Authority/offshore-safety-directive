@@ -68,8 +68,8 @@
     <p class="govuk-body">
         This website is partially compliant with the
         <@fdsAction.link
-            linkText="Web Content Accessibility Guidelines version 2.1"
-            linkUrl="https://www.w3.org/TR/WCAG21/"
+            linkText="Web Content Accessibility Guidelines version 2.2"
+            linkUrl="https://www.w3.org/TR/WCAG22/"
             openInNewTab=true
         />
         AA standard, due to the non-compliances listed below.
@@ -82,15 +82,15 @@
     <ul class="govuk-list govuk-list--bullet">
         <li>
             users are not always notified when conditionally revealed content associated with a radio button or checkbox is
-            expanded or collapsed. This fails WCAG 2.1 success criterion 4.1.3 (Status Messages).
+            expanded or collapsed. This fails WCAG 2.2 success criterion 4.1.3 (Status Messages).
         </li>
         <li>
-            breadcrumb navigation links are not identified by ARIA landmarks. This fails WCAG 2.1 success criterion
+            breadcrumb navigation links are not identified by ARIA landmarks. This fails WCAG 2.2 success criterion
             1.3.1 (Info and Relationships).
         </li>
         <li>
             when uploading a file on macOS with VoiceOver enabled, the user is unable to select the ‘Choose a file’ via
-            keyboard only. This fails WCAG 2.1 success criterion 2.1.1 (Keyboard).
+            keyboard only. This fails WCAG 2.2 success criterion 2.1.1 (Keyboard).
         </li>
     </ul>
 
