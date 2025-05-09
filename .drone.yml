@@ -182,6 +182,21 @@ steps:
       event:
         - tag
 
+  - name: scan-and-sync-public-repo
+    image: quay.io/fivium/drone-trufflehog-plugin:v1.0
+    settings:
+      scan_since_commit_hash: 64cf4dcf4800c6b665dddbd4fd1714a26208f7da
+      sync_to_mirror: true
+      mirror_remote_url: git@github.com:North-Sea-Transition-Authority/offshore-safety-directive.git
+      mirror_branch_to_sync: develop
+      mirror_remote_ssh_key:
+        from_secret: sync_ssh_key
+    when:
+      event:
+        - push
+      branch:
+        - develop
+
   - name: rebuild-cache
     image: drillster/drone-volume-cache
     volumes:
@@ -386,3 +401,9 @@ data: tUqqxLEq9I73Ld0q5X0YUVjWbW/32/zxVUAHbnkrTaJy01yfog==
 kind: secret
 name: slack_webhook
 data: 3NSpxgXzmYISOZZ/A/NkrKvfZFnFCPeA3zcuDrVmy4BDYfbqB1uDc3T+np1Z5ihkdr2PtjhDvmz8U/P47B8/Wl8chYPA6kh6qT6gcWQyAg2HBztx44Aw67WCHWJEyPIV/oWkOjDtgGmmun8=
+
+---
+
+kind: secret
+name: sync_ssh_key
+data: 8rtMC8ZkyiouiPAF5sbDBEygSyYX8WsUtme1UMv2bYMff7iXzFCdhUPKkQwmsCxt3ICGG7Y/j1kACqYs952Ts0mwT78OCZukzvIp70KyBB4o5Kh7FSIjipOV08jVLru8N9emrXKYGQ2pgTS1fVJTqtd64IhRiuf0jYakUCC2DXgxePFe0fwjg91ug1b5ONdadinRTk/dYKLJvjj8trF1jQ9eEZS/A2TeMZFQJuZ0n1sPVglf5jekONoyJkxO7Stm/KQAN+S0LGlNfKQM9vf7qF9tn4KkjDhYxibHMPLTE/ysy1W13lehmE1geW2PRZeSZEJrSstu34mLU+5OZnu1bv4xrBCCR2mhI0GuOMdHwubSOW4OiWvUoCinyE7+djPtCzPvTKG2O09FXj+WLpsKNuqWNERv8Tg1wDG3gE2u99g+5JylYbUI8TiyOJQfukOfMT1/nYMH8JlDLfhHSZ3H2at9HJckXxsg6nw9z0kXN1cjfSTSMZrIhdQYJtg2Ca4cKdxE06DRErnrZBo8FO+lCaI9cnaD2dAq3ATIUEejWatJ6Z0k/J+CYdKqG/XMkKBBv5tRU1Of5+vkLZyzzpCAE8tYuFqW76O4K8TDouc=
