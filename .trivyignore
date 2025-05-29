@@ -1,3 +1,6 @@
+# com.google.protobuf:protobuf-java
 CVE-2024-7254
+# commons-beanutils:commons-beanutils
 CVE-2024-47554
-CVE-2025-22235
+# commons-io:commons-io
+CVE-2025-48734
