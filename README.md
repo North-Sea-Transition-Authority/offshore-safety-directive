@@ -107,6 +107,11 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_ANALYTICS_ENERGY_PORTAL_IDENTIFIER     | The google analytics tag used for all apps                                                                                  |
 | OSD_ANALYTICS_SERVICE_IDENTIFIER           | The service specific google analytics tag                                                                                   |
 
+### Logging
+
+OSD can log in either JSON or text mode.
+In order to turn on JSON logging, set the profile 'json-logging'. This will automatically include any MDC attributes.
+
 ### 3. Initialise the Fivium Design System
 
 - `git submodule update --init --recursive`

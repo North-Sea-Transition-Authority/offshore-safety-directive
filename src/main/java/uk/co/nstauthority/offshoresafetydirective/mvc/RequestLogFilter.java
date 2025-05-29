@@ -1,5 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
+import static net.logstash.logback.argument.StructuredArguments.value;
+
 import com.google.common.base.Stopwatch;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -40,6 +42,14 @@ public class RequestLogFilter extends OncePerRequestFilter {
   }
 
   @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    var requestUri = request.getRequestURI();
+    var contextPath = request.getContextPath();
+    return requestUri.equals(contextPath + "/actuator/health")
+        || requestUri.startsWith(contextPath + "/assets");
+  }
+
+  @Override
   protected void doFilterInternal(
       @NonNull HttpServletRequest request,
       @NonNull HttpServletResponse response,
@@ -58,16 +68,17 @@ public class RequestLogFilter extends OncePerRequestFilter {
       var proxyWuaId = MDC.get(MDC_PROXY_WUA_ID);
 
       LOGGER.info(
-          "[{}] {}ms {} {}{} ({}) wuaId:{} proxyWuaId:{} {}",
-          response.getStatus(),
-          elapsedMs,
-          request.getMethod(),
-          request.getRequestURI(),
-          queryString,
-          pattern,
-          wuaId,
-          proxyWuaId,
-          getQueryCounts()
+          "[{}] {}ms {} {}{} ({}) wuaId:{} proxyWuaId:{} queryCounts[hibernate:{} epa:{}]",
+          value("response_status", response.getStatus()),
+          value("request_time_ms", elapsedMs),
+          value("request_method", request.getMethod()),
+          value("request_uri", request.getRequestURI()),
+          value("request_query_string", queryString),
+          value("request_uri_pattern", pattern),
+          value("wua_id", wuaId),
+          value("proxy_wua_id", proxyWuaId),
+          value("query_count_hibernate", queryCounter.getAndResetHibernate()),
+          value("query_count_epa", queryCounter.getAndResetEpa())
       );
 
       // remove MDC items set for use by the RequestLogFilter
@@ -75,12 +86,5 @@ public class RequestLogFilter extends OncePerRequestFilter {
       MDC.remove(RequestLogFilter.MDC_WUA_ID);
       MDC.remove(RequestLogFilter.MDC_PROXY_WUA_ID);
     }
-  }
-
-  private String getQueryCounts() {
-    return "queryCounts[hibernate:%s epa:%s]".formatted(
-        queryCounter.getAndResetHibernate(),
-        queryCounter.getAndResetEpa()
-    );
   }
 }
