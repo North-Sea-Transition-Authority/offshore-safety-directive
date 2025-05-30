@@ -107,6 +107,17 @@ operations. The EU Directive was implemented in UK law by the Offshore Petroleum
 | OSD_ANALYTICS_ENERGY_PORTAL_IDENTIFIER     | The google analytics tag used for all apps                                                                                  |
 | OSD_ANALYTICS_SERVICE_IDENTIFIER           | The service specific google analytics tag                                                                                   |
 
+### Energy Portal accounts service integration
+
+In order to integrate with the Energy Portal accounts service as the IDP you need to include the `use-epas` profile. If running Energy Portal accounts service
+locally add the `use-epas-development` profile as well.
+
+For deployed environments we require the following environment variables to be set
+- EPAS_SAML_ENTITY_ID
+- EPAS_SAML_LOGIN_URL
+- EPAS_LOGOUT_REQUEST_URL
+- EPAS_SAML_BASE_URL (e.g. https://nsta.itportal.dev.fivium.co.uk)
+
 ### Logging
 
 OSD can log in either JSON or text mode.

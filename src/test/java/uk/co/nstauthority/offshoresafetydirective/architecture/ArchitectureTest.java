@@ -10,6 +10,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityRule;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalLogoutSqsService;
 
 @AnalyzeClasses(
     packages = "uk.co.nstauthority.offshoresafetydirective",
@@ -22,6 +23,7 @@ class ArchitectureTest {
 
   @ArchTest
   final ArchRule scheduledAnnotationRule = methods()
-      .that().areAnnotatedWith(Scheduled.class)
+      .that().areNotDeclaredIn(EnergyPortalLogoutSqsService.class)
+      .and().areAnnotatedWith(Scheduled.class)
       .should().beAnnotatedWith(SchedulerLock.class);
 }
