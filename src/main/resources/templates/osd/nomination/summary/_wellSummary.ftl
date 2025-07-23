@@ -1,5 +1,6 @@
 <#import '../../../fds/components/summaryList/summaryList.ftl' as fdsSummaryList/>
 <#import '../../../fds/components/insetText/insetText.ftl' as fdsInsetText/>
+<#import '../../../fds/components/tag/tag.ftl' as fdsTag>
 <#import '../well/_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
 <#import '../well/_listWellbores.ftl' as _listWellbores>
 <#import '../../../fds/components/details/details.ftl' as fdsDetails>
@@ -72,7 +73,7 @@
               <#else>
                   ${subarea.subareaName().value()}
                 <div>
-                  <strong class="govuk-tag govuk-tag--blue">No longer exists</strong>
+                  <@fdsTag.tag tagClass="govuk-tag--blue">No longer exists</@fdsTag.tag>
                 </div>
               </#if>
             </li>
@@ -144,11 +145,11 @@
       <@_wonsContactGuidance.wonsContactGuidance detailsClass="govuk-!-margin-bottom-0"/>
     </#if>
   </#assign>
-  <div class="fds-summary-list-card<#if summaryListErrorMessage?has_content> fds-summary-list-card--error</#if>" id="${summaryListId}">
-    <div class="fds-summary-list-card__heading-wrapper">
-      <h2 class="fds-summary-list-card__heading">Wells</h2>
+  <div class="govuk-summary-card<#if summaryListErrorMessage?has_content> fds-summary-card--error</#if>" id="${summaryListId}">
+    <div class="govuk-summary-card__title-wrapper">
+      <h2 class="govuk-summary-card__title">Wells</h2>
     </div>
-    <div class="fds-summary-list-card__content">
+    <div class="govuk-summary-card__content">
       <#if summaryListErrorMessage?has_content>
         <p class="govuk-error-message fds-summary-list__error-message">
           <span class="govuk-visually-hidden">Error:</span> ${summaryListErrorMessage}<br/>

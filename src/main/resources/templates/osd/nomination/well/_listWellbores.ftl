@@ -1,4 +1,5 @@
 <#import '_wellDtoLicenceDisplay.ftl' as _wellDtoLicenceDisplay>
+<#import '../../../fds/components/tag/tag.ftl' as fdsTag>
 
 <#macro listWellbores wellbores>
   <table class="govuk-table">
@@ -16,7 +17,7 @@
             ${wellbore.name()}
             <#if !wellbore.isOnPortal()>
               <div>
-                <strong class="govuk-tag govuk-tag--blue">No longer exists</strong>
+                <@fdsTag.tag tagClass="govuk-tag--blue">No longer exists</@fdsTag.tag>
               </div>
             </#if>
           </td>

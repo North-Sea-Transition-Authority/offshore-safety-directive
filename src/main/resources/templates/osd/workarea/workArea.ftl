@@ -19,7 +19,7 @@
     />
   </#if>
 
-  <@fdsResultList.resultList resultCount=workAreaItems?size>
+  <@fdsResultList.resultList resultCount=workAreaItems?size resultCountSuffix="nomination">
     <#list workAreaItems as workAreaItem>
       <#if workAreaItem.type() == "NOMINATION">
         <@_nominationWorkAreaItem.nominationWorkAreaItem workAreaItem=workAreaItem/>

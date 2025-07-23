@@ -66,6 +66,7 @@ public class DefaultModelAttributeService {
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
     attributes.put("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()));
     attributes.put("analytics", analyticsProperties);
+    attributes.put("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 

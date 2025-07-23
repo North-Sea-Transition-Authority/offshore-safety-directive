@@ -21,6 +21,6 @@ public record ServiceUserDetail(
 
   public String displayName() {
     var userName = String.format("%s %s", forename, surname);
-    return Objects.nonNull(proxyUsername) ? String.format("%s/%s", proxyUsername, userName) : userName;
+    return Objects.nonNull(proxyUsername) ? String.format("%s as %s", proxyUsername, userName) : userName;
   }
 }

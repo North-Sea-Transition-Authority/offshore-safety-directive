@@ -11,7 +11,6 @@
   htmlTitle=pageName
   pageHeading=pageName
   pageSize=PageSize.TWO_THIRDS_COLUMN
-  phaseBanner=false
   backLinkWithBrowserBack=true
   errorItems=errorList>
   <@fdsForm.htmlForm actionUrl=springUrl(actionUrl)>

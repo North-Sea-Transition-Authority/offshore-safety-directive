@@ -80,7 +80,10 @@ import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamMa
     ServiceUserDetailArgumentResolver.class,
     StartNominationInterceptor.class
 })
-@EnableConfigurationProperties(value = {SamlProperties.class, AnalyticsProperties.class})
+@EnableConfigurationProperties({
+    AnalyticsProperties.class,
+    SamlProperties.class,
+})
 public abstract class AbstractControllerTest {
 
   @Autowired

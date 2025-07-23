@@ -1,9 +1,10 @@
 <#include '../../fds/layout.ftl'>
+<#include '../../fds/components/header/energyPortalHeader.ftl'>
 <#include '../../fds/objects/layouts/leftSubNavLayout.ftl'>
+<#import '../../fds/components/tag/tag.ftl' as fdsTag>
 <#import '_pageSizes.ftl' as PageSize>
 <#import '../macros/mailTo.ftl' as mailTo>
 <#import '../macros/taskList.ftl' as taskList>
-<#import '_header.ftl' as pageHeader>
 
 <#-- @ftlvariable name="serviceBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.ServiceConfigurationProperties" -->
 <#-- @ftlvariable name="customerBranding" type="uk.co.nstauthority.offshoresafetydirective.branding.CustomerConfigurationProperties" -->
@@ -15,9 +16,10 @@
 <#-- @ftlvariable name="loggedInUser" type="uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail" -->
 <#-- @ftlvariable name="flash" type="uk.co.nstauthority.offshoresafetydirective.fds.notificationbanner.NotificationBanner" -->
 <#-- @ftlvariable name="analytics" type="uk.co.nstauthority.offshoresafetydirective.configuration.AnalyticsProperties" -->
+<#-- @ftlvariable name="workAreaUrl" type="String" -->
 
 <#assign SERVICE_NAME = serviceBranding.name() />
-<#assign CUSTOMER_MNEMONIC = customerBranding.mnemonic() />
+<#assign CUSTOMER_NAME = customerBranding.name() />
 <#assign SERVICE_HOME_URL = springUrl(serviceHomeUrl) />
 <#assign FEEDBACK_URL = springUrl(feedbackUrl)/>
 
@@ -25,7 +27,7 @@
   pageHeading
   htmlTitle=pageHeading
   errorItems=[]
-  phaseBanner=true
+  phaseBanner=false
   pageSize=PageSize.TWO_THIRDS_COLUMN
   backLinkUrl=""
   backLinkWithBrowserBack=false
@@ -104,7 +106,7 @@
   </#assign>
 
   <#assign serviceHeader>
-    <@_serviceHeader pageSize=pageSize />
+    <@_serviceHeader wrapperWidth=isFullPageWidth />
   </#assign>
 
   <#assign footer>
@@ -112,15 +114,14 @@
   </#assign>
 
   <#assign analyticsScript>
-    <script src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
+    <script type="module" src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
   </#assign>
 
   <@fdsDefaultPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=SERVICE_NAME
     pageHeading=pageHeading
-    phaseBanner=phaseBanner
-    phaseBannerLink=FEEDBACK_URL
+    phaseBanner=false
     fullWidthColumn=isFullColumnWidth
     oneHalfColumn=isOneHalfColumnWidth
     oneThirdColumn=isOneThirdColumnWidth
@@ -142,6 +143,8 @@
     caption=pageHeadingCaption
     wrapperWidth=isFullPageWidth
     cookieBannerMacro=_cookieBanner
+    topNavigationServiceName=serviceBranding.name()
+    topNavigationServiceUrl=springUrl(workAreaUrl)
   >
     <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.serviceAnalyticIdentifier() />
     <@fdsGoogleAnalytics.googleAnalytics measurementId=analytics.energyPortalAnalyticIdentifier() />
@@ -152,12 +155,12 @@
 <#macro defaultPageWithSubNavigation
   pageHeading
   htmlTitle=pageHeading
-  phaseBanner=true
+  phaseBanner=false
   showNavigationItems=true
   allowSearchEngineIndexing=true
 >
   <#assign serviceHeader>
-    <@_serviceHeader pageSize=PageSize.TWO_THIRDS_COLUMN />
+    <@_serviceHeader />
   </#assign>
 
   <#assign footer>
@@ -165,15 +168,14 @@
   </#assign>
 
   <#assign analyticsScript>
-    <script src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
+    <script type="module" src="<@spring.url'/assets/javascript/googleAnalyticsEventTracking.js'/>"></script>
   </#assign>
 
   <@fdsLeftSubNavPageTemplate
     htmlTitle=htmlTitle
     htmlAppTitle=pageHeading
-    phaseBanner=phaseBanner
+    phaseBanner=false
     topNavigation=showNavigationItems
-    logoProductText=CUSTOMER_MNEMONIC
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
     footerContent=footer
@@ -198,14 +200,12 @@
   </@defaultPage>
 </#macro>
 
-<#macro _serviceHeader pageSize>
-  <@pageHeader.header
-    serviceName=SERVICE_NAME
-    customerMnemonic=CUSTOMER_MNEMONIC
-    serviceHomeUrl=SERVICE_HOME_URL
-    signedInUserName=(loggedInUser?has_content)?then(loggedInUser.displayName(), "")
+<#macro _serviceHeader wrapperWidth=false>
+  <@energyPortalHeader
+    userDisplayName=loggedInUser?has_content?then(loggedInUser.displayName(), "")
     signOutUrl=springUrl("/logout")
-    pageSize=pageSize
+    headerLogo="NSTA"
+    wrapperWidth=wrapperWidth
   />
 </#macro>
 

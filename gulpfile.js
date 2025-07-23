@@ -44,8 +44,8 @@ gulp.task('copyFdsResources', () => {
 
 // copy govuk-frontend into public/assets
 gulp.task('copyGovukResources', () => {
-  return gulp.src(['fivium-design-system-core/node_modules/govuk-frontend/**/*'])
-    .pipe(gulp.dest('src/main/resources/public/assets/govuk-frontend'));
+  return gulp.src(['fivium-design-system-core/node_modules/govuk-frontend/dist/govuk/**/*'])
+    .pipe(gulp.dest('src/main/resources/public/assets/govuk-frontend/dist/govuk'));
 });
 
 // copy FDS bundle into public/assets
@@ -60,12 +60,6 @@ gulp.task('copyVendorJs', () => {
     .pipe(gulp.dest('src/main/resources/public/assets/static/js/vendor'))
 });
 
-// copy govuk-frontend dependency into public/assets
-gulp.task('copyHtml5Shiv', () => {
-  return gulp.src(['fivium-design-system-core/node_modules/html5shiv/dist/html5shiv.min.js'])
-    .pipe(gulp.dest('src/main/resources/public/assets/html5shiv'))
-});
-
 // copy FDS images into public/assets
 gulp.task('copyFdsImages', () => {
   return gulp.src(['fivium-design-system-core/fds/static/images/**/*'])
@@ -73,7 +67,7 @@ gulp.task('copyFdsImages', () => {
 });
 
 // Init all appropriate resources into project's public/assets
-gulp.task('initFds', gulp.series(['copyFdsResources', 'copyFdsImages', 'copyGovukResources', 'copyHtml5Shiv', 'copyJs', 'copyVendorJs']));
+gulp.task('initFds', gulp.series(['copyFdsResources', 'copyFdsImages', 'copyGovukResources', 'copyJs', 'copyVendorJs']));
 
 gulp.task('sassCi', gulp.series(['initFds'], () => {
   return compileSass(true);

@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.mvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
@@ -59,7 +60,8 @@ class DefaultModelAttributeServiceTest {
         wonsContactConfigurationProperties,
         userDetailService,
         topNavigationService,
-        analyticsProperties);
+        analyticsProperties
+    );
   }
 
   @Test
@@ -81,13 +83,13 @@ class DefaultModelAttributeServiceTest {
 
     assertThat(attributes)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
-                "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
-                "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "loggedInUser", user,
-                "navigationItems", List.of(topNavigationItem),
-                "footerItems", List.of(
+            Map.ofEntries(
+                entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
+                entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("loggedInUser", user),
+                entry("navigationItems", List.of(topNavigationItem)),
+                entry("footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
@@ -96,11 +98,12 @@ class DefaultModelAttributeServiceTest {
                         ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                     new FooterItem("Feedback",
                         ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
-                ),
-                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
-                "analytics", analyticsProperties
+                )),
+                entry("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null))),
+                entry("wonsEmail", wonsContactConfigurationProperties.email()),
+                entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
+                entry("analytics", analyticsProperties),
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
             )
         );
   }
@@ -122,23 +125,24 @@ class DefaultModelAttributeServiceTest {
 
     assertThat(attributes)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
-                "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
-                "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "navigationItems", List.of(topNavigationItem),
-                "footerItems", List.of(
+            Map.ofEntries(
+                entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
+                entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("navigationItems", List.of(topNavigationItem)),
+                entry("footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
                     new FooterItem("Cookies",
                         ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
-                ),
-                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
-                "analytics", analyticsProperties
+                )),
+                entry("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null))),
+                entry("wonsEmail", wonsContactConfigurationProperties.email()),
+                entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
+                entry("analytics", analyticsProperties),
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
             )
         );
   }
@@ -182,7 +186,8 @@ class DefaultModelAttributeServiceTest {
         .hasKeyWithValue("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
         .hasKeyWithValue("wonsEmail", wonsContactConfigurationProperties.email())
         .hasKeyWithValue("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
-        .hasKeyWithValue("analytics", analyticsProperties);
+        .hasKeyWithValue("analytics", analyticsProperties)
+        .hasKeyWithValue("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
   }
 
   @Test
@@ -205,24 +210,25 @@ class DefaultModelAttributeServiceTest {
 
     assertThat(attributes)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
-                "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
-                "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "navigationItems", List.of(topNavigationItem),
-                "currentEndPoint", "/request-uri",
-                "footerItems", List.of(
+            Map.ofEntries(
+                entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
+                entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("navigationItems", List.of(topNavigationItem)),
+                entry("currentEndPoint", "/request-uri"),
+                entry("footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
                         ReverseRouter.route(on(ContactInformationController.class).getContactInformationPage())),
                     new FooterItem("Cookies",
                         ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
-                ),
-                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
-                "analytics", analyticsProperties
+                )),
+                entry("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null))),
+                entry("wonsEmail", wonsContactConfigurationProperties.email()),
+                entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
+                entry("analytics", analyticsProperties),
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
             )
         );
   }
@@ -248,13 +254,13 @@ class DefaultModelAttributeServiceTest {
 
     assertThat(attributes)
         .containsExactlyInAnyOrderEntriesOf(
-            Map.of(
-                "serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties(),
-                "customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties(),
-                "serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
-                "loggedInUser", user,
-                "navigationItems", List.of(topNavigationItem),
-                "footerItems", List.of(
+            Map.ofEntries(
+                entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
+                entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("loggedInUser", user),
+                entry("navigationItems", List.of(topNavigationItem)),
+                entry("footerItems", List.of(
                     new FooterItem("Accessibility statement",
                         ReverseRouter.route(on(AccessibilityStatementController.class).getAccessibilityStatement())),
                     new FooterItem("Contact us",
@@ -263,11 +269,12 @@ class DefaultModelAttributeServiceTest {
                         ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                     new FooterItem("Feedback",
                         ReverseRouter.route(on(FeedbackController.class).getFeedback(null)))
-                ),
-                "feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)),
-                "wonsEmail", wonsContactConfigurationProperties.email(),
-                "cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()),
-                "analytics", analyticsProperties
+                )),
+                entry("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null))),
+                entry("wonsEmail", wonsContactConfigurationProperties.email()),
+                entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
+                entry("analytics", analyticsProperties),
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
             )
         );
   }

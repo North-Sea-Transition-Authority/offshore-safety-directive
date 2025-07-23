@@ -7,7 +7,7 @@
 
     <#assign updateRequestedTag>
         <#if modelProperties["hasUpdateRequest"]>
-            <@fdsResultList.resultListTag tagText="Update requested" tagClass="govuk-tag--blue"/>
+            <@fdsTag.tag tagClass="govuk-tag--blue">Update requested</@fdsTag.tag>
         </#if>
     </#assign>
 

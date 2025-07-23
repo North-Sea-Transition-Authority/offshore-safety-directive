@@ -17,7 +17,7 @@
             <p class="govuk-!-margin-top-0">${subarea.displayName()}</p>
           <#else>
             <p class="govuk-!-margin-top-0">${subarea.subareaName().value()}</p>
-            <strong class="govuk-tag govuk-tag--blue">No longer exists</strong>
+            <@fdsTag.tag tagClass="govuk-tag--blue">No longer exists</@fdsTag.tag>
           </#if>
         </#list>
       </@fdsSummaryList.summaryListRowNoAction>
