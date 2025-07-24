@@ -4,7 +4,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import uk.co.fivium.energyportalmessagequeue.sqs.SqsService;
 import uk.co.nstauthority.offshoresafetydirective.authentication.LogoutService;
 
 @Component
-@Profile("use-epas")
 public class EnergyPortalLogoutSqsService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(EnergyPortalLogoutSqsService.class);
