@@ -194,13 +194,11 @@ public class TeamManagementController {
           .addObject("registerUrl", energyPortalConfiguration.registrationUrl());
     }
 
-    var wuaId = teamManagementService.getEnergyPortalUser(form.getUsername()).stream()
-        .filter(user -> !user.isSharedAccount() && user.canLogin())
+    var wuaId = teamManagementService.getEnergyPortalUser(form.getEmailAddress())
         .map(EnergyPortalUserDto::webUserAccountId)
-        .findFirst()
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
-            "user with username %s not found or is shared account".formatted(form.getUsername()))
+            "user with email address %s does not exist".formatted(form.getEmailAddress()))
         );
 
     return ReverseRouter.redirect(on(TeamManagementController.class).renderUserTeamRoles(teamId, wuaId, null));

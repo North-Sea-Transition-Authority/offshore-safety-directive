@@ -8,7 +8,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagemen
 @Service
 public class AddMemberFormValidator {
 
-  private static final String FIELD_NAME = "username";
+  private static final String FIELD_NAME = "emailAddress";
 
   private final TeamManagementService teamManagementService;
 
@@ -18,34 +18,22 @@ public class AddMemberFormValidator {
 
   public boolean isValid(AddMemberForm form, Errors errors) {
 
-    if (StringUtils.isBlank(form.getUsername())) {
-      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".required", "Enter an Energy Portal username");
+    if (StringUtils.isBlank(form.getEmailAddress())) {
+      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".required", "Enter a UK Energy Portal email address");
       return false;
     }
 
-    var users = teamManagementService.getEnergyPortalUser(form.getUsername());
+    var users = teamManagementService.getEnergyPortalUser(form.getEmailAddress());
     if (users.isEmpty()) {
-      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".notFound", "No Energy Portal user exists with this username");
+      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".notFound", "No UK Energy Portal account exists with this email address");
       return false;
     }
 
-    if (users.size() > 1) {
-      errors.rejectValue(
-          FIELD_NAME,
-          FIELD_NAME + ".tooMany",
-          "More than one Energy Portal user exists with this email address. Enter the username of the user instead."
-      );
-    }
-
-    if (users.get(0).isSharedAccount()) {
-      errors.rejectValue(FIELD_NAME, FIELD_NAME + ".sharedAccount", "You cannot add shared accounts to this service");
-    }
-
-    if (!users.get(0).canLogin()) {
+    if (!users.get().canLogin()) {
       errors.rejectValue(
           FIELD_NAME,
           FIELD_NAME + ".inactiveAccount",
-          "This user does not have login access to the Energy Portal and can't be added to this service"
+          "This user does not have login access to the UK Energy Portal and can't be added to this service"
       );
     }
 

@@ -296,6 +296,19 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void getEnergyPortalUser_whenMultipleUsersFound_thenThrow() {
+    var emailAddress = "foo";
+
+    when(energyPortalUserService.findUserByEmail(eq(emailAddress), any(RequestPurpose.class)))
+        .thenReturn(List.of(EnergyPortalUserDtoTestUtil.Builder().build(), EnergyPortalUserDtoTestUtil.Builder().build()));
+
+    assertThatThrownBy(() -> teamManagementService.getEnergyPortalUser("foo"))
+        .isInstanceOf(TeamManagementException.class)
+        .hasMessage("More than one UK Energy Portal user exists with the email address %s".formatted(emailAddress)
+        );
+  }
+
+  @Test
   void getTeamMemberView() {
     when(teamRoleRepository.findByWuaIdAndTeam(user1WuaId, regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage, regTeamUser1RoleOrgAdmin));

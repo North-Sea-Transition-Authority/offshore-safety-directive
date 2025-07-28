@@ -148,8 +148,20 @@ public class TeamManagementService {
     return teamRepository.findById(teamId);
   }
 
-  public List<EnergyPortalUserDto> getEnergyPortalUser(String emailAddress) {
-    return energyPortalUserService.findUserByEmail(emailAddress, new RequestPurpose("Find user to add to team"));
+  public Optional<EnergyPortalUserDto> getEnergyPortalUser(String emailAddress) {
+    var energyPortalUserDtos = energyPortalUserService.findUserByEmail(
+        emailAddress,
+        new RequestPurpose("Find user to add to team")
+    );
+
+    if (energyPortalUserDtos.size() > 1) {
+      throw new TeamManagementException(
+          "More than one UK Energy Portal user exists with the email address %s".formatted(emailAddress)
+      );
+    }
+    return energyPortalUserDtos
+        .stream()
+        .findFirst();
   }
 
   public TeamMemberView getTeamMemberView(Team team, Long wuaId) {
