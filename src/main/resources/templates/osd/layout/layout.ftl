@@ -176,6 +176,8 @@
     htmlAppTitle=pageHeading
     phaseBanner=false
     topNavigation=showNavigationItems
+    topNavigationServiceName=serviceBranding.name()
+    topNavigationServiceUrl=springUrl(workAreaUrl)
     headerContent=serviceHeader
     noIndex=!allowSearchEngineIndexing
     footerContent=footer
