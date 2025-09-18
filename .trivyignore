@@ -1,9 +1,22 @@
- CVE-2024-7254
- CVE-2025-48734
- CVE-2024-47554
- CVE-2025-58057
- CVE-2025-58056
- CVE-2025-8916
+# com.google.protobuf:protobuf-java
+CVE-2024-7254
+# commons-beanutils:commons-beanutils
+CVE-2024-47554
+# commons-io:commons-io
+CVE-2025-48734
+# io.netty:netty-codec-http2
 CVE-2025-55163
-CVE-2025-48989
+# org.bouncycastle:bcpkix-jdk18on
+CVE-2025-8916
+# org.springframework:spring-webmvc
 CVE-2025-41242
+# io.netty:netty-codec
+CVE-2025-58057
+# io.netty:netty-codec-http
+CVE-2025-58056
+# org.apache.tomcat.embed:tomcat-embed-core
+CVE-2025-48989
+# org.springframework.security:spring-security-core
+CVE-2025-41248
+# org.springframework:spring-core
+CVE-2025-41249
