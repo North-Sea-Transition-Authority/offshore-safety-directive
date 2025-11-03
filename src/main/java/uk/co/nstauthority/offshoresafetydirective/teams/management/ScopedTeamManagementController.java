@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
@@ -39,13 +42,17 @@ public class ScopedTeamManagementController {
   private final TeamManagementService teamManagementService;
   private final PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
   private final TeamQueryService teamQueryService;
+  private final EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService;
+
 
   public ScopedTeamManagementController(TeamManagementService teamManagementService,
                                         PortalOrganisationGroupQueryService portalOrganisationGroupQueryService,
-                                        TeamQueryService teamQueryService) {
+                                        TeamQueryService teamQueryService,
+                                        EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService) {
     this.teamManagementService = teamManagementService;
     this.portalOrganisationGroupQueryService = portalOrganisationGroupQueryService;
     this.teamQueryService = teamQueryService;
+    this.energyPortalServiceProviderTeamService = energyPortalServiceProviderTeamService;
   }
 
   @GetMapping("/organisation/new")
@@ -80,6 +87,15 @@ public class ScopedTeamManagementController {
 
     var scopeRef = TeamScopeReference.from(organisationGroup.organisationGroupId(), "ORGANISATION_GROUP");
     var team = teamManagementService.createScopedTeam(organisationGroup.name(), TeamType.ORGANISATION_GROUP, scopeRef);
+
+    var serviceProviderTeam = new ServiceProviderTeamDto(
+        team.getId().toString(),
+        team.getScopeId(),
+        ScopeType.ORGANISATION_GROUP,
+        team.getTeamType().name()
+    );
+    energyPortalServiceProviderTeamService.publishTeam(serviceProviderTeam);
+
     return ReverseRouter.redirect(on(TeamManagementController.class).renderTeamMemberList(team.getId(), null));
   }
 

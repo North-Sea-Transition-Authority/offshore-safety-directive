@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.authentication;
 import java.util.Optional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import uk.co.nstauthority.offshoresafetydirective.audit.AuditRevisionUtil;
 
 @Service
 public class UserDetailService {
@@ -20,11 +21,12 @@ public class UserDetailService {
   }
 
   public Optional<ServiceUserDetail> getOptionalUserDetail() {
-    try {
-      return Optional.of(getUserDetail());
-    } catch (InvalidAuthenticationException exception) {
-      return Optional.empty();
+    if (SecurityContextHolder.getContext().getAuthentication() instanceof ServiceSaml2Authentication authentication
+        && authentication.getPrincipal() instanceof ServiceUserDetail serviceUserDetail) {
+      return Optional.of(serviceUserDetail);
     }
+
+    return Optional.ofNullable(AuditRevisionUtil.getFallbackAuditUser());
   }
 
   public boolean isUserLoggedIn() {

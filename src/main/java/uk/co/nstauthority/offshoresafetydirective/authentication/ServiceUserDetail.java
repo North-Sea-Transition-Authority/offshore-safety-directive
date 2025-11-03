@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.authentication;
 import java.io.Serializable;
 import java.util.Objects;
 import org.springframework.security.core.AuthenticatedPrincipal;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 
 public record ServiceUserDetail(
     Long wuaId,
@@ -22,5 +23,17 @@ public record ServiceUserDetail(
   public String displayName() {
     var userName = String.format("%s %s", forename, surname);
     return Objects.nonNull(proxyUsername) ? String.format("%s as %s", proxyUsername, userName) : userName;
+  }
+
+  public static ServiceUserDetail from(EnergyPortalUserDto energyPortalUser) {
+    return new ServiceUserDetail(
+        energyPortalUser.webUserAccountId(),
+        null,
+        energyPortalUser.forename(),
+        energyPortalUser.surname(),
+        energyPortalUser.emailAddress(),
+        null,
+        null
+    );
   }
 }

@@ -96,6 +96,44 @@ class AuditRevisionListenerTest {
     assertThat(auditRevisionIterator.hasNext()).isFalse();
   }
 
+  @Test
+  void verifyEntityAuditedWithFallBackUserIds() {
+
+    // GIVEN an insert into the nominations table
+    var insertRevisionUser = ServiceUserDetailTestUtil.Builder()
+        .withWuaId(100L)
+        .withProxyWuaId(null)
+        .build();
+
+    SamlAuthenticationUtil.Builder()
+        .withUser(null)
+        .setSecurityContext();
+
+    var nomination = NominationTestUtil.builder()
+        .withId(null)
+        .withReference("fallback reference")
+        .build();
+
+    AuditRevisionUtil.withFallbackAuditUser(
+        insertRevisionUser,
+        () -> nominationRepository.save(nomination)
+    );
+
+    // THEN we will have one audit entries with the relevant type and user details
+    Iterator<Revision<Long, Nomination>> auditRevisionIterator = nominationRepository
+        .findRevisions(nomination.getId())
+        .iterator();
+
+    checkNextRevision(
+        auditRevisionIterator,
+        RevisionMetadata.RevisionType.INSERT,
+        "fallback reference",
+        insertRevisionUser
+    );
+
+    assertThat(auditRevisionIterator.hasNext()).isFalse();
+  }
+
   private void checkNextRevision(Iterator<Revision<Long, Nomination>> revisionIterator,
                                  RevisionMetadata.RevisionType revisionType,
                                  String reference,

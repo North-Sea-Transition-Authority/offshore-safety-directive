@@ -22,6 +22,10 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
+import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamService;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
@@ -36,6 +40,9 @@ import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @ContextConfiguration(classes = ScopedTeamManagementController.class)
 class ScopedTeamManagementControllerTest extends AbstractControllerTest {
+
+  @MockitoBean
+  private EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService;
 
   private static ServiceUserDetail invokingUser;
 
@@ -73,6 +80,7 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .build();
 
     var newTeam = new Team(UUID.randomUUID());
+    newTeam.setTeamType(TeamType.ORGANISATION_GROUP);
 
     when(teamQueryService.userHasStaticRole(invokingUser.wuaId(), TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER))
         .thenReturn(true);
@@ -89,6 +97,16 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .param("orgGroupId", "50"))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl(ReverseRouter.route(on(TeamManagementController.class).renderTeamMemberList(newTeam.getId(), null))));
+
+    var expectedServiceProviderTeamDto = new ServiceProviderTeamDto(
+        newTeam.getId().toString(),
+        newTeam.getScopeId(),
+        ScopeType.ORGANISATION_GROUP,
+        newTeam.getTeamType().name()
+    );
+
+    verify(energyPortalServiceProviderTeamService)
+        .publishTeam(expectedServiceProviderTeamDto);
   }
 
   @Test
@@ -104,6 +122,8 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(view().name("osd/teamManagement/scoped/createOrganisationTeam"));
 
     verify(teamManagementService, never()).createScopedTeam(any(), any(), any());
+
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @Test
@@ -132,6 +152,7 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(redirectedUrl(ReverseRouter.route(on(TeamManagementController.class).renderTeamMemberList(existingTeam.getId(), null))));
 
     verify(teamManagementService, never()).createScopedTeam(any(), any(), any());
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @SecurityTest
@@ -146,6 +167,7 @@ class ScopedTeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden()); // No redirect to next page
 
     verify(teamManagementService, never()).createScopedTeam(any(), any(), any());
+    verify(energyPortalServiceProviderTeamService, never()).publishTeam(any());
   }
 
   @Test

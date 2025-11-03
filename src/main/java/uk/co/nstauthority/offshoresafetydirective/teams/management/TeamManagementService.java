@@ -11,7 +11,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
-import uk.co.fivium.energyportal.accounts.starter.EnergyPortalServiceAccessService;
+import uk.co.fivium.energyportal.starter.accounts.EnergyPortalServiceAccessService;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderUserRolesService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.WebUserAccountId;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
@@ -34,15 +35,18 @@ public class TeamManagementService {
   private final TeamQueryService teamQueryService;
   private final EnergyPortalUserService energyPortalUserService;
   private final EnergyPortalServiceAccessService energyPortalServiceAccessService;
+  private final EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService;
 
   public TeamManagementService(TeamRepository teamRepository, TeamRoleRepository teamRoleRepository,
                                TeamQueryService teamQueryService, EnergyPortalUserService energyPortalUserService,
-                               EnergyPortalServiceAccessService energyPortalServiceAccessService) {
+                               EnergyPortalServiceAccessService energyPortalServiceAccessService,
+                               EnergyPortalServiceProviderUserRolesService energyPortalServiceProviderUserRolesService) {
     this.teamRepository = teamRepository;
     this.teamRoleRepository = teamRoleRepository;
     this.energyPortalUserService = energyPortalUserService;
     this.teamQueryService = teamQueryService;
     this.energyPortalServiceAccessService = energyPortalServiceAccessService;
+    this.energyPortalServiceProviderUserRolesService = energyPortalServiceProviderUserRolesService;
   }
 
   public Team createScopedTeam(String name, TeamType teamType, TeamScopeReference scopeRef) {
@@ -247,6 +251,13 @@ public class TeamManagementService {
 
     teamRoleRepository.saveAll(newTeamRoles);
 
+    energyPortalServiceProviderUserRolesService.publishUsersRolesForTeam(
+        wuaId,
+        team.getId().toString(),
+        team.getTeamType().name(),
+        roles.stream().map(Role::name).collect(Collectors.toSet())
+    );
+
     if (!doesTeamHaveTeamManager(team)) {
       throw new TeamManagementException("At least 1 team manager must exist in team %s".formatted(team.getId()));
     }
@@ -264,6 +275,10 @@ public class TeamManagementService {
       throw new TeamManagementException("Can't remove last team manager user %s from team %s".formatted(wuaId, team.getId()));
     }
     teamRoleRepository.deleteByWuaIdAndTeam(wuaId, team);
+    energyPortalServiceProviderUserRolesService.publishRemoveUserFromTeam(
+        wuaId,
+        team.getId().toString()
+    );
 
     if (!teamRoleRepository.findAllByWuaId(wuaId).isEmpty()) {
       return;
