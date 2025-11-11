@@ -186,6 +186,16 @@ class TeamManagementServiceTest {
   }
 
   @Test
+  void updateTeamName() {
+    var newName = "New Team Name";
+
+    teamManagementService.updateTeamName(orgTeam1, newName);
+    verify(teamRepository).save(teamArgumentCaptor.capture());
+
+    assertThat(teamArgumentCaptor.getValue().getName()).isEqualTo(newName);
+  }
+
+  @Test
   void getTeamTypesUserIsMemberOf() {
 
     when(teamRoleRepository.findAllByWuaId(user1WuaId))
@@ -329,7 +339,7 @@ class TeamManagementServiceTest {
         .hasSharedAccount(false)
         .build();
 
-    when(energyPortalUserService.findByWuaId(refEq(new WebUserAccountId(1)),any(RequestPurpose.class)))
+    when(energyPortalUserService.findByWuaId(refEq(new WebUserAccountId(1)), any(RequestPurpose.class)))
         .thenReturn(Optional.of(user));
 
     var teamMemberView = teamManagementService.getTeamMemberView(regTeam, user1WuaId);
@@ -341,7 +351,8 @@ class TeamManagementServiceTest {
     assertThat(teamMemberView.email()).isEqualTo(user.emailAddress());
     assertThat(teamMemberView.telNo()).isEqualTo(user.telephoneNumber());
     assertThat(teamMemberView.teamId()).isEqualTo(regTeam.getId());
-    assertThat(teamMemberView.roles()).containsExactlyInAnyOrder(regTeamUser1RoleManage.getRole(), regTeamUser1RoleOrgAdmin.getRole());
+    assertThat(teamMemberView.roles()).containsExactlyInAnyOrder(regTeamUser1RoleManage.getRole(),
+        regTeamUser1RoleOrgAdmin.getRole());
   }
 
   @Test
@@ -351,7 +362,8 @@ class TeamManagementServiceTest {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleOrgAdmin, regTeamUser1RoleManage, regTeamUser2RoleOrgAdmin));
 
-    when(energyPortalUserService.findByWuaIds(eq(Set.of(new WebUserAccountId(1), new WebUserAccountId(2))), any(RequestPurpose.class)))
+    when(energyPortalUserService.findByWuaIds(eq(Set.of(new WebUserAccountId(1), new WebUserAccountId(2))),
+        any(RequestPurpose.class)))
         .thenReturn(List.of(user1, user2));
 
     var teamMemberViews = teamManagementService.getTeamMemberViewsForTeam(regTeam);
@@ -503,7 +515,8 @@ class TeamManagementServiceTest {
         .thenReturn(Optional.empty());
 
     assertThatExceptionOfType(TeamManagementException.class)
-        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam, List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
+        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam,
+            List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
 
     verify(teamRoleRepository, never()).deleteByWuaIdAndTeam(any(), any());
     verify(teamRoleRepository, never()).saveAll(any());
@@ -546,7 +559,8 @@ class TeamManagementServiceTest {
         .thenReturn(Optional.empty());
 
     assertThatExceptionOfType(TeamManagementException.class)
-        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam, List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
+        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam,
+            List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
 
     verify(teamRoleRepository, never()).deleteByWuaIdAndTeam(any(), any());
     verify(teamRoleRepository, never()).saveAll(any());
@@ -567,7 +581,8 @@ class TeamManagementServiceTest {
         .thenReturn(Optional.empty());
 
     assertThatExceptionOfType(TeamManagementException.class)
-        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam, List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
+        .isThrownBy(() -> teamManagementService.setUserTeamRoles(user1WuaId, regTeam,
+            List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)));
 
     verify(teamRoleRepository, never()).deleteByWuaIdAndTeam(any(), any());
     verify(teamRoleRepository, never()).saveAll(any());
@@ -667,13 +682,15 @@ class TeamManagementServiceTest {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));
 
-    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user2WuaId, List.of(Role.THIRD_PARTY_TEAM_MANAGER)))
+    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user2WuaId,
+        List.of(Role.THIRD_PARTY_TEAM_MANAGER)))
         .isTrue();
   }
 
   @Test
   void willManageTeamRoleBePresentAfterMemberRoleUpdate_newRolesIncludeManage() {
-    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user1WuaId, List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)))
+    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user1WuaId,
+        List.of(Role.TEAM_MANAGER, Role.THIRD_PARTY_TEAM_MANAGER)))
         .isTrue();
   }
 
@@ -682,7 +699,8 @@ class TeamManagementServiceTest {
     when(teamRoleRepository.findByTeam(regTeam))
         .thenReturn(List.of(regTeamUser1RoleManage));
 
-    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user1WuaId, List.of(Role.THIRD_PARTY_TEAM_MANAGER)))
+    assertThat(teamManagementService.willManageTeamRoleBePresentAfterMemberRoleUpdate(regTeam, user1WuaId,
+        List.of(Role.THIRD_PARTY_TEAM_MANAGER)))
         .isFalse();
   }
 
