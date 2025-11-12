@@ -49,7 +49,6 @@ public class TeamManagementService {
     this.energyPortalServiceProviderUserRolesService = energyPortalServiceProviderUserRolesService;
   }
 
-  @Transactional
   public Team createScopedTeam(String name, TeamType teamType, TeamScopeReference scopeRef) {
     if (!teamType.isScoped()) {
       throw new TeamManagementException("Team of type %s is not scoped".formatted(teamType));
@@ -68,7 +67,6 @@ public class TeamManagementService {
     return teamRepository.save(team);
   }
 
-  @Transactional
   public void updateTeamName(Team team, String newName) {
     team.setName(newName);
     teamRepository.save(team);
