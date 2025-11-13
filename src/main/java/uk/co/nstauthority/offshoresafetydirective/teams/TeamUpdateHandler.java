@@ -8,14 +8,14 @@ import uk.co.fivium.energyportal.starter.organisationgroup.EnergyPortalOrganisat
 import uk.co.nstauthority.offshoresafetydirective.teams.management.TeamManagementService;
 
 @Component
-public class TeamUpdateHandler implements EnergyPortalOrganisationGroupConsumer {
+class TeamUpdateHandler implements EnergyPortalOrganisationGroupConsumer {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(TeamUpdateHandler.class);
 
   private final TeamQueryService teamQueryService;
   private final TeamManagementService teamManagementService;
 
-  public TeamUpdateHandler(TeamQueryService teamQueryService, TeamManagementService teamManagementService) {
+  TeamUpdateHandler(TeamQueryService teamQueryService, TeamManagementService teamManagementService) {
     this.teamQueryService = teamQueryService;
     this.teamManagementService = teamManagementService;
   }
