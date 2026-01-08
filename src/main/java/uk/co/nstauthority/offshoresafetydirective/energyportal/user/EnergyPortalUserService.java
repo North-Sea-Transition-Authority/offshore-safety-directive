@@ -64,9 +64,9 @@ public class EnergyPortalUserService {
   public List<EnergyPortalUserDto> findByWuaIds(Collection<WebUserAccountId> webUserAccountIds, RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId -> {
 
-      List<Integer> webUserAccountIdApiInputs = webUserAccountIds
+      List<Long> webUserAccountIdApiInputs = webUserAccountIds
           .stream()
-          .map(WebUserAccountId::toInt)
+          .map(WebUserAccountId::id)
           .toList();
 
       return userApi.searchUsersByIds(
@@ -84,7 +84,7 @@ public class EnergyPortalUserService {
   public Optional<EnergyPortalUserDto> findByWuaId(WebUserAccountId webUserAccountId, RequestPurpose requestPurpose) {
     return energyPortalApiWrapper.makeRequest(requestPurpose, logCorrelationId ->
         userApi.findUserById(
-            webUserAccountId.toInt(),
+            webUserAccountId.id(),
             USER_PROJECT_ROOT,
             requestPurpose,
             logCorrelationId

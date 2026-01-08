@@ -12,10 +12,6 @@ public record WebUserAccountId(long id) implements Serializable {
     return new WebUserAccountId(Long.parseLong(value));
   }
 
-  public int toInt() {
-    return ((Long) id).intValue();
-  }
-
   @Override
   public String toString() {
     return String.valueOf(id);

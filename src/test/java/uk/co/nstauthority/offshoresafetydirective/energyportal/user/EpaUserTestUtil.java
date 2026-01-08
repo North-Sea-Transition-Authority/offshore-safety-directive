@@ -15,8 +15,8 @@ class EpaUserTestUtil {
 
   static class Builder {
 
-    private int webUserAccountId = 1;
-    private int personId = 2;
+    private long webUserAccountId = 1L;
+    private long personId = 2;
     private String title = "title";
     private String forename = "forename";
     private String surname = "surname";
@@ -25,14 +25,16 @@ class EpaUserTestUtil {
     private String telephoneNumber = "telephone number";
     private boolean canLogin = true;
     private boolean isAccountShared = false;
-    private Builder() {}
 
-    Builder withWebUserAccountId(int webUserAccountId) {
+    private Builder() {
+    }
+
+    Builder withWebUserAccountId(long webUserAccountId) {
       this.webUserAccountId = webUserAccountId;
       return this;
     }
 
-    Builder withPersonId(int personId) {
+    Builder withPersonId(long personId) {
       this.personId = personId;
       return this;
     }

@@ -90,7 +90,7 @@ class EnergyPortalUserServiceTest {
         )
         .containsExactly(
             tuple(
-                Long.valueOf(expectedUser.getWebUserAccountId()),
+                expectedUser.getWebUserAccountId(),
                 expectedUser.getTitle(),
                 expectedUser.getForename(),
                 expectedUser.getSurname(),
@@ -131,7 +131,7 @@ class EnergyPortalUserServiceTest {
 
     assertThat(energyPortalUserService.findUserByEmail(username, REQUEST_PURPOSE))
         .extracting(EnergyPortalUserDto::webUserAccountId)
-        .containsExactly(Long.valueOf(canLoginUser.getWebUserAccountId()));
+        .containsExactly(canLoginUser.getWebUserAccountId());
   }
 
   @Test
@@ -142,7 +142,7 @@ class EnergyPortalUserServiceTest {
     var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
 
     when(userApi.searchUsersByIds(
-        eq(List.of(webUserAccountId.toInt())),
+        eq(List.of(webUserAccountId.id())),
         eq(userProjectionRoot),
         refEq(REQUEST_PURPOSE),
         refEq(CORRELATION_ID)
@@ -160,7 +160,7 @@ class EnergyPortalUserServiceTest {
     var userProjectionRoot = EnergyPortalUserService.USERS_PROJECT_ROOT;
 
       when(userApi.searchUsersByIds(
-          eq(List.of(webUserAccountId.toInt())),
+          eq(List.of(webUserAccountId.id())),
           eq(userProjectionRoot),
           refEq(REQUEST_PURPOSE),
           refEq(CORRELATION_ID)
@@ -179,7 +179,7 @@ class EnergyPortalUserServiceTest {
         )
         .containsExactly(
             tuple(
-                Long.valueOf(expectedUser.getWebUserAccountId()),
+                expectedUser.getWebUserAccountId(),
                 expectedUser.getTitle(),
                 expectedUser.getForename(),
                 expectedUser.getSurname(),
@@ -200,7 +200,7 @@ class EnergyPortalUserServiceTest {
     var userProjectionRoot = EnergyPortalUserService.USER_PROJECT_ROOT;
 
     when(userApi.findUserById(
-        eq(webUserAccountId.toInt()),
+        eq(webUserAccountId.id()),
         eq(userProjectionRoot),
         refEq(REQUEST_PURPOSE),
         refEq(CORRELATION_ID)
@@ -221,7 +221,7 @@ class EnergyPortalUserServiceTest {
             EnergyPortalUserDto::canLogin
         )
         .containsExactly(
-            Long.valueOf(expectedUser.getWebUserAccountId()),
+            expectedUser.getWebUserAccountId(),
             expectedUser.getTitle(),
             expectedUser.getForename(),
             expectedUser.getSurname(),
@@ -240,7 +240,7 @@ class EnergyPortalUserServiceTest {
     var userProjectionRoot = EnergyPortalUserService.USER_PROJECT_ROOT;
 
     when(userApi.findUserById(
-        eq(webUserAccountId.toInt()),
+        eq(webUserAccountId.id()),
         eq(userProjectionRoot),
         refEq(REQUEST_PURPOSE),
         refEq(CORRELATION_ID)
