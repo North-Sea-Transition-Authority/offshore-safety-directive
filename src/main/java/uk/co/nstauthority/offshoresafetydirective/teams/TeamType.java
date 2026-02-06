@@ -6,10 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.teams.management.ScopedTeamManagementController;
 
-public enum TeamType {
+public enum TeamType implements Displayable {
 
   REGULATOR(
       "Licensing authority",
@@ -55,6 +56,7 @@ public enum TeamType {
     this.createNewInstanceRoute = createNewInstanceRoute;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }

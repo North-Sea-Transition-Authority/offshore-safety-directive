@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision;
 
-public enum NominationDecision {
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
+
+public enum NominationDecision implements Displayable {
 
   NO_OBJECTION("No objection", 10),
   OBJECTION("Objection", 20);
@@ -17,6 +19,12 @@ public enum NominationDecision {
     return displayText;
   }
 
+  @Override
+  public String getDisplayName() {
+    return displayText;
+  }
+
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
   }

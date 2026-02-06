@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.action;
 
-public enum CaseProcessingActionItem {
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
+
+public enum CaseProcessingActionItem implements Displayable {
 
   UPDATE_NOMINATION("Update nomination", 5, CaseProcessingActionIdentifier.REQUEST_UPDATE),
   GENERAL_CASE_NOTE("Add a case note", 10, CaseProcessingActionIdentifier.GENERAL_NOTE),
@@ -25,6 +27,12 @@ public enum CaseProcessingActionItem {
     this.identifier = new CaseProcessingActionIdentifier(identifier);
   }
 
+  @Override
+  public String getDisplayName() {
+    return actionText;
+  }
+
+  @Override
   public int getDisplayOrder() {
     return displayOrder;
   }

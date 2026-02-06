@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.workarea;
 
-enum WorkAreaItemType {
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
+
+enum WorkAreaItemType implements Displayable {
 
   NOMINATION(10);
 
@@ -10,7 +12,8 @@ enum WorkAreaItemType {
     this.displayOrder = displayOrder;
   }
 
-  public Integer getDisplayOrder() {
+  @Override
+  public int getDisplayOrder() {
     return displayOrder;
   }
 }

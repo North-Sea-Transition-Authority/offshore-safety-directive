@@ -2,3 +2,5 @@
 CVE-2024-47554
 # io.netty:netty-codec-http
 CVE-2025-67735
+# ch.qos.logback:logback-core
+CVE-2026-1225

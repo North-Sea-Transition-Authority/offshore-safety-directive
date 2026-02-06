@@ -1,6 +1,8 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
-public enum PortalAssetType {
+import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
+
+public enum PortalAssetType implements Displayable {
 
   WELLBORE("Wellbore", "wellbore"),
   INSTALLATION("Installation", "installation"),
@@ -15,6 +17,7 @@ public enum PortalAssetType {
     this.sentenceCaseDisplayName = sentenceCaseDisplayName;
   }
 
+  @Override
   public String getDisplayName() {
     return displayName;
   }
