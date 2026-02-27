@@ -81,14 +81,14 @@ dependencies {
 
 	// fivium managed dependencies
 	implementation 'uk.co.fivium.energyportalapi:client:v16.1.0'
-	implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v4.0.0'
+	implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v5.2.0'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 	implementation "uk.co.fivium.energyportalmessagequeue:spring-boot-starter:${epmqVersion}"
 	implementation "uk.co.fivium.energyportalmessagequeue:messages:${epmqVersion}"
 	implementation 'uk.co.fivium:file-upload-spring-boot-starter:v2.8.0'
 	implementation 'uk.co.fivium.feedbackmanagementservice:client:v2.3.0'
 	implementation 'uk.co.fivium:digital-notification-library-spring-boot-starter:v1.0.1'
-    implementation 'uk.co.fivium:digital-enum-materialisation-library-spring-boot-starter:v1.1.2'
+	implementation 'uk.co.fivium:digital-enum-materialisation-library-spring-boot-starter:v1.1.2'
 
 	runtimeOnly 'org.postgresql:postgresql'
 	jooqGenerator 'org.postgresql:postgresql'
@@ -248,15 +248,15 @@ tasks.register('epmqMessagesJar', Jar) {
 	include 'uk/co/nstauthority/offshoresafetydirective/nomination/installation/NominationHasInstallations.class'
 	include 'uk/co/nstauthority/offshoresafetydirective/fds/DisplayableEnumOption.class'
 
-    // Some of the enums used in messages now implement MaterialisableEnum, this allows EPMQ to compile by exposing
-    // MaterialisableEnum.class
-    from({
-      configurations.compileClasspath.filter {
-        it.name.contains('digital-enum-materialisation-library')
-      }.collect { zipTree(it) }
-    }) {
-      include 'uk/co/fivium/digitalenummaterialisationlibrary/enummaterialisation/MaterialisableEnum.class'
-    }
+	// Some of the enums used in messages now implement MaterialisableEnum, this allows EPMQ to compile by exposing
+	// MaterialisableEnum.class
+	from({
+		configurations.compileClasspath.filter {
+			it.name.contains('digital-enum-materialisation-library')
+		}.collect { zipTree(it) }
+	}) {
+		include 'uk/co/fivium/digitalenummaterialisationlibrary/enummaterialisation/MaterialisableEnum.class'
+	}
 
 	archiveBaseName = 'offshore-safety-directive-epmq-messages'
 }
