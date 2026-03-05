@@ -6,9 +6,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationSubmittedEvent;
@@ -42,8 +43,9 @@ class NominationSubmissionPortalReferencesCopyForwardListener {
     this.nominationDetailService = nominationDetailService;
   }
 
-  @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-  public void handleSubmission(NominationSubmittedEvent event) {
+  @EventListener
+  @Transactional(propagation = Propagation.MANDATORY)
+  void handleSubmission(NominationSubmittedEvent event) {
     var nominationDetail = nominationDetailService.getLatestNominationDetail(event.getNominationId());
 
     var dto = NominationDetailDto.fromNominationDetail(nominationDetail);

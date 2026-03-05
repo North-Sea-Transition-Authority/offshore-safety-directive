@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
 
 @Repository
-interface NominationPortalReferenceRepository extends CrudRepository<NominationPortalReference, UUID> {
+public interface NominationPortalReferenceRepository extends CrudRepository<NominationPortalReference, UUID> {
 
   Optional<NominationPortalReference> findByNominationAndPortalReferenceType(Nomination nomination,
                                                                              PortalReferenceType portalReferenceType);

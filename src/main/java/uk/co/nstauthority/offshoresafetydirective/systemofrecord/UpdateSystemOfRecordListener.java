@@ -1,9 +1,10 @@
 package uk.co.nstauthority.offshoresafetydirective.systemofrecord;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseevents.CaseEventQueryService;
@@ -25,8 +26,9 @@ class UpdateSystemOfRecordListener {
     this.caseEventQueryService = caseEventQueryService;
   }
 
-  @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-  public void handleAppointmentConfirmation(AppointmentConfirmedEvent event) {
+  @EventListener
+  @Transactional(propagation = Propagation.MANDATORY)
+  void handleAppointmentConfirmation(AppointmentConfirmedEvent event) {
     var nominationId = event.getNominationId();
     var nominationDetail = nominationDetailService.getLatestNominationDetailOptional(nominationId)
         .orElseThrow(() -> new IllegalStateException("No latest NominationDetail found for Nomination [%s]".formatted(

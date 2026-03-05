@@ -4,3 +4,5 @@ CVE-2024-47554
 CVE-2025-67735
 # ch.qos.logback:logback-core
 CVE-2026-1225
+# com.fasterxml.jackson.core:jackson-core
+GHSA-72hv-8253-57qq
