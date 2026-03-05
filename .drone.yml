@@ -151,6 +151,26 @@ steps:
       status:
         - success
 
+  - name: publish-ecr
+    image: plugins/ecr:21
+    settings:
+      repo: digital/offshore-safety-directive
+      registry: 847993322739.dkr.ecr.eu-west-2.amazonaws.com
+      access_key: AKIA4K4CXHTZ7KAUZJWL
+      secret_key:
+        from_secret: ecr_secret_key
+      config:
+        from_secret: docker_config
+      region: eu-west-2
+      tags:
+        - ${DRONE_BRANCH//\//-}-${DRONE_BUILD_NUMBER}
+    when:
+      branch:
+        - develop
+        - main
+        - hotfix/**
+        - release/**
+
   - name: publish-epmq-messages-jar-snapshot
     image: eclipse-temurin:21-jdk
     environment:
@@ -371,6 +391,12 @@ volumes:
 kind: secret
 name: docker_config
 data: 5y593AlLanUALsrio186x+7Az3vEClV8+Aa7c+xTu0QeG60d7S0aygeiuvy05cINncX7bJSqVmH04qkzjCjm/NvjXBNCP4LIk6MD7IZpWlgW4mNf0WoazzwdqH1fTZGqDALURwpdVxtp8mtQpYDhIiUJBaUITWBvf3UObDTgVTsZNLgSkKWNft84igD6p0eb0toyIjltzC4Yi4P5xsm9AT0RsZ4EQcd7HTN3hhroyFO17EvH8WpivdSZyKh1HNbeH9pH4SLTlQZTaj0Q/3ZtsmB5hz9F/qlAkLM+x30oqjFb362neAu5JBVGlzcMzqGPw5mX7o2sdvHKx+/FkfV2OkEF3KuB
+
+---
+
+kind: secret
+name: ecr_secret_key
+data: Po9Bn9/X0kVKcskBHC3Ge6I8U77vkfIc1NcwRKImEXALyaPSjKrjwJUCO8JNFhfPxYybiQuhfSfUl2YdpW1uO2jmcQk=
 
 ---
 
