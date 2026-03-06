@@ -11,9 +11,11 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.co.fivium.energyportal.starter.configuration.WellKnownOrganisationGroupsConfigurationProperties;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.types.OrganisationGroup;
+import uk.co.fivium.energyportalapi.generated.types.OrganisationGroupEmailDomain;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.api.EnergyPortalApiWrapper;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.EpaOrganisationGroupTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationunit.EpaOrganisationUnitTestUtil;
@@ -24,14 +26,25 @@ class PortalOrganisationGroupQueryServiceTest {
   private OrganisationApi organisationApi;
   private EnergyPortalApiWrapper energyPortalApiWrapper;
   private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
+  private WellKnownOrganisationGroupsConfigurationProperties wellKnownGroups;
+  private WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup nsta;
+  private WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup opred;
 
   @BeforeEach
   public void setup() {
     organisationApi = mock(OrganisationApi.class);
     energyPortalApiWrapper = new EnergyPortalApiWrapper();
+    wellKnownGroups = mock(WellKnownOrganisationGroupsConfigurationProperties.class);
+    nsta = mock(WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup.class);
+    opred = mock(WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup.class);
+
+    when(wellKnownGroups.nsta()).thenReturn(nsta);
+    when(wellKnownGroups.opred()).thenReturn(opred);
+
     portalOrganisationGroupQueryService = new PortalOrganisationGroupQueryService(
         organisationApi,
-        energyPortalApiWrapper
+        energyPortalApiWrapper,
+        wellKnownGroups
     );
   }
 
@@ -39,6 +52,7 @@ class PortalOrganisationGroupQueryServiceTest {
   void findOrganisationById() {
     var orgId = 123;
     var orgName = "Org name";
+    var domain = "company1.com";
 
     var organisationGroup = new OrganisationGroup(
         orgId,
@@ -46,7 +60,8 @@ class PortalOrganisationGroupQueryServiceTest {
         null,
         null,
         null,
-        null
+        null,
+        List.of(new OrganisationGroupEmailDomain(domain))
     );
 
     when(organisationApi.findOrganisationGroup(
@@ -61,6 +76,7 @@ class PortalOrganisationGroupQueryServiceTest {
     var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
         .withOrganisationGroupId(String.valueOf(orgId))
         .withName(orgName)
+        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
         .build();
 
     assertThat(result).contains(expectedResult);
@@ -70,6 +86,7 @@ class PortalOrganisationGroupQueryServiceTest {
   void queryOrganisationByName() {
     var orgId = 123;
     var orgName = "Org name";
+    var domain = "company2.com";
 
     var organisationGroup = new OrganisationGroup(
         orgId,
@@ -77,7 +94,8 @@ class PortalOrganisationGroupQueryServiceTest {
         null,
         null,
         null,
-        null
+        null,
+        List.of(new OrganisationGroupEmailDomain(domain))
     );
 
     when(organisationApi.searchOrganisationGroups(
@@ -92,6 +110,7 @@ class PortalOrganisationGroupQueryServiceTest {
     var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
         .withOrganisationGroupId(String.valueOf(orgId))
         .withName(orgName)
+        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
         .build();
 
     assertThat(result).containsExactly(expectedResult);
@@ -174,5 +193,76 @@ class PortalOrganisationGroupQueryServiceTest {
 
     var resultingOrganisationGroups = portalOrganisationGroupQueryService.getOrganisationGroupsByOrganisationIds(List.of(), REQUEST_PURPOSE);
     assertThat(resultingOrganisationGroups).isEmpty();
+  }
+
+  @Test
+  void test1() {
+    var groupId = 123;
+    var name = "OPRED";
+    var domain = "opred.com";
+
+    when(opred.idAsInteger()).thenReturn(groupId);
+    var organisationGroup = new OrganisationGroup(
+        groupId,
+        name,
+        null,
+        null,
+        null,
+        null,
+        List.of(new OrganisationGroupEmailDomain(domain))
+    );
+
+    when(organisationApi.findOrganisationGroup(
+        eq(groupId),
+        eq(PortalOrganisationGroupQueryService.SINGLE_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(Optional.of(organisationGroup));
+
+    var result = portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
+
+    var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(String.valueOf(groupId))
+        .withName(name)
+        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
+        .build();
+
+    assertThat(result).contains(expectedResult);
+  }
+
+
+  @Test
+  void test2() {
+    var orgId = 123;
+    var orgName = "Org name";
+    var domain = "nsta.com";
+
+    when(nsta.idAsInteger()).thenReturn(orgId);
+    var organisationGroup = new OrganisationGroup(
+        orgId,
+        orgName,
+        null,
+        null,
+        null,
+        null,
+        List.of(new OrganisationGroupEmailDomain(domain))
+    );
+
+    when(organisationApi.findOrganisationGroup(
+        eq(orgId),
+        eq(PortalOrganisationGroupQueryService.SINGLE_ORGANISATION_PROJECTION_ROOT),
+        any(),
+        any()
+    )).thenReturn(Optional.of(organisationGroup));
+
+    var result = portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
+
+    var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
+        .withOrganisationGroupId(String.valueOf(orgId))
+        .withName(orgName)
+        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
+        .build();
+
+    assertThat(result).contains(expectedResult);
   }
 }
