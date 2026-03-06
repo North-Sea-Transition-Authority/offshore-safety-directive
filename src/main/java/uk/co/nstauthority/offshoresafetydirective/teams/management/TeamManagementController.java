@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
@@ -281,7 +282,7 @@ public class TeamManagementController {
     Optional<PortalOrganisationGroupDto> group;
     switch (team.getTeamType()) {
       case TeamType.ORGANISATION_GROUP -> group = portalOrganisationGroupQueryService
-          .findOrganisationById(Integer.parseInt(team.getScopeId()), null);
+          .findOrganisationById(Integer.parseInt(team.getScopeId()), new RequestPurpose("getOrganisationGroupById"));
       case TeamType.REGULATOR -> group = portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
       case TeamType.CONSULTEE ->  group = portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
       default -> throw new IllegalStateException("Unexpected value: " + team.getTeamType());
