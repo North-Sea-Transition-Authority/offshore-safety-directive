@@ -1,0 +1,36 @@
+well-known-organisation-groups:
+  groups:
+    - abbreviation: NSTA # North Sea Transition Authority
+      id: 8421
+    - abbreviation: OPRED # Offshore Petroleum Regulator for Environment & Decommissioning
+      id: 10002
+    - abbreviation: EIP # Energy Infrastructure Planning
+      id: 10003
+    - abbreviation: UKNA # CWC UK National Authority
+      id: 10004
+    - abbreviation: HSE # Health and Safety Executive
+      id: 10005
+    - abbreviation: NFFO # Fishermen’s Representative Body of England and Wales
+      id: 10006
+    - abbreviation: FRBIRELAND # Fishermen’s Representative Body of Ireland
+      id: 10007
+    - abbreviation: SFF # Scottish Fisherman’s Federation
+      id: 10008
+    - abbreviation: GLAENGLAND # General Lighthouse Authority of England and Wales
+      id: 10009
+    - abbreviation: GLAIRELAND # General Lighthouse Authority of Ireland
+      id: 10010
+    - abbreviation: GLASCOTLAND # General Lighthouse Authority of Scotland
+      id: 10011
+    - abbreviation: JNCC # Joint Nature Conservation Committee
+      id: 10012
+    - abbreviation: KINGFISHER # Kingfisher at Seafish
+      id: 10013
+    - abbreviation: MMO # Marine Management Organisation
+      id: 10014
+    - abbreviation: MARINESCOT # Marine Scotland
+      id: 10015
+    - abbreviation: UKHO # UK Hydrographic Office
+      id:  10016
+    - abbreviation: MCA # Maritime and Coastguard Agency
+      id: 10017
