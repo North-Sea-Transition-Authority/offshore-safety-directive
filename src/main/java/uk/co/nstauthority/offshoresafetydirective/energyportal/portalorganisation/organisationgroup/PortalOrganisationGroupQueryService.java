@@ -124,7 +124,7 @@ public class PortalOrganisationGroupQueryService {
   }
 
   public Optional<PortalOrganisationGroupDto> getRegulatorOrganisationGroup() {
-    return findOrganisationById(wellKnownOrganisationGroups.nsta().idAsInteger(), new RequestPurpose("getOrganisationGroupById") );
+    return findOrganisationById(wellKnownOrganisationGroups.nsta().idAsInteger(), new RequestPurpose("getOrganisationGroupById"));
   }
 
   public Optional<PortalOrganisationGroupDto> getConsulteeOrganisationGroup() {
