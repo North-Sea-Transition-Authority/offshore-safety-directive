@@ -124,11 +124,17 @@ public class PortalOrganisationGroupQueryService {
   }
 
   public Optional<PortalOrganisationGroupDto> getRegulatorOrganisationGroup() {
-    return findOrganisationById(wellKnownOrganisationGroups.nsta().idAsInteger(), new RequestPurpose("getOrganisationGroupById"));
+    return findOrganisationById(
+        wellKnownOrganisationGroups.nsta().idAsInteger(),
+        new RequestPurpose("getOrganisationGroupById")
+    );
   }
 
   public Optional<PortalOrganisationGroupDto> getConsulteeOrganisationGroup() {
-    return findOrganisationById(wellKnownOrganisationGroups.opred().idAsInteger(), new RequestPurpose("getOrganisationGroupById"));
+    return findOrganisationById(
+        wellKnownOrganisationGroups.opred().idAsInteger(),
+        new RequestPurpose("getOrganisationGroupById")
+    );
   }
 
 }
