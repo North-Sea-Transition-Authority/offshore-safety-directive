@@ -28,6 +28,7 @@ public record PortalOrganisationGroupDto(
         organisationGroup.getEmailDomains()
     );
   }
+
   public List<String> getEmailDomains() {
     return emailDomains.stream().map(OrganisationGroupEmailDomain::getDomain).toList();
   }
