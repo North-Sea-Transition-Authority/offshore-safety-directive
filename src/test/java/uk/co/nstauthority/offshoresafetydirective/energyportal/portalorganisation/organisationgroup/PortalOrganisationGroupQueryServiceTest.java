@@ -55,15 +55,11 @@ class PortalOrganisationGroupQueryServiceTest {
     var orgName = "Org name";
     var domain = "company1.com";
 
-    var organisationGroup = new OrganisationGroup(
-        orgId,
-        orgName,
-        null,
-        null,
-        null,
-        null,
-        List.of(new OrganisationGroupEmailDomain(domain))
-    );
+    var organisationGroup = new OrganisationGroup.Builder()
+        .organisationGroupId(orgId)
+        .name(orgName)
+        .emailDomains(List.of(new OrganisationGroupEmailDomain(domain)))
+        .build();
 
     when(organisationApi.findOrganisationGroup(
         eq(orgId),
@@ -89,15 +85,11 @@ class PortalOrganisationGroupQueryServiceTest {
     var orgName = "Org name";
     var domain = "company2.com";
 
-    var organisationGroup = new OrganisationGroup(
-        orgId,
-        orgName,
-        null,
-        null,
-        null,
-        null,
-        List.of(new OrganisationGroupEmailDomain(domain))
-    );
+    var organisationGroup = new OrganisationGroup.Builder()
+        .organisationGroupId(orgId)
+        .name(orgName)
+        .emailDomains(List.of(new OrganisationGroupEmailDomain(domain)))
+        .build();
 
     when(organisationApi.searchOrganisationGroups(
         eq(orgName),
