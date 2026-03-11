@@ -5,9 +5,7 @@ import static uk.co.nstauthority.offshoresafetydirective.teams.TeamType.REGULATO
 
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -20,12 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
-import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.AllowedDomainService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -51,19 +47,19 @@ public class TeamManagementController {
   private final MemberRolesFormValidator memberRolesFormValidator;
   private final AddMemberFormValidator addMemberFormValidator;
   private final EnergyPortalConfiguration energyPortalConfiguration;
-  private final PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
+  private final AllowedDomainService allowedDomainService;
 
   public TeamManagementController(TeamManagementService teamManagementService, TeamQueryService teamQueryService,
                                   MemberRolesFormValidator memberRolesFormValidator,
                                   AddMemberFormValidator addMemberFormValidator,
                                   EnergyPortalConfiguration energyPortalConfiguration,
-                                  PortalOrganisationGroupQueryService portalOrganisationGroupQueryService) {
+                                  AllowedDomainService allowedDomainService) {
     this.teamManagementService = teamManagementService;
     this.teamQueryService = teamQueryService;
     this.memberRolesFormValidator = memberRolesFormValidator;
     this.addMemberFormValidator = addMemberFormValidator;
     this.energyPortalConfiguration = energyPortalConfiguration;
-    this.portalOrganisationGroupQueryService = portalOrganisationGroupQueryService;
+    this.allowedDomainService = allowedDomainService;
   }
 
   @GetMapping
@@ -279,22 +275,7 @@ public class TeamManagementController {
     Map<String, String> rolesNamesMap = availableRoles.stream()
         .collect(StreamUtil.toLinkedHashMap(Enum::name, Role::getName));
 
-    Optional<PortalOrganisationGroupDto> group;
-    switch (team.getTeamType()) {
-      case TeamType.ORGANISATION_GROUP -> group = portalOrganisationGroupQueryService
-          .findOrganisationById(Integer.parseInt(team.getScopeId()), new RequestPurpose("getOrganisationGroupById"));
-      case TeamType.REGULATOR -> group = portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
-      case TeamType.CONSULTEE ->  group = portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
-      default -> throw new IllegalStateException("Unexpected value: " + team.getTeamType());
-    }
-
-    var userEmail = teamMemberView.email();
-    List<String> emailDomains = List.of();
-    if (group.isPresent()) {
-      emailDomains = group.get().getEmailDomains();
-    }
-
-    boolean userHasAllowedEmail = emailDomains.contains(userEmail.split("@")[1]);
+    boolean userHasAllowedEmail = allowedDomainService.isAllowedDomain(teamMemberView.email(), team);
 
     return new ModelAndView("osd/teamManagement/editMemberRoles")
         .addObject("rolesNamesMap", rolesNamesMap)
