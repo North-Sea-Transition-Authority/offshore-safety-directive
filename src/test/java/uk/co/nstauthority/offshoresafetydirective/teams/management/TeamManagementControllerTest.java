@@ -31,6 +31,7 @@ import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDeta
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.AllowedDomainService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -55,6 +56,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
   @MockitoBean
   private EnergyPortalConfiguration energyPortalConfiguration;
+
+  @MockitoBean
+  private AllowedDomainService allowedDomainService;
 
   private static Team regTeam;
   private static Team organisationTeam;
