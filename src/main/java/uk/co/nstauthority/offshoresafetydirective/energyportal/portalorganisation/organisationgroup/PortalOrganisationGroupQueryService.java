@@ -56,7 +56,8 @@ public class PortalOrganisationGroupQueryService {
   private final WellKnownOrganisationGroupsConfigurationProperties wellKnownOrganisationGroups;
 
   @Autowired
-  public PortalOrganisationGroupQueryService(OrganisationApi organisationApi, EnergyPortalApiWrapper energyPortalApiWrapper,
+  public PortalOrganisationGroupQueryService(OrganisationApi organisationApi,
+                                             EnergyPortalApiWrapper energyPortalApiWrapper,
                                              WellKnownOrganisationGroupsConfigurationProperties wellKnownOrganisationGroups) {
     this.organisationApi = organisationApi;
     this.energyPortalApiWrapper = energyPortalApiWrapper;

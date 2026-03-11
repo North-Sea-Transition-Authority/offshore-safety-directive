@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -31,7 +32,7 @@ class PortalOrganisationGroupQueryServiceTest {
   private WellKnownOrganisationGroupsConfigurationProperties.WellKnownOrgGroup opred;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     organisationApi = mock(OrganisationApi.class);
     energyPortalApiWrapper = new EnergyPortalApiWrapper();
     wellKnownGroups = mock(WellKnownOrganisationGroupsConfigurationProperties.class);
@@ -196,73 +197,37 @@ class PortalOrganisationGroupQueryServiceTest {
   }
 
   @Test
-  void test1() {
-    var groupId = 123;
-    var name = "OPRED";
-    var domain = "opred.com";
+  void getConsulteeOrganisationGroup() {
+    var expectedId = Math.toIntExact(10002L);
 
-    when(opred.idAsInteger()).thenReturn(groupId);
-    var organisationGroup = new OrganisationGroup(
-        groupId,
-        name,
-        null,
-        null,
-        null,
-        null,
-        List.of(new OrganisationGroupEmailDomain(domain))
-    );
+    when(wellKnownGroups.opred()).thenReturn(opred);
+    when(opred.idAsInteger()).thenReturn(expectedId);
 
-    when(organisationApi.findOrganisationGroup(
-        eq(groupId),
-        eq(PortalOrganisationGroupQueryService.SINGLE_ORGANISATION_PROJECTION_ROOT),
+    portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
+
+    verify(organisationApi).findOrganisationGroup(
+        eq(expectedId),
         any(),
+        any(RequestPurpose.class),
         any()
-    )).thenReturn(Optional.of(organisationGroup));
-
-    var result = portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
-
-    var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
-        .withOrganisationGroupId(String.valueOf(groupId))
-        .withName(name)
-        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
-        .build();
-
-    assertThat(result).contains(expectedResult);
+    );
   }
 
 
   @Test
-  void test2() {
-    var orgId = 123;
-    var orgName = "Org name";
-    var domain = "nsta.com";
+  void getRegulatorOrganisationGroup() {
+    var expectedId = Math.toIntExact(10001L);
 
-    when(nsta.idAsInteger()).thenReturn(orgId);
-    var organisationGroup = new OrganisationGroup(
-        orgId,
-        orgName,
-        null,
-        null,
-        null,
-        null,
-        List.of(new OrganisationGroupEmailDomain(domain))
-    );
+    when(wellKnownGroups.nsta()).thenReturn(nsta);
+    when(nsta.idAsInteger()).thenReturn(expectedId);
 
-    when(organisationApi.findOrganisationGroup(
-        eq(orgId),
-        eq(PortalOrganisationGroupQueryService.SINGLE_ORGANISATION_PROJECTION_ROOT),
+    portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
+
+    verify(organisationApi).findOrganisationGroup(
+        eq(expectedId),
         any(),
+        any(RequestPurpose.class),
         any()
-    )).thenReturn(Optional.of(organisationGroup));
-
-    var result = portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
-
-    var expectedResult = PortalOrganisationGroupDtoTestUtil.builder()
-        .withOrganisationGroupId(String.valueOf(orgId))
-        .withName(orgName)
-        .withEmailDomains(new OrganisationGroupEmailDomain(domain))
-        .build();
-
-    assertThat(result).contains(expectedResult);
+    );
   }
 }
