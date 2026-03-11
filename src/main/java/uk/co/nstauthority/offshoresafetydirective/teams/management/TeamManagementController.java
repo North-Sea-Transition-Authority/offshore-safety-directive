@@ -1,6 +1,7 @@
 package uk.co.nstauthority.offshoresafetydirective.teams.management;
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
+import static uk.co.nstauthority.offshoresafetydirective.teams.TeamType.REGULATOR;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -20,6 +21,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.AccessibleByServiceUsers;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.AllowedDomainService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
 import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
@@ -45,16 +47,19 @@ public class TeamManagementController {
   private final MemberRolesFormValidator memberRolesFormValidator;
   private final AddMemberFormValidator addMemberFormValidator;
   private final EnergyPortalConfiguration energyPortalConfiguration;
+  private final AllowedDomainService allowedDomainService;
 
   public TeamManagementController(TeamManagementService teamManagementService, TeamQueryService teamQueryService,
                                   MemberRolesFormValidator memberRolesFormValidator,
                                   AddMemberFormValidator addMemberFormValidator,
-                                  EnergyPortalConfiguration energyPortalConfiguration) {
+                                  EnergyPortalConfiguration energyPortalConfiguration,
+                                  AllowedDomainService allowedDomainService) {
     this.teamManagementService = teamManagementService;
     this.teamQueryService = teamQueryService;
     this.memberRolesFormValidator = memberRolesFormValidator;
     this.addMemberFormValidator = addMemberFormValidator;
     this.energyPortalConfiguration = energyPortalConfiguration;
+    this.allowedDomainService = allowedDomainService;
   }
 
   @GetMapping
@@ -63,7 +68,7 @@ public class TeamManagementController {
 
     var teamTypes = new HashSet<>(teamManagementService.getTeamTypesUserIsMemberOf(user.wuaId()));
 
-    if (teamQueryService.userHasStaticRole(user.wuaId(), TeamType.REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER)) {
+    if (teamQueryService.userHasStaticRole(user.wuaId(), REGULATOR, Role.THIRD_PARTY_TEAM_MANAGER)) {
       teamTypes.add(TeamType.ORGANISATION_GROUP);
       teamTypes.add(TeamType.CONSULTEE);
     }
@@ -103,7 +108,7 @@ public class TeamManagementController {
 
       boolean userCanCreateOrgs = teamQueryService.userHasStaticRole(
           user.wuaId(),
-          TeamType.REGULATOR,
+          REGULATOR,
           Role.THIRD_PARTY_TEAM_MANAGER
       );
 
@@ -270,9 +275,12 @@ public class TeamManagementController {
     Map<String, String> rolesNamesMap = availableRoles.stream()
         .collect(StreamUtil.toLinkedHashMap(Enum::name, Role::getName));
 
+    boolean userHasAllowedEmail = allowedDomainService.isAllowedDomain(teamMemberView.email(), team);
+
     return new ModelAndView("osd/teamManagement/editMemberRoles")
         .addObject("rolesNamesMap", rolesNamesMap)
         .addObject("rolesInTeam", availableRoles)
+        .addObject("userHasAllowedEmail", userHasAllowedEmail)
         .addObject("teamMemberView", teamMemberView)
         .addObject(
             "cancelUrl",

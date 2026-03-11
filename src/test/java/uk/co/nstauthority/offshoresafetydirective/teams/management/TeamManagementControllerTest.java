@@ -25,12 +25,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetail;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityTest;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalConfiguration;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.AllowedDomainService;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDtoTestUtil;
 import uk.co.nstauthority.offshoresafetydirective.mvc.AbstractControllerTest;
 import uk.co.nstauthority.offshoresafetydirective.mvc.ReverseRouter;
@@ -55,6 +57,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
 
   @MockitoBean
   private EnergyPortalConfiguration energyPortalConfiguration;
+
+  @MockitoBean
+  private AllowedDomainService allowedDomainService;
 
   private static Team regTeam;
   private static Team organisationTeam;
@@ -582,8 +587,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
         .andExpect(status().isForbidden());
   }
 
-  @Test
-  void renderUserTeamRoles() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void renderUserTeamRoles(boolean isAllowed) throws Exception {
     when(teamManagementService.getTeam(regTeam.getId()))
         .thenReturn(Optional.of(regTeam));
 
@@ -593,6 +599,9 @@ class TeamManagementControllerTest extends AbstractControllerTest {
     when(teamManagementService.getTeamMemberView(regTeam, 999L))
         .thenReturn(regTeamMemberView);
 
+    when(allowedDomainService.isAllowedDomain(regTeamMemberView.email(), regTeam)).thenReturn(
+        isAllowed
+    );
     var modelAndView = mockMvc.perform(get(ReverseRouter.route(on(TeamManagementController.class).renderUserTeamRoles(regTeam.getId(), 999L, null)))
         .with(user(invokingUser)))
         .andExpect(status().isOk())

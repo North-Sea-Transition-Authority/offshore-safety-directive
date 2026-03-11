@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.co.fivium.energyportal.starter.configuration.WellKnownOrganisationGroupsConfigurationProperties;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.fivium.energyportalapi.client.organisation.OrganisationApi;
 import uk.co.fivium.energyportalapi.generated.client.OrganisationGroupProjectionRoot;
@@ -21,12 +22,17 @@ public class PortalOrganisationGroupQueryService {
   static final OrganisationGroupProjectionRoot SINGLE_ORGANISATION_PROJECTION_ROOT =
       new OrganisationGroupProjectionRoot()
           .organisationGroupId()
-          .name();
+          .name()
+          .emailDomains()
+            .domain()
+          .root();
 
   static final OrganisationUnitProjectionRoot SINGLE_ORGANISATION_UNIT_TO_GROUP_PROJECTION_ROOT =
       new OrganisationUnitProjectionRoot()
           .organisationGroups()
             .organisationGroupId()
+          .emailDomains()
+            .domain()
           .root();
 
   static final OrganisationGroupsProjectionRoot MULTI_ORGANISATION_PROJECTION_ROOT =
@@ -47,11 +53,15 @@ public class PortalOrganisationGroupQueryService {
 
   private final OrganisationApi organisationApi;
   private final EnergyPortalApiWrapper energyPortalApiWrapper;
+  private final WellKnownOrganisationGroupsConfigurationProperties wellKnownOrganisationGroups;
 
   @Autowired
-  public PortalOrganisationGroupQueryService(OrganisationApi organisationApi, EnergyPortalApiWrapper energyPortalApiWrapper) {
+  public PortalOrganisationGroupQueryService(OrganisationApi organisationApi,
+                                             EnergyPortalApiWrapper energyPortalApiWrapper,
+                                             WellKnownOrganisationGroupsConfigurationProperties wellKnownOrganisationGroups) {
     this.organisationApi = organisationApi;
     this.energyPortalApiWrapper = energyPortalApiWrapper;
+    this.wellKnownOrganisationGroups = wellKnownOrganisationGroups;
   }
 
   public Optional<PortalOrganisationGroupDto> findOrganisationById(int id, RequestPurpose requestPurpose) {
@@ -112,6 +122,20 @@ public class PortalOrganisationGroupQueryService {
         .stream()
         .map(PortalOrganisationGroupDto::fromOrganisationGroup)
         .toList();
+  }
+
+  public Optional<PortalOrganisationGroupDto> getRegulatorOrganisationGroup() {
+    return findOrganisationById(
+        wellKnownOrganisationGroups.nsta().idAsInteger(),
+        new RequestPurpose("getOrganisationGroupById")
+    );
+  }
+
+  public Optional<PortalOrganisationGroupDto> getConsulteeOrganisationGroup() {
+    return findOrganisationById(
+        wellKnownOrganisationGroups.opred().idAsInteger(),
+        new RequestPurpose("getOrganisationGroupById")
+    );
   }
 
 }
