@@ -46,8 +46,7 @@ public class NominatedInstallationController {
       FacilityType.JACKUP_PLATFORM,
       FacilityType.LARGE_STEEL_PLATFORM,
       FacilityType.SMALL_STEEL_PLATFORM,
-      FacilityType.TENSION_LEG_PLATFORM,
-      FacilityType.UNKNOWN_TO_BE_UPDATED
+      FacilityType.TENSION_LEG_PLATFORM
   );
 
   static final String PAGE_TITLE = "Installation nominations";
