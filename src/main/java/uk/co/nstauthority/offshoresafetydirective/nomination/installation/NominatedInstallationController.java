@@ -42,7 +42,6 @@ public class NominatedInstallationController {
       FacilityType.FLOATING_STORAGE_UNIT,
       FacilityType.FLOATING_SINGLE_WELL_OPERATION_PRODUCTION_SYSTEM,
       FacilityType.CONCRETE_GRAVITY_BASED_PLATFORM,
-      FacilityType.PLATFORM_JACKET,
       FacilityType.JACKUP_WITH_CONCRETE_BASE_PLATFORM,
       FacilityType.JACKUP_PLATFORM,
       FacilityType.LARGE_STEEL_PLATFORM,
