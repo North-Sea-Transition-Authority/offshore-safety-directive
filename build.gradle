@@ -80,7 +80,7 @@ dependencies {
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.2'
 
 	// fivium managed dependencies
-	implementation 'uk.co.fivium.energyportalapi:client:v17.0.0'
+	implementation 'uk.co.fivium.energyportalapi:client:v17.0.2'
 	implementation 'uk.co.fivium.energyportal.accounts:energy-portal-accounts-spring-boot-starter:v6.1.0'
 	implementation 'uk.co.fivium.digitalformlibrary:digital-form-library:v3.0.0'
 	implementation "uk.co.fivium.energyportalmessagequeue:spring-boot-starter:${epmqVersion}"
