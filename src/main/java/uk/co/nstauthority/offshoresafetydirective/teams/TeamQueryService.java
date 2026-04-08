@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortal
 
 @Service
 public class TeamQueryService {
+  private static final UnaryOperator<String> TEAM_TYPE_NOT_SCOPED = "TeamType %s is not scoped"::formatted;
+
   private final TeamRepository teamRepository;
   private final TeamRoleRepository teamRoleRepository;
   private final EnergyPortalUserService energyPortalUserService;
@@ -82,11 +85,28 @@ public class TeamQueryService {
   public boolean userHasAtLeastOneScopedRole(Long wuaId, TeamType teamType, TeamScopeReference scopeRef, Set<Role> roles) {
     assertRolesValidForTeamType(roles, teamType);
     if (!teamType.isScoped()) {
-      throw new IllegalArgumentException("TeamType %s is not scoped".formatted(teamType));
+      throw new IllegalArgumentException(TEAM_TYPE_NOT_SCOPED.apply(teamType.name()));
     }
     return teamRepository.findByTeamTypeAndScopeTypeAndScopeId(teamType, scopeRef.getType(), scopeRef.getId())
         .filter(team -> userHasAtLeastOneRole(wuaId, team, roles))
         .isPresent();
+  }
+
+  public Set<String> getScopeIdsWhereUserHasAtLeastOneScopedRole(
+      Long wuaId,
+      TeamType teamType,
+      Collection<Role> roles
+  ) {
+    assertRolesValidForTeamType(roles, teamType);
+    if (!teamType.isScoped()) {
+      throw new IllegalArgumentException(TEAM_TYPE_NOT_SCOPED.apply(teamType.name()));
+    }
+
+    return teamRoleRepository.findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        wuaId,
+        roles,
+        teamType
+    ).stream().map(teamRole -> teamRole.getTeam().getScopeId()).collect(Collectors.toSet());
   }
 
   public Optional<Team> getScopedTeam(TeamType teamType, TeamScopeReference scopeRef) {
@@ -116,7 +136,7 @@ public class TeamQueryService {
   public Map<Role, Set<EnergyPortalUserDto>> getUsersInScopedTeam(TeamType teamType, TeamScopeReference teamScope) {
 
     if (!teamType.isScoped()) {
-      throw new IllegalArgumentException("TeamType %s is not scoped".formatted(teamType));
+      throw new IllegalArgumentException(TEAM_TYPE_NOT_SCOPED.apply(teamType.name()));
     }
 
     var team = teamRepository.findByTeamTypeAndScopeTypeAndScopeId(teamType, teamScope.getType(), teamScope.getId());
@@ -162,7 +182,7 @@ public class TeamQueryService {
         .anyMatch(teamRole -> roles.contains(teamRole.getRole()));
   }
 
-  private void assertRolesValidForTeamType(Set<Role> roles, TeamType teamType) {
+  private void assertRolesValidForTeamType(Collection<Role> roles, TeamType teamType) {
     roles.forEach(role -> {
       if (!teamType.getAllowedRoles().contains(role)) {
         throw new IllegalArgumentException("Role %s is not valid for TeamType %s".formatted(role, teamType));

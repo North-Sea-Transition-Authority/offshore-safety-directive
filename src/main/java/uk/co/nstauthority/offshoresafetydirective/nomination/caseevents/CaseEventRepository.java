@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import uk.co.nstauthority.offshoresafetydirective.nomination.Nomination;
@@ -26,5 +27,19 @@ interface CaseEventRepository extends CrudRepository<CaseEvent, UUID> {
   List<CaseEvent> findAllByNomination(Nomination nomination);
 
   Optional<CaseEvent> findByUuidAndNomination(UUID uuid, Nomination nomination);
+
+  @Query(
+      """
+      FROM CaseEvent ce
+      WHERE ce.nomination IN (
+        SELECT nd.nomination FROM NominationDetail nd
+        WHERE nd IN (
+          SELECT ad.nominationDetail FROM ApplicantDetail ad
+          WHERE ad.portalOrganisationId IN :portalOrganisationIds
+        )
+      )
+      """
+  )
+  List<CaseEvent> findAllCaseEventsByApplicantIn(Collection<Integer> portalOrganisationIds);
 
 }

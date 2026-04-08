@@ -127,7 +127,7 @@ public class PortalOrganisationUnitQueryService {
         .toList();
   }
 
-  List<PortalOrganisationDto> searchOrganisationsByGroups(Collection<Integer> organisationGroupIds,
+  public List<PortalOrganisationDto> searchOrganisationsByGroups(Collection<Integer> organisationGroupIds,
                                                           RequestPurpose requestPurpose) {
 
     if (CollectionUtils.isEmpty(organisationGroupIds)) {

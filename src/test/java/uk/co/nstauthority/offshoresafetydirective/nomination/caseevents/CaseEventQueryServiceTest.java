@@ -197,6 +197,22 @@ class CaseEventQueryServiceTest {
   }
 
   @Test
+  void findAllCaseEventsByApplicantIn() {
+    var portalOrganisationIds = List.of(50, 100, 116);
+
+    var caseEvent1 = CaseEventTestUtil.builder().build();
+    var caseEvent2 = CaseEventTestUtil.builder().build();
+
+    when(caseEventRepository.findAllCaseEventsByApplicantIn(portalOrganisationIds)).thenReturn(
+        List.of(caseEvent1, caseEvent2)
+    );
+
+    var result = caseEventQueryService.findAllCaseEventsByApplicantIn(portalOrganisationIds);
+
+    assertThat(result).containsExactlyInAnyOrder(caseEvent1, caseEvent2);
+  }
+
+  @Test
   void getLatestReasonForUpdate_whenCaseEventFound_thenAssertUpdateReason() {
     var nominationVersion = 2;
     var detail = NominationDetailTestUtil.builder()

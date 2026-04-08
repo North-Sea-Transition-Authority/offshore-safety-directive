@@ -74,7 +74,7 @@ public class CaseEvent {
     this.title = title;
   }
 
-  Nomination getNomination() {
+  public Nomination getNomination() {
     return nomination;
   }
 
@@ -82,7 +82,7 @@ public class CaseEvent {
     this.nomination = nomination;
   }
 
-  int getNominationVersion() {
+  public int getNominationVersion() {
     return nominationVersion;
   }
 

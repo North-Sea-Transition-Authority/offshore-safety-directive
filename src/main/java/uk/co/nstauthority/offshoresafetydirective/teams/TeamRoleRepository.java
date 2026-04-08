@@ -1,5 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.teams;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -21,4 +22,10 @@ public interface TeamRoleRepository extends ListCrudRepository<TeamRole, UUID> {
   List<TeamRole> findAllByWuaId(long wuaId);
 
   Set<TeamRole> findAllByTeamAndRole(Team team, Role role);
+
+  Set<TeamRole> findDistinctByWuaIdAndRoleInAndTeam_teamType(
+      Long wuaId,
+      Collection<Role> roles,
+      TeamType teamType
+  );
 }

@@ -2,6 +2,7 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseevents;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -146,6 +147,10 @@ public class CaseEventQueryService {
         caseEventId.uuid(),
         nomination
     );
+  }
+
+  public List<CaseEvent> findAllCaseEventsByApplicantIn(Collection<Integer> portalOrganisationIds) {
+    return caseEventRepository.findAllCaseEventsByApplicantIn(portalOrganisationIds);
   }
 
   CaseEventView buildCaseEventView(CaseEvent caseEvent, Map<Long, EnergyPortalUserDto> userIdAndNameMap,

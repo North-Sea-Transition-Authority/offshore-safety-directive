@@ -3,6 +3,7 @@ package uk.co.nstauthority.offshoresafetydirective.teams;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -206,6 +207,30 @@ class TeamQueryServiceTest {
     ))
         .isFalse();
   }
+
+  @Test
+  void getScopeIdsWhereUserHasAtLeastOneScopedRole() {
+    var roles = Set.of(Role.NOMINATION_SUBMITTER, Role.NOMINATION_EDITOR);
+
+    var expected = TeamRoleTestUtil.newBuilder().withTeam(TeamTestUtil.newBuilder().withScopeId("100").build()).build();
+
+    when(teamRoleRepository.findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        1L,
+        roles,
+        TeamType.ORGANISATION_GROUP
+    )).thenReturn(Set.of(expected));
+
+    var result = teamQueryService.getScopeIdsWhereUserHasAtLeastOneScopedRole(1L, TeamType.ORGANISATION_GROUP, roles);
+
+    assertThat(result).usingRecursiveComparison().isEqualTo(Set.of(expected.getTeam().getScopeId()));
+
+    verify(teamRoleRepository).findDistinctByWuaIdAndRoleInAndTeam_teamType(
+        1L,
+        roles,
+        TeamType.ORGANISATION_GROUP
+    );
+  }
+
 
   @Test
   void getScopedTeam_whenExists_thenTeamReturned() {
