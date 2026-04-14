@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import uk.co.fivium.digitalenummaterialisationlibrary.enummaterialisation.MaterialisableEnum;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.SecurityRule;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.Displayable;
-import uk.co.nstauthority.offshoresafetydirective.energyportal.EnergyPortalLogoutSqsService;
 
 @AnalyzeClasses(
     packages = "uk.co.nstauthority.offshoresafetydirective",
@@ -28,8 +27,7 @@ class ArchitectureTest {
 
   @ArchTest
   final ArchRule scheduledAnnotationRule = methods()
-      .that().areNotDeclaredIn(EnergyPortalLogoutSqsService.class)
-      .and().areAnnotatedWith(Scheduled.class)
+      .that().areAnnotatedWith(Scheduled.class)
       .should().beAnnotatedWith(SchedulerLock.class);
 
 

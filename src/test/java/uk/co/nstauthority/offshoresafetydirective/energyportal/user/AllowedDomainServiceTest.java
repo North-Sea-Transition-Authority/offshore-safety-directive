@@ -26,7 +26,7 @@ import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
 
 @ExtendWith(MockitoExtension.class)
-class EnergyPortalAllowedDomainServiceTest {
+class AllowedDomainServiceTest {
 
   private static final String USER_EMAIL = "user@example.com";
 
@@ -34,7 +34,7 @@ class EnergyPortalAllowedDomainServiceTest {
   private PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
 
   @InjectMocks
-  private EnergyPortalAllowedDomainService energyPortalAllowedDomainService;
+  private AllowedDomainService allowedDomainService;
 
   @ParameterizedTest
   @MethodSource("provideDomainIsAllowedCombinations")
@@ -55,7 +55,7 @@ class EnergyPortalAllowedDomainServiceTest {
     when(portalOrganisationGroupQueryService.findOrganisationById(eq(1), any(RequestPurpose.class)))
         .thenReturn(Optional.of(orgGroup));
 
-    assertThat(energyPortalAllowedDomainService.isAllowedDomain(USER_EMAIL, industryTeam))
+    assertThat(allowedDomainService.isAllowedDomain(USER_EMAIL, industryTeam))
         .isEqualTo(isAllowed);
   }
 
@@ -71,7 +71,7 @@ class EnergyPortalAllowedDomainServiceTest {
     when(portalOrganisationGroupQueryService.getRegulatorOrganisationGroup())
         .thenReturn(Optional.of(orgGroup));
 
-    assertThat(energyPortalAllowedDomainService.isAllowedDomain(USER_EMAIL, regTeam))
+    assertThat(allowedDomainService.isAllowedDomain(USER_EMAIL, regTeam))
         .isEqualTo(isAllowed);
   }
 
@@ -86,7 +86,7 @@ class EnergyPortalAllowedDomainServiceTest {
     when(portalOrganisationGroupQueryService.getConsulteeOrganisationGroup())
         .thenReturn(Optional.of(orgGroup));
 
-    assertThat(energyPortalAllowedDomainService.isAllowedDomain(USER_EMAIL, consulteeTeam))
+    assertThat(allowedDomainService.isAllowedDomain(USER_EMAIL, consulteeTeam))
         .isEqualTo(isAllowed);
   }
 
