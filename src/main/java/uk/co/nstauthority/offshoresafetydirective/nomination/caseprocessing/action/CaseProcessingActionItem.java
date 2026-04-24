@@ -14,7 +14,8 @@ public enum CaseProcessingActionItem implements Displayable {
   WITHDRAW("Withdraw nomination", 70, CaseProcessingActionIdentifier.WITHDRAW),
   CONFIRM_APPOINTMENT("Confirm appointment", 80, CaseProcessingActionIdentifier.CONFIRM_APPOINTMENT),
   PEARS_REFERENCE("Update related PEARS applications", 90, CaseProcessingActionIdentifier.PEARS_REFERENCES),
-  WONS_REFERENCE("Update related WONS applications", 100, CaseProcessingActionIdentifier.WONS_REFERENCES);
+  WONS_REFERENCE("Update related WONS applications", 100, CaseProcessingActionIdentifier.WONS_REFERENCES),
+  CONTACT_ORGANISATION("Contact organisation", 110, CaseProcessingActionIdentifier.CONTACT_ORGANISATION);
 
   private final String actionText;
   private final int displayOrder;

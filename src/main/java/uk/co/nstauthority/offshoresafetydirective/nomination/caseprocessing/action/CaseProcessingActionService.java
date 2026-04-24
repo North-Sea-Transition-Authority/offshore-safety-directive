@@ -257,4 +257,14 @@ public class CaseProcessingActionService {
         .build();
   }
 
+  public CaseProcessingAction createContactOrganisationAction(String emailCsv) {
+    var caseProcessingAction = new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONTACT_ORGANISATION);
+    return CaseProcessingAction.builder(
+        CaseProcessingActionItem.CONTACT_ORGANISATION,
+        CaseProcessingActionGroup.CONTACT_ORGANISATION,
+        caseProcessingAction,
+        "mailto:" + emailCsv
+    ).build();
+  }
+
 }

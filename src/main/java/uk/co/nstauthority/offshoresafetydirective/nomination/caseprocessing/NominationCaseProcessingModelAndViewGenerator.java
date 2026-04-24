@@ -18,6 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uk.co.nstauthority.offshoresafetydirective.authentication.UserDetailService;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.Breadcrumbs;
 import uk.co.nstauthority.offshoresafetydirective.breadcrumb.BreadcrumbsUtil;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.user.EnergyPortalUserDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
@@ -247,6 +248,21 @@ public class NominationCaseProcessingModelAndViewGenerator {
               }
             }
         );
+
+    var canContactOrganisation = userHasManageNominationRole
+        || teamQueryService.userHasStaticRole(user.wuaId(), TeamType.CONSULTEE, Role.CONSULTATION_MANAGER);
+
+    if (canContactOrganisation
+        && EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+            .contains(nominationDetail.getStatus())) {
+      var emails = nominationRoleService
+          .getUsersInApplicantOrganisationTeamWithAnyRoleOf(nominationDetail, Set.of(Role.NOMINATION_SUBMITTER))
+          .stream()
+          .map(EnergyPortalUserDto::emailAddress)
+          .collect(Collectors.joining(","));
+
+      actions.add(caseProcessingActionService.createContactOrganisationAction(emails));
+    }
 
     if (CollectionUtils.isNotEmpty(actions)) {
       Map<CaseProcessingActionGroup, List<CaseProcessingAction>> groupedNominationManagementActions = actions.stream()

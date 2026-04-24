@@ -13,6 +13,7 @@ public class CaseEventView {
   private final String body;
   private final String customBodyPrompt;
   private final String createdBy;
+  private final String createdByEmail;
   private final String customCreatorPrompt;
   private final Instant createdInstant;
   private final Instant eventInstant;
@@ -24,7 +25,7 @@ public class CaseEventView {
 
   private CaseEventView(int nominationVersion, String customVersionPrompt, String title, String body,
                         String customBodyPrompt,
-                        String createdBy, String customCreatorPrompt, Instant createdInstant,
+                        String createdBy, String createdByEmail, String customCreatorPrompt, Instant createdInstant,
                         Instant eventInstant, String formattedEventTime,
                         String customDatePrompt, List<FileSummaryView> fileViews, String customFilePrompt,
                         CaseEventType caseEventType) {
@@ -34,6 +35,7 @@ public class CaseEventView {
     this.body = body;
     this.customBodyPrompt = customBodyPrompt;
     this.createdBy = createdBy;
+    this.createdByEmail = createdByEmail;
     this.customCreatorPrompt = customCreatorPrompt;
     this.createdInstant = createdInstant;
     this.eventInstant = eventInstant;
@@ -66,6 +68,10 @@ public class CaseEventView {
 
   public String getCreatedBy() {
     return createdBy;
+  }
+
+  public String getCreatedByEmail() {
+    return createdByEmail;
   }
 
   public String getCustomCreatorPrompt() {
@@ -113,6 +119,7 @@ public class CaseEventView {
     private String body;
     private String customBodyPrompt;
     private final String createdBy;
+    private String createdByEmail;
     private String customCreatorPrompt;
     private Instant eventInstant;
     private final Instant createdInstant;
@@ -148,6 +155,11 @@ public class CaseEventView {
       return this;
     }
 
+    public Builder withCreatedByEmail(String createdByEmail) {
+      this.createdByEmail = createdByEmail;
+      return this;
+    }
+
     public Builder withCustomCreatorPrompt(String creatorPrompt) {
       this.customCreatorPrompt = creatorPrompt;
       return this;
@@ -176,7 +188,7 @@ public class CaseEventView {
 
     public CaseEventView build() {
       return new CaseEventView(
-          nominationVersion, customVersionPrompt, title, body, customBodyPrompt, createdBy, customCreatorPrompt,
+          nominationVersion, customVersionPrompt, title, body, customBodyPrompt, createdBy, createdByEmail, customCreatorPrompt,
           createdInstant, eventInstant, formattedEventTime, customDatePrompt, fileViews, customFilePrompt, caseEventType);
     }
   }

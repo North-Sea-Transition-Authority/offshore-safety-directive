@@ -123,6 +123,9 @@ errorItems=[]
         <#if actionKeyValue == "UPDATE_NOMINATION">
             <@fdsAction.link linkText=actionKeyValue.actionText linkUrl=springUrl(action.submitUrl) linkClass="govuk-button"/>
         </#if>
+        <#if actionKeyValue == "CONTACT_ORGANISATION">
+            <@fdsAction.link linkText=actionKeyValue.actionText linkUrl=action.submitUrl linkClass="govuk-button govuk-button--secondary" openInNewTab=true/>
+        </#if>
     </#macro>
 
     <#if updateRequestReason?has_content>

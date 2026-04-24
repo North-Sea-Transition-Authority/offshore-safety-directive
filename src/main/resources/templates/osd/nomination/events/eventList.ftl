@@ -28,6 +28,15 @@
                             />
                         </@fdsDataItems.dataItem>
 
+                        <#if event.createdByEmail?has_content>
+                          <@fdsDataItems.dataItem>
+                            <@fdsDataItems.dataValues
+                              key="Submitter email"
+                              value=event.createdByEmail
+                            />
+                          </@fdsDataItems.dataItem>
+                        </#if>
+
                         <#if event.body?has_content>
                             <h4 class="govuk-heading-s">${event.customBodyPrompt!"Comments"}</h4>
                             <p class="govuk-body govuk-body__preserve-whitespace">

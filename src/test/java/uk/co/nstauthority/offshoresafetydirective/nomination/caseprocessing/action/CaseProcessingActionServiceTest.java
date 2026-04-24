@@ -405,4 +405,26 @@ class CaseProcessingActionServiceTest {
             Collections.emptyMap()
         );
   }
+
+  @Test
+  void createContactOrganisationAction() {
+    var emailCsv = "test@organisation.com, test2@organisation.com";
+
+    var result = caseProcessingActionService.createContactOrganisationAction(emailCsv);
+
+    assertThat(result)
+        .extracting(
+            CaseProcessingAction::getItem,
+            CaseProcessingAction::getGroup,
+            CaseProcessingAction::getCaseProcessingActionIdentifier,
+            CaseProcessingAction::getSubmitUrl,
+            CaseProcessingAction::getModelProperties
+        ).containsExactly(
+            CaseProcessingActionItem.CONTACT_ORGANISATION,
+            CaseProcessingActionGroup.CONTACT_ORGANISATION,
+            new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONTACT_ORGANISATION),
+            "mailto:" + emailCsv,
+            Collections.emptyMap()
+        );
+  }
 }

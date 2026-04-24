@@ -10,6 +10,9 @@ CVE-2026-1225
 GHSA-72hv-8253-57qq
 # org.apache.tomcat.embed:tomcat-embed-core
 CVE-2026-24734
+CVE-2026-34483
+CVE-2026-34487
+CVE-2026-34500
 # org.springframework.security:spring-security-web
 CVE-2026-22732
 # org.springframework:spring-webmvc

@@ -203,6 +203,7 @@ public class CaseEventQueryService {
       case NOMINATION_SUBMITTED -> caseEventBuilder
           .withCustomDatePrompt("Submitted on")
           .withCustomCreatorPrompt("Submitted by")
+          .withCreatedByEmail(userIdAndNameMap.get(caseEvent.getCreatedBy()).emailAddress())
           .build();
       case SENT_FOR_CONSULTATION -> caseEventBuilder
           .withCustomDatePrompt("Date requested")

@@ -11,6 +11,7 @@ public record CaseProcessingActionIdentifier(String value) {
   public static final String WONS_REFERENCES = "WONS_REFERENCES";
   public static final String SEND_FOR_CONSULTATION = "SEND_FOR_CONSULTATION";
   public static final String CONSULTATION_RESPONSE = "CONSULTATION_RESPONSE";
+  public static final String CONTACT_ORGANISATION = "CONTACT_ORGANISATION";
 
   public static final String REQUEST_UPDATE = "REQUEST_UPDATE";
 
