@@ -50,6 +50,11 @@ public class NominationEmailBuilderService {
         .withMailMergeFields(getNominationMailMergeFields(nominationId));
   }
 
+  public MergedTemplate.MergedTemplateBuilder buildNominationWithdrawnTemplate(NominationId nominationId) {
+    return emailService.getTemplate(GovukNotifyTemplate.NOMINATION_WITHDRAWN)
+        .withMailMergeFields(getNominationMailMergeFields(nominationId));
+  }
+
   String getNominationOperatorshipText(NominationDetail nominationDetail) {
     return switch (nominationTypeService.getNominationDisplayType(nominationDetail)) {
       case WELL_AND_INSTALLATION -> "a well and installation operator";

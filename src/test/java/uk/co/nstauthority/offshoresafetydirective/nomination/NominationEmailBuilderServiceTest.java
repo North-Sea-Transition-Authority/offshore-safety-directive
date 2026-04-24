@@ -252,6 +252,76 @@ class NominationEmailBuilderServiceTest {
   }
 
   @Nested
+  class BuildNominationWithdrawnTemplate {
+
+    private final Nomination nomination = NominationTestUtil.builder()
+        .withReference("nomination-reference")
+        .build();
+
+    private final NominationDetail nominationDetail = NominationDetailTestUtil.builder()
+        .withNomination(nomination)
+        .build();
+
+    private final NominationId nominationId = new NominationId(nominationDetail);
+
+    @Test
+    void whenCannotFindNominationDetail() {
+
+      given(nominationDetailService.getLatestNominationDetailWithStatuses(
+          nominationId,
+          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+      ))
+          .willReturn(Optional.empty());
+
+      assertThatThrownBy(() -> nominationEmailBuilderService.buildNominationWithdrawnTemplate(nominationId))
+          .isInstanceOf(IllegalStateException.class)
+          .hasMessage("Could not find latest submitted NominationDetail for nomination with ID %s".formatted(nominationId.id()));
+    }
+
+    @Test
+    void whenSuccess_thenVerifyMailMergeFields() {
+
+      given(nominationDetailService.getLatestNominationDetailWithStatuses(
+          nominationId,
+          NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+      ))
+          .willReturn(Optional.of(nominationDetail));
+
+      var applicantOrganisation = PortalOrganisationDtoTestUtil.builder()
+          .withId(10)
+          .withName("applicant")
+          .build();
+
+      var nomineeOrganisation = PortalOrganisationDtoTestUtil.builder()
+          .withId(20)
+          .withName("nominee")
+          .build();
+
+      given(nominationOperatorService.getNominationOperators(nominationDetail))
+          .willReturn(new NominationOperators(applicantOrganisation, nomineeOrganisation));
+
+      given(nominationTypeService.getNominationDisplayType(nominationDetail))
+          .willReturn(NominationDisplayType.INSTALLATION);
+
+      given(emailService.getTemplate(GovukNotifyTemplate.NOMINATION_WITHDRAWN))
+          .willReturn(MergedTemplate.builder(new Template(null, null, Set.of(), null)));
+
+      var resultingMergeTemplate = nominationEmailBuilderService
+          .buildNominationWithdrawnTemplate(nominationId)
+          .merge();
+
+      assertThat(resultingMergeTemplate.getMailMergeFields())
+          .extracting(MailMergeField::name, MailMergeField::value)
+          .contains(
+              tuple("APPLICANT_ORGANISATION", applicantOrganisation.name()),
+              tuple("NOMINATED_ORGANISATION", nomineeOrganisation.name()),
+              tuple("NOMINATION_REFERENCE", nominationDetail.getNomination().getReference()),
+              tuple("OPERATORSHIP_DISPLAY_TYPE", "an installation operator")
+          );
+    }
+  }
+
+  @Nested
   class GetNominationOperatorshipText {
 
     private final NominationDetail nominationDetail = NominationDetailTestUtil.builder().build();

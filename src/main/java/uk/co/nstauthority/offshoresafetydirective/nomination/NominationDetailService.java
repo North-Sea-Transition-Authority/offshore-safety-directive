@@ -26,6 +26,7 @@ public class NominationDetailService {
 
   private final NominationSubmittedEventPublisher nominationSubmittedEventPublisher;
   private final CaseEventService caseEventService;
+  private final NominationWithdrawalEventPublisher nominationWithdrawalEventPublisher;
   private final Clock clock;
 
   @Autowired
@@ -33,13 +34,16 @@ public class NominationDetailService {
       NominationService nominationService,
       NominationDetailRepository nominationDetailRepository,
       NominationReferenceService nominationReferenceService,
-      NominationSubmittedEventPublisher nominationSubmittedEventPublisher, CaseEventService caseEventService,
+      NominationSubmittedEventPublisher nominationSubmittedEventPublisher,
+      CaseEventService caseEventService,
+      NominationWithdrawalEventPublisher nominationWithdrawalEventPublisher,
       Clock clock) {
     this.nominationService = nominationService;
     this.nominationDetailRepository = nominationDetailRepository;
     this.nominationReferenceService = nominationReferenceService;
     this.nominationSubmittedEventPublisher = nominationSubmittedEventPublisher;
     this.caseEventService = caseEventService;
+    this.nominationWithdrawalEventPublisher = nominationWithdrawalEventPublisher;
     this.clock = clock;
   }
 
@@ -167,6 +171,7 @@ public class NominationDetailService {
     draftNominationDetailUpdate.ifPresent(this::deleteNominationDetail);
 
     nominationDetailRepository.save(nominationDetailToWithdraw);
+    nominationWithdrawalEventPublisher.publish(new NominationId(nominationDetailToWithdraw.getNomination().getId()));
   }
 
   public Set<NominationDto> getNominationsByReferenceLikeWithStatuses(String reference,

@@ -55,6 +55,9 @@ class NominationDetailServiceTest {
   private CaseEventService caseEventService;
 
   @Mock
+  private NominationWithdrawalEventPublisher nominationWithdrawalEventPublisher;
+
+  @Mock
   private Clock clock;
 
   @InjectMocks
@@ -295,6 +298,8 @@ class NominationDetailServiceTest {
         .withStatus(NominationStatus.SUBMITTED)
         .build();
 
+    var nominationId = new NominationId(detail.getNomination().getId());
+
     when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
         detail.getNomination().getId(),
         Collections.singletonList(NominationStatus.DRAFT)
@@ -308,6 +313,8 @@ class NominationDetailServiceTest {
 
     assertThat(captor.getValue()).isEqualTo(detail);
     assertThat(captor.getValue().getStatus()).isEqualTo(NominationStatus.WITHDRAWN);
+
+    verify(nominationWithdrawalEventPublisher).publish(nominationId);
   }
 
   @Test
@@ -324,6 +331,8 @@ class NominationDetailServiceTest {
         .withVersion(2)
         .withId(UUID.randomUUID())
         .build();
+
+    var nominationToWithdrawId = new NominationId(nominationDetailToWithdraw.getNomination().getId());
 
     when(nominationDetailRepository.findFirstByNomination_IdAndStatusInOrderByVersionDesc(
         nominationDetailToWithdraw.getNomination().getId(),
@@ -354,6 +363,8 @@ class NominationDetailServiceTest {
     assertThat(deletedNominationDetail)
         .extracting(NominationDetail::getStatus, NominationDetail::getVersion)
         .containsExactly(NominationStatus.DELETED, null);
+
+    verify(nominationWithdrawalEventPublisher).publish(nominationToWithdrawId);
   }
 
   @Test

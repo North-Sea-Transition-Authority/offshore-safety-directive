@@ -8,6 +8,7 @@ public enum GovukNotifyTemplate {
   FEEDBACK_FAILED_TO_SEND("b572e7a2-2bf2-4780-9dc4-810152813cf5"),
   NOMINATION_SUBMITTED("89341528-f66e-4051-9404-f3f9fb9c775b"),
   UPDATE_REQUESTED("8d98930d-b7d2-4fe1-909e-26bcd672b946"),
+  NOMINATION_WITHDRAWN("6e4f729d-37f5-4b20-88ef-c9fc6a10fb62"),
   ;
 
   private final String templateId;

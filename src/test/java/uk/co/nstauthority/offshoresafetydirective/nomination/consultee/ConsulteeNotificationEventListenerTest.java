@@ -9,14 +9,14 @@ import static org.mockito.BDDMockito.then;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 import static uk.co.nstauthority.offshoresafetydirective.architecture.TransactionalEventListenerRule.haveTransactionalEventListenerWithPhase;
 
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +37,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationTestUtil;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationWithdrawalEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
@@ -377,6 +378,109 @@ class ConsulteeNotificationEventListenerTest {
 
       consulteeNotificationEventListener
           .notifyConsultationCoordinatorsOfAppointment(new AppointmentConfirmedEvent(nominationId));
+
+      then(nominationEmailBuilderService)
+          .shouldHaveNoInteractions();
+
+      then(emailService)
+          .shouldHaveNoInteractions();
+    }
+  }
+
+  @Nested
+  class NotifyConsultationCoordinatorsOfWithdrawal {
+
+    @ArchTest
+    final ArchRule notifyConsultationCoordinatorsOfWithdrawal_isAsync = methods()
+        .that()
+        .areDeclaredIn(ConsulteeNotificationEventListener.class)
+        .and().haveName("notifyConsultationCoordinatorsOfWithdrawal")
+        .should()
+        .beAnnotatedWith(Async.class);
+
+    @ArchTest
+    final ArchRule notifyConsultationCoordinatorsOfWithdrawal_isTransactionalAfterCommit = methods()
+        .that()
+        .areDeclaredIn(ConsulteeNotificationEventListener.class)
+        .and().haveName("notifyConsultationCoordinatorsOfWithdrawal")
+        .should(haveTransactionalEventListenerWithPhase(TransactionPhase.AFTER_COMMIT));
+
+    @Test
+    void whenConsultationCoordinatorsExist() {
+
+      given(nominationDetailService.getPostSubmissionNominationDetail(NOMINATION_ID))
+          .willReturn(Optional.of(NOMINATION_DETAIL));
+
+      var firstConsultationCoordinator = EnergyPortalUserDtoTestUtil.Builder()
+          .withEmailAddress("first@example.com")
+          .withForename("first")
+          .build();
+
+      var secondConsultationCoordinator = EnergyPortalUserDtoTestUtil.Builder()
+          .withEmailAddress("second@example.com")
+          .withForename("second")
+          .build();
+
+      given(teamQueryService.getUserWithStaticRole(
+          TeamType.CONSULTEE,
+          Role.CONSULTATION_MANAGER
+      ))
+          .willReturn(Set.of(firstConsultationCoordinator, secondConsultationCoordinator));
+
+      var template = MergedTemplate.builder(new Template(null, null, Set.of(), null));
+
+      given(nominationEmailBuilderService.buildNominationWithdrawnTemplate(NOMINATION_ID))
+          .willReturn(template);
+
+      given(emailService.withUrl(
+          ReverseRouter.route(on(NominationConsulteeViewController.class).renderNominationView(NOMINATION_ID))
+      ))
+          .willReturn("/url");
+
+      // to avoid an NPE in the log statement in the code
+      given(emailService.sendEmail(any(), any(), any())).willReturn(new EmailNotification("dummy-id"));
+
+      consulteeNotificationEventListener
+          .notifyConsultationCoordinatorsOfWithdrawal(new NominationWithdrawalEvent(NOMINATION_ID));
+
+      then(emailService)
+          .should()
+          .sendEmail(
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, firstConsultationCoordinator.forename())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(firstConsultationCoordinator),
+              eq(NOMINATION_DETAIL)
+          );
+
+      then(emailService)
+          .should()
+          .sendEmail(
+              refEq(
+                  template
+                      .withMailMergeField(EmailService.RECIPIENT_IDENTIFIER_MERGE_FIELD_NAME, secondConsultationCoordinator.forename())
+                      .withMailMergeField("NOMINATION_LINK", "/url")
+                      .merge()
+              ),
+              refEq(secondConsultationCoordinator),
+              eq(NOMINATION_DETAIL)
+          );
+    }
+
+    @Test
+    void whenNoConsultationCoordinatorsExist() {
+
+      given(teamQueryService.getUserWithStaticRole(
+          TeamType.CONSULTEE,
+          Role.CONSULTATION_MANAGER
+      ))
+          .willReturn(Collections.emptySet());
+
+      consulteeNotificationEventListener
+          .notifyConsultationCoordinatorsOfWithdrawal(new NominationWithdrawalEvent(NOMINATION_ID));
 
       then(nominationEmailBuilderService)
           .shouldHaveNoInteractions();

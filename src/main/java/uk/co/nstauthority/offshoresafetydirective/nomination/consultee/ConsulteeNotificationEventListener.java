@@ -20,6 +20,7 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetail;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationEmailBuilderService;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
+import uk.co.nstauthority.offshoresafetydirective.nomination.NominationWithdrawalEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.appointment.AppointmentConfirmedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.consultations.request.ConsultationRequestedEvent;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.decision.NominationDecisionDeterminedEvent;
@@ -129,14 +130,42 @@ class ConsulteeNotificationEventListener {
     }
   }
 
-  private void emailTeamMembers(NominationDetail nominationDetail,
-                                MergedTemplate.MergedTemplateBuilder mergedTemplateBuilder,
-                                Set<EnergyPortalUserDto> consultationCoordinators) {
+  @Async
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void notifyConsultationCoordinatorsOfWithdrawal(NominationWithdrawalEvent nominationWithdrawalEvent) {
 
-    var nominationSummaryUrl = ReverseRouter.route(on(NominationConsulteeViewController.class)
-            .renderNominationView(new NominationId(nominationDetail.getNomination().getId())));
+    NominationId nominationId = nominationWithdrawalEvent.getNominationId();
 
-    mergedTemplateBuilder.withMailMergeField("NOMINATION_LINK", emailService.withUrl(nominationSummaryUrl));
+    LOGGER.info("Handling NominationWithdrawalEvent for nomination with ID {}", nominationId.id());
+
+    Set<EnergyPortalUserDto> consultationCoordinators = getConsultationCoordinators();
+
+    if (CollectionUtils.isNotEmpty(consultationCoordinators)) {
+
+      var nominationDetail = getNominationDetail(nominationId);
+
+      MergedTemplate.MergedTemplateBuilder templateBuilder = nominationEmailBuilderService
+          .buildNominationWithdrawnTemplate(nominationId);
+
+      emailTeamMembers(nominationDetail, templateBuilder, consultationCoordinators);
+    } else {
+      LOGGER.info(
+          "No users in the consultation coordinator role when processing NominationWithdrawalEvent for nomination {}",
+          nominationId.id()
+      );
+    }
+  }
+
+  private void emailTeamMembers(
+      NominationDetail nominationDetail,
+      MergedTemplate.MergedTemplateBuilder mergedTemplateBuilder,
+      Set<EnergyPortalUserDto> consultationCoordinators
+  ) {
+
+    mergedTemplateBuilder.withMailMergeField(
+        "NOMINATION_LINK",
+        emailService.withUrl(ReverseRouter.route(on(NominationConsulteeViewController.class)
+            .renderNominationView(new NominationId(nominationDetail.getNomination().getId())))));
 
     consultationCoordinators.forEach(consultationCoordinator -> {
 
