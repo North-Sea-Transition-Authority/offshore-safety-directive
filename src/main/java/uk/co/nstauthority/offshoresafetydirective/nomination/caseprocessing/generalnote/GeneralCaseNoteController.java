@@ -37,14 +37,19 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.acti
 @RequestMapping("/nomination/{nominationId}/review")
 @CanPerformRegulatorNominationAction
 @HasNominationStatus(
-    statuses = {NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION},
+    statuses = {
+        NominationStatus.SUBMITTED,
+        NominationStatus.AWAITING_CONFIRMATION,
+        NominationStatus.APPOINTED,
+        NominationStatus.OBJECTED,
+        NominationStatus.WITHDRAWN
+    },
     fetchType = NominationDetailFetchType.LATEST_POST_SUBMISSION
 )
 public class GeneralCaseNoteController {
 
   public static final String FORM_NAME = "generalCaseNoteForm";
-  static final Set<NominationStatus> ALLOWED_STATUSES =
-      EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION);
+  static final Set<NominationStatus> ALLOWED_STATUSES = EnumSet.copyOf(NominationStatus.getPostSubmissionStatuses());
 
   private final NominationDetailService nominationDetailService;
   private final GeneralCaseNoteValidator generalCaseNoteValidator;
@@ -78,7 +83,7 @@ public class GeneralCaseNoteController {
 
     var nominationDetail = nominationDetailService.getLatestNominationDetailWithStatuses(
         nominationId,
-        EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+        ALLOWED_STATUSES
     ).orElseThrow(() -> {
 
       var statusNames = ALLOWED_STATUSES.stream()

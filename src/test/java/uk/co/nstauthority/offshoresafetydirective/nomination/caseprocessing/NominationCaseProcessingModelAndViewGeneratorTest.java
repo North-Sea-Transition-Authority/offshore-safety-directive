@@ -352,6 +352,111 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
   }
 
+  @ParameterizedTest
+  @EnumSource(
+      value = NominationStatus.class,
+      mode = EnumSource.Mode.INCLUDE,
+      names = {"APPOINTED", "OBJECTED", "WITHDRAWN"}
+  )
+  void getCaseProcessingModelAndView_whenCanManageNomination_andStatusPostSubmission_thenOnlyAddCaseNoteAction(
+      NominationStatus nominationStatus
+  ) {
+    var header = NominationCaseProcessingHeaderTestUtil.builder().build();
+    var nominationSummaryView = NominationSummaryViewTestUtil.builder().build();
+
+    var eventCreatedDateInstant = Instant.now();
+    var eventDateInstant = Instant.now();
+    var caseEventView = CaseEventView.builder("Case title", 2, eventCreatedDateInstant, eventDateInstant,
+        userDetail.displayName(), CaseEventType.NOMINATION_SUBMITTED).build();
+
+    var activePortalReferencesView = new ActivePortalReferencesView(null, null);
+
+    when(fileService.getFileUploadAttributes())
+        .thenReturn(
+            FileUploadComponentAttributes.newBuilder()
+                .withMaximumSize(DataSize.ofBytes(100))
+                .withAllowedExtensions(Set.of("ext"))
+        );
+
+    nominationDetail = NominationDetailTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withStatus(nominationStatus)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    var latestPostSubmissionNominationDetail = NominationDetailTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withStatus(nominationStatus)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetailWithStatuses(
+        new NominationId(nominationDetail),
+        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+    )).thenReturn(Optional.of(latestPostSubmissionNominationDetail));
+
+    when(nominationCaseProcessingService.getNominationCaseProcessingHeader(latestPostSubmissionNominationDetail))
+        .thenReturn(Optional.of(header));
+
+    var latestNominationDetail = NominationDetailTestUtil.builder()
+        .withId(UUID.randomUUID())
+        .withStatus(NominationStatus.DRAFT)
+        .withNominationId(NOMINATION_ID)
+        .build();
+
+    when(nominationDetailService.getLatestNominationDetail(NOMINATION_ID)).thenReturn(latestNominationDetail);
+
+    when(caseEventQueryService.getCaseEventViews(nominationDetail.getNomination()))
+        .thenReturn(List.of(caseEventView));
+
+    when(nominationSummaryService.getNominationSummaryView(nominationDetail, SummaryValidationBehaviour.NOT_VALIDATED))
+        .thenReturn(nominationSummaryView);
+
+    when(teamQueryService.userHasStaticRole(userDetail.wuaId(), TeamType.REGULATOR, Role.NOMINATION_MANAGER))
+        .thenReturn(true);
+
+    when(nominationPortalReferenceAccessService.getActivePortalReferenceView(nominationDetail.getNomination()))
+        .thenReturn(activePortalReferencesView);
+
+    var selectionMap = Map.of("1", "selection");
+    when(nominationCaseProcessingSelectionService.getSelectionOptions(nominationDetail.getNomination()))
+        .thenReturn(selectionMap);
+
+    when(userDetailService.getUserDetail()).thenReturn(userDetail);
+
+    var modelAndViewDto = CaseProcessingFormDto.builder()
+        .withNominationQaChecksForm(new NominationQaChecksForm())
+        .withNominationDecisionForm(new NominationDecisionForm())
+        .withWithdrawNominationForm(new WithdrawNominationForm())
+        .withConfirmNominationAppointmentForm(new ConfirmNominationAppointmentForm())
+        .withGeneralCaseNoteForm(new GeneralCaseNoteForm())
+        .withPearsPortalReferenceForm(new PearsPortalReferenceForm())
+        .withWonsPortalReferenceForm(new WonsPortalReferenceForm())
+        .withNominationConsultationResponseForm(new NominationConsultationResponseForm())
+        .withNominationRequestUpdateForm(new NominationRequestUpdateForm())
+        .withCaseProcessingVersionForm(new CaseProcessingVersionForm())
+        .build();
+
+    var result = modelAndViewGenerator.getCaseProcessingModelAndView(nominationDetail, modelAndViewDto);
+
+    @SuppressWarnings("unchecked")
+    var managementActions =
+        (Map<CaseProcessingActionGroup, List<CaseProcessingAction>>)
+            result.getModel().get("managementActions");
+
+    var managementActionGroupItemMap = getManagementActionGroupItemMap(managementActions);
+
+    assertThat(managementActionGroupItemMap)
+        .containsExactlyEntriesOf(
+            ImmutableMap.of(
+                CaseProcessingActionGroup.ADD_CASE_NOTE, List.of(CaseProcessingActionItem.GENERAL_CASE_NOTE)
+            )
+        );
+
+    assertBreadcrumbs(result, nominationDetail);
+    assertThat(result.getViewName()).isEqualTo("osd/nomination/caseProcessing/caseProcessing");
+  }
+
   @Test
   void getCaseProcessingModelAndView_whenCanManageNomination_andStatusSubmitted_thenAssertModelProperties() {
     var header = NominationCaseProcessingHeaderTestUtil.builder().build();

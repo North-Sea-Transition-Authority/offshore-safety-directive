@@ -297,7 +297,7 @@ public class NominationCaseProcessingModelAndViewGenerator {
   }
 
   private boolean canAddGeneralCaseNote(NominationDetailDto dto) {
-    return EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+    return NominationStatus.getPostSubmissionStatuses()
         .contains(dto.nominationStatus());
   }
 

@@ -18,7 +18,6 @@ import static uk.co.nstauthority.offshoresafetydirective.authentication.TestUser
 import static uk.co.nstauthority.offshoresafetydirective.util.NotificationBannerTestUtil.notificationBanner;
 import static uk.co.nstauthority.offshoresafetydirective.util.RedirectedToLoginUrlMatcher.redirectionToLoginUrl;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,7 +44,6 @@ import uk.co.nstauthority.offshoresafetydirective.nomination.NominationDetailTes
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationId;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatus;
 import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSecurityTestUtil;
-import uk.co.nstauthority.offshoresafetydirective.nomination.NominationStatusSubmissionStage;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.CaseProcessingFormDto;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingController;
 import uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.NominationCaseProcessingModelAndViewGenerator;
@@ -81,14 +79,14 @@ class GeneralCaseNoteControllerTest extends AbstractNominationControllerTest {
     // when retrieving the nomination detail in the post request
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        EnumSet.of(NominationStatus.SUBMITTED, NominationStatus.AWAITING_CONFIRMATION)
+        NominationStatus.getPostSubmissionStatuses()
     ))
         .thenReturn(Optional.of(nominationDetail));
 
     // for checking the nomination detail in the @HasNominationStatus annotation
     when(nominationDetailService.getLatestNominationDetailWithStatuses(
         NOMINATION_ID,
-        NominationStatus.getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION)
+        NominationStatus.getPostSubmissionStatuses()
     ))
         .thenReturn(Optional.of(nominationDetail));
 
@@ -117,7 +115,7 @@ class GeneralCaseNoteControllerTest extends AbstractNominationControllerTest {
   }
 
   @SecurityTest
-  void smokeTestNominationStatuses_onlySubmittedPermitted() {
+  void smokeTestNominationStatuses_onlyPostSubmissionPermitted() {
 
     when(nominationCaseProcessingModelAndViewGenerator.getCaseProcessingModelAndView(eq(nominationDetail),
         any(CaseProcessingFormDto.class)))
@@ -126,6 +124,9 @@ class GeneralCaseNoteControllerTest extends AbstractNominationControllerTest {
     NominationStatusSecurityTestUtil.smokeTester(mockMvc)
         .withPermittedNominationStatus(NominationStatus.SUBMITTED)
         .withPermittedNominationStatus(NominationStatus.AWAITING_CONFIRMATION)
+        .withPermittedNominationStatus(NominationStatus.APPOINTED)
+        .withPermittedNominationStatus(NominationStatus.OBJECTED)
+        .withPermittedNominationStatus(NominationStatus.WITHDRAWN)
         .withNominationDetail(nominationDetail)
         .withUser(USER)
         .withPostEndpoint(
