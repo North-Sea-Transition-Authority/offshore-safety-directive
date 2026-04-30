@@ -1,7 +1,6 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.ArrayList;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
@@ -19,20 +18,16 @@ public class AllowedDomainService {
   }
 
   public boolean isAllowedDomain(String userEmail, Team team) {
-    Optional<PortalOrganisationGroupDto> group;
-    switch (team.getTeamType()) {
-      case TeamType.ORGANISATION_GROUP -> group = portalOrganisationGroupQueryService
+    var group = switch (team.getTeamType()) {
+      case TeamType.ORGANISATION_GROUP -> portalOrganisationGroupQueryService
           .findOrganisationById(Integer.parseInt(team.getScopeId()), new RequestPurpose("getOrganisationGroupById"));
-      case TeamType.REGULATOR -> group = portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
-      case TeamType.CONSULTEE ->  group = portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
-      default -> throw new IllegalStateException("Unexpected value: " + team.getTeamType());
-    }
+      case TeamType.REGULATOR -> portalOrganisationGroupQueryService.getRegulatorOrganisationGroup();
+      case TeamType.CONSULTEE -> portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
+    };
 
-    List<String> emailDomains = List.of();
-    if (group.isPresent()) {
-      emailDomains = group.get().getEmailDomains();
-    }
-
-    return emailDomains.contains(userEmail.split("@")[1]);
+    var emailDomains = group.map(PortalOrganisationGroupDto::getEmailDomains).orElseGet(ArrayList::new);
+    return emailDomains.stream()
+        .map(String::toLowerCase)
+        .anyMatch(domain -> userEmail.toLowerCase().endsWith('@' + domain));
   }
 }
