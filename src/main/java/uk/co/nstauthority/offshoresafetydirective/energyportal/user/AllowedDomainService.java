@@ -1,7 +1,9 @@
 package uk.co.nstauthority.offshoresafetydirective.energyportal.user;
 
+import java.util.List;
 import org.springframework.stereotype.Service;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
+import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupQueryService;
 import uk.co.nstauthority.offshoresafetydirective.teams.Team;
 import uk.co.nstauthority.offshoresafetydirective.teams.TeamType;
@@ -23,9 +25,9 @@ public class AllowedDomainService {
       case TeamType.CONSULTEE -> portalOrganisationGroupQueryService.getConsulteeOrganisationGroup();
     };
 
-    return group.stream()
-        .flatMap(orgGroup -> orgGroup.getEmailDomains().stream())
+    var lowerEmail = userEmail.toLowerCase();
+    return group.map(PortalOrganisationGroupDto::getEmailDomains).orElse(List.of()).stream()
         .map(String::toLowerCase)
-        .anyMatch(domain -> userEmail.toLowerCase().endsWith('@' + domain));
+        .anyMatch(domain -> lowerEmail.endsWith("@" + domain));
   }
 }
