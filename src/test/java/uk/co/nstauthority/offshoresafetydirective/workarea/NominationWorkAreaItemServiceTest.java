@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneOffset;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -39,6 +40,8 @@ import uk.co.nstauthority.offshoresafetydirective.stringutil.StringUtil;
 @ExtendWith(MockitoExtension.class)
 class NominationWorkAreaItemServiceTest {
 
+  private static final WorkAreaFilter FILTER = new WorkAreaFilter(EnumSet.allOf(NominationStatus.class));
+
   @Mock
   private NominationWorkAreaQueryService nominationWorkAreaQueryService;
 
@@ -57,8 +60,8 @@ class NominationWorkAreaItemServiceTest {
 
   @Test
   void getWorkAreaItems_whenNoResults_thenEmpty() {
-    when(nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos()).thenReturn(List.of());
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    when(nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos(FILTER)).thenReturn(List.of());
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
     assertThat(result).isEmpty();
   }
 
@@ -99,7 +102,7 @@ class NominationWorkAreaItemServiceTest {
     when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
         .thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
@@ -157,7 +160,7 @@ class NominationWorkAreaItemServiceTest {
     when(portalOrganisationUnitQueryService.getOrganisationByIds(ids, NominationWorkAreaItemTransformerService.NOMINATED_OPERATORS_PURPOSE))
         .thenReturn(List.of(applicantOrganisation, nominatedOrganisation));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
@@ -190,7 +193,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(workAreaItem -> workAreaItem.modelProperties().getProperties().entrySet())
@@ -220,7 +223,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(queryResult));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .hasSize(1);
@@ -250,7 +253,7 @@ class NominationWorkAreaItemServiceTest {
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(
         List.of(earliestDraftNomination, latestDraftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result).map(WorkAreaItem::actionUrl)
         .containsExactly(
@@ -279,7 +282,7 @@ class NominationWorkAreaItemServiceTest {
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(
         List.of(earliestNomination, latestNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .map(WorkAreaItem::headingText)
@@ -304,7 +307,7 @@ class NominationWorkAreaItemServiceTest {
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(nomination));
 
     if (status == NominationStatus.DELETED) {
-      assertThatThrownBy(() -> nominationWorkAreaItemService.getNominationWorkAreaItems())
+      assertThatThrownBy(() -> nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER))
           .isExactlyInstanceOf(IllegalStateException.class)
           .hasMessage("Nomination with ID [%s] should not appear in work area as status is [%s]"
               .formatted(
@@ -314,7 +317,7 @@ class NominationWorkAreaItemServiceTest {
       return;
     }
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     var assertion = assertThat(result)
         .hasSize(1)
@@ -353,7 +356,7 @@ class NominationWorkAreaItemServiceTest {
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(
         List.of(submittedNomination, draftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result).map(WorkAreaItem::actionUrl)
         .containsExactly(
@@ -377,7 +380,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(
@@ -401,7 +404,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(
@@ -424,7 +427,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(submittedNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result)
         .extracting(
@@ -445,7 +448,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(deletedNomination));
 
-    assertThrows(IllegalStateException.class, () -> nominationWorkAreaItemService.getNominationWorkAreaItems());
+    assertThrows(IllegalStateException.class, () -> nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER));
 
   }
 
@@ -459,7 +462,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).modelProperties().getProperties())
@@ -477,7 +480,7 @@ class NominationWorkAreaItemServiceTest {
 
     when(nominationWorkAreaQueryService.getWorkAreaItems()).thenReturn(List.of(draftNomination));
 
-    var result = nominationWorkAreaItemService.getNominationWorkAreaItems();
+    var result = nominationWorkAreaItemService.getNominationWorkAreaItems(FILTER);
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).modelProperties().getProperties())

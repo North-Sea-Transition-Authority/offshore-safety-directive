@@ -208,7 +208,7 @@ class PearsSubareaEmailService {
         .withMailMergeField(
             "SERVICE_WORK_AREA_URL",
             emailUrlGenerationService.generateEmailUrl(
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
             )
         );
   }

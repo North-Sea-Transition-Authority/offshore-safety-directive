@@ -1649,7 +1649,7 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
             "currentPage"
         ).containsExactly(
             Map.of(
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)),
                 WorkAreaController.WORK_AREA_TITLE
             ),
             nominationDetail.getNomination().getReference()

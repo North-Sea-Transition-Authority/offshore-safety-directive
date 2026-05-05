@@ -150,7 +150,7 @@ class PearsSubareaEmailServiceTest {
         .thenReturn(Map.of(Role.NOMINATION_SUBMITTER, Set.of(userToEmail)));
 
     var generatedUrl = "/";
-    when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+    when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))))
         .thenReturn(generatedUrl);
 
     when(emailService.sendEmail(any(), any(), any()))
@@ -262,7 +262,7 @@ class PearsSubareaEmailServiceTest {
         .thenReturn(Set.of());
 
     var generatedUrl = "/";
-    when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+    when(emailUrlGenerationService.generateEmailUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))))
         .thenReturn(generatedUrl);
 
     when(emailService.sendEmail(any(), any(), any()))

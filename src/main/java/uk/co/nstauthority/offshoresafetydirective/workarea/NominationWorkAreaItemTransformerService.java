@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,8 +32,15 @@ class NominationWorkAreaItemTransformerService {
     this.portalOrganisationUnitQueryService = portalOrganisationUnitQueryService;
   }
 
-  public List<NominationWorkAreaItemDto> getNominationWorkAreaItemDtos() {
-    var queryResults = nominationWorkAreaQueryService.getWorkAreaItems();
+  public List<NominationWorkAreaItemDto> getNominationWorkAreaItemDtos(WorkAreaFilter filter) {
+    var filteredStatuses = Optional.ofNullable(filter.nominationStatuses()).orElse(Set.of());
+
+    var queryResults = nominationWorkAreaQueryService.getWorkAreaItems().stream()
+        .filter(nominationWorkAreaQueryResult ->
+            filteredStatuses.contains(nominationWorkAreaQueryResult.getNominationStatus())
+        )
+        .toList();
+
     var organisationGroupMap = getOrganisationUnitsForResults(queryResults);
 
     return queryResults.stream()

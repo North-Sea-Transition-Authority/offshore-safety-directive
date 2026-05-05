@@ -185,7 +185,7 @@ class DeleteNominationControllerTest extends AbstractNominationControllerTest {
         .deleteNomination(NOMINATION_ID, null)))
         .with(user(USER))
         .with(csrf()))
-        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))))
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andReturn();
 
@@ -216,7 +216,7 @@ class DeleteNominationControllerTest extends AbstractNominationControllerTest {
         .deleteNomination(NOMINATION_ID, null)))
         .with(user(USER))
         .with(csrf()))
-        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())))
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))))
         .andExpect(notificationBanner(expectedNotificationBanner))
         .andReturn();
 

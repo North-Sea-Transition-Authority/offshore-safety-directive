@@ -37,7 +37,7 @@ public class Breadcrumbs {
       breadcrumbs.add(
           new BreadcrumbItem(
               WorkAreaController.WORK_AREA_TITLE,
-              ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+              ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
           )
       );
       return this;

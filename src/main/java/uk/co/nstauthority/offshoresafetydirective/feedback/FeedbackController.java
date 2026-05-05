@@ -70,7 +70,7 @@ public class FeedbackController {
     feedbackService.saveFeedback(form, userDetailService.getUserDetail());
 
     applyNotificationBanner(redirectAttributes);
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null));
   }
 
   @GetMapping("/nomination/{nominationId}/feedback")
@@ -99,7 +99,7 @@ public class FeedbackController {
     feedbackService.saveFeedback(nomination, form, userDetailService.getUserDetail());
 
     applyNotificationBanner(redirectAttributes);
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null));
   }
 
   private ModelAndView getBaseModelAndView(FeedbackForm feedbackForm) {

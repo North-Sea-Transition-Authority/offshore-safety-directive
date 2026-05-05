@@ -59,14 +59,14 @@ public class DefaultModelAttributeService {
 
     attributes.put("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties());
     attributes.put("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties());
-    attributes.put("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+    attributes.put("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
     attributes.put("navigationItems", topNavigationService.getTopNavigationItems());
     attributes.put("footerItems", getFooterItems());
     attributes.put("feedbackUrl", ReverseRouter.route(on(FeedbackController.class).getFeedback(null)));
     attributes.put("wonsEmail", wonsContactConfigurationProperties.email());
     attributes.put("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()));
     attributes.put("analytics", analyticsProperties);
-    attributes.put("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+    attributes.put("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
 
     getUser().ifPresent(serviceUserDetail -> attributes.put("loggedInUser", serviceUserDetail));
 

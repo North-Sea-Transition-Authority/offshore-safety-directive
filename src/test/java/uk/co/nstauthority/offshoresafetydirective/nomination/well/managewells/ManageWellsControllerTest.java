@@ -157,7 +157,7 @@ class ManageWellsControllerTest extends AbstractNominationControllerTest {
         .andExpect(model().attribute(
             "breadcrumbsList",
             Map.of(
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()),
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)),
                 WorkAreaController.WORK_AREA_TITLE,
                 ReverseRouter.route(on(NominationTaskListController.class).getTaskList(NOMINATION_ID)),
                 NominationTaskListController.PAGE_NAME

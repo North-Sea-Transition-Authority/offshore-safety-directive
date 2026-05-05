@@ -33,8 +33,8 @@ class NominationWorkAreaItemService {
     this.nominationWorkAreaItemTransformerService = nominationWorkAreaItemTransformerService;
   }
 
-  public List<WorkAreaItem> getNominationWorkAreaItems() {
-    return nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos()
+  public List<WorkAreaItem> getNominationWorkAreaItems(WorkAreaFilter filter) {
+    return nominationWorkAreaItemTransformerService.getNominationWorkAreaItemDtos(filter)
         .stream()
         .sorted(
             Comparator.comparing((NominationWorkAreaItemDto dto) -> dto.nominationStatus().getDisplayOrder())

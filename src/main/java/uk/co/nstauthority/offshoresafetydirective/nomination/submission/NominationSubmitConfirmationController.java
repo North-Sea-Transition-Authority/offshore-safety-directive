@@ -41,7 +41,7 @@ public class NominationSubmitConfirmationController {
 
   private ModelAndView getModelAndView(Nomination nomination) {
     return new ModelAndView("osd/nomination/submission/submissionConfirmation")
-        .addObject("workAreaLink", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+        .addObject("workAreaLink", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
         .addObject("nominationReference", nomination.getReference())
         .addObject("feedbackUrl", ReverseRouter.route(on(FeedbackController.class)
             .getNominationFeedback(new NominationId(nomination.getId()), null)))

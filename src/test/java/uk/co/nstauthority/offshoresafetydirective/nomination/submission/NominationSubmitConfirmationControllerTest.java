@@ -106,7 +106,7 @@ class NominationSubmitConfirmationControllerTest extends AbstractNominationContr
         .andExpect(view().name("osd/nomination/submission/submissionConfirmation"))
         .andExpect(model().attribute(
             "workAreaLink",
-            ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+            ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
         ))
         .andExpect(model().attribute("feedbackUrl",
             ReverseRouter.route(on(FeedbackController.class).getNominationFeedback(NOMINATION_ID, null))))

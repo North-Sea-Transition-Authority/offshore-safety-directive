@@ -86,7 +86,7 @@ class DefaultModelAttributeServiceTest {
             Map.ofEntries(
                 entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
                 entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
-                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
                 entry("loggedInUser", user),
                 entry("navigationItems", List.of(topNavigationItem)),
                 entry("footerItems", List.of(
@@ -103,7 +103,7 @@ class DefaultModelAttributeServiceTest {
                 entry("wonsEmail", wonsContactConfigurationProperties.email()),
                 entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                 entry("analytics", analyticsProperties),
-                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
             )
         );
   }
@@ -128,7 +128,7 @@ class DefaultModelAttributeServiceTest {
             Map.ofEntries(
                 entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
                 entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
-                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
                 entry("navigationItems", List.of(topNavigationItem)),
                 entry("footerItems", List.of(
                     new FooterItem("Accessibility statement",
@@ -142,7 +142,7 @@ class DefaultModelAttributeServiceTest {
                 entry("wonsEmail", wonsContactConfigurationProperties.email()),
                 entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                 entry("analytics", analyticsProperties),
-                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
             )
         );
   }
@@ -170,7 +170,7 @@ class DefaultModelAttributeServiceTest {
     MapEntryAssert.thenAssertThat(attributes)
         .hasKeyWithValue("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties())
         .hasKeyWithValue("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties())
-        .hasKeyWithValue("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+        .hasKeyWithValue("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
         .hasKeyWithValue("loggedInUser", user)
         .hasKeyWithValue("navigationItems", List.of(topNavigationItem))
         .hasKeyWithValue("currentEndPoint", "/request-uri")
@@ -187,7 +187,7 @@ class DefaultModelAttributeServiceTest {
         .hasKeyWithValue("wonsEmail", wonsContactConfigurationProperties.email())
         .hasKeyWithValue("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences()))
         .hasKeyWithValue("analytics", analyticsProperties)
-        .hasKeyWithValue("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+        .hasKeyWithValue("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
   }
 
   @Test
@@ -213,7 +213,7 @@ class DefaultModelAttributeServiceTest {
             Map.ofEntries(
                 entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
                 entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
-                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
                 entry("navigationItems", List.of(topNavigationItem)),
                 entry("currentEndPoint", "/request-uri"),
                 entry("footerItems", List.of(
@@ -228,7 +228,7 @@ class DefaultModelAttributeServiceTest {
                 entry("wonsEmail", wonsContactConfigurationProperties.email()),
                 entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                 entry("analytics", analyticsProperties),
-                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
             )
         );
   }
@@ -257,7 +257,7 @@ class DefaultModelAttributeServiceTest {
             Map.ofEntries(
                 entry("serviceBranding", serviceBrandingConfigurationProperties.getServiceConfigurationProperties()),
                 entry("customerBranding", serviceBrandingConfigurationProperties.getCustomerConfigurationProperties()),
-                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea())),
+                entry("serviceHomeUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))),
                 entry("loggedInUser", user),
                 entry("navigationItems", List.of(topNavigationItem)),
                 entry("footerItems", List.of(
@@ -274,7 +274,7 @@ class DefaultModelAttributeServiceTest {
                 entry("wonsEmail", wonsContactConfigurationProperties.email()),
                 entry("cookiesStatementUrl", ReverseRouter.route(on(CookiesController.class).getCookiePreferences())),
                 entry("analytics", analyticsProperties),
-                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()))
+                entry("workAreaUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)))
             )
         );
   }

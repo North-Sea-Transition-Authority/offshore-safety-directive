@@ -108,7 +108,7 @@ class FeedbackControllerTest extends AbstractNominationControllerTest {
         .with(user(USER))
         .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))));
 
     verify(feedbackService).saveFeedback(any(FeedbackForm.class), eq(USER));
   }
@@ -221,7 +221,7 @@ class FeedbackControllerTest extends AbstractNominationControllerTest {
         .with(user(USER))
         .with(csrf()))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea())));
+        .andExpect(redirectedUrl(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))));
 
     verify(feedbackService).saveFeedback(eq(nominationDetail.getNomination()), any(FeedbackForm.class), eq(USER));
   }

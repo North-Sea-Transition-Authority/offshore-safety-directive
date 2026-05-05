@@ -149,7 +149,7 @@ class NominationTaskListControllerTest extends AbstractNominationControllerTest 
         .andExpect(model().attribute(
             "breadcrumbsList",
             Map.of(
-                ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), WorkAreaController.WORK_AREA_TITLE
+                ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)), WorkAreaController.WORK_AREA_TITLE
             )
         ))
         .andExpect(model().attribute("currentPage", NominationTaskListController.PAGE_NAME))

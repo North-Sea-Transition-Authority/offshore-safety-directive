@@ -50,7 +50,7 @@ class StartNominationControllerTest extends AbstractControllerTest {
         ))
         .andExpect(model().attribute(
             "backLinkUrl",
-            ReverseRouter.route(on(WorkAreaController.class).getWorkArea())
+            ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null))
         ));
 
     mockMvc.perform(

@@ -43,7 +43,7 @@ class BreadcrumbsUtilTest {
     var resultingBreadcrumbs = (Map<String, String>) modelAndView.getModel().get(BreadcrumbsUtil.MAP_MODEL_ATRR_NAME);
 
     assertThat(resultingBreadcrumbs).containsExactly(
-        entry(ReverseRouter.route(on(WorkAreaController.class).getWorkArea()), WorkAreaController.WORK_AREA_TITLE),
+        entry(ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)), WorkAreaController.WORK_AREA_TITLE),
         entry(secondBreadcrumbItem.url(), secondBreadcrumbItem.prompt()),
         entry(thirdBreadcrumbItem.url(), thirdBreadcrumbItem.prompt())
     );

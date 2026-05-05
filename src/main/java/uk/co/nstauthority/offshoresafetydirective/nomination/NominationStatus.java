@@ -1,9 +1,12 @@
 package uk.co.nstauthority.offshoresafetydirective.nomination;
 
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import uk.co.nstauthority.offshoresafetydirective.displayableutil.DisplayableEnum;
+import uk.co.nstauthority.offshoresafetydirective.streamutil.StreamUtil;
 
 public enum NominationStatus implements DisplayableEnum {
   DRAFT("Draft", 10, NominationStatusSubmissionStage.PRE_SUBMISSION),
@@ -47,5 +50,13 @@ public enum NominationStatus implements DisplayableEnum {
 
   public static Set<NominationStatus> getPostSubmissionStatuses() {
     return getAllStatusesForSubmissionStage(NominationStatusSubmissionStage.POST_SUBMISSION);
+  }
+
+  public static Map<String, String> getDisplayNameByEnumName(boolean includeDraft) {
+    return Arrays.stream(values())
+        .filter(status -> status.getSubmissionStage() == NominationStatusSubmissionStage.POST_SUBMISSION
+            || (includeDraft && status == DRAFT))
+        .sorted(Comparator.comparingInt(NominationStatus::getDisplayOrder))
+        .collect(StreamUtil.toLinkedHashMap(NominationStatus::name, NominationStatus::getDisplayName));
   }
 }

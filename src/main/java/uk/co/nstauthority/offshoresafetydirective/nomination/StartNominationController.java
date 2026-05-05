@@ -21,7 +21,7 @@ public class StartNominationController {
   public ModelAndView getStartPage() {
     return new ModelAndView("osd/nomination/startNomination")
         .addObject("startActionUrl", ReverseRouter.route(on(StartNominationController.class).startNomination()))
-        .addObject("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea()));
+        .addObject("backLinkUrl", ReverseRouter.route(on(WorkAreaController.class).getWorkArea(null)));
   }
 
   @PostMapping

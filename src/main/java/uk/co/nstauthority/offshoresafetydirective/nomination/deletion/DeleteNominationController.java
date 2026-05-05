@@ -101,7 +101,7 @@ public class DeleteNominationController {
       NotificationBannerUtil.applyNotificationBanner(redirectAttributes, notificationBanner);
     }
 
-    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea());
+    return ReverseRouter.redirect(on(WorkAreaController.class).getWorkArea(null));
   }
 
 }
