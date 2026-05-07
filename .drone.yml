@@ -59,6 +59,28 @@ steps:
         - ./gradlew checkstyleMain test bootJar
       build_image: repo1.dev.fivium.local:5000/docker-compose-java21
 
+  - name: publish-ecr
+    image: plugins/ecr:21
+    settings:
+      repo: digital/offshore-safety-directive
+      registry: 847993322739.dkr.ecr.eu-west-2.amazonaws.com
+      access_key: AKIA4K4CXHTZ7KAUZJWL
+      secret_key:
+        from_secret: ecr_secret_key
+      config:
+        from_secret: docker_config
+      region: eu-west-2
+      tags:
+        - ${DRONE_BRANCH//\//-}-${DRONE_BUILD_NUMBER}
+    when:
+      branch:
+        - develop
+        - main
+        - hotfix/**
+        - release/**
+      status:
+        - success
+
   - name: trivy-build-image
     image: docker:20.10.9
     volumes:
@@ -112,59 +134,6 @@ steps:
         - develop
         - main
         - drone/*
-
-  - name: publish-docker-develop
-    image: plugins/docker:19.03.8
-    settings:
-      registry: quay.io
-      repo: quay.io/fivium/offshore-safety-directive
-      tags:
-        - develop
-        - develop-${DRONE_BUILD_NUMBER}
-      config:
-        from_secret: docker_config
-    when:
-      branch:
-        - develop
-      status:
-        - success
-
-  - name: publish-docker
-    image: plugins/docker:19.03.8
-    settings:
-      registry: quay.io
-      repo: quay.io/fivium/offshore-safety-directive
-      tags:
-        - ${DRONE_BRANCH//\//-}-${DRONE_BUILD_NUMBER}
-      config:
-        from_secret: docker_config
-    when:
-      branch:
-        - main
-        - hotfix/**
-        - release/**
-      status:
-        - success
-
-  - name: publish-ecr
-    image: plugins/ecr:21
-    settings:
-      repo: digital/offshore-safety-directive
-      registry: 847993322739.dkr.ecr.eu-west-2.amazonaws.com
-      access_key: AKIA4K4CXHTZ7KAUZJWL
-      secret_key:
-        from_secret: ecr_secret_key
-      config:
-        from_secret: docker_config
-      region: eu-west-2
-      tags:
-        - ${DRONE_BRANCH//\//-}-${DRONE_BUILD_NUMBER}
-    when:
-      branch:
-        - develop
-        - main
-        - hotfix/**
-        - release/**
 
   - name: publish-epmq-messages-jar-snapshot
     image: eclipse-temurin:21-jdk
