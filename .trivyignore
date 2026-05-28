@@ -1,3 +1,25 @@
 CVE-2024-47554
 CVE-2026-41417
 CVE-2026-42198
+
+## io.netty:netty-codec (app.jar)
+CVE-2026-42583
+
+## io.netty:netty-codec-http (app.jar)
+CVE-2026-42584
+CVE-2026-42587
+CVE-2026-42580
+CVE-2026-42581
+CVE-2026-42585
+
+## io.netty:netty-codec-http2 (app.jar)
+CVE-2026-42587
+
+## org.apache.tomcat.embed:tomcat-embed-core (app.jar)
+CVE-2026-41293
+CVE-2026-43512
+CVE-2026-43515
+CVE-2026-41284
+CVE-2026-42498
+CVE-2026-43513
+CVE-2026-43514
