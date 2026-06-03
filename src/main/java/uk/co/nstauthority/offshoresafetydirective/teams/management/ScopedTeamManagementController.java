@@ -48,7 +48,8 @@ public class ScopedTeamManagementController {
   public ScopedTeamManagementController(TeamManagementService teamManagementService,
                                         PortalOrganisationGroupQueryService portalOrganisationGroupQueryService,
                                         TeamQueryService teamQueryService,
-                                        EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService) {
+                                        EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService
+  ) {
     this.teamManagementService = teamManagementService;
     this.portalOrganisationGroupQueryService = portalOrganisationGroupQueryService;
     this.teamQueryService = teamQueryService;
