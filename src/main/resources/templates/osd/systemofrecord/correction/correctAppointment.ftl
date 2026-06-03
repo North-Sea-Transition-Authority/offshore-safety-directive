@@ -33,6 +33,14 @@
             restUrl=springUrl(portalOrganisationsRestUrl)
         />
 
+        <@fdsDetails.summaryDetails
+          summaryTitle="The appointed operator I want to select is not shown in the list"
+        >
+          <p class="govuk-body">
+            If the appointed operator you want to select is not shown in the list then you can <@requestNewCompany.requestCompanyLink/>
+          </p>
+        </@fdsDetails.summaryDetails>
+
         <@fdsRadio.radioGroup
             path="form.appointmentType"
             labelText="Select the type of appointment"

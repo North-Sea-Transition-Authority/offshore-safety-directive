@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import uk.co.fivium.energyportal.starter.accounts.EnergyPortalAccountsControllerAdvice;
+import uk.co.fivium.energyportal.starter.configuration.EnergyPortalAccountsConfigurationProperties;
 import uk.co.nstauthority.offshoresafetydirective.authentication.SamlResponseParser;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceLogoutSuccessHandler;
 import uk.co.nstauthority.offshoresafetydirective.authentication.ServiceUserDetailArgumentResolver;
@@ -78,11 +80,13 @@ import uk.co.nstauthority.offshoresafetydirective.teams.management.access.TeamMa
     CanViewNominationPostSubmissionInterceptor.class,
     TeamManagementHandlerInterceptor.class,
     ServiceUserDetailArgumentResolver.class,
-    StartNominationInterceptor.class
+    StartNominationInterceptor.class,
+    EnergyPortalAccountsControllerAdvice.class,
 })
 @EnableConfigurationProperties({
     AnalyticsProperties.class,
     SamlProperties.class,
+    EnergyPortalAccountsConfigurationProperties.class,
 })
 public abstract class AbstractControllerTest {
 
