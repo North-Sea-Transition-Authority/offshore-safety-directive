@@ -19,7 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import uk.co.fivium.energyportal.serviceproviders.epmq.ScopeType;
 import uk.co.fivium.energyportal.serviceproviders.epmq.messages.ServiceProviderTeamDto;
-import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalServiceProviderTeamService;
+import uk.co.fivium.energyportal.starter.serviceproviders.EnergyPortalAccountsMessagePublishingService;
 import uk.co.fivium.energyportalapi.client.RequestPurpose;
 import uk.co.nstauthority.offshoresafetydirective.authorisation.InvokingUserHasStaticRole;
 import uk.co.nstauthority.offshoresafetydirective.energyportal.portalorganisation.organisationgroup.PortalOrganisationGroupDto;
@@ -42,17 +42,17 @@ public class ScopedTeamManagementController {
   private final TeamManagementService teamManagementService;
   private final PortalOrganisationGroupQueryService portalOrganisationGroupQueryService;
   private final TeamQueryService teamQueryService;
-  private final EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService;
+  private final EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService;
 
 
   public ScopedTeamManagementController(TeamManagementService teamManagementService,
                                         PortalOrganisationGroupQueryService portalOrganisationGroupQueryService,
                                         TeamQueryService teamQueryService,
-                                        EnergyPortalServiceProviderTeamService energyPortalServiceProviderTeamService) {
+                                        EnergyPortalAccountsMessagePublishingService energyPortalAccountsMessagePublishingService) {
     this.teamManagementService = teamManagementService;
     this.portalOrganisationGroupQueryService = portalOrganisationGroupQueryService;
     this.teamQueryService = teamQueryService;
-    this.energyPortalServiceProviderTeamService = energyPortalServiceProviderTeamService;
+    this.energyPortalAccountsMessagePublishingService = energyPortalAccountsMessagePublishingService;
   }
 
   @GetMapping("/organisation/new")
@@ -94,7 +94,7 @@ public class ScopedTeamManagementController {
         ScopeType.ORGANISATION_GROUP,
         team.getTeamType().name()
     );
-    energyPortalServiceProviderTeamService.publishTeam(serviceProviderTeam);
+    energyPortalAccountsMessagePublishingService.publishTeam(serviceProviderTeam);
 
     return ReverseRouter.redirect(on(TeamManagementController.class).renderTeamMemberList(team.getId(), null));
   }
