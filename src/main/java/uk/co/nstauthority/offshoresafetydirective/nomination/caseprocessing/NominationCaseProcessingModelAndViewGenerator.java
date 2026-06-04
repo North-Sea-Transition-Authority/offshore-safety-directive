@@ -261,7 +261,10 @@ public class NominationCaseProcessingModelAndViewGenerator {
           .map(EnergyPortalUserDto::emailAddress)
           .collect(Collectors.joining(","));
 
-      actions.add(caseProcessingActionService.createContactOrganisationAction(emails));
+      actions.add(caseProcessingActionService.createContactOrganisationAction(
+          emails,
+          nominationDetailDto.nominationDto().nominationReference()
+      ));
     }
 
     if (CollectionUtils.isNotEmpty(actions)) {

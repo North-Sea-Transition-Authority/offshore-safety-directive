@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
 import com.google.common.collect.ImmutableMap;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1445,7 +1447,10 @@ class NominationCaseProcessingModelAndViewGeneratorTest {
     var contactAction = managementActions.get(CaseProcessingActionGroup.CONTACT_ORGANISATION).getFirst();
 
     assertThat(contactAction.getItem()).isEqualTo(CaseProcessingActionItem.CONTACT_ORGANISATION);
-    assertThat(contactAction.getSubmitUrl()).isEqualTo("mailto:submitter1@example.com,submitter2@example.com");
+    assertThat(contactAction.getSubmitUrl()).isEqualTo("mailto:%s?subject=%s".formatted(
+        "submitter1@example.com,submitter2@example.com",
+        URLEncoder.encode(latestPostSubmissionNominationDetail.getNomination().getReference(), StandardCharsets.UTF_8)
+    ));
   }
 
   @ParameterizedTest

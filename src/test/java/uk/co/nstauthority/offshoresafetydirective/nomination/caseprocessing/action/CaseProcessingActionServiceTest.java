@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -409,8 +411,9 @@ class CaseProcessingActionServiceTest {
   @Test
   void createContactOrganisationAction() {
     var emailCsv = "test@organisation.com, test2@organisation.com";
+    var nominationReference = "WIO/2026/1";
 
-    var result = caseProcessingActionService.createContactOrganisationAction(emailCsv);
+    var result = caseProcessingActionService.createContactOrganisationAction(emailCsv, nominationReference);
 
     assertThat(result)
         .extracting(
@@ -423,7 +426,7 @@ class CaseProcessingActionServiceTest {
             CaseProcessingActionItem.CONTACT_ORGANISATION,
             CaseProcessingActionGroup.CONTACT_ORGANISATION,
             new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONTACT_ORGANISATION),
-            "mailto:" + emailCsv,
+            "mailto:%s?subject=%s".formatted(emailCsv, URLEncoder.encode(nominationReference, StandardCharsets.UTF_8)),
             Collections.emptyMap()
         );
   }
