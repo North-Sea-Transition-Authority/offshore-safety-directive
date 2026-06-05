@@ -28,4 +28,6 @@ public interface TeamRoleRepository extends ListCrudRepository<TeamRole, UUID> {
       Collection<Role> roles,
       TeamType teamType
   );
+
+  boolean existsByWuaId(long wuaId);
 }
