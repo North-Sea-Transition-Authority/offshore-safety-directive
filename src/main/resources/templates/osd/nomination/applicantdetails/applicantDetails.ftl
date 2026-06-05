@@ -35,13 +35,7 @@
         access manager on ${serviceBranding.mnemonic()} to provide you with access to make nominations on their behalf.
       </p>
       <p class="govuk-body">
-        If the organisation is not yet registered on ${serviceBranding.mnemonic()} a representative from the
-        organisation will need to email
-        <@mailTo.mailToLink
-          linkText=customerBranding.businessEmailAddress()
-          mailToEmailAddress=customerBranding.businessEmailAddress()
-        />
-        to gain access to the service.
+        If the organisation is not yet registered on ${serviceBranding.mnemonic()} then you can <@requestNewCompany.requestCompanyLink/>
       </p>
     </@fdsDetails.summaryDetails>
     <@fdsTextInput.textInput

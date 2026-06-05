@@ -53,7 +53,14 @@ class TeamRolesUpdateHandlerTest {
   private TeamManagementService teamManagementService;
 
   private final EnergyPortalAccountsConfigurationProperties configurationProperties
-      = new EnergyPortalAccountsConfigurationProperties(SERVICE_NAME, "dev1", false, false, "dummy", "dummy");
+      = new EnergyPortalAccountsConfigurationProperties(
+          SERVICE_NAME,
+      "dev1",
+      false,
+      false,
+      null,
+      null
+  );
 
   private TeamRolesUpdateHandler teamRolesUpdateHandler;
 

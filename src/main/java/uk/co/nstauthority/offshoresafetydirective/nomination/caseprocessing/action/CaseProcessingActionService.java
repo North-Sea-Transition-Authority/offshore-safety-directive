@@ -2,6 +2,8 @@ package uk.co.nstauthority.offshoresafetydirective.nomination.caseprocessing.act
 
 import static org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder.on;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -257,13 +259,14 @@ public class CaseProcessingActionService {
         .build();
   }
 
-  public CaseProcessingAction createContactOrganisationAction(String emailCsv) {
+  public CaseProcessingAction createContactOrganisationAction(String emailCsv, String nominationReference) {
     var caseProcessingAction = new CaseProcessingActionIdentifier(CaseProcessingActionIdentifier.CONTACT_ORGANISATION);
+    var subject = URLEncoder.encode(nominationReference, StandardCharsets.UTF_8);
     return CaseProcessingAction.builder(
         CaseProcessingActionItem.CONTACT_ORGANISATION,
         CaseProcessingActionGroup.CONTACT_ORGANISATION,
         caseProcessingAction,
-        "mailto:" + emailCsv
+        "mailto:%s?subject=%s".formatted(emailCsv, subject)
     ).build();
   }
 

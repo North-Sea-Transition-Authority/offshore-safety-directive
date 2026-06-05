@@ -31,11 +31,7 @@
       summaryTitle="The well or installation operator I want to nominate is not shown in the list"
     >
       <p class="govuk-body">
-        If the operator you want to nominate is not shown in the list then you must contact
-        <@mailTo.mailToLink
-          linkText=customerBranding.businessEmailAddress()
-          mailToEmailAddress=customerBranding.businessEmailAddress()
-        />
+        If the operator you want to nominate is not shown in the list then you can <@requestNewCompany.requestCompanyLink/>
       </p>
     </@fdsDetails.summaryDetails>
     <@fdsTextarea.textarea
